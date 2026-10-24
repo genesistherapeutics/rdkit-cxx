@@ -36,6 +36,7 @@ set(RDKIT_CXX_SOURCES
   src/ring_info.cpp
   src/mol_list.cpp
   src/molops.cpp
+  src/substruct.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -44,6 +45,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   GraphMol
   SmilesParse
   FileParsers
+  SubstructMatch
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

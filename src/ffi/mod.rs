@@ -11,3 +11,4 @@ pub(crate) mod molops;
 pub(crate) mod props;
 pub(crate) mod rd_base;
 pub(crate) mod ring_info;
+pub(crate) mod substruct;

@@ -20,6 +20,7 @@ const BRIDGES: &[&str] = &[
     "conformer",
     "ring_info",
     "molops",
+    "substruct",
 ];
 
 fn main() {
