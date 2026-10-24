@@ -1,0 +1,787 @@
+/*
+ * Copyright (c) 2026 Steven Kearnes All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
+#include "rdkit-cxx/data_structs.h"
+
+#include <algorithm>
+#include <limits>
+#include <type_traits>
+
+#include <DataStructs/BitOps.h>
+#include <DataStructs/BitVectUtils.h>
+#include <DataStructs/base64.h>
+#include <RDGeneral/Exceptions.h>
+
+#include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/ffi/data_structs.rs.h"
+#include "rdkit-cxx/util.h"
+
+namespace rdkit_cxx {
+
+namespace {
+
+template <class T>
+rust::Vec<std::uint32_t> to_indices(const std::vector<T> &v) {
+  rust::Vec<std::uint32_t> result;
+  for (auto i : v) {
+    result.push_back(static_cast<std::uint32_t>(i));
+  }
+  return result;
+}
+
+// An index error for indices that may not fit IndexError's unsigned.
+void check_index_64(std::uint64_t idx, std::uint64_t len) {
+  if (idx >= len) {
+    constexpr std::uint64_t most = std::numeric_limits<unsigned>::max();
+    throw IndexError(static_cast<unsigned>(std::min(idx, most)),
+                     static_cast<unsigned>(std::min(len, most)));
+  }
+}
+
+// Calls f with both operands' RDKit objects, which must be the same kind.
+template <class V, class F>
+auto visit2(const V &a, const V &b, F f) {
+  if (a.v.index() != b.v.index()) {
+    throw ValueErrorException("vectors of different types");
+  }
+  return std::visit(
+      [&](const auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        return f(x, std::get<T>(b.v));
+      },
+      a.v);
+}
+
+void check_same_size(const BitVect &a, const BitVect &b) {
+  if (bit_vect_get_num_bits(a) != bit_vect_get_num_bits(b)) {
+    throw ValueErrorException("BitVects must be same length");
+  }
+}
+
+template <class T>
+double metric_value(const T &a, const T &b, std::uint8_t metric, double alpha,
+                    double beta) {
+  switch (metric) {
+    case 0:
+      return TanimotoSimilarity(a, b);
+    case 1:
+      return CosineSimilarity(a, b);
+    case 2:
+      return KulczynskiSimilarity(a, b);
+    case 3:
+      return DiceSimilarity(a, b);
+    case 4:
+      return SokalSimilarity(a, b);
+    case 5:
+      return McConnaugheySimilarity(a, b);
+    case 6:
+      return AsymmetricSimilarity(a, b);
+    case 7:
+      return BraunBlanquetSimilarity(a, b);
+    case 8:
+      return RusselSimilarity(a, b);
+    case 9:
+      return RogotGoldbergSimilarity(a, b);
+    case 10:
+      return OnBitSimilarity(a, b);
+    case 11:
+      return AllBitSimilarity(a, b);
+    case 12:
+      return TverskySimilarity(a, b, alpha, beta);
+  }
+  throw ValueErrorException("unknown similarity metric");
+}
+
+std::uint8_t kind_of(const SparseIntVect &siv) {
+  return static_cast<std::uint8_t>(siv.v.index());
+}
+
+template <class F>
+auto with_kind(std::uint8_t kind, F f) {
+  switch (kind) {
+    case 0:
+      return f(std::int32_t{});
+    case 1:
+      return f(std::int64_t{});
+    case 2:
+      return f(std::uint32_t{});
+    case 3:
+      return f(std::uint64_t{});
+  }
+  throw ValueErrorException("unknown SparseIntVect kind");
+}
+
+int checked(long long value) {
+  if (value < std::numeric_limits<int>::min() ||
+      value > std::numeric_limits<int>::max()) {
+    throw ValueErrorException("SparseIntVect value overflow");
+  }
+  return static_cast<int>(value);
+}
+
+// Checks that adding (or subtracting) b to a overflows no value.
+template <class IndexType>
+void check_add(const RDKit::SparseIntVect<IndexType> &a,
+               const RDKit::SparseIntVect<IndexType> &b, int sign) {
+  if (a.getLength() != b.getLength()) {
+    throw ValueErrorException("SparseIntVect size mismatch");
+  }
+  for (const auto &[idx, val] : b.getNonzeroElements()) {
+    checked(static_cast<long long>(a.getVal(idx)) +
+            sign * static_cast<long long>(val));
+  }
+}
+
+template <class V>
+void check_lengths(const V &a, const V &b) {
+  if (a.getLength() != b.getLength()) {
+    throw ValueErrorException("length mismatch");
+  }
+}
+
+}  // namespace
+
+const ExplicitBitVect &as_explicit(const BitVect &bv) {
+  return std::get<ExplicitBitVect>(bv.v);
+}
+
+std::unique_ptr<BitVect> wrap_bit_vect(std::unique_ptr<ExplicitBitVect> bv) {
+  return std::make_unique<BitVect>(std::move(*bv));
+}
+
+std::unique_ptr<BitVect> wrap_bit_vect(std::unique_ptr<SparseBitVect> bv) {
+  return std::make_unique<BitVect>(std::move(*bv));
+}
+
+std::unique_ptr<BitVect> bit_vect_new_explicit(std::uint32_t size,
+                                               bool bits_set) {
+  return std::make_unique<BitVect>(ExplicitBitVect(size, bits_set));
+}
+
+std::unique_ptr<BitVect> bit_vect_new_sparse(std::uint32_t size) {
+  return std::make_unique<BitVect>(SparseBitVect(size));
+}
+
+std::unique_ptr<BitVect> bit_vect_from_pkl(
+    bool sparse, rust::Slice<const std::uint8_t> pkl) {
+  if (sparse) {
+    return std::make_unique<BitVect>(SparseBitVect(to_std(pkl)));
+  }
+  return std::make_unique<BitVect>(ExplicitBitVect(to_std(pkl)));
+}
+
+std::unique_ptr<BitVect> bit_vect_clone(const BitVect &bv) {
+  return std::make_unique<BitVect>(bv);
+}
+
+bool bit_vect_set_bit(BitVect &bv, std::uint32_t which) {
+  check_index(which, bit_vect_get_num_bits(bv));
+  return std::visit([&](auto &x) { return x.setBit(which); }, bv.v);
+}
+
+bool bit_vect_un_set_bit(BitVect &bv, std::uint32_t which) {
+  check_index(which, bit_vect_get_num_bits(bv));
+  return std::visit([&](auto &x) { return x.unsetBit(which); }, bv.v);
+}
+
+void bit_vect_set_bits_from_list(BitVect &bv,
+                                 rust::Slice<const std::uint32_t> on_bit_list) {
+  for (auto which : on_bit_list) {
+    check_index(which, bit_vect_get_num_bits(bv));
+  }
+  for (auto which : on_bit_list) {
+    bit_vect_set_bit(bv, which);
+  }
+}
+
+void bit_vect_un_set_bits_from_list(
+    BitVect &bv, rust::Slice<const std::uint32_t> off_bit_list) {
+  for (auto which : off_bit_list) {
+    check_index(which, bit_vect_get_num_bits(bv));
+  }
+  for (auto which : off_bit_list) {
+    bit_vect_un_set_bit(bv, which);
+  }
+}
+
+bool bit_vect_get_bit(const BitVect &bv, std::uint32_t which) {
+  check_index(which, bit_vect_get_num_bits(bv));
+  return std::visit([&](const auto &x) { return x.getBit(which); }, bv.v);
+}
+
+std::uint32_t bit_vect_get_num_bits(const BitVect &bv) {
+  return std::visit([](const auto &x) { return x.getNumBits(); }, bv.v);
+}
+
+std::uint32_t bit_vect_get_num_on_bits(const BitVect &bv) {
+  return std::visit([](const auto &x) { return x.getNumOnBits(); }, bv.v);
+}
+
+std::uint32_t bit_vect_get_num_off_bits(const BitVect &bv) {
+  return std::visit([](const auto &x) { return x.getNumOffBits(); }, bv.v);
+}
+
+rust::Vec<std::uint32_t> bit_vect_get_on_bits(const BitVect &bv) {
+  IntVect res;
+  std::visit([&](const auto &x) { x.getOnBits(res); }, bv.v);
+  return to_indices(res);
+}
+
+rust::Vec<std::uint8_t> bit_vect_to_binary(const BitVect &bv) {
+  return to_bytes(std::visit([](const auto &x) { return x.toString(); }, bv.v));
+}
+
+void bit_vect_from_base64(BitVect &bv, rust::Str in_d) {
+  std::string text(in_d);
+  std::visit([&](auto &x) { x.initFromText(text.c_str(), text.size(), true); },
+             bv.v);
+}
+
+std::unique_ptr<std::string> bit_vect_to_base64(const BitVect &bv) {
+  auto tmp = std::visit([](const auto &x) { return x.toString(); }, bv.v);
+  std::unique_ptr<const char[]> txt(Base64Encode(tmp.c_str(), tmp.length()));
+  return std::make_unique<std::string>(txt.get());
+}
+
+rust::Vec<bool> bit_vect_to_list(const BitVect &bv) {
+  rust::Vec<bool> result;
+  auto n = bit_vect_get_num_bits(bv);
+  result.reserve(n);
+  for (std::uint32_t i = 0; i < n; ++i) {
+    result.push_back(false);
+  }
+  for (auto i : bit_vect_get_on_bits(bv)) {
+    result[i] = true;
+  }
+  return result;
+}
+
+std::unique_ptr<BitVect> bit_vect_binary_op(const BitVect &a, const BitVect &b,
+                                            std::uint8_t op) {
+  if (op != '+') {
+    check_same_size(a, b);
+  }
+  return visit2(a, b, [&](const auto &x, const auto &y) {
+    using T = std::decay_t<decltype(x)>;
+    switch (op) {
+      case '&':
+        return std::make_unique<BitVect>(T(x & y));
+      case '|':
+        return std::make_unique<BitVect>(T(x | y));
+      case '^':
+        return std::make_unique<BitVect>(T(x ^ y));
+      case '+':
+        if constexpr (std::is_same_v<T, ExplicitBitVect>) {
+          return std::make_unique<BitVect>(T(x + y));
+        }
+    }
+    throw ValueErrorException("unsupported bit vector operation");
+  });
+}
+
+void bit_vect_append(BitVect &bv, const BitVect &other) {
+  std::get<ExplicitBitVect>(bv.v) += std::get<ExplicitBitVect>(other.v);
+}
+
+std::unique_ptr<BitVect> bit_vect_invert(const BitVect &bv) {
+  return std::visit(
+      [](const auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        return std::make_unique<BitVect>(T(~x));
+      },
+      bv.v);
+}
+
+bool bit_vect_eq(const BitVect &a, const BitVect &b) {
+  return a.v.index() == b.v.index() &&
+         visit2(a, b, [](const auto &x, const auto &y) { return x == y; });
+}
+
+double bit_vect_similarity(const BitVect &a, const BitVect &b,
+                           std::uint8_t metric, double alpha, double beta,
+                           bool return_distance) {
+  auto sim = visit2(a, b, [&](const auto &x, const auto &y) {
+    return metric_value(x, y, metric, alpha, beta);
+  });
+  return return_distance ? 1.0 - sim : sim;
+}
+
+double bit_vect_similarity_pkl(const BitVect &a,
+                               rust::Slice<const std::uint8_t> pkl,
+                               std::uint8_t metric, double alpha, double beta,
+                               bool return_distance) {
+  auto sim = std::visit(
+      [&](const auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        T other(to_std(pkl));
+        return metric_value(x, other, metric, alpha, beta);
+      },
+      a.v);
+  return return_distance ? 1.0 - sim : sim;
+}
+
+rust::Vec<double> bit_vect_proj_similarity(const BitVect &a, const BitVect &b,
+                                           bool on_bits) {
+  auto res = visit2(a, b, [&](const auto &x, const auto &y) {
+    return on_bits ? OnBitProjSimilarity(x, y) : OffBitProjSimilarity(x, y);
+  });
+  rust::Vec<double> result;
+  for (auto v : res) {
+    result.push_back(v);
+  }
+  return result;
+}
+
+std::int32_t bit_vect_num_bits_in_common(const BitVect &a, const BitVect &b) {
+  return visit2(
+      a, b, [](const auto &x, const auto &y) { return NumBitsInCommon(x, y); });
+}
+
+rust::Vec<std::uint32_t> bit_vect_bits_in_common(const BitVect &a,
+                                                 const BitVect &b,
+                                                 bool on_bits) {
+  return to_indices(visit2(a, b, [&](const auto &x, const auto &y) {
+    return on_bits ? OnBitsInCommon(x, y) : OffBitsInCommon(x, y);
+  }));
+}
+
+std::unique_ptr<BitVect> bit_vect_fold(const BitVect &bv,
+                                       std::uint32_t fold_factor) {
+  return std::visit(
+      [&](const auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        return wrap_bit_vect(
+            std::unique_ptr<T>(FoldFingerprint(x, fold_factor)));
+      },
+      bv.v);
+}
+
+bool bit_vect_all_probe_bits_match(const BitVect &probe, const BitVect &ref) {
+  return visit2(probe, ref, [](const auto &x, const auto &y) {
+    return AllProbeBitsMatch(x, y);
+  });
+}
+
+bool bit_vect_all_probe_bits_match_pkl(const BitVect &probe,
+                                       rust::Slice<const std::uint8_t> ref) {
+  auto text = to_std(ref);
+  return std::visit([&](const auto &x) { return AllProbeBitsMatch(x, text); },
+                    probe.v);
+}
+
+std::unique_ptr<std::string> bit_vect_to_text(const BitVect &bv) {
+  return std::make_unique<std::string>(
+      std::visit([](const auto &x) { return BitVectToText(x); }, bv.v));
+}
+
+std::unique_ptr<std::string> bit_vect_to_fps_text(const BitVect &bv) {
+  return std::make_unique<std::string>(
+      std::visit([](const auto &x) { return BitVectToFPSText(x); }, bv.v));
+}
+
+rust::Vec<std::uint8_t> bit_vect_to_binary_text(const BitVect &bv) {
+  return to_bytes(
+      std::visit([](const auto &x) { return BitVectToBinaryText(x); }, bv.v));
+}
+
+void bit_vect_init_from_daylight_string(BitVect &bv, rust::Str s) {
+  std::string text(s);
+  std::visit([&](auto &x) { FromDaylightString(x, text); }, bv.v);
+}
+
+std::unique_ptr<BitVect> convert_to_explicit(const BitVect &sbv) {
+  return wrap_bit_vect(std::unique_ptr<ExplicitBitVect>(
+      convertToExplicit(&std::get<SparseBitVect>(sbv.v))));
+}
+
+std::unique_ptr<BitVect> create_from_bit_string(rust::Str bits) {
+  std::string text(bits);
+  ExplicitBitVect bv(text.size());
+  FromBitString(bv, text);
+  return std::make_unique<BitVect>(std::move(bv));
+}
+
+std::unique_ptr<BitVect> create_from_fps_text(rust::Str fps) {
+  std::string text(fps);
+  if (text.size() % 2) {
+    throw ValueErrorException(
+        "input string must have an even number of characters");
+  }
+  ExplicitBitVect bv(text.size() * 4);
+  UpdateBitVectFromFPSText(bv, text);
+  return std::make_unique<BitVect>(std::move(bv));
+}
+
+std::unique_ptr<BitVect> create_from_binary_text(
+    rust::Slice<const std::uint8_t> fps) {
+  ExplicitBitVect bv(fps.size() * 8);
+  UpdateBitVectFromBinaryText(bv, to_std(fps));
+  return std::make_unique<BitVect>(std::move(bv));
+}
+
+std::unique_ptr<SparseIntVect> sparse_int_vect_new(std::uint8_t kind,
+                                                   std::uint64_t length) {
+  return with_kind(kind, [&](auto index) {
+    using IndexType = decltype(index);
+    if (length >
+        static_cast<std::uint64_t>(std::numeric_limits<IndexType>::max())) {
+      throw ValueErrorException("SparseIntVect length out of range");
+    }
+    return std::make_unique<SparseIntVect>(
+        RDKit::SparseIntVect<IndexType>(static_cast<IndexType>(length)));
+  });
+}
+
+std::unique_ptr<SparseIntVect> sparse_int_vect_from_pkl(
+    std::uint8_t kind, rust::Slice<const std::uint8_t> pkl) {
+  return with_kind(kind, [&](auto index) {
+    using IndexType = decltype(index);
+    return std::make_unique<SparseIntVect>(
+        RDKit::SparseIntVect<IndexType>(to_std(pkl)));
+  });
+}
+
+std::unique_ptr<SparseIntVect> sparse_int_vect_clone(const SparseIntVect &siv) {
+  return std::make_unique<SparseIntVect>(siv);
+}
+
+std::int32_t sparse_int_vect_get_val(const SparseIntVect &siv,
+                                     std::uint64_t idx) {
+  check_index_64(idx, sparse_int_vect_get_length(siv));
+  return std::visit(
+      [&](const auto &x) {
+        using IndexType =
+            typename std::decay_t<decltype(x)>::StorageType::key_type;
+        return x.getVal(static_cast<IndexType>(idx));
+      },
+      siv.v);
+}
+
+void sparse_int_vect_set_val(SparseIntVect &siv, std::uint64_t idx,
+                             std::int32_t val) {
+  check_index_64(idx, sparse_int_vect_get_length(siv));
+  std::visit(
+      [&](auto &x) {
+        using IndexType =
+            typename std::decay_t<decltype(x)>::StorageType::key_type;
+        x.setVal(static_cast<IndexType>(idx), val);
+      },
+      siv.v);
+}
+
+std::uint64_t sparse_int_vect_get_length(const SparseIntVect &siv) {
+  return std::visit(
+      [](const auto &x) { return static_cast<std::uint64_t>(x.getLength()); },
+      siv.v);
+}
+
+std::int32_t sparse_int_vect_get_total_val(const SparseIntVect &siv,
+                                           bool use_abs) {
+  return std::visit([&](const auto &x) { return x.getTotalVal(use_abs); },
+                    siv.v);
+}
+
+rust::Vec<std::uint8_t> sparse_int_vect_to_binary(const SparseIntVect &siv) {
+  return to_bytes(
+      std::visit([](const auto &x) { return x.toString(); }, siv.v));
+}
+
+void sparse_int_vect_update_from_sequence(
+    SparseIntVect &siv, rust::Slice<const std::uint64_t> seq) {
+  auto length = sparse_int_vect_get_length(siv);
+  for (auto idx : seq) {
+    check_index_64(idx, length);
+  }
+  for (auto idx : seq) {
+    sparse_int_vect_set_val(
+        siv, idx,
+        checked(static_cast<long long>(sparse_int_vect_get_val(siv, idx)) + 1));
+  }
+}
+
+SparseIntVectElements sparse_int_vect_get_nonzero_elements(
+    const SparseIntVect &siv) {
+  SparseIntVectElements elements;
+  std::visit(
+      [&](const auto &x) {
+        for (const auto &[idx, val] : x.getNonzeroElements()) {
+          elements.indices.push_back(static_cast<std::uint64_t>(idx));
+          elements.values.push_back(val);
+        }
+      },
+      siv.v);
+  return elements;
+}
+
+rust::Vec<std::int32_t> sparse_int_vect_to_list(const SparseIntVect &siv) {
+  rust::Vec<std::int32_t> result;
+  auto length = sparse_int_vect_get_length(siv);
+  result.reserve(length);
+  for (std::uint64_t i = 0; i < length; ++i) {
+    result.push_back(0);
+  }
+  auto elements = sparse_int_vect_get_nonzero_elements(siv);
+  for (std::size_t i = 0; i < elements.indices.size(); ++i) {
+    result[elements.indices[i]] = elements.values[i];
+  }
+  return result;
+}
+
+std::unique_ptr<SparseIntVect> sparse_int_vect_binary_op(const SparseIntVect &a,
+                                                         const SparseIntVect &b,
+                                                         std::uint8_t op) {
+  return visit2(a, b, [&](const auto &x, const auto &y) {
+    switch (op) {
+      case '&':
+        return std::make_unique<SparseIntVect>(x & y);
+      case '|':
+        return std::make_unique<SparseIntVect>(x | y);
+      case '+':
+        check_add(x, y, 1);
+        return std::make_unique<SparseIntVect>(x + y);
+      case '-':
+        check_add(x, y, -1);
+        return std::make_unique<SparseIntVect>(x - y);
+    }
+    throw ValueErrorException("unsupported SparseIntVect operation");
+  });
+}
+
+void sparse_int_vect_assign_op(SparseIntVect &a, const SparseIntVect &b,
+                               std::uint8_t op) {
+  if (a.v.index() != b.v.index()) {
+    throw ValueErrorException("vectors of different types");
+  }
+  std::visit(
+      [&](auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        const auto &y = std::get<T>(b.v);
+        check_add(x, y, op == '+' ? 1 : -1);
+        if (op == '+') {
+          x += y;
+        } else {
+          x -= y;
+        }
+      },
+      a.v);
+}
+
+void sparse_int_vect_scalar_op(SparseIntVect &siv, std::uint8_t op,
+                               std::int32_t val) {
+  if (op == '/' && val == 0) {
+    throw ValueErrorException("SparseIntVect division by zero");
+  }
+  std::visit(
+      [&](auto &x) {
+        // RDKit applies these to the nonzero values only.
+        for (const auto &[idx, v] : x.getNonzeroElements()) {
+          long long a = v;
+          long long b = val;
+          switch (op) {
+            case '+':
+              checked(a + b);
+              break;
+            case '-':
+              checked(a - b);
+              break;
+            case '*':
+              checked(a * b);
+              break;
+            case '/':
+              checked(a / b);
+              break;
+          }
+        }
+        switch (op) {
+          case '+':
+            x += val;
+            break;
+          case '-':
+            x -= val;
+            break;
+          case '*':
+            x *= val;
+            break;
+          case '/':
+            x /= val;
+            break;
+        }
+      },
+      siv.v);
+}
+
+bool sparse_int_vect_eq(const SparseIntVect &a, const SparseIntVect &b) {
+  return a.v.index() == b.v.index() &&
+         visit2(a, b, [](const auto &x, const auto &y) { return x == y; });
+}
+
+double sparse_int_vect_similarity(const SparseIntVect &a,
+                                  const SparseIntVect &b, std::uint8_t metric,
+                                  double alpha, double beta,
+                                  bool return_distance, double bounds) {
+  return visit2(a, b, [&](const auto &x, const auto &y) {
+    switch (metric) {
+      case 0:
+        return DiceSimilarity(x, y, return_distance, bounds);
+      case 1:
+        return TanimotoSimilarity(x, y, return_distance, bounds);
+      case 2:
+        return TverskySimilarity(x, y, alpha, beta, return_distance, bounds);
+    }
+    throw ValueErrorException("unknown similarity metric");
+  });
+}
+
+std::unique_ptr<DiscreteValueVect> discrete_value_vect_new(
+    DiscreteValueType val_type, std::uint32_t length) {
+  return std::make_unique<DiscreteValueVect>(val_type, length);
+}
+
+std::unique_ptr<DiscreteValueVect> discrete_value_vect_from_pkl(
+    rust::Slice<const std::uint8_t> pkl) {
+  return std::make_unique<DiscreteValueVect>(to_std(pkl));
+}
+
+std::unique_ptr<DiscreteValueVect> discrete_value_vect_clone(
+    const DiscreteValueVect &dvv) {
+  return std::make_unique<DiscreteValueVect>(dvv);
+}
+
+std::uint32_t discrete_value_vect_get_val(const DiscreteValueVect &dvv,
+                                          std::uint32_t i) {
+  check_index(i, dvv.getLength());
+  return dvv.getVal(i);
+}
+
+void discrete_value_vect_set_val(DiscreteValueVect &dvv, std::uint32_t i,
+                                 std::uint32_t val) {
+  check_index(i, dvv.getLength());
+  dvv.setVal(i, val);
+}
+
+std::uint32_t discrete_value_vect_get_length(const DiscreteValueVect &dvv) {
+  return dvv.getLength();
+}
+
+DiscreteValueType discrete_value_vect_get_value_type(
+    const DiscreteValueVect &dvv) {
+  return dvv.getValueType();
+}
+
+std::uint32_t discrete_value_vect_get_total_val(const DiscreteValueVect &dvv) {
+  return dvv.getTotalVal();
+}
+
+rust::Vec<std::uint8_t> discrete_value_vect_to_binary(
+    const DiscreteValueVect &dvv) {
+  return to_bytes(dvv.toString());
+}
+
+std::unique_ptr<DiscreteValueVect> discrete_value_vect_binary_op(
+    const DiscreteValueVect &a, const DiscreteValueVect &b, std::uint8_t op) {
+  check_lengths(a, b);
+  switch (op) {
+    case '&':
+      return std::make_unique<DiscreteValueVect>(a & b);
+    case '|':
+      return std::make_unique<DiscreteValueVect>(a | b);
+    case '+':
+      return std::make_unique<DiscreteValueVect>(a + b);
+    case '-':
+      return std::make_unique<DiscreteValueVect>(a - b);
+  }
+  throw ValueErrorException("unsupported DiscreteValueVect operation");
+}
+
+void discrete_value_vect_assign_op(DiscreteValueVect &a,
+                                   const DiscreteValueVect &b,
+                                   std::uint8_t op) {
+  check_lengths(a, b);
+  if (op == '+') {
+    a += b;
+  } else {
+    a -= b;
+  }
+}
+
+std::uint32_t discrete_value_vect_compute_l1_norm(const DiscreteValueVect &a,
+                                                  const DiscreteValueVect &b) {
+  return RDKit::computeL1Norm(a, b);
+}
+
+std::unique_ptr<RealValueVect> real_value_vect_new(std::uint32_t length) {
+  return std::make_unique<RealValueVect>(length);
+}
+
+std::unique_ptr<RealValueVect> real_value_vect_from_pkl(
+    rust::Slice<const std::uint8_t> pkl) {
+  return std::make_unique<RealValueVect>(to_std(pkl));
+}
+
+std::unique_ptr<RealValueVect> real_value_vect_clone(const RealValueVect &rvv) {
+  return std::make_unique<RealValueVect>(rvv);
+}
+
+double real_value_vect_get_val(const RealValueVect &rvv, std::uint32_t i) {
+  check_index(i, rvv.getLength());
+  return rvv.getVal(i);
+}
+
+void real_value_vect_set_val(RealValueVect &rvv, std::uint32_t i, double val) {
+  check_index(i, rvv.getLength());
+  rvv.setVal(i, val);
+}
+
+std::uint32_t real_value_vect_get_length(const RealValueVect &rvv) {
+  return rvv.getLength();
+}
+
+double real_value_vect_get_total_val(const RealValueVect &rvv) {
+  return rvv.getTotalVal();
+}
+
+rust::Vec<std::uint8_t> real_value_vect_to_binary(const RealValueVect &rvv) {
+  return to_bytes(rvv.toString());
+}
+
+std::unique_ptr<RealValueVect> real_value_vect_binary_op(const RealValueVect &a,
+                                                         const RealValueVect &b,
+                                                         std::uint8_t op) {
+  check_lengths(a, b);
+  auto result = std::make_unique<RealValueVect>(a);
+  switch (op) {
+    case '&':
+      *result &= b;
+      return result;
+    case '|':
+      *result |= b;
+      return result;
+    case '+':
+      *result += b;
+      return result;
+    case '-':
+      *result -= b;
+      return result;
+  }
+  throw ValueErrorException("unsupported RealValueVect operation");
+}
+
+void real_value_vect_assign_op(RealValueVect &a, const RealValueVect &b,
+                               std::uint8_t op) {
+  check_lengths(a, b);
+  if (op == '+') {
+    a += b;
+  } else {
+    a -= b;
+  }
+}
+
+double real_value_vect_compute_l1_norm(const RealValueVect &a,
+                                       const RealValueVect &b) {
+  return RDKit::computeL1Norm(a, b);
+}
+
+}  // namespace rdkit_cxx

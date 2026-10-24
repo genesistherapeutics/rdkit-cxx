@@ -63,6 +63,10 @@ const char *type_name<bool>() {
   return "a True or False value";
 }
 template <>
+const char *type_name<ExplicitBitVect>() {
+  return "an ExplicitBitVect";
+}
+template <>
 const char *type_name<std::vector<unsigned>>() {
   return "a list of unsigned integers";
 }
@@ -258,6 +262,11 @@ bool props_get_bool_prop(const RDProps &obj, rust::Str key) {
   return get_typed<bool>(obj, key);
 }
 
+std::unique_ptr<BitVect> props_get_explicit_bit_vect_prop(const RDProps &obj,
+                                                          rust::Str key) {
+  return std::make_unique<BitVect>(get_typed<ExplicitBitVect>(obj, key));
+}
+
 rust::Vec<std::uint32_t> props_get_unsigned_vect_prop(const RDProps &obj,
                                                       rust::Str key) {
   rust::Vec<std::uint32_t> result;
@@ -323,6 +332,11 @@ void props_set_bool_prop(const RDProps &obj, rust::Str key, bool val,
 }
 
 // As MolClearProp in props.hpp: a missing key is not an error.
+void props_set_explicit_bit_vect_prop(const RDProps &obj, rust::Str key,
+                                      const BitVect &val) {
+  obj.setProp(std::string(key), as_explicit(val));
+}
+
 void props_clear_prop(const RDProps &obj, rust::Str key_str) {
   std::string key(key_str);
   if (obj.hasProp(key)) {

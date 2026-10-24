@@ -171,7 +171,9 @@ rule changes the rule first.
 - **T1.** Atom and bond indices are `u32`; conformer ids are `i32`, since
   they can be −1. A Python `int` otherwise follows the C++ parameter type.
   `float` → `f64`. `str` → `&str` in, `String` out. File names →
-  `impl AsRef<Path>`. Tuples of indices → `Vec<u32>`, nested →
+  `impl AsRef<Path>`, or a named `P: AsRef<Path>` in methods and associated
+  functions, whose manifest entries set `rust_generics = "<&str>"` so the
+  path test can name them. Tuples of indices → `Vec<u32>`, nested →
   `Vec<Vec<u32>>`. `None`-able results → `Option`. NumPy coordinate arrays →
   `Vec<Point3D>`. `dict` → `BTreeMap<String, _>`.
 

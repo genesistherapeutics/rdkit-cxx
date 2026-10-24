@@ -7,7 +7,9 @@
 pub(crate) mod atom;
 pub(crate) mod bond;
 pub(crate) mod conformer;
+pub(crate) mod data_structs;
 pub(crate) mod errors;
+pub(crate) mod fpb;
 pub(crate) mod geometry;
 pub(crate) mod mol;
 pub(crate) mod mol_bundle;

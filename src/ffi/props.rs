@@ -30,6 +30,7 @@ pub(crate) mod ffi {
         type Bond = crate::ffi::bond::ffi::Bond;
         type Conformer = crate::ffi::conformer::ffi::Conformer;
         type SubstanceGroup = crate::ffi::substance_group::ffi::SubstanceGroup;
+        type BitVect = crate::ffi::data_structs::ffi::BitVect;
 
         fn mol_as_props(mol: &RWMol) -> Result<&RDProps>;
         fn atom_as_props(atom: &Atom) -> Result<&RDProps>;
@@ -44,6 +45,8 @@ pub(crate) mod ffi {
         fn props_get_unsigned_prop(obj: &RDProps, key: &str) -> Result<u32>;
         fn props_get_double_prop(obj: &RDProps, key: &str) -> Result<f64>;
         fn props_get_bool_prop(obj: &RDProps, key: &str) -> Result<bool>;
+        fn props_get_explicit_bit_vect_prop(obj: &RDProps, key: &str)
+        -> Result<UniquePtr<BitVect>>;
         fn props_get_unsigned_vect_prop(obj: &RDProps, key: &str) -> Result<Vec<u32>>;
         fn props_get_string_vect_prop(
             obj: &RDProps,
@@ -71,6 +74,7 @@ pub(crate) mod ffi {
         ) -> Result<()>;
         fn props_set_double_prop(obj: &RDProps, key: &str, val: f64, computed: bool) -> Result<()>;
         fn props_set_bool_prop(obj: &RDProps, key: &str, val: bool, computed: bool) -> Result<()>;
+        fn props_set_explicit_bit_vect_prop(obj: &RDProps, key: &str, val: &BitVect) -> Result<()>;
         fn props_clear_prop(obj: &RDProps, key: &str) -> Result<()>;
         fn props_clear_computed_props(obj: &RDProps) -> Result<()>;
         fn mol_clear_computed_props(mol: &RWMol, include_rings: bool) -> Result<()>;

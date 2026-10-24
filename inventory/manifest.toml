@@ -6,7 +6,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.rdBase"]
+complete = ["rdkit.Chem.rdchem", "rdkit.DataStructs.cDataStructs", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"
@@ -72,6 +72,10 @@ rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_degree", "rdkit_cxx::chem::rdchem
 python = "rdkit.Chem.rdchem.Atom.GetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_double_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_double_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_double_prop"]
 overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetExplicitBitVectProp"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_explicit_bit_vect_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_explicit_bit_vect_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_explicit_bit_vect_prop"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetExplicitValence"
@@ -248,6 +252,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::set_chiral_tag", "rdkit_cxx::chem::rdche
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_double_prop", "rdkit_cxx::chem::rdchem::Atom::set_double_prop_with_computed", "rdkit_cxx::chem::rdchem::AtomMut::set_double_prop", "rdkit_cxx::chem::rdchem::AtomMut::set_double_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.SetExplicitBitVectProp"
+rust = ["rdkit_cxx::chem::rdchem::Atom::set_explicit_bit_vect_prop", "rdkit_cxx::chem::rdchem::AtomMut::set_explicit_bit_vect_prop"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetFormalCharge"
@@ -3079,6 +3087,1169 @@ name_exception = "a flag enum keeps Python's spelling (F1)"
 [[entry]]
 python = "rdkit.Chem.rdmolops.SanitizeMol"
 rust = ["rdkit_cxx::chem::rdmolops::sanitize_mol", "rdkit_cxx::chem::rdmolops::sanitize_mol_with_params"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.AllBitSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::all_bit_similarity"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.AllProbeBitsMatch"
+rust = ["rdkit_cxx::data_structs::c_data_structs::all_probe_bits_match", "rdkit_cxx::data_structs::c_data_structs::all_probe_bits_match_bytes"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5); the pickle overloads are all_probe_bits_match_bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.AsymmetricSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::asymmetric_similarity", "rdkit_cxx::data_structs::c_data_structs::asymmetric_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::asymmetric_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::asymmetric_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.AsymmetricSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::asymmetric_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.AsymmetricSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::asymmetric_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BitVectToBinaryText"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bit_vect_to_binary_text"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BitVectToFPSText"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bit_vect_to_fps_text"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BitVectToText"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bit_vect_to_text"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BraunBlanquetSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::braun_blanquet_similarity", "rdkit_cxx::data_structs::c_data_structs::braun_blanquet_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::braun_blanquet_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::braun_blanquet_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BraunBlanquetSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::braun_blanquet_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BraunBlanquetSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::braun_blanquet_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkAllBitSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_all_bit_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_all_bit_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkAsymmetricSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_asymmetric_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_asymmetric_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkBraunBlanquetSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_braun_blanquet_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_braun_blanquet_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkCosineSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_cosine_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_cosine_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkDiceSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_dice_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_dice_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::bulk_dice_similarity_sparse_int_vect", "rdkit_cxx::data_structs::c_data_structs::bulk_dice_similarity_sparse_int_vect_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect, and over the four sparse int vectors (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkKulczynskiSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_kulczynski_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_kulczynski_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkMcConnaugheySimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_mc_connaughey_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_mc_connaughey_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkOnBitSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_on_bit_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_on_bit_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkRogotGoldbergSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_rogot_goldberg_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_rogot_goldberg_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkRusselSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_russel_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_russel_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkSokalSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_sokal_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_sokal_similarity_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkTanimotoSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_tanimoto_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_tanimoto_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::bulk_tanimoto_similarity_sparse_int_vect", "rdkit_cxx::data_structs::c_data_structs::bulk_tanimoto_similarity_sparse_int_vect_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect, and over the four sparse int vectors (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.BulkTverskySimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bulk_tversky_similarity", "rdkit_cxx::data_structs::c_data_structs::bulk_tversky_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::bulk_tversky_similarity_sparse_int_vect", "rdkit_cxx::data_structs::c_data_structs::bulk_tversky_similarity_sparse_int_vect_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect, and over the four sparse int vectors (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ComputeL1Norm"
+rust = ["rdkit_cxx::data_structs::c_data_structs::compute_l1_norm", "rdkit_cxx::data_structs::c_data_structs::compute_l1_norm_real_value_vect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ConvertToExplicit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::convert_to_explicit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ConvertToNumpyArray"
+rust = ["rdkit_cxx::data_structs::c_data_structs::convert_to_numpy_array"]
+overloads_note = "generic over the vector types (A5); it returns the values Python writes into destArray"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.CosineSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::cosine_similarity", "rdkit_cxx::data_structs::c_data_structs::cosine_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::cosine_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::cosine_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.CosineSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::cosine_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.CosineSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::cosine_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.CreateFromBinaryText"
+rust = ["rdkit_cxx::data_structs::c_data_structs::create_from_binary_text"]
+overloads_note = "the str overload's text is bytes too"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.CreateFromBitString"
+rust = ["rdkit_cxx::data_structs::c_data_structs::create_from_bit_string"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.CreateFromFPSText"
+rust = ["rdkit_cxx::data_structs::c_data_structs::create_from_fps_text"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiceSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::dice_similarity", "rdkit_cxx::data_structs::c_data_structs::dice_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::dice_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::dice_similarity_bytes_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::dice_similarity_sparse_int_vect", "rdkit_cxx::data_structs::c_data_structs::dice_similarity_sparse_int_vect_with_params"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect, and over the four sparse int vectors (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiceSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::dice_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiceSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::dice_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueType"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueType.EIGHTBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Eightbitvalue"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueType.FOURBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Fourbitvalue"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueType.ONEBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Onebitvalue"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueType.SIXTEENBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Sixteenbitvalue"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueType.TWOBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Twobitvalue"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.GetTotalVal"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::get_total_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.GetValueType"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::get_value_type"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::get_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::default", "rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::new", "rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__len__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::len"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::set_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.EIGHTBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Eightbitvalue"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.FromBase64"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::from_base64"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.GetBit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.GetNumBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.GetNumOffBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_num_off_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.GetNumOnBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_num_on_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.GetOnBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_on_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.SetBit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::set_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.SetBitsFromList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::set_bits_from_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToBase64"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::to_base64"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToBinary"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::to_binary"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::to_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.UnSetBit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::un_set_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.UnSetBitsFromList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::un_set_bits_from_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__eq__"
+reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_bit"]
+overloads_note = "negative indices are not bound"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::default", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::new", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::from_pkl", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::new_with_bits_set"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__invert__"
+reason = "Python's operator protocol: `!&a` (Not)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__len__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__ne__"
+reason = "Python's operator protocol: `a != b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::set_bit", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::un_set_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__xor__"
+reason = "Python's operator protocol: `&a ^ &b` (BitXor)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FOURBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Fourbitvalue"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetBytes"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_bytes"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetContainingNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_containing_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetFP"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_fp"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetId"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_id"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetNumBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetTanimoto"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_tanimoto"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetTanimotoNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_tanimoto_neighbors", "rdkit_cxx::data_structs::c_data_structs::FPBReader::get_tanimoto_neighbors_with_threshold"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetTversky"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_tversky"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.GetTverskyNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get_tversky_neighbors", "rdkit_cxx::data_structs::c_data_structs::FPBReader::get_tversky_neighbors_with_threshold"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.Init"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::init"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::get"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::new", "rdkit_cxx::data_structs::c_data_structs::FPBReader::new_with_lazy"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FPBReader.__len__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::FPBReader::len"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.FoldFingerprint"
+rust = ["rdkit_cxx::data_structs::c_data_structs::fold_fingerprint", "rdkit_cxx::data_structs::c_data_structs::fold_fingerprint_with_fold_factor"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.InitFromDaylightString"
+rust = ["rdkit_cxx::data_structs::c_data_structs::init_from_daylight_string"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.GetLength"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::get_length"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.GetNonzeroElements"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::get_nonzero_elements"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.GetTotalVal"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::get_total_val", "rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::get_total_val_with_use_abs"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.ToBinary"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::to_binary"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.ToList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::to_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.UpdateFromSequence"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::update_from_sequence"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__eq__"
+reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::get_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__imul__"
+reason = "Python's operator protocol: `a *= n` (MulAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__itruediv__"
+reason = "Python's operator protocol: `a /= n` (DivAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__ne__"
+reason = "Python's operator protocol: `a != b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::set_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.KulczynskiSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::kulczynski_similarity", "rdkit_cxx::data_structs::c_data_structs::kulczynski_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::kulczynski_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::kulczynski_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.KulczynskiSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::kulczynski_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.KulczynskiSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::kulczynski_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.GetLength"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::get_length"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.GetNonzeroElements"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::get_nonzero_elements"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.GetTotalVal"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::get_total_val", "rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::get_total_val_with_use_abs"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.ToBinary"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::to_binary"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.ToList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::to_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.UpdateFromSequence"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::update_from_sequence"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__eq__"
+reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::get_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__imul__"
+reason = "Python's operator protocol: `a *= n` (MulAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__itruediv__"
+reason = "Python's operator protocol: `a /= n` (DivAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__ne__"
+reason = "Python's operator protocol: `a != b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::set_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.McConnaugheySimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::mc_connaughey_similarity", "rdkit_cxx::data_structs::c_data_structs::mc_connaughey_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::mc_connaughey_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::mc_connaughey_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.McConnaugheySimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::mc_connaughey_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.McConnaugheySimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::mc_connaughey_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.AddReader"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::add_reader"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.GetContainingNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_containing_neighbors", "rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_containing_neighbors_with_num_threads"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.GetNumBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.GetReader"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_reader"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.GetTanimotoNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_tanimoto_neighbors", "rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_tanimoto_neighbors_with_params"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.GetTverskyNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_tversky_neighbors", "rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::get_tversky_neighbors_with_params"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.Init"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::init"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::new", "rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::new_with_init_on_search"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.MultiFPBReader.__len__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::MultiFPBReader::len"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.NumBitsInCommon"
+rust = ["rdkit_cxx::data_structs::c_data_structs::num_bits_in_common"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ONEBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Onebitvalue"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.OffBitProjSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::off_bit_proj_similarity"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.OffBitsInCommon"
+rust = ["rdkit_cxx::data_structs::c_data_structs::off_bits_in_common"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.OnBitProjSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::on_bit_proj_similarity"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.OnBitSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::on_bit_similarity"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.OnBitsInCommon"
+rust = ["rdkit_cxx::data_structs::c_data_structs::on_bits_in_common"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.GetTotalVal"
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::get_total_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::get_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::default", "rdkit_cxx::data_structs::c_data_structs::RealValueVect::new", "rdkit_cxx::data_structs::c_data_structs::RealValueVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__len__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::len"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::set_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RogotGoldbergSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::rogot_goldberg_similarity", "rdkit_cxx::data_structs::c_data_structs::rogot_goldberg_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::rogot_goldberg_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::rogot_goldberg_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RogotGoldbergSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::rogot_goldberg_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RogotGoldbergSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::rogot_goldberg_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RusselSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::russel_similarity", "rdkit_cxx::data_structs::c_data_structs::russel_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::russel_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::russel_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RusselSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::russel_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.RusselSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::russel_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SIXTEENBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Sixteenbitvalue"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SokalSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::sokal_similarity", "rdkit_cxx::data_structs::c_data_structs::sokal_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::sokal_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::sokal_similarity_bytes_with_return_distance"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SokalSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::sokal_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SokalSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::sokal_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.FromBase64"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::from_base64"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.GetBit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.GetNumBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.GetNumOffBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_num_off_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.GetNumOnBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_num_on_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.GetOnBits"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_on_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.SetBit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::set_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.SetBitsFromList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::set_bits_from_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.ToBase64"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::to_base64"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.ToBinary"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::to_binary"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.ToList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::to_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.UnSetBit"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::un_set_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.UnSetBitsFromList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::un_set_bits_from_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__eq__"
+reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_bit"]
+overloads_note = "negative indices are not bound"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::default", "rdkit_cxx::data_structs::c_data_structs::SparseBitVect::new", "rdkit_cxx::data_structs::c_data_structs::SparseBitVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__invert__"
+reason = "Python's operator protocol: `!&a` (Not)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__len__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__ne__"
+reason = "Python's operator protocol: `a != b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::set_bit", "rdkit_cxx::data_structs::c_data_structs::SparseBitVect::un_set_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__xor__"
+reason = "Python's operator protocol: `&a ^ &b` (BitXor)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.TWOBITVALUE"
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueType::Twobitvalue"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.TanimotoSimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity", "rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_bytes_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_sparse_int_vect", "rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_sparse_int_vect_with_params"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect, and over the four sparse int vectors (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.TanimotoSimilarityNeighbors"
+rust = ["rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_neighbors"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.TanimotoSimilarityNeighbors_sparse"
+rust = ["rdkit_cxx::data_structs::c_data_structs::tanimoto_similarity_neighbors_sparse"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.TverskySimilarity"
+rust = ["rdkit_cxx::data_structs::c_data_structs::tversky_similarity", "rdkit_cxx::data_structs::c_data_structs::tversky_similarity_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::tversky_similarity_bytes", "rdkit_cxx::data_structs::c_data_structs::tversky_similarity_bytes_with_return_distance", "rdkit_cxx::data_structs::c_data_structs::tversky_similarity_sparse_int_vect", "rdkit_cxx::data_structs::c_data_structs::tversky_similarity_sparse_int_vect_with_params"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect, and over the four sparse int vectors (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.GetLength"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::get_length"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.GetNonzeroElements"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::get_nonzero_elements"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.GetTotalVal"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::get_total_val", "rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::get_total_val_with_use_abs"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.ToBinary"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::to_binary"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.ToList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::to_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.UpdateFromSequence"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::update_from_sequence"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__eq__"
+reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::get_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__imul__"
+reason = "Python's operator protocol: `a *= n` (MulAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__itruediv__"
+reason = "Python's operator protocol: `a /= n` (DivAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__ne__"
+reason = "Python's operator protocol: `a != b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::set_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.GetLength"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::get_length"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.GetNonzeroElements"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::get_nonzero_elements"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.GetTotalVal"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::get_total_val", "rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::get_total_val_with_use_abs"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.ToBinary"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::to_binary"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.ToList"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::to_list"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.UpdateFromSequence"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::update_from_sequence"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__and__"
+reason = "Python's operator protocol: `&a & &b` (BitAnd)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__eq__"
+reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__getitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::get_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__imul__"
+reason = "Python's operator protocol: `a *= n` (MulAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__init__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::from_pkl"]
+overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__itruediv__"
+reason = "Python's operator protocol: `a /= n` (DivAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__ne__"
+reason = "Python's operator protocol: `a != b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__or__"
+reason = "Python's operator protocol: `&a | &b` (BitOr)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__setitem__"
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::set_val"]
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D"
