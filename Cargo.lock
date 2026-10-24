@@ -140,6 +140,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "downstream"
+version = "0.0.0"
+dependencies = [
+ "rdkit-cxx",
+]
+
+[[package]]
 name = "equivalent"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"

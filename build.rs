@@ -11,10 +11,14 @@ use std::process::Command;
 const BRIDGES: &[&str] = &["rd_base"];
 
 fn main() {
-    let prefix = rdkit_prefix();
     for var in ["RDKIT_PREFIX", "CONDA_PREFIX", "CXX", "DOCS_RS"] {
         println!("cargo::rerun-if-env-changed={var}");
     }
+    // docs.rs has no RDKit. Documentation needs no C++, so skip building it.
+    if env::var_os("DOCS_RS").is_some() {
+        return;
+    }
+    let prefix = rdkit_prefix();
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
 

@@ -33,6 +33,25 @@ cargo test
 The build finds RDKit through `CONDA_PREFIX`. To build against another RDKit
 install, such as a development build, set `RDKIT_PREFIX` to its prefix.
 
+## Using the crate
+
+RDKit's shared libraries live in the conda environment, and conda does not set
+`LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
+rpath, which its own build script adds with one line:
+
+```rust,ignore
+// build.rs
+fn main() {
+    println!("cargo::rustc-link-arg=-Wl,-rpath,{}", std::env::var("DEP_RDKIT_CXX_LIBDIR").unwrap());
+}
+```
+
+This crate cannot add the rpath for you: a dependency's build script reaches
+only its own package's binaries and tests. (conda-forge's Linux compilers add
+an rpath to `$CONDA_PREFIX/lib` on their own, so without the line a binary may
+run inside the environment and fail when linked any other way.) See
+[`downstream/`](downstream) for a complete example.
+
 ## License
 
 BSD-3-Clause, as RDKit.

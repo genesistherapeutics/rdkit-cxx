@@ -9,6 +9,9 @@ repository = "https://github.com/skearnes/rdkit-cxx"
 links = "rdkit_cxx"
 publish = false
 
+[workspace]
+members = [".", "downstream"]
+
 [dependencies]
 cxx = "=1.0.205"
 

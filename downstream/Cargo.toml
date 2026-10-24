@@ -1,0 +1,9 @@
+[package]
+name = "downstream"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Checks that a crate depending on rdkit-cxx runs with no library path set"
+
+[dependencies]
+rdkit-cxx = { path = ".." }
