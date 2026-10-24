@@ -25,11 +25,16 @@ rdkit_cxx_check_version("${rdkit_VERSION}" "${RDKIT_CXX_SUPPORTED_SERIES}")
 # One wrapper source per area (CONVENTIONS.md B4).
 set(RDKIT_CXX_SOURCES
   src/rd_base.cpp
+  src/errors.cpp
+  src/mol.cpp
+  src/molfiles.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
 set(RDKIT_CXX_RDKIT_TARGETS
   RDGeneral
+  GraphMol
+  SmilesParse
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
