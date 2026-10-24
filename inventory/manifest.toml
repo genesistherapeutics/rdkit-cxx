@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -481,6 +481,80 @@ rust_kind = "field"
 python = "rdkit.Chem.rdFingerprintGenerator.TopologicalTorsionFingerprintOptions.torsionAtomCount"
 rust = ["rdkit_cxx::chem::rd_fingerprint_generator::TopologicalTorsionFingerprintOptions::torsion_atom_count"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.CreateEmptyForceFieldForMol"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::create_empty_force_field_for_mol", "rdkit_cxx::chem::rd_force_field_helpers::create_empty_force_field_for_mol_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFAngleBendParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_angle_bend_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFBondStretchParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_bond_stretch_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFInversionParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_inversion_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFTorsionParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_torsion_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFVdWParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_vdw_params"]
+name_exception = "VdW is one word: get_uff_vdw_params"
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFGetMoleculeForceField"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_force_field", "rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_force_field_with_params"]
+overloads_note = "a None MMFFMolProperties, for which Python returns None, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFGetMoleculeProperties"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_properties", "rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_properties_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFHasAllMoleculeParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_has_all_molecule_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule", "rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMoleculeConfs"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule_confs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFSanitizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_sanitize_molecule"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.OptimizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule", "rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule_with_max_iters"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.OptimizeMoleculeConfs"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule_confs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFGetMoleculeForceField"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_get_molecule_force_field", "rdkit_cxx::chem::rd_force_field_helpers::uff_get_molecule_force_field_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFHasAllMoleculeParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_has_all_molecule_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFOptimizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule", "rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFOptimizeMoleculeConfs"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder"
@@ -8141,6 +8215,259 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__sub__"
 reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.AddDistanceConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::add_distance_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.AddExtraPoint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::add_extra_point", "rdkit_cxx::force_field::rd_force_field::ForceField::add_extra_point_with_fixed"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.AddFixedPoint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::add_fixed_point"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.CalcEnergy"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::calc_energy", "rdkit_cxx::force_field::rd_force_field::ForceField::calc_energy_with_pos"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.CalcGrad"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::calc_grad", "rdkit_cxx::force_field::rd_force_field::ForceField::calc_grad_with_pos"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Dimension"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::dimension"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.GetExtraPointPos"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::get_extra_point_pos"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Initialize"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::initialize"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddAngleConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_angle_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddDistanceConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_distance_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddPositionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_position_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddTorsionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_torsion_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Minimize"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::minimize", "rdkit_cxx::force_field::rd_force_field::ForceField::minimize_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MinimizeTrajectory"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::minimize_trajectory", "rdkit_cxx::force_field::rd_force_field::ForceField::minimize_trajectory_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.NumPoints"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::num_points"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Positions"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::positions"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddAngleConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_angle_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddDistanceConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_distance_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddPositionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_position_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddTorsionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_torsion_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFAngleBendParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_angle_bend_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFAngleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_angle_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFAtomType"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_atom_type"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFBondStretchParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_bond_stretch_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFBondTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_bond_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFDielectricConstant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_dielectric_constant"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFDielectricModel"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_dielectric_model"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFEleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_ele_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFFormalCharge"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_formal_charge"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFOopBendParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_oop_bend_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFOopTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_oop_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFPartialCharge"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_partial_charge"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFStretchBendParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_stretch_bend_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFStretchBendTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_stretch_bend_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFTorsionParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_torsion_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFTorsionTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_torsion_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFVariant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_variant"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFVdWParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_vdw_params"]
+name_exception = "VdW is one word: get_mmff_vdw_params"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFVdWTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_vdw_term"]
+name_exception = "VdW is one word: get_mmff_vdw_term"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFAngleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_angle_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_angle_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFBondTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_bond_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_bond_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFDielectricConstant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_constant", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_constant_with_diel_const"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFDielectricModel"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_model", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_model_with_diel_model"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFEleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_ele_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_ele_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFOopTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_oop_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_oop_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFStretchBendTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_stretch_bend_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_stretch_bend_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFTorsionTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_torsion_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_torsion_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVariant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_variant", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_variant_with_mmff_variant"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVdWTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_vdw_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_vdw_term_with_state"]
+name_exception = "VdW is one word: set_mmff_vdw_term"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVerbosity"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_verbosity", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_verbosity_with_verbosity"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.__init__"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::new", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::new_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_HIGH"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityHigh"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_LOW"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityLow"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_NONE"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityNone"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.GetEnergy"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_energy"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.GetPoint2D"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_point_2d"]
+name_exception = "digits stay with their letters: get_point_2d"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.GetPoint3D"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_point_3d"]
+name_exception = "digits stay with their letters: get_point_3d"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.SetEnergy"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::set_energy"]
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.ComputeDihedralAngle"

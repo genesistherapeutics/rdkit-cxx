@@ -78,6 +78,9 @@ set(RDKIT_CXX_SOURCES
   src/png.cpp
   src/suppliers.cpp
   src/writers.cpp
+  src/threads.cpp
+  src/force_field.cpp
+  src/force_field_helpers.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -104,6 +107,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ChemReactions
   Deprotect
   Descriptors
+  ForceField
+  ForceFieldHelpers
+  Trajectory
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

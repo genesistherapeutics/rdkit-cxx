@@ -20,6 +20,8 @@ pub(crate) mod descriptors_3d;
 pub(crate) mod errors;
 pub(crate) mod fingerprint_generator;
 pub(crate) mod fingerprints;
+pub(crate) mod force_field;
+pub(crate) mod force_field_helpers;
 pub(crate) mod fpb;
 pub(crate) mod geometry;
 pub(crate) mod graph;

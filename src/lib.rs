@@ -10,6 +10,7 @@ pub mod data_structs;
 pub mod error;
 mod ffi;
 mod flags;
+pub mod force_field;
 pub mod geometry;
 pub mod rd_base;
 mod util;
