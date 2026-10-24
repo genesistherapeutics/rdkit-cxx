@@ -6,10 +6,9 @@
 
 #include <algorithm>
 
+#include <RDGeneral/Exceptions.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
-
-#include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/ffi/props.rs.h"
 

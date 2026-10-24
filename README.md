@@ -111,6 +111,17 @@ The build needs RDKit's dependencies and `nanobind` 2.x (conda-forge:
 `nanobind<3 numpy libboost-devel eigen cairo freetype cxx-compiler cmake
 ninja`). The optional modules match conda-forge's build.
 
+## Development
+
+[pre-commit](https://pre-commit.com) hooks format the Rust, C++, and Python,
+add license headers, and regenerate `tests/manifest_paths.rs`; CI runs them on
+every file.
+
+```sh
+pip install pre-commit
+pre-commit install
+```
+
 ## License
 
 BSD-3-Clause, as RDKit.

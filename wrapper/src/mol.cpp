@@ -62,9 +62,9 @@ void set_default_pickle_properties(unsigned props) {
 rust::Vec<std::uint32_t> property_pickle_option_values() {
   using namespace RDKit::PicklerOps;
   rust::Vec<std::uint32_t> values;
-  for (unsigned v : {NoProps, MolProps, AtomProps, BondProps, QueryAtomData,
-                     PrivateProps, ComputedProps, AllProps, CoordsAsDouble,
-                     NoConformers}) {
+  for (unsigned v :
+       {NoProps, MolProps, AtomProps, BondProps, QueryAtomData, PrivateProps,
+        ComputedProps, AllProps, CoordsAsDouble, NoConformers}) {
     values.push_back(v);
   }
   return values;

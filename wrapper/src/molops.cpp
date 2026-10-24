@@ -37,9 +37,12 @@ void kekulize(RWMol &mol, bool clear_aromatic_flags, bool canonical) {
 
 AddHsParametersData add_hs_parameters_default() {
   RDKit::MolOps::AddHsParameters params;
-  return AddHsParametersData{params.explicitOnly,   params.addCoords,
-                             params.addResidueInfo, params.skipQueries,
-                             false,                 {}};
+  return AddHsParametersData{params.explicitOnly,
+                             params.addCoords,
+                             params.addResidueInfo,
+                             params.skipQueries,
+                             false,
+                             {}};
 }
 
 // As addHs2 in Code/GraphMol/nbWrap/MolOps.cpp: a copy gains the hydrogens.

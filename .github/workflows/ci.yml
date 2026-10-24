@@ -69,17 +69,20 @@ jobs:
       - name: The generated path test is up to date
         run: git diff --exit-code tests/manifest_paths.rs
 
-  licenses:
+  pre-commit:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+      - uses: actions/setup-python@v6
         with:
-          go-version: ">=1.16"
-      - name: Install addlicense
-        run: go install github.com/google/addlicense@v1.2.0
-      - name: Check license headers
-        run: '"${HOME}/go/bin/addlicense" -check -c "Steven Kearnes" -l bsd -ignore "target/**" .'
+          python-version: "3.12"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      - run: pip install pre-commit
+      # Runs every hook, addlicense among them, on every file. CI also runs on
+      # main, where no-commit-to-branch would always fail.
+      - run: SKIP=no-commit-to-branch pre-commit run --all-files --show-diff-on-failure
 
   docs:
     runs-on: ubuntu-24.04

@@ -1,0 +1,21 @@
+# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Ruff settings for the inventory scripts.
+line-length = 120
+target-version = "py311"
+
+[lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+
+[lint.isort]
+# The tests import the scripts beside them.
+known-first-party = ["check", "inventory"]

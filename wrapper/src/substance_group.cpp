@@ -96,12 +96,10 @@ void mol_clear_substance_groups(RWMol &mol) {
 }
 
 std::uint32_t mol_create_substance_group(RWMol &mol, rust::Str type) {
-  return RDKit::addSubstanceGroup(mol,
-                                  SubstanceGroup(&mol, std::string(type)));
+  return RDKit::addSubstanceGroup(mol, SubstanceGroup(&mol, std::string(type)));
 }
 
-std::uint32_t mol_create_data_substance_group(RWMol &mol,
-                                              rust::Str field_name,
+std::uint32_t mol_create_data_substance_group(RWMol &mol, rust::Str field_name,
                                               rust::Str value) {
   SubstanceGroup sgroup(&mol, "DAT");
   sgroup.setProp("FIELDNAME", std::string(field_name));

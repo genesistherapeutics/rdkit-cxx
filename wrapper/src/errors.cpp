@@ -4,6 +4,9 @@
 
 #include "rdkit-cxx/errors.h"
 
+#include <stdexcept>
+#include <vector>
+
 #include <GraphMol/Conformer.h>
 #include <GraphMol/SanitException.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
@@ -12,9 +15,6 @@
 #include <RDGeneral/FileParseException.h>
 #include <RDGeneral/Invariant.h>
 #include <RDGeneral/RDLog.h>
-
-#include <stdexcept>
-#include <vector>
 
 namespace rdkit_cxx {
 
