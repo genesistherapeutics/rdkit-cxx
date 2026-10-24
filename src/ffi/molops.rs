@@ -64,6 +64,7 @@ pub(crate) mod ffi {
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type MolList;
+        type BorrowedMols;
         type SanitizeFlags;
 
         fn sanitize_mol(mol: Pin<&mut RWMol>, sanitize_ops: u32, catch_errors: bool)
@@ -89,6 +90,19 @@ pub(crate) mod ffi {
         fn has_query_hs(mol: &RWMol) -> Result<Vec<bool>>;
 
         fn mol_list_size(list: &MolList) -> Result<usize>;
+        fn mol_list_name(list: &MolList, i: usize) -> Result<&CxxString>;
         fn mol_list_take(list: Pin<&mut MolList>, i: usize) -> Result<UniquePtr<RWMol>>;
+
+        fn borrowed_mols_new() -> Result<UniquePtr<BorrowedMols>>;
+        fn borrowed_mols_push(
+            list: Pin<&mut BorrowedMols>,
+            name: &str,
+            mol: Pin<&mut RWMol>,
+        ) -> Result<()>;
+        fn borrowed_mols_push_shared(
+            list: Pin<&mut BorrowedMols>,
+            name: &str,
+            mol: &RWMol,
+        ) -> Result<()>;
     }
 }

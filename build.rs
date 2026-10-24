@@ -37,6 +37,10 @@ const BRIDGES: &[&str] = &[
     "grid",
     "perception",
     "chirality",
+    "fingerprints",
+    "adjust_query",
+    "graph",
+    "transforms",
 ];
 
 fn main() {

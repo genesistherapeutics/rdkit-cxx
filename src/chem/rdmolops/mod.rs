@@ -4,22 +4,33 @@
 
 //! Mirrors `rdkit.Chem.rdmolops`.
 
+mod adjust_query;
+mod fingerprints;
+mod graph;
 mod hs;
 mod perception;
 mod stereo;
+mod transforms;
+
+use std::collections::BTreeMap;
+use std::pin::Pin;
 
 use cxx::UniquePtr;
 
-use crate::Result;
 use crate::chem::Mol;
 use crate::chem::rdchem::StereoInfo;
 use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::molops::ffi;
+use crate::{Error, Result};
 
+pub use adjust_query::*;
+pub use fingerprints::*;
+pub use graph::*;
 pub use hs::*;
 pub use perception::*;
 pub use stereo::*;
+pub use transforms::*;
 
 /// Sanitization operations, as bits. Mirrors `rdmolops.SanitizeFlags`
 /// (CONVENTIONS.md F1).
@@ -254,4 +265,58 @@ pub(crate) fn mol_list_into_vec(mut list: UniquePtr<ffi::MolList>) -> Vec<Mol> {
     (0..size)
         .map(|i| Mol::from_ffi(expect_ok(ffi::mol_list_take(list.pin_mut(), i))))
         .collect()
+}
+
+/// Moves each named molecule out of a C++ list (W6); invalid UTF-8 in a name
+/// is `Error::Value` (T2).
+pub(crate) fn mol_list_into_map(
+    mut list: UniquePtr<ffi::MolList>,
+) -> Result<BTreeMap<String, Mol>> {
+    let size = expect_ok(ffi::mol_list_size(
+        list.as_ref().expect("RDKit returned a null list"),
+    ));
+    let mut map = BTreeMap::new();
+    for i in 0..size {
+        let name = expect_ok(ffi::mol_list_name(&list, i))
+            .to_str()
+            .map_err(|err| Error::Value {
+                message: format!("invalid UTF-8 in a string from RDKit: {err}"),
+            })?
+            .to_owned();
+        let mol = Mol::from_ffi(expect_ok(ffi::mol_list_take(list.pin_mut(), i)));
+        map.insert(name, mol);
+    }
+    Ok(map)
+}
+
+/// Calls `f` with a C++ list that borrows the molecules, which RDKit may
+/// modify (W8).
+pub(crate) fn with_borrowed_mols<'a, T>(
+    mols: impl IntoIterator<Item = (&'a str, &'a mut Mol)>,
+    f: impl FnOnce(Pin<&mut ffi::BorrowedMols>) -> T,
+) -> T {
+    let mut list = expect_ok(ffi::borrowed_mols_new());
+    for (name, mol) in mols {
+        expect_ok(ffi::borrowed_mols_push(list.pin_mut(), name, mol.pin_mut()));
+    }
+    // The list drops here, before the borrows of the molecules end.
+    f(list.pin_mut())
+}
+
+/// Calls `f` with a C++ list that borrows the molecules, for calls that only
+/// read them (W8).
+pub(crate) fn with_borrowed_mols_shared<'a, T>(
+    mols: impl IntoIterator<Item = (&'a str, &'a Mol)>,
+    f: impl FnOnce(Pin<&mut ffi::BorrowedMols>) -> T,
+) -> T {
+    let mut list = expect_ok(ffi::borrowed_mols_new());
+    for (name, mol) in mols {
+        expect_ok(ffi::borrowed_mols_push_shared(
+            list.pin_mut(),
+            name,
+            mol.as_ffi(),
+        ));
+    }
+    // The list drops here, before the borrows of the molecules end.
+    f(list.pin_mut())
 }

@@ -12,6 +12,8 @@
 #include <string>
 #include <vector>
 
+#include <RDGeneral/Exceptions.h>
+
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -20,6 +22,16 @@ namespace rdkit_cxx {
 inline std::string to_std(rust::Slice<const std::uint8_t> bytes) {
   return std::string(reinterpret_cast<const char *>(bytes.data()),
                      bytes.size());
+}
+
+// A file path's bytes (A8). C++ opens a path at its first NUL, which would
+// be another file, so a path holding one is refused, as Python's open does.
+inline std::string to_path(rust::Slice<const std::uint8_t> bytes) {
+  auto path = to_std(bytes);
+  if (path.find('\0') != std::string::npos) {
+    throw ValueErrorException("embedded null byte in a file path");
+  }
+  return path;
 }
 
 inline rust::Vec<std::uint8_t> to_bytes(const std::string &text) {

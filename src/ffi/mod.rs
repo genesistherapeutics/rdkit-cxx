@@ -4,14 +4,17 @@
 
 //! Private cxx bridges, one per wrapper header (CONVENTIONS.md B3).
 
+pub(crate) mod adjust_query;
 pub(crate) mod atom;
 pub(crate) mod bond;
 pub(crate) mod chirality;
 pub(crate) mod conformer;
 pub(crate) mod data_structs;
 pub(crate) mod errors;
+pub(crate) mod fingerprints;
 pub(crate) mod fpb;
 pub(crate) mod geometry;
+pub(crate) mod graph;
 pub(crate) mod grid;
 pub(crate) mod mol;
 pub(crate) mod mol_bundle;
@@ -28,3 +31,4 @@ pub(crate) mod ring_info;
 pub(crate) mod stereo;
 pub(crate) mod substance_group;
 pub(crate) mod substruct;
+pub(crate) mod transforms;

@@ -74,4 +74,13 @@ impl ffi::IndexList {
     pub(crate) fn into_nested(lists: Vec<ffi::IndexList>) -> Vec<Vec<u32>> {
         lists.into_iter().map(|list| list.indices).collect()
     }
+
+    pub(crate) fn from_nested(lists: &[Vec<u32>]) -> Vec<ffi::IndexList> {
+        lists
+            .iter()
+            .map(|indices| ffi::IndexList {
+                indices: indices.clone(),
+            })
+            .collect()
+    }
 }
