@@ -92,6 +92,73 @@ std::unique_ptr<MolList> get_mol_frags_as_mols(const RWMol &mol,
   return list;
 }
 
+RemoveHsParametersData remove_hs_parameters_default() {
+  RDKit::MolOps::RemoveHsParameters params;
+  return RemoveHsParametersData{params.removeDegreeZero,
+                                params.removeHigherDegrees,
+                                params.removeOnlyHNeighbors,
+                                params.removeIsotopes,
+                                params.removeAndTrackIsotopes,
+                                params.removeDummyNeighbors,
+                                params.removeDefiningBondStereo,
+                                params.removeWithWedgedBond,
+                                params.removeWithQuery,
+                                params.removeMapped,
+                                params.removeInSGroups,
+                                params.showWarnings,
+                                params.removeNonimplicit,
+                                params.updateExplicitCount,
+                                params.removeHydrides,
+                                params.removeNontetrahedralNeighbors,
+                                true};
+}
+
+std::unique_ptr<RWMol> remove_hs(const RWMol &mol,
+                                 const RemoveHsParametersData &data) {
+  RDKit::MolOps::RemoveHsParameters params;
+  params.removeDegreeZero = data.remove_degree_zero;
+  params.removeHigherDegrees = data.remove_higher_degrees;
+  params.removeOnlyHNeighbors = data.remove_only_h_neighbors;
+  params.removeIsotopes = data.remove_isotopes;
+  params.removeAndTrackIsotopes = data.remove_and_track_isotopes;
+  params.removeDummyNeighbors = data.remove_dummy_neighbors;
+  params.removeDefiningBondStereo = data.remove_defining_bond_stereo;
+  params.removeWithWedgedBond = data.remove_with_wedged_bond;
+  params.removeWithQuery = data.remove_with_query;
+  params.removeMapped = data.remove_mapped;
+  params.removeInSGroups = data.remove_in_s_groups;
+  params.showWarnings = data.show_warnings;
+  params.removeNonimplicit = data.remove_nonimplicit;
+  params.updateExplicitCount = data.update_explicit_count;
+  params.removeHydrides = data.remove_hydrides;
+  params.removeNontetrahedralNeighbors = data.remove_nontetrahedral_neighbors;
+  auto res = std::make_unique<RWMol>(mol);
+  RDKit::MolOps::removeHs(*res, params, data.sanitize);
+  return res;
+}
+
+std::unique_ptr<RWMol> remove_all_hs(const RWMol &mol, bool sanitize) {
+  auto res = std::make_unique<RWMol>(mol);
+  RDKit::MolOps::removeAllHs(*res, sanitize);
+  return res;
+}
+
+std::unique_ptr<RWMol> merge_query_hs(const RWMol &mol,
+                                      bool merge_unmapped_only,
+                                      bool merge_isotopes) {
+  auto res = std::make_unique<RWMol>(mol);
+  RDKit::MolOps::mergeQueryHs(*res, merge_unmapped_only, merge_isotopes);
+  return res;
+}
+
+rust::Vec<bool> has_query_hs(const RWMol &mol) {
+  auto [has, unmergeable] = RDKit::MolOps::hasQueryHs(mol);
+  rust::Vec<bool> result;
+  result.push_back(has);
+  result.push_back(unmergeable);
+  return result;
+}
+
 std::size_t mol_list_size(const MolList &list) { return list.size(); }
 
 std::unique_ptr<RWMol> mol_list_take(MolList &list, std::size_t i) {

@@ -127,6 +127,11 @@ rule changes the rule first.
   return `Error::Value`.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`).
+- **U5.** RDKit settings kept in environment variables
+  (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
+  `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
+  every `getenv` in the process, as `std::env::set_var` does. Their setters
+  are `unsafe fn` with `set_var`'s safety contract; the getters are safe.
 
 ## Properties
 
