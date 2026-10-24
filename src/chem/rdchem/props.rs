@@ -79,7 +79,7 @@ impl Default for GetPropsAsDictParams {
     }
 }
 
-fn strings(list: cxx::UniquePtr<cxx::CxxVector<cxx::CxxString>>) -> Result<Vec<String>> {
+pub(crate) fn strings(list: cxx::UniquePtr<cxx::CxxVector<cxx::CxxString>>) -> Result<Vec<String>> {
     let list = list.as_ref().expect("RDKit returned a null list");
     list.iter()
         .map(|text| {
@@ -123,9 +123,22 @@ pub(crate) fn get_dict(
 }
 
 /// Stamps the property getters onto a type with
-/// `fn props(&self) -> &ffi::RDProps` (W3, P1).
+/// `fn props(&self) -> &ffi::RDProps` (W3, P1). The `dict_defaults` form
+/// sets the parameters `get_props_as_dict` uses, for classes whose Python
+/// `GetPropsAsDict` has other defaults.
 macro_rules! prop_getters {
     ($type:ident $(<$lifetime:lifetime>)?) => {
+        $crate::chem::rdchem::props::prop_getters!(
+            $type $(<$lifetime>)?,
+            dict_defaults = $crate::chem::rdchem::GetPropsAsDictParams::default(),
+            dict_doc = "Public, non-computed properties"
+        );
+    };
+    (
+        $type:ident $(<$lifetime:lifetime>)?,
+        dict_defaults = $dict_defaults:expr,
+        dict_doc = $dict_doc:literal
+    ) => {
         impl$(<$lifetime>)? $type$(<$lifetime>)? {
             /// Mirrors `HasProp`.
             pub fn has_prop(&self, key: &str) -> bool {
@@ -180,14 +193,16 @@ macro_rules! prop_getters {
                 $crate::chem::rdchem::props::get_names(self.props(), params)
             }
 
-            /// Public, non-computed properties, with strings that parse as
-            /// numbers converted. Mirrors `GetPropsAsDict`.
+            #[doc = concat!(
+                $dict_doc,
+                ", with strings that parse as numbers converted. Mirrors `GetPropsAsDict`."
+            )]
             pub fn get_props_as_dict(
                 &self,
             ) -> $crate::Result<
                 std::collections::BTreeMap<String, $crate::chem::rdchem::PropValue>,
             > {
-                self.get_props_as_dict_with_params(&Default::default())
+                self.get_props_as_dict_with_params(&$dict_defaults)
             }
 
             /// Mirrors `GetPropsAsDict(includePrivate, includeComputed,

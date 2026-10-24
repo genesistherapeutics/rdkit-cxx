@@ -18,4 +18,5 @@ pub(crate) mod props;
 pub(crate) mod rd_base;
 pub(crate) mod ring_info;
 pub(crate) mod stereo;
+pub(crate) mod substance_group;
 pub(crate) mod substruct;

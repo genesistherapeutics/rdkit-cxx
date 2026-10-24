@@ -105,7 +105,9 @@ rule changes the rule first.
   than being written per class. Every class with properties derives from
   `RDKit::RDProps`, so one set of wrappers takes `const RDProps&`, and each
   class has an upcast, `<class>_as_props`. The `default=` overloads of the
-  getters are not bound: `has_prop` covers them.
+  getters are not bound: `has_prop` covers them. A class whose Python
+  `GetPropsAsDict` has other defaults (`SubstanceGroup`) passes them to
+  `prop_getters!`; `GetPropsAsDictParams::default()` stays `Mol`'s.
 
 ## Documentation
 

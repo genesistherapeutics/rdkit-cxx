@@ -9,6 +9,10 @@
 complete = ["rdkit.rdBase"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.AddMolSubstanceGroup"
+rust = ["rdkit_cxx::chem::rdchem::add_mol_substance_group"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.AllProps"
 rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::AllProps"]
 name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::AllProps"
@@ -952,6 +956,10 @@ python = "rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED"
 rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.ClearMolSubstanceGroups"
+rust = ["rdkit_cxx::chem::rdchem::clear_mol_substance_groups"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.ComputedProps"
 rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::ComputedProps"]
 name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::ComputedProps"
@@ -1087,6 +1095,14 @@ rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::CoordsAsDouble"]
 name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::CoordsAsDouble"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.CreateMolDataSubstanceGroup"
+rust = ["rdkit_cxx::chem::rdchem::create_mol_data_substance_group"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CreateMolSubstanceGroup"
+rust = ["rdkit_cxx::chem::rdchem::create_mol_substance_group"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.CreateStereoGroup"
 rust = ["rdkit_cxx::chem::rdchem::create_stereo_group", "rdkit_cxx::chem::rdchem::create_stereo_group_with_params"]
 
@@ -1114,6 +1130,14 @@ rust = ["rdkit_cxx::chem::rdchem::get_atom_value"]
 [[entry]]
 python = "rdkit.Chem.rdchem.GetDefaultPickleProperties"
 rust = ["rdkit_cxx::chem::rdchem::get_default_pickle_properties"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetMolSubstanceGroupWithIdx"
+rust = ["rdkit_cxx::chem::rdchem::get_mol_substance_group_with_idx", "rdkit_cxx::chem::rdchem::get_mol_substance_group_with_idx_mut"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetMolSubstanceGroups"
+rust = ["rdkit_cxx::chem::rdchem::get_mol_substance_groups"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.GetNumPiElectrons"
@@ -1929,6 +1953,212 @@ rust = ["rdkit_cxx::chem::rdchem::StereoType::BondDouble"]
 [[entry]]
 python = "rdkit.Chem.rdchem.StereoType.Unspecified"
 rust = ["rdkit_cxx::chem::rdchem::StereoType::Unspecified"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef", "rdkit_cxx::chem::rdchem::SubstanceGroupMut"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddAtomWithBookmark"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_atom_with_bookmark"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddAtomWithIdx"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_atom_with_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddAttachPoint"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_attach_point"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddBondWithBookmark"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_bond_with_bookmark"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddBondWithIdx"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_bond_with_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddBracket"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_bracket"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddCState"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_c_state"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddParentAtomWithBookmark"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_parent_atom_with_bookmark"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.AddParentAtomWithIdx"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::add_parent_atom_with_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.ClearAttachPoints"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::clear_attach_points"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.ClearBrackets"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::clear_brackets"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.ClearCStates"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::clear_c_states"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.ClearProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::clear_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetAtoms"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_atoms", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetAttachPoints"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_attach_points", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_attach_points"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetBonds"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_bonds", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetBoolProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_bool_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_bool_prop"]
+overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetBrackets"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_brackets", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_brackets"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetCStates"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_c_states", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_c_states"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetDoubleProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_double_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_double_prop"]
+overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetIndexInMol"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_index_in_mol", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_index_in_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetIntProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_int_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_int_prop"]
+overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetOwningMol"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_owning_mol", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_owning_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetParentAtoms"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_parent_atoms", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_parent_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_prop_auto_convert"]
+overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetPropNames"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_prop_names", "rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_prop_names_with_params", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_prop_names", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_prop_names_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetPropsAsDict"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_props_as_dict", "rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_props_as_dict_with_params", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_props_as_dict", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_props_as_dict_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetStringVectProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_string_vect_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_string_vect_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetUnsignedProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_unsigned_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_unsigned_prop"]
+overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.GetUnsignedVectProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_unsigned_vect_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_unsigned_vect_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.HasProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::has_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::has_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetAtoms"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetBonds"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetBoolProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_bool_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_bool_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetDoubleProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_double_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_double_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetIntProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_int_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_int_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetParentAtoms"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_parent_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup.SetUnsignedProp"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_unsigned_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::set_unsigned_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupAttach"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupAttach"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupAttach.__init__"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupAttach::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupAttach.aIdx"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupAttach::a_idx"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupAttach.id"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupAttach::id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupAttach.lvIdx"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupAttach::lv_idx"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupCState"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupCState"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupCState.__init__"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupCState::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupCState.bondIdx"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupCState::bond_idx"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroupCState.vector"
+rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupCState::vector"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters"

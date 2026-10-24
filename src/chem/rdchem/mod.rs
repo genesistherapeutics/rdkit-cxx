@@ -17,6 +17,7 @@ pub(crate) mod props;
 mod ring_info;
 mod rwmol;
 mod stereo;
+mod substance_group;
 mod substruct;
 
 pub use atom::{__noatom_for_tests, Atom, AtomMut, AtomRef, GetSmartsParams};
@@ -47,5 +48,11 @@ pub use rwmol::{RWMol, ReplaceAtomParams, ReplaceBondParams};
 pub use stereo::{
     CreateStereoGroupParams, StereoGroup, StereoInfo, create_stereo_group,
     create_stereo_group_with_params, forward_stereo_group_ids,
+};
+pub use substance_group::{
+    SubstanceGroupAttach, SubstanceGroupCState, SubstanceGroupMut, SubstanceGroupRef,
+    add_mol_substance_group, clear_mol_substance_groups, create_mol_data_substance_group,
+    create_mol_substance_group, get_mol_substance_group_with_idx,
+    get_mol_substance_group_with_idx_mut, get_mol_substance_groups,
 };
 pub use substruct::SubstructMatchParameters;

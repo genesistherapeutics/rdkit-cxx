@@ -63,6 +63,14 @@ template <>
 const char *type_name<bool>() {
   return "a True or False value";
 }
+template <>
+const char *type_name<std::vector<unsigned>>() {
+  return "a list of unsigned integers";
+}
+template <>
+const char *type_name<std::vector<std::string>>() {
+  return "a list of strings";
+}
 
 // As GetProp<RDOb, T> in props.hpp.
 template <class T>
@@ -175,6 +183,10 @@ const RDProps &atom_as_props(const Atom &atom) { return atom; }
 const RDProps &bond_as_props(const Bond &bond) { return bond; }
 const RDProps &conformer_as_props(const Conformer &conf) { return conf; }
 
+const RDProps &substance_group_as_props(const SubstanceGroup &sgroup) {
+  return sgroup;
+}
+
 bool props_has_prop(const RDProps &obj, rust::Str key) {
   return obj.hasProp(std::string(key));
 }
@@ -245,6 +257,21 @@ double props_get_double_prop(const RDProps &obj, rust::Str key) {
 
 bool props_get_bool_prop(const RDProps &obj, rust::Str key) {
   return get_typed<bool>(obj, key);
+}
+
+rust::Vec<std::uint32_t> props_get_unsigned_vect_prop(const RDProps &obj,
+                                                      rust::Str key) {
+  rust::Vec<std::uint32_t> result;
+  for (auto val : get_typed<std::vector<unsigned>>(obj, key)) {
+    result.push_back(val);
+  }
+  return result;
+}
+
+std::unique_ptr<std::vector<std::string>> props_get_string_vect_prop(
+    const RDProps &obj, rust::Str key) {
+  return std::make_unique<std::vector<std::string>>(
+      get_typed<std::vector<std::string>>(obj, key));
 }
 
 std::unique_ptr<std::vector<std::string>> props_get_prop_names(
