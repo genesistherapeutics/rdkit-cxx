@@ -161,8 +161,25 @@ rust::Vec<bool> has_query_hs(const RWMol &mol) {
 
 std::size_t mol_list_size(const MolList &list) { return list.size(); }
 
+const std::string &mol_list_name(const MolList &list, std::size_t i) {
+  return list.name(i);
+}
+
 std::unique_ptr<RWMol> mol_list_take(MolList &list, std::size_t i) {
   return list.take(i);
+}
+
+std::unique_ptr<BorrowedMols> borrowed_mols_new() {
+  return std::make_unique<BorrowedMols>();
+}
+
+void borrowed_mols_push(BorrowedMols &list, rust::Str name, RWMol &mol) {
+  list.push(std::string(name), mol);
+}
+
+void borrowed_mols_push_shared(BorrowedMols &list, rust::Str name,
+                               const RWMol &mol) {
+  list.push(std::string(name), const_cast<RWMol &>(mol));
 }
 
 }  // namespace rdkit_cxx

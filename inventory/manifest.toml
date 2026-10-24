@@ -6,7 +6,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdchem", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"
@@ -2994,6 +2994,10 @@ rust = ["rdkit_cxx::chem::rdmolops::AddHsParameters::skip_queries"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.AddRecursiveQuery"
+rust = ["rdkit_cxx::chem::rdmolops::add_recursive_query", "rdkit_cxx::chem::rdmolops::add_recursive_query_with_preserve_existing_query"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.AddStereoAnnotations"
 rust = ["rdkit_cxx::chem::rdmolops::add_stereo_annotations", "rdkit_cxx::chem::rdmolops::add_stereo_annotations_with_params"]
 
@@ -3326,6 +3330,10 @@ python = "rdkit.Chem.rdmolops.CollapseAttachmentPoints"
 rust = ["rdkit_cxx::chem::rdmolops::collapse_attachment_points", "rdkit_cxx::chem::rdmolops::collapse_attachment_points_with_marked_only"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.CombineMols"
+rust = ["rdkit_cxx::chem::rdmolops::combine_mols", "rdkit_cxx::chem::rdmolops::combine_mols_with_offset"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.ComputeAtomCIPRanks"
 rust = ["rdkit_cxx::chem::rdmolops::compute_atom_cip_ranks"]
 
@@ -3334,12 +3342,21 @@ python = "rdkit.Chem.rdmolops.ConvertGenericQueriesToSubstanceGroups"
 rust = ["rdkit_cxx::chem::rdmolops::convert_generic_queries_to_substance_groups"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.CopyMolSubset"
+rust = ["rdkit_cxx::chem::rdmolops::copy_mol_subset", "rdkit_cxx::chem::rdmolops::copy_mol_subset_with_params", "rdkit_cxx::chem::rdmolops::copy_mol_subset_with_outputs", "rdkit_cxx::chem::rdmolops::copy_mol_subset_atoms_bonds", "rdkit_cxx::chem::rdmolops::copy_mol_subset_atoms_bonds_with_params", "rdkit_cxx::chem::rdmolops::copy_mol_subset_atoms_bonds_with_outputs"]
+overloads_note = "the (mol, atomIndices, bondIndices) overloads are copy_mol_subset_atoms_bonds (A5); the subsetInfo overloads are the _with_outputs forms (A9)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.CountAtomElec"
 rust = ["rdkit_cxx::chem::rdmolops::count_atom_elec"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.DativeBondsToHaptic"
 rust = ["rdkit_cxx::chem::rdmolops::dative_bonds_to_haptic"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.DeleteSubstructs"
+rust = ["rdkit_cxx::chem::rdmolops::delete_substructs", "rdkit_cxx::chem::rdmolops::delete_substructs_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.DetectBondStereoChemistry"
@@ -3362,6 +3379,22 @@ python = "rdkit.Chem.rdmolops.FastFindRings"
 rust = ["rdkit_cxx::chem::rdmolops::fast_find_rings"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.FindAllPathsOfLengthN"
+rust = ["rdkit_cxx::chem::rdmolops::find_all_paths_of_length_n", "rdkit_cxx::chem::rdmolops::find_all_paths_of_length_n_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindAllSubgraphsOfLengthMToN"
+rust = ["rdkit_cxx::chem::rdmolops::find_all_subgraphs_of_length_m_to_n", "rdkit_cxx::chem::rdmolops::find_all_subgraphs_of_length_m_to_n_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindAllSubgraphsOfLengthN"
+rust = ["rdkit_cxx::chem::rdmolops::find_all_subgraphs_of_length_n", "rdkit_cxx::chem::rdmolops::find_all_subgraphs_of_length_n_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindAtomEnvironmentOfRadiusN"
+rust = ["rdkit_cxx::chem::rdmolops::find_atom_environment_of_radius_n", "rdkit_cxx::chem::rdmolops::find_atom_environment_of_radius_n_with_params", "rdkit_cxx::chem::rdmolops::find_atom_environment_of_radius_n_with_outputs"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.FindMesoCenters"
 rust = ["rdkit_cxx::chem::rdmolops::find_meso_centers", "rdkit_cxx::chem::rdmolops::find_meso_centers_with_params"]
 
@@ -3378,8 +3411,40 @@ python = "rdkit.Chem.rdmolops.FindRingFamilies"
 rust = ["rdkit_cxx::chem::rdmolops::find_ring_families", "rdkit_cxx::chem::rdmolops::find_ring_families_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.FindUniqueSubgraphsOfLengthN"
+rust = ["rdkit_cxx::chem::rdmolops::find_unique_subgraphs_of_length_n", "rdkit_cxx::chem::rdmolops::find_unique_subgraphs_of_length_n_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FragmentOnBRICSBonds"
+rust = ["rdkit_cxx::chem::rdmolops::fragment_on_brics_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FragmentOnBonds"
+rust = ["rdkit_cxx::chem::rdmolops::fragment_on_bonds", "rdkit_cxx::chem::rdmolops::fragment_on_bonds_with_params", "rdkit_cxx::chem::rdmolops::fragment_on_bonds_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FragmentOnSomeBonds"
+rust = ["rdkit_cxx::chem::rdmolops::fragment_on_some_bonds", "rdkit_cxx::chem::rdmolops::fragment_on_some_bonds_with_params", "rdkit_cxx::chem::rdmolops::fragment_on_some_bonds_return_cuts_per_atom", "rdkit_cxx::chem::rdmolops::fragment_on_some_bonds_return_cuts_per_atom_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.Get3DDistanceMatrix"
+rust = ["rdkit_cxx::chem::rdmolops::get_3d_distance_matrix", "rdkit_cxx::chem::rdmolops::get_3d_distance_matrix_with_params"]
+name_exception = "digits stay with their letters: get_3d_distance_matrix"
+overloads_note = "force and prefix steer RDKit's matrix cache, which the crate never keeps (U6)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetAdjacencyMatrix"
+rust = ["rdkit_cxx::chem::rdmolops::get_adjacency_matrix", "rdkit_cxx::chem::rdmolops::get_adjacency_matrix_with_empty_val", "rdkit_cxx::chem::rdmolops::get_adjacency_matrix_use_bo", "rdkit_cxx::chem::rdmolops::get_adjacency_matrix_use_bo_with_empty_val"]
+overloads_note = "force and prefix steer RDKit's matrix cache, which the crate never keeps (U6)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.GetAllowNontetrahedralChirality"
 rust = ["rdkit_cxx::chem::rdmolops::get_allow_nontetrahedral_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetDistanceMatrix"
+rust = ["rdkit_cxx::chem::rdmolops::get_distance_matrix", "rdkit_cxx::chem::rdmolops::get_distance_matrix_with_params"]
+overloads_note = "force and prefix steer RDKit's matrix cache, which the crate never keeps (U6)"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetFormalCharge"
@@ -3388,6 +3453,10 @@ rust = ["rdkit_cxx::chem::rdmolops::get_formal_charge"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetMolFrags"
 rust = ["rdkit_cxx::chem::rdmolops::get_mol_frags", "rdkit_cxx::chem::rdmolops::get_mol_frags_as_mols", "rdkit_cxx::chem::rdmolops::get_mol_frags_as_mols_with_sanitize_frags"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetMostSubstitutedCoreMatch"
+rust = ["rdkit_cxx::chem::rdmolops::get_most_substituted_core_match"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetSSSR"
@@ -3438,8 +3507,82 @@ python = "rdkit.Chem.rdmolops.MergeQueryHs"
 rust = ["rdkit_cxx::chem::rdmolops::merge_query_hs", "rdkit_cxx::chem::rdmolops::merge_query_hs_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.MolAddRecursiveQueries"
+rust = ["rdkit_cxx::chem::rdmolops::mol_add_recursive_queries"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipLabel"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipLabel"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipLabel.AtomMapNumber"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipLabel::AtomMapNumber"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipLabel.AtomType"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipLabel::AtomType"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipLabel.FragmentOnBonds"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipLabel::FragmentOnBonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipLabel.Isotope"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipLabel::Isotope"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.__init__"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.alignCoordinates"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams::align_coordinates"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.enforceValenceRules"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams::enforce_valence_rules"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.generateCoordinates"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams::generate_coordinates"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.label"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams::label"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MolzipParams.setAtomSymbols"
+rust = ["rdkit_cxx::chem::rdmolops::MolzipParams::set_atom_symbols"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MurckoDecompose"
+rust = ["rdkit_cxx::chem::rdmolops::murcko_decompose"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.NeedsHs"
 rust = ["rdkit_cxx::chem::rdmolops::needs_hs"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ParseMolQueryDefFile"
+rust = ["rdkit_cxx::chem::rdmolops::parse_mol_query_def_file", "rdkit_cxx::chem::rdmolops::parse_mol_query_def_file_with_params", "rdkit_cxx::chem::rdmolops::parse_mol_query_def_file_text", "rdkit_cxx::chem::rdmolops::parse_mol_query_def_file_text_with_params"]
+overloads_note = "a file name is the path forms; a file object's contents are the _text forms (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.PathToSubmol"
+rust = ["rdkit_cxx::chem::rdmolops::path_to_submol", "rdkit_cxx::chem::rdmolops::path_to_submol_with_use_query", "rdkit_cxx::chem::rdmolops::path_to_submol_with_outputs"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.PatternFingerprint"
@@ -3558,6 +3701,23 @@ name_exception = "digits stay with their letters: explicit_3d"
 [[entry]]
 python = "rdkit.Chem.rdmolops.RemoveStereochemistry"
 rust = ["rdkit_cxx::chem::rdmolops::remove_stereochemistry"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RenumberAtoms"
+rust = ["rdkit_cxx::chem::rdmolops::renumber_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ReplaceCore"
+rust = ["rdkit_cxx::chem::rdmolops::replace_core", "rdkit_cxx::chem::rdmolops::replace_core_with_params", "rdkit_cxx::chem::rdmolops::replace_core_query", "rdkit_cxx::chem::rdmolops::replace_core_query_with_params"]
+overloads_note = "the (mol, coreQuery) overload, which matches the core itself, is replace_core_query (A5); matches are (core atom, molecule atom) pairs, which cover a list of molecule atoms by core index"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ReplaceSidechains"
+rust = ["rdkit_cxx::chem::rdmolops::replace_sidechains", "rdkit_cxx::chem::rdmolops::replace_sidechains_with_use_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ReplaceSubstructs"
+rust = ["rdkit_cxx::chem::rdmolops::replace_substructs", "rdkit_cxx::chem::rdmolops::replace_substructs_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.SANITIZE_ADJUSTHS"
@@ -3752,6 +3912,18 @@ python = "rdkit.Chem.rdmolops.SimplifyEnhancedStereo"
 rust = ["rdkit_cxx::chem::rdmolops::simplify_enhanced_stereo", "rdkit_cxx::chem::rdmolops::simplify_enhanced_stereo_with_remove_affected_stereo_groups"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.SortMatchesByDegreeOfCoreSubstitution"
+rust = ["rdkit_cxx::chem::rdmolops::sort_matches_by_degree_of_core_substitution"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SplitMolByPDBChainId"
+rust = ["rdkit_cxx::chem::rdmolops::split_mol_by_pdb_chain_id", "rdkit_cxx::chem::rdmolops::split_mol_by_pdb_chain_id_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SplitMolByPDBResidues"
+rust = ["rdkit_cxx::chem::rdmolops::split_mol_by_pdb_residues", "rdkit_cxx::chem::rdmolops::split_mol_by_pdb_residues_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.StereoBondThresholds"
 rust = ["rdkit_cxx::chem::rdmolops::StereoBondThresholds"]
 
@@ -3790,6 +3962,74 @@ rust = ["rdkit_cxx::chem::rdmolops::StereoGroupAbsOptions::NeverInclude"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.StereoGroupAbsOptions.OnlyIncludeWhenOtherGroupsExist"
 rust = ["rdkit_cxx::chem::rdmolops::StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetInfo"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetInfo"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetInfo.__init__"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetInfo::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetInfo.atomMapping"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetInfo::atom_mapping"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetInfo.bondMapping"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetInfo::bond_mapping"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetMethod"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetMethod"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetMethod.BONDS"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetMethod::Bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetMethod.BONDS_BETWEEN_ATOMS"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetMethod::BondsBetweenAtoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.__init__"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.clearComputedProps"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::clear_computed_props"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.conformerIdx"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::conformer_idx"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.copyAsQuery"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::copy_as_query"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.copyCoordinates"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::copy_coordinates"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.method"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::method"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SubsetOptions.sanitize"
+rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::sanitize"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm"
@@ -3930,6 +4170,15 @@ rust = ["rdkit_cxx::chem::rdmolops::wedge_bond"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.WedgeMolBonds"
 rust = ["rdkit_cxx::chem::rdmolops::wedge_mol_bonds", "rdkit_cxx::chem::rdmolops::wedge_mol_bonds_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.molzip"
+rust = ["rdkit_cxx::chem::rdmolops::molzip", "rdkit_cxx::chem::rdmolops::molzip_with_params", "rdkit_cxx::chem::rdmolops::molzip_single", "rdkit_cxx::chem::rdmolops::molzip_single_with_params", "rdkit_cxx::chem::rdmolops::molzip_row", "rdkit_cxx::chem::rdmolops::molzip_row_with_params"]
+overloads_note = "molzip(a) is molzip_single and molzip(row) is molzip_row (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.molzipFragments"
+rust = ["rdkit_cxx::chem::rdmolops::molzip_fragments", "rdkit_cxx::chem::rdmolops::molzip_fragments_with_params"]
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.AllBitSimilarity"

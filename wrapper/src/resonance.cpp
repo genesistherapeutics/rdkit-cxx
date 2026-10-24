@@ -7,15 +7,23 @@
 #include "rdkit-cxx/resonance.h"
 
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
 namespace {
 
-// RDKit returns new ROMols; Rust molecules own RWMols (W1).
+// RDKit returns new ROMols; Rust molecules own RWMols (W1). Resonance
+// structures are copies of the supplier's molecule, which carries the distance
+// matrix it computed, so the copies drop it (U6).
 std::unique_ptr<RWMol> to_rwmol(RDKit::ROMol *mol) {
   std::unique_ptr<RDKit::ROMol> owned(mol);
-  return owned ? std::make_unique<RWMol>(*owned) : nullptr;
+  if (!owned) {
+    return nullptr;
+  }
+  auto result = std::make_unique<RWMol>(*owned);
+  clear_matrix_caches(*result);
+  return result;
 }
 
 }  // namespace

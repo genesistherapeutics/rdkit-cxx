@@ -47,6 +47,13 @@ std::unique_ptr<RWMol> merge_query_hs(const RWMol &mol,
 rust::Vec<bool> has_query_hs(const RWMol &mol);
 
 std::size_t mol_list_size(const MolList &list);
+const std::string &mol_list_name(const MolList &list, std::size_t i);
 std::unique_ptr<RWMol> mol_list_take(MolList &list, std::size_t i);
+
+std::unique_ptr<BorrowedMols> borrowed_mols_new();
+void borrowed_mols_push(BorrowedMols &list, rust::Str name, RWMol &mol);
+// Only for calls that read the molecules.
+void borrowed_mols_push_shared(BorrowedMols &list, rust::Str name,
+                               const RWMol &mol);
 
 }  // namespace rdkit_cxx

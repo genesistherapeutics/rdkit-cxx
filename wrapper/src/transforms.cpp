@@ -1,0 +1,453 @@
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+#include "rdkit-cxx/transforms.h"
+
+#include <algorithm>
+#include <map>
+#include <mutex>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <GraphMol/ChemTransforms/ChemTransforms.h>
+#include <GraphMol/ChemTransforms/MolFragmenter.h>
+#include <GraphMol/QueryAtom.h>
+#include <GraphMol/QueryOps.h>
+#include <GraphMol/Substruct/SubstructUtils.h>
+#include <RDGeneral/Exceptions.h>
+
+#include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/ffi/chirality.rs.h"
+#include "rdkit-cxx/ffi/geometry.rs.h"
+#include "rdkit-cxx/ffi/transforms.rs.h"
+#include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/util.h"
+
+namespace rdkit_cxx {
+
+namespace {
+
+// RDKit returns new ROMols; Rust molecules own RWMols (W1). Null stays null
+// for the functions that return None. None of these calls computes a matrix
+// cache, but the copy drops any the input carried (U6).
+std::unique_ptr<RWMol> to_rwmol(RDKit::ROMol *mol) {
+  std::unique_ptr<RDKit::ROMol> owned(mol);
+  if (!owned) {
+    return nullptr;
+  }
+  auto result = std::make_unique<RWMol>(*owned);
+  clear_matrix_caches(*result);
+  return result;
+}
+
+std::unique_ptr<RWMol> to_rwmol(std::unique_ptr<RDKit::ROMol> mol) {
+  return to_rwmol(mol.release());
+}
+
+std::vector<RDKit::MatchVectType> to_matches(
+    rust::Slice<const IndexList> matches) {
+  // As seqOfSeqsToMatchVectTypeVect in Code/GraphMol/nbWrap/MolOps.cpp.
+  if (matches.empty()) {
+    throw ValueErrorException("matches must not be empty");
+  }
+  std::vector<RDKit::MatchVectType> result;
+  for (const auto &match : matches) {
+    if (match.indices.empty()) {
+      throw ValueErrorException("tuples in matches must not be empty");
+    }
+    RDKit::MatchVectType pairs;
+    for (std::size_t i = 0; i < match.indices.size(); ++i) {
+      // ScoreMatchesByDegreeOfCoreSubstitution range-checks both indices
+      // through getAtomWithIdx; an index past INT_MAX becomes negative here
+      // and fails that check.
+      pairs.emplace_back(static_cast<int>(i),
+                         static_cast<int>(match.indices[i]));
+    }
+    result.push_back(std::move(pairs));
+  }
+  return result;
+}
+
+std::vector<std::pair<unsigned, unsigned>> to_label_pairs(
+    rust::Slice<const IndexPair> labels) {
+  std::vector<std::pair<unsigned, unsigned>> result;
+  for (const auto &label : labels) {
+    result.emplace_back(label.first, label.second);
+  }
+  return result;
+}
+
+// As fragmentOnBondsHelper and fragmentOnSomeBondsHelper in
+// Code/GraphMol/nbWrap/MolOps.cpp, which check the bond indices before
+// fragmentOnBonds calls getBondWithIdx, and the option sizes, which RDKit
+// only checks with PRECONDITION.
+std::vector<unsigned> check_fragment_args(
+    const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
+    bool has_dummy_labels, rust::Slice<const IndexPair> dummy_labels,
+    bool has_bond_types, rust::Slice<const BondType> bond_types) {
+  if (bond_indices.empty()) {
+    throw ValueErrorException("empty bond indices");
+  }
+  std::vector<unsigned> indices;
+  for (auto idx : bond_indices) {
+    check_index(idx, mol.getNumBonds());
+    indices.push_back(idx);
+  }
+  if (has_dummy_labels && dummy_labels.size() < bond_indices.size()) {
+    throw ValueErrorException("dummyLabels shorter than bondIndices");
+  }
+  if (has_bond_types && bond_types.size() != bond_indices.size()) {
+    throw ValueErrorException("bondTypes shorter than bondIndices");
+  }
+  return indices;
+}
+
+RDKit::MolzipParams to_params(const MolzipParamsData &data) {
+  RDKit::MolzipParams params;
+  params.label = data.label;
+  params.atomSymbols.clear();
+  for (const auto &symbol : data.atom_symbols) {
+    params.atomSymbols.emplace_back(symbol);
+  }
+  params.enforceValenceRules = data.enforce_valence_rules;
+  params.generateCoordinates = data.generate_coordinates;
+  params.alignCoordinates = data.align_coordinates;
+  return params;
+}
+
+// Whether the atom carries a label, as get_label in MolZip.cpp.
+bool has_zip_label(const RDKit::Atom *atom, const RDKit::MolzipParams &params) {
+  switch (params.label) {
+    case RDKit::MolzipLabel::AtomMapNumber:
+      return atom->getAtomicNum() == 0 && atom->getAtomMapNum() != 0;
+    case RDKit::MolzipLabel::Isotope:
+      return atom->getAtomicNum() == 0 && atom->getIsotope() != 0;
+    case RDKit::MolzipLabel::FragmentOnBonds:
+      return atom->getAtomicNum() == 0;
+    case RDKit::MolzipLabel::AtomType:
+      return std::find(params.atomSymbols.begin(), params.atomSymbols.end(),
+                       atom->getSymbol()) != params.atomSymbols.end();
+    default:
+      return false;
+  }
+}
+
+// molzip takes the atom bonded to each labeled atom from get_other_atom,
+// which is null unless the labeled atom has exactly one neighbor. RDKit
+// dereferences that null pointer with the FragmentOnBonds label, and when
+// zipping a list, which tracks attachment indices, so such an atom is
+// refused there. Zipping a list also dereferences a null dummy for every
+// linker ([*:1][*:2], two labeled atoms bonded to each other), so a list may
+// not hold one.
+void check_zip_labels(const RDKit::ROMol &mol,
+                      const RDKit::MolzipParams &params, bool zipping_list) {
+  if (params.label != RDKit::MolzipLabel::FragmentOnBonds && !zipping_list) {
+    return;
+  }
+  for (const auto *atom : mol.atoms()) {
+    if (!has_zip_label(atom, params)) {
+      continue;
+    }
+    if (atom->getDegree() != 1) {
+      throw ValueErrorException("molzip: labeled atom " +
+                                std::to_string(atom->getIdx()) +
+                                " must have exactly one neighbor");
+    }
+    if (zipping_list && params.label != RDKit::MolzipLabel::FragmentOnBonds) {
+      for (const auto *nbr : mol.atomNeighbors(atom)) {
+        if (has_zip_label(nbr, params)) {
+          throw ValueErrorException(
+              "molzip: RDKit cannot zip a list that holds a linker (atoms " +
+              std::to_string(atom->getIdx()) + " and " +
+              std::to_string(nbr->getIdx()) + ")");
+        }
+      }
+    }
+  }
+}
+
+// fragmentOnBRICSBonds fills its pattern globals on first use, with no lock,
+// and then matches every call against those shared query molecules (U4).
+std::mutex &brics_mutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
+}  // namespace
+
+std::unique_ptr<RWMol> delete_substructs(const RWMol &mol, const RWMol &query,
+                                         bool only_frags, bool use_chirality) {
+  return to_rwmol(
+      RDKit::deleteSubstructs(mol, query, only_frags, use_chirality));
+}
+
+// As replaceSubstructures in Code/GraphMol/nbWrap/MolOps.cpp.
+std::unique_ptr<MolList> replace_substructs(
+    const RWMol &mol, const RWMol &query, const RWMol &replacement,
+    bool replace_all, std::uint32_t replacement_connection_point,
+    bool use_chirality) {
+  auto results =
+      RDKit::replaceSubstructs(mol, query, replacement, replace_all,
+                               replacement_connection_point, use_chirality);
+  auto list = std::make_unique<MolList>();
+  for (const auto &result : results) {
+    auto copy = std::make_unique<RWMol>(*result);
+    clear_matrix_caches(*copy);
+    list->push(std::move(copy));
+  }
+  return list;
+}
+
+std::unique_ptr<RWMol> replace_sidechains(const RWMol &mol,
+                                          const RWMol &core_query,
+                                          bool use_chirality) {
+  return to_rwmol(RDKit::replaceSidechains(mol, core_query, use_chirality));
+}
+
+// As replaceCoreHelper in Code/GraphMol/nbWrap/MolOps.cpp, with the match as
+// (core atom, molecule atom) pairs; replaceCore checks both ranges. An index
+// past INT_MAX becomes negative here and fails that check.
+std::unique_ptr<RWMol> replace_core_with_matches(
+    const RWMol &mol, const RWMol &core, rust::Slice<const IndexPair> matches,
+    bool replace_dummies, bool label_by_index, bool require_dummy_match) {
+  RDKit::MatchVectType match;
+  for (const auto &pair : matches) {
+    match.emplace_back(static_cast<int>(pair.first),
+                       static_cast<int>(pair.second));
+  }
+  return to_rwmol(RDKit::replaceCore(mol, core, match, replace_dummies,
+                                     label_by_index, require_dummy_match));
+}
+
+std::unique_ptr<RWMol> replace_core(const RWMol &mol, const RWMol &core_query,
+                                    bool replace_dummies, bool label_by_index,
+                                    bool require_dummy_match,
+                                    bool use_chirality) {
+  return to_rwmol(RDKit::replaceCore(mol, core_query, replace_dummies,
+                                     label_by_index, require_dummy_match,
+                                     use_chirality));
+}
+
+// MurckoDecompose computes the distance matrix on its const input, with
+// force, and reads its paths (U6).
+std::unique_ptr<RWMol> murcko_decompose(const RWMol &mol) {
+  MatrixCacheGuard guard(mol);
+  return to_rwmol(RDKit::MurckoDecompose(mol));
+}
+
+std::unique_ptr<RWMol> combine_mols(const RWMol &mol1, const RWMol &mol2,
+                                    const Point3D &offset) {
+  return to_rwmol(RDKit::combineMols(
+      mol1, mol2, RDGeom::Point3D(offset.x, offset.y, offset.z)));
+}
+
+// As getMostSubstitutedCoreMatchHelper in Code/GraphMol/nbWrap/MolOps.cpp.
+// RDKit returns a reference into the matches, which live until the copy.
+rust::Vec<std::uint32_t> get_most_substituted_core_match(
+    const RWMol &mol, const RWMol &core, rust::Slice<const IndexList> matches) {
+  auto match_vects = to_matches(matches);
+  const auto &best = RDKit::getMostSubstitutedCoreMatch(mol, core, match_vects);
+  rust::Vec<std::uint32_t> result;
+  for (const auto &pair : best) {
+    result.push_back(static_cast<std::uint32_t>(pair.second));
+  }
+  return result;
+}
+
+rust::Vec<IndexList> sort_matches_by_degree_of_core_substitution(
+    const RWMol &mol, const RWMol &core, rust::Slice<const IndexList> matches) {
+  auto match_vects = to_matches(matches);
+  rust::Vec<IndexList> result;
+  for (const auto &match :
+       RDKit::sortMatchesByDegreeOfCoreSubstitution(mol, core, match_vects)) {
+    rust::Vec<std::uint32_t> indices;
+    for (const auto &pair : match) {
+      indices.push_back(static_cast<std::uint32_t>(pair.second));
+    }
+    result.push_back(IndexList{std::move(indices)});
+  }
+  return result;
+}
+
+// As addRecursiveQuery in Code/GraphMol/nbWrap/MolOps.cpp.
+void add_recursive_query(RWMol &mol, const RWMol &query, std::uint32_t atom_idx,
+                         bool preserve_existing_query) {
+  if (atom_idx >= mol.getNumAtoms()) {
+    throw ValueErrorException("atom index exceeds mol.GetNumAtoms()");
+  }
+  auto q =
+      std::make_unique<RDKit::RecursiveStructureQuery>(new RDKit::ROMol(query));
+  auto *atom = mol.getAtomWithIdx(atom_idx);
+  if (!atom->hasQuery()) {
+    RDKit::QueryAtom query_atom(*atom);
+    mol.replaceAtom(atom_idx, &query_atom);
+    atom = mol.getAtomWithIdx(atom_idx);
+  }
+  if (!preserve_existing_query) {
+    atom->setQuery(q.release());
+  } else {
+    atom->expandQuery(q.release(), Queries::COMPOSITE_AND);
+  }
+}
+
+// addRecursiveQueries copies each query molecule into its query.
+void add_recursive_queries(RWMol &mol, BorrowedMols &queries,
+                           rust::Str prop_name) {
+  std::map<std::string, RDKit::ROMOL_SPTR> map;
+  for (std::size_t i = 0; i < queries.names().size(); ++i) {
+    map[queries.names()[i]] = queries.mols()[i];
+  }
+  RDKit::addRecursiveQueries(mol, map, std::string(prop_name));
+}
+
+std::unique_ptr<MolList> parse_mol_query_def_file(
+    rust::Slice<const std::uint8_t> path, bool standardize, rust::Str delimiter,
+    rust::Str comment, std::uint32_t name_column, std::uint32_t smarts_column) {
+  std::map<std::string, RDKit::ROMOL_SPTR> defs;
+  RDKit::parseQueryDefFile(to_path(path), defs, standardize,
+                           std::string(delimiter), std::string(comment),
+                           name_column, smarts_column);
+  auto list = std::make_unique<MolList>();
+  for (const auto &[name, mol] : defs) {
+    list->push_named(name, std::make_unique<RWMol>(*mol));
+  }
+  return list;
+}
+
+std::unique_ptr<MolList> parse_mol_query_def_text(
+    rust::Str text, bool standardize, rust::Str delimiter, rust::Str comment,
+    std::uint32_t name_column, std::uint32_t smarts_column) {
+  std::map<std::string, RDKit::ROMOL_SPTR> defs;
+  RDKit::parseQueryDefText(std::string(text), defs, standardize,
+                           std::string(delimiter), std::string(comment),
+                           name_column, smarts_column);
+  auto list = std::make_unique<MolList>();
+  for (const auto &[name, mol] : defs) {
+    list->push_named(name, std::make_unique<RWMol>(*mol));
+  }
+  return list;
+}
+
+std::unique_ptr<RWMol> fragment_on_bonds(
+    const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
+    bool add_dummies, bool has_dummy_labels,
+    rust::Slice<const IndexPair> dummy_labels, bool has_bond_types,
+    rust::Slice<const BondType> bond_types,
+    rust::Vec<std::uint32_t> &cuts_per_atom) {
+  auto indices = check_fragment_args(mol, bond_indices, has_dummy_labels,
+                                     dummy_labels, has_bond_types, bond_types);
+  auto labels = to_label_pairs(dummy_labels);
+  std::vector<BondType> types(bond_types.begin(), bond_types.end());
+  std::vector<unsigned> cuts(mol.getNumAtoms());
+  auto *result = RDKit::MolFragmenter::fragmentOnBonds(
+      mol, indices, add_dummies, has_dummy_labels ? &labels : nullptr,
+      has_bond_types ? &types : nullptr, &cuts);
+  cuts_per_atom = to_vec(cuts);
+  return to_rwmol(result);
+}
+
+// As fragmentOnSomeBondsHelper in Code/GraphMol/nbWrap/MolOps.cpp.
+std::unique_ptr<MolList> fragment_on_some_bonds(
+    const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
+    std::uint32_t num_to_break, bool add_dummies, bool has_dummy_labels,
+    rust::Slice<const IndexPair> dummy_labels, bool has_bond_types,
+    rust::Slice<const BondType> bond_types, bool return_cuts_per_atom,
+    rust::Vec<IndexList> &cuts_per_atom) {
+  auto indices = check_fragment_args(mol, bond_indices, has_dummy_labels,
+                                     dummy_labels, has_bond_types, bond_types);
+  auto labels = to_label_pairs(dummy_labels);
+  std::vector<BondType> types(bond_types.begin(), bond_types.end());
+  std::vector<std::vector<unsigned>> cuts;
+  std::vector<RDKit::ROMOL_SPTR> frags;
+  RDKit::MolFragmenter::fragmentOnSomeBonds(
+      mol, indices, frags, num_to_break, add_dummies,
+      has_dummy_labels ? &labels : nullptr, has_bond_types ? &types : nullptr,
+      return_cuts_per_atom ? &cuts : nullptr);
+  auto list = std::make_unique<MolList>();
+  for (const auto &frag : frags) {
+    auto copy = std::make_unique<RWMol>(*frag);
+    clear_matrix_caches(*copy);
+    list->push(std::move(copy));
+  }
+  cuts_per_atom.clear();
+  for (const auto &cut : cuts) {
+    cuts_per_atom.push_back(IndexList{to_vec(cut)});
+  }
+  return list;
+}
+
+std::unique_ptr<RWMol> fragment_on_brics_bonds(const RWMol &mol) {
+  std::lock_guard<std::mutex> lock(brics_mutex());
+  return to_rwmol(RDKit::MolFragmenter::fragmentOnBRICSBonds(mol));
+}
+
+MolzipParamsData molzip_params_default() {
+  RDKit::MolzipParams params;
+  rust::Vec<rust::String> symbols;
+  for (const auto &symbol : params.atomSymbols) {
+    symbols.push_back(rust::String(symbol));
+  }
+  return MolzipParamsData{params.label, std::move(symbols),
+                          params.enforceValenceRules,
+                          params.generateCoordinates, params.alignCoordinates};
+}
+
+// molzip returns null when it cannot zip.
+std::unique_ptr<RWMol> molzip(const RWMol &a, const RWMol &b,
+                              const MolzipParamsData &data) {
+  auto params = to_params(data);
+  check_zip_labels(a, params, false);
+  check_zip_labels(b, params, false);
+  return to_rwmol(RDKit::molzip(a, b, params));
+}
+
+std::unique_ptr<RWMol> molzip_single(const RWMol &a,
+                                     const MolzipParamsData &data) {
+  auto params = to_params(data);
+  check_zip_labels(a, params, false);
+  return to_rwmol(RDKit::molzip(a, params));
+}
+
+// As molzipHelper in Code/GraphMol/nbWrap/MolOps.cpp. With
+// generateCoordinates, RDKit gives each input molecule a conformer, which is
+// why Rust lends them mutably.
+std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
+                                        const MolzipParamsData &data) {
+  if (mols.mols().empty()) {
+    return nullptr;
+  }
+  auto params = to_params(data);
+  // With FragmentOnBonds, RDKit zips only the first molecule.
+  for (const auto &mol : mols.mols()) {
+    check_zip_labels(*mol, params, true);
+    if (params.label == RDKit::MolzipLabel::FragmentOnBonds) {
+      break;
+    }
+  }
+  return to_rwmol(RDKit::molzip(mols.mols(), params));
+}
+
+// As rgroupRowZipHelper in Code/GraphMol/nbWrap/MolOps.cpp; RDKit requires a
+// "Core" entry.
+std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
+                                  const MolzipParamsData &data) {
+  auto params = to_params(data);
+  std::map<std::string, RDKit::ROMOL_SPTR> map;
+  for (std::size_t i = 0; i < row.names().size(); ++i) {
+    map[row.names()[i]] = row.mols()[i];
+  }
+  if (map.find("Core") == map.end()) {
+    throw ValueErrorException("RGroup has no Core, cannot molzip");
+  }
+  // RDKit zips the core first, and with FragmentOnBonds only the core.
+  for (const auto &[name, mol] : map) {
+    if (params.label != RDKit::MolzipLabel::FragmentOnBonds || name == "Core") {
+      check_zip_labels(*mol, params, true);
+    }
+  }
+  return to_rwmol(RDKit::molzip(map, params));
+}
+
+}  // namespace rdkit_cxx

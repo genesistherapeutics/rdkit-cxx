@@ -16,6 +16,7 @@
 #endif
 
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -154,16 +155,21 @@ rust::Vec<std::uint32_t> mol_get_aromatic_atoms(const RWMol &mol) {
 }
 
 // As ReadWriteMol in Code/GraphMol/nbWrap/Mol.cpp: the molecule copies the
-// atom, and the bond functions return the new number of bonds.
+// atom, and the bond functions return the new number of bonds. RDKit keeps
+// cached matrices through these edits, so they clear them (U6).
 unsigned rwmol_add_atom(RWMol &mol, const Atom &atom) {
-  return mol.addAtom(atom.copy(), true, true);
+  auto idx = mol.addAtom(atom.copy(), true, true);
+  clear_matrix_caches(mol);
+  return idx;
 }
 
 unsigned rwmol_add_bond(RWMol &mol, unsigned begin_atom_idx,
                         unsigned end_atom_idx, BondType order) {
   check_index(begin_atom_idx, mol.getNumAtoms());
   check_index(end_atom_idx, mol.getNumAtoms());
-  return mol.addBond(begin_atom_idx, end_atom_idx, order);
+  auto num_bonds = mol.addBond(begin_atom_idx, end_atom_idx, order);
+  clear_matrix_caches(mol);
+  return num_bonds;
 }
 
 void rwmol_remove_atom(RWMol &mol, unsigned idx) {
@@ -175,6 +181,7 @@ void rwmol_remove_bond(RWMol &mol, unsigned idx1, unsigned idx2) {
   check_index(idx1, mol.getNumAtoms());
   check_index(idx2, mol.getNumAtoms());
   mol.removeBond(idx1, idx2);
+  clear_matrix_caches(mol);
 }
 
 void rwmol_replace_atom(RWMol &mol, unsigned index, const Atom &new_atom,
@@ -193,7 +200,10 @@ void rwmol_replace_bond(RWMol &mol, unsigned index, const Bond &new_bond,
                   keep_s_groups);
 }
 
-void rwmol_insert_mol(RWMol &mol, const RWMol &other) { mol.insertMol(other); }
+void rwmol_insert_mol(RWMol &mol, const RWMol &other) {
+  mol.insertMol(other);
+  clear_matrix_caches(mol);
+}
 
 void rwmol_begin_batch_edit(RWMol &mol) { mol.beginBatchEdit(); }
 

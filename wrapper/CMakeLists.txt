@@ -53,6 +53,9 @@ set(RDKIT_CXX_SOURCES
   src/chirality.cpp
   src/fingerprints.cpp
   src/adjust_query.cpp
+  src/mol_checks.cpp
+  src/graph.cpp
+  src/transforms.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -66,6 +69,8 @@ set(RDKIT_CXX_RDKIT_TARGETS
   RDGeometryLib
   Fingerprints
   GenericGroups
+  Subgraphs
+  ChemTransforms
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

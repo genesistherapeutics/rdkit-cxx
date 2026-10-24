@@ -91,7 +91,10 @@ rule changes the rule first.
 - **W8.** Classes that hold molecules (`MolBundle`) own them as `Vec<Mol>`,
   so they can lend `&Mol`. Each call into C++ builds a container whose
   `shared_ptr`s borrow those molecules (a no-op deleter) and drops it before
-  the call returns.
+  the call returns. Functions that take Python lists or dicts of molecules
+  lend them the same way, through `BorrowedMols`: `&[Mol]` or `&BTreeMap`
+  when RDKit only reads them, `&mut` when it writes them (`molzipFragments`
+  gives its inputs coordinates).
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
@@ -126,12 +129,24 @@ rule changes the rule first.
   that return values panic, documented under `# Panics`, and fallible ones
   return `Error::Value`.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
-  the wrapper (the grid-index cache in `GridUtils.cpp`).
+  the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
+  `fragmentOnBRICSBonds` fills on first use).
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
   every `getenv` in the process, as `std::env::set_var` does. Their setters
   are `unsafe fn` with `set_var`'s safety contract; the getters are safe.
+- **U6.** RDKit caches distance, adjacency, and path matrices as unsized
+  arrays in a molecule's computed properties (`Matrices.cpp`), and reads
+  them back whenever they exist, while `RWMol::addAtom`, `addBond`,
+  `removeBond`, and `insertMol` keep them, so a stale matrix is read past its
+  end. No molecule Rust holds carries one between calls: a wrapper whose
+  RDKit call computes one (`grep getDistanceMat\|get3DDistanceMat\|getAdjacencyMatrix`
+  in the RDKit sources) holds a `MatrixCacheGuard` (`rdkit-cxx/mol_checks.h`)
+  on the molecules it touches, which clears them before the call and after
+  it, even when it throws; molecules copied from RDKit-owned ones, and
+  RWMol's edits, clear them too. Python's `force` and `prefix` arguments,
+  which only steer the cache, are not bound.
 
 ## Properties
 
@@ -180,7 +195,13 @@ rule changes the rule first.
   `from_<first parameter>`, or a `From` impl when the parameter is another
   bound class (`RWMol(mol)` → `From<Mol>`), which the manifest records in
   `overloads_note`. nanobind's `__new__` (from `nb::new_`) repeats
-  `__init__`'s overloads and gets a `reason`.
+  `__init__`'s overloads and gets a `reason`. Overloads that differ in
+  which parameters they take, not only in a type, get a suffix naming what
+  sets them apart, recorded in the manifest's `overloads_note`:
+  `ReplaceCore(mol, coreQuery)`, which matches the core itself, is
+  `replace_core_query`; `CopyMolSubset(mol, atomIndices, bondIndices)` is
+  `copy_mol_subset_atoms_bonds`; `molzip(a)` is `molzip_single`, and
+  `molzip(row)` is `molzip_row`.
 - **A6.** `_mut` comes last: `get_conformer_with_id_mut`.
 - **A7.** Parameter structs are plain Rust structs with public fields. A
   mirror of a Python class crosses the bridge as a cxx shared struct
@@ -208,7 +229,8 @@ rule changes the rule first.
   functions, whose manifest entries set `rust_generics = "<&str>"` so the
   path test can name them. Tuples of indices → `Vec<u32>`, nested →
   `Vec<Vec<u32>>`. `None`-able results → `Option`. NumPy coordinate arrays →
-  `Vec<Point3D>`. `dict` → `BTreeMap<String, _>`.
+  `Vec<Point3D>`; other NumPy matrices → rows, `Vec<Vec<f64>>` (or `i32`
+  for integer matrices). `dict` → `BTreeMap<String, _>`.
 
 - **T3.** Nested index lists cross the bridge as `Vec<IndexList>`, and plain
   value types (`Point3D`) as cxx shared structs; both live in the `geometry`
