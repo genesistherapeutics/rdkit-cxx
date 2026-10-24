@@ -67,6 +67,9 @@ rule changes the rule first.
   `Bonds`) that implement `ExactSizeIterator` and `DoubleEndedIterator`.
   There are no mutable iterators. Code mutates by index, because two live
   `XMut`s into one molecule would alias.
+- **W6.** Functions that return new molecules copy into an `RWMol`; vectors
+  of molecules cross as `MolList`, moved out one at a time by
+  `mol_list_into_vec`.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
@@ -156,3 +159,8 @@ rule changes the rule first.
   constants (`SanitizeFlags::SANITIZE_ALL`).
 - **N5.** Exceptions to N2–N4 are recorded in the manifest with
   `name_exception`.
+- **F1.** Python flag enums become a `u32` newtype with associated constants,
+  bit operators, `bits()`, and `from_bits_retain`. nanobind binds RDKit's
+  flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so
+  the inventory lists their values as enum values; they keep Python's
+  spelling under `name_exception`.
