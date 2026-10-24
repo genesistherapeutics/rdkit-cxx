@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Rust bindings for RDKit's C++ API, mirroring RDKit's nanobind Python
-//! wrappers.
+//! Rust bindings for RDKit's C++ API, mirroring its Python wrappers.
 
 pub mod chem;
 pub mod data_structs;
