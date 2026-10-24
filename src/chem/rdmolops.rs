@@ -4,9 +4,6 @@
 
 //! Mirrors `rdkit.Chem.rdmolops`.
 
-use std::fmt;
-use std::ops::{BitAnd, BitAndAssign, BitOr, BitOrAssign, Not};
-
 use cxx::UniquePtr;
 
 use crate::Result;
@@ -51,62 +48,7 @@ sanitize_flags!(
     SANITIZE_ALL,
 );
 
-impl SanitizeFlags {
-    /// The raw bits.
-    pub const fn bits(self) -> u32 {
-        self.0
-    }
-
-    /// Flags from raw bits, keeping bits no constant names.
-    pub const fn from_bits_retain(bits: u32) -> SanitizeFlags {
-        SanitizeFlags(bits)
-    }
-}
-
-impl fmt::Debug for SanitizeFlags {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match SanitizeFlags::NAMES.iter().find(|(_, flags)| flags == self) {
-            Some((name, _)) => write!(f, "SanitizeFlags::{name}"),
-            None => write!(f, "SanitizeFlags({:#x})", self.0),
-        }
-    }
-}
-
-impl BitOr for SanitizeFlags {
-    type Output = SanitizeFlags;
-
-    fn bitor(self, rhs: SanitizeFlags) -> SanitizeFlags {
-        SanitizeFlags(self.0 | rhs.0)
-    }
-}
-
-impl BitOrAssign for SanitizeFlags {
-    fn bitor_assign(&mut self, rhs: SanitizeFlags) {
-        self.0 |= rhs.0;
-    }
-}
-
-impl BitAnd for SanitizeFlags {
-    type Output = SanitizeFlags;
-
-    fn bitand(self, rhs: SanitizeFlags) -> SanitizeFlags {
-        SanitizeFlags(self.0 & rhs.0)
-    }
-}
-
-impl BitAndAssign for SanitizeFlags {
-    fn bitand_assign(&mut self, rhs: SanitizeFlags) {
-        self.0 &= rhs.0;
-    }
-}
-
-impl Not for SanitizeFlags {
-    type Output = SanitizeFlags;
-
-    fn not(self) -> SanitizeFlags {
-        SanitizeFlags(!self.0)
-    }
-}
+crate::flags::flag_ops!(SanitizeFlags);
 
 /// Parameters for `sanitize_mol_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]

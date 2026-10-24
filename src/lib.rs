@@ -8,6 +8,7 @@
 pub mod chem;
 pub mod error;
 mod ffi;
+mod flags;
 pub mod geometry;
 pub mod rd_base;
 
