@@ -14,12 +14,16 @@ mod periodic_table;
 pub(crate) mod props;
 mod ring_info;
 mod rwmol;
+mod stereo;
 mod substruct;
 
 pub use atom::{__noatom_for_tests, Atom, AtomMut, AtomRef, GetSmartsParams};
 pub use bond::{BondMut, BondRef};
 pub use conformer::{Conformer, ConformerMut, ConformerRef};
-pub use enums::{BondDir, BondStereo, BondType, ChiralType, HybridizationType, ValenceType};
+pub use enums::{
+    BondDir, BondStereo, BondType, ChiralType, HybridizationType, StereoDescriptor,
+    StereoGroupType, StereoSpecified, StereoType, ValenceType,
+};
 pub use mol::{Atoms, Bonds, Conformers, Mol};
 pub use monomer_info::{
     __monomer_type_round_trip_for_tests, AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType,
@@ -29,4 +33,8 @@ pub use periodic_table::{PeriodicTable, get_periodic_table};
 pub use props::{GetPropNamesParams, GetPropsAsDictParams, PropValue};
 pub use ring_info::{RingInfoMut, RingInfoRef};
 pub use rwmol::{RWMol, ReplaceAtomParams, ReplaceBondParams};
+pub use stereo::{
+    CreateStereoGroupParams, StereoGroup, StereoInfo, create_stereo_group,
+    create_stereo_group_with_params, forward_stereo_group_ids,
+};
 pub use substruct::SubstructMatchParameters;

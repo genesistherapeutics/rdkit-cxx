@@ -40,6 +40,7 @@ set(RDKIT_CXX_SOURCES
   src/substruct.cpp
   src/periodic_table.cpp
   src/monomer_info.cpp
+  src/stereo.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

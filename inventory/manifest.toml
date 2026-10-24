@@ -470,6 +470,26 @@ rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::AtomValence"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom_Octahedral"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomOctahedral"]
+name_exception = "an exported enum value maps to its variant, StereoType::AtomOctahedral"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom_SquarePlanar"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomSquarePlanar"]
+name_exception = "an exported enum value maps to its variant, StereoType::AtomSquarePlanar"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom_Tetrahedral"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomTetrahedral"]
+name_exception = "an exported enum value maps to its variant, StereoType::AtomTetrahedral"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom_TrigonalBipyramidal"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomTrigonalBipyramidal"]
+name_exception = "an exported enum value maps to its variant, StereoType::AtomTrigonalBipyramidal"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Bond"
 rust = ["rdkit_cxx::chem::rdchem::BondRef", "rdkit_cxx::chem::rdchem::BondMut"]
 
@@ -807,6 +827,31 @@ python = "rdkit.Chem.rdchem.BondType.ZERO"
 rust = ["rdkit_cxx::chem::rdchem::BondType::Zero"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Bond_Atropisomer"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::BondAtropisomer"]
+name_exception = "an exported enum value maps to its variant, StereoType::BondAtropisomer"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond_Cis"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::BondCis"]
+name_exception = "an exported enum value maps to its variant, StereoDescriptor::BondCis"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond_Cumulene_Even"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::BondCumuleneEven"]
+name_exception = "an exported enum value maps to its variant, StereoType::BondCumuleneEven"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond_Double"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::BondDouble"]
+name_exception = "an exported enum value maps to its variant, StereoType::BondDouble"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond_Trans"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::BondTrans"]
+name_exception = "an exported enum value maps to its variant, StereoDescriptor::BondTrans"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.CHI_ALLENE"
 rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiAllene"]
 name_exception = "an exported enum value maps to its variant, ChiralType::ChiAllene"
@@ -1017,9 +1062,17 @@ rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Value"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.CreateStereoGroup"
+rust = ["rdkit_cxx::chem::rdchem::create_stereo_group", "rdkit_cxx::chem::rdchem::create_stereo_group_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.EXPLICIT"
 rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
 name_exception = "an exported enum value maps to its variant, ValenceType::Explicit"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ForwardStereoGroupIds"
+rust = ["rdkit_cxx::chem::rdchem::forward_stereo_group_ids"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.GetPeriodicTable"
@@ -1184,6 +1237,10 @@ python = "rdkit.Chem.rdchem.Mol.GetRingInfo"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_ring_info", "rdkit_cxx::chem::rdchem::Mol::get_ring_info_mut"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Mol.GetStereoGroups"
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_stereo_groups"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetSubstructMatch"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_substruct_match", "rdkit_cxx::chem::rdchem::Mol::get_substruct_match_with_params"]
 overloads_note = "the params form covers the keyword form; MolBundle is not bound yet"
@@ -1272,6 +1329,11 @@ reason = "nanobind's construction hook; __init__ maps the constructors"
 python = "rdkit.Chem.rdchem.MolSanitizeException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::MolSanitize"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.NoValue"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::NoValue"]
+name_exception = "an exported enum value maps to its variant, StereoDescriptor::NoValue"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.OTHER"
@@ -1398,6 +1460,10 @@ rust = ["rdkit_cxx::chem::rdchem::RWMol::replace_bond", "rdkit_cxx::chem::rdchem
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.RollbackBatchEdit"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::rollback_batch_edit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.SetStereoGroups"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::set_stereo_groups"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__copy__"
@@ -1533,6 +1599,185 @@ python = "rdkit.Chem.rdchem.RingInfo.NumRings"
 rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_rings", "rdkit_cxx::chem::rdchem::RingInfoMut::num_rings"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.STEREO_ABSOLUTE"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoAbsolute"]
+name_exception = "an exported enum value maps to its variant, StereoGroupType::StereoAbsolute"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.STEREO_AND"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoAnd"]
+name_exception = "an exported enum value maps to its variant, StereoGroupType::StereoAnd"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.STEREO_OR"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoOr"]
+name_exception = "an exported enum value maps to its variant, StereoGroupType::StereoOr"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Specified"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Specified"]
+name_exception = "an exported enum value maps to its variant, StereoSpecified::Specified"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoDescriptor"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoDescriptor.Bond_Cis"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::BondCis"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoDescriptor.Bond_Trans"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::BondTrans"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoDescriptor.NoValue"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::NoValue"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoDescriptor.Tet_CCW"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCcw"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoDescriptor.Tet_CW"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCw"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup.GetAtoms"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup::get_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup.GetBonds"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup::get_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup.GetGroupType"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup::get_group_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup.GetReadId"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup::get_read_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup.GetWriteId"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup::get_write_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup.SetWriteId"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroup::set_write_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroupType"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroupType.STEREO_ABSOLUTE"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoAbsolute"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroupType.STEREO_AND"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoAnd"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroupType.STEREO_OR"
+rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoOr"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.NOATOM"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::NOATOM"]
+name_exception = "a constant keeps Python's spelling"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.centeredOn"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::centered_on"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.controllingAtoms"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::controlling_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.descriptor"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::descriptor"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.permutation"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::permutation"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.specified"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::specified"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.type"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::type_"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoSpecified"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoSpecified.Specified"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Specified"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoSpecified.Unknown"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Unknown"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoSpecified.Unspecified"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Unspecified"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType"
+rust = ["rdkit_cxx::chem::rdchem::StereoType"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Atom_Octahedral"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomOctahedral"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Atom_SquarePlanar"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomSquarePlanar"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Atom_Tetrahedral"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomTetrahedral"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Atom_TrigonalBipyramidal"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomTrigonalBipyramidal"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Bond_Atropisomer"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::BondAtropisomer"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Bond_Cumulene_Even"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::BondCumuleneEven"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Bond_Double"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::BondDouble"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoType.Unspecified"
+rust = ["rdkit_cxx::chem::rdchem::StereoType::Unspecified"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters"]
 
@@ -1621,9 +1866,29 @@ rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::use_query_query_matc
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Tet_CCW"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCcw"]
+name_exception = "an exported enum value maps to its variant, StereoDescriptor::TetCcw"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Tet_CW"
+rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCw"]
+name_exception = "an exported enum value maps to its variant, StereoDescriptor::TetCw"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.UNKNOWN"
 rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Unknown"]
 name_exception = "an exported enum value maps to its variant, AtomMonomerType::Unknown"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Unknown"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Unknown"]
+name_exception = "an exported enum value maps to its variant, StereoSpecified::Unknown"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Unspecified"
+rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Unspecified"]
+name_exception = "an exported enum value maps to its variant, StereoSpecified::Unspecified"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ValenceType"
@@ -1869,6 +2134,10 @@ rust_kind = "field"
 python = "rdkit.Chem.rdmolops.AddHsParameters.skipQueries"
 rust = ["rdkit_cxx::chem::rdmolops::AddHsParameters::skip_queries"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindPotentialStereo"
+rust = ["rdkit_cxx::chem::rdmolops::find_potential_stereo", "rdkit_cxx::chem::rdmolops::find_potential_stereo_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetMolFrags"

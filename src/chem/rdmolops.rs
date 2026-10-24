@@ -11,6 +11,7 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::Mol;
+use crate::chem::rdchem::StereoInfo;
 use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::molops::ffi;
@@ -253,6 +254,46 @@ pub fn get_mol_frags_as_mols_with_sanitize_frags(
         mol.as_ffi(),
         sanitize_frags,
     )?))
+}
+
+/// Parameters for `find_potential_stereo_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct FindPotentialStereoParams {
+    /// Removes stereo specifications that cannot hold.
+    pub clean_it: bool,
+    /// Includes potential stereo elements that are not specified.
+    pub flag_possible: bool,
+}
+
+impl Default for FindPotentialStereoParams {
+    fn default() -> FindPotentialStereoParams {
+        FindPotentialStereoParams {
+            clean_it: false,
+            flag_possible: true,
+        }
+    }
+}
+
+/// The molecule's potential stereo elements. Mirrors
+/// `rdmolops.FindPotentialStereo`; RDKit calls it experimental.
+pub fn find_potential_stereo(mol: &mut Mol) -> Result<Vec<StereoInfo>> {
+    find_potential_stereo_with_params(mol, &FindPotentialStereoParams::default())
+}
+
+/// Mirrors `rdmolops.FindPotentialStereo(mol, cleanIt, flagPossible)`.
+pub fn find_potential_stereo_with_params(
+    mol: &mut Mol,
+    params: &FindPotentialStereoParams,
+) -> Result<Vec<StereoInfo>> {
+    Ok(crate::ffi::stereo::ffi::find_potential_stereo(
+        mol.pin_mut(),
+        params.clean_it,
+        params.flag_possible,
+    )?
+    .into_iter()
+    .map(StereoInfo::from_ffi)
+    .collect())
 }
 
 /// Moves each molecule out of a C++ list (W6).

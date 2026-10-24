@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-use crate::ffi::{atom, bond};
+use crate::ffi::{atom, bond, stereo};
 
 /// Defines a public enum mirroring a Python enum, with conversions to and from
 /// the cxx-checked C++ enum (CONVENTIONS.md N4).
@@ -127,5 +127,52 @@ rdkit_enum! {
         Stereotrans = STEREOTRANS,
         Stereoatropcw = STEREOATROPCW,
         Stereoatropccw = STEREOATROPCCW,
+    }
+}
+
+rdkit_enum! {
+    /// How a stereo group's atoms relate. Mirrors `rdchem.StereoGroupType`.
+    StereoGroupType: stereo::ffi::StereoGroupType {
+        StereoAbsolute = STEREO_ABSOLUTE,
+        StereoOr = STEREO_OR,
+        StereoAnd = STEREO_AND,
+    }
+}
+
+rdkit_enum! {
+    /// The kind of a potential stereo element. Mirrors `rdchem.StereoType`.
+    StereoType: stereo::ffi::StereoType {
+        Unspecified = Unspecified,
+        AtomTetrahedral = Atom_Tetrahedral,
+        AtomSquarePlanar = Atom_SquarePlanar,
+        AtomTrigonalBipyramidal = Atom_TrigonalBipyramidal,
+        AtomOctahedral = Atom_Octahedral,
+        BondDouble = Bond_Double,
+        BondCumuleneEven = Bond_Cumulene_Even,
+        BondAtropisomer = Bond_Atropisomer,
+    }
+}
+
+rdkit_enum! {
+    /// Whether a stereo element is specified. Mirrors `rdchem.StereoSpecified`.
+    StereoSpecified: stereo::ffi::StereoSpecified {
+        Unspecified = Unspecified,
+        Specified = Specified,
+        Unknown = Unknown,
+    }
+}
+
+rdkit_enum! {
+    /// A stereo element's configuration. Mirrors `rdchem.StereoDescriptor`;
+    /// Python lacks the atropisomer values. RDKit's `None` is Python's
+    /// `NoValue`.
+    StereoDescriptor: stereo::ffi::StereoDescriptor {
+        NoValue = None,
+        TetCw = Tet_CW,
+        TetCcw = Tet_CCW,
+        BondCis = Bond_Cis,
+        BondTrans = Bond_Trans,
+        BondAtropCw = Bond_AtropCW,
+        BondAtropCcw = Bond_AtropCCW,
     }
 }
