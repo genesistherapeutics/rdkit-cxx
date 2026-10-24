@@ -2,8 +2,11 @@
 
 pub(crate) mod atom;
 pub(crate) mod bond;
+pub(crate) mod conformer;
 pub(crate) mod errors;
+pub(crate) mod geometry;
 pub(crate) mod mol;
 pub(crate) mod molfiles;
 pub(crate) mod props;
 pub(crate) mod rd_base;
+pub(crate) mod ring_info;

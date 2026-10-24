@@ -17,6 +17,7 @@
 
 #include "rdkit-cxx/atom.h"
 #include "rdkit-cxx/bond.h"
+#include "rdkit-cxx/conformer.h"
 #include "rdkit-cxx/mol.h"
 #include "rust/cxx.h"
 
@@ -30,6 +31,7 @@ struct PropValueData;
 const RDProps &mol_as_props(const RWMol &mol);
 const RDProps &atom_as_props(const Atom &atom);
 const RDProps &bond_as_props(const Bond &bond);
+const RDProps &conformer_as_props(const Conformer &conf);
 
 bool props_has_prop(const RDProps &obj, rust::Str key);
 // As GetProp, GetPyProp, and GetPropsAsDict in

@@ -31,6 +31,9 @@ set(RDKIT_CXX_SOURCES
   src/atom.cpp
   src/bond.cpp
   src/props.cpp
+  src/geometry.cpp
+  src/conformer.cpp
+  src/ring_info.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

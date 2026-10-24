@@ -6,8 +6,11 @@ use cxx::UniquePtr;
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
-use crate::chem::rdchem::{AtomMut, AtomRef, BondMut, BondRef};
+use crate::chem::rdchem::{
+    AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoRef,
+};
 use crate::error::expect_ok;
+use crate::ffi::conformer::ffi as conformer_ffi;
 use crate::ffi::mol::ffi;
 use crate::ffi::props::ffi::{RDProps, mol_as_props, mol_clear_computed_props};
 
@@ -133,6 +136,91 @@ impl Mol {
         Ok(ffi::mol_update_property_cache(self.pin_mut(), strict)?)
     }
 
+    /// Mirrors `Mol.GetNumConformers`.
+    pub fn get_num_conformers(&self) -> u32 {
+        expect_ok(conformer_ffi::mol_get_num_conformers(self.as_ffi()))
+    }
+
+    /// The default conformer. A molecule with none is `Error::Value`. Mirrors
+    /// `Mol.GetConformer`.
+    pub fn get_conformer(&self) -> Result<ConformerRef<'_>> {
+        self.get_conformer_with_id(-1)
+    }
+
+    /// The conformer with `id`, or the default for -1. Mirrors
+    /// `Mol.GetConformer(id)`.
+    pub fn get_conformer_with_id(&self, id: i32) -> Result<ConformerRef<'_>> {
+        let conf = conformer_ffi::mol_get_conformer(self.as_ffi(), id)?;
+        Ok(ConformerRef::new(self, conf))
+    }
+
+    /// Mirrors `Mol.GetConformer`, for editing.
+    pub fn get_conformer_mut(&mut self) -> Result<ConformerMut<'_>> {
+        self.get_conformer_with_id_mut(-1)
+    }
+
+    /// Mirrors `Mol.GetConformer(id)`, for editing.
+    pub fn get_conformer_with_id_mut(&mut self, id: i32) -> Result<ConformerMut<'_>> {
+        let id = self.get_conformer_with_id(id)?.get_id() as i32;
+        Ok(ConformerMut::new(self, id))
+    }
+
+    pub(crate) fn conformer_ffi_mut(
+        &mut self,
+        id: i32,
+    ) -> Result<std::pin::Pin<&mut conformer_ffi::Conformer>> {
+        Ok(conformer_ffi::mol_get_conformer_mut(self.pin_mut(), id)?)
+    }
+
+    fn get_conformer_at(&self, position: u32) -> Result<ConformerRef<'_>> {
+        let conf = conformer_ffi::mol_get_conformer_at(self.as_ffi(), position)?;
+        Ok(ConformerRef::new(self, conf))
+    }
+
+    /// Mirrors `Mol.GetConformers`.
+    pub fn get_conformers(&self) -> Conformers<'_> {
+        Conformers {
+            mol: self,
+            range: 0..self.get_num_conformers(),
+        }
+    }
+
+    /// Adds a copy of `conf`, which must have one position per atom, and
+    /// returns its id. Mirrors `Mol.AddConformer`.
+    pub fn add_conformer(&mut self, conf: &Conformer) -> Result<u32> {
+        self.add_conformer_with_assign_id(conf, false)
+    }
+
+    /// Gives the copy a new id when `assign_id`. Mirrors
+    /// `Mol.AddConformer(conf, assignId)`.
+    pub fn add_conformer_with_assign_id(
+        &mut self,
+        conf: &Conformer,
+        assign_id: bool,
+    ) -> Result<u32> {
+        Ok(conformer_ffi::mol_add_conformer(
+            self.pin_mut(),
+            conf.raw(),
+            assign_id,
+        )?)
+    }
+
+    /// Removes the conformer with `id`, if there is one. Mirrors
+    /// `Mol.RemoveConformer`.
+    pub fn remove_conformer(&mut self, id: u32) {
+        expect_ok(conformer_ffi::mol_remove_conformer(self.pin_mut(), id))
+    }
+
+    /// Mirrors `Mol.RemoveAllConformers`.
+    pub fn remove_all_conformers(&mut self) {
+        expect_ok(conformer_ffi::mol_remove_all_conformers(self.pin_mut()))
+    }
+
+    /// Mirrors `Mol.GetRingInfo`.
+    pub fn get_ring_info(&self) -> RingInfoRef<'_> {
+        RingInfoRef::new(self)
+    }
+
     /// Mirrors `Mol.GetAtoms`.
     pub fn get_atoms(&self) -> Atoms<'_> {
         Atoms {
@@ -189,6 +277,13 @@ index_iterator!(
     Atoms,
     AtomRef,
     get_atom_with_idx
+);
+index_iterator!(
+    /// The conformers of a molecule. Mirrors the sequence `Mol.GetConformers`
+    /// returns.
+    Conformers,
+    ConformerRef,
+    get_conformer_at
 );
 index_iterator!(
     /// The bonds of a molecule. Mirrors the sequence `Mol.GetBonds` returns.

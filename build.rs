@@ -9,7 +9,16 @@ use std::process::Command;
 
 /// One name per `src/ffi/<name>.rs` (CONVENTIONS.md B4).
 const BRIDGES: &[&str] = &[
-    "rd_base", "errors", "mol", "molfiles", "atom", "bond", "props",
+    "rd_base",
+    "errors",
+    "mol",
+    "molfiles",
+    "atom",
+    "bond",
+    "props",
+    "geometry",
+    "conformer",
+    "ring_info",
 ];
 
 fn main() {

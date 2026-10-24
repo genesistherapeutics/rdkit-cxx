@@ -172,6 +172,7 @@ bool convert(const RDKit::Dict::Pair &item, bool auto_convert_strings,
 const RDProps &mol_as_props(const RWMol &mol) { return mol; }
 const RDProps &atom_as_props(const Atom &atom) { return atom; }
 const RDProps &bond_as_props(const Bond &bond) { return bond; }
+const RDProps &conformer_as_props(const Conformer &conf) { return conf; }
 
 bool props_has_prop(const RDProps &obj, rust::Str key) {
   return obj.hasProp(std::string(key));

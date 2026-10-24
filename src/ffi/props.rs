@@ -24,10 +24,12 @@ pub(crate) mod ffi {
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type Atom = crate::ffi::atom::ffi::Atom;
         type Bond = crate::ffi::bond::ffi::Bond;
+        type Conformer = crate::ffi::conformer::ffi::Conformer;
 
         fn mol_as_props(mol: &RWMol) -> Result<&RDProps>;
         fn atom_as_props(atom: &Atom) -> Result<&RDProps>;
         fn bond_as_props(bond: &Bond) -> Result<&RDProps>;
+        fn conformer_as_props(conf: &Conformer) -> Result<&RDProps>;
 
         fn props_has_prop(obj: &RDProps, key: &str) -> Result<bool>;
         fn props_get_prop(obj: &RDProps, key: &str) -> Result<UniquePtr<CxxString>>;
