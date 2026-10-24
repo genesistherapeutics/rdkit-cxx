@@ -47,6 +47,8 @@ set(RDKIT_CXX_SOURCES
   src/resonance.cpp
   src/data_structs.cpp
   src/fpb.cpp
+  src/grid.cpp
+  src/pickle_checks.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -57,6 +59,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   FileParsers
   SubstructMatch
   DataStructs
+  RDGeometryLib
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

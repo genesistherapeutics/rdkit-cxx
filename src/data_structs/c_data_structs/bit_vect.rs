@@ -8,7 +8,7 @@ use std::pin::Pin;
 use cxx::UniquePtr;
 
 use crate::Result;
-use crate::error::{expect_ok, to_string};
+use crate::error::{expect_ok, op, to_string};
 use crate::ffi::data_structs::ffi;
 
 pub(crate) mod sealed {
@@ -30,9 +30,13 @@ pub(crate) mod sealed {
 /// both (CONVENTIONS.md A5).
 pub trait BitVect: sealed::BitVectLike {}
 
-/// Unwraps an operator's result; operators panic where Python raises.
-pub(crate) fn op<T>(result: std::result::Result<T, cxx::Exception>) -> T {
-    result.unwrap_or_else(|err| panic!("{}", crate::Error::from(err)))
+/// Panics for more bits than RDKit can index; the wrapper checks too, but a
+/// panic here names the cause.
+fn check_num_bits(size: usize) {
+    assert!(
+        size <= i32::MAX as usize,
+        "bit vectors hold at most i32::MAX bits"
+    );
 }
 
 /// Defines a bit vector type over `ffi::BitVect` (W3).
@@ -233,12 +237,21 @@ bit_vect_type!(
 
 impl ExplicitBitVect {
     /// All bits off. Mirrors `ExplicitBitVect(size)`.
+    ///
+    /// # Panics
+    ///
+    /// If `size` is more than `i32::MAX`: RDKit indexes bits with `int`.
     pub fn new(size: u32) -> ExplicitBitVect {
         ExplicitBitVect::new_with_bits_set(size, false)
     }
 
     /// All bits on when `bits_set`. Mirrors `ExplicitBitVect(size, bitsSet)`.
+    ///
+    /// # Panics
+    ///
+    /// If `size` is more than `i32::MAX`, as for `new`.
     pub fn new_with_bits_set(size: u32, bits_set: bool) -> ExplicitBitVect {
+        check_num_bits(size as usize);
         ExplicitBitVect::from_ffi(expect_ok(ffi::bit_vect_new_explicit(size, bits_set)))
     }
 }
@@ -250,7 +263,7 @@ impl Default for ExplicitBitVect {
     }
 }
 
-/// The concatenation. Mirrors `+`.
+/// The concatenation, which panics past `i32::MAX` bits. Mirrors `+`.
 impl std::ops::Add for &ExplicitBitVect {
     type Output = ExplicitBitVect;
 
@@ -259,7 +272,7 @@ impl std::ops::Add for &ExplicitBitVect {
     }
 }
 
-/// Appends `rhs`. Mirrors `+=`.
+/// Appends `rhs`, which panics past `i32::MAX` bits. Mirrors `+=`.
 impl std::ops::AddAssign<&ExplicitBitVect> for ExplicitBitVect {
     fn add_assign(&mut self, rhs: &ExplicitBitVect) {
         op(ffi::bit_vect_append(self.raw_mut(), rhs.raw()))
@@ -268,7 +281,12 @@ impl std::ops::AddAssign<&ExplicitBitVect> for ExplicitBitVect {
 
 impl SparseBitVect {
     /// All bits off. Mirrors `SparseBitVect(size)`.
+    ///
+    /// # Panics
+    ///
+    /// If `size` is more than `i32::MAX`: RDKit stores bits as `int`.
     pub fn new(size: u32) -> SparseBitVect {
+        check_num_bits(size as usize);
         SparseBitVect::from_ffi(expect_ok(ffi::bit_vect_new_sparse(size)))
     }
 }
@@ -313,18 +331,28 @@ pub fn convert_to_explicit(sbv: &SparseBitVect) -> ExplicitBitVect {
 
 /// A vector with a bit for each character, on for `1`. Mirrors
 /// `cDataStructs.CreateFromBitString`.
+///
+/// # Panics
+///
+/// If `bits` is longer than `i32::MAX`.
 pub fn create_from_bit_string(bits: &str) -> ExplicitBitVect {
+    check_num_bits(bits.len());
     ExplicitBitVect::from_ffi(expect_ok(ffi::create_from_bit_string(bits)))
 }
 
-/// A vector from FPS hex, which must have an even length. Mirrors
-/// `cDataStructs.CreateFromFPSText`.
+/// A vector from FPS hex, which must have an even length and at most
+/// `i32::MAX` bits. Mirrors `cDataStructs.CreateFromFPSText`.
 pub fn create_from_fps_text(fps: &str) -> Result<ExplicitBitVect> {
     Ok(ExplicitBitVect::from_ffi(ffi::create_from_fps_text(fps)?))
 }
 
 /// A vector from packed bytes (`bit_vect_to_binary_text`). Mirrors
 /// `cDataStructs.CreateFromBinaryText`.
+///
+/// # Panics
+///
+/// If `fps` holds more than `i32::MAX` bits.
 pub fn create_from_binary_text(fps: &[u8]) -> ExplicitBitVect {
+    check_num_bits(fps.len().saturating_mul(8));
     ExplicitBitVect::from_ffi(expect_ok(ffi::create_from_binary_text(fps)))
 }

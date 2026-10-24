@@ -106,6 +106,28 @@ rule changes the rule first.
   (`Atom`, `AtomMut`). Methods take `&dyn AsAtom` instead, so they are not
   generic and `tests/manifest_paths.rs` can name them.
 
+## Unchecked input
+
+- **U1.** No input reachable from safe Rust may reach undefined behavior in
+  RDKit, even where Python's bindings do. When RDKit trusts an argument (an
+  index, a size, a value it casts or sums in `int`, a pickle, a file), the
+  C++ wrapper checks it first and throws as E3 and E4 describe, usually
+  `ValueErrorException`. Each such check carries a comment naming what RDKit
+  would do without it.
+- **U2.** Binary formats RDKit parses without validating them (bit-vector,
+  value-vector, sparse-int-vector, and grid pickles) are checked by
+  `rdkit-cxx/pickle_checks.h` before RDKit reads them, or, where parsing
+  itself is safe, on the object right after. FPB files are read by the
+  wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
+  never reads a file that changed after the check. Parsers RDKit fuzzes
+  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted.
+- **U3.** A sized object whose `int` arithmetic would overflow (more than
+  `INT_MAX` bits or grid points) is refused at construction: constructors
+  that return values panic, documented under `# Panics`, and fallible ones
+  return `Error::Value`.
+- **U4.** Global state RDKit writes without a lock is guarded by a mutex in
+  the wrapper (the grid-index cache in `GridUtils.cpp`).
+
 ## Properties
 
 - **P1.** Properties follow A2 and A4 like any method. Missing keys are

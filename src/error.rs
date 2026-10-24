@@ -128,6 +128,11 @@ pub(crate) fn expect_ok<T>(result: std::result::Result<T, cxx::Exception>) -> T 
     }
 }
 
+/// Unwraps an operator's result; operators panic where Python raises.
+pub(crate) fn op<T>(result: std::result::Result<T, cxx::Exception>) -> T {
+    result.unwrap_or_else(|err| panic!("{}", Error::from(err)))
+}
+
 /// Converts a C++ string, mapping invalid UTF-8 to `Error::Value`, as Python
 /// raises `UnicodeDecodeError`, a `ValueError` (T2).
 pub(crate) fn to_string(text: cxx::UniquePtr<cxx::CxxString>) -> Result<String> {

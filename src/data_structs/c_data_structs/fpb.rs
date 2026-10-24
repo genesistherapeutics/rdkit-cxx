@@ -33,13 +33,18 @@ impl FPBReader {
         self.ptr.pin_mut()
     }
 
-    /// A reader for `filename`, which opens it now and reads it in `init`.
-    /// Mirrors `FPBReader(filename)`.
+    /// A reader for `filename`, which it reads and checks now and parses in
+    /// `init`. RDKit trusts every size and offset in the file, so the reader
+    /// checks them first: a malformed file is `Error::Value`, and so is one
+    /// RDKit would misread (8-byte id offsets, or 4 GiB of fingerprints or
+    /// more). Mirrors `FPBReader(filename)`.
     pub fn new<P: AsRef<Path>>(filename: P) -> Result<FPBReader> {
         FPBReader::new_with_lazy(filename, false)
     }
 
-    /// When `lazy`, `init` leaves the fingerprints in the file. Mirrors
+    /// When `lazy`, `init` leaves the fingerprints undecoded. The reader
+    /// keeps the bytes it checked rather than reading the file again, so a
+    /// lazy reader holds the whole file in memory. Mirrors
     /// `FPBReader(filename, lazy)`.
     pub fn new_with_lazy<P: AsRef<Path>>(filename: P, lazy: bool) -> Result<FPBReader> {
         let ptr = ffi::fpb_reader_new(path_bytes(filename.as_ref()), lazy)?;

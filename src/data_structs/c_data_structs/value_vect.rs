@@ -9,11 +9,10 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::enums::rdkit_enum;
-use crate::data_structs::c_data_structs::bit_vect::op;
 use crate::data_structs::c_data_structs::{
     ExplicitBitVect, IntSparseIntVect, LongSparseIntVect, UIntSparseIntVect, ULongSparseIntVect,
 };
-use crate::error::expect_ok;
+use crate::error::{expect_ok, op};
 use crate::ffi::data_structs::ffi;
 
 rdkit_enum! {
@@ -51,7 +50,7 @@ macro_rules! value_vect_type {
                 self.ptr.pin_mut()
             }
 
-            fn from_ffi(ptr: UniquePtr<ffi::$ffi>) -> $name {
+            pub(crate) fn from_ffi(ptr: UniquePtr<ffi::$ffi>) -> $name {
                 assert!(!ptr.is_null(), "RDKit returned a null vector");
                 $name { ptr }
             }
@@ -183,7 +182,16 @@ value_vect_type!(
 impl DiscreteValueVect {
     /// `length` zeros of `val_type`. Mirrors `DiscreteValueVect(valType,
     /// length)`.
+    ///
+    /// # Panics
+    ///
+    /// If `length` is more than `i32::MAX`: RDKit's count of storage words
+    /// wraps near `u32::MAX`.
     pub fn new(val_type: DiscreteValueType, length: u32) -> DiscreteValueVect {
+        assert!(
+            length <= i32::MAX as u32,
+            "DiscreteValueVects hold at most i32::MAX values"
+        );
         DiscreteValueVect::from_ffi(expect_ok(ffi::discrete_value_vect_new(
             val_type.to_ffi(),
             length,

@@ -8,8 +8,7 @@ use std::pin::Pin;
 
 use cxx::UniquePtr;
 
-use crate::data_structs::c_data_structs::bit_vect::op;
-use crate::error::expect_ok;
+use crate::error::{expect_ok, op};
 use crate::ffi::data_structs::ffi;
 use crate::{Error, Result};
 
@@ -106,15 +105,17 @@ macro_rules! sparse_int_vect_type {
                 <$idx>::try_from(self.length_u64()).expect("the length fits its type")
             }
 
-            /// The sum of the values. Mirrors `GetTotalVal`.
-            pub fn get_total_val(&self) -> i32 {
+            /// The sum of the values. RDKit sums in `i32`, so values whose
+            /// absolute values sum past `i32::MAX` are `Error::Value`.
+            /// Mirrors `GetTotalVal`.
+            pub fn get_total_val(&self) -> Result<i32> {
                 self.get_total_val_with_use_abs(false)
             }
 
             /// The sum of the absolute values when `use_abs`. Mirrors
             /// `GetTotalVal(useAbs)`.
-            pub fn get_total_val_with_use_abs(&self, use_abs: bool) -> i32 {
-                expect_ok(ffi::sparse_int_vect_get_total_val(self.raw(), use_abs))
+            pub fn get_total_val_with_use_abs(&self, use_abs: bool) -> Result<i32> {
+                Ok(ffi::sparse_int_vect_get_total_val(self.raw(), use_abs)?)
             }
 
             /// RDKit's binary form, which `from_pkl` reads. Mirrors
