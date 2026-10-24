@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
 """Tests for check.py."""
 
 import pytest
@@ -189,6 +193,7 @@ def test_paths_source():
             {"python": "rdkit.Chem.rdchem.Mol.__repr__", "reason": "Python protocol method"},
         )
     )
+    assert source.startswith("// Copyright (c) 2026 Steven Kearnes All rights reserved.\n")
     assert source.count("#[test]") == 1
     assert "fn manifest_paths_exist()" in source
     # Module functions are imported, which also works for `impl Trait`

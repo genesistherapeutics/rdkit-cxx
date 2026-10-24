@@ -1,6 +1,9 @@
-// Copyright (c) 2026, Steven Kearnes
-// SPDX-License-Identifier: BSD-3-Clause
-//
+/*
+ * Copyright (c) 2026 Steven Kearnes All rights reserved.
+ * Use of this source code is governed by a BSD-style
+ * license that can be found in the LICENSE file.
+ */
+
 // Properties on molecules, atoms, bonds, and conformers. They all derive from
 // RDKit::RDProps, so one set of wrappers serves every class; each class has an
 // upcast (`<class>_as_props`). RDKit's property setters are const, so these

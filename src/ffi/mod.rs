@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 //! Private cxx bridges, one per wrapper header (CONVENTIONS.md B3).
 
 pub(crate) mod atom;

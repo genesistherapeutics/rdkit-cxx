@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 //! Rust bindings for RDKit's C++ API, mirroring RDKit's nanobind Python
 //! wrappers.
 

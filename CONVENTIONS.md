@@ -3,6 +3,13 @@
 Every rule here binds all later wrapper code. A change that cannot follow a
 rule changes the rule first.
 
+## Files
+
+- **L1.** Every source file starts with addlicense's BSD header. Add it with
+  `addlicense -c "Steven Kearnes" -l bsd -ignore "target/**" .`
+  (`go install github.com/google/addlicense@v1.2.0`); CI checks it.
+  Generators write the same header themselves (`inventory/check.py`).
+
 ## Bridges
 
 - **B1.** Every bridge function is a free function in namespace `rdkit_cxx`,

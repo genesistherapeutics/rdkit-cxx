@@ -1,5 +1,6 @@
-// Copyright (c) 2026, Steven Kearnes
-// SPDX-License-Identifier: BSD-3-Clause
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
 
 #include "rdkit-cxx/errors.h"
 
@@ -10,6 +11,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
 #include <RDGeneral/Invariant.h>
+#include <RDGeneral/RDLog.h>
 
 #include <stdexcept>
 #include <vector>
@@ -17,6 +19,13 @@
 namespace rdkit_cxx {
 
 namespace {
+
+// Python's rdBase initializes RDKit's logs on import; this does the same when
+// the library loads. Every bridge links this file (E5), so it always runs.
+const bool logs_initialized = [] {
+  RDLog::InitLogs();
+  return true;
+}();
 
 std::string encode(const std::string &variant, const std::string &payload,
                    const std::string &what) {
