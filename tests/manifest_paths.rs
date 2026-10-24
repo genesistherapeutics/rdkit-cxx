@@ -11,6 +11,7 @@
 #[rustfmt::skip]
 #[allow(unused_imports)]
 fn manifest_paths_exist() {
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::AllProps;
     let _: Option<rdkit_cxx::chem::rdchem::Atom> = None;
     let _: Option<rdkit_cxx::chem::rdchem::AtomRef> = None;
     let _: Option<rdkit_cxx::chem::rdchem::AtomMut> = None;
@@ -242,6 +243,7 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::default;
     let _ = rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::new;
     let _ = rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::new_with_params;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::AtomProps;
     let _: Option<rdkit_cxx::Error> = None;
     let _: Option<rdkit_cxx::Error> = None;
     let _ = rdkit_cxx::chem::rdchem::StereoType::AtomOctahedral;
@@ -340,6 +342,7 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::BondDir::Endupright;
     let _ = rdkit_cxx::chem::rdchem::BondDir::None;
     let _ = rdkit_cxx::chem::rdchem::BondDir::Unknown;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::BondProps;
     let _: Option<rdkit_cxx::chem::rdchem::BondStereo> = None;
     let _ = rdkit_cxx::chem::rdchem::BondStereo::Stereoany;
     let _ = rdkit_cxx::chem::rdchem::BondStereo::Stereoatropccw;
@@ -396,6 +399,7 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiTetrahedralCw;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiTrigonalbipyramidal;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::ComputedProps;
     let _: Option<rdkit_cxx::chem::rdchem::Conformer> = None;
     let _: Option<rdkit_cxx::chem::rdchem::ConformerRef> = None;
     let _: Option<rdkit_cxx::chem::rdchem::ConformerMut> = None;
@@ -488,11 +492,18 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::Conformer::new;
     let _ = rdkit_cxx::chem::rdchem::Conformer::clone;
     let _: Option<rdkit_cxx::Error> = None;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::CoordsAsDouble;
     use rdkit_cxx::chem::rdchem::create_stereo_group as _;
     use rdkit_cxx::chem::rdchem::create_stereo_group_with_params as _;
     let _ = rdkit_cxx::chem::rdchem::ValenceType::Explicit;
     use rdkit_cxx::chem::rdchem::forward_stereo_group_ids as _;
+    use rdkit_cxx::chem::rdchem::get_atom_alias as _;
+    use rdkit_cxx::chem::rdchem::get_atom_r_label as _;
+    use rdkit_cxx::chem::rdchem::get_atom_value as _;
+    use rdkit_cxx::chem::rdchem::get_default_pickle_properties as _;
+    use rdkit_cxx::chem::rdchem::get_num_pi_electrons as _;
     use rdkit_cxx::chem::rdchem::get_periodic_table as _;
+    use rdkit_cxx::chem::rdchem::get_supplemental_smiles_label as _;
     let _: Option<rdkit_cxx::chem::rdchem::HybridizationType> = None;
     let _ = rdkit_cxx::chem::rdchem::HybridizationType::Other;
     let _ = rdkit_cxx::chem::rdchem::HybridizationType::S;
@@ -569,13 +580,20 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::Mol::set_prop_with_computed;
     let _ = rdkit_cxx::chem::rdchem::Mol::set_unsigned_prop;
     let _ = rdkit_cxx::chem::rdchem::Mol::set_unsigned_prop_with_computed;
+    let _ = rdkit_cxx::chem::rdchem::Mol::to_binary;
+    let _ = rdkit_cxx::chem::rdchem::Mol::to_binary_with_property_flags;
     let _ = rdkit_cxx::chem::rdchem::Mol::update_property_cache;
     let _ = rdkit_cxx::chem::rdchem::Mol::update_property_cache_with_strict;
     let _ = rdkit_cxx::chem::rdchem::Mol::clone;
     let _ = rdkit_cxx::chem::rdchem::Mol::clone;
     let _ = rdkit_cxx::chem::rdchem::Mol::default;
     let _ = rdkit_cxx::chem::rdchem::Mol::clone;
+    let _ = rdkit_cxx::chem::rdchem::Mol::from_pkl_string;
+    let _ = rdkit_cxx::chem::rdchem::Mol::from_pkl_string_with_property_flags;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::MolProps;
     let _: Option<rdkit_cxx::Error> = None;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoConformers;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoProps;
     let _ = rdkit_cxx::chem::rdchem::StereoDescriptor::NoValue;
     let _ = rdkit_cxx::chem::rdchem::AtomMonomerType::Other;
     let _ = rdkit_cxx::chem::rdchem::AtomMonomerType::Pdbresidue;
@@ -608,6 +626,18 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::PeriodicTable::get_rvdw_str;
     let _ = rdkit_cxx::chem::rdchem::PeriodicTable::get_valence_list;
     let _ = rdkit_cxx::chem::rdchem::PeriodicTable::get_valence_list_str;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::PrivateProps;
+    let _: Option<rdkit_cxx::chem::rdchem::PropertyPickleOptions> = None;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::AllProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::AtomProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::BondProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::ComputedProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::CoordsAsDouble;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::MolProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoConformers;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::PrivateProps;
+    let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::QueryAtomData;
     let _: Option<rdkit_cxx::chem::rdchem::RWMol> = None;
     let _ = rdkit_cxx::chem::rdchem::RWMol::add_atom;
     let _ = rdkit_cxx::chem::rdchem::RWMol::add_bond;
@@ -628,6 +658,8 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::RWMol::clone;
     let _ = rdkit_cxx::chem::rdchem::RWMol::default;
     let _ = rdkit_cxx::chem::rdchem::RWMol::clone;
+    let _ = rdkit_cxx::chem::rdchem::RWMol::from_pkl_string;
+    let _ = rdkit_cxx::chem::rdchem::RWMol::from_pkl_string_with_property_flags;
     let _: Option<rdkit_cxx::chem::rdchem::RingInfoRef> = None;
     let _: Option<rdkit_cxx::chem::rdchem::RingInfoMut> = None;
     let _ = rdkit_cxx::chem::rdchem::RingInfoMut::add_ring;
@@ -684,6 +716,11 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::StereoGroupType::StereoAbsolute;
     let _ = rdkit_cxx::chem::rdchem::StereoGroupType::StereoAnd;
     let _ = rdkit_cxx::chem::rdchem::StereoGroupType::StereoOr;
+    use rdkit_cxx::chem::rdchem::set_atom_alias as _;
+    use rdkit_cxx::chem::rdchem::set_atom_r_label as _;
+    use rdkit_cxx::chem::rdchem::set_atom_value as _;
+    use rdkit_cxx::chem::rdchem::set_default_pickle_properties as _;
+    use rdkit_cxx::chem::rdchem::set_supplemental_smiles_label as _;
     let _ = rdkit_cxx::chem::rdchem::StereoSpecified::Specified;
     let _: Option<rdkit_cxx::chem::rdchem::StereoDescriptor> = None;
     let _ = rdkit_cxx::chem::rdchem::StereoDescriptor::BondCis;

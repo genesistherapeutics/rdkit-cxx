@@ -9,6 +9,11 @@
 complete = ["rdkit.rdBase"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.AllProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::AllProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::AllProps"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom"
 rust = ["rdkit_cxx::chem::rdchem::Atom", "rdkit_cxx::chem::rdchem::AtomRef", "rdkit_cxx::chem::rdchem::AtomMut"]
 
@@ -460,6 +465,11 @@ python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.__init__"
 rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::default", "rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::new", "rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::new_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.AtomProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::AtomProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::AtomProps"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.AtomSanitizeException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): the base of Error::AtomValence and Error::AtomKekulize"
@@ -697,6 +707,11 @@ rust = ["rdkit_cxx::chem::rdchem::BondDir::None"]
 [[entry]]
 python = "rdkit.Chem.rdchem.BondDir.UNKNOWN"
 rust = ["rdkit_cxx::chem::rdchem::BondDir::Unknown"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::BondProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::BondProps"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.BondStereo"
@@ -937,6 +952,11 @@ python = "rdkit.Chem.rdchem.ChiralType.CHI_UNSPECIFIED"
 rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.ComputedProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::ComputedProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::ComputedProps"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Conformer"
 rust = ["rdkit_cxx::chem::rdchem::Conformer", "rdkit_cxx::chem::rdchem::ConformerRef", "rdkit_cxx::chem::rdchem::ConformerMut"]
 
@@ -1062,6 +1082,11 @@ rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Value"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.CoordsAsDouble"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::CoordsAsDouble"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::CoordsAsDouble"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.CreateStereoGroup"
 rust = ["rdkit_cxx::chem::rdchem::create_stereo_group", "rdkit_cxx::chem::rdchem::create_stereo_group_with_params"]
 
@@ -1075,8 +1100,32 @@ python = "rdkit.Chem.rdchem.ForwardStereoGroupIds"
 rust = ["rdkit_cxx::chem::rdchem::forward_stereo_group_ids"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.GetAtomAlias"
+rust = ["rdkit_cxx::chem::rdchem::get_atom_alias"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetAtomRLabel"
+rust = ["rdkit_cxx::chem::rdchem::get_atom_r_label"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetAtomValue"
+rust = ["rdkit_cxx::chem::rdchem::get_atom_value"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetDefaultPickleProperties"
+rust = ["rdkit_cxx::chem::rdchem::get_default_pickle_properties"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetNumPiElectrons"
+rust = ["rdkit_cxx::chem::rdchem::get_num_pi_electrons"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.GetPeriodicTable"
 rust = ["rdkit_cxx::chem::rdchem::get_periodic_table"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.GetSupplementalSmilesLabel"
+rust = ["rdkit_cxx::chem::rdchem::get_supplemental_smiles_label"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.HybridizationType"
@@ -1305,6 +1354,10 @@ python = "rdkit.Chem.rdchem.Mol.SetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::set_unsigned_prop", "rdkit_cxx::chem::rdchem::Mol::set_unsigned_prop_with_computed"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Mol.ToBinary"
+rust = ["rdkit_cxx::chem::rdchem::Mol::to_binary", "rdkit_cxx::chem::rdchem::Mol::to_binary_with_property_flags"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Mol.UpdatePropertyCache"
 rust = ["rdkit_cxx::chem::rdchem::Mol::update_property_cache", "rdkit_cxx::chem::rdchem::Mol::update_property_cache_with_strict"]
 
@@ -1317,18 +1370,41 @@ python = "rdkit.Chem.rdchem.Mol.__deepcopy__"
 rust = ["rdkit_cxx::chem::rdchem::Mol::clone"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Mol.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Mol.__init__"
-rust = ["rdkit_cxx::chem::rdchem::Mol::default", "rdkit_cxx::chem::rdchem::Mol::clone"]
-overloads_note = "the pickle constructors are not bound yet; Mol(mol) is Clone"
+rust = ["rdkit_cxx::chem::rdchem::Mol::default", "rdkit_cxx::chem::rdchem::Mol::clone", "rdkit_cxx::chem::rdchem::Mol::from_pkl_string", "rdkit_cxx::chem::rdchem::Mol::from_pkl_string_with_property_flags"]
+overloads_note = "the bytes and str pickle overloads share from_pkl_string; the (mol, quickCopy, confId) copy is Clone without the options"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.__new__"
 reason = "nanobind's construction hook; __init__ maps the constructors"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Mol.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::MolProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::MolProps"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.MolSanitizeException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::MolSanitize"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.NoConformers"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoConformers"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::NoConformers"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.NoProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::NoProps"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.NoValue"
@@ -1414,6 +1490,55 @@ python = "rdkit.Chem.rdchem.PeriodicTable.GetValenceList"
 rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_valence_list", "rdkit_cxx::chem::rdchem::PeriodicTable::get_valence_list_str"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.PrivateProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::PrivateProps"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::PrivateProps"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.AllProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::AllProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.AtomProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::AtomProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.BondProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::BondProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.ComputedProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::ComputedProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.CoordsAsDouble"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::CoordsAsDouble"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.MolProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::MolProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.NoConformers"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoConformers"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.NoProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.PrivateProps"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::PrivateProps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PropertyPickleOptions.QueryAtomData"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::QueryAtomData"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.RWMol"
 rust = ["rdkit_cxx::chem::rdchem::RWMol"]
 
@@ -1482,13 +1607,21 @@ python = "rdkit.Chem.rdchem.RWMol.__exit__"
 reason = "context manager over a batch edit: begin_batch_edit, then commit_batch_edit or rollback_batch_edit"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.RWMol.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__init__"
-rust = ["rdkit_cxx::chem::rdchem::RWMol::default", "rdkit_cxx::chem::rdchem::RWMol::clone"]
-overloads_note = "RWMol(mol) is From<Mol>, which moves; the pickle constructors are not bound yet"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::default", "rdkit_cxx::chem::rdchem::RWMol::clone", "rdkit_cxx::chem::rdchem::RWMol::from_pkl_string", "rdkit_cxx::chem::rdchem::RWMol::from_pkl_string_with_property_flags"]
+overloads_note = "the bytes and str pickle overloads share from_pkl_string; the (mol, quickCopy, confId) copy is Clone without the options; RWMol(mol) is also From<Mol>, which moves"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__new__"
 reason = "nanobind's construction hook; __init__ maps the constructors"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo"
@@ -1612,6 +1745,26 @@ name_exception = "an exported enum value maps to its variant, StereoGroupType::S
 python = "rdkit.Chem.rdchem.STEREO_OR"
 rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoOr"]
 name_exception = "an exported enum value maps to its variant, StereoGroupType::StereoOr"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SetAtomAlias"
+rust = ["rdkit_cxx::chem::rdchem::set_atom_alias"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SetAtomRLabel"
+rust = ["rdkit_cxx::chem::rdchem::set_atom_r_label"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SetAtomValue"
+rust = ["rdkit_cxx::chem::rdchem::set_atom_value"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SetDefaultPickleProperties"
+rust = ["rdkit_cxx::chem::rdchem::set_default_pickle_properties"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SetSupplementalSmilesLabel"
+rust = ["rdkit_cxx::chem::rdchem::set_supplemental_smiles_label"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Specified"
@@ -1901,6 +2054,10 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
 [[entry]]
 python = "rdkit.Chem.rdchem.ValenceType.IMPLICIT"
 rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.tossit"
+reason = "RDKit's test hook that raises IndexError"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromMolBlock"

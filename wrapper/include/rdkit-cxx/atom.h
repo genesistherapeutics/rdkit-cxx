@@ -73,6 +73,18 @@ unsigned atom_get_total_valence(const Atom &atom);
 bool atom_is_in_ring(const Atom &atom);
 bool atom_is_in_ring_size(const Atom &atom, int size);
 bool atom_has_valence_violation(const Atom &atom);
+
+// The module-level atom label functions in Code/GraphMol/nbWrap/Atom.cpp.
+std::unique_ptr<std::string> atom_get_alias(const Atom &atom);
+void atom_set_alias(Atom &atom, rust::Str rlabel);
+int atom_get_r_label(const Atom &atom);
+void atom_set_r_label(Atom &atom, int rlabel);
+std::unique_ptr<std::string> atom_get_value(const Atom &atom);
+void atom_set_value(Atom &atom, rust::Str rlabel);
+std::unique_ptr<std::string> atom_get_supplemental_smiles_label(
+    const Atom &atom);
+void atom_set_supplemental_smiles_label(Atom &atom, rust::Str label);
+unsigned atom_get_num_pi_electrons(const Atom &atom);
 rust::Vec<std::uint32_t> atom_get_neighbors(const Atom &atom);
 rust::Vec<std::uint32_t> atom_get_bonds(const Atom &atom);
 void atom_update_property_cache(Atom &atom, bool strict);

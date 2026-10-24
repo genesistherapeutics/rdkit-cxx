@@ -21,6 +21,15 @@ namespace rdkit_cxx {
 using RWMol = RDKit::RWMol;
 
 std::unique_ptr<RWMol> mol_new();
+// Pickles, as MolToBinary and the pickle constructors in nbWrap/Mol.cpp.
+std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
+                                           bool has_flags, unsigned flags);
+rust::Vec<std::uint8_t> mol_to_binary(const RWMol &mol, bool has_flags,
+                                      unsigned flags);
+unsigned get_default_pickle_properties();
+void set_default_pickle_properties(unsigned props);
+// PropertyPickleOptions' values in a fixed order, for a test that pins them.
+rust::Vec<std::uint32_t> property_pickle_option_values();
 std::unique_ptr<RWMol> mol_clone(const RWMol &mol);
 unsigned mol_get_num_atoms(const RWMol &mol);
 unsigned mol_get_num_atoms_with_only_explicit(const RWMol &mol,

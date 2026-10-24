@@ -14,6 +14,12 @@ pub(crate) mod ffi {
         type BondType = crate::ffi::bond::ffi::BondType;
 
         fn mol_new() -> Result<UniquePtr<RWMol>>;
+        fn mol_from_pkl_string(pkl: &[u8], has_flags: bool, flags: u32)
+        -> Result<UniquePtr<RWMol>>;
+        fn mol_to_binary(mol: &RWMol, has_flags: bool, flags: u32) -> Result<Vec<u8>>;
+        fn get_default_pickle_properties() -> Result<u32>;
+        fn set_default_pickle_properties(props: u32) -> Result<()>;
+        fn property_pickle_option_values() -> Result<Vec<u32>>;
         fn mol_clone(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn mol_get_num_atoms(mol: &RWMol) -> Result<u32>;
         fn mol_get_num_atoms_with_only_explicit(mol: &RWMol, only_explicit: bool) -> Result<u32>;

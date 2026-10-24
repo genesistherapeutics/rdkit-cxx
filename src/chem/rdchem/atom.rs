@@ -350,7 +350,7 @@ impl Atom {
         self.ptr.as_ref().unwrap()
     }
 
-    fn raw_mut(&mut self) -> Pin<&mut ffi::Atom> {
+    pub(crate) fn raw_mut(&mut self) -> Pin<&mut ffi::Atom> {
         self.ptr.pin_mut()
     }
 
@@ -472,11 +472,11 @@ impl<'m> AtomMut<'m> {
         AtomMut { mol, idx }
     }
 
-    fn raw(&self) -> &ffi::Atom {
+    pub(crate) fn raw(&self) -> &ffi::Atom {
         expect_ok_index(self.mol.get_atom_with_idx(self.idx)).raw()
     }
 
-    fn raw_mut(&mut self) -> Pin<&mut ffi::Atom> {
+    pub(crate) fn raw_mut(&mut self) -> Pin<&mut ffi::Atom> {
         expect_ok_index(self.mol.atom_ffi_mut(self.idx))
     }
 

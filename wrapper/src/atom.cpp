@@ -164,6 +164,42 @@ bool atom_has_valence_violation(const Atom &atom) {
   return atom.hasValenceViolation();
 }
 
+std::unique_ptr<std::string> atom_get_alias(const Atom &atom) {
+  return std::make_unique<std::string>(RDKit::getAtomAlias(&atom));
+}
+
+void atom_set_alias(Atom &atom, rust::Str rlabel) {
+  RDKit::setAtomAlias(&atom, std::string(rlabel));
+}
+
+int atom_get_r_label(const Atom &atom) { return RDKit::getAtomRLabel(&atom); }
+
+void atom_set_r_label(Atom &atom, int rlabel) {
+  RDKit::setAtomRLabel(&atom, rlabel);
+}
+
+std::unique_ptr<std::string> atom_get_value(const Atom &atom) {
+  return std::make_unique<std::string>(RDKit::getAtomValue(&atom));
+}
+
+void atom_set_value(Atom &atom, rust::Str rlabel) {
+  RDKit::setAtomValue(&atom, std::string(rlabel));
+}
+
+std::unique_ptr<std::string> atom_get_supplemental_smiles_label(
+    const Atom &atom) {
+  return std::make_unique<std::string>(
+      RDKit::getSupplementalSmilesLabel(&atom));
+}
+
+void atom_set_supplemental_smiles_label(Atom &atom, rust::Str label) {
+  RDKit::setSupplementalSmilesLabel(&atom, std::string(label));
+}
+
+unsigned atom_get_num_pi_electrons(const Atom &atom) {
+  return RDKit::numPiElectrons(atom);
+}
+
 rust::Vec<std::uint32_t> atom_get_neighbors(const Atom &atom) {
   rust::Vec<std::uint32_t> indices;
   for (const auto *neighbor : atom.getOwningMol().atomNeighbors(&atom)) {

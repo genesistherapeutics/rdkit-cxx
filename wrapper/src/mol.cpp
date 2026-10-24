@@ -5,12 +5,70 @@
 #include "rdkit-cxx/mol.h"
 
 #include <iostream>
+#include <string>
+
+#include <GraphMol/MolPickler.h>
+
+// set_default_pickle_properties is safe Rust only because RDKit guards the
+// default with a mutex in thread-safe builds (CONVENTIONS.md S2).
+#ifndef RDK_BUILD_THREADSAFE_SSS
+#error "rdkit-cxx needs an RDKit built with RDK_BUILD_THREADSAFE_SSS"
+#endif
 
 #include "rdkit-cxx/errors.h"
 
 namespace rdkit_cxx {
 
 std::unique_ptr<RWMol> mol_new() { return std::make_unique<RWMol>(); }
+
+std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
+                                           bool has_flags, unsigned flags) {
+  std::string text(reinterpret_cast<const char *>(pkl.data()), pkl.size());
+  auto mol = std::make_unique<RWMol>();
+  if (has_flags) {
+    RDKit::MolPickler::molFromPickle(text, mol.get(), flags);
+  } else {
+    RDKit::MolPickler::molFromPickle(text, mol.get());
+  }
+  return mol;
+}
+
+rust::Vec<std::uint8_t> mol_to_binary(const RWMol &mol, bool has_flags,
+                                      unsigned flags) {
+  std::string res;
+  if (has_flags) {
+    RDKit::MolPickler::pickleMol(mol, res, flags);
+  } else {
+    RDKit::MolPickler::pickleMol(mol, res);
+  }
+  rust::Vec<std::uint8_t> bytes;
+  bytes.reserve(res.size());
+  for (char c : res) {
+    bytes.push_back(static_cast<std::uint8_t>(c));
+  }
+  return bytes;
+}
+
+// RDKit guards the default with a mutex in thread-safe builds
+// (RDK_BUILD_THREADSAFE_SSS), as conda-forge's is.
+unsigned get_default_pickle_properties() {
+  return RDKit::MolPickler::getDefaultPickleProperties();
+}
+
+void set_default_pickle_properties(unsigned props) {
+  RDKit::MolPickler::setDefaultPickleProperties(props);
+}
+
+rust::Vec<std::uint32_t> property_pickle_option_values() {
+  using namespace RDKit::PicklerOps;
+  rust::Vec<std::uint32_t> values;
+  for (unsigned v : {NoProps, MolProps, AtomProps, BondProps, QueryAtomData,
+                     PrivateProps, ComputedProps, AllProps, CoordsAsDouble,
+                     NoConformers}) {
+    values.push_back(v);
+  }
+  return values;
+}
 
 std::unique_ptr<RWMol> mol_clone(const RWMol &mol) {
   return std::make_unique<RWMol>(mol);

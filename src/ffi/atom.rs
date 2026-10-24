@@ -102,6 +102,15 @@ pub(crate) mod ffi {
         fn atom_is_in_ring(atom: &Atom) -> Result<bool>;
         fn atom_is_in_ring_size(atom: &Atom, size: i32) -> Result<bool>;
         fn atom_has_valence_violation(atom: &Atom) -> Result<bool>;
+        fn atom_get_alias(atom: &Atom) -> Result<UniquePtr<CxxString>>;
+        fn atom_set_alias(atom: Pin<&mut Atom>, rlabel: &str) -> Result<()>;
+        fn atom_get_r_label(atom: &Atom) -> Result<i32>;
+        fn atom_set_r_label(atom: Pin<&mut Atom>, rlabel: i32) -> Result<()>;
+        fn atom_get_value(atom: &Atom) -> Result<UniquePtr<CxxString>>;
+        fn atom_set_value(atom: Pin<&mut Atom>, rlabel: &str) -> Result<()>;
+        fn atom_get_supplemental_smiles_label(atom: &Atom) -> Result<UniquePtr<CxxString>>;
+        fn atom_set_supplemental_smiles_label(atom: Pin<&mut Atom>, label: &str) -> Result<()>;
+        fn atom_get_num_pi_electrons(atom: &Atom) -> Result<u32>;
         fn atom_get_neighbors(atom: &Atom) -> Result<Vec<u32>>;
         fn atom_get_bonds(atom: &Atom) -> Result<Vec<u32>>;
         fn atom_update_property_cache(atom: Pin<&mut Atom>, strict: bool) -> Result<()>;

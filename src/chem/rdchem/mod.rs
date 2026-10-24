@@ -5,12 +5,14 @@
 //! Mirrors `rdkit.Chem.rdchem`.
 
 mod atom;
+mod atom_labels;
 mod bond;
 mod conformer;
 mod enums;
 mod mol;
 mod monomer_info;
 mod periodic_table;
+mod pickle;
 pub(crate) mod props;
 mod ring_info;
 mod rwmol;
@@ -18,6 +20,11 @@ mod stereo;
 mod substruct;
 
 pub use atom::{__noatom_for_tests, Atom, AtomMut, AtomRef, GetSmartsParams};
+pub use atom_labels::{
+    AsAtom, AsAtomMut, get_atom_alias, get_atom_r_label, get_atom_value, get_num_pi_electrons,
+    get_supplemental_smiles_label, set_atom_alias, set_atom_r_label, set_atom_value,
+    set_supplemental_smiles_label,
+};
 pub use bond::{BondMut, BondRef};
 pub use conformer::{Conformer, ConformerMut, ConformerRef};
 pub use enums::{
@@ -30,6 +37,10 @@ pub use monomer_info::{
     AtomPDBResidueInfo, AtomPDBResidueInfoParams,
 };
 pub use periodic_table::{PeriodicTable, get_periodic_table};
+pub use pickle::{
+    __property_pickle_option_values_for_tests, PropertyPickleOptions,
+    get_default_pickle_properties, set_default_pickle_properties,
+};
 pub use props::{GetPropNamesParams, GetPropsAsDictParams, PropValue};
 pub use ring_info::{RingInfoMut, RingInfoRef};
 pub use rwmol::{RWMol, ReplaceAtomParams, ReplaceBondParams};
