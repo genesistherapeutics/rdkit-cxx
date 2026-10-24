@@ -22,6 +22,7 @@
 #include "rdkit-cxx/atom.h"
 #include "rdkit-cxx/bond.h"
 #include "rdkit-cxx/conformer.h"
+#include "rdkit-cxx/data_structs.h"
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/substance_group.h"
 #include "rust/cxx.h"
@@ -48,6 +49,8 @@ int props_get_int_prop(const RDProps &obj, rust::Str key);
 unsigned props_get_unsigned_prop(const RDProps &obj, rust::Str key);
 double props_get_double_prop(const RDProps &obj, rust::Str key);
 bool props_get_bool_prop(const RDProps &obj, rust::Str key);
+std::unique_ptr<BitVect> props_get_explicit_bit_vect_prop(const RDProps &obj,
+                                                          rust::Str key);
 rust::Vec<std::uint32_t> props_get_unsigned_vect_prop(const RDProps &obj,
                                                       rust::Str key);
 std::unique_ptr<std::vector<std::string>> props_get_string_vect_prop(
@@ -69,6 +72,8 @@ void props_set_double_prop(const RDProps &obj, rust::Str key, double val,
                            bool computed);
 void props_set_bool_prop(const RDProps &obj, rust::Str key, bool val,
                          bool computed);
+void props_set_explicit_bit_vect_prop(const RDProps &obj, rust::Str key,
+                                      const BitVect &val);
 void props_clear_prop(const RDProps &obj, rust::Str key);
 void props_clear_computed_props(const RDProps &obj);
 void mol_clear_computed_props(const RWMol &mol, bool include_rings);

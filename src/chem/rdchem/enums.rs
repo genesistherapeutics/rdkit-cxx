@@ -36,6 +36,8 @@ macro_rules! rdkit_enum {
     };
 }
 
+pub(crate) use rdkit_enum;
+
 rdkit_enum! {
     /// A bond's type. Mirrors `rdchem.BondType`.
     BondType: bond::ffi::BondType {

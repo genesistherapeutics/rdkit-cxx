@@ -199,6 +199,11 @@ def test_paths_source():
                 "rust_kind": "field",
             },
             {"python": "rdkit.Chem.rdchem.Mol.__repr__", "reason": "Python protocol method"},
+            {
+                "python": "rdkit.Chem.rdchem.Mol.GetConformer",
+                "rust": ["rdkit_cxx::chem::Mol::from_file"],
+                "rust_generics": "<&str>",
+            },
         )
     )
     assert source.startswith("// Copyright (c) 2026 Steven Kearnes All rights reserved.\n")
@@ -212,4 +217,5 @@ def test_paths_source():
     assert "let _ = rdkit_cxx::chem::BondType::Single;" in source
     assert "let _ = rdkit_cxx::chem::SanitizeFlags::SANITIZE_ALL;" in source
     assert "let _ = |value: &rdkit_cxx::geometry::Point3D| { let _ = &value.x; };" in source
+    assert "let _ = rdkit_cxx::chem::Mol::from_file::<&str>;" in source
     assert "__repr__" not in source

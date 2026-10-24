@@ -544,3 +544,44 @@ fn bonds<'m>(mol: &'m Mol, atom: &ffi::Atom) -> Vec<BondRef<'m>> {
 pub(crate) fn expect_ok_index<T>(result: Result<T>) -> T {
     result.unwrap_or_else(|err| panic!("RDKit returned a bad index: {err}"))
 }
+
+/// Stamps the `ExplicitBitVect` property methods, which Python defines on
+/// `Atom` only, onto a type with `fn props(&self) -> &RDProps` (P1).
+macro_rules! atom_bit_vect_props {
+    ($type:ident $(<$lifetime:lifetime>)?, setter) => {
+        atom_bit_vect_props!($type $(<$lifetime>)?);
+
+        impl$(<$lifetime>)? $type$(<$lifetime>)? {
+            /// Mirrors `Atom.SetExplicitBitVectProp`.
+            pub fn set_explicit_bit_vect_prop(
+                &mut self,
+                key: &str,
+                val: &crate::data_structs::ExplicitBitVect,
+            ) {
+                expect_ok(crate::ffi::props::ffi::props_set_explicit_bit_vect_prop(
+                    self.props(),
+                    key,
+                    val.raw(),
+                ))
+            }
+        }
+    };
+    ($type:ident $(<$lifetime:lifetime>)?) => {
+        impl$(<$lifetime>)? $type$(<$lifetime>)? {
+            /// A missing key is `Error::Key`, and another type `Error::Value`.
+            /// Mirrors `Atom.GetExplicitBitVectProp`.
+            pub fn get_explicit_bit_vect_prop(
+                &self,
+                key: &str,
+            ) -> Result<crate::data_structs::ExplicitBitVect> {
+                Ok(crate::data_structs::ExplicitBitVect::from_ffi(
+                    crate::ffi::props::ffi::props_get_explicit_bit_vect_prop(self.props(), key)?,
+                ))
+            }
+        }
+    };
+}
+
+atom_bit_vect_props!(Atom, setter);
+atom_bit_vect_props!(AtomRef<'m>);
+atom_bit_vect_props!(AtomMut<'m>, setter);

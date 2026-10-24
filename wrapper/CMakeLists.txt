@@ -45,6 +45,8 @@ set(RDKIT_CXX_SOURCES
   src/substance_group.cpp
   src/query.cpp
   src/resonance.cpp
+  src/data_structs.cpp
+  src/fpb.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -54,6 +56,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   SmilesParse
   FileParsers
   SubstructMatch
+  DataStructs
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

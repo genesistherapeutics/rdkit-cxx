@@ -121,14 +121,15 @@ def check(inventory: dict, manifest: dict) -> list[str]:
     return problems
 
 
-def path_statement(path: str, rust_kind: str | None) -> str:
+def path_statement(path: str, rust_kind: str | None, rust_generics: str | None = None) -> str:
     *parents, last = path.split("::")
     owner = "::".join(parents)
     if rust_kind == "field":
         return f"let _ = |value: &{owner}| {{ let _ = &value.{last}; }};"
     if parents[-1][0].isupper():
-        # An associated function, method, constant, or enum variant.
-        return f"let _ = {path};"
+        # An associated function, method, constant, or enum variant. A generic
+        # one is named with the manifest's instantiation (CONVENTIONS.md T1).
+        return f"let _ = {path}{'::' + rust_generics if rust_generics else ''};"
     if last[0].isupper():
         return f"let _: Option<{path}> = None;"
     # A free function. `use` also covers `impl Trait` parameters, whose types
@@ -152,7 +153,7 @@ def paths_source(manifest: dict) -> str:
     ]
     for item in sorted(manifest.get("entry", []), key=lambda item: item["python"]):
         for path in item.get("rust", []):
-            lines.append(f"    {path_statement(path, item.get('rust_kind'))}")
+            lines.append(f"    {path_statement(path, item.get('rust_kind'), item.get('rust_generics'))}")
     lines.append("}")
     return "\n".join(lines) + "\n"
 

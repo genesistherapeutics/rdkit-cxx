@@ -11,6 +11,7 @@ use crate::Result;
 use crate::chem::Mol;
 use crate::error::{expect_ok, to_string};
 use crate::ffi::molfiles::ffi;
+use crate::util::path_bytes;
 
 /// Parameters for SMILES parsing. Mirrors `rdmolfiles.SmilesParserParams`,
 /// plus `MolFromSmiles`'s `replacements` keyword (CONVENTIONS.md A3).
@@ -253,10 +254,6 @@ impl Default for MolFromMolFileParams {
             strict_parsing: true,
         }
     }
-}
-
-fn path_bytes(path: &Path) -> &[u8] {
-    path.as_os_str().as_encoded_bytes()
 }
 
 /// Parses a SMILES string, sanitizing the result. Mirrors

@@ -9,7 +9,7 @@ mod atom_labels;
 mod bond;
 mod conformer;
 mod editable_mol;
-mod enums;
+pub(crate) mod enums;
 mod mol;
 mod mol_bundle;
 mod monomer_info;

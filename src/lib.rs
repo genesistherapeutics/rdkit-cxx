@@ -6,10 +6,12 @@
 //! wrappers.
 
 pub mod chem;
+pub mod data_structs;
 pub mod error;
 mod ffi;
 mod flags;
 pub mod geometry;
 pub mod rd_base;
+mod util;
 
 pub use error::{Error, Result};
