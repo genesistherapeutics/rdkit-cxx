@@ -8,7 +8,7 @@ use std::pin::Pin;
 use cxx::UniquePtr;
 
 use crate::Result;
-use crate::error::{expect_ok, to_string};
+use crate::error::{expect_ok, op, to_string};
 use crate::ffi::data_structs::ffi;
 
 pub(crate) mod sealed {
@@ -29,11 +29,6 @@ pub(crate) mod sealed {
 /// `SparseBitVect`. Generic functions over it cover Python's overloads for
 /// both (CONVENTIONS.md A5).
 pub trait BitVect: sealed::BitVectLike {}
-
-/// Unwraps an operator's result; operators panic where Python raises.
-pub(crate) fn op<T>(result: std::result::Result<T, cxx::Exception>) -> T {
-    result.unwrap_or_else(|err| panic!("{}", crate::Error::from(err)))
-}
 
 /// Defines a bit vector type over `ffi::BitVect` (W3).
 macro_rules! bit_vect_type {

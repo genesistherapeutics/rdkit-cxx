@@ -8,8 +8,7 @@ use std::pin::Pin;
 
 use cxx::UniquePtr;
 
-use crate::data_structs::c_data_structs::bit_vect::op;
-use crate::error::expect_ok;
+use crate::error::{expect_ok, op};
 use crate::ffi::data_structs::ffi;
 use crate::{Error, Result};
 

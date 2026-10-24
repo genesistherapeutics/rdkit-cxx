@@ -9,11 +9,10 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::enums::rdkit_enum;
-use crate::data_structs::c_data_structs::bit_vect::op;
 use crate::data_structs::c_data_structs::{
     ExplicitBitVect, IntSparseIntVect, LongSparseIntVect, UIntSparseIntVect, ULongSparseIntVect,
 };
-use crate::error::expect_ok;
+use crate::error::{expect_ok, op};
 use crate::ffi::data_structs::ffi;
 
 rdkit_enum! {
@@ -51,7 +50,7 @@ macro_rules! value_vect_type {
                 self.ptr.pin_mut()
             }
 
-            fn from_ffi(ptr: UniquePtr<ffi::$ffi>) -> $name {
+            pub(crate) fn from_ffi(ptr: UniquePtr<ffi::$ffi>) -> $name {
                 assert!(!ptr.is_null(), "RDKit returned a null vector");
                 $name { ptr }
             }

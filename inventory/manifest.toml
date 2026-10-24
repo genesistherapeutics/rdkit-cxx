@@ -6,7 +6,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdchem", "rdkit.DataStructs.cDataStructs", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdchem", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"
@@ -4252,8 +4252,207 @@ python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__sub__"
 reason = "Python's operator protocol: `&a - &b` (Sub)"
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.ComputeDihedralAngle"
+rust = ["rdkit_cxx::geometry::rd_geometry::compute_dihedral_angle"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.ComputeGridCentroid"
+rust = ["rdkit_cxx::geometry::rd_geometry::compute_grid_centroid"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.ComputeSignedDihedralAngle"
+rust = ["rdkit_cxx::geometry::rd_geometry::compute_signed_dihedral_angle"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.FindGridTerminalPoints"
+rust = ["rdkit_cxx::geometry::rd_geometry::find_grid_terminal_points"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.AngleTo"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::angle_to"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.DirectionVector"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::direction_vector"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.DotProduct"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::dot_product"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.Length"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::length"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.LengthSq"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::length_sq"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.Normalize"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::normalize"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.SignedAngleTo"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::signed_angle_to"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__add__"
+reason = "Python's operator protocol: `a + b` (Add)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__getitem__"
+reason = "Python's sequence protocol: the x and y fields cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__getstate__"
+reason = "Python's pickling protocol: the x and y fields cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__iadd__"
+reason = "Python's operator protocol: `a += b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__imul__"
+reason = "Python's operator protocol: `a *= x` (MulAssign<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__init__"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::default", "rdkit_cxx::geometry::rd_geometry::Point2D::new", "rdkit_cxx::geometry::rd_geometry::Point2D::clone"]
+overloads_note = "the Point3D overload is `Point2D::from(Point3D)`, which drops z"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__isub__"
+reason = "Python's operator protocol: `a -= b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__itruediv__"
+reason = "Python's operator protocol: `a /= x` (DivAssign<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__len__"
+reason = "Python's sequence protocol: the point has x and y"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__mul__"
+reason = "Python's operator protocol: `a * x` (Mul<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__setstate__"
+reason = "Python's pickling protocol: the x and y fields cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__sub__"
+reason = "Python's operator protocol: `a - b` (Sub)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__truediv__"
+reason = "Python's operator protocol: `a / x` (Div<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.x"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::x"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.y"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point2D::y"]
+rust_kind = "field"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D"
 rust = ["rdkit_cxx::geometry::rd_geometry::Point3D"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.AngleTo"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::angle_to"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.CrossProduct"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::cross_product"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.DirectionVector"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::direction_vector"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.Distance"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::distance"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.DotProduct"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::dot_product"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.Length"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::length"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.LengthSq"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::length_sq"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.Normalize"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::normalize"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.SignedAngleTo"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::signed_angle_to"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__add__"
+reason = "Python's operator protocol: `a + b` (Add)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__getitem__"
+reason = "Python's sequence protocol: the x, y, and z fields cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__getstate__"
+reason = "Python's pickling protocol: the x, y, and z fields cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__iadd__"
+reason = "Python's operator protocol: `a += b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__imul__"
+reason = "Python's operator protocol: `a *= x` (MulAssign<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__init__"
+rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::default", "rdkit_cxx::geometry::rd_geometry::Point3D::new", "rdkit_cxx::geometry::rd_geometry::Point3D::clone"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__isub__"
+reason = "Python's operator protocol: `a -= b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__itruediv__"
+reason = "Python's operator protocol: `a /= x` (DivAssign<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__len__"
+reason = "Python's sequence protocol: the point has x, y, and z"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__mul__"
+reason = "Python's operator protocol: `a * x` (Mul<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__setstate__"
+reason = "Python's pickling protocol: the x, y, and z fields cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__sub__"
+reason = "Python's operator protocol: `a - b` (Sub)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__truediv__"
+reason = "Python's operator protocol: `a / x` (Div<f64>)"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D.x"
@@ -4269,6 +4468,311 @@ rust_kind = "field"
 python = "rdkit.Geometry.rdGeometry.Point3D.z"
 rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::z"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.AngleTo"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::angle_to"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.DirectionVector"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::direction_vector"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.DotProduct"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::dot_product"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.Length"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::length"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.LengthSq"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::length_sq"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.Normalize"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::normalize"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__add__"
+reason = "Python's operator protocol: `&a + &b` (Add)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__getitem__"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::get"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__getstate__"
+reason = "Python's pickling protocol: coords and from_coords cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__imul__"
+reason = "Python's operator protocol: `a *= x` (MulAssign<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__init__"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::new"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__itruediv__"
+reason = "Python's operator protocol: `a /= x` (DivAssign<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__len__"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::len"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__mul__"
+reason = "Python's operator protocol: `&a * x` (Mul<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__setitem__"
+rust = ["rdkit_cxx::geometry::rd_geometry::PointND::set"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__setstate__"
+reason = "Python's pickling protocol: coords and from_coords cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__sub__"
+reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__truediv__"
+reason = "Python's operator protocol: `&a / x` (Div<f64>)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.ProtrudeDistance"
+rust = ["rdkit_cxx::geometry::rd_geometry::protrude_distance"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.TanimotoDistance"
+rust = ["rdkit_cxx::geometry::rd_geometry::tanimoto_distance"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.TverskyIndex"
+rust = ["rdkit_cxx::geometry::rd_geometry::tversky_index"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.CompareParams"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::compare_params"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridIndex"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_index"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridIndices"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_indices"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridPointIndex"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_point_index"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridPointLoc"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_point_loc"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetNumX"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_num_x"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetNumY"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_num_y"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetNumZ"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_num_z"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetOccupancyVect"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_occupancy_vect"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetOffset"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_offset"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetSize"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_size"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetSpacing"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_spacing"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetVal"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_val"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetValPoint"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_val_point"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.SetSphereOccupancy"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_sphere_occupancy", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_sphere_occupancy_with_params"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.SetVal"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_val"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.SetValPoint"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_val_point"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__iand__"
+reason = "Python's operator protocol: `a &= &b` (BitAndAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__init__"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::new", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::new_with_params", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::from_pkl"]
+overloads_note = "both pickle overloads (str and bytes) are from_pkl"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__ior__"
+reason = "Python's operator protocol: `a |= &b` (BitOrAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.CompareGrids"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::compare_grids"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.CompareParams"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::compare_params"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.CompareVectors"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::compare_vectors"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetGridIndex"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_grid_index"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetGridIndices"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_grid_indices"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetGridPointIndex"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_grid_point_index"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetGridPointLoc"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_grid_point_loc"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetNumX"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_num_x"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetNumY"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_num_y"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetNumZ"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_num_z"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetOccupancyVect"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_occupancy_vect"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetOffset"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_offset"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetSize"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_size"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetSpacing"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_spacing"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetVal"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_val"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.GetValPoint"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::get_val_point"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.SetVal"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::set_val"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.SetValPoint"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::set_val_point"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__iadd__"
+reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__iand__"
+reason = "Python's operator protocol: `a &= &b` (BitAndAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__init__"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::default", "rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::clone", "rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::new", "rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::new_with_params", "rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::from_pkl"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__ior__"
+reason = "Python's operator protocol: `a |= &b` (BitOrAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__isub__"
+reason = "Python's operator protocol: `a -= &b` (SubAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.WriteGridToFile"
+rust = ["rdkit_cxx::geometry::rd_geometry::write_grid_to_file"]
 
 [[entry]]
 python = "rdkit.rdBase.AttachFileToLog"

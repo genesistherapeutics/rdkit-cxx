@@ -34,6 +34,7 @@ const BRIDGES: &[&str] = &[
     "resonance",
     "data_structs",
     "fpb",
+    "grid",
 ];
 
 fn main() {
