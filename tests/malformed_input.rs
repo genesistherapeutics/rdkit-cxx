@@ -305,3 +305,136 @@ fn grid_constructors() {
         &bad_spacing
     )));
 }
+
+fn fpb_data(name: &str) -> Vec<u8> {
+    std::fs::read(
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/data")
+            .join(name),
+    )
+    .unwrap()
+}
+
+/// The offset of a chunk's payload, and its size.
+fn fpb_chunk(data: &[u8], tag: &[u8; 4]) -> (usize, usize) {
+    let mut pos = 8;
+    loop {
+        let size = u64::from_le_bytes(data[pos..pos + 8].try_into().unwrap()) as usize;
+        if &data[pos + 8..pos + 12] == tag {
+            return (pos + 12, size);
+        }
+        pos += 12 + size;
+    }
+}
+
+fn open_fpb(data: &[u8], name: &str) -> rdkit_cxx::Result<FPBReader> {
+    let dir = std::env::temp_dir().join(format!("rdkit-cxx-fpb-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let path = dir.join(name);
+    std::fs::write(&path, data).unwrap();
+    let mut reader = FPBReader::new_with_lazy(&path, true)?;
+    reader.init()?;
+    std::fs::remove_file(&path).unwrap();
+    Ok(reader)
+}
+
+#[test]
+fn fpb_files() {
+    let good = fpb_data("zim.head100.fpb");
+    assert_eq!(open_fpb(&good, "good.fpb").unwrap().len().unwrap(), 100);
+    let (arena, arena_size) = fpb_chunk(&good, b"AREN");
+    let (ids, ids_size) = fpb_chunk(&good, b"FPID");
+    let fend = fpb_chunk(&good, b"FEND").0 - 12;
+    let set = |offset: usize, bytes: &[u8]| {
+        let mut data = good.clone();
+        data[offset..offset + bytes.len()].copy_from_slice(bytes);
+        data
+    };
+    let table = ids + ids_size - 101 * 4;
+    let cases = [
+        ("truncated", good[..arena + 100].to_vec()),
+        ("no FEND", good[..fend].to_vec()),
+        (
+            "chunk past the end",
+            set(arena - 12, &u64::MAX.to_le_bytes()),
+        ),
+        ("zero storage", set(arena + 4, &0u32.to_le_bytes())),
+        (
+            "fingerprints past storage",
+            set(arena, &257u32.to_le_bytes()),
+        ),
+        ("ragged arena", set(arena + 8, &[2])),
+        ("huge fingerprints", set(arena, &u32::MAX.to_le_bytes())),
+        ("8-byte ids", set(ids + 4, &1u32.to_le_bytes())),
+        ("id table past its chunk", set(ids, &u32::MAX.to_le_bytes())),
+        ("ids out of order", set(table + 8, &0u32.to_le_bytes())),
+        (
+            "id past its chunk",
+            set(table + 400, &(ids_size as u32 + 1).to_le_bytes()),
+        ),
+    ];
+    assert_eq!(arena_size, 25610);
+    for (what, data) in cases {
+        assert!(is_value(open_fpb(&data, "bad.fpb")), "{what}");
+    }
+    assert!(matches!(
+        open_fpb(b"FPB2", "magic.fpb"),
+        Err(Error::Os { .. })
+    ));
+}
+
+#[test]
+fn fpb_screens() {
+    // RDKit's popcount screen indexes past its table when the threshold is
+    // small enough, for any file with a popcount table; the wrapper searches
+    // without the screen then.
+    let reader = open_fpb(&fpb_data("zim.head100.fpb"), "screen.fpb").unwrap();
+    let query = reader.get_bytes(0).unwrap();
+    for threshold in [0.7, 0.01, 0.005, 1e-7, 0.0] {
+        let expected: Vec<u32> = (0..100)
+            .filter(|&i| reader.get_tanimoto(i, &query).unwrap() >= threshold)
+            .collect();
+        let mut found: Vec<u32> = reader
+            .get_tanimoto_neighbors_with_threshold(&query, threshold)
+            .unwrap()
+            .into_iter()
+            .map(|(_, i)| i)
+            .collect();
+        found.sort();
+        assert_eq!(found, expected, "{threshold}");
+        let tversky = reader
+            .get_tversky_neighbors_with_threshold(&query, 1.0, 1.0, threshold)
+            .unwrap();
+        assert_eq!(tversky.len(), expected.len(), "{threshold}");
+    }
+    // Weights that make RDKit's bounds infinite or NaN.
+    for (ca, cb) in [(0.0, 0.0), (1.0, 0.0), (-1.0, 2.0)] {
+        reader
+            .get_tversky_neighbors_with_threshold(&query, ca, cb, 1.0)
+            .unwrap();
+    }
+
+    let mut multi = MultiFPBReader::new();
+    multi.add_reader(open_fpb(&fpb_data("zinc_random200.1.patt.fpb"), "1.fpb").unwrap());
+    multi.add_reader(open_fpb(&fpb_data("zinc_random200.2.patt.fpb"), "2.fpb").unwrap());
+    multi.init().unwrap();
+    let query = multi.get_reader(0).unwrap().get_bytes(3).unwrap();
+    let params = MultiFPBReaderNeighborsParams {
+        threshold: 0.001,
+        num_threads: 2,
+    };
+    let nbrs = multi
+        .get_tanimoto_neighbors_with_params(&query, &params)
+        .unwrap();
+    assert_eq!(nbrs[0], (1.0, 3, 0));
+    let everything = (0..2)
+        .map(|r| {
+            let reader = multi.get_reader(r).unwrap();
+            (0..200)
+                .filter(|&i| reader.get_tanimoto(i, &query).unwrap() >= 0.001)
+                .count()
+        })
+        .sum::<usize>();
+    assert_eq!(nbrs.len(), everything);
+    assert!(nbrs.windows(2).all(|w| w[0].0 >= w[1].0));
+}

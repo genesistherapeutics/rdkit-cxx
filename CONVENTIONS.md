@@ -117,7 +117,9 @@ rule changes the rule first.
 - **U2.** Binary formats RDKit parses without validating them (bit-vector,
   value-vector, sparse-int-vector, and grid pickles) are checked by
   `rdkit-cxx/pickle_checks.h` before RDKit reads them, or, where parsing
-  itself is safe, on the object right after. Parsers RDKit fuzzes
+  itself is safe, on the object right after. FPB files are read by the
+  wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
+  never reads a file that changed after the check. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors

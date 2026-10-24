@@ -4,25 +4,78 @@
  * license that can be found in the LICENSE file.
  */
 
-// FPB fingerprint files. Fingerprints cross as bytes, which are checked
-// against the file's size; RDKit reads them without a length.
+// FPB fingerprint files. RDKit trusts every size, count, and offset in an
+// FPB file, so the wrapper reads the file itself, checks its chunks, and
+// gives RDKit only the checked bytes (CONVENTIONS.md U2). Fingerprints cross
+// as bytes, checked against the file's fingerprint size and padded to its
+// storage size, which is what RDKit reads.
 
 #pragma once
 
 #include <cstdint>
 #include <memory>
+#include <sstream>
 #include <string>
+#include <vector>
 
 #include <DataStructs/FPBReader.h>
-#include <DataStructs/MultiFPBReader.h>
 
 #include "rdkit-cxx/data_structs.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
 
-using FPBReader = RDKit::FPBReader;
-using MultiFPBReader = RDKit::MultiFPBReader;
+// What the checks learn about a file, for the reads RDKit leaves unchecked.
+struct FpbLayout {
+  std::uint32_t num_bytes = 0;     // bytes in a fingerprint
+  std::uint32_t storage_size = 0;  // bytes per fingerprint in the file
+  std::uint64_t num_pop_counts = 0;
+};
+
+// An RDKit::FPBReader over a checked copy of its file.
+class FPBReader {
+ public:
+  FPBReader(std::string data, bool lazy);
+
+  void init();
+  const RDKit::FPBReader &rdkit() const { return *d_reader; }
+  const FpbLayout &layout() const { return d_layout; }
+
+  // The query padded to the storage size; throws unless it has num_bytes.
+  std::vector<std::uint8_t> query(rust::Slice<const std::uint8_t> bytes) const;
+  // Whether RDKit's popcount screen indexes its table in range for these
+  // bounds, which it computes, and casts, unchecked.
+  bool screen_in_range(double min_count, double max_count) const;
+
+ private:
+  FpbLayout d_layout;
+  bool d_lazy;
+  std::istringstream *d_stream;  // owned by d_reader
+  std::unique_ptr<RDKit::FPBReader> d_reader;
+};
+
+// RDKit's MultiFPBReader searches its readers with the popcount screen
+// always on, so the wrapper searches them itself, as RDKit does but through
+// the checks above. The readers stay owned by Rust
+// (src/data_structs/c_data_structs/fpb.rs), which keeps them alive while
+// this holds their addresses.
+class MultiFPBReader {
+ public:
+  explicit MultiFPBReader(bool init_on_search)
+      : d_init_on_search(init_on_search) {}
+
+  std::uint32_t add_reader(FPBReader &reader);
+  void init();
+  std::uint32_t num_bits() const;
+  void check_searchable() const;
+  bool init_on_search() const { return d_init_on_search; }
+  const std::vector<FPBReader *> &readers() const { return d_readers; }
+
+ private:
+  std::vector<FPBReader *> d_readers;
+  bool d_init_on_search;
+  bool d_init = false;
+};
 
 // Shared structs, defined by the bridge (src/ffi/fpb.rs).
 struct FPBNeighbor;
@@ -54,8 +107,6 @@ rust::Vec<FPBNeighbor> fpb_reader_get_tversky_neighbors(
 rust::Vec<std::uint32_t> fpb_reader_get_containing_neighbors(
     const FPBReader &reader, rust::Slice<const std::uint8_t> bv);
 
-// The readers stay owned by Rust (src/data_structs/c_data_structs/fpb.rs),
-// which keeps them alive while the MultiFPBReader holds their addresses.
 std::unique_ptr<MultiFPBReader> multi_fpb_reader_new(bool init_on_search);
 std::uint32_t multi_fpb_reader_add_reader(MultiFPBReader &multi,
                                           FPBReader &reader);
