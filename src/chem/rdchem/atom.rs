@@ -4,9 +4,11 @@ use std::pin::Pin;
 use cxx::UniquePtr;
 
 use crate::Result;
+use crate::chem::rdchem::props::{prop_getters, prop_setters};
 use crate::chem::rdchem::{BondRef, ChiralType, HybridizationType, Mol};
 use crate::error::{expect_ok, to_string};
 use crate::ffi::atom::ffi;
+use crate::ffi::props::ffi::{RDProps, atom_as_props};
 
 /// Stamps the getters that need no owning molecule onto a type with
 /// `fn raw(&self) -> &ffi::Atom` (CONVENTIONS.md W3).
@@ -209,8 +211,16 @@ impl fmt::Debug for Atom {
     }
 }
 
+impl Atom {
+    fn props(&self) -> &RDProps {
+        expect_ok(atom_as_props(self.raw()))
+    }
+}
+
 atom_getters!(Atom);
 atom_setters!(Atom);
+prop_getters!(Atom);
+prop_setters!(Atom);
 
 /// An atom in a molecule, borrowed. Mirrors `rdchem.Atom` reached through a
 /// `Mol`.
@@ -256,8 +266,15 @@ impl<'m> AtomRef<'m> {
     }
 }
 
+impl<'m> AtomRef<'m> {
+    fn props(&self) -> &'m RDProps {
+        expect_ok(atom_as_props(self.atom))
+    }
+}
+
 atom_getters!(AtomRef<'m>);
 atom_view_getters!(AtomRef);
+prop_getters!(AtomRef<'m>);
 
 impl fmt::Debug for AtomRef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -319,9 +336,17 @@ impl<'m> AtomMut<'m> {
     }
 }
 
+impl AtomMut<'_> {
+    fn props(&self) -> &RDProps {
+        expect_ok(atom_as_props(self.raw()))
+    }
+}
+
 atom_getters!(AtomMut<'m>);
 atom_view_getters!(AtomMut);
 atom_setters!(AtomMut<'m>);
+prop_getters!(AtomMut<'m>);
+prop_setters!(AtomMut<'m>);
 
 impl fmt::Debug for AtomMut<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

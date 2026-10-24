@@ -3,9 +3,11 @@ use std::pin::Pin;
 
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
+use crate::chem::rdchem::props::{prop_getters, prop_setters};
 use crate::chem::rdchem::{AtomRef, BondType, Mol};
 use crate::error::expect_ok;
 use crate::ffi::bond::ffi;
+use crate::ffi::props::ffi::{RDProps, bond_as_props};
 
 /// Stamps the getters that need no owning molecule onto a type with
 /// `fn raw(&self) -> &ffi::Bond` (CONVENTIONS.md W3).
@@ -112,7 +114,14 @@ impl<'m> BondRef<'m> {
     }
 }
 
+impl<'m> BondRef<'m> {
+    fn props(&self) -> &'m RDProps {
+        expect_ok(bond_as_props(self.bond))
+    }
+}
+
 bond_getters!(BondRef<'m>);
+prop_getters!(BondRef<'m>);
 
 impl fmt::Debug for BondRef<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -161,8 +170,16 @@ impl<'m> BondMut<'m> {
     }
 }
 
+impl BondMut<'_> {
+    fn props(&self) -> &RDProps {
+        expect_ok(bond_as_props(self.raw()))
+    }
+}
+
 bond_getters!(BondMut<'m>);
 bond_setters!(BondMut<'m>);
+prop_getters!(BondMut<'m>);
+prop_setters!(BondMut<'m>);
 
 impl fmt::Debug for BondMut<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

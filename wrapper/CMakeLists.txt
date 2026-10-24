@@ -30,6 +30,7 @@ set(RDKIT_CXX_SOURCES
   src/molfiles.cpp
   src/atom.cpp
   src/bond.cpp
+  src/props.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

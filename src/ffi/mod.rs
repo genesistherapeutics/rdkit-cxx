@@ -5,4 +5,5 @@ pub(crate) mod bond;
 pub(crate) mod errors;
 pub(crate) mod mol;
 pub(crate) mod molfiles;
+pub(crate) mod props;
 pub(crate) mod rd_base;

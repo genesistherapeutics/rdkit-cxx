@@ -72,6 +72,16 @@ rule changes the rule first.
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
   molecule race. Parallel code gives each thread its own molecule.
 
+## Properties
+
+- **P1.** Properties follow A2 and A4 like any method. Missing keys are
+  `Error::Key`, type mismatches and invalid UTF-8 are `Error::Value`, and the
+  getters and setters come from `prop_getters!` and `prop_setters!` rather
+  than being written per class. Every class with properties derives from
+  `RDKit::RDProps`, so one set of wrappers takes `const RDProps&`, and each
+  class has an upcast, `<class>_as_props`. The `default=` overloads of the
+  getters are not bound: `has_prop` covers them.
+
 ## Documentation
 
 - **D1.** Doc examples are `no_run` or `compile_fail`; behavior is tested

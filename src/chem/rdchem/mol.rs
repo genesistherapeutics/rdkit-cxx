@@ -5,9 +5,11 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
+use crate::chem::rdchem::props::{prop_getters, prop_setters};
 use crate::chem::rdchem::{AtomMut, AtomRef, BondMut, BondRef};
 use crate::error::expect_ok;
 use crate::ffi::mol::ffi;
+use crate::ffi::props::ffi::{RDProps, mol_as_props, mol_clear_computed_props};
 
 /// A molecule. Mirrors `rdchem.Mol`.
 ///
@@ -194,6 +196,26 @@ index_iterator!(
     BondRef,
     get_bond_with_idx
 );
+
+impl Mol {
+    fn props(&self) -> &RDProps {
+        expect_ok(mol_as_props(self.as_ffi()))
+    }
+
+    /// Removes the properties RDKit computed, ring information included.
+    /// Mirrors `Mol.ClearComputedProps`.
+    pub fn clear_computed_props(&mut self) {
+        self.clear_computed_props_with_include_rings(true)
+    }
+
+    /// Mirrors `Mol.ClearComputedProps(includeRings)`.
+    pub fn clear_computed_props_with_include_rings(&mut self, include_rings: bool) {
+        expect_ok(mol_clear_computed_props(self.as_ffi(), include_rings))
+    }
+}
+
+prop_getters!(Mol);
+prop_setters!(Mol, mol);
 
 /// An empty molecule. Mirrors `Mol()`.
 impl Default for Mol {

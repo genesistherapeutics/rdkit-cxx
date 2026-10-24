@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// One name per `src/ffi/<name>.rs` (CONVENTIONS.md B4).
-const BRIDGES: &[&str] = &["rd_base", "errors", "mol", "molfiles", "atom", "bond"];
+const BRIDGES: &[&str] = &[
+    "rd_base", "errors", "mol", "molfiles", "atom", "bond", "props",
+];
 
 fn main() {
     for var in ["RDKIT_PREFIX", "CONDA_PREFIX", "CXX", "DOCS_RS"] {
