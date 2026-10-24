@@ -3,9 +3,26 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/rd_base.h");
+
+        type BlockLogs;
+        type CaptureErrorLog;
+
         fn rdkit_version() -> Result<UniquePtr<CxxString>>;
         fn boost_version() -> Result<UniquePtr<CxxString>>;
+        fn rdkit_build() -> Result<UniquePtr<CxxString>>;
         fn disable_log(spec: &str) -> Result<()>;
         fn enable_log(spec: &str) -> Result<()>;
+        fn log_status() -> Result<UniquePtr<CxxString>>;
+        fn log_to_cpp_streams() -> Result<()>;
+        fn log_debug_msg(msg: &str) -> Result<()>;
+        fn log_info_msg(msg: &str) -> Result<()>;
+        fn log_warning_msg(msg: &str) -> Result<()>;
+        fn log_error_msg(msg: &str) -> Result<()>;
+        fn log_message(spec: &str, msg: &str) -> Result<()>;
+        fn seed_random_number_generator(seed: u32) -> Result<()>;
+
+        fn block_logs_new() -> Result<UniquePtr<BlockLogs>>;
+        fn capture_error_log_new() -> Result<UniquePtr<CaptureErrorLog>>;
+        fn capture_error_log_messages(capture: &CaptureErrorLog) -> Result<UniquePtr<CxxString>>;
     }
 }

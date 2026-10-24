@@ -2,7 +2,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = []
+complete = ["rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom"
@@ -1333,6 +1333,46 @@ rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::z"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.rdBase.AttachFileToLog"
+reason = "a no-op in RDKit's nanobind wrapper"
+
+[[entry]]
+python = "rdkit.rdBase.BlockLogs"
+rust = ["rdkit_cxx::rd_base::BlockLogs"]
+
+[[entry]]
+python = "rdkit.rdBase.BlockLogs.__enter__"
+reason = "context manager protocol; the Rust guard acts until dropped"
+
+[[entry]]
+python = "rdkit.rdBase.BlockLogs.__exit__"
+reason = "context manager protocol; the Rust guard acts until dropped"
+
+[[entry]]
+python = "rdkit.rdBase.BlockLogs.__init__"
+rust = ["rdkit_cxx::rd_base::BlockLogs::default"]
+
+[[entry]]
+python = "rdkit.rdBase.CaptureErrorLog"
+rust = ["rdkit_cxx::rd_base::CaptureErrorLog"]
+
+[[entry]]
+python = "rdkit.rdBase.CaptureErrorLog.__enter__"
+reason = "context manager protocol; the Rust guard acts until dropped"
+
+[[entry]]
+python = "rdkit.rdBase.CaptureErrorLog.__exit__"
+reason = "context manager protocol; the Rust guard acts until dropped"
+
+[[entry]]
+python = "rdkit.rdBase.CaptureErrorLog.__init__"
+rust = ["rdkit_cxx::rd_base::CaptureErrorLog::default"]
+
+[[entry]]
+python = "rdkit.rdBase.CaptureErrorLog.messages"
+rust = ["rdkit_cxx::rd_base::CaptureErrorLog::messages"]
+
+[[entry]]
 python = "rdkit.rdBase.DisableLog"
 rust = ["rdkit_cxx::rd_base::disable_log"]
 
@@ -1341,8 +1381,66 @@ python = "rdkit.rdBase.EnableLog"
 rust = ["rdkit_cxx::rd_base::enable_log"]
 
 [[entry]]
+python = "rdkit.rdBase.IndexErrorException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Index"
+
+[[entry]]
+python = "rdkit.rdBase.LogDebugMsg"
+rust = ["rdkit_cxx::rd_base::log_debug_msg"]
+
+[[entry]]
+python = "rdkit.rdBase.LogErrorMsg"
+rust = ["rdkit_cxx::rd_base::log_error_msg"]
+
+[[entry]]
+python = "rdkit.rdBase.LogInfoMsg"
+rust = ["rdkit_cxx::rd_base::log_info_msg"]
+
+[[entry]]
+python = "rdkit.rdBase.LogMessage"
+rust = ["rdkit_cxx::rd_base::log_message"]
+
+[[entry]]
+python = "rdkit.rdBase.LogStatus"
+rust = ["rdkit_cxx::rd_base::log_status"]
+
+[[entry]]
+python = "rdkit.rdBase.LogToCppStreams"
+rust = ["rdkit_cxx::rd_base::log_to_cpp_streams"]
+
+[[entry]]
+python = "rdkit.rdBase.LogToPythonLogger"
+reason = "routes RDKit's logs to Python's logging module"
+
+[[entry]]
+python = "rdkit.rdBase.LogToPythonStderr"
+reason = "routes RDKit's logs to Python's sys.stderr"
+
+[[entry]]
+python = "rdkit.rdBase.LogWarningMsg"
+rust = ["rdkit_cxx::rd_base::log_warning_msg"]
+
+[[entry]]
+python = "rdkit.rdBase.SeedRandomNumberGenerator"
+rust = ["rdkit_cxx::rd_base::seed_random_number_generator"]
+
+[[entry]]
+python = "rdkit.rdBase.ValueErrorException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.rdBase.WrapLogs"
+reason = "tees RDKit's logs to Python's sys.stderr"
+
+[[entry]]
 python = "rdkit.rdBase.boostVersion"
 rust = ["rdkit_cxx::rd_base::boost_version"]
+
+[[entry]]
+python = "rdkit.rdBase.rdkitBuild"
+rust = ["rdkit_cxx::rd_base::rdkit_build"]
 
 [[entry]]
 python = "rdkit.rdBase.rdkitVersion"

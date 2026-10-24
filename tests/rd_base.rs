@@ -1,3 +1,4 @@
+use rdkit_cxx::chem::mol_from_smiles;
 use rdkit_cxx::rd_base;
 
 #[test]
@@ -14,7 +15,49 @@ fn boost_version_is_empty_or_boost_lib_version() {
 }
 
 #[test]
-fn log_can_be_disabled_and_enabled() {
+fn build_is_described() {
+    assert!(!rd_base::rdkit_build().is_empty());
+}
+
+// The logs are process-wide, so everything that touches them is in one test.
+#[test]
+fn logs() {
     rd_base::disable_log("rdApp.error");
+    assert!(rd_base::log_status().contains("rdApp.error:disabled"));
     rd_base::enable_log("rdApp.error");
+    assert!(rd_base::log_status().contains("rdApp.error:enabled"));
+
+    {
+        let capture = rd_base::CaptureErrorLog::default();
+        rd_base::log_error_msg("captured message");
+        rd_base::log_message("rdApp.error", "second message");
+        rd_base::log_message("not.a.log", "ignored");
+        // RDKit reports an unparsable SMILES to its error log.
+        assert!(mol_from_smiles("C1CC").is_err());
+        let messages = capture.messages();
+        assert!(messages.contains("captured message"), "{messages}");
+        assert!(messages.contains("second message"));
+        assert!(!messages.contains("ignored"));
+        assert!(messages.contains("SMILES Parse Error"), "{messages}");
+    }
+
+    {
+        let _blocked = rd_base::BlockLogs::default();
+        assert!(rd_base::log_status().contains("rdApp.error:disabled"));
+        let capture = rd_base::CaptureErrorLog::default();
+        rd_base::log_error_msg("not shown");
+        // Capturing enables the log it captures.
+        assert!(capture.messages().contains("not shown"));
+    }
+    assert!(rd_base::log_status().contains("rdApp.error:enabled"));
+
+    rd_base::log_to_cpp_streams();
+    rd_base::log_debug_msg("debug is disabled by default");
+    rd_base::log_info_msg("info is disabled by default");
+    rd_base::log_warning_msg("rd_base test warning");
+}
+
+#[test]
+fn seeding_is_accepted() {
+    rd_base::seed_random_number_generator(42);
 }

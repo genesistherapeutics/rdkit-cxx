@@ -522,8 +522,24 @@ fn manifest_paths_exist() {
     let _ = |value: &rdkit_cxx::geometry::rd_geometry::Point3D| { let _ = &value.x; };
     let _ = |value: &rdkit_cxx::geometry::rd_geometry::Point3D| { let _ = &value.y; };
     let _ = |value: &rdkit_cxx::geometry::rd_geometry::Point3D| { let _ = &value.z; };
+    let _: Option<rdkit_cxx::rd_base::BlockLogs> = None;
+    let _ = rdkit_cxx::rd_base::BlockLogs::default;
+    let _: Option<rdkit_cxx::rd_base::CaptureErrorLog> = None;
+    let _ = rdkit_cxx::rd_base::CaptureErrorLog::default;
+    let _ = rdkit_cxx::rd_base::CaptureErrorLog::messages;
     use rdkit_cxx::rd_base::disable_log as _;
     use rdkit_cxx::rd_base::enable_log as _;
+    let _: Option<rdkit_cxx::Error> = None;
+    use rdkit_cxx::rd_base::log_debug_msg as _;
+    use rdkit_cxx::rd_base::log_error_msg as _;
+    use rdkit_cxx::rd_base::log_info_msg as _;
+    use rdkit_cxx::rd_base::log_message as _;
+    use rdkit_cxx::rd_base::log_status as _;
+    use rdkit_cxx::rd_base::log_to_cpp_streams as _;
+    use rdkit_cxx::rd_base::log_warning_msg as _;
+    use rdkit_cxx::rd_base::seed_random_number_generator as _;
+    let _: Option<rdkit_cxx::Error> = None;
     use rdkit_cxx::rd_base::boost_version as _;
+    use rdkit_cxx::rd_base::rdkit_build as _;
     use rdkit_cxx::rd_base::rdkit_version as _;
 }
