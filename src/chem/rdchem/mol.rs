@@ -5,7 +5,7 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
-use crate::chem::rdchem::{AtomRef, BondRef};
+use crate::chem::rdchem::{AtomMut, AtomRef, BondMut, BondRef};
 use crate::error::expect_ok;
 use crate::ffi::mol::ffi;
 
@@ -35,7 +35,6 @@ impl Mol {
         self.ptr.as_ref().unwrap()
     }
 
-    #[allow(dead_code)] // used by later wrappers
     pub(crate) fn pin_mut(&mut self) -> std::pin::Pin<&mut ffi::RWMol> {
         self.ptr.pin_mut()
     }
@@ -92,6 +91,44 @@ impl Mol {
         Ok(u32::try_from(idx)
             .ok()
             .map(|idx| expect_ok_index(self.get_bond_with_idx(idx))))
+    }
+
+    /// Mirrors `Mol.GetAtomWithIdx`, for editing.
+    pub fn get_atom_with_idx_mut(&mut self, idx: u32) -> Result<AtomMut<'_>> {
+        self.atom_ffi_mut(idx)?;
+        Ok(AtomMut::new(self, idx))
+    }
+
+    /// Mirrors `Mol.GetBondWithIdx`, for editing.
+    pub fn get_bond_with_idx_mut(&mut self, idx: u32) -> Result<BondMut<'_>> {
+        self.bond_ffi_mut(idx)?;
+        Ok(BondMut::new(self, idx))
+    }
+
+    pub(crate) fn atom_ffi_mut(
+        &mut self,
+        idx: u32,
+    ) -> Result<std::pin::Pin<&mut crate::ffi::atom::ffi::Atom>> {
+        Ok(ffi::mol_get_atom_with_idx_mut(self.pin_mut(), idx)?)
+    }
+
+    pub(crate) fn bond_ffi_mut(
+        &mut self,
+        idx: u32,
+    ) -> Result<std::pin::Pin<&mut crate::ffi::bond::ffi::Bond>> {
+        Ok(ffi::mol_get_bond_with_idx_mut(self.pin_mut(), idx)?)
+    }
+
+    /// Recomputes implicit valences and related properties, failing on a bad
+    /// valence. Mirrors `Mol.UpdatePropertyCache`.
+    pub fn update_property_cache(&mut self) -> Result<()> {
+        self.update_property_cache_with_strict(true)
+    }
+
+    /// Recomputes implicit valences and related properties, failing on a bad
+    /// valence only when `strict`. Mirrors `Mol.UpdatePropertyCache(strict)`.
+    pub fn update_property_cache_with_strict(&mut self, strict: bool) -> Result<()> {
+        Ok(ffi::mol_update_property_cache(self.pin_mut(), strict)?)
     }
 
     /// Mirrors `Mol.GetAtoms`.

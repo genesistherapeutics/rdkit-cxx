@@ -31,4 +31,12 @@ bool bond_get_is_conjugated(const Bond &bond) {
   return bond.getIsConjugated();
 }
 
+void bond_set_bond_type(Bond &bond, BondType b_t) { bond.setBondType(b_t); }
+
+void bond_set_is_aromatic(Bond &bond, bool what) { bond.setIsAromatic(what); }
+
+void bond_set_is_conjugated(Bond &bond, bool what) {
+  bond.setIsConjugated(what);
+}
+
 }  // namespace rdkit_cxx

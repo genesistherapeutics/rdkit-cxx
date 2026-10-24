@@ -1,4 +1,7 @@
 use std::fmt;
+use std::pin::Pin;
+
+use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::{BondRef, ChiralType, HybridizationType, Mol};
@@ -20,9 +23,10 @@ macro_rules! atom_getters {
                 expect_ok(ffi::atom_get_atomic_num(self.raw()))
             }
 
-            /// The element symbol. Mirrors `Atom.GetSymbol`.
-            pub fn get_symbol(&self) -> String {
-                to_string(expect_ok(ffi::atom_get_symbol(self.raw()))).expect("element symbols are ASCII")
+            /// The element symbol. Fails for an atomic number RDKit's
+            /// periodic table lacks. Mirrors `Atom.GetSymbol`.
+            pub fn get_symbol(&self) -> Result<String> {
+                to_string(ffi::atom_get_symbol(self.raw())?)
             }
 
             /// Mirrors `Atom.GetFormalCharge`.
@@ -59,10 +63,10 @@ macro_rules! atom_getters {
 }
 
 /// Stamps the getters that need the owning molecule onto a view with
-/// `fn raw(&self) -> &ffi::Atom` and `fn mol(&self) -> &Mol` (W4).
+/// `fn raw(&self) -> &ffi::Atom` (W4).
 macro_rules! atom_view_getters {
     ($type:ident) => {
-        impl<'m> $type<'m> {
+        impl $type<'_> {
             /// The number of explicit neighbors. Mirrors `Atom.GetDegree`.
             pub fn get_degree(&self) -> u32 {
                 expect_ok(ffi::atom_get_degree(self.raw()))
@@ -109,6 +113,105 @@ macro_rules! atom_view_getters {
     };
 }
 
+/// Stamps the setters onto a type with
+/// `fn raw_mut(&mut self) -> Pin<&mut ffi::Atom>` (W3).
+macro_rules! atom_setters {
+    ($type:ident $(<$lifetime:lifetime>)?) => {
+        impl$(<$lifetime>)? $type$(<$lifetime>)? {
+            /// Mirrors `Atom.SetAtomicNum`.
+            pub fn set_atomic_num(&mut self, new_num: i32) {
+                expect_ok(ffi::atom_set_atomic_num(self.raw_mut(), new_num))
+            }
+
+            /// Mirrors `Atom.SetFormalCharge`.
+            pub fn set_formal_charge(&mut self, what: i32) {
+                expect_ok(ffi::atom_set_formal_charge(self.raw_mut(), what))
+            }
+
+            /// Mirrors `Atom.SetIsAromatic`.
+            pub fn set_is_aromatic(&mut self, what: bool) {
+                expect_ok(ffi::atom_set_is_aromatic(self.raw_mut(), what))
+            }
+
+            /// Mirrors `Atom.SetIsotope`.
+            pub fn set_isotope(&mut self, what: u32) {
+                expect_ok(ffi::atom_set_isotope(self.raw_mut(), what))
+            }
+
+            /// Mirrors `Atom.SetNumExplicitHs`.
+            pub fn set_num_explicit_hs(&mut self, what: u32) {
+                expect_ok(ffi::atom_set_num_explicit_hs(self.raw_mut(), what))
+            }
+
+            /// Disallows implicit hydrogens when `what`. Mirrors
+            /// `Atom.SetNoImplicit`.
+            pub fn set_no_implicit(&mut self, what: bool) {
+                expect_ok(ffi::atom_set_no_implicit(self.raw_mut(), what))
+            }
+
+            /// Mirrors `Atom.SetHybridization`.
+            pub fn set_hybridization(&mut self, what: HybridizationType) {
+                expect_ok(ffi::atom_set_hybridization(self.raw_mut(), what.to_ffi()))
+            }
+
+            /// Mirrors `Atom.SetChiralTag`.
+            pub fn set_chiral_tag(&mut self, what: ChiralType) {
+                expect_ok(ffi::atom_set_chiral_tag(self.raw_mut(), what.to_ffi()))
+            }
+        }
+    };
+}
+
+/// An atom outside any molecule. Mirrors `rdchem.Atom()`; `RWMol::add_atom`
+/// copies it into a molecule.
+pub struct Atom {
+    /// Never null.
+    ptr: UniquePtr<ffi::Atom>,
+}
+
+impl Atom {
+    fn from_ffi(ptr: UniquePtr<ffi::Atom>) -> Atom {
+        assert!(!ptr.is_null(), "RDKit returned a null atom");
+        Atom { ptr }
+    }
+
+    pub(crate) fn raw(&self) -> &ffi::Atom {
+        self.ptr.as_ref().unwrap()
+    }
+
+    fn raw_mut(&mut self) -> Pin<&mut ffi::Atom> {
+        self.ptr.pin_mut()
+    }
+
+    /// An atom of the element with symbol `what`. Mirrors `Atom(what)`.
+    pub fn new(what: &str) -> Result<Atom> {
+        Ok(Atom::from_ffi(ffi::atom_new(what)?))
+    }
+
+    /// An atom with atomic number `num`. Mirrors `Atom(num)`.
+    pub fn from_num(num: u32) -> Atom {
+        Atom::from_ffi(expect_ok(ffi::atom_from_num(num)))
+    }
+}
+
+/// Mirrors `Atom(other)`.
+impl Clone for Atom {
+    fn clone(&self) -> Atom {
+        Atom::from_ffi(expect_ok(ffi::atom_clone(self.raw())))
+    }
+}
+
+impl fmt::Debug for Atom {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Atom")
+            .field("atomic_num", &self.get_atomic_num())
+            .finish()
+    }
+}
+
+atom_getters!(Atom);
+atom_setters!(Atom);
+
 /// An atom in a molecule, borrowed. Mirrors `rdchem.Atom` reached through a
 /// `Mol`.
 ///
@@ -139,20 +242,12 @@ impl<'m> AtomRef<'m> {
 
     /// The atom's neighbors. Mirrors `Atom.GetNeighbors`.
     pub fn get_neighbors(&self) -> Vec<AtomRef<'m>> {
-        let mol = self.mol;
-        expect_ok(ffi::atom_get_neighbors(self.atom))
-            .into_iter()
-            .map(|idx| expect_ok_index(mol.get_atom_with_idx(idx)))
-            .collect()
+        neighbors(self.mol, self.atom)
     }
 
     /// The atom's bonds. Mirrors `Atom.GetBonds`.
     pub fn get_bonds(&self) -> Vec<BondRef<'m>> {
-        let mol = self.mol;
-        expect_ok(ffi::atom_get_bonds(self.atom))
-            .into_iter()
-            .map(|idx| expect_ok_index(mol.get_bond_with_idx(idx)))
-            .collect()
+        bonds(self.mol, self.atom)
     }
 
     /// Mirrors `Atom.GetOwningMol`.
@@ -172,7 +267,83 @@ impl fmt::Debug for AtomRef<'_> {
     }
 }
 
-/// Unwraps a lookup by an index RDKit itself returned.
+/// An atom in a molecule, borrowed exclusively for editing. Mirrors
+/// `rdchem.Atom` reached through a `Mol`.
+///
+/// It holds an index and finds the atom on each call, so it needs no
+/// `unsafe` (CONVENTIONS.md W2).
+pub struct AtomMut<'m> {
+    mol: &'m mut Mol,
+    idx: u32,
+}
+
+impl<'m> AtomMut<'m> {
+    /// `idx` has been checked against the molecule.
+    pub(crate) fn new(mol: &'m mut Mol, idx: u32) -> AtomMut<'m> {
+        AtomMut { mol, idx }
+    }
+
+    fn raw(&self) -> &ffi::Atom {
+        expect_ok_index(self.mol.get_atom_with_idx(self.idx)).raw()
+    }
+
+    fn raw_mut(&mut self) -> Pin<&mut ffi::Atom> {
+        expect_ok_index(self.mol.atom_ffi_mut(self.idx))
+    }
+
+    /// The atom's neighbors. Mirrors `Atom.GetNeighbors`.
+    pub fn get_neighbors(&self) -> Vec<AtomRef<'_>> {
+        neighbors(self.mol, self.raw())
+    }
+
+    /// The atom's bonds. Mirrors `Atom.GetBonds`.
+    pub fn get_bonds(&self) -> Vec<BondRef<'_>> {
+        bonds(self.mol, self.raw())
+    }
+
+    /// Mirrors `Atom.GetOwningMol`.
+    pub fn get_owning_mol(&self) -> &Mol {
+        self.mol
+    }
+
+    /// Recomputes implicit valence and related properties, failing on a bad
+    /// valence. Mirrors `Atom.UpdatePropertyCache`.
+    pub fn update_property_cache(&mut self) -> Result<()> {
+        self.update_property_cache_with_strict(true)
+    }
+
+    /// Recomputes implicit valence and related properties, failing on a bad
+    /// valence only when `strict`. Mirrors `Atom.UpdatePropertyCache(strict)`.
+    pub fn update_property_cache_with_strict(&mut self, strict: bool) -> Result<()> {
+        Ok(ffi::atom_update_property_cache(self.raw_mut(), strict)?)
+    }
+}
+
+atom_getters!(AtomMut<'m>);
+atom_view_getters!(AtomMut);
+atom_setters!(AtomMut<'m>);
+
+impl fmt::Debug for AtomMut<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AtomMut").field("idx", &self.idx).finish()
+    }
+}
+
+fn neighbors<'m>(mol: &'m Mol, atom: &ffi::Atom) -> Vec<AtomRef<'m>> {
+    expect_ok(ffi::atom_get_neighbors(atom))
+        .into_iter()
+        .map(|idx| expect_ok_index(mol.get_atom_with_idx(idx)))
+        .collect()
+}
+
+fn bonds<'m>(mol: &'m Mol, atom: &ffi::Atom) -> Vec<BondRef<'m>> {
+    expect_ok(ffi::atom_get_bonds(atom))
+        .into_iter()
+        .map(|idx| expect_ok_index(mol.get_bond_with_idx(idx)))
+        .collect()
+}
+
+/// Unwraps a lookup by an index that RDKit returned or the crate checked.
 pub(crate) fn expect_ok_index<T>(result: Result<T>) -> T {
     result.unwrap_or_else(|err| panic!("RDKit returned a bad index: {err}"))
 }

@@ -43,5 +43,9 @@ pub(crate) mod ffi {
         fn bond_get_other_atom_idx(bond: &Bond, this_idx: u32) -> Result<u32>;
         fn bond_get_is_aromatic(bond: &Bond) -> Result<bool>;
         fn bond_get_is_conjugated(bond: &Bond) -> Result<bool>;
+
+        fn bond_set_bond_type(bond: Pin<&mut Bond>, b_t: BondType) -> Result<()>;
+        fn bond_set_is_aromatic(bond: Pin<&mut Bond>, what: bool) -> Result<()>;
+        fn bond_set_is_conjugated(bond: Pin<&mut Bond>, what: bool) -> Result<()>;
     }
 }

@@ -8,6 +8,18 @@
 
 namespace rdkit_cxx {
 
+std::unique_ptr<Atom> atom_new(rust::Str what) {
+  return std::make_unique<Atom>(std::string(what));
+}
+
+std::unique_ptr<Atom> atom_from_num(unsigned num) {
+  return std::make_unique<Atom>(num);
+}
+
+std::unique_ptr<Atom> atom_clone(const Atom &atom) {
+  return std::make_unique<Atom>(atom);
+}
+
 unsigned atom_get_idx(const Atom &atom) { return atom.getIdx(); }
 
 int atom_get_atomic_num(const Atom &atom) { return atom.getAtomicNum(); }
@@ -32,6 +44,32 @@ HybridizationType atom_get_hybridization(const Atom &atom) {
 
 ChiralType atom_get_chiral_tag(const Atom &atom) {
   return atom.getChiralTag();
+}
+
+void atom_set_atomic_num(Atom &atom, int new_num) {
+  atom.setAtomicNum(new_num);
+}
+
+void atom_set_formal_charge(Atom &atom, int what) {
+  atom.setFormalCharge(what);
+}
+
+void atom_set_is_aromatic(Atom &atom, bool what) { atom.setIsAromatic(what); }
+
+void atom_set_isotope(Atom &atom, unsigned what) { atom.setIsotope(what); }
+
+void atom_set_num_explicit_hs(Atom &atom, unsigned what) {
+  atom.setNumExplicitHs(what);
+}
+
+void atom_set_no_implicit(Atom &atom, bool what) { atom.setNoImplicit(what); }
+
+void atom_set_hybridization(Atom &atom, HybridizationType what) {
+  atom.setHybridization(what);
+}
+
+void atom_set_chiral_tag(Atom &atom, ChiralType what) {
+  atom.setChiralTag(what);
 }
 
 unsigned atom_get_degree(const Atom &atom) { return atom.getDegree(); }
@@ -76,6 +114,10 @@ rust::Vec<std::uint32_t> atom_get_bonds(const Atom &atom) {
     indices.push_back(bond->getIdx());
   }
   return indices;
+}
+
+void atom_update_property_cache(Atom &atom, bool strict) {
+  atom.updatePropertyCache(strict);
 }
 
 }  // namespace rdkit_cxx

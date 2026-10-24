@@ -1,4 +1,5 @@
 use std::fmt;
+use std::pin::Pin;
 
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
@@ -56,6 +57,29 @@ macro_rules! bond_getters {
     };
 }
 
+/// Stamps the setters onto a type with
+/// `fn raw_mut(&mut self) -> Pin<&mut ffi::Bond>` (W3).
+macro_rules! bond_setters {
+    ($type:ident $(<$lifetime:lifetime>)?) => {
+        impl$(<$lifetime>)? $type$(<$lifetime>)? {
+            /// Mirrors `Bond.SetBondType`.
+            pub fn set_bond_type(&mut self, b_t: BondType) {
+                expect_ok(ffi::bond_set_bond_type(self.raw_mut(), b_t.to_ffi()))
+            }
+
+            /// Mirrors `Bond.SetIsAromatic`.
+            pub fn set_is_aromatic(&mut self, what: bool) {
+                expect_ok(ffi::bond_set_is_aromatic(self.raw_mut(), what))
+            }
+
+            /// Mirrors `Bond.SetIsConjugated`.
+            pub fn set_is_conjugated(&mut self, what: bool) {
+                expect_ok(ffi::bond_set_is_conjugated(self.raw_mut(), what))
+            }
+        }
+    };
+}
+
 /// A bond in a molecule, borrowed. Mirrors `rdchem.Bond`.
 #[derive(Clone, Copy)]
 pub struct BondRef<'m> {
@@ -95,5 +119,53 @@ impl fmt::Debug for BondRef<'_> {
         f.debug_struct("BondRef")
             .field("idx", &self.get_idx())
             .finish()
+    }
+}
+
+/// A bond in a molecule, borrowed exclusively for editing. Mirrors
+/// `rdchem.Bond`.
+///
+/// It holds an index and finds the bond on each call (CONVENTIONS.md W2).
+pub struct BondMut<'m> {
+    mol: &'m mut Mol,
+    idx: u32,
+}
+
+impl<'m> BondMut<'m> {
+    /// `idx` has been checked against the molecule.
+    pub(crate) fn new(mol: &'m mut Mol, idx: u32) -> BondMut<'m> {
+        BondMut { mol, idx }
+    }
+
+    fn raw(&self) -> &ffi::Bond {
+        expect_ok_index(self.mol.get_bond_with_idx(self.idx)).raw()
+    }
+
+    fn raw_mut(&mut self) -> Pin<&mut ffi::Bond> {
+        expect_ok_index(self.mol.bond_ffi_mut(self.idx))
+    }
+
+    /// Mirrors `Bond.GetBeginAtom`.
+    pub fn get_begin_atom(&self) -> AtomRef<'_> {
+        expect_ok_index(self.mol.get_atom_with_idx(self.get_begin_atom_idx()))
+    }
+
+    /// Mirrors `Bond.GetEndAtom`.
+    pub fn get_end_atom(&self) -> AtomRef<'_> {
+        expect_ok_index(self.mol.get_atom_with_idx(self.get_end_atom_idx()))
+    }
+
+    /// Mirrors `Bond.GetOwningMol`.
+    pub fn get_owning_mol(&self) -> &Mol {
+        self.mol
+    }
+}
+
+bond_getters!(BondMut<'m>);
+bond_setters!(BondMut<'m>);
+
+impl fmt::Debug for BondMut<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("BondMut").field("idx", &self.idx).finish()
     }
 }

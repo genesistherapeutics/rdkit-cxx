@@ -4,7 +4,7 @@ use rdkit_cxx::chem::{BondType, ChiralType, HybridizationType, mol_from_smiles};
 #[test]
 fn atom_getters() {
     let mol = mol_from_smiles("OCC").unwrap();
-    let symbols: Vec<_> = mol.get_atoms().map(|a| a.get_symbol()).collect();
+    let symbols: Vec<_> = mol.get_atoms().map(|a| a.get_symbol().unwrap()).collect();
     assert_eq!(symbols, ["O", "C", "C"]);
     let degrees: Vec<_> = mol.get_atoms().map(|a| a.get_degree()).collect();
     assert_eq!(degrees, [1, 2, 1]);

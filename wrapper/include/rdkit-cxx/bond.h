@@ -19,4 +19,8 @@ unsigned bond_get_other_atom_idx(const Bond &bond, unsigned this_idx);
 bool bond_get_is_aromatic(const Bond &bond);
 bool bond_get_is_conjugated(const Bond &bond);
 
+void bond_set_bond_type(Bond &bond, BondType b_t);
+void bond_set_is_aromatic(Bond &bond, bool what);
+void bond_set_is_conjugated(Bond &bond, bool what);
+
 }  // namespace rdkit_cxx
