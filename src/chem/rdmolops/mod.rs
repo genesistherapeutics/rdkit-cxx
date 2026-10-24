@@ -4,6 +4,8 @@
 
 //! Mirrors `rdkit.Chem.rdmolops`.
 
+mod adjust_query;
+mod fingerprints;
 mod hs;
 mod perception;
 mod stereo;
@@ -17,6 +19,8 @@ use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::molops::ffi;
 
+pub use adjust_query::*;
+pub use fingerprints::*;
 pub use hs::*;
 pub use perception::*;
 pub use stereo::*;

@@ -169,8 +169,9 @@ rule changes the rule first.
 - **A4.** An optional parameter that changes the return type gets its own
   function, `name_<param>` (`GetMolFrags(asMols=True)` →
   `get_mol_frags_as_mols`), and does not count toward A2. Python output
-  arguments (lists the call fills in) are not bound; the return value carries
-  that information.
+  arguments (lists the call fills in) are not bound as arguments; the return
+  value carries that information, from the function itself or, when that
+  would change its return type, from a `_with_outputs` form (A9).
 - **A5.** Overloads that differ by an argument's type: the first in
   nanobind's order keeps the name, and the others append `_<type>` in
   snake_case. Constructors: a zero-argument `__init__` is `Default`; a copy
@@ -189,6 +190,11 @@ rule changes the rule first.
   write Python's defaults in Rust.
 - **A8.** File paths cross the bridge as bytes
   (`Path::as_os_str().as_encoded_bytes()`), never as `&str`.
+- **A9.** Python output arguments that carry information nothing else
+  returns (fingerprints' `atomBits`, `bitInfo`, and `atomCounts`) come back
+  from a `<name>_with_outputs` function, which takes the same parameters and
+  returns the result with an outputs struct. An in-out argument is an
+  `Option` field of the parameters, and its updated value is in the outputs.
 
 ## Types
 

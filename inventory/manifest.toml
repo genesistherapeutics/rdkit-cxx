@@ -2897,6 +2897,41 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriteParams::rooted_at_atom"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNOREALL"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNOREALL"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNORECHAINS"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORECHAINS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNOREDUMMIES"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNOREDUMMIES"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNOREMAPPED"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNOREMAPPED"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNORENONDUMMIES"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORENONDUMMIES"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNORENONE"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORENONE"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ADJUST_IGNORERINGS"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORERINGS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.AROMATICITY_CUSTOM"
 rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityCustom"]
 name_exception = "exported enum value (N7)"
@@ -2967,6 +3002,160 @@ python = "rdkit.Chem.rdmolops.AddWavyBondsForStereoAny"
 rust = ["rdkit_cxx::chem::rdmolops::add_wavy_bonds_for_stereo_any", "rdkit_cxx::chem::rdmolops::add_wavy_bonds_for_stereo_any_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.NoAdjustments"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::no_adjustments"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.__init__"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustConjugatedFiveRings"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_conjugated_five_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustDegree"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_degree"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustDegreeFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_degree_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustHeavyDegree"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_heavy_degree"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustHeavyDegreeFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_heavy_degree_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustRingChain"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_ring_chain"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustRingChainFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_ring_chain_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustRingCount"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_ring_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustRingCountFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_ring_count_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustSingleBondsBetweenAromaticAtoms"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_single_bonds_between_aromatic_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.adjustSingleBondsToDegreeOneNeighbors"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::adjust_single_bonds_to_degree_one_neighbors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.aromatizeIfPossible"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::aromatize_if_possible"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.makeAtomsGeneric"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::make_atoms_generic"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.makeAtomsGenericFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::make_atoms_generic_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.makeBondsGeneric"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::make_bonds_generic"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.makeBondsGenericFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::make_bonds_generic_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.makeDummiesQueries"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::make_dummies_queries"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.setMDLFiveRingAromaticity"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::set_mdl_five_ring_aromaticity"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryParameters.useStereoCareForBonds"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryParameters::use_stereo_care_for_bonds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryProperties"
+rust = ["rdkit_cxx::chem::rdmolops::adjust_query_properties", "rdkit_cxx::chem::rdmolops::adjust_query_properties_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryPropertiesWithGenericGroups"
+rust = ["rdkit_cxx::chem::rdmolops::adjust_query_properties_with_generic_groups", "rdkit_cxx::chem::rdmolops::adjust_query_properties_with_generic_groups_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNOREALL"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNOREALL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNORECHAINS"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORECHAINS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNOREDUMMIES"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNOREDUMMIES"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNOREMAPPED"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNOREMAPPED"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNORENONDUMMIES"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORENONDUMMIES"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNORENONE"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORENONE"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AdjustQueryWhichFlags.ADJUST_IGNORERINGS"
+rust = ["rdkit_cxx::chem::rdmolops::AdjustQueryWhichFlags::ADJUST_IGNORERINGS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.AromaticityModel"
 rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel"]
 
@@ -3033,6 +3222,82 @@ rust = ["rdkit_cxx::chem::rdmolops::BondWedgingParameters::wedge_two_bonds_if_po
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__bool__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__contains__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__delitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__eq__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__getitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__init__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__ne__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__repr__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.__setitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.append"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.clear"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.count"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.extend"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.insert"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.pop"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BoolVector.remove"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.CanonicalizeStereoGroups"
 rust = ["rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups", "rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups_with_params"]
 
@@ -3063,6 +3328,10 @@ rust = ["rdkit_cxx::chem::rdmolops::collapse_attachment_points", "rdkit_cxx::che
 [[entry]]
 python = "rdkit.Chem.rdmolops.ComputeAtomCIPRanks"
 rust = ["rdkit_cxx::chem::rdmolops::compute_atom_cip_ranks"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ConvertGenericQueriesToSubstanceGroups"
+rust = ["rdkit_cxx::chem::rdmolops::convert_generic_queries_to_substance_groups"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.CountAtomElec"
@@ -3157,12 +3426,28 @@ python = "rdkit.Chem.rdmolops.KekulizeIfPossible"
 rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.LayeredFingerprint"
+rust = ["rdkit_cxx::chem::rdmolops::layered_fingerprint", "rdkit_cxx::chem::rdmolops::layered_fingerprint_with_params", "rdkit_cxx::chem::rdmolops::layered_fingerprint_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.LayeredFingerprint_substructLayers"
+rust = ["rdkit_cxx::chem::rdmolops::layered_fingerprint_substruct_layers"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.MergeQueryHs"
 rust = ["rdkit_cxx::chem::rdmolops::merge_query_hs", "rdkit_cxx::chem::rdmolops::merge_query_hs_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.NeedsHs"
 rust = ["rdkit_cxx::chem::rdmolops::needs_hs"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.PatternFingerprint"
+rust = ["rdkit_cxx::chem::rdmolops::pattern_fingerprint", "rdkit_cxx::chem::rdmolops::pattern_fingerprint_with_params", "rdkit_cxx::chem::rdmolops::pattern_fingerprint_with_outputs", "rdkit_cxx::chem::rdmolops::pattern_fingerprint_mol_bundle", "rdkit_cxx::chem::rdmolops::pattern_fingerprint_mol_bundle_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RDKFingerprint"
+rust = ["rdkit_cxx::chem::rdmolops::rdk_fingerprint", "rdkit_cxx::chem::rdmolops::rdk_fingerprint_with_params", "rdkit_cxx::chem::rdmolops::rdk_fingerprint_with_outputs"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.ReapplyMolBlockWedging"
@@ -3443,6 +3728,10 @@ python = "rdkit.Chem.rdmolops.SetDoubleBondNeighborDirections"
 rust = ["rdkit_cxx::chem::rdmolops::set_double_bond_neighbor_directions", "rdkit_cxx::chem::rdmolops::set_double_bond_neighbor_directions_with_conf"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.SetGenericQueriesFromProperties"
+rust = ["rdkit_cxx::chem::rdmolops::set_generic_queries_from_properties", "rdkit_cxx::chem::rdmolops::set_generic_queries_from_properties_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.SetHybridization"
 rust = ["rdkit_cxx::chem::rdmolops::set_hybridization"]
 
@@ -3521,6 +3810,118 @@ rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Rdl"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.TranslateChiralFlagToStereoGroups"
 rust = ["rdkit_cxx::chem::rdmolops::translate_chiral_flag_to_stereo_groups", "rdkit_cxx::chem::rdmolops::translate_chiral_flag_to_stereo_groups_with_zero_flag_group_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.ItemView"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.ItemView.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.ItemView.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView.__contains__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.ValueView"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.ValueView.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.ValueView.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__bool__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__contains__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__delitem__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__eq__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__getitem__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__init__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__ne__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__repr__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.__setitem__"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.clear"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.items"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.keys"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.update"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UIntUIntMap.values"
+reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.UnfoldedRDKFingerprintCountBased"
+rust = ["rdkit_cxx::chem::rdmolops::unfolded_rdk_fingerprint_count_based", "rdkit_cxx::chem::rdmolops::unfolded_rdk_fingerprint_count_based_with_params", "rdkit_cxx::chem::rdmolops::unfolded_rdk_fingerprint_count_based_with_outputs"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.WedgeBond"
