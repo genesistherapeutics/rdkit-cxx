@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 //! Mirrors `rdkit.rdBase`.
 //!
 //! RDKit's logs write to the C++ streams (warnings and errors to stderr) from

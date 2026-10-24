@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 // Builds the C++ half of the crate: generates cxx's C++ for each bridge, builds
 // it with the hand-written wrappers through CMake against an installed RDKit,
 // and links the result.

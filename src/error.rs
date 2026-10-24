@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Steven Kearnes All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 //! RDKit's exceptions as a Rust error type.
 //!
 //! The C++ wrappers catch every exception and encode its type and payload in

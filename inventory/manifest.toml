@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
 # Maps each name in RDKit's nanobind modules to its Rust paths, or to the
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
