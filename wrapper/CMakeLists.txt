@@ -56,6 +56,7 @@ set(RDKIT_CXX_SOURCES
   src/mol_checks.cpp
   src/graph.cpp
   src/transforms.cpp
+  src/rdqueries.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

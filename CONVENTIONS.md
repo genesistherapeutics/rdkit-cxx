@@ -68,7 +68,8 @@ rule changes the rule first.
   operations can take `RWMol&` without a cast.
 - **W2.** Shared views are `XRef<'m>` (`Copy`, holding `&'m Mol` and
   `&'m ffi::X`). Exclusive views are `XMut<'m>` (holding `&'m mut Mol` and
-  an index). An owned `X` exists only when Python has a constructor.
+  an index). An owned `X` exists only when Python has a constructor (for
+  `Bond`, the `rdqueries` functions that build query bonds).
 - **W3.** Getters are written once, in a `macro_rules!` that stamps them on
   every type that has them (owned, `Ref`, `Mut`), all calling wrappers that
   take `&ffi::X`. Setters work the same way, on owned and `Mut` types.
@@ -107,7 +108,8 @@ rule changes the rule first.
 - **S3.** Module-level functions that take any atom are generic over the
   sealed traits `AsAtom` (`Atom`, `AtomRef`, `AtomMut`) and `AsAtomMut`
   (`Atom`, `AtomMut`). Methods take `&dyn AsAtom` instead, so they are not
-  generic and `tests/manifest_paths.rs` can name them.
+  generic and `tests/manifest_paths.rs` can name them. Methods that take any
+  bond take `&dyn AsBond` (`Bond`, `BondRef`, `BondMut`).
 
 ## Unchecked input
 
@@ -147,6 +149,13 @@ rule changes the rule first.
   it, even when it throws; molecules copied from RDKit-owned ones, and
   RWMol's edits, clear them too. Python's `force` and `prefix` arguments,
   which only steer the cache, are not bound.
+- **U7.** RDKit's queries compare an atom's or bond's value with theirs by
+  subtracting in `int` (`Queries::queryCmp`). The `rdqueries` value queries
+  read values below 2^30 in magnitude (atom fields are 8 or 16 bits; masses,
+  scaled by 1000, stay below 6.6e7), so they refuse query values beyond
+  2^30 (after the mass scaling) with `Error::Value`. Integer property
+  queries read values the target sets, so the wrapper builds them from a
+  subclass of RDKit's that compares in 64 bits; it pickles as RDKit's own.
 
 ## Properties
 
