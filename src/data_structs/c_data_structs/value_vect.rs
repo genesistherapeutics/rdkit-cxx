@@ -182,7 +182,16 @@ value_vect_type!(
 impl DiscreteValueVect {
     /// `length` zeros of `val_type`. Mirrors `DiscreteValueVect(valType,
     /// length)`.
+    ///
+    /// # Panics
+    ///
+    /// If `length` is more than `i32::MAX`: RDKit's count of storage words
+    /// wraps near `u32::MAX`.
     pub fn new(val_type: DiscreteValueType, length: u32) -> DiscreteValueVect {
+        assert!(
+            length <= i32::MAX as u32,
+            "DiscreteValueVects hold at most i32::MAX values"
+        );
         DiscreteValueVect::from_ffi(expect_ok(ffi::discrete_value_vect_new(
             val_type.to_ffi(),
             length,

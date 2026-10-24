@@ -17,6 +17,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/data_structs.rs.h"
+#include "rdkit-cxx/pickle_checks.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -53,6 +54,14 @@ auto visit2(const V &a, const V &b, F f) {
         return f(x, std::get<T>(b.v));
       },
       a.v);
+}
+
+// RDKit indexes bits with int in places (getOnBits, FoldFingerprint, and
+// SparseBitVect's storage), so a vector holds at most INT_MAX bits.
+void check_num_bits(std::uint64_t size) {
+  if (size > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) {
+    throw ValueErrorException("bit vectors hold at most 2^31 - 1 bits");
+  }
 }
 
 void check_same_size(const BitVect &a, const BitVect &b) {
@@ -158,19 +167,23 @@ std::unique_ptr<BitVect> wrap_bit_vect(std::unique_ptr<SparseBitVect> bv) {
 
 std::unique_ptr<BitVect> bit_vect_new_explicit(std::uint32_t size,
                                                bool bits_set) {
+  check_num_bits(size);
   return std::make_unique<BitVect>(ExplicitBitVect(size, bits_set));
 }
 
 std::unique_ptr<BitVect> bit_vect_new_sparse(std::uint32_t size) {
+  check_num_bits(size);
   return std::make_unique<BitVect>(SparseBitVect(size));
 }
 
 std::unique_ptr<BitVect> bit_vect_from_pkl(
     bool sparse, rust::Slice<const std::uint8_t> pkl) {
+  auto text = to_std(pkl);
+  check_bit_vect_pickle(text);
   if (sparse) {
-    return std::make_unique<BitVect>(SparseBitVect(to_std(pkl)));
+    return std::make_unique<BitVect>(SparseBitVect(text));
   }
-  return std::make_unique<BitVect>(ExplicitBitVect(to_std(pkl)));
+  return std::make_unique<BitVect>(ExplicitBitVect(text));
 }
 
 std::unique_ptr<BitVect> bit_vect_clone(const BitVect &bv) {
@@ -235,9 +248,24 @@ rust::Vec<std::uint8_t> bit_vect_to_binary(const BitVect &bv) {
 }
 
 void bit_vect_from_base64(BitVect &bv, rust::Str in_d) {
+  // Base64Decode writes past its buffer for some lengths. It skips '=', so
+  // padding makes the buffer long enough without changing the result; it
+  // stops at a NUL, so the padding goes there. (It also reads one
+  // uninitialized table entry, for byte 0xFF, which UTF-8 never has.)
   std::string text(in_d);
-  std::visit([&](auto &x) { x.initFromText(text.c_str(), text.size(), true); },
-             bv.v);
+  text = text.substr(0, text.find('\0')) + "====";
+  unsigned int len = 0;
+  std::unique_ptr<char[]> decoded(Base64Decode(text.c_str(), &len));
+  std::string pkl(decoded.get(), len);
+  check_bit_vect_pickle(pkl);
+  // RDKit's in-place parse leaves the vector broken when it fails, so parse
+  // a new vector and replace this one.
+  std::visit(
+      [&](auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        x = T(pkl);
+      },
+      bv.v);
 }
 
 std::unique_ptr<std::string> bit_vect_to_base64(const BitVect &bv) {
@@ -275,6 +303,7 @@ std::unique_ptr<BitVect> bit_vect_binary_op(const BitVect &a, const BitVect &b,
         return std::make_unique<BitVect>(T(x ^ y));
       case '+':
         if constexpr (std::is_same_v<T, ExplicitBitVect>) {
+          check_num_bits(std::uint64_t{x.getNumBits()} + y.getNumBits());
           return std::make_unique<BitVect>(T(x + y));
         }
     }
@@ -283,6 +312,8 @@ std::unique_ptr<BitVect> bit_vect_binary_op(const BitVect &a, const BitVect &b,
 }
 
 void bit_vect_append(BitVect &bv, const BitVect &other) {
+  check_num_bits(std::uint64_t{bit_vect_get_num_bits(bv)} +
+                 bit_vect_get_num_bits(other));
   std::get<ExplicitBitVect>(bv.v) += std::get<ExplicitBitVect>(other.v);
 }
 
@@ -313,10 +344,12 @@ double bit_vect_similarity_pkl(const BitVect &a,
                                rust::Slice<const std::uint8_t> pkl,
                                std::uint8_t metric, double alpha, double beta,
                                bool return_distance) {
+  auto text = to_std(pkl);
+  check_bit_vect_pickle(text);
   auto sim = std::visit(
       [&](const auto &x) {
         using T = std::decay_t<decltype(x)>;
-        T other(to_std(pkl));
+        T other(text);
         return metric_value(x, other, metric, alpha, beta);
       },
       a.v);
@@ -336,6 +369,8 @@ rust::Vec<double> bit_vect_proj_similarity(const BitVect &a, const BitVect &b,
 }
 
 std::int32_t bit_vect_num_bits_in_common(const BitVect &a, const BitVect &b) {
+  // RDKit's ExplicitBitVect overload has no size check.
+  check_same_size(a, b);
   return visit2(
       a, b, [](const auto &x, const auto &y) { return NumBitsInCommon(x, y); });
 }
@@ -360,16 +395,33 @@ std::unique_ptr<BitVect> bit_vect_fold(const BitVect &bv,
 }
 
 bool bit_vect_all_probe_bits_match(const BitVect &probe, const BitVect &ref) {
+  // RDKit's ExplicitBitVect overload has no size check.
+  check_same_size(probe, ref);
   return visit2(probe, ref, [](const auto &x, const auto &y) {
     return AllProbeBitsMatch(x, y);
   });
 }
 
+// RDKit's pickle overload reads the pickle through raw pointers with no
+// bounds checks, so this reads the pickle into a vector and compares bits
+// as that overload does: whether each of the probe's on bits is on in the
+// reference, whatever their sizes.
 bool bit_vect_all_probe_bits_match_pkl(const BitVect &probe,
                                        rust::Slice<const std::uint8_t> ref) {
   auto text = to_std(ref);
-  return std::visit([&](const auto &x) { return AllProbeBitsMatch(x, text); },
-                    probe.v);
+  check_bit_vect_pickle(text);
+  return std::visit(
+      [&](const auto &x) {
+        using T = std::decay_t<decltype(x)>;
+        T other(text);
+        std::vector<int> on;
+        x.getOnBits(on);
+        return std::all_of(on.begin(), on.end(), [&](int i) {
+          return static_cast<unsigned>(i) < other.getNumBits() &&
+                 other.getBit(static_cast<unsigned>(i));
+        });
+      },
+      probe.v);
 }
 
 std::unique_ptr<std::string> bit_vect_to_text(const BitVect &bv) {
@@ -388,7 +440,18 @@ rust::Vec<std::uint8_t> bit_vect_to_binary_text(const BitVect &bv) {
 }
 
 void bit_vect_init_from_daylight_string(BitVect &bv, rust::Str s) {
+  // FromDaylightString reads past the string unless, after an optional
+  // newline, it is groups of four characters and a pad character.
   std::string text(s);
+  auto length = text.size();
+  if (length > 0 && text[length - 1] == '\n') {
+    --length;
+  }
+  if (length == 0 || (length - 1) % 4 != 0 ||
+      (text[length - 1] != '1' && text[length - 1] != '2' &&
+       text[length - 1] != '3')) {
+    throw ValueErrorException("bad daylight fingerprint string");
+  }
   std::visit([&](auto &x) { FromDaylightString(x, text); }, bv.v);
 }
 
@@ -399,6 +462,7 @@ std::unique_ptr<BitVect> convert_to_explicit(const BitVect &sbv) {
 
 std::unique_ptr<BitVect> create_from_bit_string(rust::Str bits) {
   std::string text(bits);
+  check_num_bits(text.size());
   ExplicitBitVect bv(text.size());
   FromBitString(bv, text);
   return std::make_unique<BitVect>(std::move(bv));
@@ -410,6 +474,7 @@ std::unique_ptr<BitVect> create_from_fps_text(rust::Str fps) {
     throw ValueErrorException(
         "input string must have an even number of characters");
   }
+  check_num_bits(std::uint64_t{text.size()} * 4);
   ExplicitBitVect bv(text.size() * 4);
   UpdateBitVectFromFPSText(bv, text);
   return std::make_unique<BitVect>(std::move(bv));
@@ -417,6 +482,7 @@ std::unique_ptr<BitVect> create_from_fps_text(rust::Str fps) {
 
 std::unique_ptr<BitVect> create_from_binary_text(
     rust::Slice<const std::uint8_t> fps) {
+  check_num_bits(std::uint64_t{fps.size()} * 8);
   ExplicitBitVect bv(fps.size() * 8);
   UpdateBitVectFromBinaryText(bv, to_std(fps));
   return std::make_unique<BitVect>(std::move(bv));
@@ -439,8 +505,9 @@ std::unique_ptr<SparseIntVect> sparse_int_vect_from_pkl(
     std::uint8_t kind, rust::Slice<const std::uint8_t> pkl) {
   return with_kind(kind, [&](auto index) {
     using IndexType = decltype(index);
-    return std::make_unique<SparseIntVect>(
-        RDKit::SparseIntVect<IndexType>(to_std(pkl)));
+    RDKit::SparseIntVect<IndexType> siv(to_std(pkl));
+    check_sparse_int_vect(siv);
+    return std::make_unique<SparseIntVect>(std::move(siv));
   });
 }
 
@@ -480,8 +547,12 @@ std::uint64_t sparse_int_vect_get_length(const SparseIntVect &siv) {
 
 std::int32_t sparse_int_vect_get_total_val(const SparseIntVect &siv,
                                            bool use_abs) {
-  return std::visit([&](const auto &x) { return x.getTotalVal(use_abs); },
-                    siv.v);
+  return std::visit(
+      [&](const auto &x) {
+        check_sparse_int_vect_sums(x);
+        return x.getTotalVal(use_abs);
+      },
+      siv.v);
 }
 
 rust::Vec<std::uint8_t> sparse_int_vect_to_binary(const SparseIntVect &siv) {
@@ -623,6 +694,8 @@ double sparse_int_vect_similarity(const SparseIntVect &a,
                                   double alpha, double beta,
                                   bool return_distance, double bounds) {
   return visit2(a, b, [&](const auto &x, const auto &y) {
+    check_sparse_int_vect_sums(x);
+    check_sparse_int_vect_sums(y);
     switch (metric) {
       case 0:
         return DiceSimilarity(x, y, return_distance, bounds);
@@ -637,12 +710,19 @@ double sparse_int_vect_similarity(const SparseIntVect &a,
 
 std::unique_ptr<DiscreteValueVect> discrete_value_vect_new(
     DiscreteValueType val_type, std::uint32_t length) {
+  // RDKit's count of storage ints wraps for lengths near UINT_MAX.
+  if (length > static_cast<std::uint32_t>(std::numeric_limits<int>::max())) {
+    throw ValueErrorException(
+        "DiscreteValueVects hold at most 2^31 - 1 values");
+  }
   return std::make_unique<DiscreteValueVect>(val_type, length);
 }
 
 std::unique_ptr<DiscreteValueVect> discrete_value_vect_from_pkl(
     rust::Slice<const std::uint8_t> pkl) {
-  return std::make_unique<DiscreteValueVect>(to_std(pkl));
+  auto text = to_std(pkl);
+  check_discrete_value_vect_pickle(text);
+  return std::make_unique<DiscreteValueVect>(text);
 }
 
 std::unique_ptr<DiscreteValueVect> discrete_value_vect_clone(
@@ -718,7 +798,9 @@ std::unique_ptr<RealValueVect> real_value_vect_new(std::uint32_t length) {
 
 std::unique_ptr<RealValueVect> real_value_vect_from_pkl(
     rust::Slice<const std::uint8_t> pkl) {
-  return std::make_unique<RealValueVect>(to_std(pkl));
+  auto text = to_std(pkl);
+  check_real_value_vect_pickle(text);
+  return std::make_unique<RealValueVect>(text);
 }
 
 std::unique_ptr<RealValueVect> real_value_vect_clone(const RealValueVect &rvv) {

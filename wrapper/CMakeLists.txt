@@ -48,6 +48,7 @@ set(RDKIT_CXX_SOURCES
   src/data_structs.cpp
   src/fpb.cpp
   src/grid.cpp
+  src/pickle_checks.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

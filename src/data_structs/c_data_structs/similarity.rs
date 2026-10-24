@@ -429,6 +429,9 @@ fn siv_bulk<'a, S: SparseIntVectType + 'a>(
 
 /// The Dice similarity of two sparse integer vectors of one length. Mirrors
 /// `cDataStructs.DiceSimilarity(siv1, siv2)` (A5).
+///
+/// RDKit sums the values' absolute values in `i32`, so vectors whose
+/// absolute values sum past `i32::MAX` are `Error::Value`.
 pub fn dice_similarity_sparse_int_vect<S: SparseIntVectType>(siv1: &S, siv2: &S) -> Result<f64> {
     dice_similarity_sparse_int_vect_with_params(siv1, siv2, &Default::default())
 }
@@ -444,6 +447,9 @@ pub fn dice_similarity_sparse_int_vect_with_params<S: SparseIntVectType>(
 
 /// The Tanimoto similarity of two sparse integer vectors of one length.
 /// Mirrors `cDataStructs.TanimotoSimilarity(siv1, siv2)` (A5).
+///
+/// RDKit sums the values' absolute values in `i32`, so vectors whose
+/// absolute values sum past `i32::MAX` are `Error::Value`.
 pub fn tanimoto_similarity_sparse_int_vect<S: SparseIntVectType>(
     siv1: &S,
     siv2: &S,
@@ -463,6 +469,9 @@ pub fn tanimoto_similarity_sparse_int_vect_with_params<S: SparseIntVectType>(
 
 /// The Tversky similarity of two sparse integer vectors of one length.
 /// Mirrors `cDataStructs.TverskySimilarity(siv1, siv2, a, b)` (A5).
+///
+/// The values' absolute values must sum to at most `i32::MAX`, as for
+/// `dice_similarity_sparse_int_vect`.
 pub fn tversky_similarity_sparse_int_vect<S: SparseIntVectType>(
     siv1: &S,
     siv2: &S,

@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/grid.rs.h"
+#include "rdkit-cxx/pickle_checks.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -45,18 +46,30 @@ bool inside(const Grid &grid, const RDGeom::Point3D &point) {
          in(t.z, grid.getNumZ());
 }
 
-// Checks a new grid's size before initGrid casts it. RDKit's own
-// preconditions report nonpositive (and NaN) dimensions and spacings.
-void check_dimensions(double dim_x, double dim_y, double dim_z,
-                      double spacing) {
+// Checks a new grid before initGrid casts its size. RDKit's own
+// preconditions report nonpositive (and NaN) dimensions and spacings. A grid
+// with no points along an axis can't be copied, since the copy's dimension
+// is then zero, so it is rejected too.
+void check_dimensions(double dim_x, double dim_y, double dim_z, double spacing,
+                      bool has_offset, const Point3D &offset) {
   if (!(dim_x > 0.0 && dim_y > 0.0 && dim_z > 0.0 && spacing > 0.0)) {
     return;
+  }
+  if (!std::isfinite(spacing)) {
+    throw ValueErrorException("the grid spacing must be finite");
+  }
+  if (has_offset && !(std::isfinite(offset.x) && std::isfinite(offset.y) &&
+                      std::isfinite(offset.z))) {
+    throw ValueErrorException("the grid offset must be finite");
   }
   double points = 1.0;
   for (double dim : {dim_x, dim_y, dim_z}) {
     double n = std::floor(dim / spacing + 0.5);
     if (!(n <= kMaxInt)) {
       throw ValueErrorException("the grid has too many points");
+    }
+    if (n < 1.0) {
+      throw ValueErrorException("the grid has no points along an axis");
     }
     points *= n;
   }
@@ -114,7 +127,7 @@ std::unique_ptr<UniformGrid3D> uniform_grid3d_new(double dim_x, double dim_y,
                                                   DiscreteValueType val_type,
                                                   bool has_offset,
                                                   const Point3D &offset) {
-  check_dimensions(dim_x, dim_y, dim_z, spacing);
+  check_dimensions(dim_x, dim_y, dim_z, spacing, has_offset, offset);
   auto off = rd(offset);
   return std::make_unique<UniformGrid3D>(dim_x, dim_y, dim_z, spacing, val_type,
                                          has_offset ? &off : nullptr);
@@ -122,7 +135,9 @@ std::unique_ptr<UniformGrid3D> uniform_grid3d_new(double dim_x, double dim_y,
 
 std::unique_ptr<UniformGrid3D> uniform_grid3d_from_pkl(
     rust::Slice<const std::uint8_t> pkl) {
-  return std::make_unique<UniformGrid3D>(to_std(pkl));
+  auto text = to_std(pkl);
+  check_uniform_grid3d_pickle(text);
+  return std::make_unique<UniformGrid3D>(text);
 }
 
 std::unique_ptr<UniformGrid3D> uniform_grid3d_clone(const UniformGrid3D &grid) {
@@ -301,7 +316,7 @@ std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_default() {
 std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_new(
     double dim_x, double dim_y, double dim_z, double spacing, bool has_offset,
     const Point3D &offset) {
-  check_dimensions(dim_x, dim_y, dim_z, spacing);
+  check_dimensions(dim_x, dim_y, dim_z, spacing, has_offset, offset);
   auto off = rd(offset);
   return std::make_unique<UniformRealValueGrid3D>(dim_x, dim_y, dim_z, spacing,
                                                   has_offset ? &off : nullptr);
@@ -309,7 +324,9 @@ std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_new(
 
 std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_from_pkl(
     rust::Slice<const std::uint8_t> pkl) {
-  return std::make_unique<UniformRealValueGrid3D>(to_std(pkl));
+  auto text = to_std(pkl);
+  check_uniform_real_value_grid3d_pickle(text);
+  return std::make_unique<UniformRealValueGrid3D>(text);
 }
 
 std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_clone(

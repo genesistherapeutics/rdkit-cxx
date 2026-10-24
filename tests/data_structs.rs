@@ -172,7 +172,7 @@ fn sparse_int_vects() {
         v.get_val(10).unwrap_err(),
         Error::Index { index: 10, len: 10 }
     );
-    assert_eq!(v.get_total_val(), 4);
+    assert_eq!(v.get_total_val().unwrap(), 4);
     assert_eq!(v.get_length(), 10);
     assert_eq!(v.get_nonzero_elements(), BTreeMap::from([(2, 3), (5, 1)]));
     assert_eq!(UIntSparseIntVect::from_pkl(&v.to_binary()).unwrap(), v);
