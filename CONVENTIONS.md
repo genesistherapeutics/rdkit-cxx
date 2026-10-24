@@ -55,6 +55,18 @@ rule changes the rule first.
 
 - **W1.** Every Rust molecule owns a C++ `RDKit::RWMol`, so in-place
   operations can take `RWMol&` without a cast.
+- **W2.** Shared views are `XRef<'m>` (`Copy`, holding `&'m Mol` and
+  `&'m ffi::X`). Exclusive views are `XMut<'m>` (holding `&'m mut Mol` and
+  an index). An owned `X` exists only when Python has a constructor.
+- **W3.** Getters are written once, in a `macro_rules!` that stamps them on
+  every type that has them (owned, `Ref`, `Mut`), all calling wrappers that
+  take `&ffi::X`. Setters work the same way, on owned and `Mut` types.
+- **W4.** Methods that need the owning molecule (degree, hydrogen counts,
+  ring membership, neighbors, bonds, `get_owning_mol`) exist only on views.
+- **W5.** Python sequences become iterators named for the result (`Atoms`,
+  `Bonds`) that implement `ExactSizeIterator` and `DoubleEndedIterator`.
+  There are no mutable iterators. Code mutates by index, because two live
+  `XMut`s into one molecule would alias.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
@@ -95,6 +107,9 @@ rule changes the rule first.
 
 ## Types
 
+- **N6.** C++ enums cross the bridge as cxx shared enums declared with the C++
+  names, so cxx checks every value against RDKit's header. The public enum is
+  a separate Rust enum (N4), converted by `rdkit_enum!`.
 - **T1.** Atom and bond indices are `u32`; conformer ids are `i32`, since
   they can be −1. A Python `int` otherwise follows the C++ parameter type.
   `float` → `f64`. `str` → `&str` in, `String` out. File names →
