@@ -1,0 +1,21 @@
+[package]
+name = "rdkit-cxx"
+version = "2026.9.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Rust bindings for RDKit's C++ API, mirroring its nanobind Python wrappers"
+license = "BSD-3-Clause"
+repository = "https://github.com/skearnes/rdkit-cxx"
+links = "rdkit_cxx"
+publish = false
+
+[workspace]
+members = [".", "downstream"]
+
+[dependencies]
+cxx = "=1.0.205"
+
+[build-dependencies]
+cmake = "0.1"
+cxx-gen = "=0.7.205"
+proc-macro2 = "1"

@@ -1,0 +1,73 @@
+name: CI
+
+# Branches with a pull request run once, as pull_request; push covers main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v5
+      # Built from scratch every run, so nothing cached on a runner can make
+      # the build pass.
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+          cache-environment: false
+          cache-downloads: false
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cmake -P tests/cmake/version_check.cmake
+      - name: A downstream binary runs with no library path
+        run: |
+          # conda's Linux compilers add an rpath to $CONDA_PREFIX/lib on their
+          # own, so link with the system's to check the documented line.
+          cargo build -p downstream --config "target.'cfg(target_os = \"linux\")'.linker = '/usr/bin/cc'"
+          env -u LD_LIBRARY_PATH -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
+            ./target/debug/downstream | tee downstream.out
+          grep "^RDKit 2026.09." downstream.out
+      - name: Building outside an environment fails with one message
+        run: |
+          if env -u CONDA_PREFIX -u RDKIT_PREFIX cargo build > missing.out 2>&1; then
+            echo "expected the build to fail"; exit 1
+          fi
+          cat missing.out
+          grep -F "or set RDKIT_PREFIX" missing.out
+
+  inventory:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: python3 -m pytest inventory
+      - run: python3 inventory/check.py --write-paths tests/manifest_paths.rs
+      - name: The generated path test is up to date
+        run: git diff --exit-code tests/manifest_paths.rs
+
+  docs:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - run: env -u CONDA_PREFIX -u RDKIT_PREFIX DOCS_RS=1 cargo doc --no-deps -p rdkit-cxx

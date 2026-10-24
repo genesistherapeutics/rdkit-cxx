@@ -1,0 +1,10 @@
+name: rdkit-cxx
+channels:
+  - conda-forge
+dependencies:
+  - librdkit-dev 2026.09.*
+  - libboost-devel
+  - cxx-compiler
+  - cmake >=3.22
+  - python 3.12.*
+  - pytest
