@@ -70,6 +70,12 @@ rule changes the rule first.
 - **W6.** Functions that return new molecules copy into an `RWMol`; vectors
   of molecules cross as `MolList`, moved out one at a time by
   `mol_list_into_vec`.
+- **W7.** `RWMol` wraps a `Mol` and implements `Deref<Target = Mol>` and
+  `DerefMut`, so every `Mol` method works on it; `From<Mol> for RWMol` and
+  `From<RWMol> for Mol` move without copying. Methods Python defines on
+  `RWMol` live on `RWMol`. In-place operations (`sanitize_mol`, `kekulize`,
+  property-cache updates) take `&mut Mol`, which an `RWMol` also provides;
+  operations that return a new molecule take `&Mol`.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
@@ -141,6 +147,10 @@ rule changes the rule first.
   `Vec<Vec<u32>>`. `None`-able results → `Option`. NumPy coordinate arrays →
   `Vec<Point3D>`. `dict` → `BTreeMap<String, _>`.
 
+- **T3.** Nested index lists cross the bridge as `Vec<IndexList>`, and plain
+  value types (`Point3D`) as cxx shared structs; both live in the `geometry`
+  bridge, and bridges that use them `include!` its generated header and
+  request `impl Vec<T> {}` there.
 - **T2.** C++ strings cross the bridge as `UniquePtr<CxxString>`, never
   `rust::String` (whose constructor throws on invalid UTF-8). Rust converts
   them with `to_str()`.
