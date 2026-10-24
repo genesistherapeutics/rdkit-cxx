@@ -17,6 +17,7 @@ mod periodic_table;
 mod pickle;
 pub(crate) mod props;
 mod query;
+mod resonance;
 mod ring_info;
 mod rwmol;
 mod stereo;
@@ -49,6 +50,10 @@ pub use pickle::{
 };
 pub use props::{GetPropNamesParams, GetPropsAsDictParams, PropValue};
 pub use query::{CompositeQueryType, ExpandQueryParams};
+pub use resonance::{
+    GetSubstructMatchParams, GetSubstructMatchesParams, ResonanceFlags, ResonanceMolSupplier,
+    ResonanceMolSupplierParams, ResonanceStructures,
+};
 pub use ring_info::{RingInfoMut, RingInfoRef};
 pub use rwmol::{RWMol, ReplaceAtomParams, ReplaceBondParams};
 pub use stereo::{

@@ -18,6 +18,7 @@ pub(crate) mod periodic_table;
 pub(crate) mod props;
 pub(crate) mod query;
 pub(crate) mod rd_base;
+pub(crate) mod resonance;
 pub(crate) mod ring_info;
 pub(crate) mod stereo;
 pub(crate) mod substance_group;

@@ -31,6 +31,7 @@ const BRIDGES: &[&str] = &[
     "substance_group",
     "mol_bundle",
     "query",
+    "resonance",
 ];
 
 fn main() {
