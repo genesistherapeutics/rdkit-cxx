@@ -20,6 +20,9 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::AtomMut::clear_prop;
     let _ = rdkit_cxx::chem::rdchem::Atom::clear_property_cache;
     let _ = rdkit_cxx::chem::rdchem::AtomMut::clear_property_cache;
+    let _ = rdkit_cxx::chem::rdchem::Atom::describe_query;
+    let _ = rdkit_cxx::chem::rdchem::AtomRef::describe_query;
+    let _ = rdkit_cxx::chem::rdchem::AtomMut::describe_query;
     let _ = rdkit_cxx::chem::rdchem::Atom::get_atom_map_num;
     let _ = rdkit_cxx::chem::rdchem::AtomRef::get_atom_map_num;
     let _ = rdkit_cxx::chem::rdchem::AtomMut::get_atom_map_num;
@@ -99,6 +102,9 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::AtomRef::get_props_as_dict_with_params;
     let _ = rdkit_cxx::chem::rdchem::AtomMut::get_props_as_dict;
     let _ = rdkit_cxx::chem::rdchem::AtomMut::get_props_as_dict_with_params;
+    let _ = rdkit_cxx::chem::rdchem::Atom::get_query_type;
+    let _ = rdkit_cxx::chem::rdchem::AtomRef::get_query_type;
+    let _ = rdkit_cxx::chem::rdchem::AtomMut::get_query_type;
     let _ = rdkit_cxx::chem::rdchem::Atom::get_smarts;
     let _ = rdkit_cxx::chem::rdchem::Atom::get_smarts_with_params;
     let _ = rdkit_cxx::chem::rdchem::AtomRef::get_smarts;
@@ -139,6 +145,9 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::AtomMut::is_in_ring;
     let _ = rdkit_cxx::chem::rdchem::AtomRef::is_in_ring_size;
     let _ = rdkit_cxx::chem::rdchem::AtomMut::is_in_ring_size;
+    let _ = rdkit_cxx::chem::rdchem::Atom::match_;
+    let _ = rdkit_cxx::chem::rdchem::AtomRef::match_;
+    let _ = rdkit_cxx::chem::rdchem::AtomMut::match_;
     let _ = rdkit_cxx::chem::rdchem::Atom::NOATOM;
     let _ = rdkit_cxx::chem::rdchem::Atom::needs_update_property_cache;
     let _ = rdkit_cxx::chem::rdchem::AtomRef::needs_update_property_cache;
@@ -195,6 +204,13 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::Atom::new;
     let _ = rdkit_cxx::chem::rdchem::Atom::clone;
     let _ = rdkit_cxx::chem::rdchem::Atom::from_num;
+    let _: Option<rdkit_cxx::chem::rdchem::AtomCoordsMatcher> = None;
+    let _ = rdkit_cxx::chem::rdchem::AtomCoordsMatcher::call;
+    let _ = rdkit_cxx::chem::rdchem::AtomCoordsMatcher::default;
+    let _ = rdkit_cxx::chem::rdchem::AtomCoordsMatcher::new_with_params;
+    let _ = |value: &rdkit_cxx::chem::rdchem::AtomCoordsMatcher| { let _ = &value.query_conf_id; };
+    let _ = |value: &rdkit_cxx::chem::rdchem::AtomCoordsMatcher| { let _ = &value.ref_conf_id; };
+    let _ = |value: &rdkit_cxx::chem::rdchem::AtomCoordsMatcher| { let _ = &value.tol2; };
     let _: Option<rdkit_cxx::Error> = None;
     let _: Option<rdkit_cxx::chem::rdchem::AtomMonomerInfo> = None;
     let _ = rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_chain_id;
@@ -254,6 +270,8 @@ fn manifest_paths_exist() {
     let _: Option<rdkit_cxx::chem::rdchem::BondRef> = None;
     let _: Option<rdkit_cxx::chem::rdchem::BondMut> = None;
     let _ = rdkit_cxx::chem::rdchem::BondMut::clear_prop;
+    let _ = rdkit_cxx::chem::rdchem::BondRef::describe_query;
+    let _ = rdkit_cxx::chem::rdchem::BondMut::describe_query;
     let _ = rdkit_cxx::chem::rdchem::BondRef::get_begin_atom;
     let _ = rdkit_cxx::chem::rdchem::BondMut::get_begin_atom;
     let _ = rdkit_cxx::chem::rdchem::BondRef::get_begin_atom_idx;
@@ -319,6 +337,8 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::BondMut::is_in_ring;
     let _ = rdkit_cxx::chem::rdchem::BondRef::is_in_ring_size;
     let _ = rdkit_cxx::chem::rdchem::BondMut::is_in_ring_size;
+    let _ = rdkit_cxx::chem::rdchem::BondRef::match_;
+    let _ = rdkit_cxx::chem::rdchem::BondMut::match_;
     let _ = rdkit_cxx::chem::rdchem::BondMut::set_bond_dir;
     let _ = rdkit_cxx::chem::rdchem::BondMut::set_bond_type;
     let _ = rdkit_cxx::chem::rdchem::BondMut::set_bool_prop;
@@ -390,6 +410,9 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiTetrahedralCw;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiTrigonalbipyramidal;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified;
+    let _ = rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeAnd;
+    let _ = rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeOr;
+    let _ = rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeXor;
     let _: Option<rdkit_cxx::chem::rdchem::ChiralType> = None;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiAllene;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiOctahedral;
@@ -401,6 +424,10 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiTrigonalbipyramidal;
     let _ = rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified;
     use rdkit_cxx::chem::rdchem::clear_mol_substance_groups as _;
+    let _: Option<rdkit_cxx::chem::rdchem::CompositeQueryType> = None;
+    let _ = rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeAnd;
+    let _ = rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeOr;
+    let _ = rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeXor;
     let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::ComputedProps;
     let _: Option<rdkit_cxx::chem::rdchem::Conformer> = None;
     let _: Option<rdkit_cxx::chem::rdchem::ConformerRef> = None;
@@ -553,6 +580,7 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::Mol::get_atom_with_idx;
     let _ = rdkit_cxx::chem::rdchem::Mol::get_atom_with_idx_mut;
     let _ = rdkit_cxx::chem::rdchem::Mol::get_atoms;
+    let _ = rdkit_cxx::chem::rdchem::Mol::get_atoms_matching_query;
     let _ = rdkit_cxx::chem::rdchem::Mol::get_bond_between_atoms;
     let _ = rdkit_cxx::chem::rdchem::Mol::get_bond_with_idx;
     let _ = rdkit_cxx::chem::rdchem::Mol::get_bond_with_idx_mut;
@@ -688,6 +716,15 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoProps;
     let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::PrivateProps;
     let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::QueryAtomData;
+    let _ = rdkit_cxx::chem::rdchem::Atom::expand_query;
+    let _ = rdkit_cxx::chem::rdchem::Atom::expand_query_with_params;
+    let _ = rdkit_cxx::chem::rdchem::AtomMut::expand_query;
+    let _ = rdkit_cxx::chem::rdchem::AtomMut::expand_query_with_params;
+    let _ = rdkit_cxx::chem::rdchem::Atom::set_query;
+    let _ = rdkit_cxx::chem::rdchem::AtomMut::set_query;
+    let _ = rdkit_cxx::chem::rdchem::BondMut::expand_query;
+    let _ = rdkit_cxx::chem::rdchem::BondMut::expand_query_with_params;
+    let _ = rdkit_cxx::chem::rdchem::BondMut::set_query;
     let _: Option<rdkit_cxx::chem::rdchem::RWMol> = None;
     let _ = rdkit_cxx::chem::rdchem::RWMol::add_atom;
     let _ = rdkit_cxx::chem::rdchem::RWMol::add_bond;
@@ -901,6 +938,7 @@ fn manifest_paths_exist() {
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.max_recursive_matches; };
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.num_threads; };
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.recursion_possible; };
+    let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.extra_atom_check; };
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.specified_stereo_query_matches_unspecified; };
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.uniquify; };
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.use_chirality; };

@@ -30,6 +30,10 @@ python = "rdkit.Chem.rdchem.Atom.ClearPropertyCache"
 rust = ["rdkit_cxx::chem::rdchem::Atom::clear_property_cache", "rdkit_cxx::chem::rdchem::AtomMut::clear_property_cache"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.DescribeQuery"
+rust = ["rdkit_cxx::chem::rdchem::Atom::describe_query", "rdkit_cxx::chem::rdchem::AtomRef::describe_query", "rdkit_cxx::chem::rdchem::AtomMut::describe_query"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetAtomMapNum"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_atom_map_num", "rdkit_cxx::chem::rdchem::AtomRef::get_atom_map_num", "rdkit_cxx::chem::rdchem::AtomMut::get_atom_map_num"]
 
@@ -142,6 +146,10 @@ python = "rdkit.Chem.rdchem.Atom.GetPropsAsDict"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_props_as_dict", "rdkit_cxx::chem::rdchem::Atom::get_props_as_dict_with_params", "rdkit_cxx::chem::rdchem::AtomRef::get_props_as_dict", "rdkit_cxx::chem::rdchem::AtomRef::get_props_as_dict_with_params", "rdkit_cxx::chem::rdchem::AtomMut::get_props_as_dict", "rdkit_cxx::chem::rdchem::AtomMut::get_props_as_dict_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetQueryType"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_query_type", "rdkit_cxx::chem::rdchem::AtomRef::get_query_type", "rdkit_cxx::chem::rdchem::AtomMut::get_query_type"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetSmarts"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_smarts", "rdkit_cxx::chem::rdchem::Atom::get_smarts_with_params", "rdkit_cxx::chem::rdchem::AtomRef::get_smarts", "rdkit_cxx::chem::rdchem::AtomRef::get_smarts_with_params", "rdkit_cxx::chem::rdchem::AtomMut::get_smarts", "rdkit_cxx::chem::rdchem::AtomMut::get_smarts_with_params"]
 
@@ -197,6 +205,10 @@ rust = ["rdkit_cxx::chem::rdchem::AtomRef::is_in_ring", "rdkit_cxx::chem::rdchem
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.IsInRingSize"
 rust = ["rdkit_cxx::chem::rdchem::AtomRef::is_in_ring_size", "rdkit_cxx::chem::rdchem::AtomMut::is_in_ring_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.Match"
+rust = ["rdkit_cxx::chem::rdchem::Atom::match_", "rdkit_cxx::chem::rdchem::AtomRef::match_", "rdkit_cxx::chem::rdchem::AtomMut::match_"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.NOATOM"
@@ -286,6 +298,34 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::clone"]
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.__init__"
 rust = ["rdkit_cxx::chem::rdchem::Atom::new", "rdkit_cxx::chem::rdchem::Atom::clone", "rdkit_cxx::chem::rdchem::Atom::from_num"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomCoordsMatcher"
+rust = ["rdkit_cxx::chem::rdchem::AtomCoordsMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomCoordsMatcher.__call__"
+rust = ["rdkit_cxx::chem::rdchem::AtomCoordsMatcher::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomCoordsMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdchem::AtomCoordsMatcher::default", "rdkit_cxx::chem::rdchem::AtomCoordsMatcher::new_with_params"]
+overloads_note = "AtomCoordsMatcher(refConfId, queryConfId, tol) with no arguments is Default"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomCoordsMatcher.queryConfId"
+rust = ["rdkit_cxx::chem::rdchem::AtomCoordsMatcher::query_conf_id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomCoordsMatcher.refConfId"
+rust = ["rdkit_cxx::chem::rdchem::AtomCoordsMatcher::ref_conf_id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomCoordsMatcher.tol2"
+rust = ["rdkit_cxx::chem::rdchem::AtomCoordsMatcher::tol2"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomKekulizeException"
@@ -512,6 +552,10 @@ python = "rdkit.Chem.rdchem.Bond.ClearProp"
 rust = ["rdkit_cxx::chem::rdchem::BondMut::clear_prop"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Bond.DescribeQuery"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::describe_query", "rdkit_cxx::chem::rdchem::BondMut::describe_query"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetBeginAtom"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::get_begin_atom", "rdkit_cxx::chem::rdchem::BondMut::get_begin_atom"]
 
@@ -635,6 +679,10 @@ rust = ["rdkit_cxx::chem::rdchem::BondRef::is_in_ring", "rdkit_cxx::chem::rdchem
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.IsInRingSize"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::is_in_ring_size", "rdkit_cxx::chem::rdchem::BondMut::is_in_ring_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.Match"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::match_", "rdkit_cxx::chem::rdchem::BondMut::match_"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.SetBondDir"
@@ -916,6 +964,21 @@ rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified"]
 name_exception = "an exported enum value maps to its variant, ChiralType::ChiUnspecified"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.COMPOSITE_AND"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeAnd"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.COMPOSITE_OR"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeOr"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.COMPOSITE_XOR"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeXor"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.ChiralType"
 rust = ["rdkit_cxx::chem::rdchem::ChiralType"]
 
@@ -958,6 +1021,22 @@ rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified"]
 [[entry]]
 python = "rdkit.Chem.rdchem.ClearMolSubstanceGroups"
 rust = ["rdkit_cxx::chem::rdchem::clear_mol_substance_groups"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CompositeQueryType"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CompositeQueryType.COMPOSITE_AND"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeAnd"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CompositeQueryType.COMPOSITE_OR"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeOr"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CompositeQueryType.COMPOSITE_XOR"
+rust = ["rdkit_cxx::chem::rdchem::CompositeQueryType::CompositeXor"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ComputedProps"
@@ -1292,6 +1371,10 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_atom_with_idx", "rdkit_cxx::chem::rdc
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetAtoms"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.GetAtomsMatchingQuery"
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_atoms_matching_query"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetBondBetweenAtoms"
@@ -1676,6 +1759,30 @@ rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::PrivateProps"]
 [[entry]]
 python = "rdkit.Chem.rdchem.PropertyPickleOptions.QueryAtomData"
 rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::QueryAtomData"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.QueryAtom"
+reason = "Rust does not split atoms by query: every atom type has the query methods, and expand_query and set_query check for a query atom"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.QueryAtom.ExpandQuery"
+rust = ["rdkit_cxx::chem::rdchem::Atom::expand_query", "rdkit_cxx::chem::rdchem::Atom::expand_query_with_params", "rdkit_cxx::chem::rdchem::AtomMut::expand_query", "rdkit_cxx::chem::rdchem::AtomMut::expand_query_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.QueryAtom.SetQuery"
+rust = ["rdkit_cxx::chem::rdchem::Atom::set_query", "rdkit_cxx::chem::rdchem::AtomMut::set_query"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.QueryBond"
+reason = "Rust does not split bonds by query: every bond type has the query methods, and expand_query and set_query check for a query bond"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.QueryBond.ExpandQuery"
+rust = ["rdkit_cxx::chem::rdchem::BondMut::expand_query", "rdkit_cxx::chem::rdchem::BondMut::expand_query_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.QueryBond.SetQuery"
+rust = ["rdkit_cxx::chem::rdchem::BondMut::set_query"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol"
@@ -2284,6 +2391,10 @@ python = "rdkit.Chem.rdchem.SubstructMatchParameters.__init__"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::default"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.SubstructMatchParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters.aromaticMatchesConjugated"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::aromatic_matches_conjugated"]
 rust_kind = "field"
@@ -2332,6 +2443,20 @@ rust_kind = "field"
 python = "rdkit.Chem.rdchem.SubstructMatchParameters.recursionPossible"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::recursion_possible"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstructMatchParameters.setExtraAtomCheckFunc"
+rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::extra_atom_check"]
+rust_kind = "field"
+name_exception = "a field holding an AtomCoordsMatcher, where Python's setter takes any callable"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstructMatchParameters.setExtraBondCheckFunc"
+reason = "takes a Python callable; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstructMatchParameters.setExtraFinalCheck"
+reason = "takes a Python callable; Rust callbacks are not bound"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters.specifiedStereoQueryMatchesUnspecified"

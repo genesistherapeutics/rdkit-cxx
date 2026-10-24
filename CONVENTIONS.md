@@ -99,7 +99,8 @@ rule changes the rule first.
   with a mutex. The wrappers refuse to compile otherwise.
 - **S3.** Module-level functions that take any atom are generic over the
   sealed traits `AsAtom` (`Atom`, `AtomRef`, `AtomMut`) and `AsAtomMut`
-  (`Atom`, `AtomMut`).
+  (`Atom`, `AtomMut`). Methods take `&dyn AsAtom` instead, so they are not
+  generic and `tests/manifest_paths.rs` can name them.
 
 ## Properties
 
@@ -198,6 +199,8 @@ rule changes the rule first.
 - **N7.** Enum values nanobind also exports to the module
   (`rdchem.CHI_OTHER`) map to their variants (`ChiralType::ChiOther`) under
   `name_exception`; there are no module-level copies in Rust.
+- **N8.** A name that is a Rust keyword takes a trailing underscore:
+  `Atom.Match` → `match_`, `StereoInfo.type` → `type_`.
 - **F1.** Python flag enums become a `u32` newtype with associated constants,
   bit operators, `bits()`, and `from_bits_retain`. nanobind binds RDKit's
   flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so

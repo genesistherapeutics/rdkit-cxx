@@ -14,6 +14,17 @@ namespace rdkit_cxx {
 
 namespace {
 
+AtomCoordsMatcherData to_data(const RDKit::AtomCoordsMatchFunctor &matcher) {
+  return AtomCoordsMatcherData{matcher.d_refConfId, matcher.d_queryConfId,
+                               matcher.d_tol2};
+}
+
+RDKit::AtomCoordsMatchFunctor from_data(const AtomCoordsMatcherData &data) {
+  RDKit::AtomCoordsMatchFunctor matcher(data.ref_conf_id, data.query_conf_id);
+  matcher.d_tol2 = data.tol2;
+  return matcher;
+}
+
 RDKit::SubstructMatchParameters params_from(
     const SubstructMatchParametersData &data) {
   RDKit::SubstructMatchParameters params;
@@ -40,6 +51,9 @@ RDKit::SubstructMatchParameters params_from(
       data.extra_atom_check_overrides_default_check;
   params.extraBondCheckOverridesDefaultCheck =
       data.extra_bond_check_overrides_default_check;
+  if (data.has_atom_coords_matcher) {
+    params.extraAtomCheck = from_data(data.atom_coords_matcher);
+  }
   return params;
 }
 
@@ -115,7 +129,23 @@ SubstructMatchParametersData substruct_match_parameters_default() {
       std::move(bond_properties),
       p.specifiedStereoQueryMatchesUnspecified,
       p.extraAtomCheckOverridesDefaultCheck,
-      p.extraBondCheckOverridesDefaultCheck};
+      p.extraBondCheckOverridesDefaultCheck,
+      static_cast<bool>(p.extraAtomCheck),
+      to_data(RDKit::AtomCoordsMatchFunctor())};
+}
+
+AtomCoordsMatcherData atom_coords_matcher_default() {
+  return to_data(RDKit::AtomCoordsMatchFunctor());
+}
+
+AtomCoordsMatcherData atom_coords_matcher_new(int ref_conf_id,
+                                              int query_conf_id, double tol) {
+  return to_data(RDKit::AtomCoordsMatchFunctor(ref_conf_id, query_conf_id, tol));
+}
+
+bool atom_coords_matcher_call(const AtomCoordsMatcherData &matcher,
+                              const Atom &query_atom, const Atom &target_atom) {
+  return from_data(matcher)(query_atom, target_atom);
 }
 
 bool mol_has_substruct_match(

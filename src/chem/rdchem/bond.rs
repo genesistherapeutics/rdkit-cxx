@@ -238,11 +238,11 @@ impl<'m> BondMut<'m> {
         BondMut { mol, idx }
     }
 
-    fn raw(&self) -> &ffi::Bond {
+    pub(crate) fn raw(&self) -> &ffi::Bond {
         expect_ok_index(self.mol.get_bond_with_idx(self.idx)).raw()
     }
 
-    fn raw_mut(&mut self) -> Pin<&mut ffi::Bond> {
+    pub(crate) fn raw_mut(&mut self) -> Pin<&mut ffi::Bond> {
         expect_ok_index(self.mol.bond_ffi_mut(self.idx))
     }
 

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "rdkit-cxx/atom.h"
 #include "rdkit-cxx/geometry.h"
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/mol_bundle.h"
@@ -13,10 +14,16 @@
 
 namespace rdkit_cxx {
 
-// A shared struct, defined by the bridge (src/ffi/substruct.rs).
+// Shared structs, defined by the bridge (src/ffi/substruct.rs).
 struct SubstructMatchParametersData;
+struct AtomCoordsMatcherData;
 
 SubstructMatchParametersData substruct_match_parameters_default();
+AtomCoordsMatcherData atom_coords_matcher_default();
+AtomCoordsMatcherData atom_coords_matcher_new(int ref_conf_id,
+                                              int query_conf_id, double tol);
+bool atom_coords_matcher_call(const AtomCoordsMatcherData &matcher,
+                              const Atom &query_atom, const Atom &target_atom);
 
 // As helpHasSubstructMatch, helpGetSubstructMatch, and
 // helpGetSubstructMatches in Code/GraphMol/nbWrap/substructmethods.h, for each

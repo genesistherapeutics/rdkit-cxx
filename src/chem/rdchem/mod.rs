@@ -16,6 +16,7 @@ mod monomer_info;
 mod periodic_table;
 mod pickle;
 pub(crate) mod props;
+mod query;
 mod ring_info;
 mod rwmol;
 mod stereo;
@@ -47,6 +48,7 @@ pub use pickle::{
     get_default_pickle_properties, set_default_pickle_properties,
 };
 pub use props::{GetPropNamesParams, GetPropsAsDictParams, PropValue};
+pub use query::{CompositeQueryType, ExpandQueryParams};
 pub use ring_info::{RingInfoMut, RingInfoRef};
 pub use rwmol::{RWMol, ReplaceAtomParams, ReplaceBondParams};
 pub use stereo::{
@@ -59,4 +61,4 @@ pub use substance_group::{
     create_mol_substance_group, get_mol_substance_group_with_idx,
     get_mol_substance_group_with_idx_mut, get_mol_substance_groups,
 };
-pub use substruct::SubstructMatchParameters;
+pub use substruct::{AtomCoordsMatcher, AtomCoordsMatcherParams, SubstructMatchParameters};
