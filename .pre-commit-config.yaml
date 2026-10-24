@@ -1,4 +1,5 @@
-# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Copyright (c) 2026 Steven Kearnes
+# All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
@@ -22,10 +23,16 @@ repos:
     rev: v1.2.0
     hooks:
       - id: addlicense
-        args: [-c, Steven Kearnes, -l, bsd]
+        args: [-c, Steven Kearnes, -f, .license-header.txt]
 
   - repo: local
     hooks:
+      # addlicense only checks that a header exists, so this catches the
+      # one-line form of the header (CONVENTIONS.md L1).
+      - id: license-header
+        name: license headers put "All rights reserved." on its own line
+        entry: 'Kearnes\.? All[ ]rights reserved'
+        language: pygrep
       - id: cargo-fmt
         name: cargo fmt
         entry: cargo fmt --all

@@ -5,9 +5,11 @@ rule changes the rule first.
 
 ## Files
 
-- **L1.** Every source file starts with addlicense's BSD header. The
-  pre-commit hook adds it (`addlicense -c "Steven Kearnes" -l bsd`), and CI
-  runs the hooks. Generators write the same header themselves
+- **L1.** Every source file starts with the BSD header in
+  `.license-header.txt`, with "All rights reserved." on its own line. The
+  pre-commit hook adds it (`addlicense -c "Steven Kearnes" -f
+  .license-header.txt`), another hook rejects the one-line form, and CI runs
+  the hooks. Generators write the same header themselves
   (`inventory/check.py`).
 - **L2.** rustfmt formats Rust, clang-format (`.clang-format`: Google's style
   with RDKit's pointer alignment) formats C++, and ruff (`ruff.toml`) lints

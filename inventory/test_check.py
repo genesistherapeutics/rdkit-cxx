@@ -1,4 +1,5 @@
-# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Copyright (c) 2026 Steven Kearnes
+# All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
@@ -206,7 +207,7 @@ def test_paths_source():
             },
         )
     )
-    assert source.startswith("// Copyright (c) 2026 Steven Kearnes All rights reserved.\n")
+    assert source.startswith("// Copyright (c) 2026 Steven Kearnes\n// All rights reserved.\n")
     assert source.count("#[test]") == 1
     assert "fn manifest_paths_exist()" in source
     # Module functions are imported, which also works for `impl Trait`
