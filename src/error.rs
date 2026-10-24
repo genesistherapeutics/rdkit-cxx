@@ -76,7 +76,7 @@ impl From<cxx::Exception> for Error {
 
 /// Decodes `\x1Frdkit\x1F<Variant>\x1F<payload>\x1F<what>`. Anything else is
 /// `Runtime` whole.
-fn decode(what: &str) -> Error {
+pub(crate) fn decode(what: &str) -> Error {
     let runtime = || Error::Runtime {
         message: what.to_owned(),
     };

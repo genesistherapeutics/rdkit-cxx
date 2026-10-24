@@ -49,6 +49,8 @@ set(RDKIT_CXX_SOURCES
   src/fpb.cpp
   src/grid.cpp
   src/pickle_checks.cpp
+  src/perception.cpp
+  src/chirality.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

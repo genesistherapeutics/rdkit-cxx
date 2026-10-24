@@ -2897,6 +2897,36 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriteParams::rooted_at_atom"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.AROMATICITY_CUSTOM"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityCustom"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AROMATICITY_DEFAULT"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityDefault"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AROMATICITY_MDL"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityMdl"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AROMATICITY_MMFF94"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityMmff94"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AROMATICITY_RDKIT"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityRdkit"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AROMATICITY_SIMPLE"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticitySimple"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.AddHs"
 rust = ["rdkit_cxx::chem::rdmolops::add_hs", "rdkit_cxx::chem::rdmolops::add_hs_with_params"]
 
@@ -2929,16 +2959,320 @@ rust = ["rdkit_cxx::chem::rdmolops::AddHsParameters::skip_queries"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.AddStereoAnnotations"
+rust = ["rdkit_cxx::chem::rdmolops::add_stereo_annotations", "rdkit_cxx::chem::rdmolops::add_stereo_annotations_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AddWavyBondsForStereoAny"
+rust = ["rdkit_cxx::chem::rdmolops::add_wavy_bonds_for_stereo_any", "rdkit_cxx::chem::rdmolops::add_wavy_bonds_for_stereo_any_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel.AROMATICITY_CUSTOM"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityCustom"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel.AROMATICITY_DEFAULT"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityDefault"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel.AROMATICITY_MDL"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityMdl"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel.AROMATICITY_MMFF94"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityMmff94"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel.AROMATICITY_RDKIT"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticityRdkit"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AromaticityModel.AROMATICITY_SIMPLE"
+rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticitySimple"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AssignAtomChiralTagsFromMolParity"
+rust = ["rdkit_cxx::chem::rdmolops::assign_atom_chiral_tags_from_mol_parity", "rdkit_cxx::chem::rdmolops::assign_atom_chiral_tags_from_mol_parity_with_replace_existing_tags"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AssignAtomChiralTagsFromStructure"
+rust = ["rdkit_cxx::chem::rdmolops::assign_atom_chiral_tags_from_structure", "rdkit_cxx::chem::rdmolops::assign_atom_chiral_tags_from_structure_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AssignChiralTypesFromBondDirs"
+rust = ["rdkit_cxx::chem::rdmolops::assign_chiral_types_from_bond_dirs", "rdkit_cxx::chem::rdmolops::assign_chiral_types_from_bond_dirs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AssignRadicals"
+rust = ["rdkit_cxx::chem::rdmolops::assign_radicals"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AssignStereochemistry"
+rust = ["rdkit_cxx::chem::rdmolops::assign_stereochemistry", "rdkit_cxx::chem::rdmolops::assign_stereochemistry_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AssignStereochemistryFrom3D"
+rust = ["rdkit_cxx::chem::rdmolops::assign_stereochemistry_from_3d", "rdkit_cxx::chem::rdmolops::assign_stereochemistry_from_3d_with_params"]
+name_exception = "digits stay with their letters: from_3d"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.AtomHasConjugatedBond"
+rust = ["rdkit_cxx::chem::rdmolops::atom_has_conjugated_bond"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BondWedgingParameters"
+rust = ["rdkit_cxx::chem::rdmolops::BondWedgingParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.BondWedgingParameters.wedgeTwoBondsIfPossible"
+rust = ["rdkit_cxx::chem::rdmolops::BondWedgingParameters::wedge_two_bonds_if_possible"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CanonicalizeStereoGroups"
+rust = ["rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups", "rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.Cleanup"
+rust = ["rdkit_cxx::chem::rdmolops::cleanup"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CleanupAtropisomers"
+rust = ["rdkit_cxx::chem::rdmolops::cleanup_atropisomers"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CleanupChirality"
+rust = ["rdkit_cxx::chem::rdmolops::cleanup_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CleanupOrganometallics"
+rust = ["rdkit_cxx::chem::rdmolops::cleanup_organometallics"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CleanupStereoGroups"
+rust = ["rdkit_cxx::chem::rdmolops::cleanup_stereo_groups"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CollapseAttachmentPoints"
+rust = ["rdkit_cxx::chem::rdmolops::collapse_attachment_points", "rdkit_cxx::chem::rdmolops::collapse_attachment_points_with_marked_only"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ComputeAtomCIPRanks"
+rust = ["rdkit_cxx::chem::rdmolops::compute_atom_cip_ranks"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.CountAtomElec"
+rust = ["rdkit_cxx::chem::rdmolops::count_atom_elec"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.DativeBondsToHaptic"
+rust = ["rdkit_cxx::chem::rdmolops::dative_bonds_to_haptic"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.DetectBondStereoChemistry"
+reason = "deprecated in RDKit, which says to use DetectBondStereochemistry (detect_bond_stereochemistry)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.DetectBondStereochemistry"
+rust = ["rdkit_cxx::chem::rdmolops::detect_bond_stereochemistry", "rdkit_cxx::chem::rdmolops::detect_bond_stereochemistry_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.DetectChemistryProblems"
+rust = ["rdkit_cxx::chem::rdmolops::detect_chemistry_problems", "rdkit_cxx::chem::rdmolops::detect_chemistry_problems_with_sanitize_ops"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ExpandAttachmentPoints"
+rust = ["rdkit_cxx::chem::rdmolops::expand_attachment_points", "rdkit_cxx::chem::rdmolops::expand_attachment_points_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FastFindRings"
+rust = ["rdkit_cxx::chem::rdmolops::fast_find_rings"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindMesoCenters"
+rust = ["rdkit_cxx::chem::rdmolops::find_meso_centers", "rdkit_cxx::chem::rdmolops::find_meso_centers_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.FindPotentialStereo"
 rust = ["rdkit_cxx::chem::rdmolops::find_potential_stereo", "rdkit_cxx::chem::rdmolops::find_potential_stereo_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindPotentialStereoBonds"
+rust = ["rdkit_cxx::chem::rdmolops::find_potential_stereo_bonds", "rdkit_cxx::chem::rdmolops::find_potential_stereo_bonds_with_clean_it"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.FindRingFamilies"
+rust = ["rdkit_cxx::chem::rdmolops::find_ring_families", "rdkit_cxx::chem::rdmolops::find_ring_families_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetAllowNontetrahedralChirality"
+rust = ["rdkit_cxx::chem::rdmolops::get_allow_nontetrahedral_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetFormalCharge"
+rust = ["rdkit_cxx::chem::rdmolops::get_formal_charge"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetMolFrags"
 rust = ["rdkit_cxx::chem::rdmolops::get_mol_frags", "rdkit_cxx::chem::rdmolops::get_mol_frags_as_mols", "rdkit_cxx::chem::rdmolops::get_mol_frags_as_mols_with_sanitize_frags"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.GetSSSR"
+rust = ["rdkit_cxx::chem::rdmolops::get_sssr", "rdkit_cxx::chem::rdmolops::get_sssr_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetShortestPath"
+rust = ["rdkit_cxx::chem::rdmolops::get_shortest_path"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetSymmSSSR"
+rust = ["rdkit_cxx::chem::rdmolops::get_symm_sssr", "rdkit_cxx::chem::rdmolops::get_symm_sssr_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetUseLegacyRingFinding"
+rust = ["rdkit_cxx::chem::rdmolops::get_use_legacy_ring_finding"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.GetUseLegacyStereoPerception"
+rust = ["rdkit_cxx::chem::rdmolops::get_use_legacy_stereo_perception"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.HapticBondsToDative"
+rust = ["rdkit_cxx::chem::rdmolops::haptic_bonds_to_dative"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.HasQueryHs"
+rust = ["rdkit_cxx::chem::rdmolops::has_query_hs"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.Kekulize"
 rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.KekulizeIfPossible"
+rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.MergeQueryHs"
+rust = ["rdkit_cxx::chem::rdmolops::merge_query_hs", "rdkit_cxx::chem::rdmolops::merge_query_hs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.NeedsHs"
+rust = ["rdkit_cxx::chem::rdmolops::needs_hs"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.ReapplyMolBlockWedging"
+rust = ["rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging", "rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveAllHs"
+rust = ["rdkit_cxx::chem::rdmolops::remove_all_hs", "rdkit_cxx::chem::rdmolops::remove_all_hs_with_sanitize"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHs"
+rust = ["rdkit_cxx::chem::rdmolops::remove_hs", "rdkit_cxx::chem::rdmolops::remove_hs_with_params"]
+overloads_note = "both overloads' parameters are RemoveHsParameters fields (A3); implicitOnly is !remove_nonimplicit"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.__init__"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeAndTrackIsotopes"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_and_track_isotopes"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeDefiningBondStereo"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_defining_bond_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeDegreeZero"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_degree_zero"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeDummyNeighbors"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_dummy_neighbors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeHigherDegrees"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_higher_degrees"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeHydrides"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_hydrides"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeInSGroups"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_in_s_groups"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeIsotopes"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_isotopes"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeMapped"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_mapped"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeNonimplicit"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_nonimplicit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeNontetrahedralNeighbors"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_nontetrahedral_neighbors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeOnlyHNeighbors"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_only_h_neighbors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeWithQuery"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_with_query"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.removeWithWedgedBond"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::remove_with_wedged_bond"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.showWarnings"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::show_warnings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveHsParameters.updateExplicitCount"
+rust = ["rdkit_cxx::chem::rdmolops::RemoveHsParameters::update_explicit_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveNonExplicit3DChirality"
+rust = ["rdkit_cxx::chem::rdmolops::remove_non_explicit_3d_chirality"]
+name_exception = "digits stay with their letters: explicit_3d"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.RemoveStereochemistry"
+rust = ["rdkit_cxx::chem::rdmolops::remove_stereochemistry"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.SANITIZE_ADJUSTHS"
@@ -3087,6 +3421,114 @@ name_exception = "a flag enum keeps Python's spelling (F1)"
 [[entry]]
 python = "rdkit.Chem.rdmolops.SanitizeMol"
 rust = ["rdkit_cxx::chem::rdmolops::sanitize_mol", "rdkit_cxx::chem::rdmolops::sanitize_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetAllowNontetrahedralChirality"
+rust = ["rdkit_cxx::chem::rdmolops::set_allow_nontetrahedral_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetAromaticity"
+rust = ["rdkit_cxx::chem::rdmolops::set_aromaticity", "rdkit_cxx::chem::rdmolops::set_aromaticity_with_model"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetBondStereoFromDirections"
+rust = ["rdkit_cxx::chem::rdmolops::set_bond_stereo_from_directions"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetConjugation"
+rust = ["rdkit_cxx::chem::rdmolops::set_conjugation"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetDoubleBondNeighborDirections"
+rust = ["rdkit_cxx::chem::rdmolops::set_double_bond_neighbor_directions", "rdkit_cxx::chem::rdmolops::set_double_bond_neighbor_directions_with_conf"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetHybridization"
+rust = ["rdkit_cxx::chem::rdmolops::set_hybridization"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetTerminalAtomCoords"
+rust = ["rdkit_cxx::chem::rdmolops::set_terminal_atom_coords"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetUseLegacyRingFinding"
+rust = ["rdkit_cxx::chem::rdmolops::set_use_legacy_ring_finding"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SetUseLegacyStereoPerception"
+rust = ["rdkit_cxx::chem::rdmolops::set_use_legacy_stereo_perception"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SimplifyEnhancedStereo"
+rust = ["rdkit_cxx::chem::rdmolops::simplify_enhanced_stereo", "rdkit_cxx::chem::rdmolops::simplify_enhanced_stereo_with_remove_affected_stereo_groups"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoBondThresholds"
+rust = ["rdkit_cxx::chem::rdmolops::StereoBondThresholds"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoBondThresholds.CHIRAL_ATOM"
+rust = ["rdkit_cxx::chem::rdmolops::StereoBondThresholds::CHIRAL_ATOM"]
+name_exception = "a static constant maps to an associated const"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoBondThresholds.DBL_BOND_NO_STEREO"
+rust = ["rdkit_cxx::chem::rdmolops::StereoBondThresholds::DBL_BOND_NO_STEREO"]
+name_exception = "a static constant maps to an associated const"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoBondThresholds.DBL_BOND_SPECIFIED_STEREO"
+rust = ["rdkit_cxx::chem::rdmolops::StereoBondThresholds::DBL_BOND_SPECIFIED_STEREO"]
+name_exception = "a static constant maps to an associated const"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoBondThresholds.DIRECTION_SET"
+rust = ["rdkit_cxx::chem::rdmolops::StereoBondThresholds::DIRECTION_SET"]
+name_exception = "a static constant maps to an associated const"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoGroupAbsOptions"
+rust = ["rdkit_cxx::chem::rdmolops::StereoGroupAbsOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoGroupAbsOptions.AlwaysInclude"
+rust = ["rdkit_cxx::chem::rdmolops::StereoGroupAbsOptions::AlwaysInclude"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoGroupAbsOptions.NeverInclude"
+rust = ["rdkit_cxx::chem::rdmolops::StereoGroupAbsOptions::NeverInclude"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.StereoGroupAbsOptions.OnlyIncludeWhenOtherGroupsExist"
+rust = ["rdkit_cxx::chem::rdmolops::StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm"
+rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.DEFAULT"
+rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.LEGACY"
+rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Legacy"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.RDL"
+rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Rdl"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.TranslateChiralFlagToStereoGroups"
+rust = ["rdkit_cxx::chem::rdmolops::translate_chiral_flag_to_stereo_groups", "rdkit_cxx::chem::rdmolops::translate_chiral_flag_to_stereo_groups_with_zero_flag_group_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.WedgeBond"
+rust = ["rdkit_cxx::chem::rdmolops::wedge_bond"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.WedgeMolBonds"
+rust = ["rdkit_cxx::chem::rdmolops::wedge_mol_bonds", "rdkit_cxx::chem::rdmolops::wedge_mol_bonds_with_params"]
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.AllBitSimilarity"

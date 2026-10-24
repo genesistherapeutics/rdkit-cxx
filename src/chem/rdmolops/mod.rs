@@ -4,6 +4,10 @@
 
 //! Mirrors `rdkit.Chem.rdmolops`.
 
+mod hs;
+mod perception;
+mod stereo;
+
 use cxx::UniquePtr;
 
 use crate::Result;
@@ -12,6 +16,10 @@ use crate::chem::rdchem::StereoInfo;
 use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::molops::ffi;
+
+pub use hs::*;
+pub use perception::*;
+pub use stereo::*;
 
 /// Sanitization operations, as bits. Mirrors `rdmolops.SanitizeFlags`
 /// (CONVENTIONS.md F1).

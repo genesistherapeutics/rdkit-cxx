@@ -43,6 +43,19 @@ void check_same_dimension(rust::Slice<const double> p,
 
 }  // namespace
 
+rust::Vec<IndexList> to_index_lists(
+    const std::vector<std::vector<int>> &lists) {
+  rust::Vec<IndexList> result;
+  for (const auto &indices : lists) {
+    IndexList list;
+    for (auto idx : indices) {
+      list.indices.push_back(static_cast<std::uint32_t>(idx));
+    }
+    result.push_back(std::move(list));
+  }
+  return result;
+}
+
 Point2D point2d_normalize(const Point2D &p) {
   auto res = rd(p);
   res.normalize();

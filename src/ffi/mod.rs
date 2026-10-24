@@ -6,6 +6,7 @@
 
 pub(crate) mod atom;
 pub(crate) mod bond;
+pub(crate) mod chirality;
 pub(crate) mod conformer;
 pub(crate) mod data_structs;
 pub(crate) mod errors;
@@ -17,6 +18,7 @@ pub(crate) mod mol_bundle;
 pub(crate) mod molfiles;
 pub(crate) mod molops;
 pub(crate) mod monomer_info;
+pub(crate) mod perception;
 pub(crate) mod periodic_table;
 pub(crate) mod props;
 pub(crate) mod query;

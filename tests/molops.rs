@@ -149,3 +149,70 @@ fn fragments() {
     assert!(get_mol_frags(&empty).is_empty());
     assert!(get_mol_frags_as_mols(&empty).unwrap().is_empty());
 }
+
+#[test]
+fn removing_hs() {
+    let mol = add_hs(&mol_from_smiles("[2H]C([H])O").unwrap()).unwrap();
+    assert_eq!(mol.get_num_atoms(), 6);
+    assert_eq!(remove_hs(&mol).unwrap().get_num_atoms(), 3);
+    assert_eq!(remove_all_hs(&mol).unwrap().get_num_atoms(), 2);
+    let isotopes = RemoveHsParameters {
+        remove_isotopes: true,
+        ..Default::default()
+    };
+    assert_eq!(
+        remove_hs_with_params(&mol, &isotopes)
+            .unwrap()
+            .get_num_atoms(),
+        2
+    );
+    // Python's implicitOnly=True.
+    let implicit_only = RemoveHsParameters {
+        remove_nonimplicit: false,
+        ..Default::default()
+    };
+    assert_eq!(
+        remove_hs_with_params(&mol, &implicit_only)
+            .unwrap()
+            .get_num_atoms(),
+        4
+    );
+    let defaults = RemoveHsParameters::default();
+    assert!(
+        defaults.remove_in_s_groups && defaults.remove_mapped && defaults.remove_with_wedged_bond
+    );
+    assert!(defaults.remove_nonimplicit && defaults.show_warnings && defaults.sanitize);
+    assert!(
+        !defaults.remove_isotopes
+            && !defaults.remove_degree_zero
+            && !defaults.update_explicit_count
+    );
+}
+
+#[test]
+fn query_hs() {
+    let query = mol_from_smarts("[#6][H]").unwrap();
+    assert_eq!(has_query_hs(&query), (true, false));
+    assert_eq!(
+        has_query_hs(&mol_from_smarts("CC").unwrap()),
+        (false, false)
+    );
+    assert_eq!(
+        has_query_hs(&mol_from_smarts("[#6][#1,#6]").unwrap()),
+        (true, true)
+    );
+    let merged = merge_query_hs(&query).unwrap();
+    assert_eq!(mol_to_smarts(&merged).unwrap(), "[#6&!H0]");
+    let mapped = mol_from_smarts("[#6][H:1]").unwrap();
+    let unmapped_only = MergeQueryHsParams {
+        merge_unmapped_only: true,
+        ..Default::default()
+    };
+    assert_eq!(
+        merge_query_hs_with_params(&mapped, &unmapped_only)
+            .unwrap()
+            .get_num_atoms(),
+        2
+    );
+    assert_eq!(merge_query_hs(&mapped).unwrap().get_num_atoms(), 1);
+}

@@ -18,8 +18,9 @@
 
 namespace rdkit_cxx {
 
-// A shared struct, defined by the bridge (src/ffi/molops.rs).
+// Shared structs, defined by the bridge (src/ffi/molops.rs).
 struct AddHsParametersData;
+struct RemoveHsParametersData;
 
 // RDKit's BETTER_ENUM is a plain enum with a fixed underlying type unless
 // USE_BETTER_ENUMS is defined, so cxx can check its values.
@@ -34,6 +35,16 @@ std::unique_ptr<RWMol> add_hs(const RWMol &mol,
 rust::Vec<IndexList> get_mol_frags(const RWMol &mol);
 std::unique_ptr<MolList> get_mol_frags_as_mols(const RWMol &mol,
                                                bool sanitize_frags);
+
+RemoveHsParametersData remove_hs_parameters_default();
+std::unique_ptr<RWMol> remove_hs(const RWMol &mol,
+                                 const RemoveHsParametersData &params);
+std::unique_ptr<RWMol> remove_all_hs(const RWMol &mol, bool sanitize);
+std::unique_ptr<RWMol> merge_query_hs(const RWMol &mol,
+                                      bool merge_unmapped_only,
+                                      bool merge_isotopes);
+// (has query Hs, has query Hs that can't be merged)
+rust::Vec<bool> has_query_hs(const RWMol &mol);
 
 std::size_t mol_list_size(const MolList &list);
 std::unique_ptr<RWMol> mol_list_take(MolList &list, std::size_t i);

@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -21,6 +23,10 @@ struct Point3D;
 // A list of atom or bond indices. cxx has no Vec<Vec<T>>, so nested lists
 // cross as Vec<IndexList>.
 struct IndexList;
+
+// Nested indices as IndexLists, for the wrappers that return them. RDKit's
+// indices are never negative.
+rust::Vec<IndexList> to_index_lists(const std::vector<std::vector<int>> &lists);
 
 // As the methods of RDGeom::Point2D, Point3D, and PointND (Geometry/point.h).
 // PointND crosses as its coordinates.

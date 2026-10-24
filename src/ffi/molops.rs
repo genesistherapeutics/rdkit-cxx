@@ -35,6 +35,27 @@ pub(crate) mod ffi {
         only_on_atoms: Vec<u32>,
     }
 
+    /// `RemoveHsParameters`, plus `RemoveHs`'s `sanitize`.
+    struct RemoveHsParametersData {
+        remove_degree_zero: bool,
+        remove_higher_degrees: bool,
+        remove_only_h_neighbors: bool,
+        remove_isotopes: bool,
+        remove_and_track_isotopes: bool,
+        remove_dummy_neighbors: bool,
+        remove_defining_bond_stereo: bool,
+        remove_with_wedged_bond: bool,
+        remove_with_query: bool,
+        remove_mapped: bool,
+        remove_in_s_groups: bool,
+        show_warnings: bool,
+        remove_nonimplicit: bool,
+        update_explicit_count: bool,
+        remove_hydrides: bool,
+        remove_nontetrahedral_neighbors: bool,
+        sanitize: bool,
+    }
+
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/molops.h");
@@ -56,6 +77,16 @@ pub(crate) mod ffi {
         fn add_hs(mol: &RWMol, params: &AddHsParametersData) -> Result<UniquePtr<RWMol>>;
         fn get_mol_frags(mol: &RWMol) -> Result<Vec<IndexList>>;
         fn get_mol_frags_as_mols(mol: &RWMol, sanitize_frags: bool) -> Result<UniquePtr<MolList>>;
+
+        fn remove_hs_parameters_default() -> Result<RemoveHsParametersData>;
+        fn remove_hs(mol: &RWMol, params: &RemoveHsParametersData) -> Result<UniquePtr<RWMol>>;
+        fn remove_all_hs(mol: &RWMol, sanitize: bool) -> Result<UniquePtr<RWMol>>;
+        fn merge_query_hs(
+            mol: &RWMol,
+            merge_unmapped_only: bool,
+            merge_isotopes: bool,
+        ) -> Result<UniquePtr<RWMol>>;
+        fn has_query_hs(mol: &RWMol) -> Result<Vec<bool>>;
 
         fn mol_list_size(list: &MolList) -> Result<usize>;
         fn mol_list_take(list: Pin<&mut MolList>, i: usize) -> Result<UniquePtr<RWMol>>;
