@@ -136,9 +136,12 @@ macro_rules! bit_vect_type {
             }
 
             /// RDKit's binary form, which `from_pkl` reads. Mirrors
-            /// `ToBinary`.
-            pub fn to_binary(&self) -> Vec<u8> {
-                expect_ok(ffi::bit_vect_to_binary(self.raw()))
+            /// `ToBinary`. `Error::Value` for a `SparseBitVect` of more than
+            /// `i32::MAX` bits (a fingerprint generator's unfolded
+            /// fingerprint), whose pickle RDKit would compute with
+            /// overflowing `int` arithmetic (CONVENTIONS.md U3).
+            pub fn to_binary(&self) -> Result<Vec<u8>> {
+                Ok(ffi::bit_vect_to_binary(self.raw())?)
             }
 
             /// Replaces the vector with one from base64 text (`to_base64`).
@@ -147,10 +150,10 @@ macro_rules! bit_vect_type {
                 Ok(ffi::bit_vect_from_base64(self.raw_mut(), in_d)?)
             }
 
-            /// The binary form in base64. Mirrors `ToBase64`.
-            pub fn to_base64(&self) -> String {
-                to_string(expect_ok(ffi::bit_vect_to_base64(self.raw())))
-                    .expect("base64 is ASCII")
+            /// The binary form in base64. Mirrors `ToBase64`. `Error::Value` as
+            /// `to_binary`.
+            pub fn to_base64(&self) -> Result<String> {
+                Ok(to_string(ffi::bit_vect_to_base64(self.raw())?).expect("base64 is ASCII"))
             }
 
             /// Every bit's value. Mirrors `ToList`.
@@ -325,9 +328,13 @@ pub fn init_from_daylight_string<B: BitVect>(sbv: &mut B, s: &str) -> Result<()>
     )?)
 }
 
-/// Mirrors `cDataStructs.ConvertToExplicit`.
-pub fn convert_to_explicit(sbv: &SparseBitVect) -> ExplicitBitVect {
-    ExplicitBitVect::from_ffi(expect_ok(ffi::convert_to_explicit(sbv.raw())))
+/// Mirrors `cDataStructs.ConvertToExplicit`. `Error::Value` for more than
+/// `i32::MAX` bits (a fingerprint generator's unfolded fingerprint), which an
+/// `ExplicitBitVect` cannot hold (CONVENTIONS.md U3).
+pub fn convert_to_explicit(sbv: &SparseBitVect) -> Result<ExplicitBitVect> {
+    Ok(ExplicitBitVect::from_ffi(ffi::convert_to_explicit(
+        sbv.raw(),
+    )?))
 }
 
 /// A vector with a bit for each character, on for `1`. Mirrors

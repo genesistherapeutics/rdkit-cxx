@@ -7,7 +7,418 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.AllocateAtomCounts"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::allocate_atom_counts"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.AllocateAtomToBits"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::allocate_atom_to_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.AllocateAtomsPerBit"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::allocate_atoms_per_bit"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.AllocateBitInfoMap"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::allocate_bit_info_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.AllocateBitPaths"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::allocate_bit_paths"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.CollectAtomCounts"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::collect_atom_counts"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.CollectAtomToBits"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::collect_atom_to_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.CollectAtomsPerBit"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::collect_atoms_per_bit"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.CollectBitInfoMap"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::collect_bit_info_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.CollectBitPaths"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::collect_bit_paths"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.GetAtomCounts"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::get_atom_counts"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.GetAtomToBits"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::get_atom_to_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.GetAtomsPerBit"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::get_atoms_per_bit"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.GetBitInfoMap"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::get_bit_info_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.GetBitPaths"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::get_bit_paths"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput.__init__"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AdditionalOutput::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AtomInvariantsGenerator"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AtomInvariantsGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AtomPairFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::AtomPairFp"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AtomPairFingerprintOptions"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AtomPairFingerprintOptions"]
+overloads_note = "a generator's options are FingerprintOptions, whose kind field holds this (FingerprintKindOptions)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AtomPairFingerprintOptions.maxDistance"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AtomPairFingerprintOptions::max_distance"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AtomPairFingerprintOptions.minDistance"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AtomPairFingerprintOptions::min_distance"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.AtomPairFingerprintOptions.use2D"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::AtomPairFingerprintOptions::use_2d"]
+rust_kind = "field"
+name_exception = "digits stay with their letters: use_2d"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.BondInvariantsGenerator"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::BondInvariantsGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FPType"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FPType.AtomPairFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::AtomPairFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FPType.MorganFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::MorganFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FPType.RDKitFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdKitFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FPType.TopologicalTorsionFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::TopologicalTorsionFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetCountFingerprint"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetCountFingerprintAsNumPy"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetCountFingerprints"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetFingerprint"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetFingerprintAsNumPy"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetFingerprints"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetInfoString"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetOptions"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetSparseCountFingerprint"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetSparseCountFingerprints"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetSparseFingerprint"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.GetSparseFingerprints"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator32.ToJSON"
+reason = "Python registers the class, but no function returns one: every factory and FingerprintGeneratorFromJSON returns FingerprintGenerator64"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetCountFingerprint"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprint", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprint_with_params", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprint_with_outputs"]
+overloads_note = "additionalOutput says what to collect; the _with_outputs forms return what it collected (A9)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetCountFingerprintAsNumPy"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprint_as_num_py", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprint_as_num_py_with_params"]
+overloads_note = "the array's values, in order (T1)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetCountFingerprints"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprints", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_count_fingerprints_with_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetFingerprint"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprint", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprint_with_params", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprint_with_outputs"]
+overloads_note = "additionalOutput says what to collect; the _with_outputs forms return what it collected (A9)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetFingerprintAsNumPy"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprint_as_num_py", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprint_as_num_py_with_params"]
+overloads_note = "the array's values, in order (T1)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetFingerprints"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprints", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_fingerprints_with_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetInfoString"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_info_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetOptions"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_options"]
+overloads_note = "Python returns the generator's own options to change in place; get_options returns a copy, and FingerprintGenerator64::set_options checks and applies a changed one"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetSparseCountFingerprint"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_count_fingerprint", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_count_fingerprint_with_params", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_count_fingerprint_with_outputs"]
+overloads_note = "additionalOutput says what to collect; the _with_outputs forms return what it collected (A9)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetSparseCountFingerprints"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_count_fingerprints", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_count_fingerprints_with_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetSparseFingerprint"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_fingerprint", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_fingerprint_with_params", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_fingerprint_with_outputs"]
+overloads_note = "additionalOutput says what to collect; the _with_outputs forms return what it collected (A9)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.GetSparseFingerprints"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_fingerprints", "rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::get_sparse_fingerprints_with_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGenerator64.ToJSON"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64::to_json"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintGeneratorFromJSON"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::fingerprint_generator_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintOptions"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintOptions.SetCountBounds"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintOptions::set_count_bounds"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintOptions.countSimulation"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintOptions::count_simulation"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintOptions.fpSize"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintOptions::fp_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintOptions.includeChirality"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintOptions::include_chirality"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.FingerprintOptions.numBitsPerFeature"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FingerprintOptions::num_bits_per_feature"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetAtomPairAtomInvGen"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_atom_pair_atom_inv_gen", "rdkit_cxx::chem::rd_fingerprint_generator::get_atom_pair_atom_inv_gen_with_include_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetAtomPairGenerator"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_atom_pair_generator", "rdkit_cxx::chem::rd_fingerprint_generator::get_atom_pair_generator_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetCountFPs"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_count_fps", "rdkit_cxx::chem::rd_fingerprint_generator::get_count_fps_with_fp_type"]
+name_exception = "FPs is one word: get_count_fps"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetFPs"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_fps", "rdkit_cxx::chem::rd_fingerprint_generator::get_fps_with_fp_type"]
+name_exception = "FPs is one word: get_fps"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetMorganAtomInvGen"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_atom_inv_gen"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetMorganBondInvGen"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_bond_inv_gen", "rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_bond_inv_gen_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetMorganFeatureAtomInvGen"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_feature_atom_inv_gen", "rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_feature_atom_inv_gen_with_patterns"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetMorganGenerator"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_generator", "rdkit_cxx::chem::rd_fingerprint_generator::get_morgan_generator_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetRDKitAtomInvGen"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_rdkit_atom_inv_gen"]
+name_exception = "RDKit is one word: get_rdkit_atom_inv_gen"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetRDKitFPGenerator"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_rdkit_fp_generator", "rdkit_cxx::chem::rd_fingerprint_generator::get_rdkit_fp_generator_with_params"]
+name_exception = "RDKit is one word: get_rdkit_fp_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetSparseCountFPs"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_sparse_count_fps", "rdkit_cxx::chem::rd_fingerprint_generator::get_sparse_count_fps_with_fp_type"]
+name_exception = "FPs is one word: get_sparse_count_fps"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetSparseFPs"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_sparse_fps", "rdkit_cxx::chem::rd_fingerprint_generator::get_sparse_fps_with_fp_type"]
+name_exception = "FPs is one word: get_sparse_fps"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.GetTopologicalTorsionGenerator"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::get_topological_torsion_generator", "rdkit_cxx::chem::rd_fingerprint_generator::get_topological_torsion_generator_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.MorganFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::MorganFp"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.MorganFingerprintOptions"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions"]
+overloads_note = "a generator's options are FingerprintOptions, whose kind field holds this (FingerprintKindOptions)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.MorganFingerprintOptions.includeRedundantEnvironments"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions::include_redundant_environments"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.MorganFingerprintOptions.onlyNonzeroInvariants"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions::only_nonzero_invariants"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.MorganFingerprintOptions.radius"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions::radius"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdKitFp"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions"]
+overloads_note = "a generator's options are FingerprintOptions, whose kind field holds this (FingerprintKindOptions)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions.branchedPaths"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions::branched_paths"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions.maxPath"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions::max_path"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions.minPath"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions::min_path"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions.useBondOrder"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions::use_bond_order"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions.useHs"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions::use_hs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.TopologicalTorsionFP"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::TopologicalTorsionFp"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.TopologicalTorsionFingerprintOptions"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::TopologicalTorsionFingerprintOptions"]
+overloads_note = "a generator's options are FingerprintOptions, whose kind field holds this (FingerprintKindOptions)"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.TopologicalTorsionFingerprintOptions.onlyShortestPaths"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::TopologicalTorsionFingerprintOptions::only_shortest_paths"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFingerprintGenerator.TopologicalTorsionFingerprintOptions.torsionAtomCount"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::TopologicalTorsionFingerprintOptions::torsion_atom_count"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"

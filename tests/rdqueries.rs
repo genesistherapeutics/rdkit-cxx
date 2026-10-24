@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rdqueries::*;
 use rdkit_cxx::chem::*;
 use rdkit_cxx::data_structs::ExplicitBitVect;
 

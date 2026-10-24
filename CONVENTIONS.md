@@ -131,7 +131,10 @@ rule changes the rule first.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
-  return `Error::Value`.
+  return `Error::Value`. The exception is the unfolded fingerprints RDKit
+  makes itself (`GetSparseFingerprint`'s `SparseBitVect` of 2^32 − 1 bits):
+  the operations whose `int` arithmetic they would overflow (pickling,
+  base64, conversion to `ExplicitBitVect`) refuse them instead.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use).
