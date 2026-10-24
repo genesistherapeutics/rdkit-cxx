@@ -11,7 +11,8 @@ use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
 use crate::chem::rdchem::{
-    AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoRef,
+    AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoMut,
+    RingInfoRef,
 };
 use crate::error::{expect_ok, to_string};
 use crate::ffi::conformer::ffi as conformer_ffi;
@@ -223,6 +224,11 @@ impl Mol {
     /// Mirrors `Mol.GetRingInfo`.
     pub fn get_ring_info(&self) -> RingInfoRef<'_> {
         RingInfoRef::new(self)
+    }
+
+    /// Mirrors `Mol.GetRingInfo`, to add rings.
+    pub fn get_ring_info_mut(&mut self) -> RingInfoMut<'_> {
+        RingInfoMut::new(self)
     }
 
     /// Forgets every atom's computed valences. Mirrors `Mol.ClearPropertyCache`.

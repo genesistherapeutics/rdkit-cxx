@@ -810,6 +810,10 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
 name_exception = "an exported enum value maps to its variant, ValenceType::Explicit"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.GetPeriodicTable"
+rust = ["rdkit_cxx::chem::rdchem::get_periodic_table"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.HybridizationType"
 rust = ["rdkit_cxx::chem::rdchem::HybridizationType"]
 
@@ -960,7 +964,7 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_props_as_dict", "rdkit_cxx::chem::rdc
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetRingInfo"
-rust = ["rdkit_cxx::chem::rdchem::Mol::get_ring_info"]
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_ring_info", "rdkit_cxx::chem::rdchem::Mol::get_ring_info_mut"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetSubstructMatch"
@@ -1048,6 +1052,74 @@ python = "rdkit.Chem.rdchem.Mol.__new__"
 reason = "nanobind's construction hook; __init__ maps the constructors"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetAbundanceForIsotope"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_abundance_for_isotope", "rdkit_cxx::chem::rdchem::PeriodicTable::get_abundance_for_isotope_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetAtomicNumber"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_atomic_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetAtomicWeight"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_atomic_weight", "rdkit_cxx::chem::rdchem::PeriodicTable::get_atomic_weight_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetDefaultValence"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_default_valence", "rdkit_cxx::chem::rdchem::PeriodicTable::get_default_valence_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetElementName"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_element_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetElementSymbol"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_element_symbol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetMassForIsotope"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_mass_for_isotope", "rdkit_cxx::chem::rdchem::PeriodicTable::get_mass_for_isotope_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetMaxAtomicNumber"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_max_atomic_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetMostCommonIsotope"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_most_common_isotope", "rdkit_cxx::chem::rdchem::PeriodicTable::get_most_common_isotope_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetMostCommonIsotopeMass"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_most_common_isotope_mass", "rdkit_cxx::chem::rdchem::PeriodicTable::get_most_common_isotope_mass_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetNOuterElecs"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_n_outer_elecs", "rdkit_cxx::chem::rdchem::PeriodicTable::get_n_outer_elecs_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetRb0"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_rb0", "rdkit_cxx::chem::rdchem::PeriodicTable::get_rb0_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetRcovalent"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_rcovalent", "rdkit_cxx::chem::rdchem::PeriodicTable::get_rcovalent_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetRow"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_row", "rdkit_cxx::chem::rdchem::PeriodicTable::get_row_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetRvdw"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_rvdw", "rdkit_cxx::chem::rdchem::PeriodicTable::get_rvdw_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PeriodicTable.GetValenceList"
+rust = ["rdkit_cxx::chem::rdchem::PeriodicTable::get_valence_list", "rdkit_cxx::chem::rdchem::PeriodicTable::get_valence_list_str"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.RWMol"
 rust = ["rdkit_cxx::chem::rdchem::RWMol"]
 
@@ -1122,35 +1194,111 @@ reason = "nanobind's construction hook; __init__ maps the constructors"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef", "rdkit_cxx::chem::rdchem::RingInfoMut"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AddRing"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoMut::add_ring"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AreAtomsInSameRing"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::are_atoms_in_same_ring", "rdkit_cxx::chem::rdchem::RingInfoMut::are_atoms_in_same_ring"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AreAtomsInSameRingOfSize"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::are_atoms_in_same_ring_of_size", "rdkit_cxx::chem::rdchem::RingInfoMut::are_atoms_in_same_ring_of_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AreBondsInSameRing"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::are_bonds_in_same_ring", "rdkit_cxx::chem::rdchem::RingInfoMut::are_bonds_in_same_ring"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AreBondsInSameRingOfSize"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::are_bonds_in_same_ring_of_size", "rdkit_cxx::chem::rdchem::RingInfoMut::are_bonds_in_same_ring_of_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AreRingFamiliesInitialized"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::are_ring_families_initialized", "rdkit_cxx::chem::rdchem::RingInfoMut::are_ring_families_initialized"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AreRingsFused"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::are_rings_fused", "rdkit_cxx::chem::rdchem::RingInfoMut::are_rings_fused"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AtomMembers"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::atom_members", "rdkit_cxx::chem::rdchem::RingInfoMut::atom_members"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AtomRingFamilies"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::atom_ring_families", "rdkit_cxx::chem::rdchem::RingInfoMut::atom_ring_families"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.AtomRingSizes"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::atom_ring_sizes", "rdkit_cxx::chem::rdchem::RingInfoMut::atom_ring_sizes"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.AtomRings"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::atom_rings"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::atom_rings", "rdkit_cxx::chem::rdchem::RingInfoMut::atom_rings"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.BondMembers"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::bond_members", "rdkit_cxx::chem::rdchem::RingInfoMut::bond_members"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.BondRingFamilies"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::bond_ring_families", "rdkit_cxx::chem::rdchem::RingInfoMut::bond_ring_families"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.BondRingSizes"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::bond_ring_sizes", "rdkit_cxx::chem::rdchem::RingInfoMut::bond_ring_sizes"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.BondRings"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::bond_rings"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::bond_rings", "rdkit_cxx::chem::rdchem::RingInfoMut::bond_rings"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.IsAtomInRingOfSize"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::is_atom_in_ring_of_size"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::is_atom_in_ring_of_size", "rdkit_cxx::chem::rdchem::RingInfoMut::is_atom_in_ring_of_size"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.IsBondInRingOfSize"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::is_bond_in_ring_of_size"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::is_bond_in_ring_of_size", "rdkit_cxx::chem::rdchem::RingInfoMut::is_bond_in_ring_of_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.IsRingFused"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::is_ring_fused", "rdkit_cxx::chem::rdchem::RingInfoMut::is_ring_fused"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.MinAtomRingSize"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::min_atom_ring_size", "rdkit_cxx::chem::rdchem::RingInfoMut::min_atom_ring_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.MinBondRingSize"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::min_bond_ring_size", "rdkit_cxx::chem::rdchem::RingInfoMut::min_bond_ring_size"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.NumAtomRings"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_atom_rings"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_atom_rings", "rdkit_cxx::chem::rdchem::RingInfoMut::num_atom_rings"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.NumBondRings"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_bond_rings"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_bond_rings", "rdkit_cxx::chem::rdchem::RingInfoMut::num_bond_rings"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.NumFusedBonds"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_fused_bonds", "rdkit_cxx::chem::rdchem::RingInfoMut::num_fused_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.NumRelevantCycles"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_relevant_cycles", "rdkit_cxx::chem::rdchem::RingInfoMut::num_relevant_cycles"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RingInfo.NumRingFamilies"
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_ring_families", "rdkit_cxx::chem::rdchem::RingInfoMut::num_ring_families"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo.NumRings"
-rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_rings"]
+rust = ["rdkit_cxx::chem::rdchem::RingInfoRef::num_rings", "rdkit_cxx::chem::rdchem::RingInfoMut::num_rings"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters"

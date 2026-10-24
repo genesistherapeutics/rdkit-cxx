@@ -38,6 +38,7 @@ set(RDKIT_CXX_SOURCES
   src/mol_list.cpp
   src/molops.cpp
   src/substruct.cpp
+  src/periodic_table.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

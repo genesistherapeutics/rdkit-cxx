@@ -19,5 +19,38 @@ pub(crate) mod ffi {
         fn ring_info_num_bond_rings(mol: &RWMol, idx: u32) -> Result<u32>;
         fn ring_info_is_atom_in_ring_of_size(mol: &RWMol, idx: u32, size: u32) -> Result<bool>;
         fn ring_info_is_bond_in_ring_of_size(mol: &RWMol, idx: u32, size: u32) -> Result<bool>;
+        fn ring_info_atom_members(mol: &RWMol, idx: u32) -> Result<Vec<i32>>;
+        fn ring_info_bond_members(mol: &RWMol, idx: u32) -> Result<Vec<i32>>;
+        fn ring_info_atom_ring_sizes(mol: &RWMol, idx: u32) -> Result<Vec<i32>>;
+        fn ring_info_bond_ring_sizes(mol: &RWMol, idx: u32) -> Result<Vec<i32>>;
+        fn ring_info_min_atom_ring_size(mol: &RWMol, idx: u32) -> Result<u32>;
+        fn ring_info_min_bond_ring_size(mol: &RWMol, idx: u32) -> Result<u32>;
+        fn ring_info_are_atoms_in_same_ring(mol: &RWMol, idx1: u32, idx2: u32) -> Result<bool>;
+        fn ring_info_are_atoms_in_same_ring_of_size(
+            mol: &RWMol,
+            idx1: u32,
+            idx2: u32,
+            size: u32,
+        ) -> Result<bool>;
+        fn ring_info_are_bonds_in_same_ring(mol: &RWMol, idx1: u32, idx2: u32) -> Result<bool>;
+        fn ring_info_are_bonds_in_same_ring_of_size(
+            mol: &RWMol,
+            idx1: u32,
+            idx2: u32,
+            size: u32,
+        ) -> Result<bool>;
+        fn ring_info_is_ring_fused(mol: &RWMol, ring_idx: u32) -> Result<bool>;
+        fn ring_info_are_rings_fused(mol: &RWMol, ring1_idx: u32, ring2_idx: u32) -> Result<bool>;
+        fn ring_info_num_fused_bonds(mol: &RWMol, ring_idx: u32) -> Result<u32>;
+        fn ring_info_are_ring_families_initialized(mol: &RWMol) -> Result<bool>;
+        fn ring_info_num_ring_families(mol: &RWMol) -> Result<u32>;
+        fn ring_info_num_relevant_cycles(mol: &RWMol) -> Result<u32>;
+        fn ring_info_atom_ring_families(mol: &RWMol) -> Result<Vec<IndexList>>;
+        fn ring_info_bond_ring_families(mol: &RWMol) -> Result<Vec<IndexList>>;
+        fn ring_info_add_ring(
+            mol: Pin<&mut RWMol>,
+            atom_ids: &[u32],
+            bond_ids: &[u32],
+        ) -> Result<()>;
     }
 }
