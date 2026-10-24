@@ -20,8 +20,9 @@ std::unique_ptr<Atom> atom_from_num(unsigned num) {
   return std::make_unique<Atom>(num);
 }
 
+// copy() keeps the dynamic type, so a query atom's copy keeps its query.
 std::unique_ptr<Atom> atom_clone(const Atom &atom) {
-  return std::make_unique<Atom>(atom);
+  return std::unique_ptr<Atom>(atom.copy());
 }
 
 unsigned atom_get_idx(const Atom &atom) { return atom.getIdx(); }

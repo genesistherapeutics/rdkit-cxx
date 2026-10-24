@@ -341,7 +341,7 @@ pub struct Atom {
 }
 
 impl Atom {
-    fn from_ffi(ptr: UniquePtr<ffi::Atom>) -> Atom {
+    pub(crate) fn from_ffi(ptr: UniquePtr<ffi::Atom>) -> Atom {
         assert!(!ptr.is_null(), "RDKit returned a null atom");
         Atom { ptr }
     }
