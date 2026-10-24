@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# The wrappers follow RDKit's style: Google's, with `&` and `*` next to the
+# name.
+BasedOnStyle: Google
+DerivePointerAlignment: false
+PointerAlignment: Right
+# Includes go standard library, then RDKit and Boost, then this crate and
+# cxx; Google's own categories take RDKit's `.h` headers for C system ones.
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^<[a-z_]+>$'
+    Priority: 1
+  - Regex: '^<'
+    Priority: 2
+  - Regex: '.*'
+    Priority: 3

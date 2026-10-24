@@ -6,8 +6,9 @@
 
 // Properties on molecules, atoms, bonds, conformers, and substance groups.
 // They all derive from RDKit::RDProps, so one set of wrappers serves every
-// class; each class has an upcast (`<class>_as_props`). RDKit's property setters are const, so these
-// take const RDProps&; the Rust API still takes &mut self to set.
+// class; each class has an upcast (`<class>_as_props`). RDKit's property
+// setters are const, so these take const RDProps&; the Rust API still takes
+// &mut self to set.
 
 #pragma once
 

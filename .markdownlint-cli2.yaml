@@ -1,0 +1,19 @@
+# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# markdownlint-cli2 configuration, as in ord-schema. Rule reference:
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Skip anything git ignores (target/ holds vendored Markdown).
+gitignore: true
+config:
+  # Prose is hand-wrapped, and tables and links run past any fixed column.
+  MD013: false
+  # Dash bullets and asterisk emphasis, pinned rather than inferred.
+  MD004:
+    style: dash
+  MD049:
+    style: asterisk
+  MD050:
+    style: asterisk

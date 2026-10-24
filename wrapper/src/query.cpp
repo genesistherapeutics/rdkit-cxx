@@ -32,8 +32,8 @@ template <class Query, class T>
 Query &as_query(T &obj, const char *what) {
   auto *query = dynamic_cast<Query *>(&obj);
   if (!query) {
-    throw ValueErrorException(std::string("the ") + what +
-                              " is not a query " + what);
+    throw ValueErrorException(std::string("the ") + what + " is not a query " +
+                              what);
   }
   return *query;
 }

@@ -28,9 +28,8 @@ bool atom_coords_matcher_call(const AtomCoordsMatcherData &matcher,
 // As helpHasSubstructMatch, helpGetSubstructMatch, and
 // helpGetSubstructMatches in Code/GraphMol/nbWrap/substructmethods.h, for each
 // pairing of molecule and bundle.
-bool mol_has_substruct_match(
-    const RWMol &target, const RWMol &query,
-    const SubstructMatchParametersData &params);
+bool mol_has_substruct_match(const RWMol &target, const RWMol &query,
+                             const SubstructMatchParametersData &params);
 rust::Vec<std::uint32_t> mol_get_substruct_match(
     const RWMol &target, const RWMol &query,
     const SubstructMatchParametersData &params);
@@ -46,9 +45,8 @@ rust::Vec<std::uint32_t> mol_get_substruct_match_mol_bundle(
 rust::Vec<IndexList> mol_get_substruct_matches_mol_bundle(
     const RWMol &target, const MolBundle &query,
     const SubstructMatchParametersData &params);
-bool mol_bundle_has_substruct_match(
-    const MolBundle &target, const RWMol &query,
-    const SubstructMatchParametersData &params);
+bool mol_bundle_has_substruct_match(const MolBundle &target, const RWMol &query,
+                                    const SubstructMatchParametersData &params);
 rust::Vec<std::uint32_t> mol_bundle_get_substruct_match(
     const MolBundle &target, const RWMol &query,
     const SubstructMatchParametersData &params);

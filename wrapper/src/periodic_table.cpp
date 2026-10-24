@@ -14,7 +14,9 @@ namespace rdkit_cxx {
 
 namespace {
 
-const RDKit::PeriodicTable &table() { return *RDKit::PeriodicTable::getTable(); }
+const RDKit::PeriodicTable &table() {
+  return *RDKit::PeriodicTable::getTable();
+}
 
 // RDKit checks atomic numbers with PRECONDITION; this reports them as
 // IndexError, like other indices (CONVENTIONS.md E3).

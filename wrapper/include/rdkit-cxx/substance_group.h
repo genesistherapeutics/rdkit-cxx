@@ -38,11 +38,9 @@ void mol_clear_substance_groups(RWMol &mol);
 // returns the new group's index. The copy's indices are checked against the
 // molecule it joins (CONVENTIONS.md E3).
 std::uint32_t mol_create_substance_group(RWMol &mol, rust::Str type);
-std::uint32_t mol_create_data_substance_group(RWMol &mol,
-                                              rust::Str field_name,
+std::uint32_t mol_create_data_substance_group(RWMol &mol, rust::Str field_name,
                                               rust::Str value);
-std::uint32_t mol_add_substance_group(RWMol &mol,
-                                      const SubstanceGroup &sgroup);
+std::uint32_t mol_add_substance_group(RWMol &mol, const SubstanceGroup &sgroup);
 
 std::uint32_t substance_group_get_index_in_mol(const SubstanceGroup &sgroup);
 rust::Vec<std::uint32_t> substance_group_get_atoms(

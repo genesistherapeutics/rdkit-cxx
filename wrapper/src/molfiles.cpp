@@ -72,17 +72,24 @@ std::unique_ptr<RWMol> parsed(RDKit::RWMol *mol, const std::string &what,
 
 SmilesParserParamsData smiles_parser_params_default() {
   RDKit::SmilesParserParams params;
-  return SmilesParserParamsData{params.debugParse,    params.parseName,
-                                params.allowCXSMILES, params.strictCXSMILES,
-                                params.sanitize,      params.removeHs,
-                                {},                   {}};
+  return SmilesParserParamsData{params.debugParse,
+                                params.parseName,
+                                params.allowCXSMILES,
+                                params.strictCXSMILES,
+                                params.sanitize,
+                                params.removeHs,
+                                {},
+                                {}};
 }
 
 SmartsParserParamsData smarts_parser_params_default() {
   RDKit::SmartsParserParams params;
-  return SmartsParserParamsData{params.debugParse,     params.parseName,
-                                params.allowCXSMILES,  params.strictCXSMILES,
-                                params.mergeHs,        {},
+  return SmartsParserParamsData{params.debugParse,
+                                params.parseName,
+                                params.allowCXSMILES,
+                                params.strictCXSMILES,
+                                params.mergeHs,
+                                {},
                                 {}};
 }
 
@@ -174,8 +181,8 @@ std::unique_ptr<RWMol> mol_from_mol_file(rust::Slice<const std::uint8_t> path,
   return mol;
 }
 
-std::unique_ptr<std::string> mol_to_mol_block(
-    const RWMol &mol, const MolWriterParamsData &data) {
+std::unique_ptr<std::string> mol_to_mol_block(const RWMol &mol,
+                                              const MolWriterParamsData &data) {
   return std::make_unique<std::string>(
       RDKit::MolToMolBlock(mol, writer_params(data), data.conf_id));
 }

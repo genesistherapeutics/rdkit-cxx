@@ -36,8 +36,8 @@ std::unique_ptr<AtomMonomerInfo> monomer_info_with(int type, rust::Str name,
                                                    rust::Str chain_id,
                                                    rust::Str monomer_class) {
   return std::make_unique<AtomMonomerInfo>(
-      monomer_type(type), std::string(name), std::string(residue_name),
-      res_num, std::string(chain_id), std::string(monomer_class));
+      monomer_type(type), std::string(name), std::string(residue_name), res_num,
+      std::string(chain_id), std::string(monomer_class));
 }
 
 std::unique_ptr<AtomMonomerInfo> monomer_info_clone(

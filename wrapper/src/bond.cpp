@@ -5,12 +5,12 @@
 #include "rdkit-cxx/bond.h"
 
 #include <GraphMol/MolOps.h>
-
-#include "rdkit-cxx/errors.h"
 #include <GraphMol/QueryBond.h>
 #include <GraphMol/ROMol.h>
 #include <GraphMol/SmilesParse/SmartsWrite.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
+
+#include "rdkit-cxx/errors.h"
 
 namespace rdkit_cxx {
 
@@ -36,9 +36,7 @@ unsigned bond_get_other_atom_idx(const Bond &bond, unsigned this_idx) {
 
 bool bond_get_is_aromatic(const Bond &bond) { return bond.getIsAromatic(); }
 
-bool bond_get_is_conjugated(const Bond &bond) {
-  return bond.getIsConjugated();
-}
+bool bond_get_is_conjugated(const Bond &bond) { return bond.getIsConjugated(); }
 
 BondDir bond_get_bond_dir(const Bond &bond) { return bond.getBondDir(); }
 

@@ -31,8 +31,7 @@ std::unique_ptr<AtomMonomerInfo> monomer_info_with(int type, rust::Str name,
                                                    rust::Str monomer_class);
 std::unique_ptr<AtomMonomerInfo> monomer_info_clone(
     const AtomMonomerInfo &info);
-std::unique_ptr<std::string> monomer_info_get_name(
-    const AtomMonomerInfo &info);
+std::unique_ptr<std::string> monomer_info_get_name(const AtomMonomerInfo &info);
 int monomer_info_get_monomer_type(const AtomMonomerInfo &info);
 std::unique_ptr<std::string> monomer_info_get_residue_name(
     const AtomMonomerInfo &info);
@@ -86,8 +85,7 @@ void pdb_residue_info_set_segment_number(AtomPDBResidueInfo &info,
 // Copies of the atom's info, or null; the PDB form throws ValueError for
 // other monomer types, as AtomGetPDBResidueInfo in nbWrap/Atom.cpp does.
 std::unique_ptr<AtomMonomerInfo> atom_get_monomer_info(const Atom &atom);
-std::unique_ptr<AtomPDBResidueInfo> atom_get_pdb_residue_info(
-    const Atom &atom);
+std::unique_ptr<AtomPDBResidueInfo> atom_get_pdb_residue_info(const Atom &atom);
 void atom_set_monomer_info(Atom &atom, const AtomMonomerInfo &info);
 
 }  // namespace rdkit_cxx

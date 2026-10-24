@@ -46,9 +46,7 @@ HybridizationType atom_get_hybridization(const Atom &atom) {
   return atom.getHybridization();
 }
 
-ChiralType atom_get_chiral_tag(const Atom &atom) {
-  return atom.getChiralTag();
-}
+ChiralType atom_get_chiral_tag(const Atom &atom) { return atom.getChiralTag(); }
 
 void atom_set_atomic_num(Atom &atom, int new_num) {
   atom.setAtomicNum(new_num);

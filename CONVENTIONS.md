@@ -5,10 +5,14 @@ rule changes the rule first.
 
 ## Files
 
-- **L1.** Every source file starts with addlicense's BSD header. Add it with
-  `addlicense -c "Steven Kearnes" -l bsd -ignore "target/**" .`
-  (`go install github.com/google/addlicense@v1.2.0`); CI checks it.
-  Generators write the same header themselves (`inventory/check.py`).
+- **L1.** Every source file starts with addlicense's BSD header. The
+  pre-commit hook adds it (`addlicense -c "Steven Kearnes" -l bsd`), and CI
+  runs the hooks. Generators write the same header themselves
+  (`inventory/check.py`).
+- **L2.** rustfmt formats Rust, clang-format (`.clang-format`: Google's style
+  with RDKit's pointer alignment) formats C++, and ruff (`ruff.toml`) lints
+  and formats Python. The pre-commit hooks in `.pre-commit-config.yaml` run
+  them all.
 
 ## Bridges
 

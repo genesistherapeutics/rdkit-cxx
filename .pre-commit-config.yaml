@@ -1,0 +1,60 @@
+# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Install with `pre-commit install`. CI runs every hook on every file (the
+# pre-commit job in .github/workflows/ci.yml), skipping no-commit-to-branch.
+
+repos:
+  # Every change goes through a branch and a pull request, so a commit on main
+  # is a mistake. Listed first so it fails before the slower hooks run.
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/google/addlicense
+    rev: v1.2.0
+    hooks:
+      - id: addlicense
+        args: [-c, Steven Kearnes, -l, bsd]
+
+  - repo: local
+    hooks:
+      - id: cargo-fmt
+        name: cargo fmt
+        entry: cargo fmt --all
+        language: system
+        types: [rust]
+        pass_filenames: false
+      # tests/manifest_paths.rs is generated from the manifest
+      # (CONVENTIONS.md I1); this also fails on manifest problems.
+      - id: manifest-paths
+        name: inventory/check.py --write-paths
+        entry: python3 inventory/check.py --write-paths tests/manifest_paths.rs
+        language: system
+        files: ^inventory/(check\.py|manifest\.toml|inventory-.*\.json)$
+        pass_filenames: false
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.10
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v22.1.2
+    hooks:
+      - id: clang-format
+        types_or: [c, c++]
+
+  - repo: https://github.com/DavidAnson/markdownlint-cli2
+    rev: v0.23.1
+    hooks:
+      - id: markdownlint-cli2

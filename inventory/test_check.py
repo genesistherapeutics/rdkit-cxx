@@ -149,7 +149,10 @@ def test_two_overloads_and_one_rust_path():
             "rust": ["rdkit_cxx::chem::SanitizeFlags::SANITIZE_ALL"],
         },
         {"python": "rdkit.Chem.rdchem.Mol", "rust": ["rdkit_cxx::chem::Mol"]},
-        {"python": "rdkit.Chem.rdchem.Conformer", "rust": ["rdkit_cxx::chem::ConformerRef", "rdkit_cxx::chem::ConformerMut"]},
+        {
+            "python": "rdkit.Chem.rdchem.Conformer",
+            "rust": ["rdkit_cxx::chem::ConformerRef", "rdkit_cxx::chem::ConformerMut"],
+        },
         {
             "python": "rdkit.Geometry.rdGeometry.Point3D.x",
             "rust": ["rdkit_cxx::geometry::Point3D::x"],

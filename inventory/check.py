@@ -115,7 +115,7 @@ def check(inventory: dict, manifest: dict) -> list[str]:
                 f"{python}: {overloads} overloads but {len(rust)} Rust paths; bind each or add overloads_note"
             )
     complete = set(manifest.get("modules", {}).get("complete", []))
-    for name, entry in entries.items():
+    for name in entries:
         if name not in mapped and module_of(name, classes) in complete:
             problems.append(f"{name}: unmapped in complete module {module_of(name, classes)}")
     return problems
@@ -174,9 +174,7 @@ def main() -> int:
     items = [item for item in manifest.get("entry", []) if item["python"] in names]
     with_reason = sum("reason" in item for item in items)
     complete = len(manifest.get("modules", {}).get("complete", []))
-    print(
-        f"mapped {len(items)} of {len(names)} entries ({with_reason} with a reason); complete modules: {complete}"
-    )
+    print(f"mapped {len(items)} of {len(names)} entries ({with_reason} with a reason); complete modules: {complete}")
     return 1 if problems else 0
 
 
