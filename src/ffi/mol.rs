@@ -14,6 +14,12 @@ pub(crate) mod ffi {
         type BondType = crate::ffi::bond::ffi::BondType;
 
         fn mol_new() -> Result<UniquePtr<RWMol>>;
+        fn mol_from_pkl_string(pkl: &[u8], has_flags: bool, flags: u32)
+        -> Result<UniquePtr<RWMol>>;
+        fn mol_to_binary(mol: &RWMol, has_flags: bool, flags: u32) -> Result<Vec<u8>>;
+        fn get_default_pickle_properties() -> Result<u32>;
+        fn set_default_pickle_properties(props: u32) -> Result<()>;
+        fn property_pickle_option_values() -> Result<Vec<u32>>;
         fn mol_clone(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn mol_get_num_atoms(mol: &RWMol) -> Result<u32>;
         fn mol_get_num_atoms_with_only_explicit(mol: &RWMol, only_explicit: bool) -> Result<u32>;
@@ -25,6 +31,13 @@ pub(crate) mod ffi {
         fn mol_get_atom_with_idx_mut(mol: Pin<&mut RWMol>, idx: u32) -> Result<Pin<&mut Atom>>;
         fn mol_get_bond_with_idx_mut(mol: Pin<&mut RWMol>, idx: u32) -> Result<Pin<&mut Bond>>;
         fn mol_update_property_cache(mol: Pin<&mut RWMol>, strict: bool) -> Result<()>;
+        fn mol_clear_property_cache(mol: Pin<&mut RWMol>) -> Result<()>;
+        fn mol_needs_update_property_cache(mol: &RWMol) -> Result<bool>;
+        fn mol_has_query(mol: &RWMol) -> Result<bool>;
+        fn mol_get_name(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
+        fn mol_set_name(mol: Pin<&mut RWMol>, name: &str) -> Result<()>;
+        fn mol_debug(mol: &RWMol, use_stdout: bool) -> Result<()>;
+        fn mol_get_aromatic_atoms(mol: &RWMol) -> Result<Vec<u32>>;
 
         fn rwmol_add_atom(mol: Pin<&mut RWMol>, atom: &Atom) -> Result<u32>;
         fn rwmol_add_bond(
@@ -42,6 +55,17 @@ pub(crate) mod ffi {
             update_label: bool,
             preserve_props: bool,
         ) -> Result<()>;
+        fn rwmol_replace_bond(
+            mol: Pin<&mut RWMol>,
+            index: u32,
+            new_bond: &Bond,
+            preserve_props: bool,
+            keep_s_groups: bool,
+        ) -> Result<()>;
+        fn rwmol_insert_mol(mol: Pin<&mut RWMol>, other: &RWMol) -> Result<()>;
+        fn rwmol_begin_batch_edit(mol: Pin<&mut RWMol>) -> Result<()>;
+        fn rwmol_commit_batch_edit(mol: Pin<&mut RWMol>) -> Result<()>;
+        fn rwmol_rollback_batch_edit(mol: Pin<&mut RWMol>) -> Result<()>;
     }
 }
 

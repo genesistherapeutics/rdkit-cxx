@@ -11,9 +11,10 @@ use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
 use crate::chem::rdchem::{
-    AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoRef,
+    AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoMut,
+    RingInfoRef,
 };
-use crate::error::expect_ok;
+use crate::error::{expect_ok, to_string};
 use crate::ffi::conformer::ffi as conformer_ffi;
 use crate::ffi::mol::ffi;
 use crate::ffi::props::ffi::{RDProps, mol_as_props, mol_clear_computed_props};
@@ -223,6 +224,56 @@ impl Mol {
     /// Mirrors `Mol.GetRingInfo`.
     pub fn get_ring_info(&self) -> RingInfoRef<'_> {
         RingInfoRef::new(self)
+    }
+
+    /// Mirrors `Mol.GetRingInfo`, to add rings.
+    pub fn get_ring_info_mut(&mut self) -> RingInfoMut<'_> {
+        RingInfoMut::new(self)
+    }
+
+    /// Forgets every atom's computed valences. Mirrors `Mol.ClearPropertyCache`.
+    pub fn clear_property_cache(&mut self) {
+        expect_ok(ffi::mol_clear_property_cache(self.pin_mut()))
+    }
+
+    /// Whether any atom's valences need recomputing. Mirrors
+    /// `Mol.NeedsUpdatePropertyCache`.
+    pub fn needs_update_property_cache(&self) -> bool {
+        expect_ok(ffi::mol_needs_update_property_cache(self.as_ffi()))
+    }
+
+    /// Whether any atom or bond has a query. Mirrors `Mol.HasQuery`.
+    pub fn has_query(&self) -> bool {
+        expect_ok(ffi::mol_has_query(self.as_ffi()))
+    }
+
+    /// The `_Name` property, or empty. Mirrors `Mol.GetName`.
+    pub fn get_name(&self) -> Result<String> {
+        to_string(ffi::mol_get_name(self.as_ffi())?)
+    }
+
+    /// Sets the `_Name` property. Mirrors `Mol.SetName`.
+    pub fn set_name(&mut self, name: &str) {
+        expect_ok(ffi::mol_set_name(self.pin_mut(), name))
+    }
+
+    /// Prints the molecule's atoms, bonds, and properties to stdout. Mirrors
+    /// `Mol.Debug`.
+    pub fn debug(&self) {
+        self.debug_with_use_stdout(true)
+    }
+
+    /// Prints to stderr unless `use_stdout`. Mirrors `Mol.Debug(useStdout)`.
+    pub fn debug_with_use_stdout(&self, use_stdout: bool) {
+        expect_ok(ffi::mol_debug(self.as_ffi(), use_stdout))
+    }
+
+    /// The aromatic atoms. Mirrors `Mol.GetAromaticAtoms`.
+    pub fn get_aromatic_atoms(&self) -> Vec<AtomRef<'_>> {
+        expect_ok(ffi::mol_get_aromatic_atoms(self.as_ffi()))
+            .into_iter()
+            .map(|idx| expect_ok_index(self.get_atom_with_idx(idx)))
+            .collect()
     }
 
     /// Mirrors `Mol.GetAtoms`.

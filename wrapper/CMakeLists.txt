@@ -36,8 +36,14 @@ set(RDKIT_CXX_SOURCES
   src/conformer.cpp
   src/ring_info.cpp
   src/mol_list.cpp
+  src/mol_bundle.cpp
   src/molops.cpp
   src/substruct.cpp
+  src/periodic_table.cpp
+  src/monomer_info.cpp
+  src/stereo.cpp
+  src/substance_group.cpp
+  src/query.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -59,6 +65,13 @@ foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::${target}>\n")
 endforeach()
+
+# MolBundle's pickles instantiate Boost.Serialization archives in the
+# wrappers, when RDKit was built with them.
+if(TARGET Boost::serialization)
+  target_link_libraries(rdkitcxx PUBLIC Boost::serialization)
+  string(APPEND link_libraries "$<TARGET_LINKER_FILE:Boost::serialization>\n")
+endif()
 
 # The build script links these, since Cargo, not CMake, links the crate.
 file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/link-libraries.txt

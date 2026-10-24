@@ -5,7 +5,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::Result;
-use crate::chem::rdchem::{Atom, BondType, Mol};
+use crate::chem::rdchem::{Atom, BondRef, BondType, Mol};
 use crate::error::expect_ok;
 use crate::ffi::mol::ffi;
 
@@ -26,6 +26,24 @@ pub struct ReplaceAtomParams {
     pub update_label: bool,
     /// Keeps the replaced atom's properties unless the new atom sets them.
     pub preserve_props: bool,
+}
+
+/// Parameters for `RWMol::replace_bond_with_params`, with Python's defaults.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ReplaceBondParams {
+    /// Keeps the replaced bond's properties unless the new bond sets them.
+    pub preserve_props: bool,
+    /// Keeps substance groups that refer to the bond.
+    pub keep_s_groups: bool,
+}
+
+impl Default for ReplaceBondParams {
+    fn default() -> ReplaceBondParams {
+        ReplaceBondParams {
+            preserve_props: false,
+            keep_s_groups: true,
+        }
+    }
 }
 
 impl RWMol {
@@ -91,6 +109,52 @@ impl RWMol {
             params.update_label,
             params.preserve_props,
         )?)
+    }
+}
+
+impl RWMol {
+    /// Replaces a bond with a copy of `new_bond`, which may come from another
+    /// molecule; the bond keeps its atoms. Mirrors `RWMol.ReplaceBond`.
+    pub fn replace_bond(&mut self, index: u32, new_bond: &BondRef<'_>) -> Result<()> {
+        self.replace_bond_with_params(index, new_bond, &ReplaceBondParams::default())
+    }
+
+    /// Mirrors `RWMol.ReplaceBond(index, newBond, preserveProps, keepSGroups)`.
+    pub fn replace_bond_with_params(
+        &mut self,
+        index: u32,
+        new_bond: &BondRef<'_>,
+        params: &ReplaceBondParams,
+    ) -> Result<()> {
+        Ok(ffi::rwmol_replace_bond(
+            self.mol.pin_mut(),
+            index,
+            new_bond.raw(),
+            params.preserve_props,
+            params.keep_s_groups,
+        )?)
+    }
+
+    /// Adds a copy of `mol`'s atoms and bonds. Mirrors `RWMol.InsertMol`.
+    pub fn insert_mol(&mut self, mol: &Mol) {
+        expect_ok(ffi::rwmol_insert_mol(self.mol.pin_mut(), mol.as_ffi()))
+    }
+
+    /// Defers atom and bond removals until `commit_batch_edit`, so indices
+    /// stay valid meanwhile. Fails if a batch is already open. Mirrors
+    /// `RWMol.BeginBatchEdit`; Python's `with` block runs the batch.
+    pub fn begin_batch_edit(&mut self) -> Result<()> {
+        Ok(ffi::rwmol_begin_batch_edit(self.mol.pin_mut())?)
+    }
+
+    /// Applies the batch's removals. Mirrors `RWMol.CommitBatchEdit`.
+    pub fn commit_batch_edit(&mut self) {
+        expect_ok(ffi::rwmol_commit_batch_edit(self.mol.pin_mut()))
+    }
+
+    /// Discards the batch's removals. Mirrors `RWMol.RollbackBatchEdit`.
+    pub fn rollback_batch_edit(&mut self) {
+        expect_ok(ffi::rwmol_rollback_batch_edit(self.mol.pin_mut()))
     }
 }
 

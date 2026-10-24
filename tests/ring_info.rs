@@ -81,3 +81,97 @@ fn empty_molecule_has_no_rings() {
     assert_eq!(mol.get_ring_info().num_rings().unwrap(), 0);
     assert!(mol.get_ring_info().atom_rings().is_empty());
 }
+
+#[test]
+fn memberships_and_sizes() {
+    // Naphthalene's rings share the bond between atoms 4 and 9.
+    let mol = mol_from_smiles("c1ccc2ccccc2c1").unwrap();
+    let info = mol.get_ring_info();
+    let fusion = mol.get_bond_between_atoms(3, 8).unwrap().unwrap().get_idx();
+    assert_eq!(info.atom_members(3).unwrap().len(), 2);
+    assert_eq!(info.atom_members(0).unwrap().len(), 1);
+    assert_eq!(info.bond_members(fusion).unwrap().len(), 2);
+    assert_eq!(info.atom_ring_sizes(3).unwrap(), [6, 6]);
+    assert_eq!(info.bond_ring_sizes(fusion).unwrap(), [6, 6]);
+    assert_eq!(info.min_atom_ring_size(0).unwrap(), 6);
+    assert_eq!(info.min_bond_ring_size(fusion).unwrap(), 6);
+    assert!(info.are_atoms_in_same_ring(0, 1).unwrap());
+    assert!(!info.are_atoms_in_same_ring(0, 6).unwrap());
+    assert!(info.are_atoms_in_same_ring_of_size(0, 1, 6).unwrap());
+    assert!(!info.are_atoms_in_same_ring_of_size(0, 1, 5).unwrap());
+    assert!(info.are_bonds_in_same_ring(0, 1).unwrap());
+    assert!(info.are_bonds_in_same_ring_of_size(0, 1, 6).unwrap());
+    assert!(info.is_ring_fused(0).unwrap() && info.are_rings_fused(0, 1).unwrap());
+    assert_eq!(info.num_fused_bonds(0).unwrap(), 1);
+    assert_eq!(
+        info.is_ring_fused(2).unwrap_err(),
+        Error::Index { index: 2, len: 2 }
+    );
+    assert_eq!(
+        info.atom_members(10).unwrap_err(),
+        Error::Index { index: 10, len: 10 }
+    );
+    assert_eq!(
+        info.min_bond_ring_size(11).unwrap_err(),
+        Error::Index { index: 11, len: 11 }
+    );
+
+    let chain = mol_from_smiles("CCC").unwrap();
+    assert!(chain.get_ring_info().atom_members(0).unwrap().is_empty());
+    assert_eq!(chain.get_ring_info().min_atom_ring_size(0).unwrap(), 0);
+}
+
+#[test]
+fn ring_families() {
+    // Parsing finds ring families along with the rings.
+    let mol = mol_from_smiles("C1CC1").unwrap();
+    let info = mol.get_ring_info();
+    assert!(info.are_ring_families_initialized());
+    assert_eq!(
+        (
+            info.num_ring_families().unwrap(),
+            info.num_relevant_cycles().unwrap()
+        ),
+        (1, 1)
+    );
+    assert_eq!(info.atom_ring_families(), [vec![0, 1, 2]]);
+    assert_eq!(info.bond_ring_families().len(), 1);
+
+    let mut rw = RWMol::default();
+    rw.add_atom(&Atom::from_num(6));
+    let info = rw.get_ring_info();
+    assert!(!info.are_ring_families_initialized());
+    assert!(info.atom_ring_families().is_empty());
+    assert!(matches!(
+        info.num_ring_families(),
+        Err(Error::Runtime { .. })
+    ));
+    assert!(matches!(
+        info.num_relevant_cycles(),
+        Err(Error::Runtime { .. })
+    ));
+}
+
+#[test]
+fn add_ring() {
+    let mut rw = RWMol::default();
+    for _ in 0..3 {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for (begin, end) in [(0, 1), (1, 2), (2, 0)] {
+        rw.add_bond_with_order(begin, end, BondType::Single)
+            .unwrap();
+    }
+    let mut info = rw.get_ring_info_mut();
+    assert!(matches!(
+        info.add_ring(&[0, 1, 2], &[0, 1]),
+        Err(Error::Value { .. })
+    ));
+    assert_eq!(
+        info.add_ring(&[0, 1, 5], &[0, 1, 2]).unwrap_err(),
+        Error::Index { index: 5, len: 3 }
+    );
+    info.add_ring(&[0, 1, 2], &[0, 1, 2]).unwrap();
+    assert_eq!(info.num_rings().unwrap(), 1);
+    assert!(rw.get_ring_info().is_atom_in_ring_of_size(2, 3).unwrap());
+}

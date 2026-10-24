@@ -4,9 +4,9 @@
  * license that can be found in the LICENSE file.
  */
 
-// Properties on molecules, atoms, bonds, and conformers. They all derive from
-// RDKit::RDProps, so one set of wrappers serves every class; each class has an
-// upcast (`<class>_as_props`). RDKit's property setters are const, so these
+// Properties on molecules, atoms, bonds, conformers, and substance groups.
+// They all derive from RDKit::RDProps, so one set of wrappers serves every
+// class; each class has an upcast (`<class>_as_props`). RDKit's property setters are const, so these
 // take const RDProps&; the Rust API still takes &mut self to set.
 
 #pragma once
@@ -22,6 +22,7 @@
 #include "rdkit-cxx/bond.h"
 #include "rdkit-cxx/conformer.h"
 #include "rdkit-cxx/mol.h"
+#include "rdkit-cxx/substance_group.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -35,6 +36,7 @@ const RDProps &mol_as_props(const RWMol &mol);
 const RDProps &atom_as_props(const Atom &atom);
 const RDProps &bond_as_props(const Bond &bond);
 const RDProps &conformer_as_props(const Conformer &conf);
+const RDProps &substance_group_as_props(const SubstanceGroup &sgroup);
 
 bool props_has_prop(const RDProps &obj, rust::Str key);
 // As GetProp, GetPyProp, and GetPropsAsDict in
@@ -45,6 +47,10 @@ int props_get_int_prop(const RDProps &obj, rust::Str key);
 unsigned props_get_unsigned_prop(const RDProps &obj, rust::Str key);
 double props_get_double_prop(const RDProps &obj, rust::Str key);
 bool props_get_bool_prop(const RDProps &obj, rust::Str key);
+rust::Vec<std::uint32_t> props_get_unsigned_vect_prop(const RDProps &obj,
+                                                      rust::Str key);
+std::unique_ptr<std::vector<std::string>> props_get_string_vect_prop(
+    const RDProps &obj, rust::Str key);
 std::unique_ptr<std::vector<std::string>> props_get_prop_names(
     const RDProps &obj, bool include_private, bool include_computed);
 rust::Vec<PropValueData> props_get_props_as_dict(const RDProps &obj,

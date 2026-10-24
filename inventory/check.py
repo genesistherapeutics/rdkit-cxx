@@ -69,9 +69,9 @@ def name_problem(python: str, kind: str, item: dict, rust: str) -> str | None:
     name = python.rsplit(".", 1)[1]
     segment = rust.rsplit("::", 1)[-1]
     if name == "__init__":
-        if segment in INIT_NAMES or segment.startswith("from_"):
+        if segment in INIT_NAMES or segment.startswith(("from_", "new_with_")):
             return None
-        return f"{python}: {rust} is not new, default, clone, or from_* (A5)"
+        return f"{python}: {rust} is not new, new_with_*, default, clone, or from_* (A5)"
     if name.startswith("__") or "name_exception" in item:
         return None
     expected = expected_name(name, kind, item.get("rust_kind"))

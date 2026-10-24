@@ -3,13 +3,15 @@
 // license that can be found in the LICENSE file.
 
 use crate::Result;
-use crate::chem::rdchem::Mol;
+use crate::chem::rdchem::{AsAtom, Mol, MolBundle};
 use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::substruct::ffi;
 
 /// Parameters for substructure matching. Mirrors
-/// `rdchem.SubstructMatchParameters`, without its callback setters.
+/// `rdchem.SubstructMatchParameters`. Of its callback setters, only
+/// `setExtraAtomCheckFunc(AtomCoordsMatcher(...))` has a counterpart:
+/// `extra_atom_check`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SubstructMatchParameters {
     /// Requires matching chirality.
@@ -44,6 +46,9 @@ pub struct SubstructMatchParameters {
     pub extra_atom_check_overrides_default_check: bool,
     /// Replaces the default bond check with the extra one.
     pub extra_bond_check_overrides_default_check: bool,
+    /// Also requires matched atoms to share coordinates. Python's
+    /// `setExtraAtomCheckFunc`, which takes any callable.
+    pub extra_atom_check: Option<AtomCoordsMatcher>,
 }
 
 impl Default for SubstructMatchParameters {
@@ -67,12 +72,15 @@ impl Default for SubstructMatchParameters {
                 .specified_stereo_query_matches_unspecified,
             extra_atom_check_overrides_default_check: data.extra_atom_check_overrides_default_check,
             extra_bond_check_overrides_default_check: data.extra_bond_check_overrides_default_check,
+            extra_atom_check: data
+                .has_atom_coords_matcher
+                .then(|| AtomCoordsMatcher::from_ffi(&data.atom_coords_matcher)),
         }
     }
 }
 
 impl SubstructMatchParameters {
-    fn to_ffi(&self) -> ffi::SubstructMatchParametersData {
+    pub(crate) fn to_ffi(&self) -> ffi::SubstructMatchParametersData {
         ffi::SubstructMatchParametersData {
             use_chirality: self.use_chirality,
             use_enhanced_stereo: self.use_enhanced_stereo,
@@ -91,7 +99,87 @@ impl SubstructMatchParameters {
                 .specified_stereo_query_matches_unspecified,
             extra_atom_check_overrides_default_check: self.extra_atom_check_overrides_default_check,
             extra_bond_check_overrides_default_check: self.extra_bond_check_overrides_default_check,
+            has_atom_coords_matcher: self.extra_atom_check.is_some(),
+            atom_coords_matcher: self.extra_atom_check.unwrap_or_default().to_ffi(),
         }
+    }
+}
+
+/// Matches atoms whose coordinates are within a tolerance, as an extra atom
+/// check in `SubstructMatchParameters`. Mirrors `rdchem.AtomCoordsMatcher`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AtomCoordsMatcher {
+    /// The target's conformer.
+    pub ref_conf_id: i32,
+    /// The query's conformer.
+    pub query_conf_id: i32,
+    /// The squared distance tolerance.
+    pub tol2: f64,
+}
+
+/// Parameters for `AtomCoordsMatcher::new_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct AtomCoordsMatcherParams {
+    pub ref_conf_id: i32,
+    pub query_conf_id: i32,
+    /// The distance tolerance, which the matcher squares.
+    pub tol: f64,
+}
+
+impl Default for AtomCoordsMatcherParams {
+    fn default() -> AtomCoordsMatcherParams {
+        AtomCoordsMatcherParams {
+            ref_conf_id: -1,
+            query_conf_id: -1,
+            tol: 1e-4,
+        }
+    }
+}
+
+/// Mirrors `AtomCoordsMatcher()`.
+impl Default for AtomCoordsMatcher {
+    fn default() -> AtomCoordsMatcher {
+        AtomCoordsMatcher::from_ffi(&expect_ok(ffi::atom_coords_matcher_default()))
+    }
+}
+
+impl AtomCoordsMatcher {
+    fn from_ffi(data: &ffi::AtomCoordsMatcherData) -> AtomCoordsMatcher {
+        AtomCoordsMatcher {
+            ref_conf_id: data.ref_conf_id,
+            query_conf_id: data.query_conf_id,
+            tol2: data.tol2,
+        }
+    }
+
+    fn to_ffi(self) -> ffi::AtomCoordsMatcherData {
+        ffi::AtomCoordsMatcherData {
+            ref_conf_id: self.ref_conf_id,
+            query_conf_id: self.query_conf_id,
+            tol2: self.tol2,
+        }
+    }
+
+    /// Mirrors `AtomCoordsMatcher(refConfId, queryConfId, tol)`.
+    pub fn new_with_params(params: &AtomCoordsMatcherParams) -> AtomCoordsMatcher {
+        AtomCoordsMatcher::from_ffi(&expect_ok(ffi::atom_coords_matcher_new(
+            params.ref_conf_id,
+            params.query_conf_id,
+            params.tol,
+        )))
+    }
+
+    /// Whether the atoms' positions are within the tolerance; false when
+    /// either molecule has no conformers. Both atoms must be in molecules,
+    /// and a missing conformer id is `Error::Value`. Mirrors
+    /// `AtomCoordsMatcher.__call__`.
+    pub fn call(&self, query_atom: &dyn AsAtom, target_atom: &dyn AsAtom) -> Result<bool> {
+        Ok(ffi::atom_coords_matcher_call(
+            &self.to_ffi(),
+            query_atom.atom(),
+            target_atom.atom(),
+        )?)
     }
 }
 
@@ -151,5 +239,67 @@ impl Mol {
             query.as_ffi(),
             &params.to_ffi(),
         )?))
+    }
+}
+
+impl Mol {
+    /// Whether any molecule in `query` matches part of the molecule. Mirrors
+    /// `Mol.HasSubstructMatch(query: MolBundle)` (A5).
+    pub fn has_substruct_match_mol_bundle(&self, query: &MolBundle) -> Result<bool> {
+        self.has_substruct_match_mol_bundle_with_params(query, &SubstructMatchParameters::default())
+    }
+
+    /// Mirrors `Mol.HasSubstructMatch(query: MolBundle, params)` and its
+    /// keyword form.
+    pub fn has_substruct_match_mol_bundle_with_params(
+        &self,
+        query: &MolBundle,
+        params: &SubstructMatchParameters,
+    ) -> Result<bool> {
+        let params = params.to_ffi();
+        Ok(query.with_ffi(|query| {
+            ffi::mol_has_substruct_match_mol_bundle(self.as_ffi(), query, &params)
+        })?)
+    }
+
+    /// The first match of the first molecule in `query` that matches. Mirrors
+    /// `Mol.GetSubstructMatch(query: MolBundle)` (A5).
+    pub fn get_substruct_match_mol_bundle(&self, query: &MolBundle) -> Result<Vec<u32>> {
+        self.get_substruct_match_mol_bundle_with_params(query, &SubstructMatchParameters::default())
+    }
+
+    /// Mirrors `Mol.GetSubstructMatch(query: MolBundle, params)` and its
+    /// keyword form.
+    pub fn get_substruct_match_mol_bundle_with_params(
+        &self,
+        query: &MolBundle,
+        params: &SubstructMatchParameters,
+    ) -> Result<Vec<u32>> {
+        let params = params.to_ffi();
+        Ok(query.with_ffi(|query| {
+            ffi::mol_get_substruct_match_mol_bundle(self.as_ffi(), query, &params)
+        })?)
+    }
+
+    /// Every match of the first molecule in `query` that matches. Mirrors
+    /// `Mol.GetSubstructMatches(query: MolBundle)` (A5).
+    pub fn get_substruct_matches_mol_bundle(&self, query: &MolBundle) -> Result<Vec<Vec<u32>>> {
+        self.get_substruct_matches_mol_bundle_with_params(
+            query,
+            &SubstructMatchParameters::default(),
+        )
+    }
+
+    /// Mirrors `Mol.GetSubstructMatches(query: MolBundle, params)` and its
+    /// keyword form.
+    pub fn get_substruct_matches_mol_bundle_with_params(
+        &self,
+        query: &MolBundle,
+        params: &SubstructMatchParameters,
+    ) -> Result<Vec<Vec<u32>>> {
+        let params = params.to_ffi();
+        Ok(IndexList::into_nested(query.with_ffi(|query| {
+            ffi::mol_get_substruct_matches_mol_bundle(self.as_ffi(), query, &params)
+        })?))
     }
 }

@@ -137,6 +137,11 @@ def test_two_overloads_and_one_rust_path():
             ],
         },
         {"python": "rdkit.Chem.rdchem.Mol.__init__", "rust": ["rdkit_cxx::chem::Mol::new"], "overloads_note": "x"},
+        {
+            "python": "rdkit.Chem.rdchem.Mol.__init__",
+            "rust": ["rdkit_cxx::chem::Mol::new", "rdkit_cxx::chem::Mol::new_with_params"],
+            "overloads_note": "x",
+        },
         {"python": "rdkit.Chem.rdchem.Mol.__repr__", "reason": "Python protocol method"},
         {"python": "rdkit.Chem.rdchem.BondType.SINGLE", "rust": ["rdkit_cxx::chem::BondType::Single"]},
         {

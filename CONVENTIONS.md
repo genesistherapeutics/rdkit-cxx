@@ -73,7 +73,8 @@ rule changes the rule first.
 - **W5.** Python sequences become iterators named for the result (`Atoms`,
   `Bonds`) that implement `ExactSizeIterator` and `DoubleEndedIterator`.
   There are no mutable iterators. Code mutates by index, because two live
-  `XMut`s into one molecule would alias.
+  `XMut`s into one molecule would alias. Filtered sequences (`GetAromaticAtoms`) return a
+  `Vec` of views.
 - **W6.** Functions that return new molecules copy into an `RWMol`; vectors
   of molecules cross as `MolList`, moved out one at a time by
   `mol_list_into_vec`.
@@ -83,10 +84,23 @@ rule changes the rule first.
   `RWMol` live on `RWMol`. In-place operations (`sanitize_mol`, `kekulize`,
   property-cache updates) take `&mut Mol`, which an `RWMol` also provides;
   operations that return a new molecule take `&Mol`.
+- **W8.** Classes that hold molecules (`MolBundle`) own them as `Vec<Mol>`,
+  so they can lend `&Mol`. Each call into C++ builds a container whose
+  `shared_ptr`s borrow those molecules (a no-op deleter) and drops it before
+  the call returns.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
   molecule race. Parallel code gives each thread its own molecule.
+
+- **S2.** The crate needs an RDKit built with `RDK_BUILD_THREADSAFE_SSS`, as
+  conda-forge's is: process-wide settings such as the default pickle
+  properties are safe to set from safe Rust only because RDKit guards them
+  with a mutex. The wrappers refuse to compile otherwise.
+- **S3.** Module-level functions that take any atom are generic over the
+  sealed traits `AsAtom` (`Atom`, `AtomRef`, `AtomMut`) and `AsAtomMut`
+  (`Atom`, `AtomMut`). Methods take `&dyn AsAtom` instead, so they are not
+  generic and `tests/manifest_paths.rs` can name them.
 
 ## Properties
 
@@ -96,7 +110,9 @@ rule changes the rule first.
   than being written per class. Every class with properties derives from
   `RDKit::RDProps`, so one set of wrappers takes `const RDProps&`, and each
   class has an upcast, `<class>_as_props`. The `default=` overloads of the
-  getters are not bound: `has_prop` covers them.
+  getters are not bound: `has_prop` covers them. A class whose Python
+  `GetPropsAsDict` has other defaults (`SubstanceGroup`) passes them to
+  `prop_getters!`; `GetPropsAsDictParams::default()` stays `Mol`'s.
 
 ## Documentation
 
@@ -127,7 +143,8 @@ rule changes the rule first.
 - **A5.** Overloads that differ by an argument's type: the first in
   nanobind's order keeps the name, and the others append `_<type>` in
   snake_case. Constructors: a zero-argument `__init__` is `Default`; a copy
-  `__init__` is `Clone`; the first other `__init__` is `new`; the rest are
+  `__init__` is `Clone`; the first other `__init__` is `new` (with
+  `new_with_params` for its optional parameters, per A2); the rest are
   `from_<first parameter>`, or a `From` impl when the parameter is another
   bound class (`RWMol(mol)` → `From<Mol>`), which the manifest records in
   `overloads_note`. nanobind's `__new__` (from `nb::new_`) repeats
@@ -179,6 +196,11 @@ rule changes the rule first.
   constants (`SanitizeFlags::SANITIZE_ALL`).
 - **N5.** Exceptions to N2–N4 are recorded in the manifest with
   `name_exception`.
+- **N7.** Enum values nanobind also exports to the module
+  (`rdchem.CHI_OTHER`) map to their variants (`ChiralType::ChiOther`) under
+  `name_exception`; there are no module-level copies in Rust.
+- **N8.** A name that is a Rust keyword takes a trailing underscore:
+  `Atom.Match` → `match_`, `StereoInfo.type` → `type_`.
 - **F1.** Python flag enums become a `u32` newtype with associated constants,
   bit operators, `bits()`, and `from_bits_retain`. nanobind binds RDKit's
   flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so

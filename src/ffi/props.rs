@@ -29,11 +29,13 @@ pub(crate) mod ffi {
         type Atom = crate::ffi::atom::ffi::Atom;
         type Bond = crate::ffi::bond::ffi::Bond;
         type Conformer = crate::ffi::conformer::ffi::Conformer;
+        type SubstanceGroup = crate::ffi::substance_group::ffi::SubstanceGroup;
 
         fn mol_as_props(mol: &RWMol) -> Result<&RDProps>;
         fn atom_as_props(atom: &Atom) -> Result<&RDProps>;
         fn bond_as_props(bond: &Bond) -> Result<&RDProps>;
         fn conformer_as_props(conf: &Conformer) -> Result<&RDProps>;
+        fn substance_group_as_props(sgroup: &SubstanceGroup) -> Result<&RDProps>;
 
         fn props_has_prop(obj: &RDProps, key: &str) -> Result<bool>;
         fn props_get_prop(obj: &RDProps, key: &str) -> Result<UniquePtr<CxxString>>;
@@ -42,6 +44,11 @@ pub(crate) mod ffi {
         fn props_get_unsigned_prop(obj: &RDProps, key: &str) -> Result<u32>;
         fn props_get_double_prop(obj: &RDProps, key: &str) -> Result<f64>;
         fn props_get_bool_prop(obj: &RDProps, key: &str) -> Result<bool>;
+        fn props_get_unsigned_vect_prop(obj: &RDProps, key: &str) -> Result<Vec<u32>>;
+        fn props_get_string_vect_prop(
+            obj: &RDProps,
+            key: &str,
+        ) -> Result<UniquePtr<CxxVector<CxxString>>>;
         fn props_get_prop_names(
             obj: &RDProps,
             include_private: bool,
