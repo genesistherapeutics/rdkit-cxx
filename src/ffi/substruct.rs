@@ -30,22 +30,68 @@ pub(crate) mod ffi {
         include!("rdkit-cxx/ffi/geometry.rs.h");
 
         type RWMol = crate::ffi::mol::ffi::RWMol;
+        type MolBundle = crate::ffi::mol_bundle::ffi::MolBundle;
         type IndexList = crate::ffi::geometry::ffi::IndexList;
 
         fn substruct_match_parameters_default() -> Result<SubstructMatchParametersData>;
         fn mol_has_substruct_match(
-            mol: &RWMol,
+            target: &RWMol,
             query: &RWMol,
             params: &SubstructMatchParametersData,
         ) -> Result<bool>;
         fn mol_get_substruct_match(
-            mol: &RWMol,
+            target: &RWMol,
             query: &RWMol,
             params: &SubstructMatchParametersData,
         ) -> Result<Vec<u32>>;
         fn mol_get_substruct_matches(
-            mol: &RWMol,
+            target: &RWMol,
             query: &RWMol,
+            params: &SubstructMatchParametersData,
+        ) -> Result<Vec<IndexList>>;
+        fn mol_has_substruct_match_mol_bundle(
+            target: &RWMol,
+            query: &MolBundle,
+            params: &SubstructMatchParametersData,
+        ) -> Result<bool>;
+        fn mol_get_substruct_match_mol_bundle(
+            target: &RWMol,
+            query: &MolBundle,
+            params: &SubstructMatchParametersData,
+        ) -> Result<Vec<u32>>;
+        fn mol_get_substruct_matches_mol_bundle(
+            target: &RWMol,
+            query: &MolBundle,
+            params: &SubstructMatchParametersData,
+        ) -> Result<Vec<IndexList>>;
+        fn mol_bundle_has_substruct_match(
+            target: &MolBundle,
+            query: &RWMol,
+            params: &SubstructMatchParametersData,
+        ) -> Result<bool>;
+        fn mol_bundle_get_substruct_match(
+            target: &MolBundle,
+            query: &RWMol,
+            params: &SubstructMatchParametersData,
+        ) -> Result<Vec<u32>>;
+        fn mol_bundle_get_substruct_matches(
+            target: &MolBundle,
+            query: &RWMol,
+            params: &SubstructMatchParametersData,
+        ) -> Result<Vec<IndexList>>;
+        fn mol_bundle_has_substruct_match_mol_bundle(
+            target: &MolBundle,
+            query: &MolBundle,
+            params: &SubstructMatchParametersData,
+        ) -> Result<bool>;
+        fn mol_bundle_get_substruct_match_mol_bundle(
+            target: &MolBundle,
+            query: &MolBundle,
+            params: &SubstructMatchParametersData,
+        ) -> Result<Vec<u32>>;
+        fn mol_bundle_get_substruct_matches_mol_bundle(
+            target: &MolBundle,
+            query: &MolBundle,
             params: &SubstructMatchParametersData,
         ) -> Result<Vec<IndexList>>;
     }

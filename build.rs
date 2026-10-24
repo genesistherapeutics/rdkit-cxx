@@ -29,6 +29,7 @@ const BRIDGES: &[&str] = &[
     "monomer_info",
     "stereo",
     "substance_group",
+    "mol_bundle",
 ];
 
 fn main() {

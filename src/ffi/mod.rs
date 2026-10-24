@@ -10,6 +10,7 @@ pub(crate) mod conformer;
 pub(crate) mod errors;
 pub(crate) mod geometry;
 pub(crate) mod mol;
+pub(crate) mod mol_bundle;
 pub(crate) mod molfiles;
 pub(crate) mod molops;
 pub(crate) mod monomer_info;

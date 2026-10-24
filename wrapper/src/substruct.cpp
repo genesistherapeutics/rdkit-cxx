@@ -4,6 +4,7 @@
 
 #include "rdkit-cxx/substruct.h"
 
+#include <GraphMol/MolBundle.h>
 #include <GraphMol/Substruct/SubstructMatch.h>
 
 #include "rdkit-cxx/ffi/geometry.rs.h"
@@ -55,6 +56,37 @@ rust::Vec<std::uint32_t> convert_match(const RDKit::MatchVectType &match) {
   return out;
 }
 
+// As helpHasSubstructMatch, helpGetSubstructMatch, and
+// helpGetSubstructMatches, for a molecule or bundle and a molecule or bundle.
+template <class Target, class Query>
+bool has_match(const Target &target, const Query &query,
+               const SubstructMatchParametersData &data) {
+  auto params = params_from(data);
+  params.maxMatches = 1;
+  return !RDKit::SubstructMatch(target, query, params).empty();
+}
+
+template <class Target, class Query>
+rust::Vec<std::uint32_t> get_match(const Target &target, const Query &query,
+                                   const SubstructMatchParametersData &data) {
+  auto params = params_from(data);
+  params.maxMatches = 1;
+  auto matches = RDKit::SubstructMatch(target, query, params);
+  return matches.empty() ? rust::Vec<std::uint32_t>()
+                         : convert_match(matches[0]);
+}
+
+template <class Target, class Query>
+rust::Vec<IndexList> get_matches(const Target &target, const Query &query,
+                                 const SubstructMatchParametersData &data) {
+  rust::Vec<IndexList> result;
+  for (const auto &match :
+       RDKit::SubstructMatch(target, query, params_from(data))) {
+    result.push_back(IndexList{convert_match(match)});
+  }
+  return result;
+}
+
 }  // namespace
 
 SubstructMatchParametersData substruct_match_parameters_default() {
@@ -86,31 +118,76 @@ SubstructMatchParametersData substruct_match_parameters_default() {
       p.extraBondCheckOverridesDefaultCheck};
 }
 
-bool mol_has_substruct_match(const RWMol &mol, const RWMol &query,
-                             const SubstructMatchParametersData &data) {
-  auto params = params_from(data);
-  params.maxMatches = 1;
-  return !RDKit::SubstructMatch(mol, query, params).empty();
+bool mol_has_substruct_match(
+    const RWMol &target, const RWMol &query,
+    const SubstructMatchParametersData &params) {
+  return has_match(target, query, params);
 }
 
 rust::Vec<std::uint32_t> mol_get_substruct_match(
-    const RWMol &mol, const RWMol &query,
-    const SubstructMatchParametersData &data) {
-  auto params = params_from(data);
-  params.maxMatches = 1;
-  auto matches = RDKit::SubstructMatch(mol, query, params);
-  return matches.empty() ? rust::Vec<std::uint32_t>()
-                         : convert_match(matches[0]);
+    const RWMol &target, const RWMol &query,
+    const SubstructMatchParametersData &params) {
+  return get_match(target, query, params);
 }
 
 rust::Vec<IndexList> mol_get_substruct_matches(
-    const RWMol &mol, const RWMol &query,
-    const SubstructMatchParametersData &data) {
-  rust::Vec<IndexList> result;
-  for (const auto &match : RDKit::SubstructMatch(mol, query, params_from(data))) {
-    result.push_back(IndexList{convert_match(match)});
-  }
-  return result;
+    const RWMol &target, const RWMol &query,
+    const SubstructMatchParametersData &params) {
+  return get_matches(target, query, params);
+}
+
+bool mol_has_substruct_match_mol_bundle(
+    const RWMol &target, const MolBundle &query,
+    const SubstructMatchParametersData &params) {
+  return has_match(target, query, params);
+}
+
+rust::Vec<std::uint32_t> mol_get_substruct_match_mol_bundle(
+    const RWMol &target, const MolBundle &query,
+    const SubstructMatchParametersData &params) {
+  return get_match(target, query, params);
+}
+
+rust::Vec<IndexList> mol_get_substruct_matches_mol_bundle(
+    const RWMol &target, const MolBundle &query,
+    const SubstructMatchParametersData &params) {
+  return get_matches(target, query, params);
+}
+
+bool mol_bundle_has_substruct_match(
+    const MolBundle &target, const RWMol &query,
+    const SubstructMatchParametersData &params) {
+  return has_match(target, query, params);
+}
+
+rust::Vec<std::uint32_t> mol_bundle_get_substruct_match(
+    const MolBundle &target, const RWMol &query,
+    const SubstructMatchParametersData &params) {
+  return get_match(target, query, params);
+}
+
+rust::Vec<IndexList> mol_bundle_get_substruct_matches(
+    const MolBundle &target, const RWMol &query,
+    const SubstructMatchParametersData &params) {
+  return get_matches(target, query, params);
+}
+
+bool mol_bundle_has_substruct_match_mol_bundle(
+    const MolBundle &target, const MolBundle &query,
+    const SubstructMatchParametersData &params) {
+  return has_match(target, query, params);
+}
+
+rust::Vec<std::uint32_t> mol_bundle_get_substruct_match_mol_bundle(
+    const MolBundle &target, const MolBundle &query,
+    const SubstructMatchParametersData &params) {
+  return get_match(target, query, params);
+}
+
+rust::Vec<IndexList> mol_bundle_get_substruct_matches_mol_bundle(
+    const MolBundle &target, const MolBundle &query,
+    const SubstructMatchParametersData &params) {
+  return get_matches(target, query, params);
 }
 
 }  // namespace rdkit_cxx

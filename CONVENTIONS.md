@@ -84,6 +84,10 @@ rule changes the rule first.
   `RWMol` live on `RWMol`. In-place operations (`sanitize_mol`, `kekulize`,
   property-cache updates) take `&mut Mol`, which an `RWMol` also provides;
   operations that return a new molecule take `&Mol`.
+- **W8.** Classes that hold molecules (`MolBundle`) own them as `Vec<Mol>`,
+  so they can lend `&Mol`. Each call into C++ builds a container whose
+  `shared_ptr`s borrow those molecules (a no-op deleter) and drops it before
+  the call returns.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one

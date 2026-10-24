@@ -1112,6 +1112,62 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
 name_exception = "an exported enum value maps to its variant, ValenceType::Explicit"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.EditableMol"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.AddAtom"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::add_atom"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.AddBond"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::add_bond", "rdkit_cxx::chem::rdchem::EditableMol::add_bond_with_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.BeginBatchEdit"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::begin_batch_edit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.CommitBatchEdit"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::commit_batch_edit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.GetMol"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.RemoveAtom"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::remove_atom"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.RemoveBond"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::remove_bond"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.ReplaceAtom"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::replace_atom", "rdkit_cxx::chem::rdchem::EditableMol::replace_atom_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.ReplaceBond"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::replace_bond", "rdkit_cxx::chem::rdchem::EditableMol::replace_bond_with_preserve_props"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.RollbackBatchEdit"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::rollback_batch_edit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.EditableMol.__init__"
+rust = ["rdkit_cxx::chem::rdchem::EditableMol::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.FixedMolSizeMolBundle"
+rust = ["rdkit_cxx::chem::rdchem::FixedMolSizeMolBundle"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.FixedMolSizeMolBundle.__init__"
+rust = ["rdkit_cxx::chem::rdchem::FixedMolSizeMolBundle::default"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.ForwardStereoGroupIds"
 rust = ["rdkit_cxx::chem::rdchem::forward_stereo_group_ids"]
 
@@ -1315,13 +1371,13 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_stereo_groups"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetSubstructMatch"
-rust = ["rdkit_cxx::chem::rdchem::Mol::get_substruct_match", "rdkit_cxx::chem::rdchem::Mol::get_substruct_match_with_params"]
-overloads_note = "the params form covers the keyword form; MolBundle is not bound yet"
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_substruct_match", "rdkit_cxx::chem::rdchem::Mol::get_substruct_match_with_params", "rdkit_cxx::chem::rdchem::Mol::get_substruct_match_mol_bundle", "rdkit_cxx::chem::rdchem::Mol::get_substruct_match_mol_bundle_with_params"]
+overloads_note = "the params forms cover the keyword forms"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetSubstructMatches"
-rust = ["rdkit_cxx::chem::rdchem::Mol::get_substruct_matches", "rdkit_cxx::chem::rdchem::Mol::get_substruct_matches_with_params"]
-overloads_note = "the params form covers the keyword form; MolBundle is not bound yet"
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_substruct_matches", "rdkit_cxx::chem::rdchem::Mol::get_substruct_matches_with_params", "rdkit_cxx::chem::rdchem::Mol::get_substruct_matches_mol_bundle", "rdkit_cxx::chem::rdchem::Mol::get_substruct_matches_mol_bundle_with_params"]
+overloads_note = "the params forms cover the keyword forms"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetUnsignedProp"
@@ -1338,8 +1394,8 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::has_query"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.HasSubstructMatch"
-rust = ["rdkit_cxx::chem::rdchem::Mol::has_substruct_match", "rdkit_cxx::chem::rdchem::Mol::has_substruct_match_with_params"]
-overloads_note = "the params form covers the keyword form; MolBundle is not bound yet"
+rust = ["rdkit_cxx::chem::rdchem::Mol::has_substruct_match", "rdkit_cxx::chem::rdchem::Mol::has_substruct_match_with_params", "rdkit_cxx::chem::rdchem::Mol::has_substruct_match_mol_bundle", "rdkit_cxx::chem::rdchem::Mol::has_substruct_match_mol_bundle_with_params"]
+overloads_note = "the params forms cover the keyword forms"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.NeedsUpdatePropertyCache"
@@ -1409,6 +1465,65 @@ reason = "nanobind's construction hook; __init__ maps the constructors"
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.__setstate__"
 reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.AddMol"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::add_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.GetMol"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.GetSubstructMatch"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::get_substruct_match", "rdkit_cxx::chem::rdchem::MolBundle::get_substruct_match_with_params", "rdkit_cxx::chem::rdchem::MolBundle::get_substruct_match_mol_bundle", "rdkit_cxx::chem::rdchem::MolBundle::get_substruct_match_mol_bundle_with_params"]
+overloads_note = "the params forms cover the keyword forms"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.GetSubstructMatches"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::get_substruct_matches", "rdkit_cxx::chem::rdchem::MolBundle::get_substruct_matches_with_params", "rdkit_cxx::chem::rdchem::MolBundle::get_substruct_matches_mol_bundle", "rdkit_cxx::chem::rdchem::MolBundle::get_substruct_matches_mol_bundle_with_params"]
+overloads_note = "the params forms cover the keyword forms"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.HasSubstructMatch"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::has_substruct_match", "rdkit_cxx::chem::rdchem::MolBundle::has_substruct_match_with_params", "rdkit_cxx::chem::rdchem::MolBundle::has_substruct_match_mol_bundle", "rdkit_cxx::chem::rdchem::MolBundle::has_substruct_match_mol_bundle_with_params"]
+overloads_note = "the params forms cover the keyword forms"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.Size"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.ToBinary"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::to_binary"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.__getitem__"
+reason = "Python's sequence protocol: get_mol covers it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.__init__"
+rust = ["rdkit_cxx::chem::rdchem::MolBundle::default", "rdkit_cxx::chem::rdchem::MolBundle::from_pkl_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.__len__"
+reason = "Python's sequence protocol: size covers it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundleCanSerialize"
+rust = ["rdkit_cxx::chem::rdchem::mol_bundle_can_serialize"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.MolProps"

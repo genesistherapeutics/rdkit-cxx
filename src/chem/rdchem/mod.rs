@@ -8,8 +8,10 @@ mod atom;
 mod atom_labels;
 mod bond;
 mod conformer;
+mod editable_mol;
 mod enums;
 mod mol;
+mod mol_bundle;
 mod monomer_info;
 mod periodic_table;
 mod pickle;
@@ -28,11 +30,13 @@ pub use atom_labels::{
 };
 pub use bond::{BondMut, BondRef};
 pub use conformer::{Conformer, ConformerMut, ConformerRef};
+pub use editable_mol::EditableMol;
 pub use enums::{
     BondDir, BondStereo, BondType, ChiralType, HybridizationType, StereoDescriptor,
     StereoGroupType, StereoSpecified, StereoType, ValenceType,
 };
 pub use mol::{Atoms, Bonds, Conformers, Mol};
+pub use mol_bundle::{FixedMolSizeMolBundle, MolBundle, mol_bundle_can_serialize};
 pub use monomer_info::{
     __monomer_type_round_trip_for_tests, AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType,
     AtomPDBResidueInfo, AtomPDBResidueInfoParams,

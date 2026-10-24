@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 
 use crate::Result;
-use crate::chem::rdchem::Mol;
+use crate::chem::rdchem::{Mol, MolBundle};
 use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::substruct::ffi;
@@ -72,7 +72,7 @@ impl Default for SubstructMatchParameters {
 }
 
 impl SubstructMatchParameters {
-    fn to_ffi(&self) -> ffi::SubstructMatchParametersData {
+    pub(crate) fn to_ffi(&self) -> ffi::SubstructMatchParametersData {
         ffi::SubstructMatchParametersData {
             use_chirality: self.use_chirality,
             use_enhanced_stereo: self.use_enhanced_stereo,
@@ -151,5 +151,67 @@ impl Mol {
             query.as_ffi(),
             &params.to_ffi(),
         )?))
+    }
+}
+
+impl Mol {
+    /// Whether any molecule in `query` matches part of the molecule. Mirrors
+    /// `Mol.HasSubstructMatch(query: MolBundle)` (A5).
+    pub fn has_substruct_match_mol_bundle(&self, query: &MolBundle) -> Result<bool> {
+        self.has_substruct_match_mol_bundle_with_params(query, &SubstructMatchParameters::default())
+    }
+
+    /// Mirrors `Mol.HasSubstructMatch(query: MolBundle, params)` and its
+    /// keyword form.
+    pub fn has_substruct_match_mol_bundle_with_params(
+        &self,
+        query: &MolBundle,
+        params: &SubstructMatchParameters,
+    ) -> Result<bool> {
+        let params = params.to_ffi();
+        Ok(query.with_ffi(|query| {
+            ffi::mol_has_substruct_match_mol_bundle(self.as_ffi(), query, &params)
+        })?)
+    }
+
+    /// The first match of the first molecule in `query` that matches. Mirrors
+    /// `Mol.GetSubstructMatch(query: MolBundle)` (A5).
+    pub fn get_substruct_match_mol_bundle(&self, query: &MolBundle) -> Result<Vec<u32>> {
+        self.get_substruct_match_mol_bundle_with_params(query, &SubstructMatchParameters::default())
+    }
+
+    /// Mirrors `Mol.GetSubstructMatch(query: MolBundle, params)` and its
+    /// keyword form.
+    pub fn get_substruct_match_mol_bundle_with_params(
+        &self,
+        query: &MolBundle,
+        params: &SubstructMatchParameters,
+    ) -> Result<Vec<u32>> {
+        let params = params.to_ffi();
+        Ok(query.with_ffi(|query| {
+            ffi::mol_get_substruct_match_mol_bundle(self.as_ffi(), query, &params)
+        })?)
+    }
+
+    /// Every match of the first molecule in `query` that matches. Mirrors
+    /// `Mol.GetSubstructMatches(query: MolBundle)` (A5).
+    pub fn get_substruct_matches_mol_bundle(&self, query: &MolBundle) -> Result<Vec<Vec<u32>>> {
+        self.get_substruct_matches_mol_bundle_with_params(
+            query,
+            &SubstructMatchParameters::default(),
+        )
+    }
+
+    /// Mirrors `Mol.GetSubstructMatches(query: MolBundle, params)` and its
+    /// keyword form.
+    pub fn get_substruct_matches_mol_bundle_with_params(
+        &self,
+        query: &MolBundle,
+        params: &SubstructMatchParameters,
+    ) -> Result<Vec<Vec<u32>>> {
+        let params = params.to_ffi();
+        Ok(IndexList::into_nested(query.with_ffi(|query| {
+            ffi::mol_get_substruct_matches_mol_bundle(self.as_ffi(), query, &params)
+        })?))
     }
 }
