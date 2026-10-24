@@ -6,6 +6,8 @@
 use std::fmt;
 use std::pin::Pin;
 
+use cxx::UniquePtr;
+
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
@@ -87,18 +89,6 @@ macro_rules! bond_getters {
                 expect_ok(ffi::bond_has_query(self.raw()))
             }
 
-            /// Whether the bond is in a ring, finding the molecule's rings if
-            /// needed. Mirrors `Bond.IsInRing`.
-            pub fn is_in_ring(&self) -> bool {
-                expect_ok(ffi::bond_is_in_ring(self.raw()))
-            }
-
-            /// Whether the bond is in a ring of `size` bonds, finding the
-            /// molecule's rings if needed. Mirrors `Bond.IsInRingSize`.
-            pub fn is_in_ring_size(&self, size: i32) -> bool {
-                expect_ok(ffi::bond_is_in_ring_size(self.raw(), size))
-            }
-
             /// The bond as SMARTS, or as SMILES when it has no query. Mirrors
             /// `Bond.GetSmarts`.
             pub fn get_smarts(&self) -> Result<String> {
@@ -112,6 +102,26 @@ macro_rules! bond_getters {
                 all_bonds_explicit: bool,
             ) -> Result<String> {
                 to_string(ffi::bond_get_smarts(self.raw(), all_bonds_explicit)?)
+            }
+        }
+    };
+}
+
+/// Stamps the getters that need the owning molecule onto a view type with
+/// `fn raw(&self) -> &ffi::Bond` (W4).
+macro_rules! bond_view_getters {
+    ($type:ident) => {
+        impl $type<'_> {
+            /// Whether the bond is in a ring, finding the molecule's rings if
+            /// needed. Mirrors `Bond.IsInRing`.
+            pub fn is_in_ring(&self) -> bool {
+                expect_ok(ffi::bond_is_in_ring(self.raw()))
+            }
+
+            /// Whether the bond is in a ring of `size` bonds, finding the
+            /// molecule's rings if needed. Mirrors `Bond.IsInRingSize`.
+            pub fn is_in_ring_size(&self, size: i32) -> bool {
+                expect_ok(ffi::bond_is_in_ring_size(self.raw(), size))
             }
         }
     };
@@ -161,6 +171,87 @@ macro_rules! bond_setters {
         }
     };
 }
+
+/// A bond outside any molecule: a query bond from `rdqueries`. Mirrors
+/// `rdchem.Bond`, which Python only constructs as a `QueryBond`;
+/// `RWMol::replace_bond` copies it into a molecule.
+pub struct Bond {
+    /// Never null.
+    ptr: UniquePtr<ffi::Bond>,
+}
+
+impl Bond {
+    pub(crate) fn from_ffi(ptr: UniquePtr<ffi::Bond>) -> Bond {
+        assert!(!ptr.is_null(), "RDKit returned a null bond");
+        Bond { ptr }
+    }
+
+    pub(crate) fn raw(&self) -> &ffi::Bond {
+        self.ptr.as_ref().unwrap()
+    }
+
+    pub(crate) fn raw_mut(&mut self) -> Pin<&mut ffi::Bond> {
+        self.ptr.pin_mut()
+    }
+
+    fn props(&self) -> &RDProps {
+        expect_ok(bond_as_props(self.raw()))
+    }
+}
+
+/// A copy that keeps the bond's query. Mirrors `copy.copy` of a `Bond`.
+impl Clone for Bond {
+    fn clone(&self) -> Bond {
+        Bond::from_ffi(expect_ok(ffi::bond_clone(self.raw())))
+    }
+}
+
+impl fmt::Debug for Bond {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Bond")
+            .field("bond_type", &self.get_bond_type())
+            .finish()
+    }
+}
+
+bond_getters!(Bond);
+bond_setters!(Bond);
+prop_getters!(Bond);
+prop_setters!(Bond);
+
+mod sealed {
+    use crate::ffi::bond::ffi;
+
+    pub trait BondLike {
+        fn bond(&self) -> &ffi::Bond;
+    }
+}
+
+/// A bond that methods taking another bond read: `Bond`, `BondRef`, or
+/// `BondMut` (CONVENTIONS.md S3).
+pub trait AsBond: sealed::BondLike {}
+
+impl sealed::BondLike for Bond {
+    fn bond(&self) -> &ffi::Bond {
+        self.raw()
+    }
+}
+
+impl sealed::BondLike for BondRef<'_> {
+    fn bond(&self) -> &ffi::Bond {
+        self.raw()
+    }
+}
+
+impl sealed::BondLike for BondMut<'_> {
+    fn bond(&self) -> &ffi::Bond {
+        self.raw()
+    }
+}
+
+impl AsBond for Bond {}
+impl AsBond for BondRef<'_> {}
+impl AsBond for BondMut<'_> {}
 
 /// A bond in a molecule, borrowed. Mirrors `rdchem.Bond`.
 #[derive(Clone, Copy)]
@@ -214,6 +305,7 @@ impl<'m> BondRef<'m> {
 }
 
 bond_getters!(BondRef<'m>);
+bond_view_getters!(BondRef);
 prop_getters!(BondRef<'m>);
 
 impl fmt::Debug for BondRef<'_> {
@@ -270,6 +362,7 @@ impl BondMut<'_> {
 }
 
 bond_getters!(BondMut<'m>);
+bond_view_getters!(BondMut);
 bond_setters!(BondMut<'m>);
 prop_getters!(BondMut<'m>);
 prop_setters!(BondMut<'m>);

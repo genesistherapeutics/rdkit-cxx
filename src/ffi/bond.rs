@@ -96,5 +96,6 @@ pub(crate) mod ffi {
         fn bond_set_stereo(bond: Pin<&mut Bond>, what: BondStereo) -> Result<()>;
         fn bond_set_stereo_atoms(bond: Pin<&mut Bond>, bgn_idx: u32, end_idx: u32) -> Result<()>;
         fn bond_invert_chirality(bond: Pin<&mut Bond>) -> Result<bool>;
+        fn bond_clone(bond: &Bond) -> Result<UniquePtr<Bond>>;
     }
 }

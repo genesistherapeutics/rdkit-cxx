@@ -50,5 +50,6 @@ void bond_set_bond_dir(Bond &bond, BondDir what);
 void bond_set_stereo(Bond &bond, BondStereo what);
 void bond_set_stereo_atoms(Bond &bond, unsigned bgn_idx, unsigned end_idx);
 bool bond_invert_chirality(Bond &bond);
+std::unique_ptr<Bond> bond_clone(const Bond &bond);
 
 }  // namespace rdkit_cxx

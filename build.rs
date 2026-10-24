@@ -42,6 +42,7 @@ const BRIDGES: &[&str] = &[
     "adjust_query",
     "graph",
     "transforms",
+    "rdqueries",
 ];
 
 fn main() {

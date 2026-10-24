@@ -12,7 +12,7 @@
 
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
-use crate::chem::rdchem::{AsAtom, Atom, AtomMut, AtomRef, BondMut, BondRef, Mol};
+use crate::chem::rdchem::{AsAtom, AsBond, Atom, AtomMut, AtomRef, Bond, BondMut, BondRef, Mol};
 use crate::error::{expect_ok, to_string};
 use crate::ffi::query::ffi;
 
@@ -127,8 +127,8 @@ atom_query_setters!(AtomMut<'m>);
 /// Stamps the bond query getters onto a type with
 /// `fn raw(&self) -> &ffi::Bond` (W3).
 macro_rules! bond_query_getters {
-    ($type:ident) => {
-        impl $type<'_> {
+    ($type:ident $(<$lifetime:lifetime>)?) => {
+        impl$(<$lifetime>)? $type$(<$lifetime>)? {
             /// A description of the query, one line per node, or empty.
             /// Mirrors `Bond.DescribeQuery`.
             pub fn describe_query(&self) -> Result<String> {
@@ -137,43 +137,52 @@ macro_rules! bond_query_getters {
 
             /// Whether `other` matches this bond, or this bond's query.
             /// Mirrors `Bond.Match` (N8).
-            pub fn match_(&self, other: &BondRef<'_>) -> Result<bool> {
-                Ok(ffi::bond_match(self.raw(), other.raw())?)
+            pub fn match_(&self, other: &dyn AsBond) -> Result<bool> {
+                Ok(ffi::bond_match(self.raw(), other.bond())?)
             }
         }
     };
 }
 
-bond_query_getters!(BondRef);
-bond_query_getters!(BondMut);
+/// Stamps the bond query setters onto a type with
+/// `fn raw_mut(&mut self) -> Pin<&mut ffi::Bond>` (W3).
+macro_rules! bond_query_setters {
+    ($type:ident $(<$lifetime:lifetime>)?) => {
+        impl$(<$lifetime>)? $type$(<$lifetime>)? {
+            /// Combines `other`'s query with this one, by AND. Both must be
+            /// query bonds. Mirrors `QueryBond.ExpandQuery`.
+            pub fn expand_query(&mut self, other: &dyn AsBond) -> Result<()> {
+                self.expand_query_with_params(other, &ExpandQueryParams::default())
+            }
 
-impl BondMut<'_> {
-    /// Combines `other`'s query with this one, by AND. Both must be query
-    /// bonds. Mirrors `QueryBond.ExpandQuery`.
-    pub fn expand_query(&mut self, other: &BondRef<'_>) -> Result<()> {
-        self.expand_query_with_params(other, &ExpandQueryParams::default())
-    }
+            /// Mirrors `QueryBond.ExpandQuery(other, how, maintainOrder)`.
+            pub fn expand_query_with_params(
+                &mut self,
+                other: &dyn AsBond,
+                params: &ExpandQueryParams,
+            ) -> Result<()> {
+                Ok(ffi::bond_expand_query(
+                    self.raw_mut(),
+                    other.bond(),
+                    params.how.to_ffi(),
+                    params.maintain_order,
+                )?)
+            }
 
-    /// Mirrors `QueryBond.ExpandQuery(other, how, maintainOrder)`.
-    pub fn expand_query_with_params(
-        &mut self,
-        other: &BondRef<'_>,
-        params: &ExpandQueryParams,
-    ) -> Result<()> {
-        Ok(ffi::bond_expand_query(
-            self.raw_mut(),
-            other.raw(),
-            params.how.to_ffi(),
-            params.maintain_order,
-        )?)
-    }
-
-    /// Replaces this query with a copy of `other`'s. Both must be query
-    /// bonds. Mirrors `QueryBond.SetQuery`.
-    pub fn set_query(&mut self, other: &BondRef<'_>) -> Result<()> {
-        Ok(ffi::bond_set_query(self.raw_mut(), other.raw())?)
-    }
+            /// Replaces this query with a copy of `other`'s. Both must be
+            /// query bonds. Mirrors `QueryBond.SetQuery`.
+            pub fn set_query(&mut self, other: &dyn AsBond) -> Result<()> {
+                Ok(ffi::bond_set_query(self.raw_mut(), other.bond())?)
+            }
+        }
+    };
 }
+
+bond_query_getters!(Bond);
+bond_query_getters!(BondRef<'m>);
+bond_query_getters!(BondMut<'m>);
+bond_query_setters!(Bond);
+bond_query_setters!(BondMut<'m>);
 
 impl Mol {
     /// The atoms `qa`'s query matches; `qa` must be a query atom. Mirrors

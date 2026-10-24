@@ -6,7 +6,7 @@
 use std::ops::{Deref, DerefMut};
 
 use crate::Result;
-use crate::chem::rdchem::{Atom, BondRef, BondType, Mol};
+use crate::chem::rdchem::{AsBond, Atom, BondType, Mol};
 use crate::error::expect_ok;
 use crate::ffi::mol::ffi;
 
@@ -116,7 +116,7 @@ impl RWMol {
 impl RWMol {
     /// Replaces a bond with a copy of `new_bond`, which may come from another
     /// molecule; the bond keeps its atoms. Mirrors `RWMol.ReplaceBond`.
-    pub fn replace_bond(&mut self, index: u32, new_bond: &BondRef<'_>) -> Result<()> {
+    pub fn replace_bond(&mut self, index: u32, new_bond: &dyn AsBond) -> Result<()> {
         self.replace_bond_with_params(index, new_bond, &ReplaceBondParams::default())
     }
 
@@ -124,13 +124,13 @@ impl RWMol {
     pub fn replace_bond_with_params(
         &mut self,
         index: u32,
-        new_bond: &BondRef<'_>,
+        new_bond: &dyn AsBond,
         params: &ReplaceBondParams,
     ) -> Result<()> {
         Ok(ffi::rwmol_replace_bond(
             self.mol.pin_mut(),
             index,
-            new_bond.raw(),
+            new_bond.bond(),
             params.preserve_props,
             params.keep_s_groups,
         )?)

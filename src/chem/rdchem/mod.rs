@@ -31,7 +31,7 @@ pub use atom_labels::{
     get_supplemental_smiles_label, set_atom_alias, set_atom_r_label, set_atom_value,
     set_supplemental_smiles_label,
 };
-pub use bond::{BondMut, BondRef};
+pub use bond::{AsBond, Bond, BondMut, BondRef};
 pub use conformer::{Conformer, ConformerMut, ConformerRef};
 pub use editable_mol::EditableMol;
 pub use enums::{

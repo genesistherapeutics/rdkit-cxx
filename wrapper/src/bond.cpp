@@ -107,4 +107,9 @@ void bond_set_stereo_atoms(Bond &bond, unsigned bgn_idx, unsigned end_idx) {
 
 bool bond_invert_chirality(Bond &bond) { return bond.invertChirality(); }
 
+// copy() keeps the dynamic type, so a query bond's copy keeps its query.
+std::unique_ptr<Bond> bond_clone(const Bond &bond) {
+  return std::unique_ptr<Bond>(bond.copy());
+}
+
 }  // namespace rdkit_cxx

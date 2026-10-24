@@ -8,7 +8,9 @@
 pub mod rdchem;
 pub mod rdmolfiles;
 pub mod rdmolops;
+pub mod rdqueries;
 
 pub use rdchem::*;
 pub use rdmolfiles::*;
 pub use rdmolops::*;
+pub use rdqueries::*;
