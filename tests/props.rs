@@ -156,7 +156,6 @@ fn atom_and_bond_props() {
     let mut view = rw.get_atom_with_idx_mut(0).unwrap();
     view.set_bool_prop("flag", true);
     assert!(view.get_bool_prop("flag").unwrap());
-    view.clear_computed_props();
 
     let mut mol = mol_from_smiles("CC").unwrap();
     mol.get_bond_with_idx_mut(0)

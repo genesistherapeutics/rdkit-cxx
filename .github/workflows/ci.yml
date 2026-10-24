@@ -50,6 +50,19 @@ jobs:
           cat missing.out
           grep -F "or set RDKIT_PREFIX" missing.out
 
+  inventory:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pytest
+      - run: python3 -m pytest inventory
+      - run: python3 inventory/check.py --write-paths tests/manifest_paths.rs
+      - name: The generated path test is up to date
+        run: git diff --exit-code tests/manifest_paths.rs
+
   docs:
     runs-on: ubuntu-24.04
     steps:

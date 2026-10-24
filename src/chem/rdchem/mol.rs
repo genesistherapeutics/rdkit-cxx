@@ -310,7 +310,7 @@ impl Mol {
 }
 
 prop_getters!(Mol);
-prop_setters!(Mol, mol);
+prop_setters!(Mol);
 
 /// An empty molecule. Mirrors `Mol()`.
 impl Default for Mol {

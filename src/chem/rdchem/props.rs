@@ -201,12 +201,12 @@ macro_rules! prop_getters {
 }
 
 /// Stamps the property setters onto a type with
-/// `fn props(&self) -> &ffi::RDProps`. The `mol` form leaves out
-/// `clear_computed_props`, which `Mol` defines with its `include_rings`
-/// parameter (W3, P1).
+/// `fn props(&self) -> &ffi::RDProps`. The `clear_computed` form adds
+/// `clear_computed_props`, for classes whose Python counterpart has it (`Mol`
+/// defines its own, with `include_rings`) (W3, P1).
 macro_rules! prop_setters {
-    ($type:ident $(<$lifetime:lifetime>)?) => {
-        $crate::chem::rdchem::props::prop_setters!($type $(<$lifetime>)?, mol);
+    ($type:ident $(<$lifetime:lifetime>)?, clear_computed) => {
+        $crate::chem::rdchem::props::prop_setters!($type $(<$lifetime>)?);
 
         impl$(<$lifetime>)? $type$(<$lifetime>)? {
             /// Removes the properties RDKit computed. Mirrors
@@ -218,7 +218,7 @@ macro_rules! prop_setters {
             }
         }
     };
-    ($type:ident $(<$lifetime:lifetime>)?, mol) => {
+    ($type:ident $(<$lifetime:lifetime>)?) => {
         impl$(<$lifetime>)? $type$(<$lifetime>)? {
             /// Mirrors `SetProp`.
             pub fn set_prop(&mut self, key: &str, val: &str) {

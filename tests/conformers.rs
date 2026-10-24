@@ -49,6 +49,9 @@ fn edit_through_conformer_mut() {
         .unwrap();
     conf.set_3d(true);
     conf.set_int_prop("n", 1);
+    conf.set_int_prop_with_computed("c", 1, true);
+    conf.clear_computed_props();
+    assert!(!conf.has_prop("c"));
     assert_eq!(
         conf.get_atom_position(9).unwrap_err(),
         Error::Index { index: 9, len: 2 }

@@ -138,7 +138,7 @@ impl fmt::Debug for Conformer {
 conformer_getters!(Conformer);
 conformer_setters!(Conformer);
 prop_getters!(Conformer);
-prop_setters!(Conformer);
+prop_setters!(Conformer, clear_computed);
 
 /// A conformer in a molecule, borrowed. Mirrors `rdchem.Conformer` reached
 /// through a `Mol`.
@@ -212,7 +212,7 @@ impl<'m> ConformerMut<'m> {
 conformer_getters!(ConformerMut<'m>);
 conformer_setters!(ConformerMut<'m>);
 prop_getters!(ConformerMut<'m>);
-prop_setters!(ConformerMut<'m>);
+prop_setters!(ConformerMut<'m>, clear_computed);
 
 impl fmt::Debug for ConformerMut<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

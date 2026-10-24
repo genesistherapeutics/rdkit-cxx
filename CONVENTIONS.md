@@ -115,7 +115,10 @@ rule changes the rule first.
   nanobind's order keeps the name, and the others append `_<type>` in
   snake_case. Constructors: a zero-argument `__init__` is `Default`; a copy
   `__init__` is `Clone`; the first other `__init__` is `new`; the rest are
-  `from_<first parameter>`.
+  `from_<first parameter>`, or a `From` impl when the parameter is another
+  bound class (`RWMol(mol)` → `From<Mol>`), which the manifest records in
+  `overloads_note`. nanobind's `__new__` (from `nb::new_`) repeats
+  `__init__`'s overloads and gets a `reason`.
 - **A6.** `_mut` comes last: `get_conformer_with_id_mut`.
 - **A7.** Parameter structs are plain Rust structs with public fields. A
   mirror of a Python class crosses the bridge as a cxx shared struct
@@ -164,3 +167,15 @@ rule changes the rule first.
   flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so
   the inventory lists their values as enum values; they keep Python's
   spelling under `name_exception`.
+
+## Parity
+
+- **I1.** A commit that binds a Python name adds its manifest entry and
+  regenerates `tests/manifest_paths.rs`
+  (`python3 inventory/check.py --write-paths tests/manifest_paths.rs`).
+- **I2.** `reason` marks a name with no Rust counterpart by design (Python
+  protocol methods, pickling hooks, APIs RDKit has deprecated). A name that is
+  not bound yet has no entry. `overloads_note` explains overloads a binding
+  covers with fewer Rust paths, or does not bind yet.
+- **I3.** A module joins `complete` once every inventory entry in it is
+  mapped; CI then holds it there.
