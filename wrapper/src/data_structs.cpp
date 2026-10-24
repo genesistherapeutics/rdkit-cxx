@@ -25,11 +25,19 @@ namespace rdkit_cxx {
 
 namespace {
 
+// Bit indices in ascending order. A SparseBitVect keeps its bits in a
+// std::set<int>, so bits past INT_MAX (from fingerprint generators) come
+// first until sorted as the unsigned indices they are.
 template <class T>
 rust::Vec<std::uint32_t> to_indices(const std::vector<T> &v) {
-  rust::Vec<std::uint32_t> result;
+  std::vector<std::uint32_t> sorted;
   for (auto i : v) {
-    result.push_back(static_cast<std::uint32_t>(i));
+    sorted.push_back(static_cast<std::uint32_t>(i));
+  }
+  std::sort(sorted.begin(), sorted.end());
+  rust::Vec<std::uint32_t> result;
+  for (auto i : sorted) {
+    result.push_back(i);
   }
   return result;
 }
@@ -63,6 +71,14 @@ void check_num_bits(std::uint64_t size) {
   if (size > static_cast<std::uint64_t>(std::numeric_limits<int>::max())) {
     throw ValueErrorException("bit vectors hold at most 2^31 - 1 bits");
   }
+}
+
+// Fingerprint generators make SparseBitVects of 2^32 - 1 bits (U3), whose
+// bits past INT_MAX RDKit stores as negative ints. Pickling one subtracts
+// those ints in int, which can overflow, and converting one makes an
+// ExplicitBitVect too large for its int arithmetic, so both refuse them.
+void check_int_sized(const BitVect &bv) {
+  check_num_bits(bit_vect_get_num_bits(bv));
 }
 
 void check_same_size(const BitVect &a, const BitVect &b) {
@@ -245,6 +261,7 @@ rust::Vec<std::uint32_t> bit_vect_get_on_bits(const BitVect &bv) {
 }
 
 rust::Vec<std::uint8_t> bit_vect_to_binary(const BitVect &bv) {
+  check_int_sized(bv);
   return to_bytes(std::visit([](const auto &x) { return x.toString(); }, bv.v));
 }
 
@@ -270,6 +287,7 @@ void bit_vect_from_base64(BitVect &bv, rust::Str in_d) {
 }
 
 std::unique_ptr<std::string> bit_vect_to_base64(const BitVect &bv) {
+  check_int_sized(bv);
   auto tmp = std::visit([](const auto &x) { return x.toString(); }, bv.v);
   std::unique_ptr<const char[]> txt(Base64Encode(tmp.c_str(), tmp.length()));
   return std::make_unique<std::string>(txt.get());
@@ -457,6 +475,7 @@ void bit_vect_init_from_daylight_string(BitVect &bv, rust::Str s) {
 }
 
 std::unique_ptr<BitVect> convert_to_explicit(const BitVect &sbv) {
+  check_int_sized(sbv);
   return wrap_bit_vect(std::unique_ptr<ExplicitBitVect>(
       convertToExplicit(&std::get<SparseBitVect>(sbv.v))));
 }

@@ -45,10 +45,13 @@ fn explicit_bit_vects() {
     assert!(!a.get_bit(0).unwrap());
     assert_eq!(a.to_list().iter().filter(|&&on| on).count(), 5);
 
-    assert_eq!(ExplicitBitVect::from_pkl(&a.to_binary()).unwrap(), a);
-    assert_eq!(a.to_base64(), "4P///yAAAAAFAAAAAgICAgIs");
+    assert_eq!(
+        ExplicitBitVect::from_pkl(&a.to_binary().unwrap()).unwrap(),
+        a
+    );
+    assert_eq!(a.to_base64().unwrap(), "4P///yAAAAAFAAAAAgICAgIs");
     let mut copy = ExplicitBitVect::default();
-    copy.from_base64(&a.to_base64()).unwrap();
+    copy.from_base64(&a.to_base64().unwrap()).unwrap();
     assert_eq!(copy, a);
     assert_eq!(
         ExplicitBitVect::new_with_bits_set(4, true).get_num_on_bits(),
@@ -77,8 +80,8 @@ fn sparse_bit_vects() {
     let mut s = SparseBitVect::new(1000);
     s.set_bits_from_list(&[10, 500]).unwrap();
     assert_eq!(s.get_num_on_bits(), 2);
-    assert_eq!(convert_to_explicit(&s).get_on_bits(), [10, 500]);
-    assert_eq!(SparseBitVect::from_pkl(&s.to_binary()).unwrap(), s);
+    assert_eq!(convert_to_explicit(&s).unwrap().get_on_bits(), [10, 500]);
+    assert_eq!(SparseBitVect::from_pkl(&s.to_binary().unwrap()).unwrap(), s);
     let t = SparseBitVect::new(1000);
     assert_eq!((&s | &t), s);
     assert!(close(tanimoto_similarity(&s, &s).unwrap(), 1.0));
@@ -111,7 +114,7 @@ fn similarity_metrics() {
         0.714286
     ));
     assert!(close(
-        tanimoto_similarity_bytes(&a, &b.to_binary()).unwrap(),
+        tanimoto_similarity_bytes(&a, &b.to_binary().unwrap()).unwrap(),
         0.285714
     ));
     let bulk = bulk_tanimoto_similarity(&a, [&a, &b]).unwrap();
@@ -142,7 +145,7 @@ fn similarity_metrics() {
     ));
     assert!(!all_probe_bits_match(&b, &a).unwrap());
     assert!(all_probe_bits_match(&ExplicitBitVect::new(32), &a).unwrap());
-    assert!(all_probe_bits_match_bytes(&bits(32, &[1]), &a.to_binary()).unwrap());
+    assert!(all_probe_bits_match_bytes(&bits(32, &[1]), &a.to_binary().unwrap()).unwrap());
 }
 
 #[test]

@@ -53,6 +53,7 @@ set(RDKIT_CXX_SOURCES
   src/perception.cpp
   src/chirality.cpp
   src/fingerprints.cpp
+  src/fingerprint_generator.cpp
   src/adjust_query.cpp
   src/mol_checks.cpp
   src/graph.cpp

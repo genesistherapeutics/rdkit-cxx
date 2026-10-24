@@ -36,7 +36,7 @@ fn bits(size: u32, on: &[u32]) -> ExplicitBitVect {
 
 #[test]
 fn bit_vect_pickles() {
-    let pkl = bits(32, &[1, 5]).to_binary();
+    let pkl = bits(32, &[1, 5]).to_binary().unwrap();
     assert_eq!(ExplicitBitVect::from_pkl(&pkl).unwrap(), bits(32, &[1, 5]));
     // RDKit negates the version, which overflows for i32::MIN.
     assert!(is_value(ExplicitBitVect::from_pkl(&with_i32(
@@ -70,7 +70,7 @@ fn bit_vect_pickles() {
 fn base64() {
     let a = bits(32, &[1, 5]);
     let mut b = ExplicitBitVect::new(8);
-    b.from_base64(&a.to_base64()).unwrap();
+    b.from_base64(&a.to_base64().unwrap()).unwrap();
     assert_eq!(b, a);
     // RDKit's decoder writes past its buffer for these lengths, and its
     // in-place parse leaves the vector broken when it fails.
@@ -88,11 +88,13 @@ fn probe_bits() {
     let probe = bits(16, &[1, 3]);
     let reference = bits(16, &[1, 2, 3]);
     assert!(all_probe_bits_match(&probe, &reference).unwrap());
-    assert!(all_probe_bits_match_bytes(&probe, &reference.to_binary()).unwrap());
-    assert!(!all_probe_bits_match_bytes(&reference, &probe.to_binary()).unwrap());
+    assert!(all_probe_bits_match_bytes(&probe, &reference.to_binary().unwrap()).unwrap());
+    assert!(!all_probe_bits_match_bytes(&reference, &probe.to_binary().unwrap()).unwrap());
     // The pickle may be another size, as in RDKit.
-    assert!(all_probe_bits_match_bytes(&probe, &bits(64, &[1, 3, 40]).to_binary()).unwrap());
-    assert!(!all_probe_bits_match_bytes(&bits(64, &[40]), &probe.to_binary()).unwrap());
+    assert!(
+        all_probe_bits_match_bytes(&probe, &bits(64, &[1, 3, 40]).to_binary().unwrap()).unwrap()
+    );
+    assert!(!all_probe_bits_match_bytes(&bits(64, &[40]), &probe.to_binary().unwrap()).unwrap());
     // RDKit reads the pickle through raw pointers, past short ones.
     assert!(all_probe_bits_match_bytes(&probe, &[1, 2]).is_err());
     assert!(all_probe_bits_match_bytes(&probe, &[]).is_err());

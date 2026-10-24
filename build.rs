@@ -39,6 +39,7 @@ const BRIDGES: &[&str] = &[
     "perception",
     "chirality",
     "fingerprints",
+    "fingerprint_generator",
     "adjust_query",
     "graph",
     "transforms",

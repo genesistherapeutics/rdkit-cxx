@@ -12,6 +12,7 @@ pub(crate) mod chirality;
 pub(crate) mod conformer;
 pub(crate) mod data_structs;
 pub(crate) mod errors;
+pub(crate) mod fingerprint_generator;
 pub(crate) mod fingerprints;
 pub(crate) mod fpb;
 pub(crate) mod geometry;
