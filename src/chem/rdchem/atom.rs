@@ -93,6 +93,23 @@ macro_rules! atom_getters {
                 expect_ok(ffi::atom_has_owning_mol(self.raw()))
             }
 
+            /// A copy of the atom's monomer information, if any. Mirrors
+            /// `Atom.GetMonomerInfo`, which returns the atom's own object.
+            pub fn get_monomer_info(&self) -> Option<$crate::chem::rdchem::AtomMonomerInfo> {
+                let info = expect_ok($crate::ffi::monomer_info::ffi::atom_get_monomer_info(self.raw()));
+                (!info.is_null()).then(|| $crate::chem::rdchem::AtomMonomerInfo::from_ffi(info))
+            }
+
+            /// A copy of the atom's PDB residue information, if any; other
+            /// kinds of monomer information are `Error::Value`. Mirrors
+            /// `Atom.GetPDBResidueInfo`.
+            pub fn get_pdb_residue_info(
+                &self,
+            ) -> Result<Option<$crate::chem::rdchem::AtomPDBResidueInfo>> {
+                let info = $crate::ffi::monomer_info::ffi::atom_get_pdb_residue_info(self.raw())?;
+                Ok((!info.is_null()).then(|| $crate::chem::rdchem::AtomPDBResidueInfo::from_ffi(info)))
+            }
+
             /// Mirrors `Atom.HasQuery`.
             pub fn has_query(&self) -> bool {
                 expect_ok(ffi::atom_has_query(self.raw()))
@@ -256,6 +273,23 @@ macro_rules! atom_setters {
             /// Mirrors `Atom.SetNumRadicalElectrons`.
             pub fn set_num_radical_electrons(&mut self, num: u32) {
                 expect_ok(ffi::atom_set_num_radical_electrons(self.raw_mut(), num))
+            }
+
+            /// Gives the atom a copy of `info`. Mirrors `Atom.SetMonomerInfo`.
+            pub fn set_monomer_info(&mut self, info: &$crate::chem::rdchem::AtomMonomerInfo) {
+                expect_ok($crate::ffi::monomer_info::ffi::atom_set_monomer_info(
+                    self.raw_mut(),
+                    info.monomer(),
+                ))
+            }
+
+            /// Gives the atom a copy of `info`. Mirrors
+            /// `Atom.SetPDBResidueInfo`.
+            pub fn set_pdb_residue_info(&mut self, info: &$crate::chem::rdchem::AtomPDBResidueInfo) {
+                expect_ok($crate::ffi::monomer_info::ffi::atom_set_monomer_info(
+                    self.raw_mut(),
+                    info.monomer(),
+                ))
             }
 
             /// Forgets the computed valences. Mirrors `Atom.ClearPropertyCache`.

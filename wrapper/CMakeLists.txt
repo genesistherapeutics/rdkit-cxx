@@ -39,6 +39,7 @@ set(RDKIT_CXX_SOURCES
   src/molops.cpp
   src/substruct.cpp
   src/periodic_table.cpp
+  src/monomer_info.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

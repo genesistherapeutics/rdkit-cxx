@@ -26,6 +26,7 @@ const BRIDGES: &[&str] = &[
     "molops",
     "substruct",
     "periodic_table",
+    "monomer_info",
 ];
 
 fn main() {

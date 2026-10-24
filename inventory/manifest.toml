@@ -88,6 +88,10 @@ python = "rdkit.Chem.rdchem.Atom.GetMass"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_mass", "rdkit_cxx::chem::rdchem::AtomRef::get_mass", "rdkit_cxx::chem::rdchem::AtomMut::get_mass"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetMonomerInfo"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_monomer_info", "rdkit_cxx::chem::rdchem::AtomRef::get_monomer_info", "rdkit_cxx::chem::rdchem::AtomMut::get_monomer_info"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetNeighbors"
 rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_neighbors", "rdkit_cxx::chem::rdchem::AtomMut::get_neighbors"]
 
@@ -110,6 +114,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_num_radical_electrons", "rdkit_cxx::
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetOwningMol"
 rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_owning_mol", "rdkit_cxx::chem::rdchem::AtomMut::get_owning_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetPDBResidueInfo"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_pdb_residue_info", "rdkit_cxx::chem::rdchem::AtomRef::get_pdb_residue_info", "rdkit_cxx::chem::rdchem::AtomMut::get_pdb_residue_info"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetProp"
@@ -231,6 +239,10 @@ python = "rdkit.Chem.rdchem.Atom.SetIsotope"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_isotope", "rdkit_cxx::chem::rdchem::AtomMut::set_isotope"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.SetMonomerInfo"
+rust = ["rdkit_cxx::chem::rdchem::Atom::set_monomer_info", "rdkit_cxx::chem::rdchem::AtomMut::set_monomer_info"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetNoImplicit"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_no_implicit", "rdkit_cxx::chem::rdchem::AtomMut::set_no_implicit"]
 
@@ -241,6 +253,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::set_num_explicit_hs", "rdkit_cxx::chem::
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetNumRadicalElectrons"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_num_radical_electrons", "rdkit_cxx::chem::rdchem::AtomMut::set_num_radical_electrons"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.SetPDBResidueInfo"
+rust = ["rdkit_cxx::chem::rdchem::Atom::set_pdb_residue_info", "rdkit_cxx::chem::rdchem::AtomMut::set_pdb_residue_info"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetProp"
@@ -261,6 +277,197 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::clone"]
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.__init__"
 rust = ["rdkit_cxx::chem::rdchem::Atom::new", "rdkit_cxx::chem::rdchem::Atom::clone", "rdkit_cxx::chem::rdchem::Atom::from_num"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomKekulizeException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::AtomKekulize"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.GetChainId"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_chain_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.GetMonomerClass"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_monomer_class"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.GetMonomerType"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_monomer_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.GetName"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.GetResidueName"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_residue_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.GetResidueNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::get_residue_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetChainId"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_chain_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetMonomerClass"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_monomer_class"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetMonomerType"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_monomer_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetName"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetResidueName"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_residue_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetResidueNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_residue_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerInfo.__init__"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerType"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerType.OTHER"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Other"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerType.PDBRESIDUE"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Pdbresidue"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomMonomerType.UNKNOWN"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Unknown"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetAltLoc"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_alt_loc"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetChainId"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_chain_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetInsertionCode"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_insertion_code"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetIsHeteroAtom"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_is_hetero_atom"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetMonomerClass"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_monomer_class"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetOccupancy"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_occupancy"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetResidueName"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_residue_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetResidueNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_residue_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetSecondaryStructure"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_secondary_structure"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetSegmentNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_segment_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetSerialNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_serial_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.GetTempFactor"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::get_temp_factor"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetAltLoc"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_alt_loc"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetChainId"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_chain_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetInsertionCode"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_insertion_code"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetIsHeteroAtom"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_is_hetero_atom"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetMonomerClass"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_monomer_class"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetOccupancy"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_occupancy"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetResidueName"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_residue_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetResidueNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_residue_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetSecondaryStructure"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_secondary_structure"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetSegmentNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_segment_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetSerialNumber"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_serial_number"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.SetTempFactor"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::set_temp_factor"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomPDBResidueInfo.__init__"
+rust = ["rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::default", "rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::new", "rdkit_cxx::chem::rdchem::AtomPDBResidueInfo::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomSanitizeException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): the base of Error::AtomValence and Error::AtomKekulize"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.AtomValenceException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::AtomValence"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond"
@@ -805,6 +1012,11 @@ python = "rdkit.Chem.rdchem.Conformer.__init__"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::default", "rdkit_cxx::chem::rdchem::Conformer::new", "rdkit_cxx::chem::rdchem::Conformer::clone"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.ConformerException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.EXPLICIT"
 rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
 name_exception = "an exported enum value maps to its variant, ValenceType::Explicit"
@@ -857,6 +1069,11 @@ rust = ["rdkit_cxx::chem::rdchem::HybridizationType::Unspecified"]
 python = "rdkit.Chem.rdchem.IMPLICIT"
 rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
 name_exception = "an exported enum value maps to its variant, ValenceType::Implicit"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.KekulizeException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Kekulize"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol"
@@ -1050,6 +1267,21 @@ overloads_note = "the pickle constructors are not bound yet; Mol(mol) is Clone"
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.__new__"
 reason = "nanobind's construction hook; __init__ maps the constructors"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolSanitizeException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::MolSanitize"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.OTHER"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Other"]
+name_exception = "an exported enum value maps to its variant, AtomMonomerType::Other"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.PDBRESIDUE"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Pdbresidue"]
+name_exception = "an exported enum value maps to its variant, AtomMonomerType::Pdbresidue"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.PeriodicTable"
@@ -1387,6 +1619,11 @@ rust_kind = "field"
 python = "rdkit.Chem.rdchem.SubstructMatchParameters.useQueryQueryMatches"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::use_query_query_matches"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.UNKNOWN"
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Unknown"]
+name_exception = "an exported enum value maps to its variant, AtomMonomerType::Unknown"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ValenceType"

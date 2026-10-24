@@ -128,7 +128,8 @@ rule changes the rule first.
 - **A5.** Overloads that differ by an argument's type: the first in
   nanobind's order keeps the name, and the others append `_<type>` in
   snake_case. Constructors: a zero-argument `__init__` is `Default`; a copy
-  `__init__` is `Clone`; the first other `__init__` is `new`; the rest are
+  `__init__` is `Clone`; the first other `__init__` is `new` (with
+  `new_with_params` for its optional parameters, per A2); the rest are
   `from_<first parameter>`, or a `From` impl when the parameter is another
   bound class (`RWMol(mol)` → `From<Mol>`), which the manifest records in
   `overloads_note`. nanobind's `__new__` (from `nb::new_`) repeats
