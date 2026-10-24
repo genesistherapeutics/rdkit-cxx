@@ -14,12 +14,12 @@ mod ring_info;
 mod rwmol;
 mod substruct;
 
-pub use atom::{Atom, AtomMut, AtomRef};
+pub use atom::{__noatom_for_tests, Atom, AtomMut, AtomRef, GetSmartsParams};
 pub use bond::{BondMut, BondRef};
 pub use conformer::{Conformer, ConformerMut, ConformerRef};
-pub use enums::{BondType, ChiralType, HybridizationType};
+pub use enums::{BondDir, BondStereo, BondType, ChiralType, HybridizationType, ValenceType};
 pub use mol::{Atoms, Bonds, Conformers, Mol};
 pub use props::{GetPropNamesParams, GetPropsAsDictParams, PropValue};
 pub use ring_info::RingInfoRef;
-pub use rwmol::{RWMol, ReplaceAtomParams};
+pub use rwmol::{RWMol, ReplaceAtomParams, ReplaceBondParams};
 pub use substruct::SubstructMatchParameters;

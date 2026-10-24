@@ -8,8 +8,8 @@ use std::pin::Pin;
 use crate::Result;
 use crate::chem::rdchem::atom::expect_ok_index;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
-use crate::chem::rdchem::{AtomRef, BondType, Mol};
-use crate::error::expect_ok;
+use crate::chem::rdchem::{AtomRef, BondDir, BondStereo, BondType, Mol};
+use crate::error::{expect_ok, to_string};
 use crate::ffi::bond::ffi;
 use crate::ffi::props::ffi::{RDProps, bond_as_props};
 
@@ -59,6 +59,59 @@ macro_rules! bond_getters {
             pub fn get_is_conjugated(&self) -> bool {
                 expect_ok(ffi::bond_get_is_conjugated(self.raw()))
             }
+
+            /// Mirrors `Bond.GetBondDir`.
+            pub fn get_bond_dir(&self) -> BondDir {
+                BondDir::from_ffi(expect_ok(ffi::bond_get_bond_dir(self.raw())))
+            }
+
+            /// Mirrors `Bond.GetStereo`.
+            pub fn get_stereo(&self) -> BondStereo {
+                BondStereo::from_ffi(expect_ok(ffi::bond_get_stereo(self.raw())))
+            }
+
+            /// The atoms that set the bond's stereochemistry. Mirrors
+            /// `Bond.GetStereoAtoms`.
+            pub fn get_stereo_atoms(&self) -> Vec<i32> {
+                expect_ok(ffi::bond_get_stereo_atoms(self.raw()))
+            }
+
+            /// Mirrors `Bond.HasOwningMol`.
+            pub fn has_owning_mol(&self) -> bool {
+                expect_ok(ffi::bond_has_owning_mol(self.raw()))
+            }
+
+            /// Mirrors `Bond.HasQuery`.
+            pub fn has_query(&self) -> bool {
+                expect_ok(ffi::bond_has_query(self.raw()))
+            }
+
+            /// Whether the bond is in a ring, finding the molecule's rings if
+            /// needed. Mirrors `Bond.IsInRing`.
+            pub fn is_in_ring(&self) -> bool {
+                expect_ok(ffi::bond_is_in_ring(self.raw()))
+            }
+
+            /// Whether the bond is in a ring of `size` bonds, finding the
+            /// molecule's rings if needed. Mirrors `Bond.IsInRingSize`.
+            pub fn is_in_ring_size(&self, size: i32) -> bool {
+                expect_ok(ffi::bond_is_in_ring_size(self.raw(), size))
+            }
+
+            /// The bond as SMARTS, or as SMILES when it has no query. Mirrors
+            /// `Bond.GetSmarts`.
+            pub fn get_smarts(&self) -> Result<String> {
+                self.get_smarts_with_all_bonds_explicit(false)
+            }
+
+            /// Writes single and aromatic bond symbols too when
+            /// `all_bonds_explicit`. Mirrors `Bond.GetSmarts(allBondsExplicit)`.
+            pub fn get_smarts_with_all_bonds_explicit(
+                &self,
+                all_bonds_explicit: bool,
+            ) -> Result<String> {
+                to_string(ffi::bond_get_smarts(self.raw(), all_bonds_explicit)?)
+            }
         }
     };
 }
@@ -82,6 +135,28 @@ macro_rules! bond_setters {
             pub fn set_is_conjugated(&mut self, what: bool) {
                 expect_ok(ffi::bond_set_is_conjugated(self.raw_mut(), what))
             }
+
+            /// Mirrors `Bond.SetBondDir`.
+            pub fn set_bond_dir(&mut self, what: BondDir) {
+                expect_ok(ffi::bond_set_bond_dir(self.raw_mut(), what.to_ffi()))
+            }
+
+            /// Mirrors `Bond.SetStereo`.
+            pub fn set_stereo(&mut self, what: BondStereo) {
+                expect_ok(ffi::bond_set_stereo(self.raw_mut(), what.to_ffi()))
+            }
+
+            /// Sets the atoms that set the bond's stereochemistry: a neighbor
+            /// of each end. Mirrors `Bond.SetStereoAtoms`.
+            pub fn set_stereo_atoms(&mut self, bgn_idx: u32, end_idx: u32) -> Result<()> {
+                Ok(ffi::bond_set_stereo_atoms(self.raw_mut(), bgn_idx, end_idx)?)
+            }
+
+            /// Inverts atropisomer stereochemistry, returning whether there
+            /// was any. Mirrors `Bond.InvertChirality`.
+            pub fn invert_chirality(&mut self) -> bool {
+                expect_ok(ffi::bond_invert_chirality(self.raw_mut()))
+            }
         }
     };
 }
@@ -98,7 +173,7 @@ impl<'m> BondRef<'m> {
         BondRef { mol, bond }
     }
 
-    fn raw(&self) -> &'m ffi::Bond {
+    pub(crate) fn raw(&self) -> &'m ffi::Bond {
         self.bond
     }
 
@@ -110,6 +185,19 @@ impl<'m> BondRef<'m> {
     /// Mirrors `Bond.GetEndAtom`.
     pub fn get_end_atom(&self) -> AtomRef<'m> {
         expect_ok_index(self.mol.get_atom_with_idx(self.get_end_atom_idx()))
+    }
+
+    /// The bond's other atom, given one of its atoms. Mirrors
+    /// `Bond.GetOtherAtom`.
+    pub fn get_other_atom(&self, what: &AtomRef<'_>) -> Result<AtomRef<'m>> {
+        let idx = self.get_other_atom_idx(what.get_idx())?;
+        Ok(expect_ok_index(self.mol.get_atom_with_idx(idx)))
+    }
+
+    /// The bond's contribution to an atom's valence; 0 for an atom not in the
+    /// bond. Mirrors `Bond.GetValenceContrib`.
+    pub fn get_valence_contrib(&self, at: &AtomRef<'_>) -> f64 {
+        expect_ok(ffi::bond_get_valence_contrib(self.bond, at.raw()))
     }
 
     /// Mirrors `Bond.GetOwningMol`.

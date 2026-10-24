@@ -17,6 +17,14 @@ python = "rdkit.Chem.rdchem.Atom.ClearProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::clear_prop", "rdkit_cxx::chem::rdchem::AtomMut::clear_prop"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.ClearPropertyCache"
+rust = ["rdkit_cxx::chem::rdchem::Atom::clear_property_cache", "rdkit_cxx::chem::rdchem::AtomMut::clear_property_cache"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetAtomMapNum"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_atom_map_num", "rdkit_cxx::chem::rdchem::AtomRef::get_atom_map_num", "rdkit_cxx::chem::rdchem::AtomMut::get_atom_map_num"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetAtomicNum"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_atomic_num", "rdkit_cxx::chem::rdchem::AtomRef::get_atomic_num", "rdkit_cxx::chem::rdchem::AtomMut::get_atomic_num"]
 
@@ -43,6 +51,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_double_prop", "rdkit_cxx::chem::rdch
 overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetExplicitValence"
+reason = "deprecated in RDKit: use get_valence(ValenceType::Explicit)"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetFormalCharge"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_formal_charge", "rdkit_cxx::chem::rdchem::AtomRef::get_formal_charge", "rdkit_cxx::chem::rdchem::AtomMut::get_formal_charge"]
 
@@ -53,6 +65,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_hybridization", "rdkit_cxx::chem::rd
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetIdx"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_idx", "rdkit_cxx::chem::rdchem::AtomRef::get_idx", "rdkit_cxx::chem::rdchem::AtomMut::get_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetImplicitValence"
+reason = "deprecated in RDKit: use get_valence(ValenceType::Implicit)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetIntProp"
@@ -68,8 +84,16 @@ python = "rdkit.Chem.rdchem.Atom.GetIsotope"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_isotope", "rdkit_cxx::chem::rdchem::AtomRef::get_isotope", "rdkit_cxx::chem::rdchem::AtomMut::get_isotope"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetMass"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_mass", "rdkit_cxx::chem::rdchem::AtomRef::get_mass", "rdkit_cxx::chem::rdchem::AtomMut::get_mass"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetNeighbors"
 rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_neighbors", "rdkit_cxx::chem::rdchem::AtomMut::get_neighbors"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetNoImplicit"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_no_implicit", "rdkit_cxx::chem::rdchem::AtomRef::get_no_implicit", "rdkit_cxx::chem::rdchem::AtomMut::get_no_implicit"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetNumExplicitHs"
@@ -78,6 +102,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_num_explicit_hs", "rdkit_cxx::chem::
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetNumImplicitHs"
 rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_num_implicit_hs", "rdkit_cxx::chem::rdchem::AtomMut::get_num_implicit_hs"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetNumRadicalElectrons"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_num_radical_electrons", "rdkit_cxx::chem::rdchem::AtomRef::get_num_radical_electrons", "rdkit_cxx::chem::rdchem::AtomMut::get_num_radical_electrons"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetOwningMol"
@@ -95,6 +123,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_prop_names", "rdkit_cxx::chem::rdche
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetPropsAsDict"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_props_as_dict", "rdkit_cxx::chem::rdchem::Atom::get_props_as_dict_with_params", "rdkit_cxx::chem::rdchem::AtomRef::get_props_as_dict", "rdkit_cxx::chem::rdchem::AtomRef::get_props_as_dict_with_params", "rdkit_cxx::chem::rdchem::AtomMut::get_props_as_dict", "rdkit_cxx::chem::rdchem::AtomMut::get_props_as_dict_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetSmarts"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_smarts", "rdkit_cxx::chem::rdchem::Atom::get_smarts_with_params", "rdkit_cxx::chem::rdchem::AtomRef::get_smarts", "rdkit_cxx::chem::rdchem::AtomRef::get_smarts_with_params", "rdkit_cxx::chem::rdchem::AtomMut::get_smarts", "rdkit_cxx::chem::rdchem::AtomMut::get_smarts_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetSymbol"
@@ -118,12 +150,49 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_unsigned_prop", "rdkit_cxx::chem::rd
 overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.GetValence"
+rust = ["rdkit_cxx::chem::rdchem::Atom::get_valence", "rdkit_cxx::chem::rdchem::AtomRef::get_valence", "rdkit_cxx::chem::rdchem::AtomMut::get_valence"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.HasOwningMol"
+rust = ["rdkit_cxx::chem::rdchem::Atom::has_owning_mol", "rdkit_cxx::chem::rdchem::AtomRef::has_owning_mol", "rdkit_cxx::chem::rdchem::AtomMut::has_owning_mol"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.HasProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::has_prop", "rdkit_cxx::chem::rdchem::AtomRef::has_prop", "rdkit_cxx::chem::rdchem::AtomMut::has_prop"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.HasQuery"
+rust = ["rdkit_cxx::chem::rdchem::Atom::has_query", "rdkit_cxx::chem::rdchem::AtomRef::has_query", "rdkit_cxx::chem::rdchem::AtomMut::has_query"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.HasValenceViolation"
+rust = ["rdkit_cxx::chem::rdchem::AtomRef::has_valence_violation", "rdkit_cxx::chem::rdchem::AtomMut::has_valence_violation"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.InvertChirality"
+rust = ["rdkit_cxx::chem::rdchem::Atom::invert_chirality", "rdkit_cxx::chem::rdchem::AtomMut::invert_chirality"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.IsInRing"
 rust = ["rdkit_cxx::chem::rdchem::AtomRef::is_in_ring", "rdkit_cxx::chem::rdchem::AtomMut::is_in_ring"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.IsInRingSize"
+rust = ["rdkit_cxx::chem::rdchem::AtomRef::is_in_ring_size", "rdkit_cxx::chem::rdchem::AtomMut::is_in_ring_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.NOATOM"
+rust = ["rdkit_cxx::chem::rdchem::Atom::NOATOM"]
+name_exception = "a constant keeps Python's spelling"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.NeedsUpdatePropertyCache"
+rust = ["rdkit_cxx::chem::rdchem::Atom::needs_update_property_cache", "rdkit_cxx::chem::rdchem::AtomRef::needs_update_property_cache", "rdkit_cxx::chem::rdchem::AtomMut::needs_update_property_cache"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.SetAtomMapNum"
+rust = ["rdkit_cxx::chem::rdchem::Atom::set_atom_map_num", "rdkit_cxx::chem::rdchem::Atom::set_atom_map_num_with_strict", "rdkit_cxx::chem::rdchem::AtomMut::set_atom_map_num", "rdkit_cxx::chem::rdchem::AtomMut::set_atom_map_num_with_strict"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetAtomicNum"
@@ -170,6 +239,10 @@ python = "rdkit.Chem.rdchem.Atom.SetNumExplicitHs"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_num_explicit_hs", "rdkit_cxx::chem::rdchem::AtomMut::set_num_explicit_hs"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Atom.SetNumRadicalElectrons"
+rust = ["rdkit_cxx::chem::rdchem::Atom::set_num_radical_electrons", "rdkit_cxx::chem::rdchem::AtomMut::set_num_radical_electrons"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Atom.SetProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_prop", "rdkit_cxx::chem::rdchem::Atom::set_prop_with_computed", "rdkit_cxx::chem::rdchem::AtomMut::set_prop", "rdkit_cxx::chem::rdchem::AtomMut::set_prop_with_computed"]
 
@@ -180,6 +253,10 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::set_unsigned_prop", "rdkit_cxx::chem::rd
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.UpdatePropertyCache"
 rust = ["rdkit_cxx::chem::rdchem::AtomMut::update_property_cache", "rdkit_cxx::chem::rdchem::AtomMut::update_property_cache_with_strict"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Atom.__copy__"
+rust = ["rdkit_cxx::chem::rdchem::Atom::clone"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.__init__"
@@ -200,6 +277,10 @@ rust = ["rdkit_cxx::chem::rdchem::BondRef::get_begin_atom", "rdkit_cxx::chem::rd
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetBeginAtomIdx"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::get_begin_atom_idx", "rdkit_cxx::chem::rdchem::BondMut::get_begin_atom_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.GetBondDir"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::get_bond_dir", "rdkit_cxx::chem::rdchem::BondMut::get_bond_dir"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetBondType"
@@ -245,6 +326,10 @@ python = "rdkit.Chem.rdchem.Bond.GetIsConjugated"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::get_is_conjugated", "rdkit_cxx::chem::rdchem::BondMut::get_is_conjugated"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Bond.GetOtherAtom"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::get_other_atom"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetOtherAtomIdx"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::get_other_atom_idx", "rdkit_cxx::chem::rdchem::BondMut::get_other_atom_idx"]
 
@@ -266,13 +351,53 @@ python = "rdkit.Chem.rdchem.Bond.GetPropsAsDict"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::get_props_as_dict", "rdkit_cxx::chem::rdchem::BondRef::get_props_as_dict_with_params", "rdkit_cxx::chem::rdchem::BondMut::get_props_as_dict", "rdkit_cxx::chem::rdchem::BondMut::get_props_as_dict_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Bond.GetSmarts"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::get_smarts", "rdkit_cxx::chem::rdchem::BondRef::get_smarts_with_all_bonds_explicit", "rdkit_cxx::chem::rdchem::BondMut::get_smarts", "rdkit_cxx::chem::rdchem::BondMut::get_smarts_with_all_bonds_explicit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.GetStereo"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::get_stereo", "rdkit_cxx::chem::rdchem::BondMut::get_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.GetStereoAtoms"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::get_stereo_atoms", "rdkit_cxx::chem::rdchem::BondMut::get_stereo_atoms"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::get_unsigned_prop", "rdkit_cxx::chem::rdchem::BondMut::get_unsigned_prop"]
 overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Bond.GetValenceContrib"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::get_valence_contrib"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.HasOwningMol"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::has_owning_mol", "rdkit_cxx::chem::rdchem::BondMut::has_owning_mol"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Bond.HasProp"
 rust = ["rdkit_cxx::chem::rdchem::BondRef::has_prop", "rdkit_cxx::chem::rdchem::BondMut::has_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.HasQuery"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::has_query", "rdkit_cxx::chem::rdchem::BondMut::has_query"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.InvertChirality"
+rust = ["rdkit_cxx::chem::rdchem::BondMut::invert_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.IsInRing"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::is_in_ring", "rdkit_cxx::chem::rdchem::BondMut::is_in_ring"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.IsInRingSize"
+rust = ["rdkit_cxx::chem::rdchem::BondRef::is_in_ring_size", "rdkit_cxx::chem::rdchem::BondMut::is_in_ring_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.SetBondDir"
+rust = ["rdkit_cxx::chem::rdchem::BondMut::set_bond_dir"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.SetBondType"
@@ -303,8 +428,84 @@ python = "rdkit.Chem.rdchem.Bond.SetProp"
 rust = ["rdkit_cxx::chem::rdchem::BondMut::set_prop", "rdkit_cxx::chem::rdchem::BondMut::set_prop_with_computed"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Bond.SetStereo"
+rust = ["rdkit_cxx::chem::rdchem::BondMut::set_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Bond.SetStereoAtoms"
+rust = ["rdkit_cxx::chem::rdchem::BondMut::set_stereo_atoms"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Bond.SetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::BondMut::set_unsigned_prop", "rdkit_cxx::chem::rdchem::BondMut::set_unsigned_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir"
+rust = ["rdkit_cxx::chem::rdchem::BondDir"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.BEGINDASH"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::Begindash"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.BEGINWEDGE"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::Beginwedge"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.EITHERDOUBLE"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::Eitherdouble"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.ENDDOWNRIGHT"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::Enddownright"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.ENDUPRIGHT"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::Endupright"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.NONE"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::None"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondDir.UNKNOWN"
+rust = ["rdkit_cxx::chem::rdchem::BondDir::Unknown"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOANY"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereoany"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOATROPCCW"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereoatropccw"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOATROPCW"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereoatropcw"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOCIS"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereocis"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOE"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereoe"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREONONE"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereonone"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOTRANS"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereotrans"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.BondStereo.STEREOZ"
+rust = ["rdkit_cxx::chem::rdchem::BondStereo::Stereoz"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.BondType"
@@ -397,6 +598,51 @@ rust = ["rdkit_cxx::chem::rdchem::BondType::Unspecified"]
 [[entry]]
 python = "rdkit.Chem.rdchem.BondType.ZERO"
 rust = ["rdkit_cxx::chem::rdchem::BondType::Zero"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_ALLENE"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiAllene"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiAllene"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_OCTAHEDRAL"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiOctahedral"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiOctahedral"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_OTHER"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiOther"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiOther"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_SQUAREPLANAR"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiSquareplanar"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiSquareplanar"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_TETRAHEDRAL"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiTetrahedral"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiTetrahedral"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_TETRAHEDRAL_CCW"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiTetrahedralCcw"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiTetrahedralCcw"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_TETRAHEDRAL_CW"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiTetrahedralCw"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiTetrahedralCw"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_TRIGONALBIPYRAMIDAL"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiTrigonalbipyramidal"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiTrigonalbipyramidal"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.CHI_UNSPECIFIED"
+rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiUnspecified"]
+name_exception = "an exported enum value maps to its variant, ChiralType::ChiUnspecified"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ChiralType"
@@ -559,6 +805,11 @@ python = "rdkit.Chem.rdchem.Conformer.__init__"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::default", "rdkit_cxx::chem::rdchem::Conformer::new", "rdkit_cxx::chem::rdchem::Conformer::clone"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.EXPLICIT"
+rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
+name_exception = "an exported enum value maps to its variant, ValenceType::Explicit"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.HybridizationType"
 rust = ["rdkit_cxx::chem::rdchem::HybridizationType"]
 
@@ -599,6 +850,11 @@ python = "rdkit.Chem.rdchem.HybridizationType.UNSPECIFIED"
 rust = ["rdkit_cxx::chem::rdchem::HybridizationType::Unspecified"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.IMPLICIT"
+rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
+name_exception = "an exported enum value maps to its variant, ValenceType::Implicit"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Mol"
 rust = ["rdkit_cxx::chem::rdchem::Mol"]
 
@@ -613,6 +869,18 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::clear_computed_props", "rdkit_cxx::chem::
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.ClearProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::clear_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.ClearPropertyCache"
+rust = ["rdkit_cxx::chem::rdchem::Mol::clear_property_cache"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.Debug"
+rust = ["rdkit_cxx::chem::rdchem::Mol::debug", "rdkit_cxx::chem::rdchem::Mol::debug_with_use_stdout"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.GetAromaticAtoms"
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_aromatic_atoms"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetAtomWithIdx"
@@ -656,6 +924,10 @@ overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 python = "rdkit.Chem.rdchem.Mol.GetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_int_prop"]
 overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.GetName"
+rust = ["rdkit_cxx::chem::rdchem::Mol::get_name"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetNumAtoms"
@@ -710,9 +982,17 @@ python = "rdkit.Chem.rdchem.Mol.HasProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::has_prop"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Mol.HasQuery"
+rust = ["rdkit_cxx::chem::rdchem::Mol::has_query"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Mol.HasSubstructMatch"
 rust = ["rdkit_cxx::chem::rdchem::Mol::has_substruct_match", "rdkit_cxx::chem::rdchem::Mol::has_substruct_match_with_params"]
 overloads_note = "the params form covers the keyword form; MolBundle is not bound yet"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.NeedsUpdatePropertyCache"
+rust = ["rdkit_cxx::chem::rdchem::Mol::needs_update_property_cache"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.RemoveAllConformers"
@@ -733,6 +1013,10 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::set_double_prop", "rdkit_cxx::chem::rdche
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.SetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::set_int_prop", "rdkit_cxx::chem::rdchem::Mol::set_int_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.Mol.SetName"
+rust = ["rdkit_cxx::chem::rdchem::Mol::set_name"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.SetProp"
@@ -776,8 +1060,20 @@ python = "rdkit.Chem.rdchem.RWMol.AddBond"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::add_bond", "rdkit_cxx::chem::rdchem::RWMol::add_bond_with_order"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.RWMol.BeginBatchEdit"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::begin_batch_edit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.CommitBatchEdit"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::commit_batch_edit"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.RWMol.GetMol"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.InsertMol"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::insert_mol"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.RemoveAtom"
@@ -792,12 +1088,28 @@ python = "rdkit.Chem.rdchem.RWMol.ReplaceAtom"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::replace_atom", "rdkit_cxx::chem::rdchem::RWMol::replace_atom_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.RWMol.ReplaceBond"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::replace_bond", "rdkit_cxx::chem::rdchem::RWMol::replace_bond_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.RollbackBatchEdit"
+rust = ["rdkit_cxx::chem::rdchem::RWMol::rollback_batch_edit"]
+
+[[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__copy__"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::clone"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__deepcopy__"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::clone"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.__enter__"
+reason = "context manager over a batch edit: begin_batch_edit, then commit_batch_edit or rollback_batch_edit"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.RWMol.__exit__"
+reason = "context manager over a batch edit: begin_batch_edit, then commit_batch_edit or rollback_batch_edit"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__init__"
@@ -927,6 +1239,18 @@ rust_kind = "field"
 python = "rdkit.Chem.rdchem.SubstructMatchParameters.useQueryQueryMatches"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::use_query_query_matches"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ValenceType"
+rust = ["rdkit_cxx::chem::rdchem::ValenceType"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ValenceType.EXPLICIT"
+rust = ["rdkit_cxx::chem::rdchem::ValenceType::Explicit"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ValenceType.IMPLICIT"
+rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromMolBlock"

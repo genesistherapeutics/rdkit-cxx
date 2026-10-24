@@ -9,7 +9,7 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
-use crate::chem::rdchem::{BondRef, ChiralType, HybridizationType, Mol};
+use crate::chem::rdchem::{BondRef, ChiralType, HybridizationType, Mol, ValenceType};
 use crate::error::{expect_ok, to_string};
 use crate::ffi::atom::ffi;
 use crate::ffi::props::ffi::{RDProps, atom_as_props};
@@ -64,6 +64,70 @@ macro_rules! atom_getters {
             pub fn get_chiral_tag(&self) -> ChiralType {
                 ChiralType::from_ffi(expect_ok(ffi::atom_get_chiral_tag(self.raw())))
             }
+
+            /// The atom map number, or 0 for none. Mirrors `Atom.GetAtomMapNum`.
+            pub fn get_atom_map_num(&self) -> i32 {
+                expect_ok(ffi::atom_get_atom_map_num(self.raw()))
+            }
+
+            /// The isotope's mass, or the element's average atomic weight.
+            /// Fails for an atomic number RDKit's periodic table lacks.
+            /// Mirrors `Atom.GetMass`.
+            pub fn get_mass(&self) -> Result<f64> {
+                Ok(ffi::atom_get_mass(self.raw())?)
+            }
+
+            /// Whether implicit hydrogens are disallowed. Mirrors
+            /// `Atom.GetNoImplicit`.
+            pub fn get_no_implicit(&self) -> bool {
+                expect_ok(ffi::atom_get_no_implicit(self.raw()))
+            }
+
+            /// Mirrors `Atom.GetNumRadicalElectrons`.
+            pub fn get_num_radical_electrons(&self) -> u32 {
+                expect_ok(ffi::atom_get_num_radical_electrons(self.raw()))
+            }
+
+            /// Mirrors `Atom.HasOwningMol`.
+            pub fn has_owning_mol(&self) -> bool {
+                expect_ok(ffi::atom_has_owning_mol(self.raw()))
+            }
+
+            /// Mirrors `Atom.HasQuery`.
+            pub fn has_query(&self) -> bool {
+                expect_ok(ffi::atom_has_query(self.raw()))
+            }
+
+            /// Whether the valences need recomputing. Mirrors
+            /// `Atom.NeedsUpdatePropertyCache`.
+            pub fn needs_update_property_cache(&self) -> bool {
+                expect_ok(ffi::atom_needs_update_property_cache(self.raw()))
+            }
+
+            /// The explicit or implicit valence; 0 outside a molecule. Needs
+            /// the property cache. Mirrors `Atom.GetValence`.
+            pub fn get_valence(&self, which: ValenceType) -> Result<u32> {
+                Ok(ffi::atom_get_valence(self.raw(), which.to_ffi())?)
+            }
+
+            /// The atom as SMARTS, or as SMILES when it has no query. Mirrors
+            /// `Atom.GetSmarts`.
+            pub fn get_smarts(&self) -> Result<String> {
+                self.get_smarts_with_params(&$crate::chem::rdchem::GetSmartsParams::default())
+            }
+
+            /// Mirrors `Atom.GetSmarts(doKekule, allHsExplicit, isomericSmiles)`.
+            pub fn get_smarts_with_params(
+                &self,
+                params: &$crate::chem::rdchem::GetSmartsParams,
+            ) -> Result<String> {
+                to_string(ffi::atom_get_smarts(
+                    self.raw(),
+                    params.do_kekule,
+                    params.all_hs_explicit,
+                    params.isomeric_smiles,
+                )?)
+            }
         }
     };
 }
@@ -115,6 +179,18 @@ macro_rules! atom_view_getters {
             pub fn is_in_ring(&self) -> bool {
                 expect_ok(ffi::atom_is_in_ring(self.raw()))
             }
+
+            /// Whether the atom is in a ring of `size` atoms, finding the
+            /// molecule's rings if needed. Mirrors `Atom.IsInRingSize`.
+            pub fn is_in_ring_size(&self, size: i32) -> bool {
+                expect_ok(ffi::atom_is_in_ring_size(self.raw(), size))
+            }
+
+            /// Whether the atom's valence is not allowed. Needs the property
+            /// cache. Mirrors `Atom.HasValenceViolation`.
+            pub fn has_valence_violation(&self) -> Result<bool> {
+                Ok(ffi::atom_has_valence_violation(self.raw())?)
+            }
         }
     };
 }
@@ -164,8 +240,63 @@ macro_rules! atom_setters {
             pub fn set_chiral_tag(&mut self, what: ChiralType) {
                 expect_ok(ffi::atom_set_chiral_tag(self.raw_mut(), what.to_ffi()))
             }
+
+            /// Sets the atom map number; 0 clears it. Mirrors
+            /// `Atom.SetAtomMapNum`.
+            pub fn set_atom_map_num(&mut self, mapno: i32) {
+                expect_ok(ffi::atom_set_atom_map_num(self.raw_mut(), mapno, false))
+            }
+
+            /// With `strict`, fails unless `mapno` is in 0..1000. Mirrors
+            /// `Atom.SetAtomMapNum(mapno, strict)`.
+            pub fn set_atom_map_num_with_strict(&mut self, mapno: i32, strict: bool) -> Result<()> {
+                Ok(ffi::atom_set_atom_map_num(self.raw_mut(), mapno, strict)?)
+            }
+
+            /// Mirrors `Atom.SetNumRadicalElectrons`.
+            pub fn set_num_radical_electrons(&mut self, num: u32) {
+                expect_ok(ffi::atom_set_num_radical_electrons(self.raw_mut(), num))
+            }
+
+            /// Forgets the computed valences. Mirrors `Atom.ClearPropertyCache`.
+            pub fn clear_property_cache(&mut self) {
+                expect_ok(ffi::atom_clear_property_cache(self.raw_mut()))
+            }
+
+            /// Inverts tetrahedral chirality, returning whether there was any.
+            /// Mirrors `Atom.InvertChirality`.
+            pub fn invert_chirality(&mut self) -> bool {
+                expect_ok(ffi::atom_invert_chirality(self.raw_mut()))
+            }
         }
     };
+}
+
+/// Parameters for `get_smarts_with_params`, with Python's defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GetSmartsParams {
+    /// Writes the Kekulé form.
+    pub do_kekule: bool,
+    /// Writes hydrogens in brackets.
+    pub all_hs_explicit: bool,
+    /// Includes stereochemistry and isotopes.
+    pub isomeric_smiles: bool,
+}
+
+impl Default for GetSmartsParams {
+    fn default() -> GetSmartsParams {
+        GetSmartsParams {
+            do_kekule: false,
+            all_hs_explicit: false,
+            isomeric_smiles: true,
+        }
+    }
+}
+
+/// `Atom::NOATOM`, read from C++ for a test that pins the constant.
+#[doc(hidden)]
+pub fn __noatom_for_tests() -> u32 {
+    expect_ok(ffi::atom_noatom())
 }
 
 /// An atom outside any molecule. Mirrors `rdchem.Atom()`; `RWMol::add_atom`
@@ -193,6 +324,9 @@ impl Atom {
     pub fn new(what: &str) -> Result<Atom> {
         Ok(Atom::from_ffi(ffi::atom_new(what)?))
     }
+
+    /// The index that marks "no atom". Mirrors `Atom.NOATOM`.
+    pub const NOATOM: u32 = u32::MAX;
 
     /// An atom with atomic number `num`. Mirrors `Atom(num)`.
     pub fn from_num(num: u32) -> Atom {
@@ -250,7 +384,7 @@ impl<'m> AtomRef<'m> {
         AtomRef { mol, atom }
     }
 
-    fn raw(&self) -> &'m ffi::Atom {
+    pub(crate) fn raw(&self) -> &'m ffi::Atom {
         self.atom
     }
 

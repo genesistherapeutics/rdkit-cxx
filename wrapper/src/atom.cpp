@@ -5,7 +5,10 @@
 #include "rdkit-cxx/atom.h"
 
 #include <GraphMol/MolOps.h>
+#include <GraphMol/QueryAtom.h>
 #include <GraphMol/ROMol.h>
+#include <GraphMol/SmilesParse/SmartsWrite.h>
+#include <GraphMol/SmilesParse/SmilesWrite.h>
 
 namespace rdkit_cxx {
 
@@ -73,6 +76,53 @@ void atom_set_chiral_tag(Atom &atom, ChiralType what) {
   atom.setChiralTag(what);
 }
 
+unsigned atom_noatom() { return Atom::NOATOM; }
+
+int atom_get_atom_map_num(const Atom &atom) { return atom.getAtomMapNum(); }
+
+double atom_get_mass(const Atom &atom) { return atom.getMass(); }
+
+bool atom_get_no_implicit(const Atom &atom) { return atom.getNoImplicit(); }
+
+unsigned atom_get_num_radical_electrons(const Atom &atom) {
+  return atom.getNumRadicalElectrons();
+}
+
+bool atom_has_owning_mol(const Atom &atom) { return atom.hasOwningMol(); }
+
+bool atom_has_query(const Atom &atom) { return atom.hasQuery(); }
+
+bool atom_needs_update_property_cache(const Atom &atom) {
+  return atom.needsUpdatePropertyCache();
+}
+
+unsigned atom_get_valence(const Atom &atom, ValenceType which) {
+  return atom.getValence(which);
+}
+
+std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,
+                                             bool all_hs_explicit,
+                                             bool isomeric_smiles) {
+  if (atom.hasQuery()) {
+    return std::make_unique<std::string>(RDKit::SmartsWrite::GetAtomSmarts(
+        static_cast<const RDKit::QueryAtom *>(&atom)));
+  }
+  return std::make_unique<std::string>(RDKit::SmilesWrite::GetAtomSmiles(
+      &atom, do_kekule, nullptr, all_hs_explicit, isomeric_smiles));
+}
+
+void atom_set_atom_map_num(Atom &atom, int mapno, bool strict) {
+  atom.setAtomMapNum(mapno, strict);
+}
+
+void atom_set_num_radical_electrons(Atom &atom, unsigned num) {
+  atom.setNumRadicalElectrons(num);
+}
+
+void atom_clear_property_cache(Atom &atom) { atom.clearPropertyCache(); }
+
+bool atom_invert_chirality(Atom &atom) { return atom.invertChirality(); }
+
 unsigned atom_get_degree(const Atom &atom) { return atom.getDegree(); }
 
 unsigned atom_get_total_degree(const Atom &atom) {
@@ -99,6 +149,19 @@ bool atom_is_in_ring(const Atom &atom) {
     RDKit::MolOps::findSSSR(mol);
   }
   return mol.getRingInfo()->numAtomRings(atom.getIdx()) != 0;
+}
+
+// As AtomIsInRingSize in Code/GraphMol/nbWrap/Atom.cpp.
+bool atom_is_in_ring_size(const Atom &atom, int size) {
+  auto &mol = atom.getOwningMol();
+  if (!mol.getRingInfo()->isSssrOrBetter()) {
+    RDKit::MolOps::findSSSR(mol);
+  }
+  return mol.getRingInfo()->isAtomInRingOfSize(atom.getIdx(), size);
+}
+
+bool atom_has_valence_violation(const Atom &atom) {
+  return atom.hasValenceViolation();
 }
 
 rust::Vec<std::uint32_t> atom_get_neighbors(const Atom &atom) {

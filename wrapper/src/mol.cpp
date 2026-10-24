@@ -4,6 +4,8 @@
 
 #include "rdkit-cxx/mol.h"
 
+#include <iostream>
+
 #include "rdkit-cxx/errors.h"
 
 namespace rdkit_cxx {
@@ -61,6 +63,38 @@ void mol_update_property_cache(RWMol &mol, bool strict) {
   mol.updatePropertyCache(strict);
 }
 
+void mol_clear_property_cache(RWMol &mol) { mol.clearPropertyCache(); }
+
+bool mol_needs_update_property_cache(const RWMol &mol) {
+  return mol.needsUpdatePropertyCache();
+}
+
+bool mol_has_query(const RWMol &mol) { return mol.hasQuery(); }
+
+std::unique_ptr<std::string> mol_get_name(const RWMol &mol) {
+  return std::make_unique<std::string>(mol.getName());
+}
+
+void mol_set_name(RWMol &mol, rust::Str name) {
+  mol.setName(std::string(name));
+}
+
+void mol_debug(const RWMol &mol, bool use_stdout) {
+  mol.debugMol(use_stdout ? std::cout : std::cerr);
+}
+
+// As GetAromaticAtoms in Code/GraphMol/nbWrap/Mol.cpp, which matches an
+// aromaticity query.
+rust::Vec<std::uint32_t> mol_get_aromatic_atoms(const RWMol &mol) {
+  rust::Vec<std::uint32_t> indices;
+  for (const auto *atom : mol.atoms()) {
+    if (atom->getIsAromatic()) {
+      indices.push_back(atom->getIdx());
+    }
+  }
+  return indices;
+}
+
 // As ReadWriteMol in Code/GraphMol/nbWrap/Mol.cpp: the molecule copies the
 // atom, and the bond functions return the new number of bonds.
 unsigned rwmol_add_atom(RWMol &mol, const Atom &atom) {
@@ -92,5 +126,21 @@ void rwmol_replace_atom(RWMol &mol, unsigned index, const Atom &new_atom,
   mol.replaceAtom(index, const_cast<Atom *>(&new_atom), update_label,
                   preserve_props);
 }
+
+void rwmol_replace_bond(RWMol &mol, unsigned index, const Bond &new_bond,
+                        bool preserve_props, bool keep_s_groups) {
+  check_index(index, mol.getNumBonds());
+  // replaceBond copies the bond.
+  mol.replaceBond(index, const_cast<Bond *>(&new_bond), preserve_props,
+                  keep_s_groups);
+}
+
+void rwmol_insert_mol(RWMol &mol, const RWMol &other) { mol.insertMol(other); }
+
+void rwmol_begin_batch_edit(RWMol &mol) { mol.beginBatchEdit(); }
+
+void rwmol_commit_batch_edit(RWMol &mol) { mol.commitBatchEdit(); }
+
+void rwmol_rollback_batch_edit(RWMol &mol) { mol.rollbackBatchEdit(); }
 
 }  // namespace rdkit_cxx

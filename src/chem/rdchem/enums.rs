@@ -93,3 +93,39 @@ rdkit_enum! {
         ChiOctahedral = CHI_OCTAHEDRAL,
     }
 }
+
+rdkit_enum! {
+    /// Which valence `get_valence` returns. Mirrors `rdchem.ValenceType`.
+    ValenceType: atom::ffi::ValenceType {
+        Implicit = IMPLICIT,
+        Explicit = EXPLICIT,
+    }
+}
+
+rdkit_enum! {
+    /// A bond's drawing direction, for stereochemistry. Mirrors
+    /// `rdchem.BondDir`.
+    BondDir: bond::ffi::BondDir {
+        None = NONE,
+        Beginwedge = BEGINWEDGE,
+        Begindash = BEGINDASH,
+        Enddownright = ENDDOWNRIGHT,
+        Endupright = ENDUPRIGHT,
+        Eitherdouble = EITHERDOUBLE,
+        Unknown = UNKNOWN,
+    }
+}
+
+rdkit_enum! {
+    /// A bond's stereochemistry. Mirrors `rdchem.BondStereo`.
+    BondStereo: bond::ffi::BondStereo {
+        Stereonone = STEREONONE,
+        Stereoany = STEREOANY,
+        Stereoz = STEREOZ,
+        Stereoe = STEREOE,
+        Stereocis = STEREOCIS,
+        Stereotrans = STEREOTRANS,
+        Stereoatropcw = STEREOATROPCW,
+        Stereoatropccw = STEREOATROPCCW,
+    }
+}

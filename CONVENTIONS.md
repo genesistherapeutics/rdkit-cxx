@@ -73,7 +73,8 @@ rule changes the rule first.
 - **W5.** Python sequences become iterators named for the result (`Atoms`,
   `Bonds`) that implement `ExactSizeIterator` and `DoubleEndedIterator`.
   There are no mutable iterators. Code mutates by index, because two live
-  `XMut`s into one molecule would alias.
+  `XMut`s into one molecule would alias. Filtered sequences (`GetAromaticAtoms`) return a
+  `Vec` of views.
 - **W6.** Functions that return new molecules copy into an `RWMol`; vectors
   of molecules cross as `MolList`, moved out one at a time by
   `mol_list_into_vec`.
@@ -179,6 +180,9 @@ rule changes the rule first.
   constants (`SanitizeFlags::SANITIZE_ALL`).
 - **N5.** Exceptions to N2–N4 are recorded in the manifest with
   `name_exception`.
+- **N7.** Enum values nanobind also exports to the module
+  (`rdchem.CHI_OTHER`) map to their variants (`ChiralType::ChiOther`) under
+  `name_exception`; there are no module-level copies in Rust.
 - **F1.** Python flag enums become a `u32` newtype with associated constants,
   bit operators, `bits()`, and `from_bits_retain`. nanobind binds RDKit's
   flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so
