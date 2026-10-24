@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes All rights reserved.
+# Copyright (c) 2026 Steven Kearnes. All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
@@ -27,7 +27,7 @@ DEFAULT_MANIFEST = HERE / "manifest.toml"
 
 # addlicense's BSD header, so the generated file matches what it writes.
 LICENSE_HEADER = [
-    "// Copyright (c) 2026 Steven Kearnes All rights reserved.",
+    "// Copyright (c) 2026 Steven Kearnes. All rights reserved.",
     "// Use of this source code is governed by a BSD-style",
     "// license that can be found in the LICENSE file.",
 ]
