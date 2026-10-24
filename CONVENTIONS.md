@@ -104,6 +104,14 @@ rule changes the rule first.
   `__init__` is `Clone`; the first other `__init__` is `new`; the rest are
   `from_<first parameter>`.
 - **A6.** `_mut` comes last: `get_conformer_with_id_mut`.
+- **A7.** Parameter structs are plain Rust structs with public fields. A
+  mirror of a Python class crosses the bridge as a cxx shared struct
+  `<Name>Data` with the same fields (maps as parallel key and value vectors),
+  converted by a private `to_ffi`; its `Default` comes from a wrapper that
+  returns the C++ defaults. Structs that A2 defines, with no Python class,
+  write Python's defaults in Rust.
+- **A8.** File paths cross the bridge as bytes
+  (`Path::as_os_str().as_encoded_bytes()`), never as `&str`.
 
 ## Types
 

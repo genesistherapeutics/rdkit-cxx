@@ -37,6 +37,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   RDGeneral
   GraphMol
   SmilesParse
+  FileParsers
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
