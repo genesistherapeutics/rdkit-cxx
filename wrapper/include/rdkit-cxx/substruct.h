@@ -10,6 +10,7 @@
 #include "rdkit-cxx/geometry.h"
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/mol_bundle.h"
+#include "rdkit-cxx/resonance.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -62,5 +63,15 @@ rust::Vec<std::uint32_t> mol_bundle_get_substruct_match_mol_bundle(
 rust::Vec<IndexList> mol_bundle_get_substruct_matches_mol_bundle(
     const MolBundle &target, const MolBundle &query,
     const SubstructMatchParametersData &params);
+
+// As GetSubstructMatch and GetResonanceSubstructMatches in
+// Code/GraphMol/nbWrap/ResonanceMolSupplier.cpp.
+rust::Vec<std::uint32_t> resonance_mol_supplier_get_substruct_match(
+    ResonanceMolSupplier &suppl, const RWMol &query, bool use_chirality,
+    bool use_query_query_matches);
+rust::Vec<IndexList> resonance_mol_supplier_get_substruct_matches(
+    ResonanceMolSupplier &suppl, const RWMol &query, bool uniquify,
+    bool use_chirality, bool use_query_query_matches, std::uint32_t max_matches,
+    int num_threads);
 
 }  // namespace rdkit_cxx

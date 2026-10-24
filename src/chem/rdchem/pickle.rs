@@ -2,9 +2,6 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-use std::fmt;
-use std::ops::{BitAnd, BitOr, BitOrAssign, Not};
-
 use crate::Result;
 use crate::chem::rdchem::{Mol, RWMol};
 use crate::error::expect_ok;
@@ -23,10 +20,10 @@ macro_rules! pickle_options {
                 #[doc = concat!("Mirrors `PropertyPickleOptions.", stringify!($name), "`.")]
                 pub const $name: PropertyPickleOptions = PropertyPickleOptions($value);
             )*
-        }
 
-        const NAMES: &[(&str, PropertyPickleOptions)] =
-            &[$((stringify!($name), PropertyPickleOptions::$name)),*];
+            const NAMES: &[(&str, PropertyPickleOptions)] =
+                &[$((stringify!($name), PropertyPickleOptions::$name)),*];
+        }
     };
 }
 
@@ -45,56 +42,7 @@ pickle_options! {
     NoConformers = 0x20000,
 }
 
-impl PropertyPickleOptions {
-    /// The raw bits.
-    pub const fn bits(self) -> u32 {
-        self.0
-    }
-
-    /// Options from raw bits, keeping bits no constant names.
-    pub const fn from_bits_retain(bits: u32) -> PropertyPickleOptions {
-        PropertyPickleOptions(bits)
-    }
-}
-
-impl fmt::Debug for PropertyPickleOptions {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match NAMES.iter().find(|(_, options)| options == self) {
-            Some((name, _)) => write!(f, "PropertyPickleOptions::{name}"),
-            None => write!(f, "PropertyPickleOptions({:#x})", self.0),
-        }
-    }
-}
-
-impl BitOr for PropertyPickleOptions {
-    type Output = PropertyPickleOptions;
-
-    fn bitor(self, rhs: PropertyPickleOptions) -> PropertyPickleOptions {
-        PropertyPickleOptions(self.0 | rhs.0)
-    }
-}
-
-impl BitOrAssign for PropertyPickleOptions {
-    fn bitor_assign(&mut self, rhs: PropertyPickleOptions) {
-        self.0 |= rhs.0;
-    }
-}
-
-impl BitAnd for PropertyPickleOptions {
-    type Output = PropertyPickleOptions;
-
-    fn bitand(self, rhs: PropertyPickleOptions) -> PropertyPickleOptions {
-        PropertyPickleOptions(self.0 & rhs.0)
-    }
-}
-
-impl Not for PropertyPickleOptions {
-    type Output = PropertyPickleOptions;
-
-    fn not(self) -> PropertyPickleOptions {
-        PropertyPickleOptions(!self.0)
-    }
-}
+crate::flags::flag_ops!(PropertyPickleOptions);
 
 /// What pickles include when not told. Mirrors
 /// `rdchem.GetDefaultPickleProperties`.
@@ -110,7 +58,10 @@ pub fn set_default_pickle_properties(arg1: PropertyPickleOptions) {
 
 #[doc(hidden)]
 pub fn __property_pickle_option_values_for_tests() -> (Vec<u32>, Vec<u32>) {
-    let rust = NAMES.iter().map(|(_, options)| options.bits()).collect();
+    let rust = PropertyPickleOptions::NAMES
+        .iter()
+        .map(|(_, options)| options.bits())
+        .collect();
     (rust, expect_ok(ffi::property_pickle_option_values()))
 }
 

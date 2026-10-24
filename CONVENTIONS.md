@@ -206,7 +206,8 @@ rule changes the rule first.
 - **N8.** A name that is a Rust keyword takes a trailing underscore:
   `Atom.Match` → `match_`, `StereoInfo.type` → `type_`.
 - **F1.** Python flag enums become a `u32` newtype with associated constants,
-  bit operators, `bits()`, and `from_bits_retain`. nanobind binds RDKit's
+  bit operators, `bits()`, and `from_bits_retain`; `flag_ops!` writes all but
+  the constants. nanobind binds RDKit's
   flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so
   the inventory lists their values as enum values; they keep Python's
   spelling under `name_exception`.

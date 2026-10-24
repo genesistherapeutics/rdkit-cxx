@@ -219,4 +219,33 @@ rust::Vec<IndexList> mol_bundle_get_substruct_matches_mol_bundle(
   return get_matches(target, query, params);
 }
 
+rust::Vec<std::uint32_t> resonance_mol_supplier_get_substruct_match(
+    ResonanceMolSupplier &suppl, const RWMol &query, bool use_chirality,
+    bool use_query_query_matches) {
+  RDKit::SubstructMatchParameters params;
+  params.useChirality = use_chirality;
+  params.useQueryQueryMatches = use_query_query_matches;
+  params.maxMatches = 1;
+  auto matches = RDKit::SubstructMatch(suppl, query, params);
+  return matches.empty() ? rust::Vec<std::uint32_t>()
+                         : convert_match(matches[0]);
+}
+
+rust::Vec<IndexList> resonance_mol_supplier_get_substruct_matches(
+    ResonanceMolSupplier &suppl, const RWMol &query, bool uniquify,
+    bool use_chirality, bool use_query_query_matches, std::uint32_t max_matches,
+    int num_threads) {
+  RDKit::SubstructMatchParameters params;
+  params.uniquify = uniquify;
+  params.useChirality = use_chirality;
+  params.useQueryQueryMatches = use_query_query_matches;
+  params.maxMatches = max_matches;
+  params.numThreads = num_threads;
+  rust::Vec<IndexList> result;
+  for (const auto &match : RDKit::SubstructMatch(suppl, query, params)) {
+    result.push_back(IndexList{convert_match(match)});
+  }
+  return result;
+}
+
 }  // namespace rdkit_cxx

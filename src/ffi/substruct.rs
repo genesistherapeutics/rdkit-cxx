@@ -41,6 +41,7 @@ pub(crate) mod ffi {
 
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type MolBundle = crate::ffi::mol_bundle::ffi::MolBundle;
+        type ResonanceMolSupplier = crate::ffi::resonance::ffi::ResonanceMolSupplier;
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type Atom = crate::ffi::atom::ffi::Atom;
 
@@ -115,6 +116,22 @@ pub(crate) mod ffi {
             target: &MolBundle,
             query: &MolBundle,
             params: &SubstructMatchParametersData,
+        ) -> Result<Vec<IndexList>>;
+        fn resonance_mol_supplier_get_substruct_match(
+            suppl: Pin<&mut ResonanceMolSupplier>,
+            query: &RWMol,
+            use_chirality: bool,
+            use_query_query_matches: bool,
+        ) -> Result<Vec<u32>>;
+        #[allow(clippy::too_many_arguments)]
+        fn resonance_mol_supplier_get_substruct_matches(
+            suppl: Pin<&mut ResonanceMolSupplier>,
+            query: &RWMol,
+            uniquify: bool,
+            use_chirality: bool,
+            use_query_query_matches: bool,
+            max_matches: u32,
+            num_threads: i32,
         ) -> Result<Vec<IndexList>>;
     }
 }

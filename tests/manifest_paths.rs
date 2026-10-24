@@ -11,6 +11,8 @@
 #[rustfmt::skip]
 #[allow(unused_imports)]
 fn manifest_paths_exist() {
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_CHARGE_SEPARATION;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_INCOMPLETE_OCTETS;
     use rdkit_cxx::chem::rdchem::add_mol_substance_group as _;
     let _ = rdkit_cxx::chem::rdchem::PropertyPickleOptions::AllProps;
     let _: Option<rdkit_cxx::chem::rdchem::Atom> = None;
@@ -566,6 +568,7 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::HybridizationType::Sp3d2;
     let _ = rdkit_cxx::chem::rdchem::HybridizationType::Unspecified;
     let _ = rdkit_cxx::chem::rdchem::ValenceType::Implicit;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::KEKULE_ALL;
     let _: Option<rdkit_cxx::Error> = None;
     let _: Option<rdkit_cxx::chem::rdchem::Mol> = None;
     let _ = rdkit_cxx::chem::rdchem::Mol::add_conformer;
@@ -747,6 +750,32 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::rdchem::RWMol::clone;
     let _ = rdkit_cxx::chem::rdchem::RWMol::from_pkl_string;
     let _ = rdkit_cxx::chem::rdchem::RWMol::from_pkl_string_with_property_flags;
+    let _: Option<rdkit_cxx::chem::rdchem::ResonanceFlags> = None;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_CHARGE_SEPARATION;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_INCOMPLETE_OCTETS;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::KEKULE_ALL;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_ANIONS;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_CATIONS;
+    let _: Option<rdkit_cxx::chem::rdchem::ResonanceMolSupplier> = None;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::enumerate;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_atom_conj_grp_idx;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_bond_conj_grp_idx;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_is_enumerated;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_num_conj_grps;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_match;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_match_with_params;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_matches;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_matches_with_params;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::set_num_threads;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::was_canceled;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::new;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::new_with_params;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::structures;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::len;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceStructures::next;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::at_end;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceMolSupplier::reset;
     let _: Option<rdkit_cxx::chem::rdchem::RingInfoRef> = None;
     let _: Option<rdkit_cxx::chem::rdchem::RingInfoMut> = None;
     let _ = rdkit_cxx::chem::rdchem::RingInfoMut::add_ring;
@@ -947,6 +976,8 @@ fn manifest_paths_exist() {
     let _ = |value: &rdkit_cxx::chem::rdchem::SubstructMatchParameters| { let _ = &value.use_query_query_matches; };
     let _ = rdkit_cxx::chem::rdchem::StereoDescriptor::TetCcw;
     let _ = rdkit_cxx::chem::rdchem::StereoDescriptor::TetCw;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_ANIONS;
+    let _ = rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_CATIONS;
     let _ = rdkit_cxx::chem::rdchem::AtomMonomerType::Unknown;
     let _ = rdkit_cxx::chem::rdchem::StereoSpecified::Unknown;
     let _ = rdkit_cxx::chem::rdchem::StereoSpecified::Unspecified;

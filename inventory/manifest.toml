@@ -9,6 +9,16 @@
 complete = ["rdkit.rdBase"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_CHARGE_SEPARATION"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ALLOW_INCOMPLETE_OCTETS"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_INCOMPLETE_OCTETS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.AddMolSubstanceGroup"
 rust = ["rdkit_cxx::chem::rdchem::add_mol_substance_group"]
 
@@ -1332,6 +1342,11 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
 name_exception = "an exported enum value maps to its variant, ValenceType::Implicit"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.KEKULE_ALL"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::KEKULE_ALL"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.KekulizeException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Kekulize"
@@ -1868,6 +1883,139 @@ reason = "nanobind's construction hook; __init__ maps the constructors"
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__setstate__"
 reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceFlags"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceFlags.ALLOW_CHARGE_SEPARATION"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_CHARGE_SEPARATION"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceFlags.ALLOW_INCOMPLETE_OCTETS"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::ALLOW_INCOMPLETE_OCTETS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceFlags.KEKULE_ALL"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::KEKULE_ALL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceFlags.UNCONSTRAINED_ANIONS"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_ANIONS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceFlags.UNCONSTRAINED_CATIONS"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_CATIONS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.Enumerate"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::enumerate"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetAtomConjGrpIdx"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_atom_conj_grp_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetBondConjGrpIdx"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_bond_conj_grp_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetIsEnumerated"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_is_enumerated"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetNumConjGrps"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_num_conj_grps"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetProgressCallback"
+reason = "takes or returns a Python ResonanceMolSupplierCallback; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetSubstructMatch"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_match", "rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_match_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.GetSubstructMatches"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_matches", "rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get_substruct_matches_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.SetNumThreads"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::set_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.SetProgressCallback"
+reason = "takes or returns a Python ResonanceMolSupplierCallback; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.WasCanceled"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::was_canceled"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.__getitem__"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::get"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::new", "rdkit_cxx::chem::rdchem::ResonanceMolSupplier::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::structures"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.__len__"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceStructures::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.atEnd"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::at_end"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplier.reset"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceMolSupplier::reset"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback.GetMaxStructures"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback.GetNumConjGrps"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback.GetNumDiverseStructures"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback.GetNumStructures"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback.__call__"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.ResonanceMolSupplierCallback.__init__"
+reason = "a Python base class for progress callbacks; Rust callbacks are not bound"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RingInfo"
@@ -2497,6 +2645,16 @@ name_exception = "an exported enum value maps to its variant, StereoDescriptor::
 python = "rdkit.Chem.rdchem.Tet_CW"
 rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCw"]
 name_exception = "an exported enum value maps to its variant, StereoDescriptor::TetCw"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.UNCONSTRAINED_ANIONS"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_ANIONS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.UNCONSTRAINED_CATIONS"
+rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_CATIONS"]
+name_exception = "an exported enum value maps to its constant (F1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.UNKNOWN"
