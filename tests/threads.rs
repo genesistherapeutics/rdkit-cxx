@@ -20,9 +20,12 @@
 use std::collections::BTreeSet;
 use std::thread;
 
+use rdkit_cxx::chem::rd_mol_descriptors::{
+    DoubleCubicLatticeVolume, Properties, PythonPropertyFunctor,
+};
 use rdkit_cxx::chem::{
-    MolzipParams, SmilesWriteParams, fragment_on_brics_bonds, mol_from_smiles, mol_to_mol_block,
-    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params,
+    Conformer, MolzipParams, SmilesWriteParams, fragment_on_brics_bonds, mol_from_smiles,
+    mol_to_mol_block, mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params,
 };
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
@@ -39,13 +42,14 @@ fn main() {
     grid.set_sphere_occupancy(&Point3D::default(), 1.5, 0.25)
         .unwrap();
     thread::scope(|s| {
-        let handles = [1.0, 1.5, 2.0, 2.5].map(|radius| {
+        let handles = [0, 1, 2, 3].map(|i| {
             let grid = &grid;
             s.spawn(move || {
                 random_smiles();
                 brics();
-                grid_centroids(grid, radius);
+                grid_centroids(grid, 1.0 + 0.5 * f64::from(i));
                 depiction();
+                descriptors(i);
             })
         });
         // Joining each thread, rather than leaving it to the scope, orders its
@@ -108,4 +112,29 @@ fn depiction() {
         .unwrap()
         .unwrap();
     assert_eq!(zipped.get_num_conformers(), 1);
+}
+
+// Registering a property writes RDKit's global property registry, which
+// the other calls read; DCLV's surface tests share a global cache.
+fn descriptors(i: u32) {
+    let name = format!("rustThread{i}");
+    let functor = PythonPropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
+    Properties::register_property(&functor);
+    let mut mol = mol_from_smiles("CCO").unwrap();
+    let properties = Properties::new(&[name.as_str()]).unwrap();
+    assert_eq!(
+        properties.compute_properties(&mol).unwrap(),
+        vec![f64::from(i)]
+    );
+    assert!(Properties::get_available_properties().contains(&name));
+    let mut conf = Conformer::new(3);
+    for atom in 0..3 {
+        let x = 1.5 * f64::from(atom);
+        conf.set_atom_position(atom, Point3D::new(x, 0.3 * x, 0.0))
+            .unwrap();
+    }
+    mol.add_conformer(&conf).unwrap();
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    assert!(dclv.get_surface_area() > 0.0);
+    assert!(dclv.get_polar_surface_area() > 0.0);
 }
