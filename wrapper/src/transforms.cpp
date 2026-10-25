@@ -19,6 +19,7 @@
 #include <GraphMol/Substruct/SubstructUtils.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -173,7 +174,10 @@ void check_zip_labels(const RDKit::ROMol &mol,
 
 // fragmentOnBRICSBonds fills its pattern globals on first use, with no lock,
 // and then matches every call against those shared query molecules (U4).
+// It comes before control_c_mutex, so a closure that holds that one must
+// not wait for it.
 std::mutex &brics_mutex() {
+  check_not_in_control_c_callback();
   static std::mutex mutex;
   return mutex;
 }

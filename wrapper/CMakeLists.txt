@@ -105,6 +105,10 @@ set(RDKIT_CXX_SOURCES
   src/mol_catalog.cpp
   src/frag_catalog.cpp
   src/filter_catalog.cpp
+  src/tautomer_query.cpp
+  src/generalized_substruct.cpp
+  src/rascal_mces.cpp
+  src/fmcs.cpp
   src/free_sasa.cpp
   src/mif.cpp
   src/shape_align.cpp
@@ -152,6 +156,10 @@ set(RDKIT_CXX_RDKIT_TARGETS
   Catalogs
   MolCatalog
   FragCatalog
+  TautomerQuery
+  GeneralizedSubstruct
+  RascalMCES
+  FMCS
   FreeSASALib
   MolInteractionFields
   PubChemShape
