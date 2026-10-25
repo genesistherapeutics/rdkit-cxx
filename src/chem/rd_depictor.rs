@@ -67,6 +67,24 @@ pub fn get_prefer_coord_gen() -> bool {
 /// guards that overlap on several threads can leave another guard's value
 /// behind, as in Python. The guard is neither `Send` nor `Sync`, so it is
 /// dropped on the thread that made it.
+///
+/// ```no_run
+/// use rdkit_cxx::chem::mol_from_smiles;
+/// use rdkit_cxx::chem::rd_depictor::{UsingCoordGen, compute_2d_coords};
+///
+/// let mut mol = mol_from_smiles("c1ccccc1O").unwrap();
+/// {
+///     let _coord_gen = UsingCoordGen::new(true);
+///     compute_2d_coords(&mut mol).unwrap();
+/// }
+/// ```
+///
+/// ```compile_fail,E0277
+/// use rdkit_cxx::chem::rd_depictor::UsingCoordGen;
+///
+/// fn send<T: Send>(_: T) {}
+/// send(UsingCoordGen::new(true));
+/// ```
 pub struct UsingCoordGen {
     initial: bool,
     _not_send: PhantomData<*const ()>,

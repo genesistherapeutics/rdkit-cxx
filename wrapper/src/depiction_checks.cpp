@@ -156,8 +156,9 @@ void check_rdkit_depictor_mol(const RDKit::ROMol &mol) {
   const std::int64_t n = mol.getNumAtoms();
   for (const auto atom : mol.atoms()) {
     // computeInitialCoords ranks each atom it starts a fragment from as
-    // getAtomDepictRank * numAtoms + index, in int.
-    if (RDDepict::getAtomDepictRank(atom) * n + (n - 1) > kIntMax) {
+    // getAtomDepictRank * numAtoms + index, in int, and dereferences the
+    // atom of the lowest rank below INT_MAX, past the end if there is none.
+    if (RDDepict::getAtomDepictRank(atom) * n + (n - 1) >= kIntMax) {
       throw ValueErrorException(
           "RDKit's depictor ranks atoms in int, which overflows for this "
           "many atoms with explicit hydrogens");
