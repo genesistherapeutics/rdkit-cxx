@@ -209,8 +209,9 @@ counts! {
     calc_num_heavy_atoms;
 }
 
-/// The rotatable bonds, by RDKit's default definition (`Strict` in
-/// conda-forge's builds). Mirrors `rdMolDescriptors.CalcNumRotatableBonds`.
+/// The rotatable bonds, by RDKit's default definition: `Strict`, unless
+/// RDKit was built without `RDK_USE_STRICT_ROTOR_DEFINITION`. Mirrors
+/// `rdMolDescriptors.CalcNumRotatableBonds`.
 pub fn calc_num_rotatable_bonds(mol: &Mol) -> Result<u32> {
     calc_num_rotatable_bonds_with_strict(mol, NumRotatableBondsOptions::Default)
 }
