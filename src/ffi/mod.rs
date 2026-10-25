@@ -34,6 +34,7 @@ pub(crate) mod force_field_helpers;
 pub(crate) mod fpb;
 pub(crate) mod frag_catalog;
 pub(crate) mod free_sasa;
+pub(crate) mod gaussian_shape;
 pub(crate) mod geometry;
 pub(crate) mod graph;
 pub(crate) mod grid;

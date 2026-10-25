@@ -108,6 +108,7 @@ set(RDKIT_CXX_SOURCES
   src/free_sasa.cpp
   src/mif.cpp
   src/shape_align.cpp
+  src/gaussian_shape.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -154,6 +155,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   FreeSASALib
   MolInteractionFields
   PubChemShape
+  GaussianShape
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
@@ -170,7 +172,9 @@ target_include_directories(rdkitcxx PRIVATE
   third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
-  # Declarations RDKit's installed headers need (compat/maeparser).
+  # Declarations RDKit's installed headers need (compat/maeparser), and
+  # names they include that RDKit installs elsewhere
+  # (compat/GraphMol/GaussianShape).
   compat
   # conda-forge's librdkit-dev 2026.09 installs DistGeomHelpers/
   # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it

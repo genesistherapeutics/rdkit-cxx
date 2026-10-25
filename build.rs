@@ -86,6 +86,7 @@ const BRIDGES: &[&str] = &[
     "free_sasa",
     "mif",
     "shape_align",
+    "gaussian_shape",
 ];
 
 fn main() {
