@@ -79,6 +79,7 @@ set(RDKIT_CXX_SOURCES
   src/standardize_normalize.cpp
   src/standardize_validate.cpp
   src/standardize_tautomer.cpp
+  src/standardize_pipeline.cpp
   src/file_checks.cpp
   src/streams.cpp
   src/png.cpp

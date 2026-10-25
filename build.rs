@@ -79,6 +79,7 @@ const BRIDGES: &[&str] = &[
     "standardize_normalize",
     "standardize_validate",
     "standardize_tautomer",
+    "standardize_pipeline",
 ];
 
 fn main() {
