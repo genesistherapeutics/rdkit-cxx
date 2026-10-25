@@ -137,7 +137,12 @@ rule changes the rule first.
   base64, conversion to `ExplicitBitVect`) refuse them instead.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
-  `fragmentOnBRICSBonds` fills on first use).
+  `fragmentOnBRICSBonds` fills on first use). 2D depiction's settings and
+  CoordGen's templates are globals every coordinate generation reads, so
+  every wrapper whose RDKit call may compute 2D coordinates holds
+  `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
+  mol-block writers for a molecule without a conformer, and `molzip` with
+  `generateCoordinates`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

@@ -19,6 +19,7 @@
 #include <GraphMol/Substruct/SubstructUtils.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
@@ -395,12 +396,26 @@ MolzipParamsData molzip_params_default() {
                           params.generateCoordinates, params.alignCoordinates};
 }
 
+namespace {
+
+// With generateCoordinates, molzip computes 2D coordinates.
+std::unique_lock<std::mutex> lock_if_depicting(
+    const RDKit::MolzipParams &params) {
+  if (params.generateCoordinates) {
+    return lock_depiction();
+  }
+  return {};
+}
+
+}  // namespace
+
 // molzip returns null when it cannot zip.
 std::unique_ptr<RWMol> molzip(const RWMol &a, const RWMol &b,
                               const MolzipParamsData &data) {
   auto params = to_params(data);
   check_zip_labels(a, params, false);
   check_zip_labels(b, params, false);
+  auto lock = lock_if_depicting(params);
   return to_rwmol(RDKit::molzip(a, b, params));
 }
 
@@ -408,6 +423,7 @@ std::unique_ptr<RWMol> molzip_single(const RWMol &a,
                                      const MolzipParamsData &data) {
   auto params = to_params(data);
   check_zip_labels(a, params, false);
+  auto lock = lock_if_depicting(params);
   return to_rwmol(RDKit::molzip(a, params));
 }
 
@@ -427,6 +443,7 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
       break;
     }
   }
+  auto lock = lock_if_depicting(params);
   return to_rwmol(RDKit::molzip(mols.mols(), params));
 }
 
@@ -448,6 +465,7 @@ std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
       check_zip_labels(*mol, params, true);
     }
   }
+  auto lock = lock_if_depicting(params);
   return to_rwmol(RDKit::molzip(map, params));
 }
 
