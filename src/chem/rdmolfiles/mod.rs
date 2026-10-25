@@ -10,6 +10,7 @@ mod mol_blocks;
 mod png;
 mod smiles;
 mod suppliers;
+mod writers;
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -26,6 +27,8 @@ pub use png::*;
 pub use smiles::*;
 pub(crate) use suppliers::RustReader;
 pub use suppliers::*;
+pub(crate) use writers::RustWriter;
+pub use writers::*;
 
 /// Parameters for SMILES parsing. Mirrors `rdmolfiles.SmilesParserParams`,
 /// plus `MolFromSmiles`'s `replacements` keyword (CONVENTIONS.md A3).

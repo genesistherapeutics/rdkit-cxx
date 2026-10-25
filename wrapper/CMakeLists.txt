@@ -77,6 +77,7 @@ set(RDKIT_CXX_SOURCES
   src/streams.cpp
   src/png.cpp
   src/suppliers.cpp
+  src/writers.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -110,6 +111,8 @@ target_include_directories(rdkitcxx PRIVATE
   include
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
+  # Declarations RDKit's installed headers need (compat/maeparser).
+  compat
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})

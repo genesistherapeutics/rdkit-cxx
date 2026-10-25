@@ -242,8 +242,11 @@ rule changes the rule first.
   checked stream also keeps a keyed hash of each 64 KiB chunk it scanned and
   fails when a chunk rereads differently or the file ends sooner than it did,
   so RDKit parses only the bytes that were checked. Python file objects are
-  bound as `Read` and `Write` values, read and written through the same
-  streams.
+  bound as `Read` values, read through the same streams, and `Write`
+  values, which a writer may borrow for its lifetime. RDKit's writers ignore
+  a stream that fails, so the wrappers own the output (a file they open, or
+  the Rust writer), hand RDKit the stream without ownership, and check it
+  after every call: a failed write is `Error::Os` from then on.
 
 ## Properties
 

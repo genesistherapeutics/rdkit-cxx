@@ -4340,6 +4340,48 @@ python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.reset"
 reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.GetText"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::get_text", "rdkit_cxx::chem::rdmolfiles::MaeWriter::get_text_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::new", "rdkit_cxx::chem::rdmolfiles::MaeWriter::from_fileobj"]
+rust_generics = ["<&str>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::write", "rdkit_cxx::chem::rdmolfiles::MaeWriter::write_with_conf_id"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.MetadataFromPNGFile"
 rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_file", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_file_as_list"]
 overloads_note = "asList changes the return type, so it has its own function (A4)"
@@ -4719,6 +4761,39 @@ python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.atEnd"
 rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::at_end"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::new", "rdkit_cxx::chem::rdmolfiles::PDBWriter::new_with_flavor", "rdkit_cxx::chem::rdmolfiles::PDBWriter::from_file_obj", "rdkit_cxx::chem::rdmolfiles::PDBWriter::from_file_obj_with_flavor"]
+rust_generics = ["<&str>", "<&str>", "<Vec<u8>>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::write", "rdkit_cxx::chem::rdmolfiles::PDBWriter::write_with_conf_id"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.PNGMetadataParams"
 rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams"]
 
@@ -4870,6 +4945,64 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::at_end"]
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SDMolSupplier.reset"
 rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::reset"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.GetForceV3000"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::get_force_v3000"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.GetKekulize"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::get_kekulize"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.GetText"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::get_text", "rdkit_cxx::chem::rdmolfiles::SDWriter::get_text_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.SetForceV3000"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::set_force_v3000"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.SetKekulize"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::set_kekulize"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::new", "rdkit_cxx::chem::rdmolfiles::SDWriter::from_file_obj"]
+rust_generics = ["<&str>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::write", "rdkit_cxx::chem::rdmolfiles::SDWriter::write_with_conf_id"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmartsParserParams"
@@ -5063,6 +5196,44 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriteParams::rooted_at_atom"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::new", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::new_with_params", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::from_file_obj", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::from_file_obj_with_params"]
+rust_generics = ["<&str>", "<&str>", "<Vec<u8>>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::write", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::write_with_conf_id"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.TDTMolSupplier"
 rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier"]
 
@@ -5106,6 +5277,70 @@ rust = ["rdkit_cxx::chem::rdmolfiles::TDTMols::next"]
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.reset"
 rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::reset"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.GetNumDigits"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::get_num_digits"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.GetWrite2D"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::get_write_2d"]
+name_exception = "digits stay with their letters: get_write_2d"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.GetWriteNames"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::get_write_names"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetNumDigits"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_num_digits"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetWrite2D"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_2d", "rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_2d_with_state"]
+name_exception = "digits stay with their letters: set_write_2d"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetWriteNames"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_names", "rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_names_with_state"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::new", "rdkit_cxx::chem::rdmolfiles::TDTWriter::from_file_obj"]
+rust_generics = ["<&str>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::write", "rdkit_cxx::chem::rdmolfiles::TDTWriter::write_with_conf_id"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.ADJUST_IGNOREALL"
