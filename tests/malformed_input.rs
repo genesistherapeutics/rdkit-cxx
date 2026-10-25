@@ -7,6 +7,9 @@
 //! sizes past what its `int` arithmetic holds. Each must fail cleanly.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_mol_descriptors::calc_mol_formula;
+use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
+use rdkit_cxx::chem::{Atom, RWMol, ResonanceMolSupplier, get_formal_charge};
 use rdkit_cxx::data_structs::*;
 use rdkit_cxx::geometry::*;
 
@@ -223,6 +226,75 @@ fn sparse_int_vect_sums() {
     min.set_val(0, i32::MIN).unwrap();
     assert!(is_value(min.get_total_val_with_use_abs(true)));
     assert!(is_value(dice_similarity_sparse_int_vect(&min, &min)));
+}
+
+#[test]
+fn formal_charges_wrap_to_8_bits() {
+    // RDKit stores formal charges in 8 bits, so no two atoms overflow a sum
+    // in int (U9); formal_charge_sums rests on that.
+    let mut atom = Atom::from_num(6);
+    atom.set_formal_charge(i32::MAX);
+    assert_eq!(atom.get_formal_charge(), -1);
+    let mut mol = RWMol::default();
+    mol.add_atom(&atom);
+    mol.add_atom(&atom);
+    assert_eq!(get_formal_charge(&mol).unwrap(), -2);
+    atom.set_formal_charge(128);
+    assert_eq!(atom.get_formal_charge(), -128);
+}
+
+#[test]
+fn formal_charge_sums() {
+    // RDKit sums formal charges in int (U9). 2^24 atoms of charge -128 sum to
+    // i32::MIN, which fits but whose negation does not.
+    let mut atom = Atom::from_num(6);
+    atom.set_formal_charge(-128);
+    let mut mol = RWMol::default();
+    for _ in 0..1 << 24 {
+        mol.add_atom(&atom);
+    }
+    assert_eq!(get_formal_charge(&mol).unwrap(), i32::MIN);
+    assert!(is_value(calc_mol_formula(&mol)));
+    for func in [
+        HashFunction::MolFormula,
+        HashFunction::Mesomer,
+        HashFunction::RedoxPair,
+        HashFunction::NetCharge,
+        HashFunction::HetAtomTautomer,
+        HashFunction::HetAtomTautomerv2,
+        HashFunction::HetAtomProtomer,
+        HashFunction::HetAtomProtomerv2,
+    ] {
+        assert!(is_value(mol_hash(&mol, func)), "{func:?}");
+    }
+    assert!(is_value(ResonanceMolSupplier::new(&mol).map(|_| ())));
+    mol.add_atom(&atom);
+    assert!(is_value(get_formal_charge(&mol)));
+}
+
+#[test]
+fn hydrogen_count_sums() {
+    // The tautomer and protomer hashes also sum hydrogen counts in int, at
+    // most 255 per atom, and subtract the charge from them (U9). 255 times
+    // this many atoms passes i32::MAX, with no charges.
+    let atom = Atom::from_num(6);
+    let mut mol = RWMol::default();
+    for _ in 0..i32::MAX as u32 / 255 + 1 {
+        mol.add_atom(&atom);
+    }
+    for func in [
+        HashFunction::HetAtomTautomer,
+        HashFunction::HetAtomTautomerv2,
+        HashFunction::HetAtomProtomer,
+        HashFunction::HetAtomProtomerv2,
+    ] {
+        assert!(is_value(mol_hash(&mol, func)), "{func:?}");
+    }
+    // The other hashes reach RDKit, which needs the property cache.
+    assert!(matches!(
+        mol_hash(&mol, HashFunction::NetCharge),
+        Err(Error::Runtime { .. })
+    ));
 }
 
 fn grid_pickle() -> (UniformGrid3D, Vec<u8>) {

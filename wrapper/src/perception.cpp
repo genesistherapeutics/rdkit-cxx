@@ -7,9 +7,11 @@
 
 #include "rdkit-cxx/perception.h"
 
+#include <limits>
 #include <vector>
 
 #include <GraphMol/MolOps.h>
+#include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
@@ -102,7 +104,20 @@ bool atom_has_conjugated_bond(const Atom &atom) {
   return RDKit::MolOps::atomHasConjugatedBond(&atom);
 }
 
+// getFormalCharge sums the atoms' charges in an int accumulator, in atom
+// order (std::accumulate in MolOps.cpp). Each charge is 8 bits, so the sum
+// leaves int's range only past 2^24 atoms, and overflows there (U9).
 std::int32_t get_formal_charge(const RWMol &mol) {
+  std::int64_t sum = 0;
+  for (const auto *atom : mol.atoms()) {
+    sum += atom->getFormalCharge();
+    if (sum < std::numeric_limits<int>::min() ||
+        sum > std::numeric_limits<int>::max()) {
+      throw ValueErrorException(
+          "RDKit sums formal charges in int, which overflows for this "
+          "molecule");
+    }
+  }
   return RDKit::MolOps::getFormalCharge(mol);
 }
 
