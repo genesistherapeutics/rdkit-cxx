@@ -15,6 +15,7 @@
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/FileParseException.h>
 
+#include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/random_lock.h"
@@ -194,11 +195,14 @@ std::unique_ptr<RWMol> mol_from_mol_file(rust::Slice<const std::uint8_t> path,
 namespace {
 
 // The mol-block writers compute 2D coordinates for stereo when the molecule
-// has no conformer (prepareMol in MolFileWriter.cpp).
+// has no conformer (prepareMol in MolFileWriter.cpp), with compute2DCoords,
+// which trusts the molecule (depiction_checks.h).
 std::unique_lock<std::mutex> lock_if_depicting(
     const RWMol &mol, const MolWriterParamsData &data) {
   if (data.include_stereo && mol.getNumConformers() == 0) {
-    return lock_depiction();
+    auto lock = lock_depiction();
+    check_compute_2d_coords_mol(mol, false);
+    return lock;
   }
   return {};
 }

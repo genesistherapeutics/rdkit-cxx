@@ -178,3 +178,22 @@ fn mol_blocks_from_threads() {
         }
     });
 }
+
+#[test]
+fn mol_block_depiction_refuses_what_the_depictor_would_mishandle() {
+    // RDKit's depictor reads the first neighbor of a square-planar atom
+    // unchecked (Python segfaults); with a conformer nothing is depicted.
+    let mut mol = mol_from_smiles("[Pt]").unwrap();
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiSquareplanar);
+    assert!(matches!(
+        mol_to_mol_block(&mol),
+        Err(Error::Value { message }) if message.contains("square-planar")
+    ));
+    let unstereo = MolWriterParams {
+        include_stereo: false,
+        ..MolWriterParams::default()
+    };
+    mol_to_mol_block_with_params(&mol, &unstereo).unwrap();
+}

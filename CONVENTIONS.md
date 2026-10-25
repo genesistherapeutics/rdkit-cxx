@@ -56,7 +56,7 @@ rule changes the rule first.
   | `RDKit::MolSanitizeException` | `MolSanitize` |
   | `rdkit_cxx::IndexError` | `Index` |
   | `KeyErrorException` | `Key` |
-  | `ValueErrorException`, `RDKit::ConformerException` | `Value` |
+  | `ValueErrorException`, `RDKit::ConformerException`, `RDDepict::DepictException` | `Value` |
   | `RDKit::BadFileException` | `Os` |
   | `RDKit::SmilesParse::SmilesParseException`, `RDKit::FileParseException`, `RDKit::SLNParseException`, `RDKit::ChemicalReactionParserException` | `Parse` |
   | `Invar::Invariant` (with `toUserString()`), any other exception | `Runtime` |
@@ -145,7 +145,9 @@ rule changes the rule first.
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
   mol-block writers for a molecule without a conformer, and `molzip` with
-  `generateCoordinates`. RDKit's random number generator
+  `generateCoordinates`. They also check, under the lock, what the depictor
+  that will run trusts about the molecule (`check_compute_2d_coords_mol` in
+  `depiction_checks.h`). RDKit's random number generator
   (`getRandomGenerator`) is another: wrappers whose call may draw from it
   (random SMILES, the depictor's random bond flips) hold
   `lock_random_generator()` (`random_lock.h`), after `lock_depiction()` when

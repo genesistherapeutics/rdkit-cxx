@@ -57,6 +57,7 @@ const BRIDGES: &[&str] = &[
     "descriptors_3d",
     "dclv",
     "properties",
+    "depictor",
 ];
 
 fn main() {
