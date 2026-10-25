@@ -87,6 +87,9 @@ const BRIDGES: &[&str] = &[
     "generalized_substruct",
     "rascal_mces",
     "fmcs",
+    "scaffold_network",
+    "substruct_library",
+    "rgroup",
 ];
 
 fn main() {
