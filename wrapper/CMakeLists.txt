@@ -109,6 +109,9 @@ set(RDKIT_CXX_SOURCES
   src/generalized_substruct.cpp
   src/rascal_mces.cpp
   src/fmcs.cpp
+  src/scaffold_network.cpp
+  src/substruct_library.cpp
+  src/rgroup.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -156,6 +159,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   GeneralizedSubstruct
   RascalMCES
   FMCS
+  ScaffoldNetwork
+  SubstructLibrary
+  RGroupDecomposition
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

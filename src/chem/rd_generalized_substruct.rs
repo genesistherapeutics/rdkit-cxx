@@ -44,7 +44,7 @@ impl ExtendedQueryMol {
         ExtendedQueryMol { ptr }
     }
 
-    fn as_ffi(&self) -> &ffi::ExtendedQueryMol {
+    pub(crate) fn as_ffi(&self) -> &ffi::ExtendedQueryMol {
         self.ptr.as_ref().unwrap()
     }
 
