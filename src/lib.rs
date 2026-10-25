@@ -5,6 +5,7 @@
 
 //! Rust bindings for RDKit's C++ API, mirroring its Python wrappers.
 
+pub mod avalon;
 pub mod chem;
 pub mod data_manip;
 pub mod data_structs;

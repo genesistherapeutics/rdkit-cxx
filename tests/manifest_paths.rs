@@ -12,6 +12,27 @@
 #[rustfmt::skip]
 #[allow(unused_imports)]
 fn manifest_paths_exist() {
+    let _: Option<rdkit_cxx::avalon::py_avalon_tools::StruChkFlag> = None;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::alias_conversion_failed;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::atom_check_failed;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::atom_clash;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::bad_molecule;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::dubious_stereo_removed;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::either_warning;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::fragments_found;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::recharged;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::size_check_failed;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_error;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_forced_bad;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_transformed;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::template_transformed;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::transformed;
+    let _: Option<rdkit_cxx::avalon::py_avalon_tools::StruChkResult> = None;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkResult::bad_set;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkResult::success;
+    let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkResult::transformed_set;
+    use rdkit_cxx::avalon::py_avalon_tools::avalon_sss_bits as _;
+    use rdkit_cxx::avalon::py_avalon_tools::avalon_similarity_bits as _;
     let _: Option<rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation> = None;
     let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::new;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_corrections as _;

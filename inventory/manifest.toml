@@ -7,7 +7,148 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its structure checker (struchk.c and the code it calls) runs as InitializeCheckMol, which is not bound, configured it; this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.CheckMoleculeString"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its structure checker (struchk.c and the code it calls) runs as InitializeCheckMol, which is not bound, configured it; this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.CloseCheckMolFiles"
+reason = "serves only InitializeCheckMol and the structure checker, which are not bound: it closes the files struchk opened and clears its parameters"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.Generate2DCoords"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its layout (layout.c, about 5,400 lines) goes on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table; this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetAvalonCountFP"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its fingerprints go on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table, which a sanitized molecule can have (a dummy atom with 24 neighbours); nBits 0 divides by zero (SIGFPE in Python); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetAvalonFP"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its fingerprints go on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table, which a sanitized molecule can have (a dummy atom with 24 neighbours); nBits 0 divides by zero (SIGFPE in Python); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetAvalonFPAsWords"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its fingerprints go on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table, which a sanitized molecule can have (a dummy atom with 24 neighbours); nBits 0 divides by zero (SIGFPE in Python); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetCanonSmiles"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and canonicalizes what it parsed (canonizer.c); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetCheckMolLog"
+reason = "serves only the Avalon toolkit's functions, which are not bound: it returns the messages they log to a global list"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.InitializeCheckMol"
+reason = "not bound: the Avalon structure checker (struchk.c) reads each file its options name through a null FILE* when the file does not open (MessageExit returns under InitCheckMol; a segfault in Python for '-ta /nonexistent'), parses the files it does open with the toolkit's unaudited readers, and writes the files its options name (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.alias_conversion_failed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::alias_conversion_failed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.atom_check_failed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::atom_check_failed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.atom_clash"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::atom_clash"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.bad_molecule"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::bad_molecule"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.dubious_stereo_removed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::dubious_stereo_removed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.either_warning"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::either_warning"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.fragments_found"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::fragments_found"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.recharged"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::recharged"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.size_check_failed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::size_check_failed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.stereo_error"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_error"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.stereo_forced_bad"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_forced_bad"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.stereo_transformed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_transformed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.template_transformed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::template_transformed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.transformed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::transformed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult.bad_set"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult::bad_set"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult.success"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult::success"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult.transformed_set"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult::transformed_set"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.avalonSSSBits"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_sss_bits"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.avalonSimilarityBits"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_similarity_bits"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
