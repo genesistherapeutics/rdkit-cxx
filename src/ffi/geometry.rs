@@ -67,6 +67,7 @@ pub(crate) mod ffi {
     }
 
     // Other bridges return vectors of these.
+    impl Vec<Point2D> {}
     impl Vec<Point3D> {}
     impl Vec<IndexList> {}
 }

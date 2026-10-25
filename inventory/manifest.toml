@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -21,6 +21,207 @@ name_exception = "exceptions are Error variants (E4): Error::Runtime"
 [[entry]]
 python = "rdkit.Chem.rdConformerParser.AddConformersFromAmberTrajectory"
 rust = ["rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory", "rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.AddCoords"
+rust = ["rdkit_cxx::chem::rd_coord_gen::add_coords", "rdkit_cxx::chem::rd_coord_gen::add_coords_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.SetCoordMap"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::set_coord_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.SetTemplateMol"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::set_template_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.__init__"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.coordgenScaling"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::coordgen_scaling"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.dbg_useConstrained"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::dbg_use_constrained"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.dbg_useFixed"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::dbg_use_fixed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.minimizerPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::minimizer_precision"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherBestPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_best_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherCoarsePrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_coarse_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherQuickPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_quick_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherStandardPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_standard_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.templateFileDir"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::template_file_dir"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.treatNonterminalBondsToMetalAsZOBs"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::treat_nonterminal_bonds_to_metal_as_zobs"]
+rust_kind = "field"
+name_exception = "ZOBs is one word: treat_nonterminal_bonds_to_metal_as_zobs"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.SetDefaultTemplateFileDir"
+rust = ["rdkit_cxx::chem::rd_coord_gen::set_default_template_file_dir"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.AddRingSystemTemplates"
+rust = ["rdkit_cxx::chem::rd_depictor::add_ring_system_templates"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.Compute2DCoords"
+rust = ["rdkit_cxx::chem::rd_depictor::compute_2d_coords", "rdkit_cxx::chem::rd_depictor::compute_2d_coords_with_params"]
+name_exception = "digits stay with their letters: compute_2d_coords"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.Compute2DCoordsMimicDistmat"
+rust = ["rdkit_cxx::chem::rd_depictor::compute_2d_coords_mimic_distmat", "rdkit_cxx::chem::rd_depictor::compute_2d_coords_mimic_distmat_with_params"]
+name_exception = "digits stay with their letters: compute_2d_coords_mimic_distmat"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.__init__"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.acceptFailure"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::accept_failure"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.adjustMolBlockWedging"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::adjust_mol_block_wedging"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.alignOnly"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::align_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.allowRGroups"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::allow_r_groups"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.existingConfId"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::existing_conf_id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.forceRDKit"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::force_rdkit"]
+rust_kind = "field"
+name_exception = "RDKit is one word: force_rdkit"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.ConstrainedDepictionParams.useRingTemplates"
+rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::use_ring_templates"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.DepictException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.GenerateDepictionMatching2DStructure"
+rust = ["rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure_with_params", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure_atom_map", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure_atom_map_with_params"]
+name_exception = "digits stay with their letters: generate_depiction_matching_2d_structure"
+overloads_note = "the params forms cover the keyword forms (acceptFailure, forceRDKit, allowRGroups); the atomMap overloads are the _atom_map forms (A5); confId and refPatt are fields of ConstrainedDepictionParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.GenerateDepictionMatching3DStructure"
+rust = ["rdkit_cxx::chem::rd_depictor::generate_depiction_matching_3d_structure", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_3d_structure_with_params"]
+name_exception = "digits stay with their letters: generate_depiction_matching_3d_structure"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.GetPreferCoordGen"
+rust = ["rdkit_cxx::chem::rd_depictor::get_prefer_coord_gen"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.IsCoordGenSupportAvailable"
+rust = ["rdkit_cxx::chem::rd_depictor::is_coord_gen_support_available"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.LoadDefaultRingSystemTemplates"
+rust = ["rdkit_cxx::chem::rd_depictor::load_default_ring_system_templates"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.NormalizeDepiction"
+rust = ["rdkit_cxx::chem::rd_depictor::normalize_depiction", "rdkit_cxx::chem::rd_depictor::normalize_depiction_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.SetPreferCoordGen"
+rust = ["rdkit_cxx::chem::rd_depictor::set_prefer_coord_gen"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.SetRingSystemTemplates"
+rust = ["rdkit_cxx::chem::rd_depictor::set_ring_system_templates"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.StraightenDepiction"
+rust = ["rdkit_cxx::chem::rd_depictor::straighten_depiction", "rdkit_cxx::chem::rd_depictor::straighten_depiction_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.UsingCoordGen"
+rust = ["rdkit_cxx::chem::rd_depictor::UsingCoordGen"]
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.UsingCoordGen.__enter__"
+reason = "context manager protocol; the Rust guard acts until dropped"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.UsingCoordGen.__exit__"
+reason = "context manager protocol; the Rust guard acts until dropped"
+
+[[entry]]
+python = "rdkit.Chem.rdDepictor.UsingCoordGen.__init__"
+rust = ["rdkit_cxx::chem::rd_depictor::UsingCoordGen::new"]
 
 [[entry]]
 python = "rdkit.Chem.rdDeprotect.Deprotect"

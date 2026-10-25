@@ -9,6 +9,8 @@
 
 pub mod rd_cip_labeler;
 pub mod rd_conformer_parser;
+pub mod rd_coord_gen;
+pub mod rd_depictor;
 pub mod rd_deprotect;
 pub mod rd_determine_bonds;
 pub mod rd_dist_geom;
