@@ -52,6 +52,7 @@ pub(crate) mod png;
 pub(crate) mod properties;
 pub(crate) mod props;
 pub(crate) mod query;
+pub(crate) mod rascal_mces;
 pub(crate) mod rd_base;
 pub(crate) mod rdqueries;
 pub(crate) mod reduced_graphs;

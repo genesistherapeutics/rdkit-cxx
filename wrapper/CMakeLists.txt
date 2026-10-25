@@ -103,6 +103,7 @@ set(RDKIT_CXX_SOURCES
   src/enumerate.cpp
   src/tautomer_query.cpp
   src/generalized_substruct.cpp
+  src/rascal_mces.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -145,6 +146,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   MolStandardize
   TautomerQuery
   GeneralizedSubstruct
+  RascalMCES
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

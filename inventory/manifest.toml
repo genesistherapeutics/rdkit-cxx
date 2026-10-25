@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -4323,6 +4323,213 @@ rust = ["rdkit_cxx::chem::rd_mol_transforms::transform_conformer"]
 [[entry]]
 python = "rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges"
 rust = ["rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges", "rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.FindMCES"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::find_mces", "rdkit_cxx::chem::rd_rascal_mces::find_mces_with_opts"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalButinaCluster"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::rascal_butina_cluster", "rdkit_cxx::chem::rd_rascal_mces::rascal_butina_cluster_with_opts"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalCluster"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::rascal_cluster", "rdkit_cxx::chem::rd_rascal_mces::rascal_cluster_with_opts"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.__init__"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.a"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::a"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.b"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::b"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.clusterMergeSim"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::cluster_merge_sim"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.maxNumFrags"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::max_num_frags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.minFragSize"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::min_frag_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.minIntraClusterSim"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::min_intra_cluster_sim"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.numThreads"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalClusterOptions.similarityCutoff"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalClusterOptions::similarity_cutoff"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.__init__"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.allBestMCESs"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::all_best_mcess"]
+rust_kind = "field"
+name_exception = "MCESs is one word: all_best_mcess"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.completeAromaticRings"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::complete_aromatic_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.completeSmallestRings"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::complete_smallest_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.equivalentAtoms"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::equivalent_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.exactConnectionsMatch"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::exact_connections_match"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.ignoreAtomAromaticity"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::ignore_atom_aromaticity"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.ignoreBondOrders"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::ignore_bond_orders"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.maxBestMCESs"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::max_best_mcess"]
+rust_kind = "field"
+name_exception = "MCESs is one word: max_best_mcess"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.maxBondMatchPairs"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::max_bond_match_pairs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.maxFragSeparation"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::max_frag_separation"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.minCliqueSize"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::min_clique_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.minFragSize"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::min_frag_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.returnEmptyMCES"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::return_empty_mces"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.ringMatchesRingOnly"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::ring_matches_ring_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.similarityThreshold"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::similarity_threshold"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.singleLargestFrag"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::single_largest_frag"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalOptions.timeout"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalOptions::timeout"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.atomMatches"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::atom_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.bondMatches"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::bond_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.largestFragmentOnly"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::largest_fragment_only"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.largestFragmentSize"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::largest_fragment_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.numFragments"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::num_fragments"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.similarity"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::similarity"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.smartsString"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::smarts_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.tier1Sim"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::tier1_sim"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.tier2Sim"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::tier2_sim"]
+
+[[entry]]
+python = "rdkit.Chem.rdRascalMCES.RascalResult.timedOut"
+rust = ["rdkit_cxx::chem::rd_rascal_mces::RascalResult::timed_out"]
 
 [[entry]]
 python = "rdkit.Chem.rdReducedGraphs.GenerateErGFingerprintForReducedGraph"
