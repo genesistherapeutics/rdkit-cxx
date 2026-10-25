@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -4638,6 +4638,128 @@ rust = ["rdkit_cxx::chem::rd_sln_parse::mol_from_sln", "rdkit_cxx::chem::rd_sln_
 python = "rdkit.Chem.rdSLNParse.SLNParseException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Parse"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.AlignMol"
+rust = ["rdkit_cxx::chem::rd_shape_align::align_mol", "rdkit_cxx::chem::rd_shape_align::align_mol_with_params", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_opts", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_opts_with_params", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_input", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_input_with_params"]
+overloads_note = "the (ref, probe, refShapeOpts, probeShapeOpts, ...) overload is align_mol_shape_opts, and the (refShape, probe, ...) one align_mol_shape_input (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.AlignShapes"
+rust = ["rdkit_cxx::chem::rd_shape_align::align_shapes", "rdkit_cxx::chem::rd_shape_align::align_shapes_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.PrepareConformer"
+rust = ["rdkit_cxx::chem::rd_shape_align::prepare_conformer", "rdkit_cxx::chem::rd_shape_align::prepare_conformer_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ScoreMol"
+rust = ["rdkit_cxx::chem::rd_shape_align::score_mol", "rdkit_cxx::chem::rd_shape_align::score_mol_with_params", "rdkit_cxx::chem::rd_shape_align::score_mol_shape_input", "rdkit_cxx::chem::rd_shape_align::score_mol_shape_input_with_mol_conf_id"]
+overloads_note = "the (shape, mol, molShapeOpts, molConfId) overload is score_mol_shape_input (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ScoreShape"
+rust = ["rdkit_cxx::chem::rd_shape_align::score_shape", "rdkit_cxx::chem::rd_shape_align::score_shape_with_use_colors"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.alpha_vector"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::alpha_vector"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.atom_type_vector"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::atom_type_vector"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.coord"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::coord"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.inertialRot"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::inertial_rot"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.shift"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::shift"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.sof"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::sof"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.sov"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::sov"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInput.volumeAtomIndexVector"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInput::volume_atom_index_vector"]
+overloads_note = "read-only here: the alignment trusts a shape's vectors and self overlaps to agree, which setting one at a time breaks, so Python's setter is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.__init__"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.atomRadii"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::atom_radii"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.atomSubset"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::atom_subset"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.customFeatures"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::custom_features"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.dummyRadius"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::dummy_radius"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.includeDummies"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::include_dummies"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.normalize"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::normalize"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.notColorAtoms"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::not_color_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.ShapeInputOptions.useColors"
+rust = ["rdkit_cxx::chem::rd_shape_align::ShapeInputOptions::use_colors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.TransformConformer"
+rust = ["rdkit_cxx::chem::rd_shape_align::transform_conformer"]
 
 [[entry]]
 python = "rdkit.Chem.rdShapeHelpers.ComputeConfBox"

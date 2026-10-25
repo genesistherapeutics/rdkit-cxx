@@ -85,6 +85,7 @@ const BRIDGES: &[&str] = &[
     "filter_catalog",
     "free_sasa",
     "mif",
+    "shape_align",
 ];
 
 fn main() {

@@ -61,6 +61,7 @@ pub(crate) mod rdqueries;
 pub(crate) mod reduced_graphs;
 pub(crate) mod resonance;
 pub(crate) mod ring_info;
+pub(crate) mod shape_align;
 pub(crate) mod shape_helpers;
 pub(crate) mod sln_parse;
 pub(crate) mod standardize;

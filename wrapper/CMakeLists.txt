@@ -107,6 +107,7 @@ set(RDKIT_CXX_SOURCES
   src/filter_catalog.cpp
   src/free_sasa.cpp
   src/mif.cpp
+  src/shape_align.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -152,6 +153,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   FragCatalog
   FreeSASALib
   MolInteractionFields
+  PubChemShape
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
