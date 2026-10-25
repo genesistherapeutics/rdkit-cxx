@@ -373,7 +373,15 @@ fn hueckel_child() {
 
     // Methyl has 7 valence electrons in 7 orbitals, so its charge can be
     // from -7 to 6. Python's YAeHMOP exits the process past them.
-    for (charge, ok) in [(-8, false), (-7, true), (6, true), (7, false)] {
+    // The first atom keeps the charge in 8 bits: 262 is 6, and -200 is 56.
+    for (charge, ok) in [
+        (-8, false),
+        (-7, true),
+        (6, true),
+        (7, false),
+        (262, true),
+        (-200, false),
+    ] {
         let result =
             determine_connectivity_with_params(&mut atoms(METHYL), &hueckel_params(charge));
         assert_eq!(result.is_ok(), ok, "{charge}: {result:?}");
@@ -407,7 +415,7 @@ fn inputs_rdkit_trusts() {
         determine_connectivity_with_params(&mut mol, &vdw).unwrap();
     }
 
-    // RDKit takes std::abs of the charge and sums formal charges in int.
+    // RDKit takes std::abs of the charge, undefined for i32::MIN.
     let radicals = DetermineBondsParams {
         allow_charged_fragments: false,
         charge: i32::MIN,
@@ -417,18 +425,6 @@ fn inputs_rdkit_trusts() {
         &mut atoms(METHYL),
         &radicals
     )));
-    let mut mol = atoms(METHYL);
-    for i in [1, 2] {
-        mol.get_atom_with_idx_mut(i)
-            .unwrap()
-            .set_formal_charge(i32::MAX);
-    }
-    assert!(value(determine_bond_orders(&mut mol)));
-    let mut mol = atoms(METHYL);
-    mol.get_atom_with_idx_mut(0)
-        .unwrap()
-        .set_formal_charge(i32::MIN);
-    assert!(value(determine_bonds(&mut mol)));
 }
 
 #[test]
@@ -458,16 +454,17 @@ fn monomer_info_connect_the_dots_would_misread() {
     assert_eq!(bonds(&mol), vec![(1, 2)]);
 
     // RDKit would read other monomer info as PDB residue info, past its
-    // end; the call hides it, and puts it back.
+    // end, whatever its type (U10); the call hides it, and puts it back.
     let mut mol = atoms(BRIDGE);
     for (i, residue) in [1, 2, 2].into_iter().enumerate() {
         let info = AtomMonomerInfo::new_with_params(
-            AtomMonomerType::Pdbresidue,
+            AtomMonomerType::Other,
             &AtomMonomerInfoParams {
                 res_num: residue,
                 ..Default::default()
             },
-        );
+        )
+        .unwrap();
         mol.get_atom_with_idx_mut(i as u32)
             .unwrap()
             .set_monomer_info(&info);
@@ -481,7 +478,7 @@ fn monomer_info_connect_the_dots_would_misread() {
             .get_monomer_info()
             .unwrap();
         assert_eq!(info.get_residue_number(), residue);
-        assert_eq!(info.get_monomer_type(), AtomMonomerType::Pdbresidue);
+        assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
     }
 }
 

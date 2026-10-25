@@ -41,30 +41,15 @@ namespace rdkit_cxx {
 
 namespace {
 
-// RDKit subtracts each formal charge from its atom's atomic number in int
-// (possibleValences and setAtomicCharges in DetermineBonds.cpp), sums the
-// charges in int (MolOps::getFormalCharge, after setAtomicCharges sets some
-// to values within 32 and the Hückel option sets the first to `charge`), and
-// takes std::abs of `charge` (setAtomicRadicals): each overflows near INT_MIN
-// or INT_MAX.
-void check_charges(const RWMol &mol, std::int32_t charge, bool hueckel) {
+// RDKit sums formal charges in int (MolOps::getFormalCharge, U9) after
+// setAtomicCharges, or the Hückel option, sets some, each stored in 8 bits;
+// headroom for every atom's covers them. setAtomicRadicals takes std::abs of
+// `charge`, undefined for INT_MIN.
+void check_charges(const RWMol &mol, std::int32_t charge) {
   if (charge == INT_MIN) {
     throw ValueErrorException("charge must be above INT_MIN");
   }
-  std::int64_t bound = hueckel ? std::abs(std::int64_t{charge}) : 0;
-  for (const auto atom : mol.atoms()) {
-    std::int64_t formal = atom->getFormalCharge();
-    std::int64_t difference = std::int64_t{atom->getAtomicNum()} - formal;
-    if (difference < INT_MIN || difference > INT_MAX) {
-      throw ValueErrorException(
-          "an atom's atomic number minus its formal charge must fit in int");
-    }
-    bound += std::max<std::int64_t>(std::abs(formal), 32);
-  }
-  if (bound > INT_MAX) {
-    throw ValueErrorException(
-        "the formal charges are too large for RDKit to sum in int");
-  }
+  check_formal_charge_sum(mol, 128 * std::int64_t{mol.getNumAtoms()});
 }
 
 // ConnectTheDots_Large (FileParsers/ProximityBonds.cpp) hashes each atom's
@@ -85,9 +70,10 @@ void check_proximity_coordinates(const RWMol &mol) {
 }
 
 // ConnectTheDots_Large, pruning a hydrogen bonded to several atoms, reads each
-// one's monomer info as an AtomPDBResidueInfo without checking, past the end
-// of any other kind. Those are set aside for the call, so that RDKit sees no
-// info there, and put back after it, even when it throws.
+// one's monomer info as an AtomPDBResidueInfo without checking even its type
+// (CONVENTIONS.md U10), past the end of any other kind. Those are set aside for
+// the call, so that RDKit sees no info there, and put back after it, even when
+// it throws.
 class OtherMonomerInfoSetAside {
  public:
   explicit OtherMonomerInfoSetAside(RWMol &mol) {
@@ -261,7 +247,7 @@ EhtElement eht_element(const std::vector<std::string> &lines, bool ends,
 // exits the process unless there are some electrons and at most two per
 // orbital, and YAeHMOP sizes its matrices as int(orbitals * orbitals).
 void check_hueckel(const RWMol &mol, std::int32_t charge) {
-  check_charges(mol, charge, true);
+  check_charges(mol, charge);
   check_matrix_size(mol);
   if (!mol.getNumAtoms()) {
     return;  // connectivityHueckel throws on its own.
@@ -269,8 +255,9 @@ void check_hueckel(const RWMol &mol, std::int32_t charge) {
   auto [lines, ends] = eht_parameter_lines();
   std::int64_t valence = 0;
   std::int64_t orbitals = 0;
-  // connectivityHueckel sets the first atom's formal charge to `charge`.
-  std::int64_t total_charge = charge;
+  // connectivityHueckel sets the first atom's formal charge to `charge`,
+  // which Atom keeps in 8 bits.
+  std::int64_t total_charge = static_cast<std::int8_t>(charge);
   bool first = true;
   for (const auto atom : mol.atoms()) {
     if (atom->getAtomicNum() == 0) {
@@ -333,7 +320,7 @@ void determine_connectivity(RWMol &mol, bool use_hueckel, std::int32_t charge,
 void determine_bond_orders(RWMol &mol, std::int32_t charge,
                            bool allow_charged_fragments, bool embed_chiral,
                            bool use_atom_map, std::size_t max_iterations) {
-  check_charges(mol, charge, false);
+  check_charges(mol, charge);
   MatrixCacheGuard guard(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   RDKit::determineBondOrders(mol, charge, allow_charged_fragments, embed_chiral,
@@ -350,7 +337,7 @@ void determine_bonds(RWMol &mol, bool use_hueckel, std::int32_t charge,
   }
   check_connectivity(mol, use_hueckel, charge, use_vdw);
   // The bond orders start from the charge the Hückel option set.
-  check_charges(mol, charge, use_hueckel);
+  check_charges(mol, charge);
   MatrixCacheGuard guard(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   OtherMonomerInfoSetAside set_aside(mol);
