@@ -69,7 +69,7 @@ fn custom_deprotections() {
     assert!(two_reactants.is_valid());
     assert!(matches!(
         deprotect_in_place_with_deprotections(&mut protected(), &[two_reactants]),
-        Err(Error::Runtime { .. })
+        Err(Error::Value { .. })
     ));
 }
 

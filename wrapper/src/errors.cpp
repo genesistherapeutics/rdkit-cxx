@@ -8,6 +8,7 @@
 #include <stdexcept>
 #include <vector>
 
+#include <GraphMol/ChemReactions/Reaction.h>
 #include <GraphMol/ChemReactions/ReactionParser.h>
 #include <GraphMol/Conformer.h>
 #include <GraphMol/SLNParse/SLNParse.h>
@@ -78,6 +79,9 @@ std::string encode_current_exception() {
     return encode("Value", "", e.what());
   } catch (const RDKit::ConformerException &e) {
     return encode("Value", "", e.what());
+  } catch (const RDKit::ChemicalReactionException &e) {
+    // Python's ChemicalReactionException subclasses ValueError.
+    return encode("Value", "", e.what());
   } catch (const RDKit::BadFileException &e) {
     return encode("Os", "", e.what());
   } catch (const RDKit::SmilesParse::SmilesParseException &e) {
@@ -124,6 +128,8 @@ void raise_for_tests(rust::Str kind_str) {
     throw RDKit::SmilesParse::SmilesParseException(message);
   } else if (kind == "sln_parse") {
     throw RDKit::SLNParseException(message);
+  } else if (kind == "reaction") {
+    throw RDKit::ChemicalReactionException(message);
   } else if (kind == "reaction_parse") {
     throw RDKit::ChemicalReactionParserException(message);
   } else if (kind == "invariant") {

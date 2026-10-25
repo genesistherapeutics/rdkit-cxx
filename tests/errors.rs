@@ -50,12 +50,14 @@ fn each_rdkit_exception_maps_to_its_variant() {
             message: message("value")
         }
     );
-    assert_eq!(
-        raise("conformer").unwrap_err(),
-        Error::Value {
-            message: message("conformer")
-        }
-    );
+    for kind in ["conformer", "reaction"] {
+        assert_eq!(
+            raise(kind).unwrap_err(),
+            Error::Value {
+                message: message(kind)
+            }
+        );
+    }
     assert_eq!(
         raise("bad_file").unwrap_err(),
         Error::Os {

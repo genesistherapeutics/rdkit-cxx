@@ -56,7 +56,7 @@ rule changes the rule first.
   | `RDKit::MolSanitizeException` | `MolSanitize` |
   | `rdkit_cxx::IndexError` | `Index` |
   | `KeyErrorException` | `Key` |
-  | `ValueErrorException`, `RDKit::ConformerException` | `Value` |
+  | `ValueErrorException`, `RDKit::ConformerException`, `RDKit::ChemicalReactionException` | `Value` |
   | `RDKit::BadFileException` | `Os` |
   | `RDKit::SmilesParse::SmilesParseException`, `RDKit::FileParseException`, `RDKit::SLNParseException`, `RDKit::ChemicalReactionParserException` | `Parse` |
   | `Invar::Invariant` (with `toUserString()`), any other exception | `Runtime` |
