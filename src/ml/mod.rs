@@ -6,3 +6,4 @@
 //! Mirrors `rdkit.ML`.
 
 pub mod cluster;
+pub mod info_theory;

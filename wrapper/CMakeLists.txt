@@ -116,6 +116,7 @@ set(RDKIT_CXX_SOURCES
   src/murtagh_checks.cpp
   src/cluster.cpp
   src/sim_div_pickers.cpp
+  src/info_theory.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -168,6 +169,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   RGroupDecomposition
   hc
   SimDivPickers
+  InfoTheory
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
@@ -190,6 +192,9 @@ target_include_directories(rdkitcxx PRIVATE
   # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it
   # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
   # install that has it finds its own first, next to the including header.
+  # It installs none of ML/InfoTheory's headers (RDKit::InfoTheory's), so
+  # vendor/ML/InfoTheory holds them, from the same release; an install
+  # that has them finds its own first, earlier on the path.
   vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
