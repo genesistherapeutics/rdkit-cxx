@@ -18,6 +18,9 @@ const BRIDGES: &[&str] = &[
     "errors",
     "mol",
     "molfiles",
+    "png",
+    "suppliers",
+    "writers",
     "atom",
     "bond",
     "props",
@@ -57,6 +60,8 @@ const BRIDGES: &[&str] = &[
     "descriptors_3d",
     "dclv",
     "properties",
+    "depictor",
+    "coord_gen",
 ];
 
 fn main() {

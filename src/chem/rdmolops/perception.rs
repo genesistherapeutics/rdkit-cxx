@@ -266,9 +266,12 @@ pub fn atom_has_conjugated_bond(atom: &impl AsAtom) -> Result<bool> {
     Ok(ffi::atom_has_conjugated_bond(atom.atom())?)
 }
 
-/// The sum of the atoms' formal charges. Mirrors `rdmolops.GetFormalCharge`.
-pub fn get_formal_charge(mol: &Mol) -> i32 {
-    expect_ok(ffi::get_formal_charge(mol.as_ffi()))
+/// The sum of the atoms' formal charges. RDKit sums them in `int`, which
+/// overflows only for molecules of more than 2^24 atoms (each charge is 8
+/// bits); a molecule whose running sum would leave `i32`'s range is
+/// `Error::Value`. Mirrors `rdmolops.GetFormalCharge`.
+pub fn get_formal_charge(mol: &Mol) -> Result<i32> {
+    Ok(ffi::get_formal_charge(mol.as_ffi())?)
 }
 
 /// The atoms on a shortest path between two atoms, both included; empty

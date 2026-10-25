@@ -25,6 +25,18 @@ AtomMonomerInfo::AtomMonomerType monomer_type(int type) {
   return static_cast<AtomMonomerInfo::AtomMonomerType>(type);
 }
 
+// RDKit takes an info's type for its class: code that finds PDBRESIDUE
+// (MolPickler.cpp, PDBWriter.cpp, AddHs.cpp, ProximityBonds.cpp) casts the
+// info to AtomPDBResidueInfo and reads past the end of a plain
+// AtomMonomerInfo. Only an AtomPDBResidueInfo may have the type
+// (CONVENTIONS.md U10).
+void check_not_pdb(AtomMonomerInfo::AtomMonomerType type) {
+  if (type == AtomMonomerInfo::PDBRESIDUE) {
+    throw ValueErrorException(
+        "only AtomPDBResidueInfo can have AtomMonomerType PDBRESIDUE");
+  }
+}
+
 }  // namespace
 
 std::unique_ptr<AtomMonomerInfo> monomer_info_new() {
@@ -36,8 +48,10 @@ std::unique_ptr<AtomMonomerInfo> monomer_info_with(int type, rust::Str name,
                                                    int res_num,
                                                    rust::Str chain_id,
                                                    rust::Str monomer_class) {
+  auto typ = monomer_type(type);
+  check_not_pdb(typ);
   return std::make_unique<AtomMonomerInfo>(
-      monomer_type(type), std::string(name), std::string(residue_name), res_num,
+      typ, std::string(name), std::string(residue_name), res_num,
       std::string(chain_id), std::string(monomer_class));
 }
 
@@ -79,7 +93,12 @@ void monomer_info_set_name(AtomMonomerInfo &info, rust::Str nm) {
 }
 
 void monomer_info_set_monomer_type(AtomMonomerInfo &info, int typ) {
-  info.setMonomerType(monomer_type(typ));
+  auto type = monomer_type(typ);
+  // A PDB residue's info, or a plain copy of one, may have its type back.
+  if (!dynamic_cast<AtomPDBResidueInfo *>(&info)) {
+    check_not_pdb(type);
+  }
+  info.setMonomerType(type);
 }
 
 void monomer_info_set_residue_name(AtomMonomerInfo &info, rust::Str val) {
@@ -211,11 +230,13 @@ std::unique_ptr<AtomPDBResidueInfo> atom_get_pdb_residue_info(
   if (!info) {
     return nullptr;
   }
-  if (info->getMonomerType() != AtomMonomerInfo::PDBRESIDUE) {
+  // Python casts; only an AtomPDBResidueInfo can have the type (U10), but the
+  // class is checked too.
+  const auto *pdb = dynamic_cast<const AtomPDBResidueInfo *>(info);
+  if (info->getMonomerType() != AtomMonomerInfo::PDBRESIDUE || !pdb) {
     throw ValueErrorException("MonomerInfo is not a PDB Residue");
   }
-  return std::make_unique<AtomPDBResidueInfo>(
-      static_cast<const AtomPDBResidueInfo &>(*info));
+  return std::make_unique<AtomPDBResidueInfo>(*pdb);
 }
 
 void atom_set_monomer_info(Atom &atom, const AtomMonomerInfo &info) {

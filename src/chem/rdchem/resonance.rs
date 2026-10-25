@@ -115,7 +115,9 @@ impl ResonanceMolSupplier {
     }
 
     /// A supplier for a copy of `mol`, which it kekulizes; a molecule that
-    /// cannot be kekulized is `Error::Kekulize`. Mirrors
+    /// cannot be kekulized is `Error::Kekulize`. RDKit sums the formal
+    /// charges in `int`; a molecule whose charges could overflow it (only
+    /// possible with 2^24 or more atoms) is `Error::Value`. Mirrors
     /// `ResonanceMolSupplier(mol)`.
     pub fn new(mol: &Mol) -> Result<ResonanceMolSupplier> {
         ResonanceMolSupplier::new_with_params(mol, &ResonanceMolSupplierParams::default())

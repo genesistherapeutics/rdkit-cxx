@@ -496,3 +496,27 @@ fn molzip_lists_that_rdkit_crashes_on() {
     ]);
     assert!(matches!(molzip_row(&mut row), Err(Error::Value { .. })));
 }
+
+#[test]
+fn molzip_coordinates_refuse_what_the_depictor_would_mishandle() {
+    // The zipped molecule keeps a square-planar atom without neighbors,
+    // whose first neighbor RDKit's depictor reads unchecked; Python
+    // segfaults generating its coordinates.
+    let mut planar = smiles("[Pt].C[*:1]");
+    planar
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiSquareplanar);
+    let mut mols = vec![planar, smiles("[*:1]O")];
+    let coords = MolzipParams {
+        generate_coordinates: true,
+        ..Default::default()
+    };
+    assert!(matches!(
+        molzip_fragments_with_params(&mut mols, &coords),
+        Err(Error::Value { message }) if message.contains("square-planar")
+    ));
+    assert!(mols.iter().all(|mol| mol.get_num_conformers() == 0));
+    let zipped = molzip_fragments(&mut mols).unwrap().unwrap();
+    assert_eq!(mol_to_smiles(&zipped).unwrap(), "CO.[Pt@SP]");
+}
