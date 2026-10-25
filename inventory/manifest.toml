@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -4118,6 +4118,38 @@ python = "rdkit.Chem.rdmolfiles.CDXMLFormat.CDXML"
 rust = ["rdkit_cxx::chem::rdmolfiles::CDXMLFormat::Cdxml"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.__init__"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.__setattr__"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.format"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.parseQueries"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.removeHs"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.sanitize"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.strictQueryParsing"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.CXSmilesFields"
 rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields"]
 
@@ -4669,6 +4701,14 @@ rust_kind = "field"
 python = "rdkit.Chem.rdmolfiles.MolWriterParams.precision"
 rust = ["rdkit_cxx::chem::rdmolfiles::MolWriterParams::precision"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromCDXML"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromCDXMLFile"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolsFromPNGFile"

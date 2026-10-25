@@ -378,8 +378,11 @@ rule changes the rule first.
   regenerates `tests/manifest_paths.rs`
   (`python3 inventory/check.py --write-paths tests/manifest_paths.rs`).
 - **I2.** `reason` marks a name with no Rust counterpart by design (Python
-  protocol methods, pickling hooks, APIs RDKit has deprecated). A name that is
-  not bound yet has no entry. `overloads_note` explains overloads a binding
+  protocol methods, pickling hooks, APIs RDKit has deprecated), or one left
+  unbound because no check could keep its RDKit code from undefined
+  behavior (U1): the reason, which starts "not bound:", names what RDKit
+  trusts (`MaeMolSupplier`, the ChemDraw readers). A name that is not bound
+  yet has no entry. `overloads_note` explains overloads a binding
   covers with fewer Rust paths, or does not bind yet.
 - **I3.** A module joins `complete` once every inventory entry in it is
   mapped; CI then holds it there.
