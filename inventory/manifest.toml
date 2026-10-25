@@ -10,6 +10,195 @@
 complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CanonicalTautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::canonical_tautomer", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::canonical_tautomer_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Cleanup"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.__setattr__"
+reason = "nanobind's guard against setting attributes the class lacks; a Rust struct's fields are fixed"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.acidbaseFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::acidbase_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.doCanonical"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::do_canonical"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.fragmentFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::fragment_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.largestFragmentChooserCountHeavyAtomsOnly"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::largest_fragment_chooser_count_heavy_atoms_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.largestFragmentChooserUseAtomCount"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::largest_fragment_chooser_use_atom_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.maxRestarts"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::max_restarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.maxTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::max_tautomers"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.maxTransforms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::max_transforms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.normalizationsFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::normalizations_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.preferOrganic"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::prefer_organic"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerReassignStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_reassign_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerRemoveBondStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_remove_bond_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerRemoveIsotopicHs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_remove_isotopic_hs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerRemoveSp3Stereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_remove_sp3_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerTransformsFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_transforms_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ReionizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RemoveFragments"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RemoveFragmentsInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StandardizeSmiles"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::standardize_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.UpdateParamsFromJSON"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::update_params_from_json"]
+
+[[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
 rust = ["rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels", "rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels_with_params"]
 

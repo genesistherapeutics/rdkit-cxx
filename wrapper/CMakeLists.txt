@@ -73,6 +73,7 @@ set(RDKIT_CXX_SOURCES
   src/descriptors_3d.cpp
   src/dclv.cpp
   src/properties.cpp
+  src/standardize.cpp
   src/file_checks.cpp
   src/streams.cpp
   src/png.cpp
@@ -104,6 +105,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ChemReactions
   Deprotect
   Descriptors
+  MolStandardize
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
