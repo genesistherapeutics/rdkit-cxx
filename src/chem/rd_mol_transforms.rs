@@ -20,7 +20,7 @@ use crate::ffi::mol_transforms::ffi;
 use crate::geometry::Point3D;
 
 /// A 4 x 4 transform's 16 values, row-major.
-fn transform_values(trans: &[Vec<f64>]) -> Result<Vec<f64>> {
+pub(crate) fn transform_values(trans: &[Vec<f64>]) -> Result<Vec<f64>> {
     if trans.len() != 4 || trans.iter().any(|row| row.len() != 4) {
         return Err(Error::Value {
             message: "the transform must be a 4 x 4 matrix".to_owned(),

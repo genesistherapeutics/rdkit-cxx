@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -2000,6 +2000,34 @@ rust = ["rdkit_cxx::chem::rd_sln_parse::mol_from_sln", "rdkit_cxx::chem::rd_sln_
 python = "rdkit.Chem.rdSLNParse.SLNParseException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Parse"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ComputeConfBox"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::compute_conf_box", "rdkit_cxx::chem::rd_shape_helpers::compute_conf_box_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ComputeConfDimsAndOffset"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::compute_conf_dims_and_offset", "rdkit_cxx::chem::rd_shape_helpers::compute_conf_dims_and_offset_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ComputeUnionBox"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::compute_union_box"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.EncodeShape"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::encode_shape", "rdkit_cxx::chem::rd_shape_helpers::encode_shape_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ShapeProtrudeDist"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_protrude_dist", "rdkit_cxx::chem::rd_shape_helpers::shape_protrude_dist_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ShapeTanimotoDist"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tanimoto_dist", "rdkit_cxx::chem::rd_shape_helpers::shape_tanimoto_dist_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ShapeTverskyIndex"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index", "rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"

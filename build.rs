@@ -67,6 +67,7 @@ const BRIDGES: &[&str] = &[
     "mol_transforms",
     "alignment",
     "determine_bonds",
+    "shape_helpers",
 ];
 
 fn main() {
