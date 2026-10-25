@@ -81,7 +81,7 @@ set(RDKIT_CXX_SOURCES
   src/threads.cpp
   src/force_field.cpp
   src/force_field_helpers.cpp
-  src/global_state.cpp
+  src/control_c_lock.cpp
   src/embedder.cpp
   src/distance_geometry.cpp
   src/mol_transforms.cpp

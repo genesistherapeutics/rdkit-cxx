@@ -10,8 +10,8 @@
 #include <GraphMol/CIPLabeler/CIPLabeler.h>
 #include <boost/dynamic_bitset.hpp>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
-#include "rdkit-cxx/global_state.h"
 
 namespace rdkit_cxx {
 
