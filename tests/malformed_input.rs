@@ -7,6 +7,7 @@
 //! sizes past what its `int` arithmetic holds. Each must fail cleanly.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_coord_gen::add_coords;
 use rdkit_cxx::chem::rd_mol_descriptors::calc_mol_formula;
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
 use rdkit_cxx::chem::{Atom, RWMol, ResonanceMolSupplier, get_formal_charge, mol_to_cml_block};
@@ -269,6 +270,8 @@ fn formal_charge_sums() {
     }
     assert!(is_value(ResonanceMolSupplier::new(&mol).map(|_| ())));
     assert!(is_value(mol_to_cml_block(&mol)));
+    // CoordGen sums each fragment's charges in int.
+    assert!(is_value(add_coords(&mut mol)));
     mol.add_atom(&atom);
     assert!(is_value(get_formal_charge(&mol)));
 }

@@ -371,7 +371,10 @@ pub fn mol_from_mol_file_with_params(
     )?))
 }
 
-/// A mol block for a molecule. Mirrors `rdmolfiles.MolToMolBlock`.
+/// A mol block for a molecule. Mirrors `rdmolfiles.MolToMolBlock`. With
+/// stereochemistry and no conformer, RDKit first computes 2D coordinates,
+/// and this returns `Error::Value` for a molecule the depictor would
+/// mishandle (see `chem::rd_depictor`).
 pub fn mol_to_mol_block(mol: &Mol) -> Result<String> {
     mol_to_mol_block_with_params(mol, &MolWriterParams::default())
 }
