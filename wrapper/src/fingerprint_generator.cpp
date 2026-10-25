@@ -16,7 +16,6 @@
 #include <utility>
 #include <vector>
 
-#include <GraphMol/Chirality.h>
 #include <GraphMol/Fingerprints/AtomPairGenerator.h>
 #include <GraphMol/Fingerprints/FingerprintUtil.h>
 #include <GraphMol/Fingerprints/MorganGenerator.h>
@@ -167,18 +166,6 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
   if (uses_3d_distances(gen)) {
     check_3d_distances(mol, conf_id);
   }
-}
-
-// With the new stereo perception on, the Morgan and atom-pair invariants run
-// the CIP labeler for chirality (MorganGenerator.cpp, getAtomPairCode in
-// FingerprintUtil.cpp), which constructs a ControlCHandler, so the call
-// holds control_c_mutex then. The legacy perception, RDKit's default, never
-// labels, and takes no lock.
-std::unique_lock<std::mutex> lock_control_c_for_cip() {
-  if (RDKit::Chirality::getUseLegacyStereoPerception()) {
-    return {};
-  }
-  return std::unique_lock<std::mutex>(control_c_mutex());
 }
 
 // Python's AdditionalOutput, rebuilt for each call.
