@@ -10,6 +10,7 @@
 #pragma once
 
 #include <cstdint>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -52,6 +53,15 @@ rust::Vec<T> to_vec(const std::vector<T> &v) {
     result.push_back(x);
   }
   return result;
+}
+
+// RDKit's random number generator (getRandomGenerator in RDGeneral/utils.cpp)
+// is one global that randomized SMILES, depiction, and embedding advance
+// without a lock. Every wrapper that can reach it holds this mutex
+// (CONVENTIONS.md U4).
+inline std::mutex &random_generator_mutex() {
+  static std::mutex mutex;
+  return mutex;
 }
 
 }  // namespace rdkit_cxx

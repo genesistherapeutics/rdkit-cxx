@@ -127,7 +127,10 @@ rule changes the rule first.
   itself is safe, on the object right after. FPB files are read by the
   wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
   never reads a file that changed after the check. Parsers RDKit fuzzes
-  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted.
+  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
+  for the limits U12 checks. Text a wrapper checks before RDKit parses it is
+  read once: a file is read through a checked stream (U12) or into memory, so
+  RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -145,7 +148,10 @@ rule changes the rule first.
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
   mol-block writers for a molecule without a conformer, and `molzip` with
-  `generateCoordinates`.
+  `generateCoordinates`. RDKit's random-number generator
+  (`getRandomGenerator` in `RDGeneral/utils.cpp`) is another: randomized
+  SMILES draw from it, so every wrapper that can reach it holds
+  `random_generator_mutex()` (`rdkit-cxx/util.h`).
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
@@ -212,6 +218,24 @@ rule changes the rule first.
   may then trust the type; wrapper code that casts uses `dynamic_cast` all
   the same. RDKit code that casts whatever the type (`DCLV.cpp`) still needs
   its own check.
+- **U11.** RDKit keeps the SMILES and SMARTS parsers' debug levels in globals
+  (`yysmiles_debug`, `yysmarts_debug`) that every parse reads. A parse writes
+  them only when its `debugParse` differs, so the wrappers refuse a nonzero
+  `debugParse` with `Error::Value`, and no parse writes them. RDKit's own
+  `AtomFromSmiles`, `BondFromSmiles`, `AtomFromSmarts`, and `BondFromSmarts`
+  (and `RDKitSVGToMol`, which calls them) write them on every call, racing
+  with parses the wrapper cannot see, so their Rust functions are `unsafe fn`
+  whose contract is that no other thread parses SMILES or SMARTS meanwhile.
+- **U12.** Text RDKit reads with its line-oriented readers (mol blocks, SD,
+  SMILES, and TDT files) is checked as RDKit reads it, by the streams of
+  `rdkit-cxx/streams.h` (or `check_input_text` for text in memory): RDKit
+  counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
+  matches V3000 enhanced-stereo lines with `std::regex`, which recurses once
+  per character (about 300 bytes of stack each), so such lines are refused
+  past 4000 characters. A checked stream stops delivering bytes before the
+  first one past a limit, and the wrapper throws `ValueErrorException` once
+  RDKit returns. Python file objects are bound as `Read` and `Write` values,
+  read and written through the same streams.
 
 ## Properties
 

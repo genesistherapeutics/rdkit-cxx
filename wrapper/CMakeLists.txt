@@ -73,6 +73,8 @@ set(RDKIT_CXX_SOURCES
   src/descriptors_3d.cpp
   src/dclv.cpp
   src/properties.cpp
+  src/file_checks.cpp
+  src/streams.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -81,6 +83,8 @@ set(RDKIT_CXX_RDKIT_TARGETS
   GraphMol
   SmilesParse
   FileParsers
+  MarvinParser
+  Depictor
   SubstructMatch
   DataStructs
   RDGeometryLib

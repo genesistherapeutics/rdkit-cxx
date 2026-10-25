@@ -5,6 +5,10 @@
 
 //! Mirrors `rdkit.Chem.rdmolfiles`.
 
+mod formats;
+mod mol_blocks;
+mod smiles;
+
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -14,11 +18,17 @@ use crate::error::{expect_ok, to_string};
 use crate::ffi::molfiles::ffi;
 use crate::util::path_bytes;
 
+pub use formats::*;
+pub use mol_blocks::*;
+pub use smiles::*;
+
 /// Parameters for SMILES parsing. Mirrors `rdmolfiles.SmilesParserParams`,
 /// plus `MolFromSmiles`'s `replacements` keyword (CONVENTIONS.md A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SmilesParserParams {
-    /// The amount of parser debugging output.
+    /// The amount of parser debugging output. It must be 0, or parsing is
+    /// `Error::Value`: RDKit keeps it in a global that every SMILES parse
+    /// reads without a lock.
     pub debug_parse: i32,
     /// Parses the molecule's name after the SMILES.
     pub parse_name: bool,
@@ -51,7 +61,7 @@ impl Default for SmilesParserParams {
 }
 
 impl SmilesParserParams {
-    fn to_ffi(&self) -> ffi::SmilesParserParamsData {
+    pub(crate) fn to_ffi(&self) -> ffi::SmilesParserParamsData {
         ffi::SmilesParserParamsData {
             debug_parse: self.debug_parse,
             parse_name: self.parse_name,
@@ -69,7 +79,9 @@ impl SmilesParserParams {
 /// plus `MolFromSmarts`'s `replacements` keyword (A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SmartsParserParams {
-    /// The amount of parser debugging output.
+    /// The amount of parser debugging output. It must be 0, or parsing is
+    /// `Error::Value`: RDKit keeps it in a global that every SMARTS parse
+    /// reads without a lock.
     pub debug_parse: i32,
     /// Parses the molecule's name after the SMARTS.
     pub parse_name: bool,
@@ -182,7 +194,9 @@ pub struct MolWriterParams {
     pub kekulize: bool,
     /// Writes V3000 even when V2000 would do.
     pub force_v3000: bool,
-    /// Coordinate precision (V3000 only).
+    /// Coordinate precision (V3000 only), at most 1000 digits; more is
+    /// `Error::Value`, since the C++ standard library formats each coordinate
+    /// in a stack buffer as long as its output.
     pub precision: u32,
     /// The conformer to write, or -1 for the default.
     pub conf_id: i32,
@@ -202,7 +216,7 @@ impl Default for MolWriterParams {
 }
 
 impl MolWriterParams {
-    fn to_ffi(&self) -> ffi::MolWriterParamsData {
+    pub(crate) fn to_ffi(&self) -> ffi::MolWriterParamsData {
         ffi::MolWriterParamsData {
             include_stereo: self.include_stereo,
             kekulize: self.kekulize,
