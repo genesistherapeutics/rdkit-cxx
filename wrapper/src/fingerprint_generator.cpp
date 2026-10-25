@@ -9,12 +9,14 @@
 #include <climits>
 #include <cmath>
 #include <exception>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <thread>
 #include <utility>
 #include <vector>
 
+#include <GraphMol/Chirality.h>
 #include <GraphMol/Fingerprints/AtomPairGenerator.h>
 #include <GraphMol/Fingerprints/FingerprintUtil.h>
 #include <GraphMol/Fingerprints/MorganGenerator.h>
@@ -30,6 +32,7 @@
 #include "rdkit-cxx/ffi/fingerprint_generator.rs.h"
 #include "rdkit-cxx/ffi/fingerprints.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
+#include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
@@ -166,6 +169,18 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
   }
 }
 
+// With the new stereo perception on, the Morgan and atom-pair invariants run
+// the CIP labeler for chirality (MorganGenerator.cpp, getAtomPairCode in
+// FingerprintUtil.cpp), which constructs a ControlCHandler, so the call
+// holds control_c_mutex then. The legacy perception, RDKit's default, never
+// labels, and takes no lock.
+std::unique_lock<std::mutex> lock_control_c_for_cip() {
+  if (RDKit::Chirality::getUseLegacyStereoPerception()) {
+    return {};
+  }
+  return std::unique_lock<std::mutex>(control_c_mutex());
+}
+
 // Python's AdditionalOutput, rebuilt for each call.
 class Outputs {
  public:
@@ -262,6 +277,7 @@ auto with_args(const FpGenerator &gen, const RWMol &mol,
       from_atoms.get(), ignore_atoms.get(), data.conf_id, ao.get(),
       atom_invariants.get(), bond_invariants.get());
   MatrixCacheGuard guard(mol);
+  auto control_c = lock_control_c_for_cip();
   auto result = call(args);
   ao.copy_to(outputs);
   return result;
@@ -303,7 +319,9 @@ bool is_bits(FingerprintOutput output) {
 // threads without catching: an exception in one (an invalid conformer, a
 // count-bounds check) would call std::terminate. Here each thread keeps its
 // first exception, and the call rethrows it. Each molecule is read by one
-// thread only, as RDKit's own split does.
+// thread only, as RDKit's own split does. RDKit's threads would each
+// construct a ControlCHandler when they run the CIP labeler, so a call that
+// may run it (lock_control_c_for_cip) runs on this thread alone.
 std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
                                           BorrowedMols &mols,
                                           FingerprintOutput output,
@@ -327,7 +345,9 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
       result->int_vects[i] = counts(gen, *list[i], output, args);
     }
   };
-  unsigned n = RDKit::getNumThreadsToUse(num_threads);
+  auto control_c = lock_control_c_for_cip();
+  unsigned n =
+      control_c.owns_lock() ? 1 : RDKit::getNumThreadsToUse(num_threads);
   if (n <= 1 || list.size() <= 1) {
     for (std::size_t i = 0; i < list.size(); ++i) {
       work(i);

@@ -17,7 +17,8 @@ namespace rdkit_cxx {
 // RDKit::ControlCHandler (RDGeneral/ControlCHandler.h) swaps the SIGINT
 // handler and keeps the previous one, and its flag, in plain static
 // variables, so two calls that construct one at once race. The embedder,
-// DetermineBondOrders, and the CIP labeler construct one.
+// DetermineBondOrders, and the CIP labeler construct one, and so do the
+// fingerprint generators that run the CIP labeler for chirality.
 std::mutex &control_c_mutex();
 
 // RDKit's random generator (getRandomGenerator and getDoubleRandomSource in

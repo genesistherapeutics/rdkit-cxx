@@ -156,7 +156,11 @@ rule changes the rule first.
   with `doRandom`, `MolToRandomSmilesVect`, PNG metadata with random SMILES,
   and `compute2DCoords` with random flips (`nFlipsPerSample`; the writers'
   default depiction never draws). A wrapper that needs both locks takes
-  `lock_depiction()` first.
+  `lock_depiction()` first. RDKit's Ctrl-C handler (`ControlCHandler`,
+  which swaps the SIGINT handler through static variables) has its own lock,
+  `control_c_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call
+  by every wrapper whose RDKit call constructs one; a wrapper that also
+  needs `random_mutex()` takes `control_c_mutex()` first.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

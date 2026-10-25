@@ -5,10 +5,13 @@
 
 #include "rdkit-cxx/cip_labeler.h"
 
+#include <mutex>
+
 #include <GraphMol/CIPLabeler/CIPLabeler.h>
 #include <boost/dynamic_bitset.hpp>
 
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/global_state.h"
 
 namespace rdkit_cxx {
 
@@ -39,6 +42,8 @@ void assign_cip_labels(RWMol &mol, bool has_atoms,
     atom_set.set();
     bond_set.set();
   }
+  // assignCIPLabels constructs a ControlCHandler (CIPLabeler.cpp).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   RDKit::CIPLabeler::assignCIPLabels(mol, atom_set, bond_set,
                                      max_recursive_iterations);
 }
