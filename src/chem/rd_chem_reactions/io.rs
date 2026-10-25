@@ -347,8 +347,10 @@ pub fn reaction_from_rxn_file_with_params(
 }
 
 /// Parses a Marvin (MRV) reaction. Python returns `None` for any failure;
-/// this returns RDKit's error (`Error::Parse` for a malformed block).
-/// Mirrors `rdChemReactions.ReactionFromMrvBlock`.
+/// this returns RDKit's error: `Error::Parse` for Marvin data that is not a
+/// reaction RDKit can read (and for a bond without two atoms, which RDKit
+/// reads past), `Error::Runtime` for malformed XML. Mirrors
+/// `rdChemReactions.ReactionFromMrvBlock`.
 pub fn reaction_from_mrv_block(rxnblock: &str) -> Result<ChemicalReaction> {
     reaction_from_mrv_block_with_params(rxnblock, &ReactionFromMrvBlockParams::default())
 }

@@ -482,6 +482,41 @@ fn marvin() {
 }
 
 #[test]
+fn marvin_bonds_need_two_atoms() {
+    // RDKit's Marvin parser copies a bond's two atom refs before it checks
+    // that there are two: Python segfaults on these.
+    let rxn = reaction_from_rxn_block(&reaction_to_rxn_block(&amide()).unwrap()).unwrap();
+    let mrv = reaction_to_mrv_block(&rxn).unwrap();
+    let start = mrv.find("atomRefs2=\"").unwrap() + "atomRefs2=\"".len();
+    let end = start + mrv[start..].find('"').unwrap();
+    let first = mrv[start..end].split(' ').next().unwrap().to_owned();
+    for refs in [first.as_str(), ""] {
+        let crafted = format!("{}{refs}{}", &mrv[..start], &mrv[end..]);
+        let err = reaction_from_mrv_block(&crafted).unwrap_err();
+        assert!(
+            matches!(&err, Error::Parse { message } if message.contains("atomRefs2")),
+            "{err:?}"
+        );
+        let path = common::temp_path("one-ref.mrv");
+        std::fs::write(&path, &crafted).unwrap();
+        assert!(matches!(
+            reaction_from_mrv_file(&path),
+            Err(Error::Parse { .. })
+        ));
+        std::fs::remove_file(&path).unwrap();
+    }
+    let missing = mrv.replacen("atomRefs2=", "atomRefs3=", 1);
+    assert!(matches!(
+        reaction_from_mrv_block(&missing),
+        Err(Error::Parse { .. })
+    ));
+    assert!(matches!(
+        reaction_from_mrv_block("<cml"),
+        Err(Error::Runtime { .. })
+    ));
+}
+
+#[test]
 fn cdxml() {
     let rxns = reactions_from_cdxml_file(data("rxn1.cdxml")).unwrap();
     assert_eq!(rxns.len(), 1);
