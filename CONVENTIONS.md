@@ -252,7 +252,9 @@ rule changes the rule first.
   residue info, and molecule and bundle pickles (and the reaction pickles
   and `EnumerateLibrary` archives that hold them) whose atoms have such an
   info, or a type `AtomMonomerType` lacks, are refused right after RDKit
-  reads them (`check_monomer_types` in `rdkit-cxx/mol_checks.h`). RDKit code
+  reads them (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also
+  checks the molecules of recursive queries, as MolPickler pickles them
+  whole, and walks the queries with its own stack). RDKit code
   may then trust the type; wrapper code that casts uses `dynamic_cast` all
   the same. RDKit code that casts whatever the type (`DCLV.cpp`) still needs
   its own check.
