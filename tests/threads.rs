@@ -8,6 +8,17 @@
 //! guards, and at least one that only reads it. CI also runs this binary
 //! under Valgrind's DRD, which sees RDKit's accesses to its globals even in
 //! conda's uninstrumented build, and fails on any the locks leave unordered.
+//!
+//! DRD reports two accesses only when no chain of locks orders them, and
+//! Valgrind runs one thread at a time: a thread that took a lock after an
+//! unlocked access, and another that took the same lock before its own,
+//! would hide the race. So the test runs in phases. Each starts four
+//! threads at once that make one kind of call each: the wrapper under test
+//! on two, and on the other two a plain wrapper that holds the same lock
+//! (the random SMILES writer, a substructure match, a settings reader or
+//! writer), whose accesses a missing lock leaves unordered with the first's.
+//! The inputs are built on the main thread before the threads start.
+//!
 //! It is a plain `main` (`harness = false` in Cargo.toml), so libtest's
 //! threads add nothing to DRD's report. To run the check as CI does, with
 //! Valgrind installed:
@@ -20,41 +31,69 @@
 //! ```
 
 use std::collections::BTreeSet;
-use std::path::Path;
+use std::path::PathBuf;
 use std::thread;
 
-use rdkit_cxx::chem::rd_coord_gen::{add_coords, set_default_template_file_dir};
+use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::{
+    FragmentRemover, MetalDisconnector, MolVSValidation, Normalizer, Pipeline, TautomerEnumerator,
+    Uncharger, cleanup_in_place_mols,
+};
+use rdkit_cxx::chem::rd_chem_reactions::{
+    ChemicalReaction, Compute2DCoordsForReactionParams, EnumerateLibrary,
+    compute_2d_coords_for_reaction_with_params, reaction_from_smarts, reaction_to_rxn_block,
+    reaction_to_smiles_with_params,
+};
+use rdkit_cxx::chem::rd_coord_gen::{
+    CoordGenParams, add_coords, add_coords_with_params, set_default_template_file_dir,
+};
 use rdkit_cxx::chem::rd_depictor::{
-    Compute2DCoordsParams, add_ring_system_templates, compute_2d_coords_mimic_distmat,
-    compute_2d_coords_with_params, generate_depiction_matching_3d_structure,
+    Compute2DCoordsParams, add_ring_system_templates, compute_2d_coords,
+    compute_2d_coords_mimic_distmat, compute_2d_coords_with_params,
+    generate_depiction_matching_2d_structure, generate_depiction_matching_3d_structure,
     is_coord_gen_support_available, load_default_ring_system_templates, set_prefer_coord_gen,
     set_ring_system_templates,
 };
-use rdkit_cxx::chem::rd_determine_bonds::{
-    determine_bond_orders, determine_bonds, determine_connectivity,
-};
+use rdkit_cxx::chem::rd_deprotect::deprotect;
+use rdkit_cxx::chem::rd_determine_bonds::determine_bonds;
 use rdkit_cxx::chem::rd_dist_geom::{
     EmbedParameters, GetMoleculeBoundsMatrixParams, embed_molecule,
-    embed_multiple_confs_with_params, get_molecule_bounds_matrix_with_params,
+    embed_multiple_confs_with_params, get_experimental_torsions,
+    get_molecule_bounds_matrix_with_params,
 };
+use rdkit_cxx::chem::rd_fingerprint_generator::{
+    FingerprintGenerator64, GetMorganGeneratorParams, get_morgan_feature_atom_inv_gen,
+    get_morgan_generator_with_params,
+};
+use rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule;
+use rdkit_cxx::chem::rd_mmpa::fragment_mol;
 use rdkit_cxx::chem::rd_mol_align::{
-    RandomTransformParams, get_best_rms, random_transform, random_transform_with_params,
+    RandomTransformParams, align_mol, get_best_rms, random_transform, random_transform_with_params,
 };
 use rdkit_cxx::chem::rd_mol_descriptors::{
-    DoubleCubicLatticeVolume, Properties, PythonPropertyFunctor,
+    DoubleCubicLatticeVolume, Properties, PythonPropertyFunctor, calc_crippen_descriptors,
+    get_maccs_keys_fingerprint, get_usrcat,
 };
+use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
+use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
 use rdkit_cxx::chem::{
-    Conformer, Mol, MolFragmentToSmilesParams, MolToCXSmilesParams, MolToRandomSmilesVectParams,
-    MolzipParams, PNGMetadataParams, SmilesWriteParams, assign_cip_labels, fragment_on_brics_bonds,
-    mol_fragment_to_cx_smiles_with_params, mol_fragment_to_smiles_with_params, mol_from_smiles,
-    mol_from_xyz_block, mol_metadata_to_png_string_with_params, mol_to_cx_smiles_with_params,
-    mol_to_mol_block, mol_to_random_smiles_vect_with_params, mol_to_smiles,
-    mol_to_smiles_with_params, molzip_fragments_with_params,
+    Conformer, Mol, MolFragmentToSmilesParams, MolFromSCSRParams, MolToCXSmilesParams,
+    MolToRandomSmilesVectParams, MolzipParams, PNGMetadataParams, ResonanceMolSupplier,
+    SCSRBaseHbondOptions, SDWriter, SmilesWriteParams, assign_cip_labels, delete_substructs,
+    fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
+    mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
+    mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
+    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
+    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
 };
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
 };
+
+const ASPIRIN: &str = "CC(=O)Oc1ccccc1C(=O)O";
+
+/// Propionic acid and ammonia to propanamide.
+const AMIDE: &str = "[CH3:4][CH2:5][C:1](=[O:2])O.[N:3]>>[CH3:4][CH2:5][C:1](=[O:2])[N:3]";
 
 /// A 1x1 grayscale PNG for the metadata writer.
 const PNG: &[u8] = &[
@@ -77,167 +116,170 @@ H 0.5980 -1.4177 -0.1686
 H 1.8339 1.0320 0.4595
 ";
 
+/// An RNA dimer whose base templates SCSR's Auto option matches to find
+/// their hydrogen-bond sites.
+const RIBOSE_SCSR: &str = include_str!("data/RiboseFullname.mol");
+
 fn main() {
     // RDKit fills some static data on first use (the periodic table, the
-    // SMILES parser's tables), ordered by C++'s thread-safe initialization,
-    // whose fast path DRD cannot see. Filling it before any thread starts
-    // keeps those reads out of the report. Globals that only the locks order
-    // (the BRICS patterns) are left for the threads to fill.
-    mol_to_smiles(&mol_from_smiles("CC(=O)Oc1ccccc1C(=O)O").unwrap()).unwrap();
-    let mut grid = UniformGrid3D::new(10.0, 10.0, 10.0).unwrap();
-    grid.set_sphere_occupancy(&Point3D::default(), 1.5, 0.25)
-        .unwrap();
-    let templates = std::env::temp_dir().join(format!(
-        "rdkit-cxx-threads-{}-templates.cxsmi",
-        std::process::id()
-    ));
+    // SMILES parser's and writer's tables), ordered by C++'s thread-safe
+    // initialization, whose fast path DRD cannot see. Filling it before any
+    // thread starts keeps those reads out of the report. Globals that only
+    // the locks order (the BRICS patterns) are left for the threads to fill.
+    mol_to_smiles(&mol(ASPIRIN)).unwrap();
     std::fs::write(
-        &templates,
+        templates(),
         "C1CC2CCC1C2 |(1.55254,0.75,;1.55254,-0.75,;0.125954,-1.21353,;-1.30063,-0.75,;\
          -1.30063,0.75,;0.125954,1.21353,;-0.755724,0,)|\n",
     )
     .unwrap();
-    thread::scope(|s| {
-        let handles = [0, 1, 2, 3].map(|i| {
-            let grid = &grid;
-            let templates = &templates;
-            s.spawn(move || {
-                random_smiles();
-                brics();
-                grid_centroids(grid, 1.0 + 0.5 * f64::from(i));
-                depiction();
-                depiction_settings(i, templates);
-                descriptors(i);
-                three_d();
-            })
-        });
-        // Joining each thread, rather than leaving it to the scope, orders its
-        // accesses before the destructors that run at exit, for DRD.
-        for handle in handles {
-            handle.join().unwrap();
-        }
-    });
-    std::fs::remove_file(&templates).unwrap();
+
+    // RDKit's random number generator: each module's writers against the
+    // SMILES writer.
+    phase(varied_random_smiles(), varied_random_smiles());
+    phase(random_cx_smiles(), random_smiles());
+    phase(random_fragment_smiles(), random_smiles());
+    phase(seeded_random_smiles(), random_smiles());
+    phase(random_png_metadata(), random_smiles());
+    phase(flipped_coords(), random_smiles());
+    phase(mimicked_distances(), random_smiles());
+    phase(matched_3d_depiction(), random_smiles());
+    phase(random_reaction_smiles(), random_smiles());
+    phase(flipped_reaction_coords(), random_smiles());
+    phase(unseeded_embedding(), random_smiles());
+    phase(bounds_matrix_embedding(), random_smiles());
+    phase(random_transforms(), random_smiles());
+
+    // 2D depiction's settings: each writer against a reader, from every
+    // module that reads them.
+    phase(prefer_coord_gen(), mol_block());
+    phase(ring_system_templates(), ring_template_coords());
+    phase(added_ring_system_templates(), zipped_coords());
+    phase(coord_gen_template_dir(), coord_gen_coords());
+    phase(bond_length_coords(), sd_text());
+    phase(default_ring_system_templates(), ring_template_coords());
+    phase(prefer_coord_gen(), png_mol_block());
+    phase(prefer_coord_gen(), rxn_block());
+
+    // ControlCHandler's statics: a substructure match from each module
+    // against a plain one.
+    phase(has_substruct_match(), substruct_matches());
+    phase(resonance_matches(), substruct_matches());
+    phase(deleted_substructs(), substruct_matches());
+    phase(brics_fragments(), substruct_matches());
+    phase(best_rms(), substruct_matches());
+    phase(aligned(), substruct_matches());
+    phase(crippen(), substruct_matches());
+    phase(maccs_keys(), substruct_matches());
+    phase(computed_properties(), substruct_matches());
+    phase(reaction_products(), substruct_matches());
+    phase(enumerated_library(), substruct_matches());
+    phase(uff_optimized(), substruct_matches());
+    phase(deprotected(), substruct_matches());
+    phase(erg_fingerprint(), substruct_matches());
+    phase(pattern_fp(), substruct_matches());
+    phase(query_atoms(), substruct_matches());
+    phase(hashed(), substruct_matches());
+    phase(mmpa_fragments(), substruct_matches());
+    phase(usrcat(), substruct_matches());
+    phase(matched_2d_depiction(), substruct_matches());
+    phase(templated_coord_gen(), substruct_matches());
+    phase(seeded_embedding(), substruct_matches());
+    phase(experimental_torsions(), substruct_matches());
+    phase(feature_morgan_fp(), substruct_matches());
+    phase(scsr_hbonds(), substruct_matches());
+    phase(cip_labels(), substruct_matches());
+    phase(bonds_from_xyz(), substruct_matches());
+    phase(cleaned_up_mols(), substruct_matches());
+    phase(uncharged(), substruct_matches());
+    phase(fragments_removed(), substruct_matches());
+    phase(normalized(), substruct_matches());
+    phase(metals_disconnected(), substruct_matches());
+    phase(canonical_tautomer(), substruct_matches());
+    phase(validated(), substruct_matches());
+    phase(pipeline_run(), substruct_matches());
+
+    // The rest: the grid centroids' cache, the property registry, and
+    // DCLV's surface cache.
+    phase(grid_centroids(), grid_centroids());
+    phase(registered_property(), available_properties());
+    phase(dclv_surfaces(), dclv_surfaces());
+
+    std::fs::remove_file(templates()).unwrap();
 }
 
-// Every SMILES writer that draws from, or seeds, RDKit's global random
-// number generator.
-fn random_smiles() {
-    let random = SmilesWriteParams {
+/// One thread's call in a phase: `run` on the input `make` builds, on the
+/// main thread, for thread `i`.
+struct Call<T> {
+    make: fn(u32) -> T,
+    run: fn(T),
+}
+
+/// Runs `even` on threads 0 and 2 and `odd` on threads 1 and 3, at once.
+fn phase<A: Send + 'static, B: Send + 'static>(even: Call<A>, odd: Call<B>) {
+    let (a0, b1, a2, b3) = ((even.make)(0), (odd.make)(1), (even.make)(2), (odd.make)(3));
+    let handles = [
+        thread::spawn(move || (even.run)(a0)),
+        thread::spawn(move || (odd.run)(b1)),
+        thread::spawn(move || (even.run)(a2)),
+        thread::spawn(move || (odd.run)(b3)),
+    ];
+    // Joining each thread orders its accesses before the next phase's, and
+    // before the destructors that run at exit, for DRD.
+    for handle in handles {
+        handle.join().unwrap();
+    }
+}
+
+fn mol(smiles: &str) -> Mol {
+    mol_from_smiles(smiles).unwrap()
+}
+
+fn random() -> SmilesWriteParams {
+    SmilesWriteParams {
         do_random: true,
         ..Default::default()
-    };
-    let mol = mol_from_smiles("CC(=O)Oc1ccccc1C(=O)O").unwrap();
-    let canonical = mol_to_smiles(&mol).unwrap();
-    let mut written = BTreeSet::new();
-    for _ in 0..50 {
-        let smiles = mol_to_smiles_with_params(&mol, &random).unwrap();
-        let parsed = mol_from_smiles(&smiles).unwrap();
-        assert_eq!(mol_to_smiles(&parsed).unwrap(), canonical);
-        written.insert(smiles);
     }
-    assert!(written.len() > 1);
-    let cx = MolToCXSmilesParams {
-        params: random.clone(),
-        ..Default::default()
-    };
-    mol_to_cx_smiles_with_params(&mol, &cx).unwrap();
-    let fragment = MolFragmentToSmilesParams {
-        params: random.clone(),
-        ..Default::default()
-    };
-    mol_fragment_to_smiles_with_params(&mol, &[0, 1, 2], &fragment).unwrap();
-    mol_fragment_to_cx_smiles_with_params(&mol, &[0, 1, 2], &fragment).unwrap();
-    let seeded = MolToRandomSmilesVectParams {
-        random_seed: 7,
-        ..Default::default()
-    };
-    let smiles = mol_to_random_smiles_vect_with_params(&mol, 5, &seeded).unwrap();
-    assert_eq!(smiles.len(), 5);
-    let png = PNGMetadataParams {
-        smiles_write_params: random,
-        ..Default::default()
-    };
-    assert!(
-        mol_metadata_to_png_string_with_params(&mol, PNG, &png)
-            .unwrap()
-            .len()
-            > PNG.len()
-    );
 }
 
-// The first BRICS call fills RDKit's pattern globals.
-fn brics() {
-    let mol = mol_from_smiles("CCCOCCC(=O)c1ccccc1").unwrap();
-    assert_eq!(fragment_on_brics_bonds(&mol).unwrap().get_num_atoms(), 20);
+fn amide() -> ChemicalReaction {
+    reaction_from_smarts(AMIDE).unwrap()
 }
 
-// The centroid functions share a cache in RDKit; each thread's radius adds
-// its own entry.
-fn grid_centroids(grid: &UniformGrid3D, radius: f64) {
-    for _ in 0..5 {
-        find_grid_terminal_points(grid, radius, 0.5).unwrap();
-    }
-    let (weight_sum, _) = compute_grid_centroid(grid, &Point3D::default(), radius).unwrap();
-    assert!(weight_sum > 0.0);
+fn amide_reactants() -> Vec<Mol> {
+    vec![mol("CCC(=O)O"), mol("N")]
 }
 
-// A mol block for a molecule without a conformer, and molzip's
-// generate_coordinates, compute 2D coordinates, which read 2D depiction's
-// global settings.
-fn depiction() {
-    let chiral = mol_from_smiles("F[C@H](Cl)Br").unwrap();
-    assert!(mol_to_mol_block(&chiral).unwrap().contains("V2000"));
-    let coords = MolzipParams {
-        generate_coordinates: true,
+/// Ring-system templates for the depictor, written by `main`.
+fn templates() -> PathBuf {
+    std::env::temp_dir().join(format!(
+        "rdkit-cxx-threads-{}-templates.cxsmi",
+        std::process::id()
+    ))
+}
+
+/// A molecule with an embedded conformer.
+fn embedded(smiles: &str) -> Mol {
+    let mut mol = mol(smiles);
+    let mut seeded = EmbedParameters {
+        random_seed: 42,
         ..Default::default()
     };
-    let mut mols = vec![
-        mol_from_smiles("c1ccccc1[*:1]").unwrap(),
-        mol_from_smiles("O[*:1]").unwrap(),
-    ];
-    let zipped = molzip_fragments_with_params(&mut mols, &coords)
-        .unwrap()
-        .unwrap();
-    assert_eq!(zipped.get_num_conformers(), 1);
+    embed_multiple_confs_with_params(&mut mol, 1, &mut seeded).unwrap();
+    mol
 }
 
-// The calls that write 2D depiction's settings (the CoordGen preference, the
-// bond length, the ring-system and CoordGen templates), and the depictor's
-// sampling, which draws from RDKit's generator: random bond flips, and the
-// distance mimicking that matching a 3D structure runs.
-fn depiction_settings(i: u32, templates: &Path) {
-    set_prefer_coord_gen(i % 2 == 0);
-    set_ring_system_templates(templates).unwrap();
-    add_ring_system_templates(templates).unwrap();
-    load_default_ring_system_templates();
-    set_default_template_file_dir("").unwrap();
-    // Rotatable bonds, so the samples have bonds to flip.
-    let mut mol = mol_from_smiles("c1ccccc1CCC(=O)O").unwrap();
-    let sampled = Compute2DCoordsParams {
-        n_flips_per_sample: 2,
-        n_sample: 5,
-        bond_length: 1.2,
-        force_rdkit: true,
-        use_ring_templates: true,
-        ..Default::default()
-    };
-    compute_2d_coords_with_params(&mut mol, &sampled).unwrap();
-    let n = mol.get_num_atoms() as usize;
-    compute_2d_coords_mimic_distmat(&mut mol, &vec![1.5; n * (n - 1) / 2]).unwrap();
-    if is_coord_gen_support_available() {
-        add_coords(&mut mol).unwrap();
-    }
-    let mut propanol = mol_from_smiles("CCCO").unwrap();
-    generate_depiction_matching_3d_structure(&mut propanol, &propanol_3d()).unwrap();
-    assert_eq!(propanol.get_num_conformers(), 1);
-    set_prefer_coord_gen(false);
+/// A molecule with 2D coordinates.
+fn depicted(smiles: &str) -> Mol {
+    let mut mol = mol(smiles);
+    compute_2d_coords(&mut mol).unwrap();
+    mol
 }
 
 /// Propanol in 3D, from Python's EmbedMolecule(AddHs(CCCO), randomSeed=42)
 /// without the hydrogens.
 fn propanol_3d() -> Mol {
-    let mut mol = mol_from_smiles("CCCO").unwrap();
+    let mut mol = mol("CCCO");
     let mut conf = Conformer::new(4);
     let positions = [
         (-1.2784, -0.0795, -0.4157),
@@ -252,70 +294,750 @@ fn propanol_3d() -> Mol {
     mol
 }
 
-// Registering a property writes RDKit's global property registry, which
-// the other calls read; DCLV's surface tests share a global cache.
-fn descriptors(i: u32) {
-    let name = format!("rustThread{i}");
-    let functor = PythonPropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
-    Properties::register_property(&functor);
-    let mut mol = mol_from_smiles("CCO").unwrap();
-    let properties = Properties::new(&[name.as_str()]).unwrap();
-    assert_eq!(
-        properties.compute_properties(&mol).unwrap(),
-        vec![f64::from(i)]
-    );
-    assert!(Properties::get_available_properties().contains(&name));
-    let mut conf = Conformer::new(3);
-    for atom in 0..3 {
-        let x = 1.5 * f64::from(atom);
-        conf.set_atom_position(atom, Point3D::new(x, 0.3 * x, 0.0))
-            .unwrap();
+// RDKit's random number generator. Drawing from it, and seeding it, write
+// it.
+
+fn random_smiles() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            mol_to_smiles_with_params(&mol, &random()).unwrap();
+        },
     }
-    mol.add_conformer(&conf).unwrap();
-    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
-    assert!(dclv.get_surface_area() > 0.0);
-    assert!(dclv.get_polar_surface_area() > 0.0);
 }
 
-// The 3D modules. Embedding without a seed, bounds-matrix embedding, and
-// RandomTransform draw from RDKit's generator; the embedder's RMS pruning
-// and best-RMS alignment assign symmetrizeTerminalAtoms's static; and
-// embedding, CIP labeling, and DetermineBonds swap the SIGINT handler
-// through ControlCHandler's statics.
-fn three_d() {
-    let mut mol = mol_from_smiles("CCCO").unwrap();
-    let mut pruned = EmbedParameters {
-        prune_rms_thresh: 0.1,
-        ..Default::default()
-    };
-    assert!(
-        !embed_multiple_confs_with_params(&mut mol, 3, &mut pruned)
-            .unwrap()
-            .is_empty()
-    );
-    random_transform(&mut mol).unwrap();
-    let seeded = RandomTransformParams {
-        seed: 5,
-        ..Default::default()
-    };
-    random_transform_with_params(&mut mol, &seeded).unwrap();
-    let mut probe = mol_from_smiles("CCCO").unwrap();
-    assert_eq!(embed_molecule(&mut probe).unwrap(), 0);
-    assert!(get_best_rms(&mut probe, &mol).unwrap() >= 0.0);
-    let unsmoothed = GetMoleculeBoundsMatrixParams {
-        do_triangle_smoothing: false,
-        ..Default::default()
-    };
-    let bounds =
-        get_molecule_bounds_matrix_with_params(&mol_from_smiles("CCCC").unwrap(), &unsmoothed)
-            .unwrap();
-    assert_eq!(embed_bounds_matrix(&bounds).unwrap().len(), 4);
-    let mut chiral = mol_from_smiles("F[C@H](Cl)Br").unwrap();
-    assign_cip_labels(&mut chiral).unwrap();
-    let mut atoms = mol_from_xyz_block(ETHANOL_XYZ).unwrap();
-    determine_bonds(&mut atoms).unwrap();
-    assert_eq!(atoms.get_num_bonds(), 8);
-    let mut connected = mol_from_xyz_block(ETHANOL_XYZ).unwrap();
-    determine_connectivity(&mut connected).unwrap();
-    determine_bond_orders(&mut connected).unwrap();
+fn varied_random_smiles() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let canonical = mol_to_smiles(&mol).unwrap();
+            let mut written = BTreeSet::new();
+            for _ in 0..50 {
+                let smiles = mol_to_smiles_with_params(&mol, &random()).unwrap();
+                let parsed = mol_from_smiles(&smiles).unwrap();
+                assert_eq!(mol_to_smiles(&parsed).unwrap(), canonical);
+                written.insert(smiles);
+            }
+            assert!(written.len() > 1);
+        },
+    }
+}
+
+fn random_cx_smiles() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let cx = MolToCXSmilesParams {
+                params: random(),
+                ..Default::default()
+            };
+            mol_to_cx_smiles_with_params(&mol, &cx).unwrap();
+        },
+    }
+}
+
+fn random_fragment_smiles() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let fragment = MolFragmentToSmilesParams {
+                params: random(),
+                ..Default::default()
+            };
+            mol_fragment_to_smiles_with_params(&mol, &[0, 1, 2], &fragment).unwrap();
+            mol_fragment_to_cx_smiles_with_params(&mol, &[0, 1, 2], &fragment).unwrap();
+        },
+    }
+}
+
+fn seeded_random_smiles() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let seeded = MolToRandomSmilesVectParams {
+                random_seed: 7,
+                ..Default::default()
+            };
+            let smiles = mol_to_random_smiles_vect_with_params(&mol, 5, &seeded).unwrap();
+            assert_eq!(smiles.len(), 5);
+        },
+    }
+}
+
+fn random_png_metadata() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let png = PNGMetadataParams {
+                smiles_write_params: random(),
+                ..Default::default()
+            };
+            let written = mol_metadata_to_png_string_with_params(&mol, PNG, &png).unwrap();
+            assert!(written.len() > PNG.len());
+        },
+    }
+}
+
+// Random bond flips, with rotatable bonds to flip.
+fn flipped_coords() -> Call<Mol> {
+    Call {
+        make: |_| mol("c1ccccc1CCC(=O)O"),
+        run: |mut mol| {
+            let sampled = Compute2DCoordsParams {
+                n_flips_per_sample: 2,
+                n_sample: 5,
+                ..Default::default()
+            };
+            compute_2d_coords_with_params(&mut mol, &sampled).unwrap();
+        },
+    }
+}
+
+fn mimicked_distances() -> Call<Mol> {
+    Call {
+        make: |_| mol("c1ccccc1CCC(=O)O"),
+        run: |mut mol| {
+            let n = mol.get_num_atoms() as usize;
+            compute_2d_coords_mimic_distmat(&mut mol, &vec![1.5; n * (n - 1) / 2]).unwrap();
+        },
+    }
+}
+
+// Matching a 3D structure mimics its distances.
+fn matched_3d_depiction() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol("CCCO"), propanol_3d()),
+        run: |(mut mol, reference)| {
+            generate_depiction_matching_3d_structure(&mut mol, &reference).unwrap();
+            assert_eq!(mol.get_num_conformers(), 1);
+        },
+    }
+}
+
+fn random_reaction_smiles() -> Call<ChemicalReaction> {
+    Call {
+        make: |_| amide(),
+        run: |reaction| {
+            reaction_to_smiles_with_params(&reaction, &random()).unwrap();
+        },
+    }
+}
+
+fn flipped_reaction_coords() -> Call<ChemicalReaction> {
+    Call {
+        make: |_| amide(),
+        run: |mut reaction| {
+            let flips = Compute2DCoordsForReactionParams {
+                n_flips_per_sample: 2,
+                n_sample: 3,
+                ..Default::default()
+            };
+            compute_2d_coords_for_reaction_with_params(&mut reaction, &flips).unwrap();
+        },
+    }
+}
+
+fn unseeded_embedding() -> Call<Mol> {
+    Call {
+        make: |_| mol("CCCO"),
+        run: |mut mol| assert_eq!(embed_molecule(&mut mol).unwrap(), 0),
+    }
+}
+
+fn bounds_matrix_embedding() -> Call<Vec<Vec<f64>>> {
+    Call {
+        make: |_| {
+            let unsmoothed = GetMoleculeBoundsMatrixParams {
+                do_triangle_smoothing: false,
+                ..Default::default()
+            };
+            get_molecule_bounds_matrix_with_params(&mol("CCCC"), &unsmoothed).unwrap()
+        },
+        run: |bounds| assert_eq!(embed_bounds_matrix(&bounds).unwrap().len(), 4),
+    }
+}
+
+fn random_transforms() -> Call<Mol> {
+    Call {
+        make: |_| propanol_3d(),
+        run: |mut mol| {
+            random_transform(&mut mol).unwrap();
+            let seeded = RandomTransformParams {
+                seed: 5,
+                ..Default::default()
+            };
+            random_transform_with_params(&mut mol, &seeded).unwrap();
+        },
+    }
+}
+
+// 2D depiction's settings. Computing 2D coordinates reads them, as do the
+// writers that compute them for a molecule without a conformer.
+
+fn prefer_coord_gen() -> Call<()> {
+    Call {
+        make: |_| (),
+        run: |()| {
+            set_prefer_coord_gen(true);
+            set_prefer_coord_gen(false);
+        },
+    }
+}
+
+fn mol_block() -> Call<Mol> {
+    Call {
+        make: |_| mol("F[C@H](Cl)Br"),
+        run: |mol| assert!(mol_to_mol_block(&mol).unwrap().contains("V2000")),
+    }
+}
+
+fn ring_system_templates() -> Call<PathBuf> {
+    Call {
+        make: |_| templates(),
+        run: |path| set_ring_system_templates(&path).unwrap(),
+    }
+}
+
+// Norbornane, which the templates match.
+fn ring_template_coords() -> Call<Mol> {
+    Call {
+        make: |_| mol("C1CC2CCC1C2"),
+        run: |mut mol| {
+            let templated = Compute2DCoordsParams {
+                use_ring_templates: true,
+                ..Default::default()
+            };
+            compute_2d_coords_with_params(&mut mol, &templated).unwrap();
+        },
+    }
+}
+
+fn added_ring_system_templates() -> Call<PathBuf> {
+    Call {
+        make: |_| templates(),
+        run: |path| add_ring_system_templates(&path).unwrap(),
+    }
+}
+
+fn zipped_coords() -> Call<Vec<Mol>> {
+    Call {
+        make: |_| vec![mol("c1ccccc1[*:1]"), mol("O[*:1]")],
+        run: |mut mols| {
+            let coords = MolzipParams {
+                generate_coordinates: true,
+                ..Default::default()
+            };
+            let zipped = molzip_fragments_with_params(&mut mols, &coords)
+                .unwrap()
+                .unwrap();
+            assert_eq!(zipped.get_num_conformers(), 1);
+        },
+    }
+}
+
+fn coord_gen_template_dir() -> Call<()> {
+    Call {
+        make: |_| (),
+        run: |()| set_default_template_file_dir("").unwrap(),
+    }
+}
+
+fn coord_gen_coords() -> Call<Mol> {
+    Call {
+        make: |_| mol("c1ccccc1CCC(=O)O"),
+        run: |mut mol| {
+            if is_coord_gen_support_available() {
+                add_coords(&mut mol).unwrap();
+            }
+        },
+    }
+}
+
+fn bond_length_coords() -> Call<Mol> {
+    Call {
+        make: |_| mol("c1ccccc1CCC(=O)O"),
+        run: |mut mol| {
+            let longer = Compute2DCoordsParams {
+                bond_length: 1.2,
+                ..Default::default()
+            };
+            compute_2d_coords_with_params(&mut mol, &longer).unwrap();
+        },
+    }
+}
+
+fn sd_text() -> Call<Mol> {
+    Call {
+        make: |_| mol("F[C@H](Cl)Br"),
+        run: |mol| assert!(SDWriter::get_text(&mol).unwrap().contains("$$$$")),
+    }
+}
+
+fn default_ring_system_templates() -> Call<()> {
+    Call {
+        make: |_| (),
+        run: |()| load_default_ring_system_templates(),
+    }
+}
+
+fn png_mol_block() -> Call<Mol> {
+    Call {
+        make: |_| mol("F[C@H](Cl)Br"),
+        run: |mol| {
+            let with_mol = PNGMetadataParams {
+                include_mol: true,
+                ..Default::default()
+            };
+            mol_metadata_to_png_string_with_params(&mol, PNG, &with_mol).unwrap();
+        },
+    }
+}
+
+fn rxn_block() -> Call<ChemicalReaction> {
+    Call {
+        make: |_| amide(),
+        run: |reaction| {
+            assert!(
+                reaction_to_rxn_block(&reaction)
+                    .unwrap()
+                    .starts_with("$RXN")
+            )
+        },
+    }
+}
+
+// ControlCHandler's statics, which every substructure match writes.
+
+fn substruct_matches() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol(ASPIRIN), mol_from_smarts("C(=O)[OH]").unwrap()),
+        run: |(mol, query)| assert_eq!(mol.get_substruct_matches(&query).unwrap().len(), 1),
+    }
+}
+
+fn has_substruct_match() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol(ASPIRIN), mol_from_smarts("c1ccccc1").unwrap()),
+        run: |(mol, query)| assert!(mol.has_substruct_match(&query).unwrap()),
+    }
+}
+
+fn resonance_matches() -> Call<(ResonanceMolSupplier, Mol)> {
+    Call {
+        make: |_| {
+            let acetate = mol("CC(=O)[O-]");
+            (
+                ResonanceMolSupplier::new(&acetate).unwrap(),
+                mol_from_smarts("C=O").unwrap(),
+            )
+        },
+        run: |(mut suppl, query)| assert!(!suppl.get_substruct_matches(&query).unwrap().is_empty()),
+    }
+}
+
+fn deleted_substructs() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol(ASPIRIN), mol_from_smarts("C(=O)[OH]").unwrap()),
+        run: |(mol, query)| {
+            let deleted = delete_substructs(&mol, &query).unwrap();
+            assert_eq!(deleted.get_num_atoms(), 10);
+        },
+    }
+}
+
+// The first BRICS call also fills RDKit's pattern globals.
+fn brics_fragments() -> Call<Mol> {
+    Call {
+        make: |_| mol("CCCOCCC(=O)c1ccccc1"),
+        run: |mol| assert_eq!(fragment_on_brics_bonds(&mol).unwrap().get_num_atoms(), 20),
+    }
+}
+
+// Best-RMS alignment also symmetrizes terminal atoms.
+fn best_rms() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (embedded("CCCO"), propanol_3d()),
+        run: |(mut probe, reference)| assert!(get_best_rms(&mut probe, &reference).unwrap() >= 0.0),
+    }
+}
+
+fn aligned() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (embedded("CCCO"), propanol_3d()),
+        run: |(mut probe, reference)| assert!(align_mol(&mut probe, &reference).unwrap() >= 0.0),
+    }
+}
+
+fn crippen() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| assert!(calc_crippen_descriptors(&mol).unwrap().0 > 0.0),
+    }
+}
+
+fn maccs_keys() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            get_maccs_keys_fingerprint(&mol).unwrap();
+        },
+    }
+}
+
+// RDKit's own property functors match substructures.
+fn computed_properties() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let properties = Properties::new(&["NumHBD"]).unwrap();
+            assert_eq!(properties.compute_properties(&mol).unwrap(), vec![1.0]);
+        },
+    }
+}
+
+fn reaction_products() -> Call<(ChemicalReaction, Vec<Mol>)> {
+    Call {
+        make: |_| (amide(), amide_reactants()),
+        run: |(mut reaction, reactants)| {
+            assert_eq!(reaction.run_reactants(&reactants).unwrap().len(), 1)
+        },
+    }
+}
+
+fn enumerated_library() -> Call<(ChemicalReaction, Vec<Vec<Mol>>)> {
+    Call {
+        make: |_| (amide(), vec![vec![mol("CCC(=O)O")], vec![mol("N")]]),
+        run: |(reaction, blocks)| {
+            let mut library = EnumerateLibrary::new(&reaction, &blocks).unwrap();
+            assert_eq!(library.next_smiles().unwrap().len(), 1);
+        },
+    }
+}
+
+// Typing atoms for UFF matches substructures.
+fn uff_optimized() -> Call<Mol> {
+    Call {
+        make: |_| embedded("CCO"),
+        run: |mut mol| {
+            uff_optimize_molecule(&mut mol).unwrap();
+        },
+    }
+}
+
+fn deprotected() -> Call<Mol> {
+    Call {
+        make: |_| mol("CC(C)(C)OC(=O)NCC(=O)O"),
+        run: |boc| {
+            assert_eq!(
+                mol_to_smiles(&deprotect(&boc).unwrap()).unwrap(),
+                "NCC(=O)O"
+            )
+        },
+    }
+}
+
+fn erg_fingerprint() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            get_erg_fingerprint(&mol).unwrap();
+        },
+    }
+}
+
+fn pattern_fp() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            pattern_fingerprint(&mol).unwrap();
+        },
+    }
+}
+
+fn query_atoms() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol(ASPIRIN), mol_from_smarts("[OX2H]").unwrap()),
+        run: |(mol, hydroxyl)| {
+            let query = hydroxyl.get_atom_with_idx(0).unwrap();
+            assert_eq!(mol.get_atoms_matching_query(&query).unwrap().len(), 1);
+        },
+    }
+}
+
+fn hashed() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            mol_hash(&mol, HashFunction::HetAtomTautomerv2).unwrap();
+        },
+    }
+}
+
+fn mmpa_fragments() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| assert!(!fragment_mol(&mol).unwrap().is_empty()),
+    }
+}
+
+fn usrcat() -> Call<Mol> {
+    Call {
+        make: |_| embedded("CCCO"),
+        run: |mol| {
+            get_usrcat(&mol).unwrap();
+        },
+    }
+}
+
+fn matched_2d_depiction() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol("c1ccccc1CCO"), depicted("c1ccccc1")),
+        run: |(mut mol, reference)| {
+            assert_eq!(
+                generate_depiction_matching_2d_structure(&mut mol, &reference)
+                    .unwrap()
+                    .len(),
+                6
+            );
+        },
+    }
+}
+
+fn templated_coord_gen() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol("c1ccccc1CCO"), depicted("c1ccccc1")),
+        run: |(mut mol, template)| {
+            if is_coord_gen_support_available() {
+                let templated = CoordGenParams {
+                    template_mol: Some(template),
+                    ..Default::default()
+                };
+                add_coords_with_params(&mut mol, &templated).unwrap();
+            }
+        },
+    }
+}
+
+// Seeded, the embedder leaves the generator alone; RMS pruning also
+// symmetrizes terminal atoms.
+fn seeded_embedding() -> Call<Mol> {
+    Call {
+        make: |_| mol("CCCO"),
+        run: |mut mol| {
+            let mut pruned = EmbedParameters {
+                prune_rms_thresh: 0.1,
+                random_seed: 42,
+                ..Default::default()
+            };
+            let ids = embed_multiple_confs_with_params(&mut mol, 3, &mut pruned).unwrap();
+            assert!(!ids.is_empty());
+        },
+    }
+}
+
+fn experimental_torsions() -> Call<Mol> {
+    Call {
+        make: |_| mol("CCCO"),
+        run: |mol| {
+            get_experimental_torsions(&mol).unwrap();
+        },
+    }
+}
+
+// Feature invariants match their feature patterns.
+fn feature_morgan_fp() -> Call<(FingerprintGenerator64, Mol)> {
+    Call {
+        make: |_| {
+            let features = GetMorganGeneratorParams {
+                atom_invariants_generator: Some(get_morgan_feature_atom_inv_gen()),
+                ..Default::default()
+            };
+            (
+                get_morgan_generator_with_params(&features).unwrap(),
+                mol(ASPIRIN),
+            )
+        },
+        run: |(generator, mol)| {
+            generator.get_fingerprint(&mol).unwrap();
+        },
+    }
+}
+
+fn scsr_hbonds() -> Call<()> {
+    Call {
+        make: |_| (),
+        run: |()| {
+            let auto = MolFromSCSRParams {
+                scsr_base_hbond_options: SCSRBaseHbondOptions::Auto,
+                ..Default::default()
+            };
+            mol_from_scsr_block_with_params(RIBOSE_SCSR, &auto).unwrap();
+        },
+    }
+}
+
+fn cip_labels() -> Call<Mol> {
+    Call {
+        make: |_| mol("F[C@H](Cl)Br"),
+        run: |mut mol| assign_cip_labels(&mut mol).unwrap(),
+    }
+}
+
+fn bonds_from_xyz() -> Call<Mol> {
+    Call {
+        make: |_| mol_from_xyz_block(ETHANOL_XYZ).unwrap(),
+        run: |mut mol| {
+            determine_bonds(&mut mol).unwrap();
+            assert_eq!(mol.get_num_bonds(), 8);
+        },
+    }
+}
+
+// Standardization. The multi-molecule forms run on the wrapper's own
+// threads, which take the lock in turn.
+fn cleaned_up_mols() -> Call<Vec<Mol>> {
+    Call {
+        make: |_| vec![mol("CC(=O)[O-].[Na+]"), mol("CN(=O)=O"), mol("Oc1ccccn1")],
+        run: |mut mols| cleanup_in_place_mols(&mut mols, 2).unwrap(),
+    }
+}
+
+fn uncharged() -> Call<(Uncharger, Mol)> {
+    Call {
+        make: |_| (Uncharger::default(), mol("CC(=O)[O-]")),
+        run: |(uncharger, mol)| {
+            let neutral = uncharger.uncharge(&mol).unwrap();
+            assert_eq!(mol_to_smiles(&neutral).unwrap(), "CC(=O)O");
+        },
+    }
+}
+
+fn fragments_removed() -> Call<(FragmentRemover, Mol)> {
+    Call {
+        make: |_| (FragmentRemover::default(), mol("CC(=O)O.Cl")),
+        run: |(remover, mol)| {
+            let kept = remover.remove(&mol).unwrap();
+            assert_eq!(mol_to_smiles(&kept).unwrap(), "CC(=O)O");
+        },
+    }
+}
+
+fn normalized() -> Call<(Normalizer, Mol)> {
+    Call {
+        make: |_| (Normalizer::default(), mol("CN(=O)=O")),
+        run: |(normalizer, mol)| {
+            let nitro = normalizer.normalize(&mol).unwrap();
+            assert_eq!(mol_to_smiles(&nitro).unwrap(), "C[N+](=O)[O-]");
+        },
+    }
+}
+
+fn metals_disconnected() -> Call<(MetalDisconnector, Mol)> {
+    Call {
+        make: |_| (MetalDisconnector::new(), mol("CCC(=O)O[Na]")),
+        run: |(disconnector, mol)| {
+            let ions = disconnector.disconnect(&mol).unwrap();
+            assert_eq!(mol_to_smiles(&ions).unwrap(), "CCC(=O)[O-].[Na+]");
+        },
+    }
+}
+
+fn canonical_tautomer() -> Call<(TautomerEnumerator, Mol)> {
+    Call {
+        make: |_| (TautomerEnumerator::default(), mol("Oc1ccccn1")),
+        run: |(enumerator, mol)| {
+            let pyridone = enumerator.canonicalize(&mol).unwrap();
+            assert_eq!(mol_to_smiles(&pyridone).unwrap(), "O=c1cccc[nH]1");
+        },
+    }
+}
+
+fn validated() -> Call<(MolVSValidation, Mol)> {
+    Call {
+        make: |_| (MolVSValidation::default(), mol("CC(=O)O.Cl")),
+        run: |(validation, mol)| assert!(!validation.validate(&mol).unwrap().is_empty()),
+    }
+}
+
+fn pipeline_run() -> Call<(Pipeline, String)> {
+    Call {
+        make: |_| {
+            (
+                Pipeline::default(),
+                mol_to_mol_block(&depicted("CC(=O)[O-].[Na+]")).unwrap(),
+            )
+        },
+        run: |(pipeline, block)| {
+            pipeline.run(&block).unwrap();
+        },
+    }
+}
+
+// The rest.
+
+// The centroid functions share a cache in RDKit; each thread's radius adds
+// its own entry.
+fn grid_centroids() -> Call<(UniformGrid3D, f64)> {
+    Call {
+        make: |i| {
+            let mut grid = UniformGrid3D::new(10.0, 10.0, 10.0).unwrap();
+            grid.set_sphere_occupancy(&Point3D::default(), 1.5, 0.25)
+                .unwrap();
+            (grid, 1.0 + 0.5 * f64::from(i))
+        },
+        run: |(grid, radius)| {
+            for _ in 0..5 {
+                find_grid_terminal_points(&grid, radius, 0.5).unwrap();
+            }
+            let (weight_sum, _) =
+                compute_grid_centroid(&grid, &Point3D::default(), radius).unwrap();
+            assert!(weight_sum > 0.0);
+        },
+    }
+}
+
+// Registering a property writes RDKit's global registry.
+fn registered_property() -> Call<(u32, Mol)> {
+    Call {
+        make: |i| (i, mol("CCO")),
+        run: |(i, mol)| {
+            let name = format!("rustThread{i}");
+            let functor = PythonPropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
+            Properties::register_property(&functor);
+            let properties = Properties::new(&[name.as_str()]).unwrap();
+            assert_eq!(
+                properties.compute_properties(&mol).unwrap(),
+                vec![f64::from(i)]
+            );
+        },
+    }
+}
+
+fn available_properties() -> Call<()> {
+    Call {
+        make: |_| (),
+        run: |()| assert!(Properties::get_available_properties().contains(&"NumHBD".to_string())),
+    }
+}
+
+// DCLV's surface tests share a global cache.
+fn dclv_surfaces() -> Call<Mol> {
+    Call {
+        make: |_| {
+            let mut mol = mol("CCO");
+            let mut conf = Conformer::new(3);
+            for atom in 0..3 {
+                let x = 1.5 * f64::from(atom);
+                conf.set_atom_position(atom, Point3D::new(x, 0.3 * x, 0.0))
+                    .unwrap();
+            }
+            mol.add_conformer(&conf).unwrap();
+            mol
+        },
+        run: |mol| {
+            let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+            assert!(dclv.get_surface_area() > 0.0);
+            assert!(dclv.get_polar_surface_area() > 0.0);
+        },
+    }
 }
