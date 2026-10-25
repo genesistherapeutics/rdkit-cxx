@@ -309,8 +309,10 @@ macro_rules! cleanup_functions {
         #[doc = concat!("As `", stringify!($in_place), "`, for several molecules. Mirrors `rdMolStandardize.", $python, "InPlace(mols, numThreads)`.")]
         #[doc = ""]
         #[doc = "The molecules are split among `num_threads` threads (0 or less uses all but \
-                 that many of the cores), each standardized by one. When some fail, the others \
-                 may still have been standardized, and one of the errors is returned."]
+                 that many of the cores), each standardized by one. The threads hold the \
+                 process-wide lock the module's documentation describes while they standardize, \
+                 so they take turns and gain little. When some fail, the others may still have been \
+                 standardized, and one of the errors is returned."]
         pub fn $mols(mols: &mut [Mol], num_threads: i32) -> Result<()> {
             $mols_params(mols, num_threads, &CleanupParameters::default())
         }
@@ -418,8 +420,11 @@ macro_rules! parent_functions {
         #[doc = concat!("As `", stringify!($in_place), "`, for several molecules. Mirrors `rdMolStandardize.", $python, "InPlace(mols, numThreads)`.")]
         #[doc = ""]
         #[doc = "The molecules are split among `num_threads` threads (0 or less uses all but \
-                 that many of the cores), each standardized by one. When some fail, the others \
-                 may still have been standardized, and one of the errors is returned."]
+                 that many of the cores), each standardized by one. The threads hold the \
+                 process-wide lock the module's documentation describes while they standardize \
+                 (not when the parent skips that and only drops fragments, stereochemistry, or \
+                 isotopes), so they take turns and gain little. When some fail, the others may still have been \
+                 standardized, and one of the errors is returned."]
         pub fn $mols(mols: &mut [Mol], num_threads: i32) -> Result<()> {
             $mols_params(mols, num_threads, &$in_place_params::default())
         }

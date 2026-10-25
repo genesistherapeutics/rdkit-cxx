@@ -275,8 +275,9 @@ impl Pipeline {
     /// status and log; `Error::Value` for a mol block that breaks the
     /// reader's limits (CONVENTIONS.md U12), for a molecule whose charges
     /// could overflow RDKit's `int` sums (U9), and for text in the result
-    /// that is not UTF-8, which Python raises on reading. Mirrors
-    /// `Pipeline.run`.
+    /// that is not UTF-8, which Python raises on reading. A run holds the
+    /// process-wide lock the module's documentation describes, so runs on
+    /// several threads take turns. Mirrors `Pipeline.run`.
     pub fn run(&self, mol_data: &str) -> Result<PipelineResult> {
         PipelineResult::from_ffi(ffi::pipeline_run(self.ptr.as_ref().unwrap(), mol_data)?)
     }

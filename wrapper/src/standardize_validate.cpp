@@ -13,6 +13,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_validate.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/standardize_lock.h"
 
 namespace rdkit_cxx {
 
@@ -24,8 +25,9 @@ namespace {
 // the thread that validates; copies (MolVSValidation copies its methods)
 // share the closure, which is why it is Send + Sync. It gets its own copy
 // of the molecule, as a Rust molecule, without cached matrices or
-// descriptors (U6, U8). A panic in it becomes an exception in Rust's half of
-// the bridge.
+// descriptors (U6, U8), and without control_c_mutex, which it may take by
+// calling wrappers (standardize_lock.h). A panic in it becomes an exception
+// in Rust's half of the bridge.
 class RustValidationMethod : public MS::ValidationMethod {
  public:
   explicit RustValidationMethod(
@@ -37,8 +39,12 @@ class RustValidationMethod : public MS::ValidationMethod {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
-    auto messages = call_validation_callback(**d_callback, std::move(copy),
-                                             reportAllFailures);
+    rust::Vec<rust::String> messages;
+    {
+      StandardizeUnlocked unlocked;
+      messages = call_validation_callback(**d_callback, std::move(copy),
+                                          reportAllFailures);
+    }
     std::vector<MS::ValidationErrorInfo> errors;
     for (const auto &message : messages) {
       errors.emplace_back(message);
@@ -55,10 +61,12 @@ class RustValidationMethod : public MS::ValidationMethod {
 };
 
 std::unique_ptr<ValidationMethodHandle> handle(
-    std::shared_ptr<MS::ValidationMethod> ptr, bool sums_charges = false) {
+    std::shared_ptr<MS::ValidationMethod> ptr, bool sums_charges = false,
+    bool matches = false) {
   auto result = std::make_unique<ValidationMethodHandle>();
   result->ptr = std::move(ptr);
   result->sums_charges = sums_charges;
+  result->matches = matches;
   return result;
 }
 
@@ -94,7 +102,7 @@ std::unique_ptr<ValidationMethodHandle> validation_no_atom() {
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_fragment() {
-  return handle(std::make_shared<MS::FragmentValidation>());
+  return handle(std::make_shared<MS::FragmentValidation>(), false, true);
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_neutral() {
@@ -106,7 +114,7 @@ std::unique_ptr<ValidationMethodHandle> validation_isotope(bool strict) {
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_mol_vs_default() {
-  return handle(std::make_shared<MS::MolVSValidation>(), true);
+  return handle(std::make_shared<MS::MolVSValidation>(), true, true);
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_mol_vs(
@@ -115,7 +123,7 @@ std::unique_ptr<ValidationMethodHandle> validation_mol_vs(
     throw ValueErrorException("validations argument must be non-empty");
   }
   return handle(std::make_shared<MS::MolVSValidation>(list.items),
-                list.sums_charges);
+                list.sums_charges, list.matches);
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_allowed_atoms(
@@ -159,7 +167,7 @@ std::unique_ptr<ValidationMethodHandle> validation_stereo() {
 
 std::unique_ptr<ValidationMethodHandle> validation_clone(
     const ValidationMethodHandle &original) {
-  return handle(original.ptr, original.sums_charges);
+  return handle(original.ptr, original.sums_charges, original.matches);
 }
 
 // NeutralValidation sums the formal charges in int (MolOps::getFormalCharge),
@@ -170,6 +178,7 @@ std::unique_ptr<std::vector<std::string>> validation_validate(
   if (handle.sums_charges) {
     check_formal_charge_sum(mol);
   }
+  StandardizeMatching matching(handle.matches);
   return strings(handle.ptr->validate(mol, report_all_failures));
 }
 
@@ -181,6 +190,7 @@ void validation_list_push(ValidationList &list,
                           const ValidationMethodHandle &handle) {
   list.items.push_back(handle.ptr->copy());
   list.sums_charges = list.sums_charges || handle.sums_charges;
+  list.matches = list.matches || handle.matches;
 }
 
 std::unique_ptr<AtomList> atom_list_new() {
@@ -201,6 +211,7 @@ std::unique_ptr<std::vector<std::string>> validate_smiles(rust::Str smiles) {
   }
   check_formal_charge_sum(*mol);
   MS::MolVSValidation validation;
+  StandardizeMatching matching;
   return strings(validation.validate(*mol, true));
 }
 

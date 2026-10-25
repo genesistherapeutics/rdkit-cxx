@@ -16,6 +16,7 @@
 #include "rdkit-cxx/ffi/standardize_charge.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
+#include "rdkit-cxx/standardize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -84,14 +85,17 @@ std::unique_ptr<Reionizer> reionizer_from_data(
   return std::make_unique<Reionizer>(in, corrections);
 }
 
+// The reionizer and uncharger match their patterns (standardize_lock.h).
 std::unique_ptr<RWMol> reionizer_reionize(const Reionizer &reionizer,
                                           const RWMol &mol) {
   check_reionizer_atoms(mol);
+  StandardizeMatching matching;
   return adopt_mol(mut(reionizer).reionize(mol));
 }
 
 void reionizer_reionize_in_place(const Reionizer &reionizer, RWMol &mol) {
   check_reionizer_atoms(mol);
+  StandardizeMatching matching;
   mut(reionizer).reionizeInPlace(mol);
 }
 
@@ -105,11 +109,13 @@ std::unique_ptr<Uncharger> uncharger_new(bool canonical_order, bool force,
 std::unique_ptr<RWMol> uncharger_uncharge(const Uncharger &uncharger,
                                           const RWMol &mol) {
   check_formal_charge_sum(mol);
+  StandardizeMatching matching;
   return adopt_mol(mut(uncharger).uncharge(mol));
 }
 
 void uncharger_uncharge_in_place(const Uncharger &uncharger, RWMol &mol) {
   check_formal_charge_sum(mol);
+  StandardizeMatching matching;
   mut(uncharger).unchargeInPlace(mol);
 }
 

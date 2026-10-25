@@ -30,16 +30,20 @@ struct Layout2DValidationData;
 // A validation method, shared: copies of a handle share one, which RDKit
 // only reads. sums_charges says whether its validation sums the molecule's
 // formal charges in int (NeutralValidation, alone or in a MolVSValidation),
-// which the wrapper checks first (U9).
+// which the wrapper checks first (U9), and matches whether it matches
+// substructures (FragmentValidation, alone or in a MolVSValidation), for
+// which the wrapper holds control_c_mutex (standardize_lock.h).
 struct ValidationMethodHandle {
   std::shared_ptr<RDKit::MolStandardize::ValidationMethod> ptr;
   bool sums_charges = false;
+  bool matches = false;
 };
 
 // Validation methods Rust lends to MolVSValidation's constructor.
 struct ValidationList {
   std::vector<std::shared_ptr<RDKit::MolStandardize::ValidationMethod>> items;
   bool sums_charges = false;
+  bool matches = false;
 };
 
 // Atoms Rust lends to the atom-list validations, copied.

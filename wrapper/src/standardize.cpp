@@ -24,6 +24,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/standardize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -51,6 +52,20 @@ bool uses_tautomers(StandardizeOp op) {
   return op == StandardizeOp::CanonicalTautomer ||
          op == StandardizeOp::TautomerParent ||
          op == StandardizeOp::SuperParent;
+}
+
+// Whether the op matches substructures (standardize_lock.h): all do but the
+// parents that skip the standardization, which then only choose a fragment
+// or remove stereochemistry or isotopes.
+bool op_matches(StandardizeOp op, bool skip_standardize) {
+  switch (op) {
+    case StandardizeOp::FragmentParent:
+    case StandardizeOp::StereoParent:
+    case StandardizeOp::IsotopeParent:
+      return !skip_standardize;
+    default:
+      return true;
+  }
 }
 
 // Whether the op reionizes or uncharges the molecule, which sums its charges.
@@ -137,6 +152,8 @@ class Standardizer {
       check_reionizer_atoms(mol);
     }
   }
+
+  bool matches() const { return op_matches(d_op, d_skip); }
 
   void in_place(RWMol &mol) const {
     switch (d_op) {
@@ -446,6 +463,7 @@ std::unique_ptr<RWMol> standardize_copy(StandardizeOp op, const RWMol &mol,
                                         bool skip_standardize) {
   Standardizer standardizer(op, data, skip_standardize);
   standardizer.check(mol);
+  StandardizeMatching matching(standardizer.matches());
   return standardizer.copy(mol);
 }
 
@@ -454,6 +472,7 @@ void standardize_in_place(StandardizeOp op, RWMol &mol,
                           bool skip_standardize) {
   Standardizer standardizer(op, data, skip_standardize);
   standardizer.check(mol);
+  StandardizeMatching matching(standardizer.matches());
   standardizer.in_place(mol);
 }
 
@@ -462,7 +481,9 @@ void standardize_in_place(StandardizeOp op, RWMol &mol,
 // rather than by the threads they run, so 0 loops forever and a negative
 // count has two threads standardize one molecule at once, and which let an
 // exception escape a thread (std::terminate). RDKit's check for a molecule
-// listed twice is not needed: Rust lends each one mutably once.
+// listed twice is not needed: Rust lends each one mutably once. Each thread
+// holds control_c_mutex while it standardizes a molecule, when the op
+// matches (standardize_lock.h), so those threads take turns.
 void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
                                std::int32_t num_threads,
                                const CleanupParametersData &data,
@@ -475,8 +496,10 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
   for (const auto *mol : list) {
     standardizer.check(*mol);
   }
-  run_threads(list.size(), num_threads,
-              [&](std::size_t i) { standardizer.in_place(*list[i]); });
+  run_threads(list.size(), num_threads, [&](std::size_t i) {
+    StandardizeMatching matching(standardizer.matches());
+    standardizer.in_place(*list[i]);
+  });
 }
 
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
@@ -488,6 +511,7 @@ std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
                               input);
   }
   check_reionizer_atoms(*mol);
+  StandardizeMatching matching;
   MS::cleanupInPlace(*mol);
   return std::make_unique<std::string>(RDKit::MolToSmiles(*mol));
 }

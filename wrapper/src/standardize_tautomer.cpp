@@ -18,6 +18,7 @@
 #include "rdkit-cxx/ffi/standardize_tautomer.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
+#include "rdkit-cxx/standardize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -32,8 +33,9 @@ namespace {
 // another share it, which is why it is Send + Sync. It gets its own copy of
 // the molecule, and a copy of the result so far that shares its tautomers
 // with RDKit's (RDKit waits while the closure runs, and the copy is dropped
-// before it resumes). A panic in it becomes an exception in Rust's half of
-// the bridge, which leaves the enumeration.
+// before it resumes). It runs without control_c_mutex, which it may take by
+// calling wrappers (standardize_lock.h). A panic in it becomes an exception
+// in Rust's half of the bridge, which leaves the enumeration.
 class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
  public:
   explicit RustTautomerCallback(rust::Box<TautomerCallback> callback)
@@ -44,9 +46,10 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
-    return call_tautomer_callback(
-        *d_callback, std::move(copy),
-        std::make_unique<TautomerEnumeratorResult>(res));
+    auto shared = std::make_unique<TautomerEnumeratorResult>(res);
+    StandardizeUnlocked unlocked;
+    return call_tautomer_callback(*d_callback, std::move(copy),
+                                  std::move(shared));
   }
 
  private:
@@ -54,15 +57,19 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
 };
 
 // A scoring function that calls a Rust closure with a copy of each
-// tautomer. pickCanonical starts its search at INT_MIN and dereferences the
-// best tautomer, null when none scores above that, so INT_MIN counts as
-// INT_MIN + 1.
+// tautomer, without control_c_mutex (standardize_lock.h). pickCanonical
+// starts its search at INT_MIN and dereferences the best tautomer, null when
+// none scores above that, so INT_MIN counts as INT_MIN + 1.
 boost::function<int(const RDKit::ROMol &)> scorer(const ScoreFunction &score) {
   return [&score](const RDKit::ROMol &mol) -> int {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
-    int value = call_score_function(score, std::move(copy));
+    int value;
+    {
+      StandardizeUnlocked unlocked;
+      value = call_score_function(score, std::move(copy));
+    }
     return value == INT_MIN ? INT_MIN + 1 : value;
   };
 }
@@ -186,8 +193,11 @@ void tautomer_enumerator_clear_callback(TautomerEnumerator &enumerator) {
   enumerator.setCallback(std::shared_ptr<MS::TautomerEnumeratorCallback>());
 }
 
+// Enumeration, canonicalization, and the default score match substructures
+// (standardize_lock.h); picking by a Rust score function matches nothing.
 std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
+  StandardizeMatching matching;
   return std::make_unique<TautomerEnumeratorResult>(enumerator.enumerate(mol));
 }
 
@@ -196,12 +206,14 @@ std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
 std::unique_ptr<RWMol> tautomer_enumerator_canonicalize(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
   check_tautomer_score(mol);
+  StandardizeMatching matching;
   return adopt_mol(enumerator.canonicalize(mol));
 }
 
 std::unique_ptr<RWMol> tautomer_enumerator_canonicalize_with(
     const TautomerEnumerator &enumerator, const RWMol &mol,
     const ScoreFunction &score) {
+  StandardizeMatching matching;
   return adopt_mol(enumerator.canonicalize(mol, scorer(score)));
 }
 
@@ -233,6 +245,7 @@ std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical(
       check_default_score(*mol);
     }
   }
+  StandardizeMatching matching;
   return adopt_mol(enumerator.pickCanonical(list));
 }
 
@@ -250,6 +263,7 @@ std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical_result(
       check_default_score(*mol);
     }
   }
+  StandardizeMatching matching;
   return adopt_mol(enumerator.pickCanonical(result));
 }
 
@@ -340,6 +354,7 @@ std::int32_t score_hetero_hs(const RWMol &mol) {
 
 // The default terms' scores times their at most 1000 matches stay in int.
 std::int32_t score_substructs(const RWMol &mol) {
+  StandardizeMatching matching;
   return TSF::scoreSubstructs(mol);
 }
 
@@ -362,11 +377,13 @@ std::int32_t score_substructs_with_terms(
                            term.smarts.data(), term.smarts.size())),
                        term.score);
   }
+  StandardizeMatching matching;
   return TSF::scoreSubstructs(mol, terms);
 }
 
 std::int32_t score_tautomer(const RWMol &mol) {
   check_default_score(mol);
+  StandardizeMatching matching;
   return TSF::scoreTautomer(mol);
 }
 

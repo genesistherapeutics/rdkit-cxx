@@ -10,6 +10,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/standardize.h"
+#include "rdkit-cxx/standardize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -51,13 +52,17 @@ std::unique_ptr<FragmentRemover> fragment_remover_from_data(
   return std::make_unique<FragmentRemover>(in, leave_last, skip_if_all_match);
 }
 
+// The remover matches its fragments (standardize_lock.h); the largest
+// fragment chooser matches nothing.
 std::unique_ptr<RWMol> fragment_remover_remove(const FragmentRemover &remover,
                                                const RWMol &mol) {
+  StandardizeMatching matching;
   return adopt_mol(mut(remover).remove(mol));
 }
 
 void fragment_remover_remove_in_place(const FragmentRemover &remover,
                                       RWMol &mol) {
+  StandardizeMatching matching;
   mut(remover).removeInPlace(mol);
 }
 

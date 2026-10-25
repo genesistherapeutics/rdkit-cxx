@@ -25,6 +25,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_pipeline.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/standardize_lock.h"
 #include "rdkit-cxx/standardize_normalize.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
@@ -168,13 +169,18 @@ MS::RWMOL_SPTR_PAIR checked_make_parent(RDKit::RWMOL_SPTR mol,
 // As Operations::serialize, whose mol-block writers compute 2D coordinates
 // for a molecule without a conformer (prepareMol in MolFileWriter.cpp), so
 // it holds the depiction lock then and checks the molecule under it (U4).
-// serialize records its writers' exceptions as output errors; so does this
-// for the check's.
+// The run holds control_c_mutex, which comes after the depiction lock, and
+// no ControlCHandler is alive between its steps, so it is released while
+// the depiction lock is taken and taken back after. serialize records its
+// writers' exceptions as output errors; so does this for the check's.
 void locked_serialize(MS::RWMOL_SPTR_PAIR output, MS::PipelineResult &result,
                       const MS::PipelineOptions &options) {
   std::unique_lock<std::mutex> lock;
   if (!output.first->getNumConformers() || !output.second->getNumConformers()) {
-    lock = lock_depiction();
+    {
+      StandardizeUnlocked unlocked;
+      lock = lock_depiction();
+    }
     try {
       for (const auto *mol : {output.first.get(), output.second.get()}) {
         if (!mol->getNumConformers()) {
@@ -242,7 +248,13 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
 PipelineResultData pipeline_run(const Pipeline &pipeline, rust::Str mol_data) {
   std::string block(mol_data);
   check_input_text(block);
-  auto result = pipeline.run(block);
+  // Its standardization step and makeParent match substructures
+  // (standardize_lock.h).
+  MS::PipelineResult result;
+  {
+    StandardizeMatching matching;
+    result = pipeline.run(block);
+  }
   PipelineResultData data;
   data.status = static_cast<std::uint32_t>(result.status);
   data.stage = result.stage;

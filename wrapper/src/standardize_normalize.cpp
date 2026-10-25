@@ -15,6 +15,7 @@
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_normalize.rs.h"
 #include "rdkit-cxx/standardize.h"
+#include "rdkit-cxx/standardize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -73,12 +74,16 @@ std::unique_ptr<Normalizer> normalizer_from_params(
       MS::normalizerFromParams(to_cleanup_parameters(params)));
 }
 
+// The normalizer runs its transformations, and the metal disconnector
+// matches its queries (standardize_lock.h).
 std::unique_ptr<RWMol> normalizer_normalize(const Normalizer &normalizer,
                                             const RWMol &mol) {
+  StandardizeMatching matching;
   return adopt_mol(mut(normalizer).normalize(mol));
 }
 
 void normalizer_normalize_in_place(const Normalizer &normalizer, RWMol &mol) {
+  StandardizeMatching matching;
   mut(normalizer).normalizeInPlace(mol);
 }
 
@@ -130,31 +135,37 @@ void metal_disconnector_set_metal_non(MetalDisconnector &disconnector,
 
 std::unique_ptr<RWMol> metal_disconnector_disconnect(
     const MetalDisconnector &disconnector, const RWMol &mol) {
+  StandardizeMatching matching;
   return adopt_mol(mut(disconnector).disconnect(mol));
 }
 
 void metal_disconnector_disconnect_in_place(
     const MetalDisconnector &disconnector, RWMol &mol) {
+  StandardizeMatching matching;
   mut(disconnector).disconnectInPlace(mol);
 }
 
 std::unique_ptr<RWMol> disconnect_organometallics(const RWMol &mol) {
+  StandardizeMatching matching;
   return adopt_mol(
       MS::disconnectOrganometallics(static_cast<const RDKit::ROMol &>(mol)));
 }
 
 std::unique_ptr<RWMol> disconnect_organometallics_with_options(
     const RWMol &mol, const MetalDisconnectorOptionsData &options) {
+  StandardizeMatching matching;
   return adopt_mol(MS::disconnectOrganometallics(
       static_cast<const RDKit::ROMol &>(mol), to_options(options)));
 }
 
 void disconnect_organometallics_in_place(RWMol &mol) {
+  StandardizeMatching matching;
   MS::disconnectOrganometallicsInPlace(mol);
 }
 
 void disconnect_organometallics_in_place_with_options(
     RWMol &mol, const MetalDisconnectorOptionsData &options) {
+  StandardizeMatching matching;
   MS::disconnectOrganometallicsInPlace(mol, to_options(options));
 }
 
