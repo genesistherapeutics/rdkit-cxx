@@ -28,7 +28,7 @@ SASAOptsData sasa_opts_default();
 // The radii, or none when some atom could not be classified.
 rust::Vec<double> classify_atoms(RWMol &mol, const SASAOptsData &opts);
 // `query` is null or an atom.
-double calc_sasa(const RWMol &mol, rust::Slice<const double> radii,
+double calc_sasa(RWMol &mol, rust::Slice<const double> radii,
                  std::int32_t conf_idx, const Atom *query,
                  const SASAOptsData &opts);
 std::unique_ptr<Atom> make_free_sasa_a_polar_atom_query();

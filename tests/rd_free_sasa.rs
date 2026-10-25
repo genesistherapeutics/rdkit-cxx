@@ -126,7 +126,7 @@ fn atoms_without_residues_get_radius_zero() {
     assert_eq!(classify_atoms(&mut mol), vec![0.0; 9]);
     assert!(class_names(&mol).iter().all(|name| name == "Unclassified"));
     assert_close_to(
-        calc_sasa(&mol, &[1.7; 9]).unwrap(),
+        calc_sasa(&mut mol, &[1.7; 9]).unwrap(),
         249.67315676029267,
         1e-6,
     );
@@ -136,7 +136,7 @@ fn atoms_without_residues_get_radius_zero() {
 fn computes_areas() {
     let mut mol = met_gln();
     let radii = classify_atoms(&mut mol);
-    let lee_richards = calc_sasa(&mol, &radii).unwrap();
+    let lee_richards = calc_sasa(&mut mol, &radii).unwrap();
     assert_close_to(lee_richards, 467.7077888464553, 1e-6);
     assert_close_to(mol.get_double_prop("SASA").unwrap(), lee_richards, 1e-12);
     let atom0 = mol
@@ -151,12 +151,12 @@ fn computes_areas() {
         ..Default::default()
     };
     assert_close_to(
-        calc_sasa_with_params(&mol, &radii, &shrake).unwrap(),
+        calc_sasa_with_params(&mut mol, &radii, &shrake).unwrap(),
         472.9801948817594,
         1e-6,
     );
     assert_close_to(
-        calc_sasa_with_params(&mol, &radii, &with_probe(2.0)).unwrap(),
+        calc_sasa_with_params(&mut mol, &radii, &with_probe(2.0)).unwrap(),
         564.07589407925,
         1e-6,
     );
@@ -165,7 +165,7 @@ fn computes_areas() {
         ..Default::default()
     };
     assert_close_to(
-        calc_sasa_with_params(&mol, &radii, &shrake2).unwrap(),
+        calc_sasa_with_params(&mut mol, &radii, &shrake2).unwrap(),
         556.9531192557344,
         1e-6,
     );
@@ -186,8 +186,8 @@ fn queries_limit_the_area() {
         query: Some(&polar_query),
         ..Default::default()
     };
-    let apolar = calc_sasa_with_params(&mol, &radii, &apolar).unwrap();
-    let polar = calc_sasa_with_params(&mol, &radii, &polar).unwrap();
+    let apolar = calc_sasa_with_params(&mut mol, &radii, &apolar).unwrap();
+    let polar = calc_sasa_with_params(&mut mol, &radii, &polar).unwrap();
     assert_close_to(apolar, 228.42560450066512, 1e-6);
     assert_close_to(polar, 239.28218434579014, 1e-6);
 
@@ -197,7 +197,7 @@ fn queries_limit_the_area() {
         query: Some(&carbon),
         ..Default::default()
     };
-    assert_value_error(calc_sasa_with_params(&mol, &radii, &plain));
+    assert_value_error(calc_sasa_with_params(&mut mol, &radii, &plain));
 }
 
 #[test]
@@ -207,14 +207,14 @@ fn conformers_are_checked() {
         conf_idx: 3,
         ..Default::default()
     };
-    assert_value_error(calc_sasa_with_params(&mol, &[1.7; 9], &params));
+    assert_value_error(calc_sasa_with_params(&mut mol, &[1.7; 9], &params));
     mol.remove_all_conformers();
     assert!(matches!(
-        calc_sasa(&mol, &[1.7; 9]),
+        calc_sasa(&mut mol, &[1.7; 9]),
         Err(Error::Runtime { .. })
     ));
     assert!(matches!(
-        calc_sasa(&Mol::default(), &[]),
+        calc_sasa(&mut Mol::default(), &[]),
         Err(Error::Runtime { .. })
     ));
 }
@@ -223,10 +223,10 @@ fn conformers_are_checked() {
 // given: it crashes for an empty list, and reads past a short one.
 #[test]
 fn radii_must_match_the_atoms() {
-    let mol = ethanol();
-    assert_value_error(calc_sasa(&mol, &[]));
-    assert_value_error(calc_sasa(&mol, &[1.7; 3]));
-    assert_value_error(calc_sasa(&mol, &[1.7; 10]));
+    let mut mol = ethanol();
+    assert_value_error(calc_sasa(&mut mol, &[]));
+    assert_value_error(calc_sasa(&mut mol, &[1.7; 3]));
+    assert_value_error(calc_sasa(&mut mol, &[1.7; 10]));
 }
 
 // Each of these crashes Python's CalcSASA, in freesasa's cell lists.
@@ -236,15 +236,27 @@ fn coordinates_and_radii_are_checked() {
     let radii = classify_atoms(&mut mol);
     // Every radius plus the probe at most 0, or too small for coordinates
     // this large.
-    assert_value_error(calc_sasa_with_params(&mol, &[0.0; 17], &with_probe(0.0)));
-    assert_value_error(calc_sasa_with_params(&mol, &[-1.0; 17], &with_probe(0.5)));
-    assert_value_error(calc_sasa_with_params(&mol, &[1e-300; 17], &with_probe(0.0)));
+    assert_value_error(calc_sasa_with_params(
+        &mut mol,
+        &[0.0; 17],
+        &with_probe(0.0),
+    ));
+    assert_value_error(calc_sasa_with_params(
+        &mut mol,
+        &[-1.0; 17],
+        &with_probe(0.5),
+    ));
+    assert_value_error(calc_sasa_with_params(
+        &mut mol,
+        &[1e-300; 17],
+        &with_probe(0.0),
+    ));
     for probe in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
-        assert_value_error(calc_sasa_with_params(&mol, &radii, &with_probe(probe)));
+        assert_value_error(calc_sasa_with_params(&mut mol, &radii, &with_probe(probe)));
     }
     let mut huge = radii.clone();
     huge[0] = f64::INFINITY;
-    assert_value_error(calc_sasa(&mol, &huge));
+    assert_value_error(calc_sasa(&mut mol, &huge));
     for (x, y) in [
         (f64::NAN, 0.0),
         (f64::INFINITY, 0.0),
@@ -257,7 +269,7 @@ fn coordinates_and_radii_are_checked() {
             .unwrap()
             .set_atom_position(3, Point3D::new(x, y, y))
             .unwrap();
-        assert_value_error(calc_sasa(&moved, &radii));
+        assert_value_error(calc_sasa(&mut moved, &radii));
     }
     // A molecule spread over many cells, but fewer than i32 counts, works.
     let mut spread = mol.clone();
@@ -266,7 +278,7 @@ fn coordinates_and_radii_are_checked() {
         .unwrap()
         .set_atom_position(3, Point3D::new(500.0, 0.0, 0.0))
         .unwrap();
-    assert!(calc_sasa(&spread, &radii).unwrap() > 467.0);
+    assert!(calc_sasa(&mut spread, &radii).unwrap() > 467.0);
 }
 
 // freesasa compares an uninitialized buffer with its classifier's names for

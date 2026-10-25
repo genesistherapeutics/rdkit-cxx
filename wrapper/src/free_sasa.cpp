@@ -208,7 +208,7 @@ rust::Vec<double> classify_atoms(RWMol &mol, const SASAOptsData &opts) {
   return result;
 }
 
-double calc_sasa(const RWMol &mol, rust::Slice<const double> radii,
+double calc_sasa(RWMol &mol, rust::Slice<const double> radii,
                  std::int32_t conf_idx, const Atom *query,
                  const SASAOptsData &opts) {
   auto options = to_opts(opts);

@@ -26,7 +26,7 @@ pub(crate) mod ffi {
         ///
         /// The query is null or valid.
         unsafe fn calc_sasa(
-            mol: &RWMol,
+            mol: Pin<&mut RWMol>,
             radii: &[f64],
             conf_idx: i32,
             query: *const Atom,

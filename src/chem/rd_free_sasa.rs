@@ -12,7 +12,7 @@
 //!
 //! let mut mol = mol_from_pdb_file("protein.pdb").unwrap();
 //! let radii = classify_atoms(&mut mol);
-//! println!("{}", calc_sasa(&mol, &radii).unwrap());
+//! println!("{}", calc_sasa(&mut mol, &radii).unwrap());
 //! ```
 //!
 //! FreeSASA trusts what it is given, so `calc_sasa` refuses with
@@ -199,24 +199,28 @@ impl Default for CalcSASAParams<'_> {
 /// `rdFreeSASA.CalcSASA`.
 ///
 /// Sets each atom's `SASA` property to its area, and the molecule's to the
-/// total. A molecule without atoms or conformers is `Error::Runtime`, a
+/// total, so it takes the molecule mutably (S4). A molecule without atoms or conformers is `Error::Runtime`, a
 /// missing conformer `Error::Value`, and so are the inputs the module
 /// documentation lists. FreeSASA failing for want of memory gives 0.
-pub fn calc_sasa(mol: &Mol, radii: &[f64]) -> Result<f64> {
+pub fn calc_sasa(mol: &mut Mol, radii: &[f64]) -> Result<f64> {
     calc_sasa_with_params(mol, radii, &CalcSASAParams::default())
 }
 
 /// Mirrors `rdFreeSASA.CalcSASA(mol, radii, confIdx, query, opts)`. With a
 /// query, the result is the sum of the areas of the atoms it matches; an
 /// atom that is not a query atom is `Error::Value`.
-pub fn calc_sasa_with_params(mol: &Mol, radii: &[f64], params: &CalcSASAParams<'_>) -> Result<f64> {
+pub fn calc_sasa_with_params(
+    mol: &mut Mol,
+    radii: &[f64],
+    params: &CalcSASAParams<'_>,
+) -> Result<f64> {
     let query = params
         .query
         .map_or(std::ptr::null(), |atom| atom.atom() as *const _);
     // SAFETY: the query is null or borrowed for the call.
     Ok(unsafe {
         ffi::calc_sasa(
-            mol.as_ffi(),
+            mol.pin_mut(),
             radii,
             params.conf_idx,
             query,
