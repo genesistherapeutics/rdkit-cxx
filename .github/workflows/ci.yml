@@ -57,6 +57,24 @@ jobs:
           cat missing.out
           grep -F "or set RDKIT_PREFIX" missing.out
 
+  # Builds the crate from its package, as cargo publish verifies it, so a file
+  # that include in Cargo.toml leaves out fails here rather than at release.
+  package:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+          cache-environment: false
+          cache-downloads: false
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo package --locked
+
   inventory:
     runs-on: ubuntu-24.04
     steps:
