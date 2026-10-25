@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -271,6 +271,482 @@ rust = ["rdkit_cxx::chem::rd_deprotect::deprotect_in_place", "rdkit_cxx::chem::r
 [[entry]]
 python = "rdkit.Chem.rdDeprotect.GetDeprotections"
 rust = ["rdkit_cxx::chem::rd_deprotect::get_deprotections"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.DetermineBondOrders"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_bond_orders", "rdkit_cxx::chem::rd_determine_bonds::determine_bond_orders_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.DetermineBonds"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_bonds", "rdkit_cxx::chem::rd_determine_bonds::determine_bonds_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.DetermineConnectivity"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_connectivity", "rdkit_cxx::chem::rd_determine_bonds::determine_connectivity_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.MaxFindBondOrdersItersExceeded"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Runtime"
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.hueckelEnabled"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::hueckel_enabled"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.BAD_DOUBLE_BOND_STEREO"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::BadDoubleBondStereo"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::BadDoubleBondStereo"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CHECK_CHIRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::CheckChiralCenters"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CHECK_CHIRAL_CENTERS2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters2"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::CheckChiralCenters2"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CHECK_TETRAHEDRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckTetrahedralCenters"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::CheckTetrahedralCenters"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CLASH"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Clash"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::Clash"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.DG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::dg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.DG_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::DgEmbedding"]
+name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::DgEmbedding"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETDG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etdg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETDGv2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etdg_v2"]
+name_exception = "the version stays a suffix: etdg_v2"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDGv2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v2"]
+name_exception = "the version stays a suffix: etkdg_v2"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDGv3"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v3"]
+name_exception = "the version stays a suffix: etkdg_v3"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDGv4"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v4"]
+name_exception = "the version stays a suffix: etkdg_v4"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETK_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::EtkMinimization"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::EtkMinimization"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EXCEEDED_TIMEOUT"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::ExceededTimeout"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::ExceededTimeout"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFF.MMFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Mmff"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFF.UFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Uff"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.BAD_DOUBLE_BOND_STEREO"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::BadDoubleBondStereo"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CHECK_CHIRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CHECK_CHIRAL_CENTERS2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters2"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CHECK_TETRAHEDRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckTetrahedralCenters"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CLASH"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Clash"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.ETK_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::EtkMinimization"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.EXCEEDED_TIMEOUT"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::ExceededTimeout"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.FINAL_CENTER_IN_VOLUME"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalCenterInVolume"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.FINAL_CHIRAL_BOUNDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalChiralBounds"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.FIRST_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FirstMinimization"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.INITIAL_COORDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::InitialCoords"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.KTERM_VIOLATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::KtermViolation"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.LINEAR_DOUBLE_BOND"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::LinearDoubleBond"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Minimization"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.MINIMIZE_FOURTH_DIMENSION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::MinimizeFourthDimension"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedMolecule"
+rust = ["rdkit_cxx::chem::rd_dist_geom::embed_molecule", "rdkit_cxx::chem::rd_dist_geom::embed_molecule_with_params"]
+overloads_note = "the keyword overload's arguments are fields of EmbedParameters, which the _with_params form takes (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedMultipleConfs"
+rust = ["rdkit_cxx::chem::rd_dist_geom::embed_multiple_confs", "rdkit_cxx::chem::rd_dist_geom::embed_multiple_confs_with_params"]
+overloads_note = "the keyword overload's arguments are fields of EmbedParameters, which the _with_params form takes (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.ETversion"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::et_version"]
+rust_kind = "field"
+name_exception = "ET is one word: et_version"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.GetFailureCounts"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::get_failure_counts"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.SetBoundsMat"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::set_bounds_mat"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.SetCPCI"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::set_cpci"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.SetCoordMap"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::set_coord_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.__init__"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.__setattr__"
+reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.basinThresh"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::basin_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.boundsMatForceScaling"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::bounds_mat_force_scaling"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.boxSizeMult"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::box_size_mult"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.clearConfs"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::clear_confs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.embedForceField"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::embed_force_field"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.embedFragmentsSeparately"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::embed_fragments_separately"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.enableSequentialRandomSeeds"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::enable_sequential_random_seeds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.enforceChirality"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::enforce_chirality"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.forceTransAmides"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::force_trans_amides"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.ignoreSmoothingFailures"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::ignore_smoothing_failures"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.initialEmbeddingMode"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::initial_embedding_mode"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.maxIterations"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::max_iterations"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.numThreads"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.numZeroFail"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::num_zero_fail"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.onlyHeavyAtomsForRMS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::only_heavy_atoms_for_rms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.onlyInitialEmbedding"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::only_initial_embedding"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.optimizerForceTol"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::optimizer_force_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.pruneRmsThresh"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::prune_rms_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.randNegEig"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::rand_neg_eig"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.randomSeed"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::random_seed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.symmetrizeConjugatedTerminalGroupsForPruning"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::symmetrize_conjugated_terminal_groups_for_pruning"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.timeout"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::timeout"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.trackFailures"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::track_failures"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useBasicKnowledge"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_basic_knowledge"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useExpTorsionAnglePrefs"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_exp_torsion_angle_prefs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useLegacyImplementation"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_legacy_implementation"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useMacrocycle14config"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_macrocycle14config"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useMacrocycleTorsions"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_macrocycle_torsions"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useRandomCoords"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_random_coords"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useSmallRingTorsions"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_small_ring_torsions"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useSymmetryForPruning"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_symmetry_for_pruning"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.verbose"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::verbose"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParametersToJSON"
+rust = ["rdkit_cxx::chem::rd_dist_geom::embed_parameters_to_json"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.FINAL_CENTER_IN_VOLUME"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalCenterInVolume"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::FinalCenterInVolume"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.FINAL_CHIRAL_BOUNDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalChiralBounds"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::FinalChiralBounds"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.FIRST_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FirstMinimization"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::FirstMinimization"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.GetExperimentalTorsions"
+rust = ["rdkit_cxx::chem::rd_dist_geom::get_experimental_torsions", "rdkit_cxx::chem::rd_dist_geom::get_experimental_torsions_with_params"]
+overloads_note = "the keyword overload's arguments are fields of EmbedParameters, which the _with_params form takes (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.GetMoleculeBoundsMatrix"
+rust = ["rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix", "rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix_with_params", "rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix_embed_parameters", "rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix_embed_parameters_with_params"]
+overloads_note = "the (mol, embedParameters) overload is get_molecule_bounds_matrix_embed_parameters (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.INITIAL_COORDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::InitialCoords"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::InitialCoords"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.INTERNAL_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::InternalCoordinateEmbedding"]
+name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::InternalCoordinateEmbedding"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.DG_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::DgEmbedding"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.INTERNAL_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::InternalCoordinateEmbedding"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.RANDOM_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::RandomCoordinateEmbedding"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.KDG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::kdg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.KTERM_VIOLATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::KtermViolation"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::KtermViolation"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.LINEAR_DOUBLE_BOND"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::LinearDoubleBond"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::LinearDoubleBond"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Minimization"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::Minimization"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.MINIMIZE_FOURTH_DIMENSION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::MinimizeFourthDimension"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::MinimizeFourthDimension"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.MMFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Mmff"]
+name_exception = "an exported enum value maps to its variant, EmbedFF::Mmff"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.OrderedEmbedFailureCauses"
+rust = ["rdkit_cxx::chem::rd_dist_geom::ordered_embed_failure_causes", "rdkit_cxx::chem::rd_dist_geom::ordered_embed_failure_causes_with_legacy_implementation"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.RANDOM_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::RandomCoordinateEmbedding"]
+name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::RandomCoordinateEmbedding"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.UFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Uff"]
+name_exception = "an exported enum value maps to its variant, EmbedFF::Uff"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.srETKDGv3"
+rust = ["rdkit_cxx::chem::rd_dist_geom::sr_etkdg_v3"]
+name_exception = "the version stays a suffix: sr_etkdg_v3"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput"
@@ -684,6 +1160,80 @@ rust = ["rdkit_cxx::chem::rd_fingerprint_generator::TopologicalTorsionFingerprin
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.CreateEmptyForceFieldForMol"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::create_empty_force_field_for_mol", "rdkit_cxx::chem::rd_force_field_helpers::create_empty_force_field_for_mol_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFAngleBendParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_angle_bend_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFBondStretchParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_bond_stretch_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFInversionParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_inversion_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFTorsionParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_torsion_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.GetUFFVdWParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::get_uff_vdw_params"]
+name_exception = "VdW is one word: get_uff_vdw_params"
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFGetMoleculeForceField"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_force_field", "rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_force_field_with_params"]
+overloads_note = "a None MMFFMolProperties, for which Python returns None, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFGetMoleculeProperties"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_properties", "rdkit_cxx::chem::rd_force_field_helpers::mmff_get_molecule_properties_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFHasAllMoleculeParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_has_all_molecule_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule", "rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMoleculeConfs"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::mmff_optimize_molecule_confs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.MMFFSanitizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::mmff_sanitize_molecule"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.OptimizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule", "rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule_with_max_iters"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.OptimizeMoleculeConfs"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::optimize_molecule_confs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFGetMoleculeForceField"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_get_molecule_force_field", "rdkit_cxx::chem::rd_force_field_helpers::uff_get_molecule_force_field_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFHasAllMoleculeParams"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_has_all_molecule_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFOptimizeMolecule"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule", "rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdForceFieldHelpers.UFFOptimizeMoleculeConfs"
+rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder"
 rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder"]
 
@@ -760,6 +1310,127 @@ rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::new", "rdkit_cxx::ch
 python = "rdkit.Chem.rdMMPA.FragmentMol"
 rust = ["rdkit_cxx::chem::rd_mmpa::fragment_mol", "rdkit_cxx::chem::rd_mmpa::fragment_mol_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles_with_params"]
 overloads_note = "the (mol, minCuts, maxCuts, maxCutBonds) overload is fragment_mol_min_cuts and the bondsToCut one fragment_mol_bonds (A5); resultsAsMols=False is the _as_smiles forms (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.AlignMol"
+rust = ["rdkit_cxx::chem::rd_mol_align::align_mol", "rdkit_cxx::chem::rd_mol_align::align_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.AlignMolConformers"
+rust = ["rdkit_cxx::chem::rd_mol_align::align_mol_conformers", "rdkit_cxx::chem::rd_mol_align::align_mol_conformers_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.ignoreHs"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::ignore_hs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.map"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::map"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.maxMatches"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::max_matches"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.numThreads"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.symmetrizeConjugatedTerminalGroups"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::symmetrize_conjugated_terminal_groups"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.weights"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::weights"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.CalcRMS"
+rust = ["rdkit_cxx::chem::rd_mol_align::calc_rms", "rdkit_cxx::chem::rd_mol_align::calc_rms_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetAlignmentTransform"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_alignment_transform", "rdkit_cxx::chem::rd_mol_align::get_alignment_transform_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetAllConformerBestRMS"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms", "rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_with_params"]
+overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetAllConformerBestRMSToRef"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_to_ref", "rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_to_ref_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetBestAlignmentTransform"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_best_alignment_transform", "rdkit_cxx::chem::rd_mol_align::get_best_alignment_transform_with_params"]
+overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetBestRMS"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_best_rms", "rdkit_cxx::chem::rd_mol_align::get_best_rms_with_params"]
+overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetCrippenO3A"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_crippen_o3a", "rdkit_cxx::chem::rd_mol_align::get_crippen_o3a_with_params"]
+name_exception = "O3A stays one word, as in the class: get_crippen_o3a"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetCrippenO3AForProbeConfs"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_crippen_o3a_for_probe_confs", "rdkit_cxx::chem::rd_mol_align::get_crippen_o3a_for_probe_confs_with_params"]
+name_exception = "O3A stays one word, as in the class: get_crippen_o3a_for_probe_confs"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetO3A"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_o3a", "rdkit_cxx::chem::rd_mol_align::get_o3a_with_params"]
+name_exception = "O3A stays one word, as in the class: get_o3a"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetO3AForProbeConfs"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_o3a_for_probe_confs", "rdkit_cxx::chem::rd_mol_align::get_o3a_for_probe_confs_with_params"]
+name_exception = "O3A stays one word, as in the class: get_o3a_for_probe_confs"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Align"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::align"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Matches"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Score"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::score"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Trans"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::trans"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Weights"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::weights"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.RandomTransform"
+rust = ["rdkit_cxx::chem::rd_mol_align::random_transform", "rdkit_cxx::chem::rd_mol_align::random_transform_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
@@ -1551,6 +2222,74 @@ rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBrl"]
 name_exception = "exported enum value (N7)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolTransforms.CanonicalizeConformer"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::canonicalize_conformer", "rdkit_cxx::chem::rd_mol_transforms::canonicalize_conformer_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.CanonicalizeMol"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::canonicalize_mol", "rdkit_cxx::chem::rd_mol_transforms::canonicalize_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputeCanonicalTransform"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_canonical_transform", "rdkit_cxx::chem::rd_mol_transforms::compute_canonical_transform_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputeCentroid"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_centroid", "rdkit_cxx::chem::rd_mol_transforms::compute_centroid_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputePrincipalAxesAndMoments"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments", "rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputePrincipalAxesAndMomentsFromGyrationMatrix"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments_from_gyration_matrix", "rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments_from_gyration_matrix_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetAngleDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_angle_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetAngleRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_angle_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetBondLength"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_bond_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetDihedralDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_dihedral_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetDihedralRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_dihedral_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetAngleDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_angle_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetAngleRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_angle_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetBondLength"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_bond_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetDihedralDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_dihedral_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetDihedralRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_dihedral_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.TransformConformer"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::transform_conformer"]
+
+[[entry]]
 python = "rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges"
 rust = ["rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges", "rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges_with_params"]
 
@@ -1583,6 +2322,34 @@ rust = ["rdkit_cxx::chem::rd_sln_parse::mol_from_sln", "rdkit_cxx::chem::rd_sln_
 python = "rdkit.Chem.rdSLNParse.SLNParseException"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Parse"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ComputeConfBox"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::compute_conf_box", "rdkit_cxx::chem::rd_shape_helpers::compute_conf_box_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ComputeConfDimsAndOffset"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::compute_conf_dims_and_offset", "rdkit_cxx::chem::rd_shape_helpers::compute_conf_dims_and_offset_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ComputeUnionBox"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::compute_union_box"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.EncodeShape"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::encode_shape", "rdkit_cxx::chem::rd_shape_helpers::encode_shape_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ShapeProtrudeDist"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_protrude_dist", "rdkit_cxx::chem::rd_shape_helpers::shape_protrude_dist_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ShapeTanimotoDist"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tanimoto_dist", "rdkit_cxx::chem::rd_shape_helpers::shape_tanimoto_dist_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeHelpers.ShapeTverskyIndex"
+rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index", "rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"
@@ -8344,6 +9111,267 @@ python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__sub__"
 reason = "Python's operator protocol: `&a - &b` (Sub)"
 
 [[entry]]
+python = "rdkit.DistanceGeometry.DistGeom.DoTriangleSmoothing"
+rust = ["rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing", "rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing_with_tol"]
+
+[[entry]]
+python = "rdkit.DistanceGeometry.DistGeom.EmbedBoundsMatrix"
+rust = ["rdkit_cxx::distance_geometry::dist_geom::embed_bounds_matrix", "rdkit_cxx::distance_geometry::dist_geom::embed_bounds_matrix_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.AddDistanceConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::add_distance_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.AddExtraPoint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::add_extra_point", "rdkit_cxx::force_field::rd_force_field::ForceField::add_extra_point_with_fixed"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.AddFixedPoint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::add_fixed_point"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.CalcEnergy"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::calc_energy", "rdkit_cxx::force_field::rd_force_field::ForceField::calc_energy_with_pos"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.CalcGrad"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::calc_grad", "rdkit_cxx::force_field::rd_force_field::ForceField::calc_grad_with_pos"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Dimension"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::dimension"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.GetExtraPointPos"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::get_extra_point_pos"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Initialize"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::initialize"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddAngleConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_angle_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddDistanceConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_distance_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddPositionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_position_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MMFFAddTorsionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::mmff_add_torsion_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Minimize"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::minimize", "rdkit_cxx::force_field::rd_force_field::ForceField::minimize_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.MinimizeTrajectory"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::minimize_trajectory", "rdkit_cxx::force_field::rd_force_field::ForceField::minimize_trajectory_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.NumPoints"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::num_points"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.Positions"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::positions"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddAngleConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_angle_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddDistanceConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_distance_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddPositionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_position_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.ForceField.UFFAddTorsionConstraint"
+rust = ["rdkit_cxx::force_field::rd_force_field::ForceField::uff_add_torsion_constraint"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFAngleBendParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_angle_bend_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFAngleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_angle_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFAtomType"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_atom_type"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFBondStretchParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_bond_stretch_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFBondTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_bond_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFDielectricConstant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_dielectric_constant"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFDielectricModel"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_dielectric_model"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFEleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_ele_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFFormalCharge"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_formal_charge"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFOopBendParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_oop_bend_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFOopTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_oop_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFPartialCharge"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_partial_charge"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFStretchBendParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_stretch_bend_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFStretchBendTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_stretch_bend_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFTorsionParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_torsion_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFTorsionTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_torsion_term"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFVariant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_variant"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFVdWParams"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_vdw_params"]
+name_exception = "VdW is one word: get_mmff_vdw_params"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.GetMMFFVdWTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::get_mmff_vdw_term"]
+name_exception = "VdW is one word: get_mmff_vdw_term"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFAngleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_angle_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_angle_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFBondTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_bond_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_bond_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFDielectricConstant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_constant", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_constant_with_diel_const"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFDielectricModel"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_model", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_dielectric_model_with_diel_model"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFEleTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_ele_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_ele_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFOopTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_oop_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_oop_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFStretchBendTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_stretch_bend_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_stretch_bend_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFTorsionTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_torsion_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_torsion_term_with_state"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVariant"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_variant", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_variant_with_mmff_variant"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVdWTerm"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_vdw_term", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_vdw_term_with_state"]
+name_exception = "VdW is one word: set_mmff_vdw_term"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVerbosity"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_verbosity", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_verbosity_with_verbosity"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFMolProperties.__init__"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::new", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::new_with_params"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_HIGH"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityHigh"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_LOW"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityLow"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_NONE"
+rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityNone"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.GetEnergy"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_energy"]
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.GetPoint2D"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_point_2d"]
+name_exception = "digits stay with their letters: get_point_2d"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.GetPoint3D"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_point_3d"]
+name_exception = "digits stay with their letters: get_point_3d"
+
+[[entry]]
+python = "rdkit.ForceField.rdForceField.Snapshot.SetEnergy"
+rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::set_energy"]
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.ComputeDihedralAngle"
 rust = ["rdkit_cxx::geometry::rd_geometry::compute_dihedral_angle"]
 
@@ -8865,6 +9893,10 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.WriteGridToFile"
 rust = ["rdkit_cxx::geometry::rd_geometry::write_grid_to_file"]
+
+[[entry]]
+python = "rdkit.Numerics.rdAlignment.GetAlignmentTransform"
+rust = ["rdkit_cxx::numerics::rd_alignment::get_alignment_transform", "rdkit_cxx::numerics::rd_alignment::get_alignment_transform_with_params"]
 
 [[entry]]
 python = "rdkit.rdBase.AttachFileToLog"

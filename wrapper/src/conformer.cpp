@@ -32,8 +32,19 @@ std::unique_ptr<Conformer> conformer_with_num_atoms(unsigned num_atoms) {
   return std::make_unique<Conformer>(num_atoms);
 }
 
+// Conformer's copy constructor keeps the source's owning molecule, so a
+// copy taken from a molecule would point at it after it is gone, and every
+// RDKit function that calls getOwningMol on the copy would read freed memory
+// (Python's Conformer(other) does). The copy here has no owner: its
+// positions, id, dimensionality, and properties.
 std::unique_ptr<Conformer> conformer_clone(const Conformer &conf) {
-  return std::make_unique<Conformer>(conf);
+  auto copy = std::make_unique<Conformer>(conf.getNumAtoms());
+  static_cast<RDKit::RDProps &>(*copy) =
+      static_cast<const RDKit::RDProps &>(conf);
+  copy->getPositions() = conf.getPositions();
+  copy->setId(conf.getId());
+  copy->set3D(conf.is3D());
+  return copy;
 }
 
 unsigned conformer_get_id(const Conformer &conf) { return conf.getId(); }
