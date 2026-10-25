@@ -140,12 +140,39 @@ pub(crate) mod ffi {
         standard_colours_for_highlighted_atoms: bool,
     }
 
+    /// A drawing call's molecule-specific arguments: Python's
+    /// `highlightAtoms`, `highlightBonds`, `highlightAtomColors`,
+    /// `highlightBondColors`, `highlightAtomRadii`, `confId`, and `legend`,
+    /// maps as parallel keys and values.
+    struct DrawMoleculeData {
+        highlight_atoms: Vec<u32>,
+        has_highlight_atoms: bool,
+        highlight_bonds: Vec<u32>,
+        has_highlight_bonds: bool,
+        highlight_atom_colour_keys: Vec<u32>,
+        highlight_atom_colour_values: Vec<DrawColour>,
+        highlight_bond_colour_keys: Vec<u32>,
+        highlight_bond_colour_values: Vec<DrawColour>,
+        highlight_atom_radii_keys: Vec<u32>,
+        highlight_atom_radii_values: Vec<f64>,
+        conf_id: i32,
+        legend: String,
+    }
+
+    /// A width and height in pixels.
+    struct DrawSize {
+        width: i32,
+        height: i32,
+    }
+
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/draw.h");
         include!("rdkit-cxx/ffi/geometry.rs.h");
 
         type IndexList = crate::ffi::geometry::ffi::IndexList;
+        type Point2D = crate::ffi::geometry::ffi::Point2D;
+        type RWMol = crate::ffi::mol::ffi::RWMol;
         type LegendPosition;
         type MultiColourHighlightStyle;
         type DrawElement;
@@ -171,8 +198,98 @@ pub(crate) mod ffi {
             json: &str,
         ) -> Result<MolDrawOptionsData>;
         fn check_draw_colour(colour: &DrawColour) -> Result<()>;
+
+        /// An RDKit MolDraw2DSVG or MolDraw2DCairo, with what the wrappers
+        /// track about it (`draw.h`).
+        type Drawer;
+
+        fn mol_draw_2d_svg_new(
+            width: i32,
+            height: i32,
+            panel_width: i32,
+            panel_height: i32,
+            no_freetype: bool,
+        ) -> Result<UniquePtr<Drawer>>;
+        fn drawer_width(d: &Drawer) -> i32;
+        fn drawer_height(d: &Drawer) -> i32;
+        fn drawer_font_size(d: &Drawer) -> f64;
+        fn drawer_set_font_size(d: Pin<&mut Drawer>, size: f64) -> Result<()>;
+        fn drawer_line_width(d: &Drawer) -> f64;
+        fn drawer_set_line_width(d: Pin<&mut Drawer>, width: f64) -> Result<()>;
+        fn drawer_fill_polys(d: &Drawer) -> bool;
+        fn drawer_set_fill_polys(d: Pin<&mut Drawer>, val: bool);
+        fn drawer_flexi_mode(d: &Drawer) -> bool;
+        fn drawer_set_flexi_mode(d: Pin<&mut Drawer>, mode: bool);
+        fn drawer_offset(d: &Drawer) -> Point2D;
+        fn drawer_set_offset(d: Pin<&mut Drawer>, x: i32, y: i32) -> Result<()>;
+        fn drawer_set_colour(d: Pin<&mut Drawer>, colour: &DrawColour) -> Result<()>;
+        fn drawer_clear_drawing(d: Pin<&mut Drawer>) -> Result<()>;
+        fn drawer_draw_options(d: &Drawer) -> Result<MolDrawOptionsData>;
+        fn drawer_set_draw_options(d: Pin<&mut Drawer>, data: &MolDrawOptionsData) -> Result<()>;
+        fn drawer_update_params_from_json(d: Pin<&mut Drawer>, json: &str) -> Result<()>;
+        fn drawer_set_dark_mode(d: Pin<&mut Drawer>);
+        fn drawer_set_monochrome_mode(
+            d: Pin<&mut Drawer>,
+            fg_colour: &DrawColour,
+            bg_colour: &DrawColour,
+        ) -> Result<()>;
+        fn drawer_draw_molecule(
+            d: Pin<&mut Drawer>,
+            mol: &RWMol,
+            data: &DrawMoleculeData,
+        ) -> Result<()>;
+        fn drawer_get_mol_size(
+            d: Pin<&mut Drawer>,
+            mol: &RWMol,
+            data: &DrawMoleculeData,
+        ) -> Result<DrawSize>;
+        fn drawer_prepare_and_draw_molecule(
+            d: Pin<&mut Drawer>,
+            mol: &RWMol,
+            data: &DrawMoleculeData,
+            kekulize: bool,
+        ) -> Result<()>;
+        fn svg_finish_drawing(d: Pin<&mut Drawer>) -> Result<()>;
+        fn svg_drawing_text(d: &Drawer) -> Result<UniquePtr<CxxString>>;
+        fn svg_add_molecule_metadata(d: Pin<&mut Drawer>, mol: &RWMol, conf_id: i32) -> Result<()>;
+        fn svg_tag_atoms(
+            d: Pin<&mut Drawer>,
+            mol: &RWMol,
+            radius: f64,
+            event_keys: &Vec<String>,
+            event_values: &Vec<String>,
+        ) -> Result<()>;
+
+        fn prepare_mol_for_drawing(
+            mol: &RWMol,
+            kekulize: bool,
+            add_chiral_hs: bool,
+            wedge_bonds: bool,
+            force_coords: bool,
+            wavy_bonds: bool,
+        ) -> Result<UniquePtr<RWMol>>;
+        #[allow(clippy::too_many_arguments)]
+        fn mol_to_svg(
+            mol: &RWMol,
+            width: i32,
+            height: i32,
+            atoms: &Vec<u32>,
+            has_atoms: bool,
+            line_width_mult: u32,
+            include_atom_circles: bool,
+            conf_id: i32,
+        ) -> Result<UniquePtr<CxxString>>;
+        fn mean_bond_length(mol: &RWMol, conf_id: i32) -> Result<f64>;
     }
 
     impl Vec<DrawText> {}
     impl Vec<DrawColour> {}
 }
+
+// SAFETY: a Drawer owns its RDKit drawer, which holds copies of what it drew
+// (DrawMol copies each molecule and its highlights) and its own text drawer
+// and output, with no thread affinity: moving it to another thread moves all
+// it owns. It is not Sync: RDKit's const methods write to it
+// (MolDraw2DSVG::addMoleculeMetadata appends to its output), so the Rust
+// methods that call them take it mutably (CONVENTIONS.md S4).
+unsafe impl Send for ffi::Drawer {}

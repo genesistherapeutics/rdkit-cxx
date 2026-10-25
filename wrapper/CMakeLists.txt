@@ -107,6 +107,7 @@ set(RDKIT_CXX_SOURCES
   src/filter_catalog.cpp
   src/draw.cpp
   src/draw_checks.cpp
+  src/draw_drawer.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -172,6 +173,8 @@ target_include_directories(rdkitcxx PRIVATE
   # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it
   # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
   # install that has it finds its own first, next to the including header.
+  # vendor/GraphMol/MolDraw2D holds the text drawer's headers, from the same
+  # release, which no package installs (draw.cpp).
   vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
