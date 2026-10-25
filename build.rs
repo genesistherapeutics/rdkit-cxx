@@ -58,6 +58,7 @@ const BRIDGES: &[&str] = &[
     "dclv",
     "properties",
     "depictor",
+    "coord_gen",
 ];
 
 fn main() {

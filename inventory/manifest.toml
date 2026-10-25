@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -21,6 +21,85 @@ name_exception = "exceptions are Error variants (E4): Error::Runtime"
 [[entry]]
 python = "rdkit.Chem.rdConformerParser.AddConformersFromAmberTrajectory"
 rust = ["rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory", "rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.AddCoords"
+rust = ["rdkit_cxx::chem::rd_coord_gen::add_coords", "rdkit_cxx::chem::rd_coord_gen::add_coords_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.SetCoordMap"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::set_coord_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.SetTemplateMol"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::set_template_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.__init__"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.coordgenScaling"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::coordgen_scaling"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.dbg_useConstrained"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::dbg_use_constrained"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.dbg_useFixed"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::dbg_use_fixed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.minimizerPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::minimizer_precision"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherBestPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_best_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherCoarsePrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_coarse_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherQuickPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_quick_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.sketcherStandardPrecision"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::sketcher_standard_precision"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.templateFileDir"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::template_file_dir"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.CoordGenParams.treatNonterminalBondsToMetalAsZOBs"
+rust = ["rdkit_cxx::chem::rd_coord_gen::CoordGenParams::treat_nonterminal_bonds_to_metal_as_zobs"]
+rust_kind = "field"
+name_exception = "ZOBs is one word: treat_nonterminal_bonds_to_metal_as_zobs"
+
+[[entry]]
+python = "rdkit.Chem.rdCoordGen.SetDefaultTemplateFileDir"
+rust = ["rdkit_cxx::chem::rd_coord_gen::set_default_template_file_dir"]
 
 [[entry]]
 python = "rdkit.Chem.rdDepictor.AddRingSystemTemplates"

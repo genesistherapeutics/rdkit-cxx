@@ -24,6 +24,33 @@ include(cmake/RDKitCxxVersion.cmake)
 find_package(rdkit CONFIG REQUIRED)
 rdkit_cxx_check_version("${rdkit_VERSION}" "${RDKIT_CXX_SUPPORTED_SERIES}")
 
+# src/coord_gen.cpp copies CoordGenParams from GraphMol/CoordGen.h, which
+# needs coordgen headers RDKit's packages do not install, and calls the
+# addCoords<ROMol> that libRDKitDepictor exports. Fail here, not at run time,
+# if the installed header differs (whitespace aside).
+find_file(RDKIT_CXX_COORDGEN_HEADER GraphMol/CoordGen.h
+  PATHS ${RDKit_INCLUDE_DIRS} NO_DEFAULT_PATH NO_CACHE)
+if(NOT RDKIT_CXX_COORDGEN_HEADER)
+  message(FATAL_ERROR "GraphMol/CoordGen.h not found in ${RDKit_INCLUDE_DIRS}")
+endif()
+file(READ "${RDKIT_CXX_COORDGEN_HEADER}" coordgen_header)
+file(READ "${CMAKE_CURRENT_SOURCE_DIR}/src/coord_gen.cpp" coordgen_source)
+string(REGEX MATCH "// BEGIN CoordGen.h\n(.*)// END CoordGen.h" coordgen_match
+  "${coordgen_source}")
+set(coordgen_copy "${CMAKE_MATCH_1}")
+string(REGEX REPLACE "[ \t\r\n]+" " " coordgen_header "${coordgen_header}")
+string(REGEX REPLACE "[ \t\r\n]+" " " coordgen_copy "${coordgen_copy}")
+foreach(expected
+    "${coordgen_copy}"
+    "template <typename T> unsigned int addCoords(T &mol, const CoordGenParams *params = nullptr) {")
+  string(FIND "${coordgen_header}" "${expected}" coordgen_found)
+  if(coordgen_copy STREQUAL "" OR coordgen_found EQUAL -1)
+    message(FATAL_ERROR
+      "${RDKIT_CXX_COORDGEN_HEADER} no longer matches src/coord_gen.cpp: "
+      "update the copy of CoordGenParams and addCoords")
+  endif()
+endforeach()
+
 # One wrapper source per area (CONVENTIONS.md B4).
 set(RDKIT_CXX_SOURCES
   src/rd_base.cpp
@@ -76,6 +103,7 @@ set(RDKIT_CXX_SOURCES
   src/properties.cpp
   src/depiction_checks.cpp
   src/depictor.cpp
+  src/coord_gen.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
