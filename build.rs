@@ -92,6 +92,10 @@ const BRIDGES: &[&str] = &[
     "rgroup",
     "chemical_features",
     "mol_chemical_features",
+    "free_sasa",
+    "mif",
+    "shape_align",
+    "gaussian_shape",
 ];
 
 fn main() {
