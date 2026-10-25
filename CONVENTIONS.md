@@ -154,8 +154,10 @@ rule changes the rule first.
   `rdkit-cxx/global_state.h`, held for the whole call by every wrapper whose
   RDKit call can seed it or draw from it: the SMILES and CXSMILES writers
   with `doRandom`, `MolToRandomSmilesVect`, PNG metadata with random SMILES,
-  and `compute2DCoords` with random flips (`nFlipsPerSample`; the writers'
-  default depiction never draws). A wrapper that needs both locks takes
+  `compute2DCoords` with random flips (`nFlipsPerSample`; the writers'
+  default depiction never draws), the embedder without a seed, DistGeom's
+  `EmbedBoundsMatrix`, and MolAlign's `RandomTransform`. A wrapper that
+  needs both locks takes
   `lock_depiction()` first. RDKit's Ctrl-C handler (`ControlCHandler`,
   which swaps the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
