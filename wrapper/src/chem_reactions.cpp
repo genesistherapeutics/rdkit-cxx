@@ -40,6 +40,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 
 #include "rdkit-cxx/adjust_query.h"
+#include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/adjust_query.rs.h"
@@ -48,6 +49,7 @@
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/molfiles.h"
 #include "rdkit-cxx/substruct.h"
@@ -186,13 +188,24 @@ bool any_template_without_conformer(const ChemicalReaction &rxn) {
 
 // The V2000 rxn writer writes each template with MolToMolBlock and
 // includeStereo, which computes 2D coordinates for a molecule without a
-// conformer (prepareMol in MolFileWriter.cpp), so it holds the lock (U4).
+// conformer (prepareMol in MolFileWriter.cpp) with compute2DCoords, so it
+// holds the lock and checks those templates under it (U4); compute2DCoords
+// trusts the molecule (depiction_checks.h). The V3000 writer writes the
+// templates' CTABs without depicting them.
 std::unique_lock<std::mutex> lock_if_depicting(const ChemicalReaction &rxn,
                                                bool force_v3000) {
-  if (!force_v3000 && any_template_without_conformer(rxn)) {
-    return lock_depiction();
+  if (force_v3000 || !any_template_without_conformer(rxn)) {
+    return {};
   }
-  return {};
+  auto lock = lock_depiction();
+  for (std::uint8_t kind = 0; kind < 3; ++kind) {
+    for (const auto &mol : templates(rxn, kind)) {
+      if (!mol->getNumConformers()) {
+        check_compute_2d_coords_mol(*mol, false);
+      }
+    }
+  }
+  return lock;
 }
 
 // PNG files: the 8-byte signature, then chunks of a big-endian length, a
@@ -306,29 +319,6 @@ rust::Vec<std::uint8_t> add_metadata(const ChemicalReaction &rxn,
   return to_vec(RDKit::addChemicalReactionToPNGString(
       rxn, png, include_pkl, include_smiles, include_smarts, include_rxn));
 }
-
-// Python's Compute2DCoordsForReaction sets RDDepict::BOND_LEN for one call;
-// this restores it even when RDKit throws.
-class BondLengthSetter {
- public:
-  explicit BondLengthSetter(double bond_length)
-      : d_old(RDDepict::BOND_LEN), d_set(bond_length > 0) {
-    if (d_set) {
-      RDDepict::BOND_LEN = bond_length;
-    }
-  }
-  ~BondLengthSetter() {
-    if (d_set) {
-      RDDepict::BOND_LEN = d_old;
-    }
-  }
-  BondLengthSetter(const BondLengthSetter &) = delete;
-  BondLengthSetter &operator=(const BondLengthSetter &) = delete;
-
- private:
-  double d_old;
-  bool d_set;
-};
 
 RDKit::ReactionFingerprintParams fp_params_from(
     const ReactionFingerprintParamsData &data) {
@@ -792,19 +782,33 @@ std::unique_ptr<ChemicalReaction> reaction_from_smarts(
       text);
 }
 
+namespace {
+
+// The reaction writers write each template with RDKit's SMILES or SMARTS
+// writer, whose doRandom advances RDKit's global generator (U4).
+std::unique_lock<std::mutex> random_lock(const SmilesWriteParamsData &params) {
+  return params.do_random ? std::unique_lock<std::mutex>(random_mutex())
+                          : std::unique_lock<std::mutex>();
+}
+
+}  // namespace
+
 std::unique_ptr<std::string> reaction_to_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
+  auto lock = random_lock(params);
   return own(RDKit::ChemicalReactionToRxnSmarts(rxn, write_params(params)));
 }
 
 std::unique_ptr<std::string> reaction_to_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
+  auto lock = random_lock(params);
   return own(RDKit::ChemicalReactionToRxnSmiles(rxn, write_params(params)));
 }
 
 std::unique_ptr<std::string> reaction_to_cx_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
+  auto lock = random_lock(params);
   return own(
       RDKit::ChemicalReactionToCXRxnSmarts(rxn, write_params(params), flags));
 }
@@ -812,6 +816,7 @@ std::unique_ptr<std::string> reaction_to_cx_smarts(
 std::unique_ptr<std::string> reaction_to_cx_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
+  auto lock = random_lock(params);
   return own(
       RDKit::ChemicalReactionToCXRxnSmiles(rxn, write_params(params), flags));
 }
@@ -984,17 +989,25 @@ void compute_2d_coords_for_reaction(ChemicalReaction &rxn, double spacing,
                                     unsigned n_sample, int sample_seed,
                                     bool permute_deg4_nodes,
                                     double bond_length) {
+  check_bond_length(bond_length);
   auto lock = lock_depiction();
+  // Random bond flips (nSample and nFlipsPerSample) draw from RDKit's
+  // generator (U4).
+  std::lock_guard<std::mutex> random_lock(random_mutex());
+  // compute2DCoordsForReaction runs compute2DCoords on each reactant and
+  // product template (ReactionDepict.cpp), which trusts the molecule
+  // (depiction_checks.h); its updateProps changes nothing the checks read.
   // RDDepict computes the templates' distance matrices, in int, and caches
   // them (U6). Agents are not depicted.
   std::vector<std::unique_ptr<MatrixCacheGuard>> guards;
   for (std::uint8_t kind = 0; kind < 2; ++kind) {
     for (const auto &mol : templates(rxn, kind)) {
       check_matrix_size(*mol);
+      check_compute_2d_coords_mol(*mol, false);
       guards.push_back(std::make_unique<MatrixCacheGuard>(*mol));
     }
   }
-  BondLengthSetter setter(bond_length);
+  BondLengthOverride setter(bond_length);
   RDDepict::compute2DCoordsForReaction(rxn, spacing, update_props, canon_orient,
                                        n_flips_per_sample, n_sample,
                                        sample_seed, permute_deg4_nodes);

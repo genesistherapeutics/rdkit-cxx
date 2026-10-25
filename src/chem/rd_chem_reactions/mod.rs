@@ -257,8 +257,9 @@ impl Default for Compute2DCoordsForReactionParams {
 
 /// Lays out the reactant and product templates in 2D, left to right.
 /// Templates over 46340 atoms are `Error::Value`, since RDKit computes their
-/// distance matrices in `i32`. Mirrors
-/// `rdChemReactions.Compute2DCoordsForReaction`.
+/// distance matrices in `i32`, as are templates the depictor would mishandle
+/// and a bond length past its coordinate bound (see `chem::rd_depictor`).
+/// Mirrors `rdChemReactions.Compute2DCoordsForReaction`.
 pub fn compute_2d_coords_for_reaction(reaction: &mut ChemicalReaction) -> Result<()> {
     compute_2d_coords_for_reaction_with_params(reaction, &Default::default())
 }

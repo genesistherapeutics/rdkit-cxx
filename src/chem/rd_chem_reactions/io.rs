@@ -120,7 +120,8 @@ pub struct ReactionMetadataToPNGStringParams {
     pub include_smiles: bool,
     /// Adds its reaction SMARTS.
     pub include_smarts: bool,
-    /// Adds its V2000 rxn block.
+    /// Adds its V2000 rxn block, which depicts each template without a
+    /// conformer, as `reaction_to_rxn_block` does.
     pub include_rxn: bool,
 }
 
@@ -439,7 +440,9 @@ pub fn reactions_from_cdxml_file_with_params(
 }
 
 /// An MDL rxn block for a reaction, V2000 with the agents among the
-/// reactants. Mirrors `rdChemReactions.ReactionToRxnBlock`.
+/// reactants. The V2000 writer depicts each template without a conformer,
+/// and this returns `Error::Value` for one the depictor would mishandle (see
+/// `chem::rd_depictor`). Mirrors `rdChemReactions.ReactionToRxnBlock`.
 pub fn reaction_to_rxn_block(reaction: &ChemicalReaction) -> Result<String> {
     reaction_to_rxn_block_with_params(reaction, &ReactionToRxnBlockParams::default())
 }

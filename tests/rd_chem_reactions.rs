@@ -13,8 +13,8 @@ use std::path::PathBuf;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
 use rdkit_cxx::chem::{
-    Mol, PropValue, PropertyPickleOptions, SmilesWriteParams, mol_from_smarts, mol_from_smiles,
-    mol_to_smiles,
+    ChiralType, Mol, PropValue, PropertyPickleOptions, SmilesWriteParams, mol_from_smarts,
+    mol_from_smiles, mol_to_smiles,
 };
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
@@ -1083,6 +1083,54 @@ fn depiction() {
     );
     let length = ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt();
     assert!((length - 1.5).abs() < 1e-6, "{length}");
+}
+
+fn square_planar_refused<T>(result: Result<T, Error>) -> bool {
+    matches!(result, Err(Error::Value { message }) if message.contains("square-planar"))
+}
+
+/// RDKit's depictor reads the first neighbor of a square-planar atom
+/// unchecked: Python segfaults in Compute2DCoordsForReaction and in
+/// ReactionToRxnBlock, whose V2000 writer depicts a template without a
+/// conformer. The paths that depict a template check it first.
+#[test]
+fn depiction_refuses_what_the_depictor_would_mishandle() {
+    let mut platinum = smiles("[Pt]");
+    platinum
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiSquareplanar);
+    let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
+    rxn.add_product_template(&platinum);
+    assert!(square_planar_refused(reaction_to_rxn_block(&rxn)));
+    let png = std::fs::read(data("reaction1.no_metadata.png")).unwrap();
+    let with_rxn = ReactionMetadataToPNGStringParams {
+        include_rxn: true,
+        ..Default::default()
+    };
+    assert!(square_planar_refused(
+        reaction_metadata_to_png_string_with_params(&rxn, &png, &with_rxn)
+    ));
+    assert!(square_planar_refused(compute_2d_coords_for_reaction(
+        &mut rxn
+    )));
+    // The writers that do not depict write it.
+    assert!(
+        reaction_to_v3k_rxn_block(&rxn)
+            .unwrap()
+            .starts_with("$RXN V3000")
+    );
+    reaction_metadata_to_png_string(&rxn, &png).unwrap();
+
+    // So is a bond length past the depictor's coordinate bound.
+    let params = Compute2DCoordsForReactionParams {
+        bond_length: 1e6,
+        ..Default::default()
+    };
+    assert!(matches!(
+        compute_2d_coords_for_reaction_with_params(&mut amide(), &params),
+        Err(Error::Value { .. })
+    ));
 }
 
 #[test]
