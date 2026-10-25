@@ -19,6 +19,7 @@ members = [".", "downstream"]
 
 [dependencies]
 cxx = "=1.0.205"
+sha1_smol = "1"
 
 [build-dependencies]
 cmake = "0.1"

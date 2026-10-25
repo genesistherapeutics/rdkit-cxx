@@ -4,9 +4,12 @@
 // license that can be found in the LICENSE file.
 
 //! Mirrors `rdkit.Chem`, which re-exports `rdchem`, `rdmolfiles`, and
-//! `rdmolops` (and `rdCIPLabeler` and `rdMolInterchange`); its other
-//! submodules are reached by path, as in Python.
+//! `rdmolops` (and `rdCIPLabeler` and `rdMolInterchange`), and defines
+//! Python functions of its own (`FindMolChiralCenters`), ported here; its
+//! other submodules are reached by path, as in Python.
 
+mod init;
+pub mod lipinski;
 pub mod mol_standardize;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
@@ -48,8 +51,10 @@ pub mod rdfragcatalog;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
+pub mod registration_hash;
 pub mod scaffolds;
 
+pub use init::*;
 pub use rd_cip_labeler::*;
 pub use rdchem::*;
 pub use rdmolfiles::*;

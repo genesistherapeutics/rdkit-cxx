@@ -8,3 +8,4 @@ From RDKit's source tree, under RDKit's BSD license:
 - `reaction1.no_metadata.png`: `Code/GraphMol/ChemReactions/testData`
 - `rxn1.cdxml`: `Code/GraphMol/test_data/CDXML`
 - `AlexRxn.mrv`: `Code/GraphMol/MarvinParse/test_data`
+- `RP-6306_atrop1.sdf`: `Code/GraphMol/FileParsers/test_data/atropisomers`

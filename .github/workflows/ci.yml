@@ -40,6 +40,11 @@ jobs:
       - run: cargo fmt --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
+      - name: The cookbook examples run
+        run: |
+          for example in examples/*.rs; do
+            cargo run --quiet --example "$(basename "$example" .rs)" > /dev/null
+          done
       - run: cmake -P tests/cmake/version_check.cmake
       - name: A downstream binary runs with no library path
         run: |
