@@ -30,6 +30,7 @@
 #include "rdkit-cxx/force_field.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/symmetrize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -299,7 +300,8 @@ EmbedParametersData embed_parameters_preset(EmbedPreset preset) {
 // RDKit's global random generator. The embedding therefore runs on the
 // calling thread, which gives the conformers RDKit's threads would, since
 // each conformer's seed depends only on its index. Each call also swaps the
-// process's SIGINT handler (control_c_mutex).
+// process's SIGINT handler (control_c_mutex), and pruning symmetrizes
+// terminal groups (symmetrize_mutex).
 rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
                                              std::uint32_t num_confs,
                                              EmbedParametersData &data) {
@@ -309,6 +311,12 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
   params.numThreads = 1;
   MatrixCacheGuard guard(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
+  // Pruning by RMS symmetrizes terminal groups (getMolSelfMatches).
+  std::unique_lock<std::mutex> symmetrize(symmetrize_mutex(), std::defer_lock);
+  if (params.pruneRmsThresh > 0.0 && params.useSymmetryForPruning &&
+      params.symmetrizeConjugatedTerminalGroupsForPruning) {
+    symmetrize.lock();
+  }
   std::unique_lock<std::mutex> random(random_mutex(), std::defer_lock);
   if (params.randomSeed < 0) {
     random.lock();

@@ -159,8 +159,12 @@ rule changes the rule first.
   `lock_depiction()` first. RDKit's Ctrl-C handler (`ControlCHandler`,
   which swaps the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
-  by every wrapper whose RDKit call constructs one; a wrapper that also
-  needs `random_mutex()` takes `control_c_mutex()` first.
+  by every wrapper whose RDKit call constructs one. MolAlign's
+  `symmetrizeTerminalAtoms`, which the best-alignment functions and the
+  embedder's pruning reach, assigns a static on every call, so callers hold
+  `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
+  several of these locks takes `control_c_mutex()`, then
+  `symmetrize_mutex()`, then `random_mutex()`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
