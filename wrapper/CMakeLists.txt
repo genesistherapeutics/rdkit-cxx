@@ -105,6 +105,7 @@ set(RDKIT_CXX_SOURCES
   src/mol_catalog.cpp
   src/frag_catalog.cpp
   src/filter_catalog.cpp
+  src/chemical_features.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -148,6 +149,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   Catalogs
   MolCatalog
   FragCatalog
+  ChemicalFeatures
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

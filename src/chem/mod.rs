@@ -10,6 +10,7 @@
 pub mod mol_standardize;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
+pub mod rd_chemical_features;
 pub mod rd_cip_labeler;
 pub mod rd_conformer_parser;
 pub mod rd_coord_gen;

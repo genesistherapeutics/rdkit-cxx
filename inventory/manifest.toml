@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -2045,6 +2045,55 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::sanitize_rxn_as_mols", "rdkit_cxx::
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.UpdateProductsStereochemistry"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::update_products_stereochemistry"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetFamily"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_family"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetId"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetPos"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_pos"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetType"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetFamily"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_family"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetId"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetPos"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_pos"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetType"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__getstate__"
+reason = "Python's pickling protocol: to_pickle and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__init__"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::default", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::from_pickle", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::new", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::new_with_id", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::from_family"]
+overloads_note = "the str and bytes pickle overloads share from_pickle; FreeChemicalFeature(family, type, loc, id) is new, with new_with_id for id (A2), and FreeChemicalFeature(family, loc) from_family (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__setstate__"
+reason = "Python's pickling protocol: to_pickle and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdConformerParser.AddConformersFromAmberTrajectory"

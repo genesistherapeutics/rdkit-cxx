@@ -83,6 +83,7 @@ const BRIDGES: &[&str] = &[
     "mol_catalog",
     "frag_catalog",
     "filter_catalog",
+    "chemical_features",
 ];
 
 fn main() {
