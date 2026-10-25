@@ -69,6 +69,10 @@ set(RDKIT_CXX_SOURCES
   src/graph.cpp
   src/transforms.cpp
   src/rdqueries.cpp
+  src/descriptors.cpp
+  src/descriptors_3d.cpp
+  src/dclv.cpp
+  src/properties.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -92,6 +96,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   MMPA
   ChemReactions
   Deprotect
+  Descriptors
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
