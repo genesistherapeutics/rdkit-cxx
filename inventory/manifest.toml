@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -4175,6 +4175,144 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
 [[entry]]
 python = "rdkit.Chem.rdchem.tossit"
 reason = "RDKit's test hook that raises IndexError"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator.AddFragsFromMol"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator::add_frags_from_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetFuncGroup"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_func_group"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetLowerFragLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_lower_frag_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetNumFuncGroups"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_num_func_groups"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetTolerance"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_tolerance"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetTypeString"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_type_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetUpperFragLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_upper_frag_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.Serialize"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::new", "rdkit_cxx::chem::rdfragcatalog::FragCatParams::new_with_tol"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitDescription"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitDiscrims"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_discrims"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitEntryId"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_entry_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitFuncGroupIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_func_group_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitOrder"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetCatalogParams"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_catalog_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryBitId"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_bit_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryDescription"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryDownIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_down_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryFuncGroupIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_func_group_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryOrder"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetFPLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_fp_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::default", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::new", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::from_pickle"]
+overloads_note = "the bytes and str pickle overloads share from_pickle"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.GetFPForMol"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::get_fp_for_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGFile"

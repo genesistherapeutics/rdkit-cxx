@@ -20,6 +20,7 @@ pub mod rd_partial_charges;
 pub mod rd_reduced_graphs;
 pub mod rd_sln_parse;
 pub mod rdchem;
+pub mod rdfragcatalog;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;

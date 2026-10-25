@@ -80,6 +80,7 @@ set(RDKIT_CXX_SOURCES
   src/writers.cpp
   src/catalog_checks.cpp
   src/mol_catalog.cpp
+  src/frag_catalog.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -108,6 +109,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   Descriptors
   Catalogs
   MolCatalog
+  FragCatalog
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

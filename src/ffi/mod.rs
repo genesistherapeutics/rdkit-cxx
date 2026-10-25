@@ -21,6 +21,7 @@ pub(crate) mod errors;
 pub(crate) mod fingerprint_generator;
 pub(crate) mod fingerprints;
 pub(crate) mod fpb;
+pub(crate) mod frag_catalog;
 pub(crate) mod geometry;
 pub(crate) mod graph;
 pub(crate) mod grid;
