@@ -35,6 +35,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
@@ -688,11 +689,14 @@ namespace {
 
 // The mol-block and Marvin writers compute 2D coordinates for stereo when
 // the molecule has no conformer (prepareMol in MolFileWriter.cpp,
-// MolToMrvBlock in MarvinWriter.cpp).
+// MolToMrvBlock in MarvinWriter.cpp), with compute2DCoords, which trusts the
+// molecule (depiction_checks.h).
 std::unique_lock<std::mutex> lock_if_depicting(const RWMol &mol,
                                                bool include_stereo) {
   if (include_stereo && mol.getNumConformers() == 0) {
-    return lock_depiction();
+    auto lock = lock_depiction();
+    check_compute_2d_coords_mol(mol, false);
+    return lock;
   }
   return {};
 }
@@ -1132,6 +1136,7 @@ rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
   RDKit::MolOps::Kekulize(copy);
   if (!copy.getNumConformers()) {
     auto lock = lock_depiction();
+    check_compute_2d_coords_mol(copy, false);
     RDDepict::compute2DCoords(copy);
   }
   check_cdx_coordinates(copy);

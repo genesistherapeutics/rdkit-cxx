@@ -11,6 +11,7 @@
 #include <GraphMol/ChemReactions/Reaction.h>
 #include <GraphMol/ChemReactions/ReactionParser.h>
 #include <GraphMol/Conformer.h>
+#include <GraphMol/Depictor/RDDepictor.h>
 #include <GraphMol/SLNParse/SLNParse.h>
 #include <GraphMol/SanitException.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
@@ -82,6 +83,9 @@ std::string encode_current_exception() {
   } catch (const RDKit::ChemicalReactionException &e) {
     // Python's ChemicalReactionException subclasses ValueError.
     return encode("Value", "", e.what());
+  } catch (const RDDepict::DepictException &e) {
+    // Python's rdDepictor registers it as a ValueError.
+    return encode("Value", "", e.what());
   } catch (const RDKit::BadFileException &e) {
     return encode("Os", "", e.what());
   } catch (const RDKit::SmilesParse::SmilesParseException &e) {
@@ -122,6 +126,8 @@ void raise_for_tests(rust::Str kind_str) {
     throw ValueErrorException(message);
   } else if (kind == "conformer") {
     throw RDKit::ConformerException(message);
+  } else if (kind == "depict") {
+    throw RDDepict::DepictException(message);
   } else if (kind == "bad_file") {
     throw RDKit::BadFileException(message);
   } else if (kind == "smiles_parse") {

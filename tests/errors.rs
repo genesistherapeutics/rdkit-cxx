@@ -59,6 +59,12 @@ fn each_rdkit_exception_maps_to_its_variant() {
         );
     }
     assert_eq!(
+        raise("depict").unwrap_err(),
+        Error::Value {
+            message: message("depict")
+        }
+    );
+    assert_eq!(
         raise("bad_file").unwrap_err(),
         Error::Os {
             message: message("bad_file")

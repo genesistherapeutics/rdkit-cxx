@@ -10,7 +10,9 @@ rule changes the rule first.
   pre-commit hook adds it (`addlicense -c "Steven Kearnes" -f
   .license-header.txt`), another hook rejects the one-line form, and CI runs
   the hooks. Generators write the same header themselves
-  (`inventory/check.py`).
+  (`inventory/check.py`). Vendored third-party files
+  (`wrapper/third_party/`) stay as their upstream ships them, under their
+  own licenses, and the hooks skip them.
 - **L2.** rustfmt formats Rust, clang-format (`.clang-format`: Google's style
   with RDKit's pointer alignment) formats C++, and ruff (`ruff.toml`) lints
   and formats Python. The pre-commit hooks in `.pre-commit-config.yaml` run
@@ -56,7 +58,7 @@ rule changes the rule first.
   | `RDKit::MolSanitizeException` | `MolSanitize` |
   | `rdkit_cxx::IndexError` | `Index` |
   | `KeyErrorException` | `Key` |
-  | `ValueErrorException`, `RDKit::ConformerException`, `RDKit::ChemicalReactionException` | `Value` |
+  | `ValueErrorException`, `RDKit::ConformerException`, `RDKit::ChemicalReactionException`, `RDDepict::DepictException` | `Value` |
   | `RDKit::BadFileException` | `Os` |
   | `RDKit::SmilesParse::SmilesParseException`, `RDKit::FileParseException`, `RDKit::SLNParseException`, `RDKit::ChemicalReactionParserException` | `Parse` |
   | `Invar::Invariant` (with `toUserString()`), any other exception | `Runtime` |
@@ -162,19 +164,20 @@ rule changes the rule first.
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
-  mol-block (V2000 and V3000), Marvin, ChemDraw, and PNG writers for a
-  molecule without a conformer, and the reaction writers built on them (rxn
-  blocks, Marvin, and PNG metadata) for a reaction with such a template; and
-  `molzip` with `generateCoordinates`.
-  RDKit's random number generator (`RDGeneral/utils.cpp`) is shared by
-  every module, so it has one lock, `random_mutex()` in
-  `rdkit-cxx/global_state.h`, held for the whole call by every wrapper whose
-  RDKit call can seed it or draw from it: the SMILES and CXSMILES writers
-  (for molecules and reactions) with `doRandom`, `MolToRandomSmilesVect`,
-  PNG metadata with random SMILES, and `compute2DCoords` and
-  `Compute2DCoordsForReaction` with random flips (`nFlipsPerSample`; the
-  writers' default depiction never draws). A wrapper that needs both locks
-  takes `lock_depiction()` first.
+  mol-block (V2000 and V3000), Marvin, ChemDraw, PNG, SD, and Maestro
+  writers for a molecule without a conformer, and the reaction writers built
+  on them (rxn blocks, Marvin, and PNG metadata) for a reaction with such a
+  template; and `molzip` with `generateCoordinates`. They also check, under
+  the lock, what the depictor that will run trusts about the molecule
+  (`check_compute_2d_coords_mol` in `depiction_checks.h`). RDKit's random
+  number generator (`RDGeneral/utils.cpp`) is shared by every module, so it
+  has one lock, `random_mutex()` in `rdkit-cxx/global_state.h`, held for the
+  whole call by every wrapper whose RDKit call can seed it or draw from it:
+  the SMILES and CXSMILES writers (for molecules and reactions) with
+  `doRandom`, `MolToRandomSmilesVect`, PNG metadata with random SMILES, and
+  the depictor's sampling (`nFlipsPerSample` and random bond flips, in
+  `Compute2DCoordsForReaction` too; the writers' default depiction never
+  draws). A wrapper that needs both locks takes `lock_depiction()` first.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

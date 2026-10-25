@@ -78,6 +78,9 @@ set(RDKIT_CXX_SOURCES
   src/png.cpp
   src/suppliers.cpp
   src/writers.cpp
+  src/depiction_checks.cpp
+  src/depictor.cpp
+  src/coord_gen.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
 )
@@ -106,12 +109,17 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ChemReactions
   Deprotect
   Descriptors
+  coordgen
+  MolTransforms
   FilterCatalog
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
+# GraphMol/CoordGen.h includes coordgen's headers, which RDKit's packages
+# do not install; third_party/coordgen holds the version RDKit builds in.
 target_include_directories(rdkitcxx PRIVATE
   include
+  third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
   # Declarations RDKit's installed headers need (compat/maeparser).

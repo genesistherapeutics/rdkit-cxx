@@ -16,6 +16,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/types.h>
 
+#include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/writers.rs.h"
@@ -186,10 +187,13 @@ RDKit::STR_VECT to_strings(const rust::Vec<rust::String> &props) {
 
 // The SD and Maestro writers compute 2D coordinates for a molecule without a
 // conformer (prepareMol in MolFileWriter.cpp, _MolToMaeCtBlock in
-// MaeWriter.cpp), so they hold the depiction lock then (U4).
+// MaeWriter.cpp), so they hold the depiction lock then (U4). They use
+// compute2DCoords, which trusts the molecule (depiction_checks.h).
 std::unique_lock<std::mutex> lock_if_depicting(const RWMol &mol) {
   if (mol.getNumConformers() == 0) {
-    return lock_depiction();
+    auto lock = lock_depiction();
+    check_compute_2d_coords_mol(mol, false);
+    return lock;
   }
   return {};
 }
