@@ -6,6 +6,7 @@
 #include "rdkit-cxx/force_field_helpers.h"
 
 #include <algorithm>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -18,6 +19,7 @@
 #include <GraphMol/ForceFieldHelpers/UFF/Builder.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/force_field.rs.h"
 #include "rdkit-cxx/ffi/force_field_helpers.rs.h"
@@ -31,6 +33,21 @@ namespace {
 // The builders size their neighbor matrices in unsigned int, and the MMFF
 // one reads the int distance matrix (U3, U6).
 void check_builder_size(const RDKit::ROMol &mol) { check_matrix_size(mol); }
+
+// The builders match torsion patterns (addTorsions in UFF/Builder.cpp and
+// MMFF/Builder.cpp), so they run under control_c_mutex (control_c_lock.h);
+// minimizing, which may use several threads, matches nothing.
+template <class... Args>
+ForceFields::ForceField *build_uff(Args &&...args) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  return RDKit::UFF::constructForceField(std::forward<Args>(args)...);
+}
+
+template <class... Args>
+ForceFields::ForceField *build_mmff(Args &&...args) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  return RDKit::MMFF::constructForceField(std::forward<Args>(args)...);
+}
 
 // Minimizes one conformer, as OptimizeMoleculeConfsST.
 ConfOptimization optimize_conf(ForceFields::ForceField &field,
@@ -142,8 +159,8 @@ int uff_optimize_molecule(RWMol &mol, unsigned max_iters, double vdw_thresh,
                           int conf_id, bool ignore_interfrag_interactions) {
   check_builder_size(mol);
   check_minimize_size(mol.getNumAtoms(), 3);
-  std::unique_ptr<ForceFields::ForceField> ff(RDKit::UFF::constructForceField(
-      mol, vdw_thresh, conf_id, ignore_interfrag_interactions));
+  std::unique_ptr<ForceFields::ForceField> ff(
+      build_uff(mol, vdw_thresh, conf_id, ignore_interfrag_interactions));
   return RDKit::ForceFieldsHelper::OptimizeMolecule(*ff, max_iters).first;
 }
 
@@ -151,8 +168,8 @@ rust::Vec<ConfOptimization> uff_optimize_molecule_confs(
     RWMol &mol, int num_threads, unsigned max_iters, double vdw_thresh,
     bool ignore_interfrag_interactions) {
   check_builder_size(mol);
-  std::unique_ptr<ForceFields::ForceField> ff(RDKit::UFF::constructForceField(
-      mol, vdw_thresh, -1, ignore_interfrag_interactions));
+  std::unique_ptr<ForceFields::ForceField> ff(
+      build_uff(mol, vdw_thresh, -1, ignore_interfrag_interactions));
   return optimize_confs(mol, *ff, num_threads, max_iters);
 }
 
@@ -160,8 +177,8 @@ std::unique_ptr<ForceField> uff_get_molecule_force_field(
     RWMol &mol, double vdw_thresh, int conf_id,
     bool ignore_interfrag_interactions) {
   check_builder_size(mol);
-  return wrap(RDKit::UFF::constructForceField(mol, vdw_thresh, conf_id,
-                                              ignore_interfrag_interactions));
+  return wrap(
+      build_uff(mol, vdw_thresh, conf_id, ignore_interfrag_interactions));
 }
 
 bool uff_has_all_molecule_params(const RWMol &mol) {
@@ -180,7 +197,7 @@ int mmff_optimize_molecule(RWMol &mol, rust::Str mmff_variant,
   if (!props.isValid()) {
     return -1;
   }
-  std::unique_ptr<ForceFields::ForceField> ff(RDKit::MMFF::constructForceField(
+  std::unique_ptr<ForceFields::ForceField> ff(build_mmff(
       mol, &props, non_bonded_thresh, conf_id, ignore_interfrag_interactions));
   ff->initialize();
   return ff->minimize(max_iters);
@@ -215,9 +232,8 @@ std::unique_ptr<ForceField> mmff_get_molecule_force_field(
   MatrixCacheGuard guard(mol);
   auto &mmff_props =
       const_cast<RDKit::MMFF::MMFFMolProperties &>(props.props());
-  return wrap(RDKit::MMFF::constructForceField(mol, &mmff_props,
-                                               non_bonded_thresh, conf_id,
-                                               ignore_interfrag_interactions));
+  return wrap(build_mmff(mol, &mmff_props, non_bonded_thresh, conf_id,
+                         ignore_interfrag_interactions));
 }
 
 std::unique_ptr<ForceField> create_empty_force_field_for_mol(RWMol &mol,
@@ -250,7 +266,7 @@ rust::Vec<ConfOptimization> mmff_optimize_molecule_confs(
     }
     return res;
   }
-  std::unique_ptr<ForceFields::ForceField> ff(RDKit::MMFF::constructForceField(
+  std::unique_ptr<ForceFields::ForceField> ff(build_mmff(
       mol, &props, non_bonded_thresh, -1, ignore_interfrag_interactions));
   return optimize_confs(mol, *ff, num_threads, max_iters);
 }

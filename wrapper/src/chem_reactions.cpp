@@ -39,6 +39,7 @@
 #include <boost/property_tree/xml_parser.hpp>
 
 #include "rdkit-cxx/adjust_query.h"
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -716,6 +717,9 @@ rust::Vec<std::uint32_t> chemical_reaction_validate(ChemicalReaction &rxn,
   return res;
 }
 
+// Running a reaction, testing a molecule against its templates, comparing
+// reactions, preprocessing, and the fingerprints (which can be pattern
+// fingerprints) match substructures (control_c_lock.h).
 std::unique_ptr<ProductSets> chemical_reaction_run_reactants(
     ChemicalReaction &rxn, BorrowedMols &reactants, unsigned max_products) {
   initialize_if_needed(rxn);
@@ -725,6 +729,7 @@ std::unique_ptr<ProductSets> chemical_reaction_run_reactants(
   for (const auto &mol : reactants.mols()) {
     copies.emplace_back(new RWMol(*mol));
   }
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_product_sets(rxn.runReactants(copies, max_products));
 }
 
@@ -735,6 +740,7 @@ std::unique_ptr<ProductSets> chemical_reaction_run_reactant(
   // after it has cleared the reactant's bookmarks.
   check_index(reaction_idx, rxn.getNumReactantTemplates());
   ROMOL_SPTR copy(new RWMol(reactant));
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_product_sets(rxn.runReactant(copy, reaction_idx));
 }
 
@@ -745,6 +751,7 @@ bool chemical_reaction_run_reactant_in_place(ChemicalReaction &rxn,
   // Python's binding static_casts its ROMol to RWMol, undefined for a Mol;
   // a Rust molecule is an RWMol (W1). Its edits keep cached matrices (U6).
   MatrixCacheGuard guard(reactant);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   try {
     return rxn.runReactant(reactant, remove_unmatched_atoms);
   } catch (...) {
@@ -757,6 +764,7 @@ bool chemical_reaction_run_reactant_in_place(ChemicalReaction &rxn,
 bool chemical_reaction_is_molecule_template(const ChemicalReaction &rxn,
                                             std::uint8_t kind,
                                             const RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   switch (kind) {
     case 0:
       return RDKit::isMoleculeReactantOfReaction(rxn, mol);
@@ -1062,6 +1070,7 @@ std::unique_ptr<SparseIntVect> create_difference_fingerprint_for_reaction(
   auto guards =
       guard_templates(rxn, params.fpType == FingerprintType::AtomPairFP);
   check_difference_fingerprint(rxn, params);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> fp(
       RDKit::DifferenceFingerprintChemReaction(rxn, params));
   return std::make_unique<SparseIntVect>(std::move(*fp));
@@ -1073,6 +1082,7 @@ std::unique_ptr<BitVect> create_structural_fingerprint_for_reaction(
   check_structural_fingerprint(params);
   auto guards =
       guard_templates(rxn, params.fpType == FingerprintType::AtomPairFP);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<ExplicitBitVect> fp(
       RDKit::StructuralFingerprintChemReaction(rxn, params));
   return std::make_unique<BitVect>(std::move(*fp));
@@ -1090,12 +1100,14 @@ bool has_reaction_atom_mapping(const ChemicalReaction &rxn) {
 bool has_reaction_substruct_match(const ChemicalReaction &rxn,
                                   const ChemicalReaction &query_rxn,
                                   bool include_agents) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return RDKit::hasReactionSubstructMatch(rxn, query_rxn, include_agents);
 }
 
 bool has_template_substruct_match(const ChemicalReaction &rxn,
                                   const ChemicalReaction &query_rxn,
                                   std::uint8_t kind) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   switch (kind) {
     case 0:
       return RDKit::hasReactantTemplateSubstructMatch(rxn, query_rxn);
@@ -1142,6 +1154,7 @@ PreprocessReactionData preprocess_reaction(ChemicalReaction &rxn,
   rxn.validate(num_warnings, num_errors);
   std::vector<std::vector<std::pair<unsigned int, std::string>>> labels;
   if (!num_errors) {
+    std::lock_guard<std::mutex> control_c(control_c_mutex());
     RDKit::preprocessReaction(rxn, num_warnings, num_errors, labels, qs,
                               std::string(prop_name));
   }

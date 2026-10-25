@@ -10,6 +10,7 @@
 #include <mutex>
 #include <utility>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/properties.rs.h"
 #include "rdkit-cxx/mol_checks.h"
@@ -29,6 +30,29 @@ std::mutex &registry_mutex() {
   static std::mutex mutex;
   return mutex;
 }
+
+// RDKit's own functors include descriptors that match substructures
+// (control_c_lock.h), so computing properties holds control_c_mutex. A Rust
+// functor among them runs a closure that may call wrappers that take it, so
+// it releases the lock while the closure runs; no ControlCHandler is alive
+// between two functors. This is the lock the thread's innermost computation
+// holds, if any.
+thread_local std::unique_lock<std::mutex> *computing_control_c = nullptr;
+
+class ComputingProperties {
+ public:
+  ComputingProperties()
+      : d_lock(control_c_mutex()), d_outer(computing_control_c) {
+    computing_control_c = &d_lock;
+  }
+  ~ComputingProperties() { computing_control_c = d_outer; }
+  ComputingProperties(const ComputingProperties &) = delete;
+  ComputingProperties &operator=(const ComputingProperties &) = delete;
+
+ private:
+  std::unique_lock<std::mutex> d_lock;
+  std::unique_lock<std::mutex> *d_outer;
+};
 
 // Set at exit, before RDKit's registry is destroyed: closures still in it
 // are leaked then rather than dropped, since Rust's thread-locals on the
@@ -58,7 +82,18 @@ class RustPropertyFunctor : public Desc::PropertyFunctor {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
-    return call_property_callback(*d_callback, std::move(copy));
+    // A computation's lock is released for the closure (ComputingProperties)
+    // and taken back for the functors after it; if the closure throws, the
+    // computation ends without it.
+    auto *held = computing_control_c;
+    if (held) {
+      held->unlock();
+    }
+    double value = call_property_callback(*d_callback, std::move(copy));
+    if (held) {
+      held->lock();
+    }
+    return value;
   }
 
  private:
@@ -91,10 +126,15 @@ std::unique_ptr<std::string> property_functor_get_version(
 }
 
 // RDKit's own functors call their descriptors with the defaults, which read
-// the descriptor caches (U8).
+// the descriptor caches (U8), and may match substructures; a Rust functor
+// calls its closure without the lock.
 double property_functor_call(const PropertyFunctorHandle &functor,
                              const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
+  std::unique_lock<std::mutex> control_c;
+  if (!dynamic_cast<const RustPropertyFunctor *>(functor.ptr.get())) {
+    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+  }
   return (*functor.ptr)(mol);
 }
 
@@ -121,17 +161,20 @@ std::unique_ptr<std::vector<std::string>> properties_get_property_names(
 rust::Vec<double> properties_compute_properties(const Properties &properties,
                                                 const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
+  ComputingProperties computing;
   return to_vec(properties.computeProperties(mol, false));
 }
 
 rust::Vec<double> properties_compute_properties_annotate(
     const Properties &properties, RWMol &mol) {
   DescriptorCacheGuard guard(mol);
+  ComputingProperties computing;
   return to_vec(properties.computeProperties(mol, true));
 }
 
 void properties_annotate_properties(const Properties &properties, RWMol &mol) {
   DescriptorCacheGuard guard(mol);
+  ComputingProperties computing;
   properties.annotateProperties(mol);
 }
 
@@ -175,11 +218,12 @@ std::unique_ptr<PropertyRangeQuery> make_property_range_query(rust::Str name,
 }
 
 // The query calls the descriptor function of RDKit's functor, which reads
-// the descriptor caches (U8). A Rust functor has none, which RDKit's
-// precondition reports.
+// the descriptor caches (U8) and may match substructures. A Rust functor has
+// none, which RDKit's precondition reports.
 bool property_range_query_match(const PropertyRangeQuery &query,
                                 const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return query.Match(mol);
 }
 

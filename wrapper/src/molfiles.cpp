@@ -35,6 +35,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -793,6 +794,12 @@ std::unique_ptr<RWMol> scsr_from_text(const std::string &text, bool sanitize,
   check_scsr_hbonds(text, params, scsr);
   std::istringstream in(text);
   unsigned int line = 0;
+  // With Auto, RDKit finds the bases' hydrogen-bond sites by substructure
+  // matches (control_c_lock.h).
+  std::unique_lock<std::mutex> control_c;
+  if (scsr.scsrBaseHbondOptions == FP::SCSRBaseHbondOptions::Auto) {
+    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+  }
   return parsed(FP::MolFromSCSRDataStream(in, line, params, scsr), what);
 }
 

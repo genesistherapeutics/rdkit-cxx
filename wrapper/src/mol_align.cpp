@@ -24,6 +24,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDLog.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/mol_align.rs.h"
@@ -91,10 +92,12 @@ int thread_count(std::int32_t target) {
 // As getAllMatchesPrbRef in AlignMolecules.cpp, which RDKit calls when no
 // map is given. symmetrizeTerminalAtoms writes a static (symmetrize_mutex),
 // so the matches are found here, under the lock only for that, and passed
-// to RDKit as the map.
+// to RDKit as the map. Both steps match substructures, so both hold
+// control_c_mutex (control_c_lock.h), taken first.
 std::vector<MatchVectType> all_matches(const ROMol &prb, const ROMol &ref,
                                        int max_matches, bool symmetrize,
                                        bool ignore_hs) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::RWMol> symmetrized;
   if (symmetrize) {
     symmetrized = std::make_unique<RDKit::RWMol>(prb);
@@ -338,8 +341,10 @@ std::vector<double> crippen_contribs(const RWMol &mol, bool has_given,
   std::vector<double> logp(n), mr(n);
   std::vector<unsigned int> types(n);
   std::vector<std::string> labels(n);
-  // getCrippenAtomContribs caches them in the molecule's properties (U8).
+  // getCrippenAtomContribs caches them in the molecule's properties (U8),
+  // and types the atoms by substructure matches (control_c_lock.h).
   DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   RDKit::Descriptors::getCrippenAtomContribs(mol, logp, mr, true, &types,
                                              &labels);
   return logp;
@@ -379,6 +384,8 @@ double get_alignment_transform(const RWMol &prb_mol, const RWMol &ref_mol,
     }
   }
   RDGeom::Transform3D transform;
+  // RDKit matches the probe to the reference itself (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   double rmsd = MolAlign::getAlignmentTransform(
       prb_mol, ref_mol, transform, prb_cid, ref_cid,
       map.empty() ? nullptr : &map, weights_vec.get(), reflect, max_iters);
@@ -399,6 +406,8 @@ double align_mol(RWMol &prb_mol, const RWMol &ref_mol, std::int32_t prb_cid,
       throw ValueErrorException("Incorrect number of weights specified");
     }
   }
+  // RDKit matches the probe to the reference itself (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return MolAlign::alignMol(prb_mol, ref_mol, prb_cid, ref_cid,
                             map.empty() ? nullptr : &map, weights_vec.get(),
                             reflect, max_iters);
