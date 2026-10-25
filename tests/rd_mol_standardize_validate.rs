@@ -455,6 +455,27 @@ fn rust_validation_methods() {
 }
 
 #[test]
+fn rust_validation_methods_can_match_substructures() {
+    // Validating holds control_c_mutex, released while a Rust method runs,
+    // so the method can call wrappers that take it.
+    let carboxyls = ValidationMethod::new(|m, _| {
+        let query = mol_from_smarts("C(=O)[OH]").unwrap();
+        let n = m.get_substruct_matches(&query).unwrap().len();
+        vec![format!("INFO: [V] {n} carboxyl groups")]
+    });
+    let composite = MolVSValidation::new(&[FragmentValidation.into(), carboxyls]).unwrap();
+    assert_eq!(
+        composite
+            .validate_with_report_all_failures(&mol("OC(=O)CC(=O)O.Cl"), true)
+            .unwrap(),
+        [
+            "INFO: [FragmentValidation] chlorine is present",
+            "INFO: [V] 2 carboxyl groups"
+        ]
+    );
+}
+
+#[test]
 fn panics_in_validation_methods_are_errors() {
     let method = ValidationMethod::new(|_, _| panic!("no validation"));
     let err = method.validate(&mol("C")).unwrap_err();

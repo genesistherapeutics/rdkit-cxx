@@ -5,11 +5,13 @@
 
 #include "rdkit-cxx/standardize_validate.h"
 
+#include <mutex>
 #include <utility>
 
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_validate.rs.h"
 #include "rdkit-cxx/mol_checks.h"
@@ -25,7 +27,8 @@ namespace {
 // share the closure, which is why it is Send + Sync. It gets its own copy
 // of the molecule, as a Rust molecule, without cached matrices or
 // descriptors (U6, U8). A panic in it becomes an exception in Rust's half of
-// the bridge.
+// the bridge. It runs without the validation's control_c_mutex, so it can
+// call wrappers that take it; RDKit calls it between matches.
 class RustValidationMethod : public MS::ValidationMethod {
  public:
   explicit RustValidationMethod(
@@ -37,6 +40,7 @@ class RustValidationMethod : public MS::ValidationMethod {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
+    ReleaseControlC release;
     auto messages = call_validation_callback(**d_callback, std::move(copy),
                                              reportAllFailures);
     std::vector<MS::ValidationErrorInfo> errors;
@@ -164,12 +168,15 @@ std::unique_ptr<ValidationMethodHandle> validation_clone(
 
 // NeutralValidation sums the formal charges in int (MolOps::getFormalCharge),
 // so a molecule whose charges could overflow it is refused first (U9).
+// FragmentValidation, alone or among MolVSValidation's methods, matches
+// substructures (control_c_lock.h); a Rust method runs without the lock.
 std::unique_ptr<std::vector<std::string>> validation_validate(
     const ValidationMethodHandle &handle, const RWMol &mol,
     bool report_all_failures) {
   if (handle.sums_charges) {
     check_formal_charge_sum(mol);
   }
+  HoldControlC control_c;
   return strings(handle.ptr->validate(mol, report_all_failures));
 }
 
@@ -201,6 +208,7 @@ std::unique_ptr<std::vector<std::string>> validate_smiles(rust::Str smiles) {
   }
   check_formal_charge_sum(*mol);
   MS::MolVSValidation validation;
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return strings(validation.validate(*mol, true));
 }
 
