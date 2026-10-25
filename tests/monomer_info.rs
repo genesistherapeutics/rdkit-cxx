@@ -30,7 +30,7 @@ fn monomer_info() {
         chain_id: "A".into(),
         monomer_class: "AA".into(),
     };
-    let mut info = AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params);
+    let mut info = AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap();
     assert_eq!(info.get_name().unwrap(), "N1");
     assert_eq!(info.get_residue_name().unwrap(), "GLY");
     assert_eq!(
@@ -43,12 +43,13 @@ fn monomer_info() {
     info.set_residue_number(5);
     info.set_chain_id("B");
     info.set_monomer_class("LINK");
-    info.set_monomer_type(AtomMonomerType::Unknown);
+    info.set_monomer_type(AtomMonomerType::Unknown).unwrap();
     let copy = info.clone();
     assert_eq!(copy.get_name().unwrap(), "C1");
     assert_eq!(copy.get_monomer_type(), AtomMonomerType::Unknown);
     assert_eq!(
         AtomMonomerInfo::new(AtomMonomerType::Other)
+            .unwrap()
             .get_name()
             .unwrap(),
         ""
@@ -162,7 +163,7 @@ fn atoms_copy_info_in_and_out() {
     );
 
     let mut atom = Atom::from_num(8);
-    atom.set_monomer_info(&AtomMonomerInfo::new(AtomMonomerType::Other));
+    atom.set_monomer_info(&AtomMonomerInfo::new(AtomMonomerType::Other).unwrap());
     assert!(matches!(
         atom.get_pdb_residue_info(),
         Err(Error::Value { .. })
@@ -180,5 +181,138 @@ fn atoms_copy_info_in_and_out() {
             .unwrap()
             .get_monomer_type(),
         AtomMonomerType::Other
+    );
+}
+
+fn is_value<T>(result: rdkit_cxx::Result<T>) -> bool {
+    matches!(result, Err(Error::Value { .. }))
+}
+
+// RDKit casts any info of type PDBRESIDUE to AtomPDBResidueInfo, which reads
+// past the end of a plain AtomMonomerInfo (CONVENTIONS.md U9). Python allows
+// one.
+#[test]
+fn plain_info_cannot_have_the_pdb_type() {
+    assert!(is_value(AtomMonomerInfo::new(AtomMonomerType::Pdbresidue)));
+    assert!(is_value(AtomMonomerInfo::new_with_params(
+        AtomMonomerType::Pdbresidue,
+        &AtomMonomerInfoParams::default()
+    )));
+    let mut info = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
+    assert!(is_value(info.set_monomer_type(AtomMonomerType::Pdbresidue)));
+    assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
+    let mut info = AtomMonomerInfo::default();
+    assert!(is_value(info.set_monomer_type(AtomMonomerType::Pdbresidue)));
+    assert_eq!(info.get_monomer_type(), AtomMonomerType::Unknown);
+}
+
+#[test]
+fn pdb_residue_info_changes_type_freely() {
+    let mut residue = AtomPDBResidueInfo::new(" CA ");
+    residue.set_residue_name("ALA");
+    residue.set_monomer_type(AtomMonomerType::Other);
+    assert_eq!(residue.get_monomer_type(), AtomMonomerType::Other);
+    let mut atom = Atom::from_num(6);
+    atom.set_pdb_residue_info(&residue);
+    // As in Python, PDB residue info of another type is not read as such.
+    assert!(is_value(atom.get_pdb_residue_info()));
+
+    // A plain copy of PDB residue info is still one, so it may have its type
+    // back, and its clones too.
+    let mut copy = atom.get_monomer_info().unwrap();
+    copy.set_monomer_type(AtomMonomerType::Unknown).unwrap();
+    let mut clone = copy.clone();
+    clone.set_monomer_type(AtomMonomerType::Pdbresidue).unwrap();
+    atom.set_monomer_info(&clone);
+    let back = atom.get_pdb_residue_info().unwrap().unwrap();
+    assert_eq!(
+        (back.get_name().unwrap(), back.get_residue_name().unwrap()),
+        (" CA ".into(), "ALA".into())
+    );
+    residue.set_monomer_type(AtomMonomerType::Pdbresidue);
+    assert_eq!(residue.get_monomer_type(), AtomMonomerType::Pdbresidue);
+}
+
+/// A pickle of methane whose atom has plain info named "MARK", and where its
+/// type byte is.
+fn marked_pickle() -> (Vec<u8>, usize) {
+    let mut mol = mol_from_smiles("C").unwrap();
+    let params = AtomMonomerInfoParams {
+        name: "MARK".into(),
+        ..Default::default()
+    };
+    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
+        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
+    );
+    let pkl = mol.to_binary();
+    // The info's name (a u32 length, then its bytes), then its type as a byte.
+    let name = pkl
+        .windows(9)
+        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .unwrap();
+    (pkl, name + 8)
+}
+
+#[test]
+fn pickles_cannot_give_plain_info_the_pdb_type() {
+    let (pkl, at) = marked_pickle();
+    let typ = |pkl: &[u8]| {
+        Mol::from_pkl_string(pkl).map(|mol| {
+            mol.get_atom_with_idx(0)
+                .unwrap()
+                .get_monomer_info()
+                .unwrap()
+                .get_monomer_type()
+        })
+    };
+    assert_eq!(typ(&pkl).unwrap(), AtomMonomerType::Other);
+    let mut unknown = pkl.clone();
+    unknown[at] = 0;
+    assert_eq!(typ(&unknown).unwrap(), AtomMonomerType::Unknown);
+    for bad in [1, 3, 255] {
+        let mut changed = pkl.clone();
+        changed[at] = bad;
+        assert!(is_value(typ(&changed)), "type {bad}");
+        assert!(is_value(Mol::from_pkl_string_with_property_flags(
+            &changed,
+            PropertyPickleOptions::AllProps
+        )));
+        assert!(is_value(RWMol::from_pkl_string(&changed)));
+    }
+
+    // MolBundle pickles hold molecule pickles, byte for byte.
+    let mut bundle = MolBundle::default();
+    bundle.add_mol(&Mol::from_pkl_string(&pkl).unwrap());
+    let bundle_pkl = bundle.to_binary().unwrap();
+    let name = bundle_pkl
+        .windows(9)
+        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .unwrap();
+    assert_eq!(MolBundle::from_pkl_string(&bundle_pkl).unwrap().size(), 1);
+    let mut changed = bundle_pkl;
+    changed[name + 8] = 1;
+    assert!(is_value(MolBundle::from_pkl_string(&changed)));
+}
+
+// RDKit pickles PDB residue info by its type, so a real one round-trips.
+#[test]
+fn pickles_keep_pdb_residue_info() {
+    let mut mol = mol_from_smiles("C").unwrap();
+    let mut residue = AtomPDBResidueInfo::new(" C1 ");
+    residue.set_residue_name("LIG");
+    residue.set_serial_number(7);
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_pdb_residue_info(&residue);
+    let back = Mol::from_pkl_string(&mol.to_binary()).unwrap();
+    let info = back
+        .get_atom_with_idx(0)
+        .unwrap()
+        .get_pdb_residue_info()
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        (info.get_residue_name().unwrap(), info.get_serial_number()),
+        ("LIG".into(), 7)
     );
 }

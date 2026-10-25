@@ -23,7 +23,10 @@ namespace rdkit_cxx {
 using AtomMonomerInfo = RDKit::AtomMonomerInfo;
 using AtomPDBResidueInfo = RDKit::AtomPDBResidueInfo;
 
-// AtomMonomerType has no fixed underlying type, so it crosses as int.
+// AtomMonomerType has no fixed underlying type, so it crosses as int. Only
+// an AtomPDBResidueInfo may have type PDBRESIDUE (CONVENTIONS.md U9), so
+// monomer_info_with refuses it, and monomer_info_set_monomer_type refuses it
+// for an info of another class, with ValueError.
 std::unique_ptr<AtomMonomerInfo> monomer_info_new();
 std::unique_ptr<AtomMonomerInfo> monomer_info_with(int type, rust::Str name,
                                                    rust::Str residue_name,
@@ -84,7 +87,8 @@ void pdb_residue_info_set_segment_number(AtomPDBResidueInfo &info,
                                          unsigned val);
 
 // Copies of the atom's info, or null; the PDB form throws ValueError for
-// other monomer types, as AtomGetPDBResidueInfo in nbWrap/Atom.cpp does.
+// other monomer types, as AtomGetPDBResidueInfo in nbWrap/Atom.cpp does, and
+// checks the info's class with dynamic_cast where Python casts.
 std::unique_ptr<AtomMonomerInfo> atom_get_monomer_info(const Atom &atom);
 std::unique_ptr<AtomPDBResidueInfo> atom_get_pdb_residue_info(const Atom &atom);
 void atom_set_monomer_info(Atom &atom, const AtomMonomerInfo &info);

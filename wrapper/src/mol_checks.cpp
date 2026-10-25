@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include <GraphMol/MonomerInfo.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDValue.h>
 #include <boost/shared_array.hpp>
@@ -79,6 +80,28 @@ void check_matrix_size(const RDKit::ROMol &mol) {
     throw ValueErrorException(
         "RDKit computes atom matrices in int, which overflows above 46340 "
         "atoms");
+  }
+}
+
+void check_monomer_types(const RDKit::ROMol &mol) {
+  using RDKit::AtomMonomerInfo;
+  for (const auto *atom : mol.atoms()) {
+    const auto *info = atom->getMonomerInfo();
+    if (!info) {
+      continue;
+    }
+    int type = info->getMonomerType();
+    if (type < AtomMonomerInfo::UNKNOWN || type > AtomMonomerInfo::OTHER) {
+      throw ValueErrorException("atom " + std::to_string(atom->getIdx()) +
+                                " has unknown AtomMonomerType " +
+                                std::to_string(type));
+    }
+    if (type == AtomMonomerInfo::PDBRESIDUE &&
+        !dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
+      throw ValueErrorException(
+          "atom " + std::to_string(atom->getIdx()) +
+          " has type PDBRESIDUE, which only AtomPDBResidueInfo can have");
+    }
   }
 }
 

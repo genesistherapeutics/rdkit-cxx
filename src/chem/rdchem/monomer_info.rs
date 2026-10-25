@@ -95,14 +95,6 @@ macro_rules! monomer_setters {
                 expect_ok(ffi::monomer_info_set_name(self.monomer_mut(), nm))
             }
 
-            /// Mirrors `SetMonomerType`.
-            pub fn set_monomer_type(&mut self, typ: AtomMonomerType) {
-                expect_ok(ffi::monomer_info_set_monomer_type(
-                    self.monomer_mut(),
-                    typ.to_ffi(),
-                ))
-            }
-
             /// Mirrors `SetResidueName`.
             pub fn set_residue_name(&mut self, val: &str) {
                 expect_ok(ffi::monomer_info_set_residue_name(self.monomer_mut(), val))
@@ -146,6 +138,11 @@ pub struct AtomMonomerInfoParams {
 /// (`set_monomer_info`); edit a copy and set it back, where Python edits the
 /// atom's info in place. A copy of a PDB residue's info keeps its PDB fields
 /// for `set_monomer_info`, though only `get_pdb_residue_info` reads them.
+///
+/// Only such a copy, or an `AtomPDBResidueInfo`, has type
+/// `AtomMonomerType::Pdbresidue`: RDKit casts any info of that type to PDB
+/// residue info, reading past the end of a plain one, so `new` and
+/// `set_monomer_type` refuse it, where Python allows it (CONVENTIONS.md U9).
 pub struct AtomMonomerInfo {
     /// Never null.
     ptr: UniquePtr<ffi::AtomMonomerInfo>,
@@ -166,25 +163,35 @@ impl AtomMonomerInfo {
     }
 
     /// Info of type `typ`, with Python's defaults for the rest. Mirrors
-    /// `AtomMonomerInfo(type)`.
-    pub fn new(typ: AtomMonomerType) -> AtomMonomerInfo {
+    /// `AtomMonomerInfo(type)`; `Error::Value` for `Pdbresidue`, for which
+    /// `AtomPDBResidueInfo::new` makes PDB residue info.
+    pub fn new(typ: AtomMonomerType) -> Result<AtomMonomerInfo> {
         AtomMonomerInfo::new_with_params(typ, &AtomMonomerInfoParams::default())
     }
 
     /// Mirrors `AtomMonomerInfo(type, name, residueName, resNum, chainId,
-    /// monomerClass)`.
+    /// monomerClass)`; `Error::Value` for `Pdbresidue`.
     pub fn new_with_params(
         typ: AtomMonomerType,
         params: &AtomMonomerInfoParams,
-    ) -> AtomMonomerInfo {
-        AtomMonomerInfo::from_ffi(expect_ok(ffi::monomer_info_with(
+    ) -> Result<AtomMonomerInfo> {
+        Ok(AtomMonomerInfo::from_ffi(ffi::monomer_info_with(
             typ.to_ffi(),
             &params.name,
             &params.residue_name,
             params.res_num,
             &params.chain_id,
             &params.monomer_class,
-        )))
+        )?))
+    }
+
+    /// Mirrors `SetMonomerType`; `Error::Value` for `Pdbresidue` unless the
+    /// info is a copy of a PDB residue's.
+    pub fn set_monomer_type(&mut self, typ: AtomMonomerType) -> Result<()> {
+        Ok(ffi::monomer_info_set_monomer_type(
+            self.monomer_mut(),
+            typ.to_ffi(),
+        )?)
     }
 }
 
@@ -302,6 +309,15 @@ impl AtomPDBResidueInfo {
             p.segment_number,
             &p.monomer_class,
         )))
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.SetMonomerType`. Any type is safe here:
+    /// RDKit casts only on `Pdbresidue`, and this info is PDB residue info.
+    pub fn set_monomer_type(&mut self, typ: AtomMonomerType) {
+        expect_ok(ffi::monomer_info_set_monomer_type(
+            self.monomer_mut(),
+            typ.to_ffi(),
+        ))
     }
 
     /// Mirrors `AtomPDBResidueInfo.GetSerialNumber`.
@@ -423,10 +439,11 @@ impl fmt::Debug for AtomPDBResidueInfo {
 monomer_getters!(AtomPDBResidueInfo);
 monomer_setters!(AtomPDBResidueInfo);
 
-/// `AtomMonomerType` values as C++ sees them, for a round-trip test.
+/// `AtomMonomerType` values as C++ sees them, for a round-trip test. PDB
+/// residue info takes every type.
 #[doc(hidden)]
 pub fn __monomer_type_round_trip_for_tests(typ: AtomMonomerType) -> AtomMonomerType {
-    let mut info = AtomMonomerInfo::default();
+    let mut info = AtomPDBResidueInfo::default();
     info.set_monomer_type(typ);
     info.get_monomer_type()
 }

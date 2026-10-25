@@ -341,14 +341,23 @@ fn split_by_pdb() {
 }
 
 #[test]
-fn split_by_pdb_with_plain_monomer_info() {
-    // Python static_casts any PDBRESIDUE-typed info to AtomPDBResidueInfo; a
-    // plain AtomMonomerInfo can carry that type.
-    let mut mol = smiles("CC");
-    let info = AtomMonomerInfo::new(AtomMonomerType::Pdbresidue);
+fn split_by_pdb_with_other_monomer_types() {
+    // As in Python, only info of type PDBRESIDUE has a residue, even PDB
+    // residue info whose type was changed.
+    let mut mol = smiles("CCC");
+    let mut info = AtomPDBResidueInfo::new(" C1 ");
+    info.set_residue_name("ALA");
+    info.set_chain_id("A");
+    info.set_monomer_type(AtomMonomerType::Other);
     mol.get_atom_with_idx_mut(0)
         .unwrap()
-        .set_monomer_info(&info);
+        .set_pdb_residue_info(&info);
+    let mut plain = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
+    plain.set_residue_name("ALA");
+    plain.set_chain_id("A");
+    mol.get_atom_with_idx_mut(1)
+        .unwrap()
+        .set_monomer_info(&plain);
     let residues = split_mol_by_pdb_residues(&mol).unwrap();
     assert_eq!(residues.keys().collect::<Vec<_>>(), vec![""]);
     let chains = split_mol_by_pdb_chain_id(&mol).unwrap();

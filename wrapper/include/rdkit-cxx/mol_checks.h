@@ -65,4 +65,10 @@ class DescriptorCacheGuard {
   const RDKit::ROMol &d_mol;
 };
 
+// RDKit takes a monomer info's type for its class and casts an info of type
+// PDBRESIDUE to AtomPDBResidueInfo, so only one of those may have it
+// (CONVENTIONS.md U9). A pickle can give an atom a plain info of that type,
+// or a type AtomMonomerType lacks; throws ValueErrorException for either.
+void check_monomer_types(const RDKit::ROMol &mol);
+
 }  // namespace rdkit_cxx
