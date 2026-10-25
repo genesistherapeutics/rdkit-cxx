@@ -61,12 +61,16 @@ std::vector<unsigned> to_vector(rust::Slice<const std::uint32_t> indices) {
   return std::vector<unsigned>(indices.begin(), indices.end());
 }
 
-// As getResidue and getChainId in Code/GraphMol/nbWrap/MolOps.cpp, but with
-// dynamic_cast: Python static_casts any monomer info whose type is
-// PDBRESIDUE, and a plain AtomMonomerInfo can carry that type.
+// As getResidue and getChainId in Code/GraphMol/nbWrap/MolOps.cpp, which
+// read only info whose type is PDBRESIDUE, but with dynamic_cast where
+// Python static_casts (only an AtomPDBResidueInfo can have the type,
+// CONVENTIONS.md U10).
 const RDKit::AtomPDBResidueInfo *residue_info(const RDKit::Atom *atom) {
-  return dynamic_cast<const RDKit::AtomPDBResidueInfo *>(
-      atom->getMonomerInfo());
+  const auto *info = atom->getMonomerInfo();
+  if (!info || info->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {
+    return nullptr;
+  }
+  return dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info);
 }
 
 std::string get_residue(const RDKit::ROMol &, const RDKit::Atom *atom) {

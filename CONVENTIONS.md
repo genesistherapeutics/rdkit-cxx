@@ -199,6 +199,19 @@ rule changes the rule first.
   is bounded by its 46339-atom limit.) A new binding whose RDKit call sums
   charges (`grep 'getFormalCharge()'` in the RDKit sources) checks the same
   way.
+- **U10.** RDKit takes a monomer info's type for its class: code that finds
+  `PDBRESIDUE` (`grep PDBRESIDUE` in the RDKit sources: `MolPickler.cpp`,
+  `AddHs.cpp`, the PDB and sequence writers, `ProximityBonds.cpp`) casts the
+  info to `AtomPDBResidueInfo`, which reads past the end of a plain
+  `AtomMonomerInfo`. So no atom holds a plain info of that type, though
+  Python allows one: `AtomMonomerInfo::new` refuses the type with
+  `Error::Value`, as does `set_monomer_type` unless `dynamic_cast` finds PDB
+  residue info, and molecule and bundle pickles whose atoms have such an
+  info, or a type `AtomMonomerType` lacks, are refused right after RDKit
+  reads them (`check_monomer_types` in `rdkit-cxx/mol_checks.h`). RDKit code
+  may then trust the type; wrapper code that casts uses `dynamic_cast` all
+  the same. RDKit code that casts whatever the type (`DCLV.cpp`) still needs
+  its own check.
 
 ## Properties
 
