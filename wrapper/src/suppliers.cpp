@@ -199,7 +199,7 @@ std::unique_ptr<RWMol> sd_mol_supplier_next(SDMolSupplier &s) {
 
 // RDKit's SDMolSupplier counts the lines it reads in int (d_line) and only
 // reset() restarts the count, so each random access resets first; reset()
-// leaves nothing else that operator[] does not set (U10).
+// leaves nothing else that operator[] does not set (U11).
 std::unique_ptr<RWMol> sd_mol_supplier_get(SDMolSupplier &s,
                                            std::uint32_t idx) {
   s.suppl->reset();
@@ -405,7 +405,7 @@ class TextBuf : public std::streambuf {
 
 void index_tdt(TDTMolSupplier &s, std::string text,
                FP::TDTMolSupplierParams params) {
-  // The fresh suppliers count the lines they read in int (U10).
+  // The fresh suppliers count the lines they read in int (U11).
   check_input_text(text);
   std::vector<std::size_t> starts;
   for (std::size_t pos = 0; pos < text.size();) {

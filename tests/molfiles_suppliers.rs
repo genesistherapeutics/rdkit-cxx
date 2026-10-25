@@ -377,7 +377,7 @@ fn tdt_record_positions_are_checked() {
 
 #[test]
 fn files_that_change_are_refused() {
-    // Bytes RDKit reads again must be the bytes it was checked against (U10).
+    // Bytes RDKit reads again must be the bytes it was checked against (U11).
     let sd = three_sd().repeat(500);
     assert!(sd.len() > 3 << 16);
     let path = write("changing.sdf", &sd);
@@ -494,7 +494,7 @@ fn multithreaded_smiles_supplier() {
 
 #[test]
 fn long_stereo_group_lines_are_refused() {
-    // RDKit's mol-block regex would recurse once per character (U10).
+    // RDKit's mol-block regex would recurse once per character (U11).
     let block = mol_to_v3k_mol_block(&mol_from_smiles("C[C@H](F)Cl |&1:1|").unwrap()).unwrap();
     let long = block.replace(
         "MDLV30/STERAC1 ATOMS=(1 2)",

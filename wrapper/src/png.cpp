@@ -83,7 +83,7 @@ std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
 }
 
 // As PNGStreamToMols in PNGParser.cpp: a molecule for one metadata value,
-// or null for a SMILES RDKit cannot parse. The mol block is checked (U10).
+// or null for a SMILES RDKit cannot parse. The mol block is checked (U11).
 std::unique_ptr<RWMol> from_metadata(const std::string &key,
                                      const std::string &value,
                                      const RDKit::SmilesParserParams &params) {
