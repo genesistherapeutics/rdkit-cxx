@@ -729,14 +729,20 @@ std::unique_ptr<RWMol> mol_from_mol_file(rust::Slice<const std::uint8_t> path,
 
 namespace {
 
-// The mol-block writers compute 2D coordinates for stereo when the molecule
-// has no conformer (prepareMol in MolFileWriter.cpp).
-std::unique_lock<std::mutex> lock_if_depicting(
-    const RWMol &mol, const MolWriterParamsData &data) {
-  if (data.include_stereo && mol.getNumConformers() == 0) {
+// The mol-block and Marvin writers compute 2D coordinates for stereo when
+// the molecule has no conformer (prepareMol in MolFileWriter.cpp,
+// MolToMrvBlock in MarvinWriter.cpp).
+std::unique_lock<std::mutex> lock_if_depicting(const RWMol &mol,
+                                               bool include_stereo) {
+  if (include_stereo && mol.getNumConformers() == 0) {
     return lock_depiction();
   }
   return {};
+}
+
+std::unique_lock<std::mutex> lock_if_depicting(
+    const RWMol &mol, const MolWriterParamsData &data) {
+  return lock_if_depicting(mol, data.include_stereo);
 }
 
 }  // namespace
@@ -755,16 +761,19 @@ void mol_to_mol_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
 
 std::unique_ptr<std::string> mol_to_v2k_mol_block(
     const RWMol &mol, const MolWriterParamsData &data) {
+  auto lock = lock_if_depicting(mol, data);
   return str(RDKit::MolToV2KMolBlock(mol, writer_params(data), data.conf_id));
 }
 
 std::unique_ptr<std::string> mol_to_v3k_mol_block(
     const RWMol &mol, const MolWriterParamsData &data) {
+  auto lock = lock_if_depicting(mol, data);
   return str(RDKit::MolToV3KMolBlock(mol, writer_params(data), data.conf_id));
 }
 
 void mol_to_v3k_mol_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                          const MolWriterParamsData &data) {
+  auto lock = lock_if_depicting(mol, data);
   RDKit::MolToV3KMolFile(mol, to_path(path), writer_params(data), data.conf_id);
 }
 
@@ -952,6 +961,7 @@ std::unique_ptr<std::string> mol_to_mrv_block(const RWMol &mol,
                                               std::int32_t conf_id,
                                               bool kekulize,
                                               bool pretty_print) {
+  auto lock = lock_if_depicting(mol, include_stereo);
   return str(RDKit::MolToMrvBlock(mol, include_stereo, conf_id, kekulize,
                                   pretty_print));
 }
@@ -959,6 +969,7 @@ std::unique_ptr<std::string> mol_to_mrv_block(const RWMol &mol,
 void mol_to_mrv_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                      bool include_stereo, std::int32_t conf_id, bool kekulize,
                      bool pretty_print) {
+  auto lock = lock_if_depicting(mol, include_stereo);
   RDKit::MolToMrvFile(mol, to_path(path), include_stereo, conf_id, kekulize,
                       pretty_print);
 }
@@ -1166,6 +1177,7 @@ rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
   RDKit::RWMol copy(mol);
   RDKit::MolOps::Kekulize(copy);
   if (!copy.getNumConformers()) {
+    auto lock = lock_depiction();
     RDDepict::compute2DCoords(copy);
   }
   check_cdx_coordinates(copy);

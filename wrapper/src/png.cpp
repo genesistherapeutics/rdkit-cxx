@@ -16,6 +16,7 @@
 #include <RDGeneral/FileParseException.h>
 #include <boost/algorithm/string/predicate.hpp>
 
+#include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/ffi/png.rs.h"
@@ -149,7 +150,12 @@ rust::Vec<std::uint8_t> mol_to_png(const RWMol &mol, const std::string &png,
   params.smilesWriteParams = write_params(data.smiles_write_params);
   params.cxSmilesFlags = data.cx_smiles_flags;
   params.restoreBondDirs = data.restore_bond_dirs;
-  // Randomized SMILES advance RDKit's global generator (U4).
+  // The mol block computes 2D coordinates for a molecule without a
+  // conformer, and randomized SMILES advance RDKit's global generator (U4).
+  std::unique_lock<std::mutex> depicting;
+  if (params.includeMol && mol.getNumConformers() == 0) {
+    depicting = lock_depiction();
+  }
   std::unique_lock<std::mutex> lock;
   if (params.includeSmiles && params.smilesWriteParams.doRandom) {
     lock = std::unique_lock<std::mutex>(random_generator_mutex());

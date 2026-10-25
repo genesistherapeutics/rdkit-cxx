@@ -632,3 +632,29 @@ fn smiles_debug_parse_must_be_zero() {
     };
     assert!(is_value(mol_from_smarts_with_params("C", &debug)));
 }
+
+#[test]
+fn depicting_writers_run_on_many_threads() {
+    // Each writer depicts a molecule without a conformer under the depiction
+    // lock (U4); the results match a single thread's.
+    let mol = smiles("C[C@H](F)C1=CC=CC=C1");
+    let expected = (
+        mol_to_v2k_mol_block(&mol).unwrap(),
+        mol_to_v3k_mol_block(&mol).unwrap(),
+        mol_to_mrv_block(&mol).unwrap(),
+        mol_to_cdxml_block(&mol).unwrap(),
+    );
+    std::thread::scope(|scope| {
+        for _ in 0..4 {
+            scope.spawn(|| {
+                for _ in 0..20 {
+                    let mol = smiles("C[C@H](F)C1=CC=CC=C1");
+                    assert_eq!(mol_to_v2k_mol_block(&mol).unwrap(), expected.0);
+                    assert_eq!(mol_to_v3k_mol_block(&mol).unwrap(), expected.1);
+                    assert_eq!(mol_to_mrv_block(&mol).unwrap(), expected.2);
+                    assert_eq!(mol_to_cdxml_block(&mol).unwrap(), expected.3);
+                }
+            });
+        }
+    });
+}
