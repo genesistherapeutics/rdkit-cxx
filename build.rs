@@ -53,6 +53,7 @@ const BRIDGES: &[&str] = &[
     "conformer_parser",
     "mmpa",
     "deprotect",
+    "chem_reactions",
 ];
 
 fn main() {

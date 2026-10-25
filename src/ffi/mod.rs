@@ -8,6 +8,7 @@
 pub(crate) mod adjust_query;
 pub(crate) mod atom;
 pub(crate) mod bond;
+pub(crate) mod chem_reactions;
 pub(crate) mod chirality;
 pub(crate) mod cip_labeler;
 pub(crate) mod conformer;

@@ -19,6 +19,516 @@ rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Runtime"
 
 [[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.AddAgentTemplate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_agent_template"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.AddProductTemplate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_product_template"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.AddReactantTemplate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_reactant_template"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.AddRecursiveQueriesToReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_recursive_queries_to_reaction", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_recursive_queries_to_reaction_with_params", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_recursive_queries_to_reaction_get_labels", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::add_recursive_queries_to_reaction_get_labels_with_params"]
+overloads_note = "getLabels=True changes the return type, so it is the _get_labels forms (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.ClearComputedProps"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::clear_computed_props"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.ClearProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::clear_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetAgentTemplate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_agent_template"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetAgents"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_agents"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetBoolProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_bool_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetDoubleProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_double_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetIntProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_int_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetNumAgentTemplates"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_num_agent_templates"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetNumProductTemplates"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_num_product_templates"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetNumReactantTemplates"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_num_reactant_templates"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetProductTemplate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_product_template"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetProducts"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_products"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetPropNames"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_prop_names", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_prop_names_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetPropsAsDict"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_props_as_dict", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_props_as_dict_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetReactantTemplate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_reactant_template"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetReactants"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_reactants"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetReactingAtoms"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_reacting_atoms", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_reacting_atoms_with_mapped_atoms_only"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetSubstructParams"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_substruct_params"]
+overloads_note = "Python returns the parameters to change in place; set_substruct_params writes a changed copy back"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.GetUnsignedProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::get_unsigned_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.HasProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::has_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.Initialize"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::initialize", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::initialize_with_silent"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.IsInitialized"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::is_initialized"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.IsMoleculeAgent"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::is_molecule_agent"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.IsMoleculeProduct"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::is_molecule_product"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.IsMoleculeReactant"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::is_molecule_reactant"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.RemoveAgentTemplates"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::remove_agent_templates"]
+overloads_note = "targetList is an output argument, so the removed templates are the return value (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.RemoveUnmappedProductTemplates"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::remove_unmapped_product_templates", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::remove_unmapped_product_templates_with_params"]
+overloads_note = "targetList is an output argument, so the removed templates are the return value (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.RemoveUnmappedReactantTemplates"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::remove_unmapped_reactant_templates", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::remove_unmapped_reactant_templates_with_params"]
+overloads_note = "targetList is an output argument, so the removed templates are the return value (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.RunReactant"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::run_reactant"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.RunReactantInPlace"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::run_reactant_in_place", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::run_reactant_in_place_with_remove_unmatched_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.RunReactants"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::run_reactants", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::run_reactants_with_max_products"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.SetBoolProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_bool_prop", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_bool_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.SetDoubleProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_double_prop", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_double_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.SetIntProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_int_prop", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_int_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.SetProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_prop", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.SetUnsignedProp"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_unsigned_prop", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::set_unsigned_prop_with_computed"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.ToBinary"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::to_binary", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::to_binary_with_property_flags"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.Validate"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::validate", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::validate_with_silent"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_bin_str cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::default", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::from_bin_str", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::clone"]
+overloads_note = "the bytes and str pickle overloads share from_bin_str; the copy is Clone"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__new__"
+reason = "nanobind's construction hook; __init__ maps the constructors"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_bin_str cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReactionException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReactionParserException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Parse"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.Compute2DCoordsForReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::compute_2d_coords_for_reaction", "rdkit_cxx::chem::rd_chem_reactions::compute_2d_coords_for_reaction_with_params"]
+name_exception = "2D is one word: compute_2d_coords_for_reaction"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.CreateDifferenceFingerprintForReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::create_difference_fingerprint_for_reaction", "rdkit_cxx::chem::rd_chem_reactions::create_difference_fingerprint_for_reaction_with_reaction_finger_print_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.CreateStructuralFingerprintForReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::create_structural_fingerprint_for_reaction", "rdkit_cxx::chem::rd_chem_reactions::create_structural_fingerprint_for_reaction_with_reaction_finger_print_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.FingerprintType"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.FingerprintType.AtomPairFP"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::AtomPairFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.FingerprintType.MorganFP"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::MorganFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.FingerprintType.PatternFP"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::PatternFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.FingerprintType.RDKitFP"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::RdKitFp"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.FingerprintType.TopologicalTorsion"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::TopologicalTorsion"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.GetChemDrawRxnAdjustParams"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::get_chem_draw_rxn_adjust_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.GetDefaultAdjustParams"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::get_default_adjust_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.HasAgentTemplateSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::has_agent_template_substruct_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.HasProductTemplateSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::has_product_template_substruct_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.HasReactantTemplateSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::has_reactant_template_substruct_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.HasReactionAtomMapping"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::has_reaction_atom_mapping"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.HasReactionSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::has_reaction_substruct_match", "rdkit_cxx::chem::rd_chem_reactions::has_reaction_substruct_match_with_include_agents"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.IsReactionTemplateMoleculeAgent"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::is_reaction_template_molecule_agent"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.MatchOnlyAtRgroupsAdjustParams"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::match_only_at_rgroups_adjust_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.MrvBlockIsReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::mrv_block_is_reaction"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.MrvFileIsReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::mrv_file_is_reaction"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.PreprocessReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::preprocess_reaction", "rdkit_cxx::chem::rd_chem_reactions::preprocess_reaction_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::default", "rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.__setattr__"
+reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.agentWeight"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::agent_weight"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.bitRatioAgents"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::bit_ratio_agents"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.fpSize"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::fp_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.fpType"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::fp_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.includeAgents"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::include_agents"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.nonAgentWeight"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::non_agent_weight"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromMolecule"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_molecule"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromMrvBlock"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_mrv_block", "rdkit_cxx::chem::rd_chem_reactions::reaction_from_mrv_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromMrvFile"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_mrv_file", "rdkit_cxx::chem::rd_chem_reactions::reaction_from_mrv_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromPNGFile"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_png_file"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromPNGString"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_png_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromRxnBlock"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_rxn_block", "rdkit_cxx::chem::rd_chem_reactions::reaction_from_rxn_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromRxnFile"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_rxn_file", "rdkit_cxx::chem::rd_chem_reactions::reaction_from_rxn_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromSmarts"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts", "rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionFromSmiles"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_from_smiles", "rdkit_cxx::chem::rd_chem_reactions::reaction_from_smiles_with_replacements"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionMetadataToPNGFile"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_metadata_to_png_file", "rdkit_cxx::chem::rd_chem_reactions::reaction_metadata_to_png_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionMetadataToPNGString"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_metadata_to_png_string", "rdkit_cxx::chem::rd_chem_reactions::reaction_metadata_to_png_string_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToCXSmarts"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_cx_smarts", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_cx_smarts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToCXSmiles"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_cx_smiles", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_cx_smiles_with_params"]
+overloads_note = "the canonical overload is reaction_to_cx_smiles_with_params with SmilesWriteParams.canonical"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToMolecule"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_molecule"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToMrvBlock"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_mrv_block", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_mrv_block_with_pretty_print"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToMrvFile"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_mrv_file", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_mrv_file_with_pretty_print"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToRxnBlock"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_rxn_block", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_rxn_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToSmarts"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_smarts", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_smarts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToSmiles"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_smiles", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_smiles_with_params"]
+overloads_note = "the canonical overload is reaction_to_smiles_with_params with SmilesWriteParams.canonical"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionToV3KRxnBlock"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reaction_to_v3k_rxn_block", "rdkit_cxx::chem::rd_chem_reactions::reaction_to_v3k_rxn_block_with_separate_agents"]
+name_exception = "V3K is one word: reaction_to_v3k_rxn_block"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionsFromCDXMLBlock"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block", "rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReactionsFromCDXMLFile"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file", "rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.ReduceProductToSideChains"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::reduce_product_to_side_chains", "rdkit_cxx::chem::rd_chem_reactions::reduce_product_to_side_chains_with_add_dummy_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RemoveMappingNumbersFromReactions"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::remove_mapping_numbers_from_reactions"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SANITIZE_ADJUST_REACTANTS"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_ADJUST_REACTANTS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SANITIZE_ALL"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_ALL"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SANITIZE_ATOM_MAPS"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_ATOM_MAPS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SANITIZE_MERGEHS"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_MERGEHS"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SANITIZE_NONE"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_NONE"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SANITIZE_RGROUP_NAMES"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_RGROUP_NAMES"]
+name_exception = "an exported enum value maps to its constant (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags.SANITIZE_ADJUST_REACTANTS"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_ADJUST_REACTANTS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags.SANITIZE_ALL"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_ALL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags.SANITIZE_ATOM_MAPS"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_ATOM_MAPS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags.SANITIZE_MERGEHS"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_MERGEHS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags.SANITIZE_NONE"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_NONE"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeFlags.SANITIZE_RGROUP_NAMES"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::SanitizeFlags::SANITIZE_RGROUP_NAMES"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeRxn"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::sanitize_rxn", "rdkit_cxx::chem::rd_chem_reactions::sanitize_rxn_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.SanitizeRxnAsMols"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::sanitize_rxn_as_mols", "rdkit_cxx::chem::rd_chem_reactions::sanitize_rxn_as_mols_with_sanitize_ops"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.UpdateProductsStereochemistry"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::update_products_stereochemistry"]
+
+[[entry]]
 python = "rdkit.Chem.rdConformerParser.AddConformersFromAmberTrajectory"
 rust = ["rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory", "rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory_with_params"]
 

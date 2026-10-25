@@ -112,6 +112,14 @@ rule changes the rule first.
   (`Atom`, `AtomMut`). Methods take `&dyn AsAtom` instead, so they are not
   generic and `tests/manifest_paths.rs` can name them. Methods that take any
   bond take `&dyn AsBond` (`Bond`, `BondRef`, `BondMut`).
+- **S4.** A method that may change state RDKit keeps for later calls takes
+  `&mut self`, even when Python's runs it on a const object.
+  `ChemicalReaction`'s runs initialize the reaction first when it is not
+  (validation writes its product templates' properties), so they, `initialize`,
+  and `validate` take `&mut self`; a reaction is not initialized behind a
+  shared reference. Classes that hold molecules RDKit may write through const
+  (`ChemicalReaction`) are `Send` and not `Sync`, as S1 says of molecules,
+  and their bridges record why in a `SAFETY` comment.
 
 ## Unchecked input
 
@@ -126,8 +134,11 @@ rule changes the rule first.
   `rdkit-cxx/pickle_checks.h` before RDKit reads them, or, where parsing
   itself is safe, on the object right after. FPB files are read by the
   wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
-  never reads a file that changed after the check. Parsers RDKit fuzzes
-  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted.
+  never reads a file that changed after the check; PNG files are read and
+  their chunks checked the same way. Parsers RDKit fuzzes
+  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, and so
+  are reaction pickles, which are molecule pickles framed by counts and tags
+  RDKit checks.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -141,7 +152,8 @@ rule changes the rule first.
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
-  mol-block writers for a molecule without a conformer, and `molzip` with
+  mol-block writers for a molecule without a conformer (and the V2000
+  rxn-block writer for a reaction with such a template), and `molzip` with
   `generateCoordinates`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
