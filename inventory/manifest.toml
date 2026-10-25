@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -1109,6 +1109,127 @@ rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::new", "rdkit_cxx::ch
 python = "rdkit.Chem.rdMMPA.FragmentMol"
 rust = ["rdkit_cxx::chem::rd_mmpa::fragment_mol", "rdkit_cxx::chem::rd_mmpa::fragment_mol_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles_with_params"]
 overloads_note = "the (mol, minCuts, maxCuts, maxCutBonds) overload is fragment_mol_min_cuts and the bondsToCut one fragment_mol_bonds (A5); resultsAsMols=False is the _as_smiles forms (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.AlignMol"
+rust = ["rdkit_cxx::chem::rd_mol_align::align_mol", "rdkit_cxx::chem::rd_mol_align::align_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.AlignMolConformers"
+rust = ["rdkit_cxx::chem::rd_mol_align::align_mol_conformers", "rdkit_cxx::chem::rd_mol_align::align_mol_conformers_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.ignoreHs"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::ignore_hs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.map"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::map"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.maxMatches"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::max_matches"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.numThreads"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.symmetrizeConjugatedTerminalGroups"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::symmetrize_conjugated_terminal_groups"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.weights"
+rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::weights"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.CalcRMS"
+rust = ["rdkit_cxx::chem::rd_mol_align::calc_rms", "rdkit_cxx::chem::rd_mol_align::calc_rms_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetAlignmentTransform"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_alignment_transform", "rdkit_cxx::chem::rd_mol_align::get_alignment_transform_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetAllConformerBestRMS"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms", "rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_with_params"]
+overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetAllConformerBestRMSToRef"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_to_ref", "rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_to_ref_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetBestAlignmentTransform"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_best_alignment_transform", "rdkit_cxx::chem::rd_mol_align::get_best_alignment_transform_with_params"]
+overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetBestRMS"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_best_rms", "rdkit_cxx::chem::rd_mol_align::get_best_rms_with_params"]
+overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetCrippenO3A"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_crippen_o3a", "rdkit_cxx::chem::rd_mol_align::get_crippen_o3a_with_params"]
+name_exception = "O3A stays one word, as in the class: get_crippen_o3a"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetCrippenO3AForProbeConfs"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_crippen_o3a_for_probe_confs", "rdkit_cxx::chem::rd_mol_align::get_crippen_o3a_for_probe_confs_with_params"]
+name_exception = "O3A stays one word, as in the class: get_crippen_o3a_for_probe_confs"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetO3A"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_o3a", "rdkit_cxx::chem::rd_mol_align::get_o3a_with_params"]
+name_exception = "O3A stays one word, as in the class: get_o3a"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.GetO3AForProbeConfs"
+rust = ["rdkit_cxx::chem::rd_mol_align::get_o3a_for_probe_confs", "rdkit_cxx::chem::rd_mol_align::get_o3a_for_probe_confs_with_params"]
+name_exception = "O3A stays one word, as in the class: get_o3a_for_probe_confs"
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Align"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::align"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Matches"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Score"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::score"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Trans"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::trans"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.O3A.Weights"
+rust = ["rdkit_cxx::chem::rd_mol_align::O3A::weights"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.RandomTransform"
+rust = ["rdkit_cxx::chem::rd_mol_align::random_transform", "rdkit_cxx::chem::rd_mol_align::random_transform_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
