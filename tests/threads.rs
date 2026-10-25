@@ -30,17 +30,28 @@ use rdkit_cxx::chem::rd_depictor::{
     is_coord_gen_support_available, load_default_ring_system_templates, set_prefer_coord_gen,
     set_ring_system_templates,
 };
+use rdkit_cxx::chem::rd_determine_bonds::{
+    determine_bond_orders, determine_bonds, determine_connectivity,
+};
+use rdkit_cxx::chem::rd_dist_geom::{
+    EmbedParameters, GetMoleculeBoundsMatrixParams, embed_molecule,
+    embed_multiple_confs_with_params, get_molecule_bounds_matrix_with_params,
+};
+use rdkit_cxx::chem::rd_mol_align::{
+    RandomTransformParams, get_best_rms, random_transform, random_transform_with_params,
+};
 use rdkit_cxx::chem::rd_mol_descriptors::{
     DoubleCubicLatticeVolume, Properties, PythonPropertyFunctor,
 };
 use rdkit_cxx::chem::{
     Conformer, Mol, MolFragmentToSmilesParams, MolToCXSmilesParams, MolToRandomSmilesVectParams,
-    MolzipParams, PNGMetadataParams, SmilesWriteParams, fragment_on_brics_bonds,
+    MolzipParams, PNGMetadataParams, SmilesWriteParams, assign_cip_labels, fragment_on_brics_bonds,
     mol_fragment_to_cx_smiles_with_params, mol_fragment_to_smiles_with_params, mol_from_smiles,
-    mol_metadata_to_png_string_with_params, mol_to_cx_smiles_with_params, mol_to_mol_block,
-    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
-    molzip_fragments_with_params,
+    mol_from_xyz_block, mol_metadata_to_png_string_with_params, mol_to_cx_smiles_with_params,
+    mol_to_mol_block, mol_to_random_smiles_vect_with_params, mol_to_smiles,
+    mol_to_smiles_with_params, molzip_fragments_with_params,
 };
+use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
 };
@@ -51,6 +62,20 @@ const PNG: &[u8] = &[
     0, 0, 58, 126, 155, 85, 0, 0, 0, 10, 73, 68, 65, 84, 120, 156, 99, 96, 0, 0, 0, 2, 0, 1, 72,
     175, 164, 113, 0, 0, 0, 0, 73, 69, 78, 68, 174, 66, 96, 130,
 ];
+
+/// Ethanol's atoms and 3D coordinates, without bonds, for DetermineBonds.
+const ETHANOL_XYZ: &str = "9
+ethanol
+C -0.9640 0.0151 0.0410
+C 0.5041 -0.3085 -0.2036
+O 1.2237 0.3416 0.7792
+H -1.3563 0.7407 -0.7043
+H -1.5833 -0.9142 -0.0029
+H -1.0287 0.5174 1.0296
+H 0.7725 -0.0064 -1.2300
+H 0.5980 -1.4177 -0.1686
+H 1.8339 1.0320 0.4595
+";
 
 fn main() {
     // RDKit fills some static data on first use (the periodic table, the
@@ -83,6 +108,7 @@ fn main() {
                 depiction();
                 depiction_settings(i, templates);
                 descriptors(i);
+                three_d();
             })
         });
         // Joining each thread, rather than leaving it to the scope, orders its
@@ -249,4 +275,47 @@ fn descriptors(i: u32) {
     let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
     assert!(dclv.get_surface_area() > 0.0);
     assert!(dclv.get_polar_surface_area() > 0.0);
+}
+
+// The 3D modules. Embedding without a seed, bounds-matrix embedding, and
+// RandomTransform draw from RDKit's generator; the embedder's RMS pruning
+// and best-RMS alignment assign symmetrizeTerminalAtoms's static; and
+// embedding, CIP labeling, and DetermineBonds swap the SIGINT handler
+// through ControlCHandler's statics.
+fn three_d() {
+    let mut mol = mol_from_smiles("CCCO").unwrap();
+    let mut pruned = EmbedParameters {
+        prune_rms_thresh: 0.1,
+        ..Default::default()
+    };
+    assert!(
+        !embed_multiple_confs_with_params(&mut mol, 3, &mut pruned)
+            .unwrap()
+            .is_empty()
+    );
+    random_transform(&mut mol).unwrap();
+    let seeded = RandomTransformParams {
+        seed: 5,
+        ..Default::default()
+    };
+    random_transform_with_params(&mut mol, &seeded).unwrap();
+    let mut probe = mol_from_smiles("CCCO").unwrap();
+    assert_eq!(embed_molecule(&mut probe).unwrap(), 0);
+    assert!(get_best_rms(&mut probe, &mol).unwrap() >= 0.0);
+    let unsmoothed = GetMoleculeBoundsMatrixParams {
+        do_triangle_smoothing: false,
+        ..Default::default()
+    };
+    let bounds =
+        get_molecule_bounds_matrix_with_params(&mol_from_smiles("CCCC").unwrap(), &unsmoothed)
+            .unwrap();
+    assert_eq!(embed_bounds_matrix(&bounds).unwrap().len(), 4);
+    let mut chiral = mol_from_smiles("F[C@H](Cl)Br").unwrap();
+    assign_cip_labels(&mut chiral).unwrap();
+    let mut atoms = mol_from_xyz_block(ETHANOL_XYZ).unwrap();
+    determine_bonds(&mut atoms).unwrap();
+    assert_eq!(atoms.get_num_bonds(), 8);
+    let mut connected = mol_from_xyz_block(ETHANOL_XYZ).unwrap();
+    determine_connectivity(&mut connected).unwrap();
+    determine_bond_orders(&mut connected).unwrap();
 }
