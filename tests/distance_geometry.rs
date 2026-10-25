@@ -10,7 +10,32 @@ use rdkit_cxx::chem::rd_dist_geom::{
 };
 use rdkit_cxx::distance_geometry::*;
 
-// Expected values below come from Python's DistGeom.
+// Expected values below come from Python's DistGeom. Floats are compared
+// with a tolerance, since they differ in the last bits between platforms,
+// and embedded coordinates, which differ more, by the bounds they meet.
+
+fn assert_matrix_close(actual: &[Vec<f64>], expected: &[Vec<f64>]) {
+    assert_eq!(actual.len(), expected.len());
+    for (a, e) in actual.iter().zip(expected) {
+        assert_eq!(a.len(), e.len());
+        for (x, y) in a.iter().zip(e) {
+            assert!((x - y).abs() < 1e-9, "{actual:?} != {expected:?}");
+        }
+    }
+}
+
+/// Asserts that the points meet the bounds, to a tolerance.
+fn assert_within_bounds(points: &[rdkit_cxx::geometry::Point3D], bounds: &[Vec<f64>]) {
+    for i in 0..points.len() {
+        for j in i + 1..points.len() {
+            let d = points[i].distance(&points[j]);
+            assert!(
+                bounds[j][i] - 0.1 < d && d < bounds[i][j] + 0.1,
+                "{i}-{j}: {d}"
+            );
+        }
+    }
+}
 
 fn butane_bounds() -> Vec<Vec<f64>> {
     get_molecule_bounds_matrix_with_params(
@@ -40,11 +65,11 @@ fn defaults() {
 #[test]
 fn triangle_smoothing() {
     let mut bounds = butane_bounds();
-    assert_eq!(bounds[2][0], 2.4257022902910914);
-    assert_eq!(bounds[0][3], 3.8753832408954354);
+    assert!((bounds[2][0] - 2.4257022902910914).abs() < 1e-9);
+    assert!((bounds[0][3] - 3.8753832408954354).abs() < 1e-9);
     let raw = bounds.clone();
     assert!(do_triangle_smoothing(&mut bounds).unwrap());
-    assert_eq!(bounds, raw);
+    assert_matrix_close(&bounds, &raw);
 
     let mut bad = vec![
         vec![0.0, 1.0, 1.0],
@@ -52,13 +77,13 @@ fn triangle_smoothing() {
         vec![3.0, 0.5, 0.0],
     ];
     assert!(!do_triangle_smoothing(&mut bad).unwrap());
-    assert_eq!(
-        bad,
-        vec![
+    assert_matrix_close(
+        &bad,
+        &[
             vec![0.0, 1.0, 1.0],
             vec![0.5, 0.0, 1.0],
-            vec![3.0, 2.0, 0.0]
-        ]
+            vec![3.0, 2.0, 0.0],
+        ],
     );
     let mut close = vec![
         vec![0.0, 1.0, 1.0],
@@ -66,13 +91,13 @@ fn triangle_smoothing() {
         vec![2.02, 0.5, 0.0],
     ];
     assert!(!do_triangle_smoothing_with_tol(&mut close, 0.05).unwrap());
-    assert_eq!(
-        close,
-        vec![
+    assert_matrix_close(
+        &close,
+        &[
             vec![0.0, 1.0, 1.0],
             vec![0.5, 0.0, 1.02],
-            vec![2.02, 1.02, 0.0]
-        ]
+            vec![2.02, 1.02, 0.0],
+        ],
     );
     let value = |result: Result<bool, Error>| matches!(result, Err(Error::Value { .. }));
     assert!(value(do_triangle_smoothing(&mut [])));
@@ -81,16 +106,6 @@ fn triangle_smoothing() {
 
 #[test]
 fn embedding() {
-    let expected = [
-        (
-            -1.5209907982334718,
-            -0.5716127504791275,
-            -0.15517330685885306,
-        ),
-        (-0.6739436193085492, 0.5639549369723209, 0.3497242904897715),
-        (0.6660322905746084, 0.5808228503019247, -0.3443470543822283),
-        (1.528902126967413, -0.5731650367951179, 0.149796070751309),
-    ];
     let seeded = EmbedBoundsMatrixParams {
         random_seed: 42,
         ..Default::default()
@@ -108,16 +123,21 @@ fn embedding() {
             ..seeded.clone()
         },
     ];
+    let bounds = butane_bounds();
     for params in others {
-        let coords = embed_bounds_matrix_with_params(&butane_bounds(), &params).unwrap();
+        let coords = embed_bounds_matrix_with_params(&bounds, &params).unwrap();
         assert_eq!(coords.len(), 4);
-        for (point, e) in coords.iter().zip(expected) {
-            assert!((point.x - e.0).abs() < 1e-9);
-            assert!((point.y - e.1).abs() < 1e-9);
-            assert!((point.z - e.2).abs() < 1e-9);
-        }
+        assert_within_bounds(&coords, &bounds);
     }
-    assert_eq!(embed_bounds_matrix(&butane_bounds()).unwrap().len(), 4);
+    // A seed repeats.
+    let first = embed_bounds_matrix_with_params(&bounds, &seeded).unwrap();
+    let again = embed_bounds_matrix_with_params(&bounds, &seeded).unwrap();
+    for (p, q) in first.iter().zip(&again) {
+        assert!(p.distance(q) < 1e-12);
+    }
+    let unseeded = embed_bounds_matrix(&bounds).unwrap();
+    assert_eq!(unseeded.len(), 4);
+    assert_within_bounds(&unseeded, &bounds);
     // RDKit adds iter * 999 to the seed in int, which overflows here.
     let overflowing = EmbedBoundsMatrixParams {
         random_seed: i32::MAX - 500,

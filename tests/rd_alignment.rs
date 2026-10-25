@@ -7,7 +7,8 @@ use rdkit_cxx::Error;
 use rdkit_cxx::geometry::Point3D;
 use rdkit_cxx::numerics::rd_alignment::*;
 
-// Expected values below come from Python's rdAlignment.
+// Expected values below come from Python's rdAlignment, compared to 1e-9
+// since the last bits differ between platforms.
 
 fn points(coords: &[(f64, f64, f64)]) -> Vec<Point3D> {
     coords
@@ -19,7 +20,7 @@ fn points(coords: &[(f64, f64, f64)]) -> Vec<Point3D> {
 fn assert_rows(actual: &[Vec<f64>], expected: [[f64; 4]; 4]) {
     for (row, e) in actual.iter().zip(expected) {
         for (a, b) in row.iter().zip(e) {
-            assert!((a - b).abs() < 1e-12, "{actual:?}");
+            assert!((a - b).abs() < 1e-9, "{actual:?}");
         }
     }
 }
@@ -47,7 +48,7 @@ fn alignment_transforms() {
         (1.2, 1.0, 2.4),
     ]);
     let (ssd, trans) = get_alignment_transform(&reference, &probe).unwrap();
-    assert!((ssd - 0.00991970967898581).abs() < 1e-12);
+    assert!((ssd - 0.00991970967898581).abs() < 1e-9);
     assert_rows(
         &trans,
         [
@@ -78,7 +79,7 @@ fn alignment_transforms() {
         max_iterations: 10,
     };
     let (ssd, trans) = get_alignment_transform_with_params(&reference, &probe, &params).unwrap();
-    assert!((ssd - 1.3731858933562364).abs() < 1e-12);
+    assert!((ssd - 1.3731858933562364).abs() < 1e-9);
     assert_rows(
         &trans,
         [

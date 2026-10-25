@@ -5,7 +5,7 @@
 
 mod common;
 
-use common::{assert_close, ethanol, ethanol_two_confs};
+use common::{assert_close, assert_close_to, ethanol, ethanol_two_confs};
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_force_field_helpers::*;
 use rdkit_cxx::chem::rdmolops::SanitizeFlags;
@@ -14,12 +14,28 @@ use rdkit_cxx::force_field::*;
 use rdkit_cxx::geometry::Point3D;
 
 // Expected values below come from Python's rdForceField and
-// rdForceFieldHelpers on the same molecules.
+// rdForceFieldHelpers on the same molecules. Energies and gradients at given
+// coordinates agree to the last bits between platforms; a minimization's
+// steps amplify those bits, so its results are compared loosely.
 
 fn assert_point(actual: Point3D, expected: (f64, f64, f64)) {
     assert_close(actual.x, expected.0);
     assert_close(actual.y, expected.1);
     assert_close(actual.z, expected.2);
+}
+
+/// Asserts an energy a minimization reached, relative to the larger.
+fn assert_minimized(actual: f64, expected: f64) {
+    assert_close_to(actual, expected, 1e-4);
+}
+
+/// Asserts coordinates a minimization reached, to 0.005 Å.
+fn assert_minimized_point(actual: Point3D, expected: (f64, f64, f64)) {
+    let expected = Point3D::new(expected.0, expected.1, expected.2);
+    assert!(
+        actual.distance(&expected) < 5e-3,
+        "{actual:?} != {expected:?}"
+    );
 }
 
 #[test]
@@ -137,11 +153,11 @@ fn uff_force_field_minimizes_the_conformer() {
         );
         assert_eq!(ff.calc_grad_with_pos(&positions).unwrap(), grad);
         assert_eq!(ff.minimize().unwrap(), 0);
-        assert_close(ff.calc_energy().unwrap(), 1.5367465474722097);
+        assert_minimized(ff.calc_energy().unwrap(), 1.5367465474722097);
     }
     // The force field moved the molecule's atoms.
     let pos = mol.get_conformer().unwrap().get_atom_position(0).unwrap();
-    assert_point(
+    assert_minimized_point(
         pos,
         (
             -0.9258790873923073,
@@ -163,9 +179,14 @@ fn minimize_steps_and_trajectories() {
         ff.minimize_with_params(&one_step).unwrap();
     }
     let positions = ff.positions();
-    assert_close(positions[0], -0.9705908182100972);
-    assert_close(positions[1], 0.04271027257846574);
-    assert_close(positions[2], 0.06469367054822592);
+    assert_minimized_point(
+        Point3D::new(positions[0], positions[1], positions[2]),
+        (
+            -0.9705908182100972,
+            0.04271027257846574,
+            0.06469367054822592,
+        ),
+    );
 
     let mut mol = ethanol();
     let mut ff = uff_get_molecule_force_field(&mut mol).unwrap();
@@ -180,7 +201,7 @@ fn minimize_steps_and_trajectories() {
     ];
     assert_eq!(energies.len(), expected.len());
     for (actual, expected) in energies.iter().zip(expected) {
-        assert_close(*actual, expected);
+        assert_minimized(*actual, expected);
     }
     // The last snapshot holds the final coordinates.
     let last = snapshots.last().unwrap();
@@ -218,7 +239,7 @@ fn constraints_and_extra_points() {
         ..Default::default()
     };
     assert_eq!(ff.minimize_with_params(&five).unwrap(), 1);
-    assert_close(ff.calc_energy().unwrap(), 47.95527901082138);
+    assert_minimized(ff.calc_energy().unwrap(), 47.95527901082138);
 
     let mut mol = ethanol();
     let mut ff = uff_get_molecule_force_field(&mut mol).unwrap();
@@ -250,7 +271,7 @@ fn constraints_and_extra_points() {
     ff.add_fixed_point(1).unwrap();
     assert_close(ff.calc_energy().unwrap(), 5.685604480312075);
     assert_eq!(ff.minimize().unwrap(), 0);
-    assert_close(ff.calc_energy().unwrap(), 0.9476007467186802);
+    assert_minimized(ff.calc_energy().unwrap(), 0.9476007467186802);
 }
 
 #[test]
@@ -384,7 +405,7 @@ fn mmff_force_fields() {
         ..Default::default()
     };
     assert_eq!(ff.minimize_with_params(&params).unwrap(), 0);
-    assert_close(ff.calc_energy().unwrap(), -1.3368570621313476);
+    assert_minimized(ff.calc_energy().unwrap(), -1.3368570621313476);
 
     let mut mol = ethanol();
     let mut props = MMFFMolProperties::new(&mut mol).unwrap();
@@ -590,7 +611,7 @@ fn optimize_molecules() {
     let mut mol = ethanol();
     assert_eq!(uff_optimize_molecule(&mut mol).unwrap(), 0);
     let pos = mol.get_conformer().unwrap().get_atom_position(0).unwrap();
-    assert_point(
+    assert_minimized_point(
         pos,
         (
             -0.9258790873923073,
@@ -601,7 +622,7 @@ fn optimize_molecules() {
     let mut mol = ethanol();
     assert_eq!(mmff_optimize_molecule(&mut mol).unwrap(), 0);
     let pos = mol.get_conformer().unwrap().get_atom_position(0).unwrap();
-    assert_point(
+    assert_minimized_point(
         pos,
         (
             -0.8864157419367157,
@@ -616,7 +637,7 @@ fn optimize_molecules() {
         assert_eq!(actual.len(), expected.len());
         for (a, e) in actual.iter().zip(expected) {
             assert_eq!(a.0, e.0);
-            assert_close(a.1, e.1);
+            assert_minimized(a.1, e.1);
         }
     };
     for num_threads in [1, 2, 0, -1, i32::MIN] {
@@ -657,7 +678,7 @@ fn optimize_molecules() {
     let mut mol = ethanol();
     let mut ff = uff_get_molecule_force_field(&mut mol).unwrap();
     assert_eq!(optimize_molecule(&mut ff).unwrap(), 0);
-    assert_close(ff.calc_energy().unwrap(), 1.5367465474722097);
+    assert_minimized(ff.calc_energy().unwrap(), 1.5367465474722097);
     assert_eq!(optimize_molecule_with_max_iters(&mut ff, 10).unwrap(), 0);
 
     let mut benzene = mol_from_smiles("c1ccccc1").unwrap();
@@ -679,8 +700,8 @@ fn optimize_molecule_confs_restores_the_force_field() {
         };
         let results = optimize_molecule_confs_with_params(&mut mol, &mut ff, &params).unwrap();
         assert_eq!(results.len(), 2);
-        assert_close(results[0].1, 1.5367465474722097);
-        assert_close(results[1].1, 1.5367465492621029);
+        assert_minimized(results[0].1, 1.5367465474722097);
+        assert_minimized(results[1].1, 1.5367465492621029);
         // In Python the force field now points into `mol`'s last conformer,
         // and reading it once `mol` is gone crashes.
         drop(mol);

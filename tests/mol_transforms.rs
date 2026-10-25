@@ -12,7 +12,9 @@ use rdkit_cxx::chem::*;
 use rdkit_cxx::geometry::Point3D;
 
 // Expected values below come from Python's rdMolTransforms on the same
-// molecules.
+// molecules. Principal axes are eigenvectors, whose signs the eigensolver may
+// choose differently on another platform, so the tests compare them, and
+// coordinates in their frame, up to sign.
 
 fn assert_point(actual: Point3D, expected: [f64; 3]) {
     assert_close(actual.x, expected[0]);
@@ -20,13 +22,18 @@ fn assert_point(actual: Point3D, expected: [f64; 3]) {
     assert_close(actual.z, expected[2]);
 }
 
-fn assert_rows(actual: &[Vec<f64>], expected: &[&[f64]]) {
+/// Asserts that each row is the expected one or its negation, as an
+/// eigenvector (with its part of a transform's translation) can be.
+fn assert_rows_up_to_sign(actual: &[Vec<f64>], expected: &[&[f64]]) {
     assert_eq!(actual.len(), expected.len());
     for (a, e) in actual.iter().zip(expected) {
         assert_eq!(a.len(), e.len());
-        for (x, y) in a.iter().zip(e.iter()) {
-            assert!((x - y).abs() < 1e-12, "{actual:?}");
-        }
+        let close = |sign: f64| {
+            a.iter()
+                .zip(e.iter())
+                .all(|(x, y)| (x - sign * y).abs() < 1e-9)
+        };
+        assert!(close(1.0) || close(-1.0), "{actual:?}");
     }
 }
 
@@ -111,7 +118,7 @@ fn centroids_and_axes() {
         Err(Error::Runtime { .. })
     ));
 
-    assert_rows(
+    assert_rows_up_to_sign(
         &compute_canonical_transform(&conf).unwrap(),
         &[
             &[
@@ -135,13 +142,17 @@ fn centroids_and_axes() {
             &[0.0, 0.0, 0.0, 1.0],
         ],
     );
+    assert_eq!(
+        compute_canonical_transform(&conf).unwrap()[3],
+        vec![0.0, 0.0, 0.0, 1.0]
+    );
     let centered = ComputeCanonicalTransformParams {
         center: Some(Point3D::new(1.0, 0.0, 0.0)),
         normalize_covar: true,
         ignore_hs: false,
     };
     let trans = compute_canonical_transform_with_params(&conf, &centered).unwrap();
-    assert_rows(
+    assert_rows_up_to_sign(
         &trans[..1],
         &[&[
             0.9966927012968062,
@@ -152,7 +163,7 @@ fn centroids_and_axes() {
     );
 
     let (axes, moments) = compute_principal_axes_and_moments(&conf).unwrap().unwrap();
-    assert_rows(
+    assert_rows_up_to_sign(
         &axes,
         &[
             &[0.9456520915724026, 0.3154473300711106, -0.07896267254689619],
@@ -182,10 +193,11 @@ fn centroids_and_axes() {
     let (axes, moments) = compute_principal_axes_and_moments_from_gyration_matrix(&conf)
         .unwrap()
         .unwrap();
-    assert!(moments[0].abs() < 1e-12);
+    // The heavy atoms are in a plane, and this moment comes out of rounding.
+    assert!(moments[0].abs() < 1e-9);
     assert_close(moments[1], 0.16535498786612557);
     assert_close(moments[2], 0.9083990699116524);
-    assert_rows(
+    assert_rows_up_to_sign(
         &axes[..1],
         &[&[
             0.07896267254689594,
@@ -301,9 +313,9 @@ fn transforms() {
     let mut mol = ethanol();
     canonicalize_conformer(&mut mol.get_conformer_mut().unwrap()).unwrap();
     let pos = mol.get_conformer().unwrap().get_atom_position(0).unwrap();
-    assert_close(pos.x, -1.2017662434995573);
-    assert_close(pos.y, 0.2604150690862285);
-    assert!(pos.z.abs() < 1e-12);
+    assert_close(pos.x.abs(), 1.2017662434995573);
+    assert_close(pos.y.abs(), 0.2604150690862285);
+    assert!(pos.z.abs() < 1e-9);
 
     let mut mol = ethanol_two_confs();
     canonicalize_mol_with_params(
@@ -314,16 +326,14 @@ fn transforms() {
         },
     )
     .unwrap();
+    let pos = mol
+        .get_conformer_with_id(1)
+        .unwrap()
+        .get_atom_position(0)
+        .unwrap();
     assert_point(
-        mol.get_conformer_with_id(1)
-            .unwrap()
-            .get_atom_position(0)
-            .unwrap(),
-        [
-            -0.9403362542875655,
-            -0.2320832172234178,
-            0.021914869411848587,
-        ],
+        Point3D::new(pos.x.abs(), pos.y.abs(), pos.z.abs()),
+        [0.9403362542875655, 0.2320832172234178, 0.021914869411848587],
     );
     canonicalize_mol(&mut mol).unwrap();
     canonicalize_conformer_with_params(

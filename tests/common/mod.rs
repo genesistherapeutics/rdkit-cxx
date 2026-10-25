@@ -91,11 +91,19 @@ pub fn ethanol_two_confs() -> rdkit_cxx::chem::Mol {
     mol
 }
 
-/// Asserts that two floats agree to 1e-9, relative to the larger.
+/// Asserts that two floats agree to 1e-9, relative to the larger (and
+/// absolutely below 1): enough for the last bits that differ between
+/// platforms in a direct computation.
 pub fn assert_close(actual: f64, expected: f64) {
+    assert_close_to(actual, expected, 1e-9);
+}
+
+/// Asserts that two floats agree to `tol`, relative to the larger (and
+/// absolutely below 1).
+pub fn assert_close_to(actual: f64, expected: f64, tol: f64) {
     let scale = actual.abs().max(expected.abs()).max(1.0);
     assert!(
-        (actual - expected).abs() <= 1e-9 * scale,
-        "{actual} != {expected}"
+        (actual - expected).abs() <= tol * scale,
+        "{actual} != {expected} (tolerance {tol})"
     );
 }
