@@ -204,46 +204,6 @@ void check_extended_query_mol(const XQ &query) {
       query.xqmol);
 }
 
-// RDKit's LinkNodeOp (MolEnumerator/LinkNode.cpp) labels each link node's
-// atoms with isotopes 1000 * (index + 1), which an atom stores in 16 bits,
-// and replaces the node with a reaction whose SMARTS needs those isotopes,
-// distinct ends, and single bonds. It takes the reaction's first product
-// without checking there is one (ASSERT_INVARIANT, compiled out), so a node
-// whose labels wrap, whose two bonds share their end, or whose bonds are not
-// single reads past an empty vector. So does a second node on the same atom,
-// which the first node's enumeration has replaced with a chain. The specs
-// themselves are parsed as the enumerator parses them, which refuses the
-// malformed ones.
-void check_link_nodes(const RDKit::ROMol &mol) {
-  if (!mol.hasProp(RDKit::common_properties::molFileLinkNodes)) {
-    return;
-  }
-  std::vector<unsigned int> var_atoms;
-  for (const auto &node : RDKit::MolEnumerator::utils::getMolLinkNodes(mol)) {
-    const auto var_atom = node.bondAtoms.at(0).first;
-    for (const auto &[begin, end] : node.bondAtoms) {
-      if (begin > 64 || end > 64) {
-        throw ValueErrorException(
-            "a link node's atoms must be among the first 65, whose isotope "
-            "labels the enumerator can store");
-      }
-      if (mol.getBondBetweenAtoms(begin, end)->getBondType() !=
-          RDKit::Bond::SINGLE) {
-        throw ValueErrorException("a link node's bonds must be single bonds");
-      }
-    }
-    if (node.bondAtoms.at(0).second == node.bondAtoms.at(1).second) {
-      throw ValueErrorException("a link node's two bonds must differ");
-    }
-    for (auto other : var_atoms) {
-      if (other == var_atom) {
-        throw ValueErrorException("two link nodes share an atom");
-      }
-    }
-    var_atoms.push_back(var_atom);
-  }
-}
-
 // As SubstructMatch(mol, ExtendedQueryMol, params) in XQMol.cpp, with the
 // tautomer queries matched by tautomer_query.cpp's matcher, holding
 // control_c_mutex (control_c_lock.h).
@@ -294,6 +254,46 @@ RDKit::SubstructMatchParameters first_match_only(
 }
 
 }  // namespace
+
+// RDKit's LinkNodeOp (MolEnumerator/LinkNode.cpp) labels each link node's
+// atoms with isotopes 1000 * (index + 1), which an atom stores in 16 bits,
+// and replaces the node with a reaction whose SMARTS needs those isotopes,
+// distinct ends, and single bonds. It takes the reaction's first product
+// without checking there is one (ASSERT_INVARIANT, compiled out), so a node
+// whose labels wrap, whose two bonds share their end, or whose bonds are not
+// single reads past an empty vector. So does a second node on the same atom,
+// which the first node's enumeration has replaced with a chain. The specs
+// themselves are parsed as the enumerator parses them, which refuses the
+// malformed ones.
+void check_link_nodes(const RDKit::ROMol &mol) {
+  if (!mol.hasProp(RDKit::common_properties::molFileLinkNodes)) {
+    return;
+  }
+  std::vector<unsigned int> var_atoms;
+  for (const auto &node : RDKit::MolEnumerator::utils::getMolLinkNodes(mol)) {
+    const auto var_atom = node.bondAtoms.at(0).first;
+    for (const auto &[begin, end] : node.bondAtoms) {
+      if (begin > 64 || end > 64) {
+        throw ValueErrorException(
+            "a link node's atoms must be among the first 65, whose isotope "
+            "labels the enumerator can store");
+      }
+      if (mol.getBondBetweenAtoms(begin, end)->getBondType() !=
+          RDKit::Bond::SINGLE) {
+        throw ValueErrorException("a link node's bonds must be single bonds");
+      }
+    }
+    if (node.bondAtoms.at(0).second == node.bondAtoms.at(1).second) {
+      throw ValueErrorException("a link node's two bonds must differ");
+    }
+    for (auto other : var_atoms) {
+      if (other == var_atom) {
+        throw ValueErrorException("two link nodes share an atom");
+      }
+    }
+    var_atoms.push_back(var_atom);
+  }
+}
 
 std::unique_ptr<ExtendedQueryMol> extended_query_mol_from_binary(
     rust::Slice<const std::uint8_t> pickle) {
