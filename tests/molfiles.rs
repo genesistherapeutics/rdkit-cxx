@@ -66,6 +66,32 @@ fn smiles_params() {
 }
 
 #[test]
+fn random_smiles_threads() {
+    // Random SMILES draw from RDKit's global random number generator, which
+    // the wrapper locks.
+    let random = SmilesWriteParams {
+        do_random: true,
+        ..Default::default()
+    };
+    std::thread::scope(|s| {
+        for _ in 0..4 {
+            s.spawn(|| {
+                let mol = mol_from_smiles("CC(=O)Oc1ccccc1C(=O)O").unwrap();
+                let canonical = mol_to_smiles(&mol).unwrap();
+                let mut written = std::collections::BTreeSet::new();
+                for _ in 0..50 {
+                    let smiles = mol_to_smiles_with_params(&mol, &random).unwrap();
+                    let parsed = mol_from_smiles(&smiles).unwrap();
+                    assert_eq!(mol_to_smiles(&parsed).unwrap(), canonical);
+                    written.insert(smiles);
+                }
+                assert!(written.len() > 1);
+            });
+        }
+    });
+}
+
+#[test]
 fn smarts() {
     assert_eq!(
         mol_to_smarts(&mol_from_smarts("[OX2H]").unwrap()).unwrap(),

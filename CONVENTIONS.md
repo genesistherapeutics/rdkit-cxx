@@ -142,7 +142,15 @@ rule changes the rule first.
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
   mol-block writers for a molecule without a conformer, and `molzip` with
-  `generateCoordinates`.
+  `generateCoordinates`. RDKit's random number generator
+  (`RDGeneral/utils.cpp`) is shared by every module, so it has one lock,
+  `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
+  every wrapper whose RDKit call can seed it or draw from it
+  (`grep -rn 'getRandomGenerator\|getRandomVal\|getDoubleRandomSource' Code`
+  in RDKit's sources): `MolToSmiles` with `doRandom`, and `compute2DCoords`
+  when `nSamples` and `nFlipsPerSample` are both set (the defaults, which
+  the mol-block writers and `molzip` use, never draw). A wrapper that needs
+  both locks takes `lock_depiction()` first.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
