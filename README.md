@@ -122,6 +122,27 @@ pip install pre-commit
 pre-commit install
 ```
 
+## Releases
+
+Releases are cut by hand: run the
+[Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
+on `main` from the Actions tab. Merging to `main` publishes nothing.
+
+The workflow releases the version in `Cargo.toml` if no tag has it yet (the
+first release of an RDKit series), and otherwise bumps the patch level with
+[bump-my-version](https://github.com/callowayproject/bump-my-version). It
+tests the release commit, builds the packaged crate, publishes it to crates.io
+through trusted publishing, pushes the version bump and a `v<version>` tag to
+`main`, and creates a GitHub release with generated notes.
+
+The patch level moves only through the workflow. A new RDKit series sets the
+major and minor levels by hand, in the pull request that updates
+`environment.yml`:
+
+```sh
+bump-my-version bump --new-version 2027.3.0
+```
+
 ## License
 
 BSD-3-Clause, as RDKit.
