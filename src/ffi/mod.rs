@@ -31,6 +31,7 @@ pub(crate) mod fingerprints;
 pub(crate) mod force_field;
 pub(crate) mod force_field_helpers;
 pub(crate) mod fpb;
+pub(crate) mod generalized_substruct;
 pub(crate) mod geometry;
 pub(crate) mod graph;
 pub(crate) mod grid;

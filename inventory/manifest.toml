@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -3215,6 +3215,54 @@ rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule", "rdkit
 [[entry]]
 python = "rdkit.Chem.rdForceFieldHelpers.UFFOptimizeMoleculeConfs"
 rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.CreateExtendedQueryMol"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::create_extended_query_mol", "rdkit_cxx::chem::rd_generalized_substruct::create_extended_query_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.InitFromBinary"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::init_from_binary"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.InitFromJSON"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::init_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.PatternFingerprintQuery"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::pattern_fingerprint_query", "rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::pattern_fingerprint_query_with_fingerprint_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.ToBinary"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::to_binary"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.ToJSON"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::to_json"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.__init__"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::new", "rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::new_with_is_json", "rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::from_data"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.MolGetSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_match", "rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_match_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.MolGetSubstructMatches"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_matches", "rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_matches_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.MolHasSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::mol_has_substruct_match", "rdkit_cxx::chem::rd_generalized_substruct::mol_has_substruct_match_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdGeneralizedSubstruct.PatternFingerprintTarget"
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::pattern_fingerprint_target", "rdkit_cxx::chem::rd_generalized_substruct::pattern_fingerprint_target_with_fingerprint_size"]
 
 [[entry]]
 python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder"

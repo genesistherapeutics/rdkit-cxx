@@ -81,6 +81,7 @@ const BRIDGES: &[&str] = &[
     "standardize_tautomer",
     "standardize_pipeline",
     "tautomer_query",
+    "generalized_substruct",
 ];
 
 fn main() {
