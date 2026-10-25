@@ -111,6 +111,9 @@ def check(inventory: dict, manifest: dict) -> list[str]:
         for path in rust:
             if problem := name_problem(python, entry["kind"], item, path):
                 problems.append(problem)
+        generics = item.get("rust_generics")
+        if isinstance(generics, list) and len(generics) != len(rust):
+            problems.append(f"{python}: rust_generics lists {len(generics)} paths' generics for {len(rust)} paths")
         overloads = len(entry["overloads"])
         if len(rust) < overloads and "overloads_note" not in item:
             problems.append(
@@ -139,6 +142,17 @@ def path_statement(path: str, rust_kind: str | None, rust_generics: str | None =
     return f"use {path} as _;"
 
 
+def generics_of(item: dict) -> list[str | None]:
+    """Each Rust path's generics: rust_generics names one instantiation for
+    every path, or a list of them, one per path, "" for a path that is not
+    generic."""
+    generics = item.get("rust_generics")
+    paths = item.get("rust", [])
+    if isinstance(generics, list):
+        return [g or None for g in generics]
+    return [generics] * len(paths)
+
+
 def paths_source(manifest: dict) -> str:
     lines = [
         *LICENSE_HEADER,
@@ -154,8 +168,8 @@ def paths_source(manifest: dict) -> str:
         "fn manifest_paths_exist() {",
     ]
     for item in sorted(manifest.get("entry", []), key=lambda item: item["python"]):
-        for path in item.get("rust", []):
-            lines.append(f"    {path_statement(path, item.get('rust_kind'), item.get('rust_generics'))}")
+        for path, generics in zip(item.get("rust", []), generics_of(item), strict=True):
+            lines.append(f"    {path_statement(path, item.get('rust_kind'), generics)}")
     lines.append("}")
     return "\n".join(lines) + "\n"
 

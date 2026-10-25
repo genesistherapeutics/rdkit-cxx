@@ -73,6 +73,11 @@ set(RDKIT_CXX_SOURCES
   src/descriptors_3d.cpp
   src/dclv.cpp
   src/properties.cpp
+  src/file_checks.cpp
+  src/streams.cpp
+  src/png.cpp
+  src/suppliers.cpp
+  src/writers.cpp
   src/depiction_checks.cpp
   src/depictor.cpp
   src/coord_gen.cpp
@@ -84,6 +89,8 @@ set(RDKIT_CXX_RDKIT_TARGETS
   GraphMol
   SmilesParse
   FileParsers
+  MarvinParser
+  Depictor
   SubstructMatch
   DataStructs
   RDGeometryLib
@@ -100,7 +107,6 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ChemReactions
   Deprotect
   Descriptors
-  Depictor
   coordgen
   MolTransforms
 )
@@ -113,6 +119,8 @@ target_include_directories(rdkitcxx PRIVATE
   third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
+  # Declarations RDKit's installed headers need (compat/maeparser).
+  compat
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})

@@ -196,4 +196,17 @@ fn mol_block_depiction_refuses_what_the_depictor_would_mishandle() {
         ..MolWriterParams::default()
     };
     mol_to_mol_block_with_params(&mol, &unstereo).unwrap();
+    // The other writers that depict a molecule without a conformer check it
+    // the same way.
+    for result in [
+        mol_to_v3k_mol_block(&mol),
+        mol_to_mrv_block(&mol),
+        mol_to_cdxml_block(&mol),
+        SDWriter::get_text(&mol),
+    ] {
+        assert!(matches!(
+            result,
+            Err(Error::Value { message }) if message.contains("square-planar")
+        ));
+    }
 }

@@ -129,7 +129,10 @@ rule changes the rule first.
   itself is safe, on the object right after. FPB files are read by the
   wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
   never reads a file that changed after the check. Parsers RDKit fuzzes
-  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted.
+  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
+  for the limits U12 checks. Text a wrapper checks before RDKit parses it is
+  read once: a file is read through a checked stream (U12) or into memory, so
+  RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -145,15 +148,19 @@ rule changes the rule first.
   call (the MACCS patterns in `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
-  `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
-  mol-block writers for a molecule without a conformer, and `molzip` with
+  `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
+  mol-block (V2000 and V3000), Marvin, ChemDraw, PNG, SD, and Maestro
+  writers for a molecule without a conformer; and `molzip` with
   `generateCoordinates`. They also check, under the lock, what the depictor
   that will run trusts about the molecule (`check_compute_2d_coords_mol` in
   `depiction_checks.h`). RDKit's random number generator
-  (`getRandomGenerator`) is another: wrappers whose call may draw from it
-  (random SMILES, the depictor's random bond flips) hold `random_mutex()`
-  (`global_state.h`) for the whole RDKit call, after `lock_depiction()` when
-  they hold both.
+  (`RDGeneral/utils.cpp`) is shared by every module, so it has one lock,
+  `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
+  every wrapper whose RDKit call can seed it or draw from it: the SMILES and
+  CXSMILES writers with `doRandom`, `MolToRandomSmilesVect`, PNG metadata
+  with random SMILES, and the depictor's sampling (`nFlipsPerSample` and
+  random bond flips; the writers' default depiction never draws). A wrapper
+  that needs both locks takes `lock_depiction()` first.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
@@ -196,11 +203,11 @@ rule changes the rule first.
   do not: `MolOps::getFormalCharge`, `getMolFormula` (which negates the
   sum), MolHash's formula, mesomer, redox-pair, net-charge, and tautomer
   hashes (the tautomer and protomer hashes subtract the charge from a
-  hydrogen count also summed in `int`, at most 255 per atom), and
-  `ResonanceMolSupplier`'s conjugated groups add charges in `int`, which
-  only 2^24 or more atoms can overflow. `get_formal_charge` adds the
-  charges in 64 bits, in RDKit's order, and refuses the molecule when the
-  running sum leaves `int`'s range; the others call
+  hydrogen count also summed in `int`, at most 255 per atom),
+  `ResonanceMolSupplier`'s conjugated groups, and the CML writer add charges
+  in `int`, which only 2^24 or more atoms can overflow. `get_formal_charge`
+  adds the charges in 64 bits, in RDKit's order, and refuses the molecule
+  when the running sum leaves `int`'s range; the others call
   `check_formal_charge_sum` (`rdkit-cxx/mol_checks.h`), which refuses a
   molecule whose charges' magnitudes, plus that hydrogen bound where RDKit
   adds one, exceed `INT_MAX`. Both refuse with `Error::Value`. (EEM's sum
@@ -220,6 +227,33 @@ rule changes the rule first.
   may then trust the type; wrapper code that casts uses `dynamic_cast` all
   the same. RDKit code that casts whatever the type (`DCLV.cpp`) still needs
   its own check.
+- **U11.** RDKit keeps the SMILES and SMARTS parsers' debug levels in globals
+  (`yysmiles_debug`, `yysmarts_debug`) that every parse reads. A parse writes
+  them only when its `debugParse` differs, so the wrappers refuse a nonzero
+  `debugParse` with `Error::Value`, and no parse writes them. RDKit's own
+  `AtomFromSmiles`, `BondFromSmiles`, `AtomFromSmarts`, and `BondFromSmarts`
+  (and `RDKitSVGToMol`, which calls them) write them on every call, racing
+  with parses the wrapper cannot see, so their Rust functions are `unsafe fn`
+  whose contract is that no other thread parses SMILES or SMARTS meanwhile.
+- **U12.** Text RDKit reads with its line-oriented readers (mol blocks, SD,
+  SMILES, and TDT files) is checked as RDKit reads it, by the streams of
+  `rdkit-cxx/streams.h` (or `check_input_text` for text in memory): RDKit
+  counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
+  matches V3000 enhanced-stereo lines with `std::regex`, which recurses once
+  per character (about 300 bytes of stack each), so such lines are refused
+  past 4000 characters. A checked stream stops delivering bytes before the
+  first one past a limit, and the wrapper throws `ValueErrorException` once
+  RDKit asks for that byte, from that call and every later one: RDKit's
+  readers trust the positions they record, and a cut-off read can record
+  `tellg`'s −1. RDKit's random-access suppliers reread their files, so a
+  checked stream also keeps a keyed hash of each 64 KiB chunk it scanned and
+  fails when a chunk rereads differently or the file ends sooner than it did,
+  so RDKit parses only the bytes that were checked. Python file objects are
+  bound as `Read` values, read through the same streams, and `Write`
+  values, which a writer may borrow for its lifetime. RDKit's writers ignore
+  a stream that fails, so the wrappers own the output (a file they open, or
+  the Rust writer), hand RDKit the stream without ownership, and check it
+  after every call: a failed write is `Error::Os` from then on.
 
 ## Properties
 
@@ -300,10 +334,13 @@ rule changes the rule first.
   `float` → `f64`. `str` → `&str` in, `String` out. File names →
   `impl AsRef<Path>`, or a named `P: AsRef<Path>` in methods and associated
   functions, whose manifest entries set `rust_generics = "<&str>"` so the
-  path test can name them. Tuples of indices → `Vec<u32>`, nested →
-  `Vec<Vec<u32>>`. `None`-able results → `Option`. NumPy coordinate arrays →
-  `Vec<Point3D>`; other NumPy matrices → rows, `Vec<Vec<f64>>` (or `i32`
-  for integer matrices). `dict` → `BTreeMap<String, _>`.
+  path test can name them (or a list, one per Rust path, with `""` for a
+  path that is not generic). Python file objects → `R: Read + Send +
+  'static` or `W: Write + Send + 'static` (U12). Tuples of indices →
+  `Vec<u32>`, nested → `Vec<Vec<u32>>`. `None`-able results → `Option`.
+  NumPy coordinate arrays → `Vec<Point3D>`; other NumPy matrices → rows,
+  `Vec<Vec<f64>>` (or `i32` for integer matrices). `dict` →
+  `BTreeMap<String, _>`.
 
 - **T3.** Nested index lists cross the bridge as `Vec<IndexList>`, and plain
   value types (`Point3D`) as cxx shared structs; both live in the `geometry`
@@ -348,8 +385,11 @@ rule changes the rule first.
   regenerates `tests/manifest_paths.rs`
   (`python3 inventory/check.py --write-paths tests/manifest_paths.rs`).
 - **I2.** `reason` marks a name with no Rust counterpart by design (Python
-  protocol methods, pickling hooks, APIs RDKit has deprecated). A name that is
-  not bound yet has no entry. `overloads_note` explains overloads a binding
+  protocol methods, pickling hooks, APIs RDKit has deprecated), or one left
+  unbound because no check could keep its RDKit code from undefined
+  behavior (U1): the reason, which starts "not bound:", names what RDKit
+  trusts (`MaeMolSupplier`, the ChemDraw readers). A name that is not bound
+  yet has no entry. `overloads_note` explains overloads a binding
   covers with fewer Rust paths, or does not bind yet.
 - **I3.** A module joins `complete` once every inventory entry in it is
   mapped; CI then holds it there.
