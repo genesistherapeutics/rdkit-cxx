@@ -26,6 +26,7 @@ pub(crate) mod distance_geometry;
 pub(crate) mod embedder;
 pub(crate) mod enumerate;
 pub(crate) mod errors;
+pub(crate) mod filter_catalog;
 pub(crate) mod fingerprint_generator;
 pub(crate) mod fingerprints;
 pub(crate) mod force_field;

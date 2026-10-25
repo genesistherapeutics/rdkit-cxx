@@ -97,6 +97,7 @@ set(RDKIT_CXX_SOURCES
   src/catalog_checks.cpp
   src/mol_catalog.cpp
   src/frag_catalog.cpp
+  src/filter_catalog.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

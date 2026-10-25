@@ -75,6 +75,7 @@ const BRIDGES: &[&str] = &[
     "enumerate",
     "mol_catalog",
     "frag_catalog",
+    "filter_catalog",
 ];
 
 fn main() {

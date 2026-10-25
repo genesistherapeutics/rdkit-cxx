@@ -29,6 +29,7 @@ pub mod rd_reduced_graphs;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
 pub mod rdchem;
+pub mod rdfiltercatalog;
 pub mod rdfragcatalog;
 pub mod rdmolfiles;
 pub mod rdmolops;
