@@ -13,6 +13,7 @@ pub(crate) mod cip_labeler;
 pub(crate) mod conformer;
 pub(crate) mod conformer_parser;
 pub(crate) mod data_structs;
+pub(crate) mod dclv;
 pub(crate) mod deprotect;
 pub(crate) mod descriptors;
 pub(crate) mod descriptors_3d;

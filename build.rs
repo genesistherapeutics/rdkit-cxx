@@ -55,6 +55,7 @@ const BRIDGES: &[&str] = &[
     "deprotect",
     "descriptors",
     "descriptors_3d",
+    "dclv",
 ];
 
 fn main() {

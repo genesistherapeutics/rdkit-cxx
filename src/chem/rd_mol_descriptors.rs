@@ -11,11 +11,13 @@
 //! calls (CONVENTIONS.md U8), so `force` is not bound and every result is
 //! computed afresh.
 
+mod dclv;
 mod descriptors;
 mod descriptors_3d;
 mod fingerprints;
 mod usr;
 
+pub use dclv::*;
 pub use descriptors::*;
 pub use descriptors_3d::*;
 pub use fingerprints::*;

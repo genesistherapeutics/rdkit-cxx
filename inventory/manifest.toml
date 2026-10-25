@@ -917,6 +917,63 @@ name_exception = "the trailing underscore is dropped: custom_prop_vsa"
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetAtomSurfaceArea"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_atom_surface_area"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetAtomVolume"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_atom_volume"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetCompactness"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_compactness"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetPackingDensity"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_packing_density"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetPartialSurfaceArea"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_partial_surface_area"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetPartialVolume"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_partial_volume"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetPolarSurfaceArea"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_polar_surface_area", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_polar_surface_area_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetPolarVolume"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_polar_volume", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_polar_volume_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetSurfaceArea"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surface_area"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetSurfacePoints"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surface_points", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surface_points_with_all_points"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetVDWVolume"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_vdw_volume"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetVolume"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_volume"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::new", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::new_with_params", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::from_radii", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::from_radii_with_params"]
+overloads_note = "the radii overload is from_radii (A5)"
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.GetAtomFeatures"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_atom_features", "rdkit_cxx::chem::rd_mol_descriptors::get_atom_features_with_addchiral"]
 

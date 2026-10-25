@@ -742,3 +742,214 @@ fn usr_score() {
         Err(Error::Value { .. })
     ));
 }
+
+#[test]
+fn double_cubic_lattice_volume() {
+    let mol = apap();
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    assert_close(dclv.get_surface_area(), 359.1514138560083, 1e-9);
+    assert_close(
+        dclv.get_atom_surface_area(3).unwrap(),
+        1.0602942625078853,
+        1e-9,
+    );
+    assert_close(dclv.get_polar_surface_area(), 69.0682554875265, 1e-9);
+    let all = GetPolarSurfaceAreaParams {
+        include_s_and_p: true,
+        include_hs: true,
+    };
+    assert_close(
+        dclv.get_polar_surface_area_with_params(&all),
+        121.63057639425081,
+        1e-9,
+    );
+    assert_close(
+        dclv.get_partial_surface_area(&[0, 1, 2]).unwrap(),
+        55.11566657147476,
+        1e-9,
+    );
+    assert_close(dclv.get_volume(), 521.2816592976219, 1e-9);
+    assert_close(dclv.get_vdw_volume(), 142.25639074780653, 1e-9);
+    assert_close(
+        dclv.get_atom_volume(3, 1.4).unwrap(),
+        1.228488368361729,
+        1e-9,
+    );
+    assert_close(dclv.get_polar_volume(), 100.45257249696948, 1e-9);
+    let all = GetPolarVolumeParams {
+        include_s_and_p: true,
+        include_hs: true,
+    };
+    assert_close(
+        dclv.get_polar_volume_with_params(&all),
+        180.235182113821,
+        1e-9,
+    );
+    assert_close(
+        dclv.get_partial_volume(&[0, 1, 2]).unwrap(),
+        77.15314976782922,
+        1e-9,
+    );
+    assert_close(dclv.get_compactness(), 1.1465997055971109, 1e-9);
+    assert_close(dclv.get_packing_density(), 0.2728973640459242, 1e-9);
+    let points = dclv.get_surface_points();
+    assert_eq!(points.len(), 20);
+    assert_eq!(points[&0].len(), 30);
+    let p = points[&0][0];
+    assert_close(p.x, 3.3012675952076913, 1e-12);
+    assert_close(p.y, -2.8182707559585567, 1e-12);
+    assert_close(p.z, -1.8400875192165373, 1e-12);
+
+    let mut fresh = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    let all_points = fresh.get_surface_points_with_all_points(true);
+    assert_eq!(all_points.len(), 20);
+    assert_eq!(all_points[&0].len(), 320);
+
+    let probe = DoubleCubicLatticeVolumeParams {
+        probe_radius: 1.2,
+        ..Default::default()
+    };
+    let mut smaller = DoubleCubicLatticeVolume::new_with_params(&mol, &probe).unwrap();
+    assert_close(smaller.get_surface_area(), 329.78204818769734, 1e-9);
+
+    let protein = DoubleCubicLatticeVolumeParams {
+        is_protein: true,
+        ..Default::default()
+    };
+    let mut protein = DoubleCubicLatticeVolume::new_with_params(&mol, &protein).unwrap();
+    assert_close(protein.get_surface_area(), 359.1514138560083, 1e-9);
+}
+
+#[test]
+fn double_cubic_lattice_volume_radii() {
+    let mol = apap();
+    let mut radii = vec![1.5; 20];
+    radii[18] = 0.0;
+    radii[19] = 0.0;
+    let mut dclv = DoubleCubicLatticeVolume::from_radii(&mol, &radii).unwrap();
+    assert_close(dclv.get_surface_area(), 373.85661534765137, 1e-9);
+    assert_eq!(dclv.get_atom_surface_area(19).unwrap(), 0.0);
+    assert_close(dclv.get_volume(), 546.0604526875268, 1e-9);
+    // Empty radii are the van der Waals radii.
+    let mut vdw = DoubleCubicLatticeVolume::from_radii(&mol, &[]).unwrap();
+    assert_close(vdw.get_surface_area(), 359.1514138560083, 1e-9);
+    assert_eq!(
+        DoubleCubicLatticeVolumeParams::default(),
+        DoubleCubicLatticeVolumeParams {
+            is_protein: false,
+            include_ligand: true,
+            probe_radius: 1.4,
+            conf_id: -1,
+        }
+    );
+    assert_eq!(
+        GetPolarSurfaceAreaParams::default(),
+        GetPolarSurfaceAreaParams {
+            include_s_and_p: false,
+            include_hs: false,
+        }
+    );
+    assert_eq!(
+        GetPolarVolumeParams::default(),
+        GetPolarVolumeParams {
+            include_s_and_p: false,
+            include_hs: false,
+        }
+    );
+}
+
+#[test]
+fn double_cubic_lattice_volume_checks() {
+    let mol = apap();
+    let value = |result: rdkit_cxx::Result<DoubleCubicLatticeVolume>| {
+        matches!(result, Err(Error::Value { .. }))
+    };
+    // A radius 0 before a nonzero one makes RDKit read the wrong atom's
+    // neighbor list, and the last past the end (Python crashes).
+    let mut radii = vec![1.5; 20];
+    radii[0] = 0.0;
+    assert!(value(DoubleCubicLatticeVolume::from_radii(&mol, &radii)));
+    // RDKit indexes the radii by atom.
+    assert!(value(DoubleCubicLatticeVolume::from_radii(
+        &mol, &[1.5; 19]
+    )));
+    // RDKit casts scaled radii, probe radii, and coordinates to grid
+    // indices.
+    for bad in [f64::NAN, f64::INFINITY, 1e7] {
+        let mut radii = vec![1.5; 20];
+        radii[3] = bad;
+        assert!(value(DoubleCubicLatticeVolume::from_radii(&mol, &radii)));
+        let probe = DoubleCubicLatticeVolumeParams {
+            probe_radius: bad,
+            ..Default::default()
+        };
+        assert!(value(DoubleCubicLatticeVolume::new_with_params(
+            &mol, &probe
+        )));
+    }
+    let mut far = apap();
+    far.get_conformer_mut()
+        .unwrap()
+        .set_atom_position(
+            2,
+            Point3D {
+                x: 1e9,
+                y: 0.0,
+                z: 0.0,
+            },
+        )
+        .unwrap();
+    assert!(value(DoubleCubicLatticeVolume::new(&far)));
+    // RDKit reads the largest of no radii.
+    let mut empty = Mol::default();
+    empty.add_conformer(&Conformer::new(0)).unwrap();
+    assert!(value(DoubleCubicLatticeVolume::new(&empty)));
+    let conf = DoubleCubicLatticeVolumeParams {
+        conf_id: 5,
+        ..Default::default()
+    };
+    assert!(value(DoubleCubicLatticeVolume::new_with_params(
+        &mol, &conf
+    )));
+    assert!(value(DoubleCubicLatticeVolume::new(
+        &mol_from_smiles("CCO").unwrap()
+    )));
+
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    assert!(matches!(
+        dclv.get_atom_surface_area(20),
+        Err(Error::Index { index: 20, len: 20 })
+    ));
+    assert!(matches!(
+        dclv.get_atom_volume(20, 1.4),
+        Err(Error::Index { .. })
+    ));
+    assert!(matches!(
+        dclv.get_partial_surface_area(&[0, 20]),
+        Err(Error::Index { .. })
+    ));
+    assert!(matches!(
+        dclv.get_partial_volume(&[20]),
+        Err(Error::Index { .. })
+    ));
+}
+
+#[test]
+fn double_cubic_lattice_volume_in_threads() {
+    // RDKit's surface tests share one global, recordCache, which the
+    // wrapper locks.
+    let threads: Vec<_> = (0..4)
+        .map(|_| {
+            std::thread::spawn(|| {
+                let mol = apap();
+                let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+                (dclv.get_surface_area(), dclv.get_volume())
+            })
+        })
+        .collect();
+    for thread in threads {
+        let (area, volume) = thread.join().unwrap();
+        assert_close(area, 359.1514138560083, 1e-9);
+        assert_close(volume, 521.2816592976219, 1e-9);
+    }
+}
