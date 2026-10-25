@@ -9,6 +9,7 @@
 #include <climits>
 #include <cmath>
 #include <exception>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <thread>
@@ -25,6 +26,7 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/fingerprint_generator.rs.h"
@@ -262,6 +264,7 @@ auto with_args(const FpGenerator &gen, const RWMol &mol,
       from_atoms.get(), ignore_atoms.get(), data.conf_id, ao.get(),
       atom_invariants.get(), bond_invariants.get());
   MatrixCacheGuard guard(mol);
+  auto control_c = lock_control_c_for_cip();
   auto result = call(args);
   ao.copy_to(outputs);
   return result;
@@ -303,7 +306,9 @@ bool is_bits(FingerprintOutput output) {
 // threads without catching: an exception in one (an invalid conformer, a
 // count-bounds check) would call std::terminate. Here each thread keeps its
 // first exception, and the call rethrows it. Each molecule is read by one
-// thread only, as RDKit's own split does.
+// thread only, as RDKit's own split does. RDKit's threads would each
+// construct a ControlCHandler when they run the CIP labeler, so a call that
+// may run it (lock_control_c_for_cip) runs on this thread alone.
 std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
                                           BorrowedMols &mols,
                                           FingerprintOutput output,
@@ -327,7 +332,9 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
       result->int_vects[i] = counts(gen, *list[i], output, args);
     }
   };
-  unsigned n = RDKit::getNumThreadsToUse(num_threads);
+  auto control_c = lock_control_c_for_cip();
+  unsigned n =
+      control_c.owns_lock() ? 1 : RDKit::getNumThreadsToUse(num_threads);
   if (n <= 1 || list.size() <= 1) {
     for (std::size_t i = 0; i < list.size(); ++i) {
       work(i);

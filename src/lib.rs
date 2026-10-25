@@ -7,10 +7,13 @@
 
 pub mod chem;
 pub mod data_structs;
+pub mod distance_geometry;
 pub mod error;
 mod ffi;
 mod flags;
+pub mod force_field;
 pub mod geometry;
+pub mod numerics;
 pub mod rd_base;
 mod util;
 

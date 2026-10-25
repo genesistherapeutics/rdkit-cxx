@@ -165,19 +165,30 @@ rule changes the rule first.
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
   mol-block (V2000 and V3000), Marvin, ChemDraw, PNG, SD, and Maestro
-  writers for a molecule without a conformer, and the reaction writers built
-  on them (rxn blocks, Marvin, and PNG metadata) for a reaction with such a
-  template; and `molzip` with `generateCoordinates`. They also check, under
-  the lock, what the depictor that will run trusts about the molecule
-  (`check_compute_2d_coords_mol` in `depiction_checks.h`). RDKit's random
-  number generator (`RDGeneral/utils.cpp`) is shared by every module, so it
-  has one lock, `random_mutex()` in `rdkit-cxx/global_state.h`, held for the
-  whole call by every wrapper whose RDKit call can seed it or draw from it:
-  the SMILES and CXSMILES writers (for molecules and reactions) with
-  `doRandom`, `MolToRandomSmilesVect`, PNG metadata with random SMILES, and
-  the depictor's sampling (`nFlipsPerSample` and random bond flips, in
+  writers for a molecule without a conformer, and the V2000 rxn-block
+  writer built on them (also in reaction PNG metadata) for a reaction with
+  such a template; and `molzip` with
+  `generateCoordinates`. They also check, under the lock, what the depictor
+  that will run trusts about the molecule (`check_compute_2d_coords_mol` in
+  `depiction_checks.h`). RDKit's random number generator
+  (`RDGeneral/utils.cpp`) is shared by every module, so it has one lock,
+  `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
+  every wrapper whose RDKit call can seed it or draw from it: the SMILES and
+  CXSMILES writers (for molecules and reactions) with `doRandom`,
+  `MolToRandomSmilesVect`, PNG metadata with random SMILES, the depictor's
+  sampling (`nFlipsPerSample` and random bond flips, in
   `Compute2DCoordsForReaction` too; the writers' default depiction never
-  draws). A wrapper that needs both locks takes `lock_depiction()` first.
+  draws), the embedder
+  without a seed, DistGeom's `EmbedBoundsMatrix`, and MolAlign's
+  `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
+  the SIGINT handler through static variables) has its own lock,
+  `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
+  by every wrapper whose RDKit call constructs one. MolAlign's
+  `symmetrizeTerminalAtoms`, which the best-alignment functions and the
+  embedder's pruning reach, assigns a static on every call, so callers hold
+  `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
+  several of these locks takes them in this order: `lock_depiction()`,
+  `control_c_mutex()`, `symmetrize_mutex()`, then `random_mutex()`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

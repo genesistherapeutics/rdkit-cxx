@@ -36,7 +36,7 @@ macro_rules! grid_type {
                 self.ptr.as_ref().unwrap()
             }
 
-            fn raw_mut(&mut self) -> Pin<&mut ffi::$ffi> {
+            pub(crate) fn raw_mut(&mut self) -> Pin<&mut ffi::$ffi> {
                 self.ptr.pin_mut()
             }
 
