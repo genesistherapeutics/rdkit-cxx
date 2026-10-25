@@ -178,6 +178,15 @@ def test_init_maps_only_to_constructor_names():
     assert len(found) == 1
 
 
+def test_generics_for_each_path():
+    item = {
+        "python": "rdkit.Chem.rdchem.Mol.__init__",
+        "rust": ["rdkit_cxx::chem::Mol::default"],
+        "rust_generics": ["", "<&str>"],
+    }
+    assert any("rust_generics lists 2" in p for p in check(INVENTORY, manifest(item)))
+
+
 def test_a_duplicate_entry():
     item = {"python": "rdkit.rdBase.DisableLog", "rust": ["rdkit_cxx::rd_base::disable_log"]}
     assert len(problems(item, item)) == 1
@@ -205,6 +214,11 @@ def test_paths_source():
                 "rust": ["rdkit_cxx::chem::Mol::from_file"],
                 "rust_generics": "<&str>",
             },
+            {
+                "python": "rdkit.Chem.rdchem.Mol.__init__",
+                "rust": ["rdkit_cxx::chem::Mol::default", "rdkit_cxx::chem::Mol::from_reader"],
+                "rust_generics": ["", "<std::fs::File>"],
+            },
         )
     )
     assert source.startswith("// Copyright (c) 2026 Steven Kearnes\n// All rights reserved.\n")
@@ -219,4 +233,7 @@ def test_paths_source():
     assert "let _ = rdkit_cxx::chem::SanitizeFlags::SANITIZE_ALL;" in source
     assert "let _ = |value: &rdkit_cxx::geometry::Point3D| { let _ = &value.x; };" in source
     assert "let _ = rdkit_cxx::chem::Mol::from_file::<&str>;" in source
+    # A list gives each path its own generics.
+    assert "let _ = rdkit_cxx::chem::Mol::default;" in source
+    assert "let _ = rdkit_cxx::chem::Mol::from_reader::<std::fs::File>;" in source
     assert "__repr__" not in source

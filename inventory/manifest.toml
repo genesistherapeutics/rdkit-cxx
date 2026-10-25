@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -4073,12 +4073,467 @@ python = "rdkit.Chem.rdchem.tossit"
 reason = "RDKit's test hook that raises IndexError"
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::add_metadata_to_png_file"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::add_metadata_to_png_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.AtomFromSmarts"
+rust = ["rdkit_cxx::chem::rdmolfiles::atom_from_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.AtomFromSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::atom_from_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.BadFileException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Os"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.BondFromSmarts"
+rust = ["rdkit_cxx::chem::rdmolfiles::bond_from_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.BondFromSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::bond_from_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLFormat"
+rust = ["rdkit_cxx::chem::rdmolfiles::CDXMLFormat"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLFormat.Auto"
+rust = ["rdkit_cxx::chem::rdmolfiles::CDXMLFormat::Auto"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLFormat.CDX"
+rust = ["rdkit_cxx::chem::rdmolfiles::CDXMLFormat::Cdx"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLFormat.CDXML"
+rust = ["rdkit_cxx::chem::rdmolfiles::CDXMLFormat::Cdxml"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.__init__"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.__setattr__"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.format"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.parseQueries"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.removeHs"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.sanitize"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.strictQueryParsing"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_ALL"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_ALL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_ALL_BUT_COORDS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_ALL_BUT_COORDS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_ATOM_LABELS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_ATOM_LABELS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_ATOM_PROPS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_ATOM_PROPS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_BOND_ATROPISOMER"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_BOND_ATROPISOMER"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_BOND_CFG"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_BOND_CFG"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_COORDINATE_BONDS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_COORDINATE_BONDS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_COORDS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_COORDS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_ENHANCEDSTEREO"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_ENHANCEDSTEREO"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_LINKNODES"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_LINKNODES"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_MOLFILE_VALUES"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_MOLFILE_VALUES"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_NONE"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_NONE"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_POLYMER"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_POLYMER"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_RADICALS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_RADICALS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_SGROUPS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_SGROUPS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CXSmilesFields.CX_ZERO_BONDS"
+rust = ["rdkit_cxx::chem::rdmolfiles::CXSmilesFields::CX_ZERO_BONDS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CanonicalRankAtoms"
+rust = ["rdkit_cxx::chem::rdmolfiles::canonical_rank_atoms", "rdkit_cxx::chem::rdmolfiles::canonical_rank_atoms_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CanonicalRankAtomsInFragment"
+rust = ["rdkit_cxx::chem::rdmolfiles::canonical_rank_atoms_in_fragment", "rdkit_cxx::chem::rdmolfiles::canonical_rank_atoms_in_fragment_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CanonicalizeEnhancedStereo"
+rust = ["rdkit_cxx::chem::rdmolfiles::canonicalize_enhanced_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateAtomBoolPropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_atom_bool_property_list", "rdkit_cxx::chem::rdmolfiles::create_atom_bool_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateAtomDoublePropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_atom_double_property_list", "rdkit_cxx::chem::rdmolfiles::create_atom_double_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateAtomIntPropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_atom_int_property_list", "rdkit_cxx::chem::rdmolfiles::create_atom_int_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateAtomStringPropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_atom_string_property_list", "rdkit_cxx::chem::rdmolfiles::create_atom_string_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateBondBoolPropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_bond_bool_property_list", "rdkit_cxx::chem::rdmolfiles::create_bond_bool_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateBondDoublePropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_bond_double_property_list", "rdkit_cxx::chem::rdmolfiles::create_bond_double_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateBondIntPropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_bond_int_property_list", "rdkit_cxx::chem::rdmolfiles::create_bond_int_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.CreateBondStringPropertyList"
+rust = ["rdkit_cxx::chem::rdmolfiles::create_bond_string_property_list", "rdkit_cxx::chem::rdmolfiles::create_bond_string_property_list_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.FileParseException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Parse"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.GetEOFHitOnRead"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::get_eof_hit_on_read"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.GetProcessPropertyLists"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::get_process_property_lists"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.SetProcessPropertyLists"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::set_process_property_lists"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.__enter__"
+reason = "Python's context-manager protocol: the supplier is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the input, as dropping the supplier does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::new", "rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::new_with_params", "rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::from_fileobj", "rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::from_fileobj_with_params"]
+rust_generics = ["<&str>", "<&str>", "<std::fs::File>", "<std::fs::File>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMols::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier.atEnd"
+rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::at_end"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.HasChemDrawCDXSupport"
+rust = ["rdkit_cxx::chem::rdmolfiles::has_chem_draw_cdx_support"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.SetData"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__enter__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__exit__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__getitem__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__init__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__iter__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__len__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.__next__"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.atEnd"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeMolSupplier.reset"
+reason = "not bound: RDKit's MaeMolSupplier trusts maeparser's parse (it dereferences a missing bond-order key's end iterator, subtracts 1 from INT_MIN, and takes back() of an empty token), and maeparser's headers, which a check would need, are not installed"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.GetText"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::get_text", "rdkit_cxx::chem::rdmolfiles::MaeWriter::get_text_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::new", "rdkit_cxx::chem::rdmolfiles::MaeWriter::from_fileobj"]
+rust_generics = ["<&str>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MaeWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::write", "rdkit_cxx::chem::rdmolfiles::MaeWriter::write_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MetadataFromPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_file", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_file_as_list"]
+overloads_note = "asList changes the return type, so it has its own function (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MetadataFromPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_string", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_string_as_list"]
+overloads_note = "asList changes the return type, so it has its own function (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFragmentToCXSmarts"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smarts", "rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smarts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFragmentToCXSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smiles", "rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smiles_with_params"]
+overloads_note = "the keyword overload's arguments are fields of MolFragmentToSmilesParams::params, a SmilesWriteParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFragmentToSmarts"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_fragment_to_smarts", "rdkit_cxx::chem::rdmolfiles::mol_fragment_to_smarts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFragmentToSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_fragment_to_smiles", "rdkit_cxx::chem::rdmolfiles::mol_fragment_to_smiles_with_params"]
+overloads_note = "the keyword overload's arguments are fields of MolFragmentToSmilesParams::params, a SmilesWriteParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromFASTA"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_fasta", "rdkit_cxx::chem::rdmolfiles::mol_from_fasta_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromHELM"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_helm", "rdkit_cxx::chem::rdmolfiles::mol_from_helm_with_sanitize"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromMol2Block"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_mol2_block", "rdkit_cxx::chem::rdmolfiles::mol_from_mol2_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromMol2File"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_mol2_file", "rdkit_cxx::chem::rdmolfiles::mol_from_mol2_file_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromMolBlock"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_mol_block", "rdkit_cxx::chem::rdmolfiles::mol_from_mol_block_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromMolFile"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_mol_file", "rdkit_cxx::chem::rdmolfiles::mol_from_mol_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromMrvBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_mrv_block", "rdkit_cxx::chem::rdmolfiles::mol_from_mrv_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromMrvFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_mrv_file", "rdkit_cxx::chem::rdmolfiles::mol_from_mrv_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromPDBBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_pdb_block", "rdkit_cxx::chem::rdmolfiles::mol_from_pdb_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromPDBFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_pdb_file", "rdkit_cxx::chem::rdmolfiles::mol_from_pdb_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_png_file", "rdkit_cxx::chem::rdmolfiles::mol_from_png_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_png_string", "rdkit_cxx::chem::rdmolfiles::mol_from_png_string_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromRDKitSVG"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_rdkit_svg", "rdkit_cxx::chem::rdmolfiles::mol_from_rdkit_svg_with_params"]
+name_exception = "RDKit stays one word: mol_from_rdkit_svg"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_scsr_block", "rdkit_cxx::chem::rdmolfiles::mol_from_scsr_block_with_params"]
+overloads_note = "sanitize and removeHs are fields of MolFromSCSRParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_scsr_file", "rdkit_cxx::chem::rdmolfiles::mol_from_scsr_file_with_params"]
+overloads_note = "sanitize and removeHs are fields of MolFromSCSRParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams"
+rust = ["rdkit_cxx::chem::rdmolfiles::MolFromSCSRParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MolFromSCSRParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.__setattr__"
+reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.includeLeavingGroups"
+rust = ["rdkit_cxx::chem::rdmolfiles::MolFromSCSRParams::include_leaving_groups"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.scsrBaseHbondOptions"
+rust = ["rdkit_cxx::chem::rdmolfiles::MolFromSCSRParams::scsr_base_hbond_options"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.scsrTemplateNames"
+rust = ["rdkit_cxx::chem::rdmolfiles::MolFromSCSRParams::scsr_template_names"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromSequence"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_sequence", "rdkit_cxx::chem::rdmolfiles::mol_from_sequence_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromSmarts"
@@ -4089,6 +4544,62 @@ python = "rdkit.Chem.rdmolfiles.MolFromSmiles"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_smiles", "rdkit_cxx::chem::rdmolfiles::mol_from_smiles_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromTPLBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_tpl_block", "rdkit_cxx::chem::rdmolfiles::mol_from_tpl_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromTPLFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_tpl_file", "rdkit_cxx::chem::rdmolfiles::mol_from_tpl_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromXYZBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_xyz_block"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromXYZFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_xyz_file"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolMetadataToPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_file", "rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_file_with_params"]
+overloads_note = "the includePkl, includeSmiles, and includeMol overload's arguments are fields of PNGMetadataParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolMetadataToPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_string", "rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_string_with_params"]
+overloads_note = "the includePkl, includeSmiles, and includeMol overload's arguments are fields of PNGMetadataParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToCDXMLBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_cdxml_block", "rdkit_cxx::chem::rdmolfiles::mol_to_cdxml_block_format"]
+overloads_note = "format changes the return type to bytes for CDX, so it has its own function (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToCMLBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_cml_block", "rdkit_cxx::chem::rdmolfiles::mol_to_cml_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToCMLFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_cml_file", "rdkit_cxx::chem::rdmolfiles::mol_to_cml_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToCXSmarts"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_cx_smarts", "rdkit_cxx::chem::rdmolfiles::mol_to_cx_smarts_with_isomeric_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToCXSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_cx_smiles", "rdkit_cxx::chem::rdmolfiles::mol_to_cx_smiles_with_params"]
+overloads_note = "the keyword overload's arguments are fields of MolToCXSmilesParams::params, a SmilesWriteParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToFASTA"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_fasta"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToHELM"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_helm"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.MolToMolBlock"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_mol_block", "rdkit_cxx::chem::rdmolfiles::mol_to_mol_block_with_params"]
 
@@ -4097,12 +4608,71 @@ python = "rdkit.Chem.rdmolfiles.MolToMolFile"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_mol_file", "rdkit_cxx::chem::rdmolfiles::mol_to_mol_file_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToMrvBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_mrv_block", "rdkit_cxx::chem::rdmolfiles::mol_to_mrv_block_with_params"]
+overloads_note = "the MrvWriterParams overload is not callable from Python, which does not bind MrvWriterParams"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToMrvFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_mrv_file", "rdkit_cxx::chem::rdmolfiles::mol_to_mrv_file_with_params"]
+overloads_note = "the MrvWriterParams overload is not callable from Python, which does not bind MrvWriterParams"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToPDBBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_pdb_block", "rdkit_cxx::chem::rdmolfiles::mol_to_pdb_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToPDBFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_pdb_file", "rdkit_cxx::chem::rdmolfiles::mol_to_pdb_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToRandomSmilesVect"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_random_smiles_vect", "rdkit_cxx::chem::rdmolfiles::mol_to_random_smiles_vect_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToSequence"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_sequence"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.MolToSmarts"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_smarts", "rdkit_cxx::chem::rdmolfiles::mol_to_smarts_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolToSmiles"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_smiles", "rdkit_cxx::chem::rdmolfiles::mol_to_smiles_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToTPLBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_tpl_block", "rdkit_cxx::chem::rdmolfiles::mol_to_tpl_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToTPLFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_tpl_file", "rdkit_cxx::chem::rdmolfiles::mol_to_tpl_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToV2KMolBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_v2k_mol_block", "rdkit_cxx::chem::rdmolfiles::mol_to_v2k_mol_block_with_params"]
+name_exception = "digits stay with their letters: mol_to_v2k_mol_block"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToV3KMolBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_v3k_mol_block", "rdkit_cxx::chem::rdmolfiles::mol_to_v3k_mol_block_with_params"]
+name_exception = "digits stay with their letters: mol_to_v3k_mol_block"
+overloads_note = "the keyword overload's arguments are fields of MolWriterParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToV3KMolFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_v3k_mol_file", "rdkit_cxx::chem::rdmolfiles::mol_to_v3k_mol_file_with_params"]
+name_exception = "digits stay with their letters: mol_to_v3k_mol_file"
+overloads_note = "the keyword overload's arguments are fields of MolWriterParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToXYZBlock"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_xyz_block", "rdkit_cxx::chem::rdmolfiles::mol_to_xyz_block_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolToXYZFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_xyz_file", "rdkit_cxx::chem::rdmolfiles::mol_to_xyz_file_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolWriterParams"
@@ -4131,6 +4701,348 @@ rust_kind = "field"
 python = "rdkit.Chem.rdmolfiles.MolWriterParams.precision"
 rust = ["rdkit_cxx::chem::rdmolfiles::MolWriterParams::precision"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromCDXML"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromCDXMLFile"
+reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mols_from_png_file", "rdkit_cxx::chem::rdmolfiles::mols_from_png_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::mols_from_png_string", "rdkit_cxx::chem::rdmolfiles::mols_from_png_string_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.GetLastItemText"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::get_last_item_text"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.GetLastRecordId"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::get_last_record_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.GetProcessPropertyLists"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::get_process_property_lists"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.SetProcessPropertyLists"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::set_process_property_lists"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.__enter__"
+reason = "Python's context-manager protocol: the supplier is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the input, as dropping the supplier does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::default", "rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::new", "rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::new_with_params"]
+rust_generics = ["", "<&str>", "<&str>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMols::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSDMolSupplier.atEnd"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSDMolSupplier::at_end"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.GetLastItemText"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::get_last_item_text"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.GetLastRecordId"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::get_last_record_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.__enter__"
+reason = "Python's context-manager protocol: the supplier is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the input, as dropping the supplier does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::default", "rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::new", "rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::new_with_params"]
+rust_generics = ["", "<&str>", "<&str>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMols::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MultithreadedSmilesMolSupplier.atEnd"
+rust = ["rdkit_cxx::chem::rdmolfiles::MultithreadedSmilesMolSupplier::at_end"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::new", "rdkit_cxx::chem::rdmolfiles::PDBWriter::new_with_flavor", "rdkit_cxx::chem::rdmolfiles::PDBWriter::from_file_obj", "rdkit_cxx::chem::rdmolfiles::PDBWriter::from_file_obj_with_flavor"]
+rust_generics = ["<&str>", "<&str>", "<Vec<u8>>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PDBWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::PDBWriter::write", "rdkit_cxx::chem::rdmolfiles::PDBWriter::write_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.__setattr__"
+reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.cxSmilesFlags"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::cx_smiles_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.includeMol"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::include_mol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.includePkl"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::include_pkl"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.includeSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::include_smiles"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.propertyFlags"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::property_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.restoreBondDirs"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::restore_bond_dirs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.smilesWriteParams"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::smiles_write_params"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.RestoreBondDirOption"
+rust = ["rdkit_cxx::chem::rdmolfiles::RestoreBondDirOption"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.RestoreBondDirOption.RestoreBondDirOptionClear"
+rust = ["rdkit_cxx::chem::rdmolfiles::RestoreBondDirOption::RestoreBondDirOptionClear"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.RestoreBondDirOption.RestoreBondDirOptionTrue"
+rust = ["rdkit_cxx::chem::rdmolfiles::RestoreBondDirOption::RestoreBondDirOptionTrue"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRBaseHbondOptions"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRBaseHbondOptions"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRBaseHbondOptions.Auto"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRBaseHbondOptions::Auto"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRBaseHbondOptions.Ignore"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRBaseHbondOptions::Ignore"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRBaseHbondOptions.UseSapAll"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRBaseHbondOptions::UseSapAll"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRBaseHbondOptions.UseSapOne"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRBaseHbondOptions::UseSapOne"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRTemplateNames"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRTemplateNames"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRTemplateNames.AsEntered"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRTemplateNames::AsEntered"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRTemplateNames.UseFirstName"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRTemplateNames::UseFirstName"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SCSRTemplateNames.UseSecondName"
+rust = ["rdkit_cxx::chem::rdmolfiles::SCSRTemplateNames::UseSecondName"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.GetItemText"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::get_item_text"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.GetProcessPropertyLists"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::get_process_property_lists"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.SetData"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::set_data", "rdkit_cxx::chem::rdmolfiles::SDMolSupplier::set_data_with_params", "rdkit_cxx::chem::rdmolfiles::SDMolSupplier::set_data_bytes", "rdkit_cxx::chem::rdmolfiles::SDMolSupplier::set_data_bytes_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.SetProcessPropertyLists"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::set_process_property_lists"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__enter__"
+reason = "Python's context-manager protocol: the supplier is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the input, as dropping the supplier does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__getitem__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::get"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::default", "rdkit_cxx::chem::rdmolfiles::SDMolSupplier::new", "rdkit_cxx::chem::rdmolfiles::SDMolSupplier::new_with_params"]
+rust_generics = ["", "<&str>", "<&str>"]
+overloads_note = "a fileName given as any object is its str, as P: AsRef<Path> takes any path"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__len__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMols::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.atEnd"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::at_end"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDMolSupplier.reset"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDMolSupplier::reset"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.GetForceV3000"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::get_force_v3000"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.GetKekulize"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::get_kekulize"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.GetText"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::get_text", "rdkit_cxx::chem::rdmolfiles::SDWriter::get_text_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.SetForceV3000"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::set_force_v3000"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.SetKekulize"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::set_kekulize"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::new", "rdkit_cxx::chem::rdmolfiles::SDWriter::from_file_obj"]
+rust_generics = ["<&str>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SDWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::SDWriter::write", "rdkit_cxx::chem::rdmolfiles::SDWriter::write_with_conf_id"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmartsParserParams"
@@ -4168,6 +5080,56 @@ rust_kind = "field"
 python = "rdkit.Chem.rdmolfiles.SmartsParserParams.strictCXSMILES"
 rust = ["rdkit_cxx::chem::rdmolfiles::SmartsParserParams::strict_cxsmiles"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.GetItemText"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::get_item_text"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.SetData"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::set_data", "rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::set_data_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__enter__"
+reason = "Python's context-manager protocol: the supplier is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the input, as dropping the supplier does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__getitem__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::get"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::new", "rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::new_with_params", "rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::default"]
+rust_generics = ["<&str>", "<&str>", ""]
+overloads_note = "a fileName given as any object is its str, as P: AsRef<Path> takes any path"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__len__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMols::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplier.reset"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesMolSupplier::reset"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesMolSupplierFromText"
+rust = ["rdkit_cxx::chem::rdmolfiles::smiles_mol_supplier_from_text", "rdkit_cxx::chem::rdmolfiles::smiles_mol_supplier_from_text_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmilesParserParams"
@@ -4272,6 +5234,153 @@ rust_kind = "field"
 python = "rdkit.Chem.rdmolfiles.SmilesWriteParams.rootedAtAtom"
 rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriteParams::rooted_at_atom"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::new", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::new_with_params", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::from_file_obj", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::from_file_obj_with_params"]
+rust_generics = ["<&str>", "<&str>", "<Vec<u8>>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.SmilesWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriter::write", "rdkit_cxx::chem::rdmolfiles::SmilesWriter::write_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.GetItemText"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::get_item_text"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.SetData"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::set_data", "rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::set_data_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__enter__"
+reason = "Python's context-manager protocol: the supplier is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the input, as dropping the supplier does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__getitem__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::get"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::default", "rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::new", "rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::new_with_params"]
+rust_generics = ["", "<&str>", "<&str>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__iter__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__len__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.__next__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMols::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTMolSupplier.reset"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTMolSupplier::reset"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.GetNumDigits"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::get_num_digits"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.GetWrite2D"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::get_write_2d"]
+name_exception = "digits stay with their letters: get_write_2d"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.GetWriteNames"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::get_write_names"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.NumMols"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::num_mols"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetNumDigits"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_num_digits"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetProps"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_props"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetWrite2D"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_2d", "rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_2d_with_state"]
+name_exception = "digits stay with their letters: set_write_2d"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.SetWriteNames"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_names", "rdkit_cxx::chem::rdmolfiles::TDTWriter::set_write_names_with_state"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.__enter__"
+reason = "Python's context-manager protocol: the writer is returned as is"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.__exit__"
+reason = "Python's context-manager protocol: __exit__ closes the writer, as close or dropping it does"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::new", "rdkit_cxx::chem::rdmolfiles::TDTWriter::from_file_obj"]
+rust_generics = ["<&str>", "<Vec<u8>>"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.close"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::close"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.flush"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::flush"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.TDTWriter.write"
+rust = ["rdkit_cxx::chem::rdmolfiles::TDTWriter::write", "rdkit_cxx::chem::rdmolfiles::TDTWriter::write_with_conf_id"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.ADJUST_IGNOREALL"
