@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -70,6 +70,461 @@ rust = ["rdkit_cxx::chem::rd_deprotect::deprotect_in_place", "rdkit_cxx::chem::r
 [[entry]]
 python = "rdkit.Chem.rdDeprotect.GetDeprotections"
 rust = ["rdkit_cxx::chem::rd_deprotect::get_deprotections"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.BAD_DOUBLE_BOND_STEREO"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::BadDoubleBondStereo"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::BadDoubleBondStereo"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CHECK_CHIRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::CheckChiralCenters"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CHECK_CHIRAL_CENTERS2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters2"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::CheckChiralCenters2"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CHECK_TETRAHEDRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckTetrahedralCenters"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::CheckTetrahedralCenters"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.CLASH"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Clash"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::Clash"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.DG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::dg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.DG_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::DgEmbedding"]
+name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::DgEmbedding"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETDG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etdg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETDGv2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etdg_v2"]
+name_exception = "the version stays a suffix: etdg_v2"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDGv2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v2"]
+name_exception = "the version stays a suffix: etkdg_v2"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDGv3"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v3"]
+name_exception = "the version stays a suffix: etkdg_v3"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETKDGv4"
+rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v4"]
+name_exception = "the version stays a suffix: etkdg_v4"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.ETK_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::EtkMinimization"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::EtkMinimization"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EXCEEDED_TIMEOUT"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::ExceededTimeout"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::ExceededTimeout"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFF.MMFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Mmff"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFF.UFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Uff"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.BAD_DOUBLE_BOND_STEREO"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::BadDoubleBondStereo"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CHECK_CHIRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CHECK_CHIRAL_CENTERS2"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters2"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CHECK_TETRAHEDRAL_CENTERS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckTetrahedralCenters"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.CLASH"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Clash"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.ETK_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::EtkMinimization"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.EXCEEDED_TIMEOUT"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::ExceededTimeout"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.FINAL_CENTER_IN_VOLUME"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalCenterInVolume"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.FINAL_CHIRAL_BOUNDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalChiralBounds"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.FIRST_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FirstMinimization"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.INITIAL_COORDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::InitialCoords"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.KTERM_VIOLATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::KtermViolation"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.LINEAR_DOUBLE_BOND"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::LinearDoubleBond"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Minimization"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses.MINIMIZE_FOURTH_DIMENSION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::MinimizeFourthDimension"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedMolecule"
+rust = ["rdkit_cxx::chem::rd_dist_geom::embed_molecule", "rdkit_cxx::chem::rd_dist_geom::embed_molecule_with_params"]
+overloads_note = "the keyword overload's arguments are fields of EmbedParameters, which the _with_params form takes (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedMultipleConfs"
+rust = ["rdkit_cxx::chem::rd_dist_geom::embed_multiple_confs", "rdkit_cxx::chem::rd_dist_geom::embed_multiple_confs_with_params"]
+overloads_note = "the keyword overload's arguments are fields of EmbedParameters, which the _with_params form takes (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.ETversion"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::et_version"]
+rust_kind = "field"
+name_exception = "ET is one word: et_version"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.GetFailureCounts"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::get_failure_counts"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.SetBoundsMat"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::set_bounds_mat"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.SetCPCI"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::set_cpci"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.SetCoordMap"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::set_coord_map"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.__init__"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.__setattr__"
+reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.basinThresh"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::basin_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.boundsMatForceScaling"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::bounds_mat_force_scaling"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.boxSizeMult"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::box_size_mult"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.clearConfs"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::clear_confs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.embedForceField"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::embed_force_field"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.embedFragmentsSeparately"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::embed_fragments_separately"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.enableSequentialRandomSeeds"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::enable_sequential_random_seeds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.enforceChirality"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::enforce_chirality"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.forceTransAmides"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::force_trans_amides"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.ignoreSmoothingFailures"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::ignore_smoothing_failures"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.initialEmbeddingMode"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::initial_embedding_mode"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.maxIterations"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::max_iterations"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.numThreads"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.numZeroFail"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::num_zero_fail"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.onlyHeavyAtomsForRMS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::only_heavy_atoms_for_rms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.onlyInitialEmbedding"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::only_initial_embedding"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.optimizerForceTol"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::optimizer_force_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.pruneRmsThresh"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::prune_rms_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.randNegEig"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::rand_neg_eig"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.randomSeed"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::random_seed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.symmetrizeConjugatedTerminalGroupsForPruning"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::symmetrize_conjugated_terminal_groups_for_pruning"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.timeout"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::timeout"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.trackFailures"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::track_failures"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useBasicKnowledge"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_basic_knowledge"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useExpTorsionAnglePrefs"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_exp_torsion_angle_prefs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useLegacyImplementation"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_legacy_implementation"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useMacrocycle14config"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_macrocycle14config"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useMacrocycleTorsions"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_macrocycle_torsions"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useRandomCoords"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_random_coords"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useSmallRingTorsions"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_small_ring_torsions"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.useSymmetryForPruning"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::use_symmetry_for_pruning"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParameters.verbose"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::verbose"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.EmbedParametersToJSON"
+rust = ["rdkit_cxx::chem::rd_dist_geom::embed_parameters_to_json"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.FINAL_CENTER_IN_VOLUME"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalCenterInVolume"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::FinalCenterInVolume"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.FINAL_CHIRAL_BOUNDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FinalChiralBounds"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::FinalChiralBounds"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.FIRST_MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::FirstMinimization"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::FirstMinimization"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.GetExperimentalTorsions"
+rust = ["rdkit_cxx::chem::rd_dist_geom::get_experimental_torsions", "rdkit_cxx::chem::rd_dist_geom::get_experimental_torsions_with_params"]
+overloads_note = "the keyword overload's arguments are fields of EmbedParameters, which the _with_params form takes (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.GetMoleculeBoundsMatrix"
+rust = ["rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix", "rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix_with_params", "rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix_embed_parameters", "rdkit_cxx::chem::rd_dist_geom::get_molecule_bounds_matrix_embed_parameters_with_params"]
+overloads_note = "the (mol, embedParameters) overload is get_molecule_bounds_matrix_embed_parameters (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.INITIAL_COORDS"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::InitialCoords"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::InitialCoords"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.INTERNAL_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::InternalCoordinateEmbedding"]
+name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::InternalCoordinateEmbedding"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.DG_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::DgEmbedding"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.INTERNAL_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::InternalCoordinateEmbedding"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.RANDOM_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::RandomCoordinateEmbedding"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.KDG"
+rust = ["rdkit_cxx::chem::rd_dist_geom::kdg"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.KTERM_VIOLATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::KtermViolation"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::KtermViolation"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.LINEAR_DOUBLE_BOND"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::LinearDoubleBond"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::LinearDoubleBond"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.MINIMIZATION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::Minimization"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::Minimization"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.MINIMIZE_FOURTH_DIMENSION"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::MinimizeFourthDimension"]
+name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::MinimizeFourthDimension"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.MMFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Mmff"]
+name_exception = "an exported enum value maps to its variant, EmbedFF::Mmff"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.OrderedEmbedFailureCauses"
+rust = ["rdkit_cxx::chem::rd_dist_geom::ordered_embed_failure_causes", "rdkit_cxx::chem::rd_dist_geom::ordered_embed_failure_causes_with_legacy_implementation"]
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.RANDOM_COORDINATE_EMBEDDING"
+rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::RandomCoordinateEmbedding"]
+name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::RandomCoordinateEmbedding"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.UFF"
+rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Uff"]
+name_exception = "an exported enum value maps to its variant, EmbedFF::Uff"
+
+[[entry]]
+python = "rdkit.Chem.rdDistGeom.srETKDGv3"
+rust = ["rdkit_cxx::chem::rd_dist_geom::sr_etkdg_v3"]
+name_exception = "the version stays a suffix: sr_etkdg_v3"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput"

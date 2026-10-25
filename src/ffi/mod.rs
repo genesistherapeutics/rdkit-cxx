@@ -17,6 +17,7 @@ pub(crate) mod dclv;
 pub(crate) mod deprotect;
 pub(crate) mod descriptors;
 pub(crate) mod descriptors_3d;
+pub(crate) mod embedder;
 pub(crate) mod errors;
 pub(crate) mod fingerprint_generator;
 pub(crate) mod fingerprints;

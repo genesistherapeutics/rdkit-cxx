@@ -81,6 +81,8 @@ set(RDKIT_CXX_SOURCES
   src/threads.cpp
   src/force_field.cpp
   src/force_field_helpers.cpp
+  src/global_state.cpp
+  src/embedder.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -110,6 +112,8 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ForceField
   ForceFieldHelpers
   Trajectory
+  DistGeometry
+  DistGeomHelpers
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
@@ -119,6 +123,11 @@ target_include_directories(rdkitcxx PRIVATE
   ${RDKit_INCLUDE_DIRS}
   # Declarations RDKit's installed headers need (compat/maeparser).
   compat
+  # conda-forge's librdkit-dev 2026.09 installs DistGeomHelpers/
+  # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it
+  # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
+  # install that has it finds its own first, next to the including header.
+  vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})

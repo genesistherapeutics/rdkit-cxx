@@ -62,6 +62,7 @@ const BRIDGES: &[&str] = &[
     "properties",
     "force_field",
     "force_field_helpers",
+    "embedder",
 ];
 
 fn main() {
