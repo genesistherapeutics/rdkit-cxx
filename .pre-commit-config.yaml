@@ -6,6 +6,9 @@
 # Install with `pre-commit install`. CI runs every hook on every file (the
 # pre-commit job in .github/workflows/ci.yml), skipping no-commit-to-branch.
 
+# Vendored third-party files stay exactly as their upstream ships them.
+exclude: ^wrapper/third_party/
+
 repos:
   # Every change goes through a branch and a pull request, so a commit on main
   # is a mistake. Listed first so it fails before the slower hooks run.
@@ -60,6 +63,8 @@ repos:
     hooks:
       - id: clang-format
         types_or: [c, c++]
+        # RDKit's own headers, kept as RDKit wrote them.
+        exclude: ^wrapper/vendor/
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.23.1

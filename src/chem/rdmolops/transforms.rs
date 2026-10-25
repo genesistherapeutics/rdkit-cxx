@@ -594,7 +594,8 @@ pub struct MolzipParams {
     /// Checks valences after zipping.
     pub enforce_valence_rules: bool,
     /// Gives the result, and for `molzip_fragments` the inputs, 2D
-    /// coordinates.
+    /// coordinates; those calls return `Error::Value` for a result the
+    /// depictor would mishandle (see `chem::rd_depictor`).
     pub generate_coordinates: bool,
     /// Aligns the inputs' coordinates along the new bonds.
     pub align_coordinates: bool,

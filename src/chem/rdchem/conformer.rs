@@ -125,14 +125,16 @@ impl Default for Conformer {
 }
 
 /// A copy of a molecule's conformer, for the functions that take any
-/// conformer while borrowing the molecule. Mirrors `Conformer(other)`.
+/// conformer while borrowing the molecule. Mirrors `Conformer(other)`, except
+/// that the copy has no owning molecule: Python's keeps a pointer to the
+/// molecule, which the copy can outlive.
 impl From<ConformerRef<'_>> for Conformer {
     fn from(conf: ConformerRef<'_>) -> Conformer {
         Conformer::from_ffi(expect_ok(ffi::conformer_clone(conf.raw())))
     }
 }
 
-/// Mirrors `Conformer(other)`.
+/// Mirrors `Conformer(other)`; the copy has no owning molecule.
 impl Clone for Conformer {
     fn clone(&self) -> Conformer {
         Conformer::from_ffi(expect_ok(ffi::conformer_clone(self.raw())))
@@ -234,3 +236,61 @@ impl fmt::Debug for ConformerMut<'_> {
             .finish()
     }
 }
+
+pub(crate) mod sealed {
+    use std::pin::Pin;
+
+    use crate::ffi::conformer::ffi;
+
+    pub trait ConformerLike {
+        fn conformer(&self) -> &ffi::Conformer;
+    }
+
+    pub trait ConformerLikeMut: ConformerLike {
+        fn conformer_mut(&mut self) -> Pin<&mut ffi::Conformer>;
+    }
+}
+
+/// A conformer the module-level functions read: `Conformer`, `ConformerRef`,
+/// or `ConformerMut` (CONVENTIONS.md S3).
+pub trait AsConformer: sealed::ConformerLike {}
+
+/// A conformer the module-level functions write: `Conformer` or
+/// `ConformerMut`.
+pub trait AsConformerMut: sealed::ConformerLikeMut {}
+
+impl sealed::ConformerLike for Conformer {
+    fn conformer(&self) -> &ffi::Conformer {
+        self.raw()
+    }
+}
+
+impl sealed::ConformerLikeMut for Conformer {
+    fn conformer_mut(&mut self) -> Pin<&mut ffi::Conformer> {
+        self.raw_mut()
+    }
+}
+
+impl sealed::ConformerLike for ConformerRef<'_> {
+    fn conformer(&self) -> &ffi::Conformer {
+        self.raw()
+    }
+}
+
+impl sealed::ConformerLike for ConformerMut<'_> {
+    fn conformer(&self) -> &ffi::Conformer {
+        self.raw()
+    }
+}
+
+impl sealed::ConformerLikeMut for ConformerMut<'_> {
+    fn conformer_mut(&mut self) -> Pin<&mut ffi::Conformer> {
+        self.raw_mut()
+    }
+}
+
+impl AsConformer for Conformer {}
+impl AsConformer for ConformerRef<'_> {}
+impl AsConformer for ConformerMut<'_> {}
+impl AsConformerMut for Conformer {}
+impl AsConformerMut for ConformerMut<'_> {}

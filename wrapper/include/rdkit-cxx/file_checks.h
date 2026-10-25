@@ -38,4 +38,12 @@ void check_precision(unsigned precision);
 // with parses on other threads. The parsers therefore take only 0.
 void check_debug_parse(int debug_parse);
 
+// RDKit's Marvin reader (MarvinMolBase::parseAtomsAndBonds in
+// MarvinDefs.cpp), which reads molecules and reactions alike, copies the
+// second atom reference of each bond before it checks that there are two,
+// reading past the end of its token vector for a bond with one or none (a
+// segfault in Python). This parses the XML as RDKit does, which throws for
+// malformed XML, and checks every bond.
+void check_mrv(const std::string &text);
+
 }  // namespace rdkit_cxx

@@ -21,6 +21,7 @@
 #include <GraphMol/Fingerprints/MorganFingerprints.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/descriptors.rs.h"
 #include "rdkit-cxx/mol_checks.h"
@@ -321,6 +322,11 @@ std::unique_ptr<BitVect> get_maccs_keys_fingerprint(const RWMol &mol) {
 std::uint32_t get_atom_pair_atom_code(const Atom &atom,
                                       std::uint32_t branch_subtract,
                                       bool include_chirality) {
+  // getAtomCode may run the CIP labeler on the atom's molecule.
+  std::unique_lock<std::mutex> control_c;
+  if (include_chirality) {
+    control_c = lock_control_c_for_cip();
+  }
   return RDKit::AtomPairs::getAtomCode(&atom, branch_subtract,
                                        include_chirality);
 }

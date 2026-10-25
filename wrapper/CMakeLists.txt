@@ -83,6 +83,22 @@ set(RDKIT_CXX_SOURCES
   src/png.cpp
   src/suppliers.cpp
   src/writers.cpp
+  src/depiction_checks.cpp
+  src/depictor.cpp
+  src/coord_gen.cpp
+  src/threads.cpp
+  src/force_field.cpp
+  src/force_field_helpers.cpp
+  src/control_c_lock.cpp
+  src/embedder.cpp
+  src/distance_geometry.cpp
+  src/mol_transforms.cpp
+  src/alignment.cpp
+  src/determine_bonds.cpp
+  src/shape_helpers.cpp
+  src/mol_align.cpp
+  src/chem_reactions.cpp
+  src/enumerate.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -109,16 +125,43 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ChemReactions
   Deprotect
   Descriptors
+  coordgen
+  MolTransforms
+  ForceField
+  ForceFieldHelpers
+  Trajectory
+  DistGeometry
+  DistGeomHelpers
+  Alignment
+  DetermineBonds
+  ShapeHelpers
+  MolAlign
+  O3AAlign
+  FilterCatalog
   MolStandardize
 )
 
+# DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
+# RDKit has when it was built with YAeHMOP.
+if(TARGET RDKit::EHTLib)
+  list(APPEND RDKIT_CXX_RDKIT_TARGETS EHTLib)
+endif()
+
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
+# GraphMol/CoordGen.h includes coordgen's headers, which RDKit's packages
+# do not install; third_party/coordgen holds the version RDKit builds in.
 target_include_directories(rdkitcxx PRIVATE
   include
+  third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
   # Declarations RDKit's installed headers need (compat/maeparser).
   compat
+  # conda-forge's librdkit-dev 2026.09 installs DistGeomHelpers/
+  # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it
+  # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
+  # install that has it finds its own first, next to the including header.
+  vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})

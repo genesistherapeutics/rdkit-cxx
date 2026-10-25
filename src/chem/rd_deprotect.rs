@@ -138,7 +138,7 @@ pub fn deprotect_with_deprotections(mol: &Mol, deprotections: &[DeprotectData]) 
 }
 
 /// Deprotects the molecule in place, returning whether it changed. Mirrors
-/// `rdDeprotect.DeprotectInPlace`. `Error::Runtime` for a deprotection
+/// `rdDeprotect.DeprotectInPlace`. `Error::Value` for a deprotection
 /// whose reaction has more than one reactant.
 pub fn deprotect_in_place(mol: &mut Mol) -> Result<bool> {
     Ok(ffi::deprotect_in_place_default(mol.pin_mut())?)

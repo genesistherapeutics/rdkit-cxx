@@ -493,7 +493,7 @@ impl Default for BondWedgingParameters {
 }
 
 /// Wedges the molecule's bonds for its chiral centers, as in mol files, by
-/// `conformer`'s coordinates; a copy of one of the molecule's
+/// `conformer`'s coordinates, one per atom; a copy of one of the molecule's
 /// (`Conformer::from`) will do. Mirrors `rdmolops.WedgeMolBonds`.
 pub fn wedge_mol_bonds(mol: &mut Mol, conformer: &Conformer) -> Result<()> {
     wedge_mol_bonds_with_params(mol, conformer, &BondWedgingParameters::default())

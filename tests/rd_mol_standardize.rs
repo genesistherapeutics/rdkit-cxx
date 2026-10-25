@@ -1003,18 +1003,13 @@ fn normalizer() {
         normalizer_from_data("x\tC>>>N", &params),
         Err(Error::Parse { .. })
     ));
-    // A transformation with no product, or two reactants, is RDKit's error.
+    // A transformation with no product, or two reactants, is RDKit's
+    // ChemicalReactionException (E4).
     let no_product = normalizer_from_data("x\t[C:1]>>", &params).unwrap();
-    assert!(matches!(
-        no_product.normalize(&mol("CC")),
-        Err(Error::Runtime { .. })
-    ));
+    assert!(is_value(no_product.normalize(&mol("CC"))));
     assert!(is_value(no_product.normalize_in_place(&mut mol("CC"))));
     let two = normalizer_from_data("x\t[C:1].[O:2]>>[C:1][O:2]", &params).unwrap();
-    assert!(matches!(
-        two.normalize(&mol("C.O")),
-        Err(Error::Runtime { .. })
-    ));
+    assert!(is_value(two.normalize(&mol("C.O"))));
 }
 
 #[test]

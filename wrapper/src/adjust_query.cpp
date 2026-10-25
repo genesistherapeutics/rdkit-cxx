@@ -69,6 +69,16 @@ RDKit::MolOps::AdjustQueryParameters from_data(
 
 }  // namespace
 
+AdjustQueryParametersData adjust_query_params_to_data(
+    const RDKit::MolOps::AdjustQueryParameters &params) {
+  return to_data(params);
+}
+
+RDKit::MolOps::AdjustQueryParameters adjust_query_params_from_data(
+    const AdjustQueryParametersData &data) {
+  return from_data(data);
+}
+
 AdjustQueryParametersData adjust_query_parameters_default() {
   return to_data(RDKit::MolOps::AdjustQueryParameters());
 }

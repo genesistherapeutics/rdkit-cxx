@@ -54,7 +54,12 @@ pub struct SubstructMatchParameters {
 
 impl Default for SubstructMatchParameters {
     fn default() -> SubstructMatchParameters {
-        let data = expect_ok(ffi::substruct_match_parameters_default());
+        SubstructMatchParameters::from_ffi(expect_ok(ffi::substruct_match_parameters_default()))
+    }
+}
+
+impl SubstructMatchParameters {
+    pub(crate) fn from_ffi(data: ffi::SubstructMatchParametersData) -> SubstructMatchParameters {
         SubstructMatchParameters {
             use_chirality: data.use_chirality,
             use_enhanced_stereo: data.use_enhanced_stereo,
@@ -78,9 +83,7 @@ impl Default for SubstructMatchParameters {
                 .then(|| AtomCoordsMatcher::from_ffi(&data.atom_coords_matcher)),
         }
     }
-}
 
-impl SubstructMatchParameters {
     pub(crate) fn to_ffi(&self) -> ffi::SubstructMatchParametersData {
         ffi::SubstructMatchParametersData {
             use_chirality: self.use_chirality,
