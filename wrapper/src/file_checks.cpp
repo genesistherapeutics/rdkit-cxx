@@ -9,7 +9,6 @@
 #include <iterator>
 #include <sstream>
 
-#include <GraphMol/MonomerInfo.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 
@@ -48,22 +47,6 @@ void check_debug_parse(int debug_parse) {
     throw ValueErrorException(
         "debugParse must be 0: RDKit stores it in a global that every SMILES "
         "and SMARTS parse reads without a lock");
-  }
-}
-
-void check_pdb_residue_infos(const RDKit::ROMol &mol, bool every_info) {
-  for (const auto atom : mol.atoms()) {
-    const auto *info = atom->getMonomerInfo();
-    if (!info || dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
-      continue;
-    }
-    if (every_info ||
-        info->getMonomerType() == RDKit::AtomMonomerInfo::PDBRESIDUE) {
-      throw ValueErrorException(
-          "atom " + std::to_string(atom->getIdx()) +
-          " has monomer info that is not an AtomPDBResidueInfo" +
-          (every_info ? "" : " but is marked PDBRESIDUE"));
-    }
   }
 }
 

@@ -525,8 +525,6 @@ impl fmt::Debug for TDTWriter<'_> {
 /// Writes PDB files. Mirrors `rdmolfiles.PDBWriter`.
 ///
 /// `flavor` is `MolToPDBBlock`'s; flavor 1 writes each molecule as a model.
-/// Writing a molecule whose atoms carry monomer infos that are not PDB residue
-/// infos is `Error::Value`, as for `mol_to_pdb_block`.
 pub struct PDBWriter<'w> {
     /// Never null.
     ptr: UniquePtr<ffi::PDBWriter>,

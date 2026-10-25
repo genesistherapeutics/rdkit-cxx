@@ -410,9 +410,7 @@ std::unique_ptr<PDBWriter> pdb_writer_from_writer(rust::Box<RustWriter> writer,
   return make_pdb_writer(rust_output(std::move(writer)), flavor);
 }
 
-// As mol_to_pdb_block, which checks the residue infos RDKit casts.
 void pdb_writer_write(PDBWriter &w, const RWMol &mol, std::int32_t conf_id) {
-  check_pdb_residue_infos(mol, false);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 
@@ -454,9 +452,18 @@ void check_mae_props(const RDKit::RDProps &obj, const RDKit::STR_VECT &props) {
 }
 
 // The Maestro writer casts every atom's monomer info to AtomPDBResidueInfo
-// (mapAtom in MaeWriter.cpp), and matches property names as above.
+// (mapAtom in MaeWriter.cpp), whatever its type, which reads past a plain
+// AtomMonomerInfo; and it matches property names as above.
 void check_mae(const RWMol &mol, const RDKit::STR_VECT &props) {
-  check_pdb_residue_infos(mol, true);
+  for (const auto atom : mol.atoms()) {
+    const auto *info = atom->getMonomerInfo();
+    if (info && !dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
+      throw ValueErrorException(
+          "atom " + std::to_string(atom->getIdx()) +
+          " has monomer info that is not an AtomPDBResidueInfo, which RDKit's "
+          "Maestro writer would read as one");
+    }
+  }
   check_mae_props(mol, props);
   for (const auto atom : mol.atoms()) {
     check_mae_props(*atom, props);

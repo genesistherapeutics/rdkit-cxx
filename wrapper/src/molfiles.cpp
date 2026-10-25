@@ -1034,13 +1034,11 @@ std::unique_ptr<RWMol> mol_from_pdb_file(rust::Slice<const std::uint8_t> path,
 std::unique_ptr<std::string> mol_to_pdb_block(const RWMol &mol,
                                               std::int32_t conf_id,
                                               std::uint32_t flavor) {
-  check_pdb_residue_infos(mol, false);
   return str(RDKit::MolToPDBBlock(mol, conf_id, flavor));
 }
 
 void mol_to_pdb_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                      std::int32_t conf_id, std::uint32_t flavor) {
-  check_pdb_residue_infos(mol, false);
   RDKit::MolToPDBFile(mol, to_path(path), conf_id, flavor);
 }
 
@@ -1106,17 +1104,14 @@ std::unique_ptr<RWMol> mol_from_helm(rust::Str text, bool sanitize) {
 }
 
 std::unique_ptr<std::string> mol_to_sequence(const RWMol &mol) {
-  check_pdb_residue_infos(mol, false);
   return str(RDKit::MolToSequence(mol));
 }
 
 std::unique_ptr<std::string> mol_to_fasta(const RWMol &mol) {
-  check_pdb_residue_infos(mol, false);
   return str(RDKit::MolToFASTA(mol));
 }
 
 std::unique_ptr<std::string> mol_to_helm(const RWMol &mol) {
-  check_pdb_residue_infos(mol, false);
   return str(RDKit::MolToHELM(mol));
 }
 

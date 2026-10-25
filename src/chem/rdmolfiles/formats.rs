@@ -489,9 +489,7 @@ defaults! {
     }
 }
 
-/// A PDB block. An atom whose monomer info is marked `Pdbresidue` but is not
-/// an `AtomPDBResidueInfo` is `Error::Value`. Mirrors
-/// `rdmolfiles.MolToPDBBlock`.
+/// A PDB block. Mirrors `rdmolfiles.MolToPDBBlock`.
 pub fn mol_to_pdb_block(mol: &Mol) -> Result<String> {
     mol_to_pdb_block_with_params(mol, &MolToPDBBlockParams::default())
 }

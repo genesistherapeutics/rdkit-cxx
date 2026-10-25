@@ -13,8 +13,6 @@
 
 #include <string>
 
-#include <GraphMol/ROMol.h>
-
 namespace rdkit_cxx {
 
 // The bytes of a file, read once, so RDKit never rereads a file that changed
@@ -39,12 +37,5 @@ void check_precision(unsigned precision);
 // MolFromSmiles and MolFromSmarts write a nonzero debugParse there, racing
 // with parses on other threads. The parsers therefore take only 0.
 void check_debug_parse(int debug_parse);
-
-// RDKit's PDB, sequence, and Maestro writers cast an atom's monomer info to
-// AtomPDBResidueInfo when it is tagged PDBRESIDUE (MaeWriter.cpp: whenever it
-// is present), but a pickle or an AtomMonomerInfo constructed with that type
-// carries the tag on the base class, which the cast would read past.
-// `every_info` checks every present info rather than only tagged ones.
-void check_pdb_residue_infos(const RDKit::ROMol &mol, bool every_info);
 
 }  // namespace rdkit_cxx
