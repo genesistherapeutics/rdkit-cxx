@@ -73,6 +73,11 @@ std::unique_ptr<RWMol> parsed(RDKit::RWMol *mol, const std::string &what,
 
 }  // namespace
 
+RDKit::SmilesWriteParams smiles_write_params_from_data(
+    const SmilesWriteParamsData &data) {
+  return write_params(data);
+}
+
 SmilesParserParamsData smiles_parser_params_default() {
   RDKit::SmilesParserParams params;
   return SmilesParserParamsData{params.debugParse,

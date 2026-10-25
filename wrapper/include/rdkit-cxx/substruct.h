@@ -7,6 +7,8 @@
 
 #pragma once
 
+#include <GraphMol/Substruct/SubstructMatch.h>
+
 #include "rdkit-cxx/atom.h"
 #include "rdkit-cxx/geometry.h"
 #include "rdkit-cxx/mol.h"
@@ -19,6 +21,12 @@ namespace rdkit_cxx {
 // Shared structs, defined by the bridge (src/ffi/substruct.rs).
 struct SubstructMatchParametersData;
 struct AtomCoordsMatcherData;
+
+// Conversions for other areas' wrappers that hold the parameters.
+SubstructMatchParametersData substruct_params_to_data(
+    const RDKit::SubstructMatchParameters &params);
+RDKit::SubstructMatchParameters substruct_params_from_data(
+    const SubstructMatchParametersData &data);
 
 SubstructMatchParametersData substruct_match_parameters_default();
 AtomCoordsMatcherData atom_coords_matcher_default();

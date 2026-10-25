@@ -11,6 +11,8 @@
 #include <memory>
 #include <string>
 
+#include <GraphMol/SmilesParse/SmilesWrite.h>
+
 #include "rdkit-cxx/mol.h"
 #include "rust/cxx.h"
 
@@ -27,6 +29,10 @@ SmilesParserParamsData smiles_parser_params_default();
 SmartsParserParamsData smarts_parser_params_default();
 SmilesWriteParamsData smiles_write_params_default();
 MolWriterParamsData mol_writer_params_default();
+
+// For other areas' wrappers that take SmilesWriteParams.
+RDKit::SmilesWriteParams smiles_write_params_from_data(
+    const SmilesWriteParamsData &data);
 
 std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
                                        const SmilesParserParamsData &params);
