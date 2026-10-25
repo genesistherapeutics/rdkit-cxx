@@ -196,11 +196,11 @@ rule changes the rule first.
   do not: `MolOps::getFormalCharge`, `getMolFormula` (which negates the
   sum), MolHash's formula, mesomer, redox-pair, net-charge, and tautomer
   hashes (the tautomer and protomer hashes subtract the charge from a
-  hydrogen count also summed in `int`, at most 255 per atom), and
-  `ResonanceMolSupplier`'s conjugated groups add charges in `int`, which
-  only 2^24 or more atoms can overflow. `get_formal_charge` adds the
-  charges in 64 bits, in RDKit's order, and refuses the molecule when the
-  running sum leaves `int`'s range; the others call
+  hydrogen count also summed in `int`, at most 255 per atom),
+  `ResonanceMolSupplier`'s conjugated groups, and the CML writer add charges
+  in `int`, which only 2^24 or more atoms can overflow. `get_formal_charge`
+  adds the charges in 64 bits, in RDKit's order, and refuses the molecule
+  when the running sum leaves `int`'s range; the others call
   `check_formal_charge_sum` (`rdkit-cxx/mol_checks.h`), which refuses a
   molecule whose charges' magnitudes, plus that hydrogen bound where RDKit
   adds one, exceed `INT_MAX`. Both refuse with `Error::Value`. (EEM's sum

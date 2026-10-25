@@ -39,6 +39,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
 
@@ -300,18 +301,6 @@ FP::MolFromSCSRParams scsr_params(const MolFromSCSRParamsData &data) {
   params.scsrTemplateNames = data.scsr_template_names;
   params.scsrBaseHbondOptions = data.scsr_base_hbond_options;
   return params;
-}
-
-// RDKit's CML writer (molToPTree in CMLWriter.cpp) sums the formal charges
-// in int.
-void check_formal_charge_sum(const RDKit::ROMol &mol) {
-  long long sum = 0;
-  for (const auto atom : mol.atoms()) {
-    sum += atom->getFormalCharge();
-    if (sum > INT_MAX || sum < INT_MIN) {
-      throw ValueErrorException("the formal charges sum past the int range");
-    }
-  }
 }
 
 // RDKit's property lists (getPropertyList in FileParserUtils.h) drop the
@@ -1054,6 +1043,8 @@ void mol_to_pdb_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
   RDKit::MolToPDBFile(mol, to_path(path), conf_id, flavor);
 }
 
+// RDKit's CML writer (molToPTree in CMLWriter.cpp) sums the formal charges
+// in int (U9).
 std::unique_ptr<std::string> mol_to_cml_block(const RWMol &mol,
                                               std::int32_t conf_id,
                                               bool kekulize) {
