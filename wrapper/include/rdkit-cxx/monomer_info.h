@@ -24,7 +24,7 @@ using AtomMonomerInfo = RDKit::AtomMonomerInfo;
 using AtomPDBResidueInfo = RDKit::AtomPDBResidueInfo;
 
 // AtomMonomerType has no fixed underlying type, so it crosses as int. Only
-// an AtomPDBResidueInfo may have type PDBRESIDUE (CONVENTIONS.md U9), so
+// an AtomPDBResidueInfo may have type PDBRESIDUE (CONVENTIONS.md U10), so
 // monomer_info_with refuses it, and monomer_info_set_monomer_type refuses it
 // for an info of another class, with ValueError.
 std::unique_ptr<AtomMonomerInfo> monomer_info_new();

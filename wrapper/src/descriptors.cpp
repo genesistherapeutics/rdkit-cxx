@@ -109,9 +109,12 @@ double calc_exact_mol_wt(const RWMol &mol, bool only_heavy) {
   return Desc::calcExactMW(mol, only_heavy);
 }
 
+// getMolFormula (MolProps.cpp) sums the formal charges in int and negates a
+// negative sum (U9).
 std::unique_ptr<std::string> calc_mol_formula(const RWMol &mol,
                                               bool separate_isotopes,
                                               bool abbreviate_h_isotopes) {
+  check_formal_charge_sum(mol);
   return std::make_unique<std::string>(
       Desc::calcMolFormula(mol, separate_isotopes, abbreviate_h_isotopes));
 }

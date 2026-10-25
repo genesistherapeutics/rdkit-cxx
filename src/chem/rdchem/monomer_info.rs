@@ -142,7 +142,7 @@ pub struct AtomMonomerInfoParams {
 /// Only such a copy, or an `AtomPDBResidueInfo`, has type
 /// `AtomMonomerType::Pdbresidue`: RDKit casts any info of that type to PDB
 /// residue info, reading past the end of a plain one, so `new` and
-/// `set_monomer_type` refuse it, where Python allows it (CONVENTIONS.md U9).
+/// `set_monomer_type` refuse it, where Python allows it (CONVENTIONS.md U10).
 pub struct AtomMonomerInfo {
     /// Never null.
     ptr: UniquePtr<ffi::AtomMonomerInfo>,

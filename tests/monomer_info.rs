@@ -189,7 +189,7 @@ fn is_value<T>(result: rdkit_cxx::Result<T>) -> bool {
 }
 
 // RDKit casts any info of type PDBRESIDUE to AtomPDBResidueInfo, which reads
-// past the end of a plain AtomMonomerInfo (CONVENTIONS.md U9). Python allows
+// past the end of a plain AtomMonomerInfo (CONVENTIONS.md U10). Python allows
 // one.
 #[test]
 fn plain_info_cannot_have_the_pdb_type() {

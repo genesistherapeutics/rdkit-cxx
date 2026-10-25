@@ -29,7 +29,7 @@ AtomMonomerInfo::AtomMonomerType monomer_type(int type) {
 // (MolPickler.cpp, PDBWriter.cpp, AddHs.cpp, ProximityBonds.cpp) casts the
 // info to AtomPDBResidueInfo and reads past the end of a plain
 // AtomMonomerInfo. Only an AtomPDBResidueInfo may have the type
-// (CONVENTIONS.md U9).
+// (CONVENTIONS.md U10).
 void check_not_pdb(AtomMonomerInfo::AtomMonomerType type) {
   if (type == AtomMonomerInfo::PDBRESIDUE) {
     throw ValueErrorException(
@@ -230,7 +230,7 @@ std::unique_ptr<AtomPDBResidueInfo> atom_get_pdb_residue_info(
   if (!info) {
     return nullptr;
   }
-  // Python casts; only an AtomPDBResidueInfo can have the type (U9), but the
+  // Python casts; only an AtomPDBResidueInfo can have the type (U10), but the
   // class is checked too.
   const auto *pdb = dynamic_cast<const AtomPDBResidueInfo *>(info);
   if (info->getMonomerType() != AtomMonomerInfo::PDBRESIDUE || !pdb) {

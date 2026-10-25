@@ -1764,7 +1764,7 @@ rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_monomer_class"]
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetMonomerType"
 rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_monomer_type"]
-overloads_note = "PDBRESIDUE is Error::Value unless the info is a copy of PDB residue info, which Python does not check (U9)"
+overloads_note = "PDBRESIDUE is Error::Value unless the info is a copy of PDB residue info, which Python does not check (U10)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerInfo.SetName"
@@ -1781,7 +1781,7 @@ rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_residue_number"]
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerInfo.__init__"
 rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_params"]
-overloads_note = "type PDBRESIDUE, which Python allows, is Error::Value: only AtomPDBResidueInfo has it (U9)"
+overloads_note = "type PDBRESIDUE, which Python allows, is Error::Value: only AtomPDBResidueInfo has it (U10)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerType"

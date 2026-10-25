@@ -64,7 +64,7 @@ std::vector<unsigned> to_vector(rust::Slice<const std::uint32_t> indices) {
 // As getResidue and getChainId in Code/GraphMol/nbWrap/MolOps.cpp, which
 // read only info whose type is PDBRESIDUE, but with dynamic_cast where
 // Python static_casts (only an AtomPDBResidueInfo can have the type,
-// CONVENTIONS.md U9).
+// CONVENTIONS.md U10).
 const RDKit::AtomPDBResidueInfo *residue_info(const RDKit::Atom *atom) {
   const auto *info = atom->getMonomerInfo();
   if (!info || info->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {

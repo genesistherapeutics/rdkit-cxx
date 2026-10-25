@@ -5,6 +5,8 @@
 
 #include "rdkit-cxx/mol_checks.h"
 
+#include <cstdlib>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -80,6 +82,17 @@ void check_matrix_size(const RDKit::ROMol &mol) {
     throw ValueErrorException(
         "RDKit computes atom matrices in int, which overflows above 46340 "
         "atoms");
+  }
+}
+
+void check_formal_charge_sum(const RDKit::ROMol &mol, std::int64_t headroom) {
+  std::int64_t total = headroom;
+  for (const auto *atom : mol.atoms()) {
+    total += std::abs(atom->getFormalCharge());
+  }
+  if (total > std::numeric_limits<int>::max()) {
+    throw ValueErrorException(
+        "RDKit sums formal charges in int, which overflows for this molecule");
   }
 }
 
