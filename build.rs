@@ -90,6 +90,7 @@ const BRIDGES: &[&str] = &[
     "scaffold_network",
     "substruct_library",
     "rgroup",
+    "metric_matrix_calc",
 ];
 
 fn main() {

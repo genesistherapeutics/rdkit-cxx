@@ -38,6 +38,7 @@ pub(crate) mod generalized_substruct;
 pub(crate) mod geometry;
 pub(crate) mod graph;
 pub(crate) mod grid;
+pub(crate) mod metric_matrix_calc;
 pub(crate) mod mhfp;
 pub(crate) mod mmpa;
 pub(crate) mod mol;

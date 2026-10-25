@@ -112,6 +112,7 @@ set(RDKIT_CXX_SOURCES
   src/scaffold_network.cpp
   src/substruct_library.cpp
   src/rgroup.cpp
+  src/metric_matrix_calc.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

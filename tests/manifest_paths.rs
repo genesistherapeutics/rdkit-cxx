@@ -3626,6 +3626,9 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rdqueries::x_atom_query_atom_with_negate as _;
     use rdkit_cxx::chem::rdqueries::xh_atom_query_atom as _;
     use rdkit_cxx::chem::rdqueries::xh_atom_query_atom_with_negate as _;
+    use rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_euclidean_dist_mat as _;
+    use rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_tanimoto_dist_mat as _;
+    use rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_tanimoto_sim_mat as _;
     use rdkit_cxx::data_structs::c_data_structs::all_bit_similarity as _;
     use rdkit_cxx::data_structs::c_data_structs::all_probe_bits_match as _;
     use rdkit_cxx::data_structs::c_data_structs::all_probe_bits_match_bytes as _;
