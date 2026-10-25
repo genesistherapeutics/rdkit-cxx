@@ -421,7 +421,8 @@ impl EnumerateLibrary {
 
     /// Fills a library made by `default` from `serialize`'s bytes; a library
     /// with a reaction is `Error::Value`, as is a strategy state that does
-    /// not fit the building blocks. Mirrors
+    /// not fit the building blocks, or a molecule whose plain monomer info
+    /// has the PDB residue type (CONVENTIONS.md U10). Mirrors
     /// `EnumerateLibraryBase.InitFromString`.
     ///
     /// # Safety

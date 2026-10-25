@@ -8,8 +8,6 @@
 #include <climits>
 #include <cmath>
 #include <cstring>
-#include <fstream>
-#include <iterator>
 #include <map>
 #include <mutex>
 #include <sstream>
@@ -25,6 +23,7 @@
 #include <GraphMol/ChemReactions/ReactionUtils.h>
 #include <GraphMol/ChemReactions/SanitizeRxn.h>
 #include <GraphMol/Depictor/DepictUtils.h>
+#include <GraphMol/FileParsers/PNGParser.h>
 #include <GraphMol/FilterCatalog/FunctionalGroupHierarchy.h>
 #include <GraphMol/Fingerprints/AtomPairGenerator.h>
 #include <GraphMol/Fingerprints/MorganGenerator.h>
@@ -52,6 +51,7 @@
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/molfiles.h"
+#include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/substruct.h"
 
 namespace rdkit_cxx {
@@ -300,10 +300,30 @@ void check_png_for_metadata(const std::string &data) {
   throw RDKit::FileParseException("did not find IEND block in PNG");
 }
 
+// As ReactionFromPNGStream in ChemReactions/PNGParser.cpp: the first record
+// RDKit can use, with its pickle's templates checked (U10) and its rxn block
+// checked before RDKit reads it (U12).
 std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
   check_png_metadata(data);
-  return finish(RDKit::v2::ReactionParser::ReactionFromPNGString(data),
-                "the PNG metadata");
+  namespace RP = RDKit::v2::ReactionParser;
+  for (const auto &[key, value] : RDKit::PNGStringToMetadata(data)) {
+    std::unique_ptr<ChemicalReaction> rxn;
+    if (boost::starts_with(key, RDKit::PNGData::rxnPklTag)) {
+      rxn = std::make_unique<ChemicalReaction>(value);
+      check_reaction_monomer_types(*rxn);
+    } else if (boost::starts_with(key, RDKit::PNGData::rxnSmilesTag)) {
+      rxn = RP::ReactionFromSmiles(value);
+    } else if (boost::starts_with(key, RDKit::PNGData::rxnSmartsTag)) {
+      rxn = RP::ReactionFromSmarts(value);
+    } else if (boost::starts_with(key, RDKit::PNGData::rxnRxnTag)) {
+      check_input_text(value);
+      rxn = RP::ReactionFromRxnBlock(value);
+    } else {
+      continue;
+    }
+    return finish(std::move(rxn), "the PNG metadata");
+  }
+  throw RDKit::FileParseException("No suitable metadata found.");
 }
 
 rust::Vec<std::uint8_t> add_metadata(const ChemicalReaction &rxn,
@@ -582,13 +602,25 @@ std::unique_ptr<ChemicalReaction> chemical_reaction_clone(
   return std::make_unique<ChemicalReaction>(rxn);
 }
 
+void check_reaction_monomer_types(const ChemicalReaction &rxn) {
+  for (std::uint8_t kind = 0; kind < 3; ++kind) {
+    for (const auto &mol : templates(rxn, kind)) {
+      if (mol) {
+        check_monomer_types(*mol);
+      }
+    }
+  }
+}
+
 std::unique_ptr<ChemicalReaction> chemical_reaction_from_bin_str(
     rust::Slice<const std::uint8_t> bin_str) {
-  // The templates are molecule pickles, which RDKit fuzzes (U2); the rest is
-  // counts and tags it checks, the substructure parameters' JSON, and
-  // properties read as molecule pickles read them.
+  // The templates are molecule pickles, which RDKit fuzzes (U2), checked as
+  // those are (U10); the rest is counts and tags it checks, the
+  // substructure parameters' JSON, and properties read as molecule pickles
+  // read them.
   auto rxn = std::make_unique<ChemicalReaction>();
   RDKit::ReactionPickler::reactionFromPickle(to_std(bin_str), rxn.get());
+  check_reaction_monomer_types(*rxn);
   normalize_templates(*rxn);
   return rxn;
 }
@@ -829,32 +861,31 @@ std::unique_ptr<ChemicalReaction> reaction_from_rxn_block(rust::Str rxn_block,
                                                           bool sanitize,
                                                           bool remove_hs,
                                                           bool strict_parsing) {
+  std::string text(rxn_block);
+  // Its templates are mol blocks, read by RDKit's line-oriented reader (U12).
+  check_input_text(text);
   RDKit::v2::FileParsers::MolFileParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
   params.strictParsing = strict_parsing;
-  return finish(RDKit::v2::ReactionParser::ReactionFromRxnBlock(
-                    std::string(rxn_block), params),
+  return finish(RDKit::v2::ReactionParser::ReactionFromRxnBlock(text, params),
                 "the rxn block");
 }
 
 std::unique_ptr<ChemicalReaction> reaction_from_rxn_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs,
     bool strict_parsing) {
+  // Read once and checked, as reaction_from_rxn_block checks a block (U2,
+  // U12); RDKit's ReactionFromRxnFile parses an opened file as it parses a
+  // block.
+  auto text = read_path(path);
+  check_input_text(text);
   RDKit::v2::FileParsers::MolFileParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
   params.strictParsing = strict_parsing;
-  auto name = to_std(path);
-  auto rxn = RDKit::v2::ReactionParser::ReactionFromRxnFile(name, params);
-  if (!rxn) {
-    // RDKit returns null for a file it cannot open, and for an empty one.
-    std::ifstream in(name);
-    if (!in) {
-      throw RDKit::BadFileException("Bad input file " + name);
-    }
-  }
-  return finish(std::move(rxn), "the rxn file " + name);
+  return finish(RDKit::v2::ReactionParser::ReactionFromRxnBlock(text, params),
+                "the rxn file " + to_std(path));
 }
 
 std::unique_ptr<ChemicalReaction> reaction_from_mrv_block(rust::Str mrv,

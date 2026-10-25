@@ -8,7 +8,9 @@
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
-use rdkit_cxx::chem::{Mol, mol_from_smiles, mol_to_smiles};
+use rdkit_cxx::chem::{
+    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, Mol, mol_from_smiles, mol_to_smiles,
+};
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
 
@@ -416,4 +418,38 @@ fn libraries_and_strategies_move_between_threads() {
     let (mut lib, strategy) = std::thread::spawn(move || (lib, strategy)).join().unwrap();
     assert_eq!(lib.next_smiles().unwrap(), [vec!["CNC(C)=O".to_string()]]);
     assert_eq!(strategy.type_(), "EvenSamplePairsStrategy");
+}
+
+/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo; a
+/// library's reaction and building blocks are molecule pickles, which RDKit
+/// writes with such a type for a plain info Python gave it (U10).
+#[test]
+fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
+    let mut amine = smiles("CN");
+    let params = AtomMonomerInfoParams {
+        name: "MARK".into(),
+        ..Default::default()
+    };
+    amine.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
+        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
+    );
+    let blocks = vec![group(&["CC(=O)O"]), vec![amine]];
+    let lib = EnumerateLibrary::new(&amide(), &blocks).unwrap();
+    let bytes = lib.serialize().unwrap();
+    let mut loaded = EnumerateLibrary::default();
+    // SAFETY: the bytes came from serialize.
+    unsafe { loaded.init_from_string(&bytes) }.unwrap();
+    // The info's name (a u32 length, then its bytes), then its type.
+    let at = bytes
+        .windows(9)
+        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .unwrap()
+        + 8;
+    let mut changed = bytes.clone();
+    changed[at] = 1;
+    let mut loaded = EnumerateLibrary::default();
+    // SAFETY: serialize's bytes with one byte changed inside a molecule
+    // pickle, as RDKit writes them for a molecule whose plain info has the
+    // PDB type; Boost's framing is serialize's.
+    assert!(is_value(unsafe { loaded.init_from_string(&changed) }));
 }

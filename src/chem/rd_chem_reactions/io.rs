@@ -306,7 +306,9 @@ pub fn reaction_to_cx_smiles_with_params(
     )?)
 }
 
-/// Parses an MDL rxn block (V2000 or V3000). Mirrors
+/// Parses an MDL rxn block (V2000 or V3000). Its templates are mol blocks,
+/// checked as `mol_from_mol_block` checks one: past those limits it is
+/// `Error::Value` (CONVENTIONS.md U12). Mirrors
 /// `rdChemReactions.ReactionFromRxnBlock`.
 pub fn reaction_from_rxn_block(rxnblock: &str) -> Result<ChemicalReaction> {
     reaction_from_rxn_block_with_params(rxnblock, &ReactionFromRxnBlockParams::default())

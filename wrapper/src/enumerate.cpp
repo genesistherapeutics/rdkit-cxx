@@ -484,6 +484,15 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_from_string(
   lib->initFromString(
       std::string(reinterpret_cast<const char *>(data.data()), data.size()));
   const EnumerateLibrary &loaded = *lib;
+  // The reaction and the building blocks are molecule pickles (U10).
+  check_reaction_monomer_types(loaded.getReaction());
+  for (const auto &group : loaded.getReagents()) {
+    for (const auto &mol : group) {
+      if (mol) {
+        check_monomer_types(*mol);
+      }
+    }
+  }
   auto sizes = RDKit::getSizesFromBBs(loaded.getReagents());
   for (const auto *strategy :
        {&LibraryAccess::enumerator(loaded), &LibraryAccess::initial(loaded)}) {

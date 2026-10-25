@@ -249,7 +249,8 @@ rule changes the rule first.
   `AtomMonomerInfo`. So no atom holds a plain info of that type, though
   Python allows one: `AtomMonomerInfo::new` refuses the type with
   `Error::Value`, as does `set_monomer_type` unless `dynamic_cast` finds PDB
-  residue info, and molecule and bundle pickles whose atoms have such an
+  residue info, and molecule and bundle pickles (and the reaction pickles
+  and `EnumerateLibrary` archives that hold them) whose atoms have such an
   info, or a type `AtomMonomerType` lacks, are refused right after RDKit
   reads them (`check_monomer_types` in `rdkit-cxx/mol_checks.h`). RDKit code
   may then trust the type; wrapper code that casts uses `dynamic_cast` all
@@ -264,7 +265,8 @@ rule changes the rule first.
   with parses the wrapper cannot see, so their Rust functions are `unsafe fn`
   whose contract is that no other thread parses SMILES or SMARTS meanwhile.
 - **U12.** Text RDKit reads with its line-oriented readers (mol blocks, SD,
-  SMILES, and TDT files) is checked as RDKit reads it, by the streams of
+  SMILES, and TDT files, and rxn blocks, whose templates are mol blocks) is
+  checked as RDKit reads it, by the streams of
   `rdkit-cxx/streams.h` (or `check_input_text` for text in memory): RDKit
   counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
   matches V3000 enhanced-stereo lines with `std::regex`, which recurses once

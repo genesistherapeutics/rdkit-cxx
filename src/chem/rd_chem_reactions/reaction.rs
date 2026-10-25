@@ -262,7 +262,9 @@ impl ChemicalReaction {
         )?)
     }
 
-    /// A reaction from a pickle (`to_binary`). Mirrors
+    /// A reaction from a pickle (`to_binary`). A template whose plain
+    /// monomer info has the PDB residue type is `Error::Value`, as for a
+    /// molecule pickle (CONVENTIONS.md U10). Mirrors
     /// `ChemicalReaction(binStr)`.
     pub fn from_bin_str(bin_str: &[u8]) -> Result<ChemicalReaction> {
         Ok(ChemicalReaction::from_ffi(

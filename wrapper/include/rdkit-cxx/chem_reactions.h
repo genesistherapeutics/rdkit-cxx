@@ -68,6 +68,9 @@ class ProductSets {
 // agent block cut short). Called on every reaction RDKit makes before Rust
 // sees it.
 void normalize_templates(ChemicalReaction &rxn);
+// check_monomer_types (mol_checks.h) on every template of a reaction read
+// from a pickle, whose templates are molecule pickles (CONVENTIONS.md U10).
+void check_reaction_monomer_types(const ChemicalReaction &rxn);
 
 // Copies RDKit's product sets for Rust, clearing their matrix caches (U6).
 std::unique_ptr<ProductSets> to_product_sets(

@@ -13,8 +13,8 @@ use std::path::PathBuf;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
 use rdkit_cxx::chem::{
-    ChiralType, Mol, PropValue, PropertyPickleOptions, SmilesWriteParams, mol_from_smarts,
-    mol_from_smiles, mol_to_smiles,
+    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, ChiralType, Mol, PropValue,
+    PropertyPickleOptions, SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
 };
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
@@ -1145,4 +1145,96 @@ fn reactions_move_between_threads() {
     .join()
     .unwrap();
     assert_eq!(products, [["CN(C)C=O"]]);
+}
+
+/// A V3000 rxn block whose product has a stereo-group line with `pad` extra
+/// spaces.
+fn stereo_group_rxn_block(pad: usize) -> String {
+    let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
+    rxn.add_product_template(&smiles("C[C@H](F)Cl |&1:1|"));
+    let block = reaction_to_v3k_rxn_block(&rxn).unwrap();
+    assert!(block.contains("MDLV30/STERAC1 ATOMS=(1 2)"));
+    block.replace(
+        "MDLV30/STERAC1 ATOMS=(1 2)",
+        &format!("MDLV30/STERAC1 ATOMS=(1 2{})", " ".repeat(pad)),
+    )
+}
+
+fn png_with_text(key: &str, value: &[u8]) -> Vec<u8> {
+    let mut text = key.as_bytes().to_vec();
+    text.push(0);
+    text.extend_from_slice(value);
+    let mut png = PNG_SIGNATURE.to_vec();
+    png.extend(png_chunk(b"tEXt", &text));
+    png.extend(png_chunk(b"IEND", b""));
+    png
+}
+
+/// RDKit reads an rxn block's templates with its mol-block reader, whose
+/// regex recurses once per character of a stereo-group line (U12).
+#[test]
+fn long_stereo_group_lines_are_refused() {
+    let short = stereo_group_rxn_block(3000);
+    let long = stereo_group_rxn_block(100_000);
+    let rxn = reaction_from_rxn_block(&short).unwrap();
+    assert_eq!(rxn.get_num_product_templates(), 2);
+    assert!(matches!(
+        reaction_from_rxn_block(&long),
+        Err(Error::Value { .. })
+    ));
+    let path = common::temp_path("stereo-group.rxn");
+    std::fs::write(&path, &long).unwrap();
+    assert!(matches!(
+        reaction_from_rxn_file(&path),
+        Err(Error::Value { .. })
+    ));
+    std::fs::write(&path, &short).unwrap();
+    reaction_from_rxn_file(&path).unwrap();
+    // An rxn block in PNG metadata is read the same way.
+    reaction_from_png_string(&png_with_text("ReactionRxn", short.as_bytes())).unwrap();
+    assert!(matches!(
+        reaction_from_png_string(&png_with_text("ReactionRxn", long.as_bytes())),
+        Err(Error::Value { .. })
+    ));
+}
+
+/// A reaction whose agent is methane with plain monomer info named "MARK",
+/// its pickle, and where the info's type byte is in it.
+fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
+    let mut methane = smiles("C");
+    let params = AtomMonomerInfoParams {
+        name: "MARK".into(),
+        ..Default::default()
+    };
+    methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
+        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
+    );
+    let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
+    rxn.add_agent_template(&methane);
+    let pkl = rxn.to_binary();
+    // The info's name (a u32 length, then its bytes), then its type.
+    let name = pkl
+        .windows(9)
+        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .unwrap();
+    (rxn, pkl, name + 8)
+}
+
+/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo,
+/// and a reaction pickle's templates are molecule pickles (U10).
+#[test]
+fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
+    let (_, pkl, at) = marked_reaction_pickle();
+    ChemicalReaction::from_bin_str(&pkl).unwrap();
+    reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)).unwrap();
+    let mut changed = pkl.clone();
+    changed[at] = 1;
+    assert!(matches!(
+        ChemicalReaction::from_bin_str(&changed),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)),
+        Err(Error::Value { .. })
+    ));
 }
