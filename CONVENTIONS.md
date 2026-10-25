@@ -100,6 +100,15 @@ rule changes the rule first.
   lend them the same way, through `BorrowedMols`: `&[Mol]` or `&BTreeMap`
   when RDKit only reads them, `&mut` when it writes them (`molzipFragments`
   gives its inputs coordinates).
+- **W9.** Objects RDKit shares through `shared_ptr`s, between owners Rust
+  cannot see (`FilterCatalog`'s entries and matchers, shared by catalogs,
+  entries, and match results), are shared by Rust handles too, and changed
+  only when no other owner exists: a handle copies a shared object before
+  it changes it (`FilterCatalogEntry`, by its `use_count`), or owns it alone
+  because RDKit copies whatever another object holds (the concrete
+  matchers, whose `Clone` is RDKit's `copy`). A borrowed child in such a
+  tree (`FilterHierarchyMatcherMut`) borrows its root mutably, as W2's views
+  do.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
@@ -122,6 +131,16 @@ rule changes the rule first.
   shared reference. Classes that hold molecules RDKit may write through const
   (`ChemicalReaction`, `EnumerateLibrary`) are `Send` and not `Sync`, as S1
   says of molecules, and their bridges record why in a `SAFETY` comment.
+- **S5.** Classes whose `const` methods RDKit itself runs from several
+  threads (`FilterCatalog`, its entries, and its matchers, which
+  `RunFilterCatalog` shares) are `Send` and `Sync`. Their query molecules
+  are matched concurrently, which writes recursive queries' matches under
+  each query's lock (`RDK_BUILD_THREADSAFE_SSS`), so a wrapper that copies
+  such a molecule, which reads those matches, holds the same locks, taken in
+  `SubstructMatch`'s order after `control_c_mutex()`, as matches take them
+  (`copy_pattern` in `filter_catalog.cpp`). Matching holds
+  `control_c_mutex()` (U4) and releases it while a Rust matcher's methods
+  run, which RDKit calls between its matches.
 
 ## Unchecked input
 
@@ -140,12 +159,19 @@ rule changes the rule first.
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
   for the limits U12 checks, and so are reaction pickles, which are molecule
-  pickles framed by counts and tags RDKit checks. Boost.Serialization
-  archives of polymorphic objects (`EnumerateLibrary`'s `Serialize` and
-  `GetState`) are not: Boost trusts their class and object ids, so the
-  functions that read them are `unsafe fn`s whose contract is bytes RDKit
-  wrote, and the wrappers check only what such bytes can still get wrong (a
-  state from another library). Text a wrapper checks before RDKit parses it
+  pickles framed by counts and tags RDKit checks. Catalog pickles
+  (`MolCatalog`, `FragCatalog`, and their entries) frame molecule pickles
+  with lengths and indices RDKit trusts, so `rdkit-cxx/catalog_checks.h`
+  reads each as RDKit will, with RDKit's readers for the molecules and
+  parameters, checking those and the molecules' monomer infos (U10), and
+  RDKit then reads the same bytes. Boost.Serialization archives of
+  polymorphic objects (`EnumerateLibrary`'s `Serialize` and `GetState`,
+  `FilterCatalog`'s pickles) are not checked: Boost trusts their class and
+  object ids, so the functions that read them are `unsafe fn`s whose
+  contract is bytes RDKit wrote, and the wrappers check only what such
+  bytes can still get wrong (a state from another library; matchers that
+  RDKit dereferences null in or recurses through forever, and patterns'
+  monomer infos). Text a wrapper checks before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
@@ -250,12 +276,14 @@ rule changes the rule first.
   Python allows one: `AtomMonomerInfo::new` refuses the type with
   `Error::Value`, as does `set_monomer_type` unless `dynamic_cast` finds PDB
   residue info, and molecule, bundle, and PNG-metadata pickles (and the
-  reaction pickles and `EnumerateLibrary` archives that hold them) whose
-  atoms have such an info, or a type `AtomMonomerType` lacks, are refused
-  right after RDKit reads them (`check_monomer_types` in
-  `rdkit-cxx/mol_checks.h`). RDKit code may then trust the type; wrapper code
-  that casts uses `dynamic_cast` all the same. RDKit code that casts whatever
-  the type (`DCLV.cpp`) still needs its own check.
+  reaction pickles, `EnumerateLibrary` archives, and catalog pickles and
+  archives that hold them) whose atoms have such an info, or a type
+  `AtomMonomerType` lacks, are refused right after RDKit reads them
+  (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also checks the
+  molecules of recursive queries, as MolPickler pickles them whole, and
+  walks the queries with its own stack). RDKit code may then trust the
+  type; wrapper code that casts uses `dynamic_cast` all the same. RDKit code
+  that casts whatever the type (`DCLV.cpp`) still needs its own check.
 - **U11.** RDKit keeps the SMILES and SMARTS parsers' debug levels in globals
   (`yysmiles_debug`, `yysmarts_debug`) that every parse reads. A parse writes
   them only when its `debugParse` differs, so the wrappers refuse a nonzero

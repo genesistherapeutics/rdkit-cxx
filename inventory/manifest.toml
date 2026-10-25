@@ -7,7 +7,1296 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CHARGE_CORRECTIONS"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_corrections"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CanonicalTautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::canonical_tautomer", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::canonical_tautomer_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeCorrection"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeCorrection.Charge"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection::charge"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeCorrection.Name"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection::name"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeCorrection.Smarts"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection::smarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeCorrection.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ChargeParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Cleanup"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::cleanup_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.__setattr__"
+reason = "nanobind's guard against setting attributes the class lacks; a Rust struct's fields are fixed"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.acidbaseFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::acidbase_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.doCanonical"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::do_canonical"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.fragmentFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::fragment_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.largestFragmentChooserCountHeavyAtomsOnly"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::largest_fragment_chooser_count_heavy_atoms_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.largestFragmentChooserUseAtomCount"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::largest_fragment_chooser_use_atom_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.maxRestarts"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::max_restarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.maxTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::max_tautomers"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.maxTransforms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::max_transforms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.normalizationsFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::normalizations_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.preferOrganic"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::prefer_organic"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerReassignStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_reassign_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerRemoveBondStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_remove_bond_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerRemoveIsotopicHs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_remove_isotopic_hs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerRemoveSp3Stereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_remove_sp3_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.tautomerTransformsFile"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters::tautomer_transforms_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedAtomsValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedAtomsValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedRadicalValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedRadicalValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisconnectOrganometallics"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisconnectOrganometallicsInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_in_place_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowAromaticBondType"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_aromatic_bond_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowAtomAliases"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_atom_aliases"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowDativeBondType"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_dative_bond_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowDummies"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_dummies"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowEnhancedStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_enhanced_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowQueries"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_queries"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentRemover"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentRemover.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::new_with_params"]
+overloads_note = "FragmentRemover() is Default; FragmentRemover(fragmentFilename, leave_last, skip_if_all_match) is new_with_params"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentRemover.remove"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::remove"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentRemover.removeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::remove_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentRemoverFromData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_remover_from_data", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_remover_from_data_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.GetDefaultTautomerScoreSubstructs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::get_default_tautomer_score_substructs"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.GetV1TautomerEnumerator"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::get_v1_tautomer_enumerator"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation.threshold"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::threshold"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeValidation.strict"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::strict"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::new_with_prefer_organic", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::from_params"]
+overloads_note = "LargestFragmentChooser() is Default and (preferOrganic) new_with_prefer_organic; (params) is from_params (A5)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser.choose"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::choose"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser.chooseInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::choose_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default (Python's minMedianBondLength defaults to 0, not C++'s 0.001)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.allowAtomBondClashExemption"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::allow_atom_bond_clash_exemption"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.allowLongBondsInRings"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::allow_long_bonds_in_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.bondLengthLimit"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::bond_length_limit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.clashLimit"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::clash_limit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.minMedianBondLength"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::min_median_bond_length"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.Disconnect"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::disconnect"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.DisconnectInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::disconnect_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.MetalNof"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::metal_nof"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.MetalNon"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::metal_non"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.SetMetalNof"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::set_metal_nof"]
+overloads_note = "refuses a query that is not two bonded atoms (or none), which RDKit would read past a match's end or dereference a null bond for"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.SetMetalNon"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::set_metal_non"]
+overloads_note = "refuses a query that is not two bonded atoms (or none), which RDKit would read past a match's end or dereference a null bond for"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::new", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::new_with_options"]
+overloads_note = "MetalDisconnector(options=None): Default and new take no options, new_with_options takes them"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.adjustCharges"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::adjust_charges"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.removeHapticDummies"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::remove_haptic_dummies"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.splitAromaticC"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::split_aromatic_c"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.splitGrignards"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::split_grignards"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MolVSValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MolVSValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NeutralValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NeutralValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NoAtomValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NoAtomValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::new"]
+rust_generics = ["", "<&str>"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer.normalize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::normalize"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer.normalizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::normalize_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizerFromData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalizer_from_data"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizerFromParams"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalizer_from_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Pipeline"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Pipeline"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Pipeline.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Pipeline::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Pipeline::new"]
+overloads_note = "Pipeline() is Default and (options) new, which refuses metal SMARTS that do not parse or are not two bonded atoms, since RDKit would dereference the null or read past the match"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Pipeline.run"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Pipeline::run"]
+overloads_note = "input RDKit cannot parse is reported in the result as in Python; mol blocks with lines long enough to make the parser's regex recurse deeply are Error::Value (U12)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__bool__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__contains__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__delitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__eq__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__getitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__init__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__ne__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__repr__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__setitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.append"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.clear"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.count"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.extend"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.insert"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.pop"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.remove"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLogEntry"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineLogEntry"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLogEntry.detail"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineLogEntry::detail"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLogEntry.status"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineLogEntry::status"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.allowAromaticBondType"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::allow_aromatic_bond_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.allowAtomBondClashExemption"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::allow_atom_bond_clash_exemption"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.allowDativeBondType"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::allow_dative_bond_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.allowEmptyMolecules"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::allow_empty_molecules"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.allowEnhancedStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::allow_enhanced_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.allowLongBondsInRings"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::allow_long_bonds_in_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.atomClashLimit"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::atom_clash_limit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.bondLengthLimit"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::bond_length_limit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.is2DZeroThreshold"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::is_2d_zero_threshold"]
+rust_kind = "field"
+name_exception = "digits stay with their letters: is_2d_zero_threshold"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.metalNof"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::metal_nof"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.metalNon"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::metal_non"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.minMedianBondLength"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::min_median_bond_length"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.normalizerData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::normalizer_data"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.normalizerMaxRestarts"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::normalizer_max_restarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.outputV2000"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::output_v2000"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.reportAllFailures"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::report_all_failures"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.scaledMedianBondLength"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::scaled_median_bond_length"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineOptions.strictParsing"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineOptions::strict_parsing"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult.inputMolData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult::input_mol_data"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the result is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult.log"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult::log"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the result is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult.outputMolData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult::output_mol_data"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the result is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult.parentMolData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult::parent_mol_data"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the result is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult.stage"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult::stage"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the result is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineResult.status"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineResult::status"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the result is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.COMPLETED"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::Completed"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.PARSING_INPUT"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::ParsingInput"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.PREPARE_FOR_STANDARDIZATION"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::PrepareForStandardization"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.PREPARE_FOR_VALIDATION"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::PrepareForValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.SERIALIZING_OUTPUT"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::SerializingOutput"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.STANDARDIZATION"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::Standardization"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStage.VALIDATION"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStage::Validation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.BASIC_VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::BASIC_VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.CHARGE_STANDARDIZATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::CHARGE_STANDARDIZATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.FEATURES_VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::FEATURES_VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.FRAGMENTS_REMOVED"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::FRAGMENTS_REMOVED"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.FRAGMENT_STANDARDIZATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::FRAGMENT_STANDARDIZATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.INPUT_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::INPUT_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.IS2D_VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::IS2D_VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.LAYOUT2D_VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::LAYOUT2D_VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.METALS_DISCONNECTED"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::METALS_DISCONNECTED"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.METAL_STANDARDIZATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::METAL_STANDARDIZATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.NORMALIZATION_APPLIED"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::NORMALIZATION_APPLIED"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.NORMALIZER_STANDARDIZATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::NORMALIZER_STANDARDIZATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.NO_EVENT"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::NO_EVENT"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.OUTPUT_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::OUTPUT_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.PIPELINE_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::PIPELINE_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.PREPARE_FOR_STANDARDIZATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::PREPARE_FOR_STANDARDIZATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.PREPARE_FOR_VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::PREPARE_FOR_VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.PROTONATION_CHANGED"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::PROTONATION_CHANGED"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.STANDARDIZATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::STANDARDIZATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.STEREO_VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::STEREO_VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.STRUCTURE_MODIFICATION"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::STRUCTURE_MODIFICATION"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineStatus.VALIDATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::PipelineStatus::VALIDATION_ERROR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RDKitValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RDKitValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RDKitValidation.allowEmptyMolecules"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::allow_empty_molecules"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ReionizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionizer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionizer.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::new", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::new_with_ccs"]
+rust_generics = ["", "<&str>", "<&str>"]
+overloads_note = "Reionizer() is Default, (acidbaseFile) new, and (acidbaseFile, ccs) new_with_ccs, which refuses charge corrections whose SMARTS do not parse (RDKit would dereference them as null)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionizer.reionize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::reionize"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionizer.reionizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::reionize_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ReionizerFromData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionizer_from_data", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionizer_from_data_with_charge_corrections"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RemoveFragments"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RemoveFragmentsInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ScoreHeteroHs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_hetero_hs"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ScoreRings"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_rings"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ScoreSubstructs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_substructs", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_substructs_with_terms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__len__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::len"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.items"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::items"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.keys"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::keys"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.values"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::values"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StandardizeSmiles"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::standardize_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.name"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::name"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the term is a plain struct, made into RDKit's for each call"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.score"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::score"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the term is a plain struct, made into RDKit's for each call"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.smarts"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::smarts"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the term is a plain struct, made into RDKit's for each call"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__bool__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__contains__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__delitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__eq__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__getitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__init__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__ne__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__repr__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__setitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.append"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.clear"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.count"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.extend"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.insert"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.pop"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.remove"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Tautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Tautomer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Tautomer.kekulized"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Tautomer::kekulized"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Tautomer.tautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Tautomer::tautomer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.Canonicalize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::canonicalize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::canonicalize_with_score_func"]
+rust_generics = ["", "<fn(&rdkit_cxx::chem::Mol) -> i32>"]
+overloads_note = "(mol, scoreFunc) is canonicalize_with_score_func, whose closure's i32::MIN counts as i32::MIN + 1, since RDKit dereferences null when no tautomer scores above it"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.Enumerate"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::enumerate"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetCallback"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_callback"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetMaxTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_max_tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetMaxTransforms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_max_transforms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetReassignStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_reassign_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetRemoveBondStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_remove_bond_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetRemoveSp3Stereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_remove_sp3_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.PickCanonical"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical_with_score_func", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical_tautomer_enumerator_result", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical_tautomer_enumerator_result_with_score_func"]
+rust_generics = ["", "<fn(&rdkit_cxx::chem::Mol) -> i32>", "", "<fn(&rdkit_cxx::chem::Mol) -> i32>"]
+overloads_note = "iterable is molecules or a TautomerEnumeratorResult, the second with the type's suffix (A5); scoreFunc is the _with_score_func forms; no tautomers, which RDKit dereferences as null, is Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.ScoreTautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::score_tautomer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetCallback"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_callback"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetMaxTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_max_tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetMaxTransforms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_max_transforms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetReassignStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_reassign_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetRemoveBondStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_remove_bond_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetRemoveSp3Stereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_remove_sp3_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::new", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::clone"]
+overloads_note = "TautomerEnumerator() is Default, (params) new, which refuses transforms RDKit would read past the ends of, and (other) Clone"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.tautomerScoreVersion"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::tautomer_score_version"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback.__call__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback::call"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol, &rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult) -> bool>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync because enumerators copied from one another share it, and whose panics are caught at the bridge"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__call__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__getitem__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::get"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__iter__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__len__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::len"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.modifiedAtoms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::modified_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.modifiedBonds"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::modified_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.smiles"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::smiles"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.smilesTautomerMap"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::smiles_tautomer_map"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.status"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::status"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.tautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.Canceled"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::Canceled"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.Completed"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::Completed"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.MaxTautomersReached"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::MaxTautomersReached"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.MaxTransformsReached"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::MaxTransformsReached"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerParent"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerParentInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_mols_with_params"]
+overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Uncharger"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Uncharger.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::new_with_params"]
+overloads_note = "Uncharger(canonicalOrder, force, protonationOnly) with no arguments is Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Uncharger.uncharge"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::uncharge"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Uncharger.unchargeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::uncharge_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.UpdateParamsFromJSON"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::update_params_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidateSmiles"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::validate_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol, bool) -> Vec<String>>"
+overloads_note = "Python subclasses the class to override validate (and copy); Rust cannot, so new takes the closure validate runs, which must be Send + Sync because MolVSValidation shares it, and whose panics are caught at the bridge; RDKit's validations convert into a ValidationMethod with From"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod.validate"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate_with_report_all_failures"]
+overloads_note = "every validation has the two forms, as the Python subclasses inherit validate"
 
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.BRICSScaffoldParams"
@@ -2288,6 +3577,110 @@ rust = ["rdkit_cxx::chem::rd_mol_align::O3A::weights"]
 [[entry]]
 python = "rdkit.Chem.rdMolAlign.RandomTransform"
 rust = ["rdkit_cxx::chem::rd_mol_align::random_transform", "rdkit_cxx::chem::rd_mol_align::random_transform_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.CreateMolCatalog"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::create_mol_catalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.AddEdge"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::add_edge"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.AddEntry"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::add_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetBitDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_bit_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetBitEntryId"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_bit_entry_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryBitId"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_bit_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryDownIds"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_down_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetFPLength"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_fp_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::from_pickle"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetMol"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetOrder"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.Serialize"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetMol"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetOrder"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::default", "rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::from_pickle"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
@@ -5896,6 +7289,491 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
 [[entry]]
 python = "rdkit.Chem.rdchem.tossit"
 reason = "RDKit's test hook that raises IndexError"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList.AddPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList::add_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList.SetExclusionPatterns"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList::set_exclusion_patterns"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.AddEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::add_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetEntryWithIdx"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_entry_with_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetFilterMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_filter_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetFirstMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_first_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.HasMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::has_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.RemoveEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::remove_entry", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::remove_entry_filter_catalog_entry"]
+overloads_note = "RemoveEntry(obj) takes an index or an entry; the entry form is remove_entry_filter_catalog_entry (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::from_pickle", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::new", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::from_catalogs"]
+overloads_note = "the bytes and str pickle overloads share from_pickle, an unsafe fn (U2); FilterCatalog(params) is new and FilterCatalog(catalogs) from_catalogs (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogCanSerialize"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::filter_catalog_can_serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.ClearProp"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::clear_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetDescription"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetFilterMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_filter_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetProp"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetPropList"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_prop_list"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.HasFilterMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::has_filter_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.IsValid"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::is_valid"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.Serialize"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.SetDescription"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::set_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.SetProp"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::set_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.AddCatalog"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams::add_catalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs"]
+overloads_note = "Rust has no nested types, so the flag type is the module's"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.ALL"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::ALL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.BRENK"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::BRENK"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_BMS"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_BMS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_Dundee"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_Dundee"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_Glaxo"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_Glaxo"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_Inpharmatica"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_Inpharmatica"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_LINT"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_LINT"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_MLSMR"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_MLSMR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_SureChEMBL"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_SureChEMBL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.NIH"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::NIH"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS_A"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS_A"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS_B"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS_B"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS_C"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS_C"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.ZINC"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::ZINC"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcherMut"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher.AddChild"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::add_child", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcherMut::add_child"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher.SetPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::set_pattern", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcherMut::set_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::default", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch.atomPairs"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch::atom_pairs"]
+rust_kind = "field"
+overloads_note = "read-only in Python; a public field of a plain struct here"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch.filterMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch::filter_match"]
+rust_kind = "field"
+overloads_note = "read-only in Python; a public field of a plain struct here"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.GetMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::get_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.GetName"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::get_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.HasMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::has_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.IsValid"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::is_valid"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::new"]
+rust_generics = "<Box<dyn rdkit_cxx::chem::rdfiltercatalog::CustomFilterMatcher>>"
+overloads_note = "Python subclasses the class to override IsValid, HasMatch, and GetMatches; Rust cannot, so new also takes a CustomFilterMatcher with those methods, which must be Send + Sync because catalogs share matchers between threads, and whose panics are caught at the bridge"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.__str__"
+reason = "Python's string protocol: FilterMatcher implements Display with get_name"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.GetFlattenedFunctionalGroupHierarchy"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::get_flattened_functional_group_hierarchy", "rdkit_cxx::chem::rdfiltercatalog::get_flattened_functional_group_hierarchy_with_normalized"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.GetFunctionalGroupHierarchy"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::get_functional_group_hierarchy"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.IntPair"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::int_pair"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.RunFilterCatalog"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::run_filter_catalog", "rdkit_cxx::chem::rdfiltercatalog::run_filter_catalog_with_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.GetMaxCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::get_max_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.GetMinCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::get_min_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.GetPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::get_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.IsValid"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::is_valid"]
+overloads_note = "SmartsMatcher dereferences to FilterMatcher, whose is_valid runs SmartsMatcher's"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.SetMaxCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_max_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.SetMinCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_min_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.SetPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_pattern", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_pattern_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::new", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_rhs", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_mol", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_mol_with_params", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_smarts", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_smarts_with_params"]
+overloads_note = "SmartsMatcher(name) is new and SmartsMatcher(rhs) from_rhs; the (name, mol) and (name, smarts) overloads are from_mol and from_smarts, with their counts in SmartsMatcherParams (A2, A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator.AddFragsFromMol"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator::add_frags_from_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetFuncGroup"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_func_group"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetLowerFragLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_lower_frag_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetNumFuncGroups"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_num_func_groups"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetTolerance"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_tolerance"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetTypeString"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_type_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetUpperFragLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_upper_frag_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.Serialize"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::new", "rdkit_cxx::chem::rdfragcatalog::FragCatParams::new_with_tol"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitDescription"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitDiscrims"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_discrims"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitEntryId"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_entry_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitFuncGroupIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_func_group_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitOrder"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetCatalogParams"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_catalog_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryBitId"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_bit_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryDescription"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryDownIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_down_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryFuncGroupIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_func_group_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryOrder"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetFPLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_fp_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::default", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::new", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::from_pickle"]
+overloads_note = "the bytes and str pickle overloads share from_pickle"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.GetFPForMol"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::get_fp_for_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGFile"
