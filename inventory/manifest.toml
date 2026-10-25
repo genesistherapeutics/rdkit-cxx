@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -1471,6 +1471,51 @@ rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Runtime"
 
 [[entry]]
+python = "rdkit.Chem.rdChemDraw.CDXFormat"
+rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.CDXFormat.CDX"
+rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat::Cdx"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.CDXFormat.CDXML"
+rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat::Cdxml"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.MolToChemDrawBlock"
+rust = ["rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block", "rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block_format"]
+overloads_note = "format changes the return type to bytes, which a CDX document needs, so it has its own function (A4); Python returns str for either and cannot decode CDX"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.MolsFromChemDrawBlock"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.MolsFromChemDrawFile"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.NeedsCleanPolicy"
+reason = "not bound: only the ChemDraw readers take it, and they read through the unaudited ChemDraw SDK (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustExplicitHydrogens"
+reason = "not bound: only the ChemDraw readers take it, and they read through the unaudited ChemDraw SDK (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustSource"
+reason = "not bound: only the ChemDraw readers take it, and they read through the unaudited ChemDraw SDK (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.ReactionsFromChemDrawBlock"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.ReactionsFromChemDrawFile"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
 python = "rdkit.Chem.rdChemReactions.CartesianProductStrategy"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy"]
 
@@ -2163,6 +2208,55 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::sanitize_rxn_as_mols", "rdkit_cxx::
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.UpdateProductsStereochemistry"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::update_products_stereochemistry"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetFamily"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_family"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetId"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetPos"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_pos"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.GetType"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::get_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetFamily"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_family"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetId"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetPos"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_pos"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetType"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__getstate__"
+reason = "Python's pickling protocol: to_pickle and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__init__"
+rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::default", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::from_pickle", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::new", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::new_with_id", "rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::from_family"]
+overloads_note = "the str and bytes pickle overloads share from_pickle; FreeChemicalFeature(family, type, loc, id) is new, with new_with_id for id (A2), and FreeChemicalFeature(family, loc) from_family (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__setstate__"
+reason = "Python's pickling protocol: to_pickle and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdConformerParser.AddConformersFromAmberTrajectory"
@@ -2893,6 +2987,54 @@ name_exception = "an exported enum value maps to its variant, EmbedFF::Uff"
 python = "rdkit.Chem.rdDistGeom.srETKDGv3"
 rust = ["rdkit_cxx::chem::rd_dist_geom::sr_etkdg_v3"]
 name_exception = "the version stays a suffix: sr_etkdg_v3"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetAtomicCharges"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetHamiltonian"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetOrbitalEnergies"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetOverlapMatrix"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetReducedChargeMatrix"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetReducedOverlapPopulationMatrix"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.fermiEnergy"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.numElectrons"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.numOrbitals"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.totalEnergy"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.RunMol"
+reason = "not bound: RDKit's EHTTools::runMol (External/YAeHMOP/EHTTools.cpp) fcloses its two temporary files and then, destroying their Tempfile holders, reads each closed FILE through fileno and fcloses it again whenever that descriptor number is open: a use after free on every call (valgrind reports the reads in Python), and a double free once another thread reuses the descriptor, which no check of the input can prevent (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdFMCS.AtomCompare"
@@ -4634,6 +4776,93 @@ rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::default", "rdkit_cxx:
 [[entry]]
 python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__setstate__"
 reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.BuildFeatureFactory"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::build_feature_factory"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.BuildFeatureFactoryFromString"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::build_feature_factory_from_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.FeatureFileParseException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Parse"
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.GetAtomMatch"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::get_atom_match", "rdkit_cxx::chem::rd_mol_chemical_features::get_atom_match_with_max_ats"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.ClearCache"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::clear_cache"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetActiveConformer"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_active_conformer"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetAtomIds"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_atom_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetFactory"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_factory"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetFamily"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_family"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetId"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetMol"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetPos"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_pos", "rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_pos_with_conf_id"]
+overloads_note = "GetPos() is get_pos and GetPos(confId) get_pos_with_conf_id"
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.GetType"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::get_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeature.SetActiveConformer"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeature::set_active_conformer"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeatureFactory"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeatureFactory.GetFeatureDefs"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_feature_defs"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeatureFactory.GetFeatureFamilies"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_feature_families"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeatureFactory.GetMolFeature"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_mol_feature", "rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_mol_feature_with_params"]
+overloads_note = "recompute, which only chooses whether Python reads back a static list its binding keeps from the last call (for any molecule, on any thread), is not bound: the features are computed each call"
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeatureFactory.GetNumFeatureDefs"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_num_feature_defs"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolChemicalFeatures.MolChemicalFeatureFactory.GetNumMolFeatures"
+rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_num_mol_features", "rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::get_num_mol_features_with_include_only"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"

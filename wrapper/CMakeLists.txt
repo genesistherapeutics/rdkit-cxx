@@ -112,6 +112,8 @@ set(RDKIT_CXX_SOURCES
   src/scaffold_network.cpp
   src/substruct_library.cpp
   src/rgroup.cpp
+  src/chemical_features.cpp
+  src/mol_chemical_features.cpp
   src/free_sasa.cpp
   src/mif.cpp
   src/shape_align.cpp
@@ -166,6 +168,8 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ScaffoldNetwork
   SubstructLibrary
   RGroupDecomposition
+  ChemicalFeatures
+  MolChemicalFeatures
   FreeSASALib
   MolInteractionFields
   PubChemShape
