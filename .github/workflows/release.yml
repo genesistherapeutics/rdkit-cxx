@@ -1,0 +1,112 @@
+# Copyright (c) 2026 Steven Kearnes
+# All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+name: Release
+
+# Pushes the next version (.github/scripts/prepare_release.sh) to main,
+# publishes it to crates.io, then tags it and creates a GitHub release.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Builds the release from its package against conda-forge RDKit, as cargo
+  # publish verifies it, in a job with no secrets and no id-token permission.
+  build:
+    if: github.repository == 'skearnes/rdkit-cxx' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -el {0}
+    outputs:
+      version: ${{ steps.prepare.outputs.version }}
+      tree: ${{ steps.prepare.outputs.tree }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - id: prepare
+        run: .github/scripts/prepare_release.sh
+      - uses: mamba-org/setup-micromamba@add3a49764cedee8ee24e82dfde87f5bc2914462  # v2.0.7
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+          cache-environment: false
+          cache-downloads: false
+      - run: cargo publish --dry-run --locked
+
+  # id-token: write lets any step here mint a crates.io token, so the job runs
+  # no third-party action and no build script: it uses the runner's Rust,
+  # exchanges the OIDC token with curl, and publishes with --no-verify.
+  publish:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      id-token: write  # crates.io trusted publishing (OIDC).
+    defaults:
+      run:
+        # Adds pipefail, so a failed curl fails its pipe into jq.
+        shell: bash
+    env:
+      VERSION: ${{ needs.build.outputs.version }}
+      USER_AGENT: rdkit-cxx-release (https://github.com/skearnes/rdkit-cxx)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          # Pushes to main through the ruleset's bypass.
+          token: ${{ secrets.ACTIONS_PUSH }}
+      - id: prepare
+        run: .github/scripts/prepare_release.sh
+      - name: The release is the one the build job verified
+        env:
+          TREE: ${{ needs.build.outputs.tree }}
+          PREPARED_VERSION: ${{ steps.prepare.outputs.version }}
+          PREPARED_TREE: ${{ steps.prepare.outputs.tree }}
+        run: |
+          test "${PREPARED_VERSION}" = "${VERSION}"
+          test "${PREPARED_TREE}" = "${TREE}"
+      # Pushed before publishing, so a failed publish leaves main at an untagged
+      # version, which a rerun ships as it is. The push fails if main has moved
+      # since the run started.
+      - name: Push the release commit
+        run: git push origin HEAD:main
+      - name: Publish to crates.io
+        run: |
+          # Prints the body of a failed response, which jq would swallow.
+          request() {
+            local response
+            if ! response="$(curl -sS --fail-with-body -A "${USER_AGENT}" "$@")"; then
+              echo "Request failed: ${response}" >&2
+              return 1
+            fi
+            printf '%s' "${response}"
+          }
+          tokens=https://crates.io/api/v1/trusted_publishing/tokens
+          jwt="$(request -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=crates.io" | jq -r .value)"
+          token="$(jq -n --arg jwt "${jwt}" '{jwt: $jwt}' |
+            request -H "Content-Type: application/json" --data @- "${tokens}" |
+            jq -r .token)"
+          echo "::add-mask::${token}"
+          # Revokes the token when the step ends. A failed revoke must not fail
+          # a publish that succeeded, which would skip the tag.
+          trap 'request -X DELETE -H "Authorization: Bearer ${token}" "${tokens}" > /dev/null ||
+            echo "::warning::Could not revoke the crates.io token; it expires on its own."' EXIT
+          CARGO_REGISTRY_TOKEN="${token}" cargo publish --no-verify --locked
+      - name: Push the tag
+        run: |
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_PUSH }}
+        run: gh release create "v${VERSION}" --verify-tag --generate-notes
