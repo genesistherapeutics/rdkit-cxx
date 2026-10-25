@@ -100,6 +100,15 @@ rule changes the rule first.
   lend them the same way, through `BorrowedMols`: `&[Mol]` or `&BTreeMap`
   when RDKit only reads them, `&mut` when it writes them (`molzipFragments`
   gives its inputs coordinates).
+- **W9.** Objects RDKit shares through `shared_ptr`s, between owners Rust
+  cannot see (`FilterCatalog`'s entries and matchers, shared by catalogs,
+  entries, and match results), are shared by Rust handles too, and changed
+  only when no other owner exists: a handle copies a shared object before
+  it changes it (`FilterCatalogEntry`, by its `use_count`), or owns it alone
+  because RDKit copies whatever another object holds (the concrete
+  matchers, whose `Clone` is RDKit's `copy`). A borrowed child in such a
+  tree (`FilterHierarchyMatcherMut`) borrows its root mutably, as W2's views
+  do.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
@@ -122,6 +131,16 @@ rule changes the rule first.
   shared reference. Classes that hold molecules RDKit may write through const
   (`ChemicalReaction`, `EnumerateLibrary`) are `Send` and not `Sync`, as S1
   says of molecules, and their bridges record why in a `SAFETY` comment.
+- **S5.** Classes whose `const` methods RDKit itself runs from several
+  threads (`FilterCatalog`, its entries, and its matchers, which
+  `RunFilterCatalog` shares) are `Send` and `Sync`. Their query molecules
+  are matched concurrently, which writes recursive queries' matches under
+  each query's lock (`RDK_BUILD_THREADSAFE_SSS`), so a wrapper that copies
+  such a molecule, which reads those matches, holds the same locks, taken in
+  `SubstructMatch`'s order after `control_c_mutex()`, as matches take them
+  (`copy_pattern` in `filter_catalog.cpp`). Matching holds
+  `control_c_mutex()` (U4) and releases it while a Rust matcher's methods
+  run, which RDKit calls between its matches.
 
 ## Unchecked input
 
@@ -140,12 +159,19 @@ rule changes the rule first.
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
   for the limits U12 checks, and so are reaction pickles, which are molecule
-  pickles framed by counts and tags RDKit checks. Boost.Serialization
-  archives of polymorphic objects (`EnumerateLibrary`'s `Serialize` and
-  `GetState`) are not: Boost trusts their class and object ids, so the
-  functions that read them are `unsafe fn`s whose contract is bytes RDKit
-  wrote, and the wrappers check only what such bytes can still get wrong (a
-  state from another library). Text a wrapper checks before RDKit parses it
+  pickles framed by counts and tags RDKit checks. Catalog pickles
+  (`MolCatalog`, `FragCatalog`, and their entries) frame molecule pickles
+  with lengths and indices RDKit trusts, so `rdkit-cxx/catalog_checks.h`
+  reads each as RDKit will, with RDKit's readers for the molecules and
+  parameters, checking those and the molecules' monomer infos (U10), and
+  RDKit then reads the same bytes. Boost.Serialization archives of
+  polymorphic objects (`EnumerateLibrary`'s `Serialize` and `GetState`,
+  `FilterCatalog`'s pickles) are not checked: Boost trusts their class and
+  object ids, so the functions that read them are `unsafe fn`s whose
+  contract is bytes RDKit wrote, and the wrappers check only what such
+  bytes can still get wrong (a state from another library; matchers that
+  RDKit dereferences null in or recurses through forever, and patterns'
+  monomer infos). Text a wrapper checks before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
@@ -184,16 +210,21 @@ rule changes the rule first.
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
   by every wrapper whose RDKit call constructs one. Every substructure match
-  does (`Substruct/vf2.hpp`), so that is the match methods and every
-  wrapper whose RDKit call matches patterns: the transforms that match,
-  reactions, alignment, the force-field builders, Crippen and the other
-  descriptors and fingerprints that type atoms by SMARTS, depiction with
-  templates, and standardization, besides the embedder, DetermineBonds, and
-  the CIP labeler. Such a call runs on the calling thread the work RDKit
-  would split across its own threads, which the lock cannot order (the
-  wrapper's own threads take it in turn), and releases the lock
-  (`HoldControlC` and `ReleaseControlC`) while a Rust closure it calls runs
-  (a property functor, tautomer callback or score, or validation method). MolAlign's
+  does (`Substruct/vf2.hpp`), so that is the match methods and every wrapper
+  whose RDKit call matches patterns: the transforms that match, reactions,
+  alignment, the force-field builders, Crippen and the other descriptors and
+  fingerprints that type atoms by SMARTS, depiction with templates,
+  standardization, the catalogs, and MCS, besides the embedder,
+  DetermineBonds, and the CIP labeler. Such a call runs on the calling
+  thread the work RDKit would split across its own threads, which the lock
+  cannot order (the wrapper's own threads take it in turn), and releases the
+  lock while a Rust closure it calls between matches runs (a property
+  functor, tautomer callback or score, validation method, filter matcher, or
+  FMCS typer or callback; new wrappers use `HoldControlC` and
+  `ReleaseControlC`). A closure RDKit calls inside a match (FMCS's final
+  match checks) runs with the lock held, so a wrapper it calls that takes
+  this lock, or one ordered before it, fails instead
+  (`check_not_in_control_c_callback`). MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
@@ -266,12 +297,14 @@ rule changes the rule first.
   Python allows one: `AtomMonomerInfo::new` refuses the type with
   `Error::Value`, as does `set_monomer_type` unless `dynamic_cast` finds PDB
   residue info, and molecule, bundle, and PNG-metadata pickles (and the
-  reaction pickles and `EnumerateLibrary` archives that hold them) whose
-  atoms have such an info, or a type `AtomMonomerType` lacks, are refused
-  right after RDKit reads them (`check_monomer_types` in
-  `rdkit-cxx/mol_checks.h`). RDKit code may then trust the type; wrapper code
-  that casts uses `dynamic_cast` all the same. RDKit code that casts whatever
-  the type (`DCLV.cpp`) still needs its own check.
+  reaction pickles, `EnumerateLibrary` archives, and catalog pickles and
+  archives that hold them) whose atoms have such an info, or a type
+  `AtomMonomerType` lacks, are refused right after RDKit reads them
+  (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also checks the
+  molecules of recursive queries, as MolPickler pickles them whole, and
+  walks the queries with its own stack). RDKit code may then trust the
+  type; wrapper code that casts uses `dynamic_cast` all the same. RDKit code
+  that casts whatever the type (`DCLV.cpp`) still needs its own check.
 - **U11.** RDKit keeps the SMILES and SMARTS parsers' debug levels in globals
   (`yysmiles_debug`, `yysmarts_debug`) that every parse reads. A parse writes
   them only when its `debugParse` differs, so the wrappers refuse a nonzero
