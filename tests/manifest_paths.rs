@@ -2683,6 +2683,10 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::new;
     let _ = rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::from_pkl;
     let _ = rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::set_val;
+    use rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing as _;
+    use rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing_with_tol as _;
+    use rdkit_cxx::distance_geometry::dist_geom::embed_bounds_matrix as _;
+    use rdkit_cxx::distance_geometry::dist_geom::embed_bounds_matrix_with_params as _;
     let _: Option<rdkit_cxx::force_field::rd_force_field::ForceField> = None;
     let _ = rdkit_cxx::force_field::rd_force_field::ForceField::add_distance_constraint;
     let _ = rdkit_cxx::force_field::rd_force_field::ForceField::add_extra_point;

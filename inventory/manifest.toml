@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -8670,6 +8670,14 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__sub__"
 reason = "Python's operator protocol: `&a - &b` (Sub)"
+
+[[entry]]
+python = "rdkit.DistanceGeometry.DistGeom.DoTriangleSmoothing"
+rust = ["rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing", "rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing_with_tol"]
+
+[[entry]]
+python = "rdkit.DistanceGeometry.DistGeom.EmbedBoundsMatrix"
+rust = ["rdkit_cxx::distance_geometry::dist_geom::embed_bounds_matrix", "rdkit_cxx::distance_geometry::dist_geom::embed_bounds_matrix_with_params"]
 
 [[entry]]
 python = "rdkit.ForceField.rdForceField.ForceField"

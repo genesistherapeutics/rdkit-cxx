@@ -63,6 +63,7 @@ const BRIDGES: &[&str] = &[
     "force_field",
     "force_field_helpers",
     "embedder",
+    "distance_geometry",
 ];
 
 fn main() {

@@ -83,6 +83,7 @@ set(RDKIT_CXX_SOURCES
   src/force_field_helpers.cpp
   src/global_state.cpp
   src/embedder.cpp
+  src/distance_geometry.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
