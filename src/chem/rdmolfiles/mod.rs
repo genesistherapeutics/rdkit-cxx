@@ -7,6 +7,7 @@
 
 mod formats;
 mod mol_blocks;
+mod png;
 mod smiles;
 
 use std::collections::BTreeMap;
@@ -20,6 +21,7 @@ use crate::util::path_bytes;
 
 pub use formats::*;
 pub use mol_blocks::*;
+pub use png::*;
 pub use smiles::*;
 
 /// Parameters for SMILES parsing. Mirrors `rdmolfiles.SmilesParserParams`,
@@ -151,7 +153,12 @@ pub struct SmilesWriteParams {
 
 impl Default for SmilesWriteParams {
     fn default() -> SmilesWriteParams {
-        let data = expect_ok(ffi::smiles_write_params_default());
+        SmilesWriteParams::from_ffi(expect_ok(ffi::smiles_write_params_default()))
+    }
+}
+
+impl SmilesWriteParams {
+    pub(crate) fn from_ffi(data: ffi::SmilesWriteParamsData) -> SmilesWriteParams {
         SmilesWriteParams {
             do_isomeric_smiles: data.do_isomeric_smiles,
             do_kekule: data.do_kekule,
@@ -165,9 +172,7 @@ impl Default for SmilesWriteParams {
             ignore_atom_map_numbers: data.ignore_atom_map_numbers,
         }
     }
-}
 
-impl SmilesWriteParams {
     pub(crate) fn to_ffi(&self) -> ffi::SmilesWriteParamsData {
         ffi::SmilesWriteParamsData {
             do_isomeric_smiles: self.do_isomeric_smiles,

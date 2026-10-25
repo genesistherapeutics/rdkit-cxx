@@ -35,6 +35,7 @@ pub(crate) mod monomer_info;
 pub(crate) mod partial_charges;
 pub(crate) mod perception;
 pub(crate) mod periodic_table;
+pub(crate) mod png;
 pub(crate) mod properties;
 pub(crate) mod props;
 pub(crate) mod query;

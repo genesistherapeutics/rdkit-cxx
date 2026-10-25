@@ -4073,6 +4073,14 @@ python = "rdkit.Chem.rdchem.tossit"
 reason = "RDKit's test hook that raises IndexError"
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::add_metadata_to_png_file"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::add_metadata_to_png_string"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.AtomFromSmarts"
 rust = ["rdkit_cxx::chem::rdmolfiles::atom_from_smarts"]
 
@@ -4247,6 +4255,16 @@ python = "rdkit.Chem.rdmolfiles.HasChemDrawCDXSupport"
 rust = ["rdkit_cxx::chem::rdmolfiles::has_chem_draw_cdx_support"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolfiles.MetadataFromPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_file", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_file_as_list"]
+overloads_note = "asList changes the return type, so it has its own function (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MetadataFromPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_string", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_string_as_list"]
+overloads_note = "asList changes the return type, so it has its own function (A4)"
+
+[[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFragmentToCXSmarts"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smarts", "rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smarts_with_params"]
 
@@ -4303,6 +4321,14 @@ rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_pdb_block", "rdkit_cxx::chem::rdm
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromPDBFile"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_pdb_file", "rdkit_cxx::chem::rdmolfiles::mol_from_pdb_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_png_file", "rdkit_cxx::chem::rdmolfiles::mol_from_png_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolFromPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_png_string", "rdkit_cxx::chem::rdmolfiles::mol_from_png_string_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromRDKitSVG"
@@ -4373,6 +4399,16 @@ rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_xyz_block"]
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromXYZFile"
 rust = ["rdkit_cxx::chem::rdmolfiles::mol_from_xyz_file"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolMetadataToPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_file", "rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_file_with_params"]
+overloads_note = "the includePkl, includeSmiles, and includeMol overload's arguments are fields of PNGMetadataParams (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolMetadataToPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_string", "rdkit_cxx::chem::rdmolfiles::mol_metadata_to_png_string_with_params"]
+overloads_note = "the includePkl, includeSmiles, and includeMol overload's arguments are fields of PNGMetadataParams (A3)"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolToCDXMLBlock"
@@ -4505,6 +4541,61 @@ rust_kind = "field"
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolWriterParams.precision"
 rust = ["rdkit_cxx::chem::rdmolfiles::MolWriterParams::precision"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromPNGFile"
+rust = ["rdkit_cxx::chem::rdmolfiles::mols_from_png_file", "rdkit_cxx::chem::rdmolfiles::mols_from_png_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolsFromPNGString"
+rust = ["rdkit_cxx::chem::rdmolfiles::mols_from_png_string", "rdkit_cxx::chem::rdmolfiles::mols_from_png_string_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.__setattr__"
+reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.cxSmilesFlags"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::cx_smiles_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.includeMol"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::include_mol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.includePkl"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::include_pkl"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.includeSmiles"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::include_smiles"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.propertyFlags"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::property_flags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.restoreBondDirs"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::restore_bond_dirs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.smilesWriteParams"
+rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::smiles_write_params"]
 rust_kind = "field"
 
 [[entry]]
