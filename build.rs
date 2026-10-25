@@ -71,6 +71,8 @@ const BRIDGES: &[&str] = &[
     "determine_bonds",
     "shape_helpers",
     "mol_align",
+    "chem_reactions",
+    "enumerate",
 ];
 
 fn main() {

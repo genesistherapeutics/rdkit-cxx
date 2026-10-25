@@ -7,6 +7,7 @@
 //! `rdmolops` (and `rdCIPLabeler` and `rdMolInterchange`); its other
 //! submodules are reached by path, as in Python.
 
+pub mod rd_chem_reactions;
 pub mod rd_cip_labeler;
 pub mod rd_conformer_parser;
 pub mod rd_coord_gen;

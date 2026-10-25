@@ -87,7 +87,7 @@ pub struct AdjustQueryParameters {
 }
 
 impl AdjustQueryParameters {
-    fn from_ffi(data: ffi::AdjustQueryParametersData) -> AdjustQueryParameters {
+    pub(crate) fn from_ffi(data: ffi::AdjustQueryParametersData) -> AdjustQueryParameters {
         AdjustQueryParameters {
             adjust_degree: data.adjust_degree,
             adjust_degree_flags: AdjustQueryWhichFlags(data.adjust_degree_flags),
@@ -113,7 +113,7 @@ impl AdjustQueryParameters {
         }
     }
 
-    fn to_ffi(&self) -> ffi::AdjustQueryParametersData {
+    pub(crate) fn to_ffi(&self) -> ffi::AdjustQueryParametersData {
         ffi::AdjustQueryParametersData {
             adjust_degree: self.adjust_degree,
             adjust_degree_flags: self.adjust_degree_flags.bits(),

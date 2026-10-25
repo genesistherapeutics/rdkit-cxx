@@ -192,39 +192,6 @@ void check_tpl(const std::string &text) {
   }
 }
 
-// RDKit's Marvin reader (MarvinMolBase::parseAtomsAndBonds in
-// MarvinDefs.cpp) copies the second atom reference of each bond before it
-// checks that there are two, reading past the end of its token vector for a
-// bond with one. This parses the XML as RDKit does and checks every bond.
-void check_bond_refs(const boost::property_tree::ptree &tree) {
-  for (const auto &[key, child] : tree) {
-    if (key == "bondArray") {
-      for (const auto &[bkey, bond] : child) {
-        if (bkey != "bond") {
-          continue;
-        }
-        std::vector<std::string> refs;
-        boost::algorithm::split(
-            refs, bond.get<std::string>("<xmlattr>.atomRefs2", ""),
-            boost::algorithm::is_space());
-        if (refs.size() < 2) {
-          throw RDKit::FileParseException(
-              "atomRefs2 must contain two atom refs that must appear in the "
-              "atoms array in MRV file");
-        }
-      }
-    }
-    check_bond_refs(child);
-  }
-}
-
-void check_mrv(const std::string &text) {
-  std::istringstream in(text);
-  boost::property_tree::ptree tree;
-  boost::property_tree::read_xml(in, tree);
-  check_bond_refs(tree);
-}
-
 // RDKit's SVG reader (ptreeToMol in SVGParser.cpp) subtracts 1 from each
 // bond's atom indices in int, which overflows for INT_MIN.
 void check_svg(const std::string &svg) {

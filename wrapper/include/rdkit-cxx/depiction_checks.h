@@ -12,6 +12,7 @@
 #pragma once
 
 #include <GraphMol/Conformer.h>
+#include <GraphMol/Depictor/DepictUtils.h>
 #include <GraphMol/ROMol.h>
 
 namespace rdkit_cxx {
@@ -35,6 +36,36 @@ void check_depiction_coordinate(double v, const char *what);
 // Throws unless every coordinate of the conformer passes
 // check_depiction_coordinate.
 void check_depiction_conformer(const RDKit::Conformer &conf, const char *what);
+
+// A bond length the depictor scales every coordinate by: throws unless a
+// positive one passes check_depiction_coordinate (zero and negative lengths
+// keep RDKit's).
+void check_bond_length(double bond_length);
+
+// Python's Compute2DCoords, Compute2DCoordsMimicDistmat, and
+// Compute2DCoordsForReaction set RDDepict::BOND_LEN for one call when
+// bondLength > 0. This restores it even when RDKit throws. Its owner holds
+// lock_depiction().
+class BondLengthOverride {
+ public:
+  explicit BondLengthOverride(double bond_length)
+      : d_old(RDDepict::BOND_LEN), d_set(bond_length > 0) {
+    if (d_set) {
+      RDDepict::BOND_LEN = bond_length;
+    }
+  }
+  ~BondLengthOverride() {
+    if (d_set) {
+      RDDepict::BOND_LEN = d_old;
+    }
+  }
+  BondLengthOverride(const BondLengthOverride &) = delete;
+  BondLengthOverride &operator=(const BondLengthOverride &) = delete;
+
+ private:
+  double d_old;
+  bool d_set;
+};
 
 // The conformer getConformer(id) returns, or null where it would throw.
 const RDKit::Conformer *find_conformer(const RDKit::ROMol &mol, int id);
