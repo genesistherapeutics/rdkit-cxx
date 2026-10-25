@@ -23,6 +23,7 @@
 #include "rdkit-cxx/ffi/png.rs.h"
 #include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/global_state.h"
+#include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/molfiles.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
@@ -78,9 +79,11 @@ void check_png(const std::string &png) {
   }
 }
 
+// As Mol::from_pkl_string, a pickle's monomer types are checked (U10).
 std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
   auto mol = std::make_unique<RWMol>();
   RDKit::MolPickler::molFromPickle(pkl, mol.get());
+  check_monomer_types(*mol);
   return mol;
 }
 

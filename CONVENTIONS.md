@@ -272,15 +272,15 @@ rule changes the rule first.
   `AtomMonomerInfo`. So no atom holds a plain info of that type, though
   Python allows one: `AtomMonomerInfo::new` refuses the type with
   `Error::Value`, as does `set_monomer_type` unless `dynamic_cast` finds PDB
-  residue info, and molecule and bundle pickles (and the reaction pickles
-  and `EnumerateLibrary` archives that hold them) whose atoms have such an
-  info, or a type `AtomMonomerType` lacks, are refused right after RDKit
-  reads them (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also
-  checks the molecules of recursive queries, as MolPickler pickles them
-  whole, and walks the queries with its own stack). RDKit code
-  may then trust the type; wrapper code that casts uses `dynamic_cast` all
-  the same. RDKit code that casts whatever the type (`DCLV.cpp`) still needs
-  its own check.
+  residue info, and molecule, bundle, and PNG-metadata pickles (and the
+  reaction pickles, `EnumerateLibrary` archives, and catalog pickles and
+  archives that hold them) whose atoms have such an info, or a type
+  `AtomMonomerType` lacks, are refused right after RDKit reads them
+  (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also checks the
+  molecules of recursive queries, as MolPickler pickles them whole, and
+  walks the queries with its own stack). RDKit code may then trust the
+  type; wrapper code that casts uses `dynamic_cast` all the same. RDKit code
+  that casts whatever the type (`DCLV.cpp`) still needs its own check.
 - **U11.** RDKit keeps the SMILES and SMARTS parsers' debug levels in globals
   (`yysmiles_debug`, `yysmarts_debug`) that every parse reads. A parse writes
   them only when its `debugParse` differs, so the wrappers refuse a nonzero
