@@ -183,12 +183,21 @@ rule changes the rule first.
   `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
-  by every wrapper whose RDKit call constructs one. MolAlign's
+  by every wrapper whose RDKit call constructs one. Every substructure match
+  does (`Substruct/vf2.hpp`), so that is the match methods and every
+  wrapper whose RDKit call matches patterns: the transforms that match,
+  reactions, alignment, the force-field builders, Crippen and the other
+  descriptors and fingerprints that type atoms by SMARTS, and depiction with
+  templates, besides the embedder, DetermineBonds, and the CIP labeler. Such
+  a call runs on the calling thread the work RDKit would split across its
+  own threads, which the lock cannot order, and releases the lock while a
+  Rust closure it calls runs (a property functor). MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
-  several of these locks takes them in this order: `lock_depiction()`,
-  `control_c_mutex()`, `symmetrize_mutex()`, then `random_mutex()`.
+  several of these locks takes them in this order, after any of the locks
+  above for one module's state: `lock_depiction()`, `control_c_mutex()`,
+  `symmetrize_mutex()`, then `random_mutex()`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

@@ -12,6 +12,7 @@
 #include <filesystem>
 #include <fstream>
 #include <memory>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -24,6 +25,7 @@
 #include <RDGeneral/RDConfig.h>
 #include <unistd.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -242,6 +244,8 @@ unsigned compute_2d_coords(RWMol &mol, const Compute2DCoordsData &data) {
   }
   check_bond_length(data.bond_length);
   auto lock = lock_depiction();
+  // Ring-system templates are matched to the molecule (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   // Random bond flips (nSample and nFlipsPerSample) draw from RDKit's
   // generator.
   std::lock_guard<std::mutex> random_lock(random_mutex());
@@ -295,6 +299,9 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
     bool has_ref_patt, const ConstrainedDepictionParamsData &data) {
   auto params = to_params(data);
   auto lock = lock_depiction();
+  // It matches the reference, or its pattern, to the molecule
+  // (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   check_constrained_inputs(mol, reference, data.conf_id, params);
   MatrixCacheGuard mol_guard(mol);
   MatrixCacheGuard reference_guard(reference);
@@ -334,6 +341,8 @@ void generate_depiction_matching_3d_structure(
     RWMol &mol, const RWMol &reference, int conf_id, const RWMol &ref_patt,
     bool has_ref_patt, bool accept_failure, bool force_rdkit) {
   auto lock = lock_depiction();
+  // It matches the reference to the molecule (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::lock_guard<std::mutex> random_lock(random_mutex());
   // It mimics the reference's distances with RDKit's depictor, or with
   // acceptFailure falls back to compute2DCoords without forceRDKit.

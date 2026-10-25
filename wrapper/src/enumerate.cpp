@@ -7,6 +7,7 @@
 
 #include <climits>
 #include <limits>
+#include <mutex>
 #include <set>
 #include <stdexcept>
 #include <utility>
@@ -18,6 +19,7 @@
 #include <GraphMol/ChemReactions/Enumerate/RandomSampleAllBBs.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chem_reactions.rs.h"
 #include "rdkit-cxx/ffi/enumerate.rs.h"
@@ -366,7 +368,9 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_params(
     rust::Slice<const std::uint32_t> group_sizes,
     const EnumerationParamsData &data) {
   // Python's library shares Python's molecules without keeping them alive;
-  // this one owns copies.
+  // this one owns copies. Construction drops the building blocks the
+  // reaction does not match, and running it matches too (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return std::make_unique<EnumerateLibrary>(
       rxn, to_bbs(mols, group_sizes, true), params_from(data));
 }
@@ -382,6 +386,7 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_enumerator(
   // initialized reaction matches; check those first.
   ChemicalReaction initialized(rxn);
   initialized.initReactantMatchers(true);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   check_initialize(strategy,
                    RDKit::getSizesFromBBs(RDKit::removeNonmatchingReagents(
                        initialized, bbs, params)));
@@ -436,6 +441,7 @@ std::unique_ptr<ProductSets> enumerate_library_next(EnumerateLibrary &lib) {
     }
     reactants.push_back(bbs[i][indices[i]]);
   }
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_product_sets(lib.getReaction().runReactants(reactants));
 }
 
