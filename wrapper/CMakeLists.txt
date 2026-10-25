@@ -94,6 +94,7 @@ set(RDKIT_CXX_SOURCES
   src/mol_align.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
+  src/free_sasa.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -133,6 +134,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   MolAlign
   O3AAlign
   FilterCatalog
+  FreeSASALib
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -1926,6 +1926,134 @@ rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule", "rdkit
 [[entry]]
 python = "rdkit.Chem.rdForceFieldHelpers.UFFOptimizeMoleculeConfs"
 rust = ["rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs", "rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule_confs_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.APolar"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass::APolar"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.CalcSASA"
+rust = ["rdkit_cxx::chem::rd_free_sasa::calc_sasa", "rdkit_cxx::chem::rd_free_sasa::calc_sasa_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.LeeRichards"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAAlgorithm::LeeRichards"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.MakeFreeSasaAPolarAtomQuery"
+rust = ["rdkit_cxx::chem::rd_free_sasa::make_free_sasa_a_polar_atom_query"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.MakeFreeSasaPolarAtomQuery"
+rust = ["rdkit_cxx::chem::rd_free_sasa::make_free_sasa_polar_atom_query"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.NACCESS"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier::Naccess"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.OONS"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier::Oons"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.Polar"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass::Polar"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.Protor"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier::Protor"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAAlgorithm"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAAlgorithm"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAAlgorithm.LeeRichards"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAAlgorithm::LeeRichards"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAAlgorithm.ShrakeRupley"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAAlgorithm::ShrakeRupley"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClass"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClass.APolar"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass::APolar"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClass.Polar"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass::Polar"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClass.Unclassified"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass::Unclassified"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClassifier"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClassifier.NACCESS"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier::Naccess"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClassifier.OONS"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier::Oons"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAClassifier.Protor"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClassifier::Protor"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAOpts"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAOpts"]
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAOpts.__init__"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAOpts::default", "rdkit_cxx::chem::rd_free_sasa::SASAOpts::new", "rdkit_cxx::chem::rd_free_sasa::SASAOpts::new_with_pr"]
+overloads_note = "SASAOpts() is Default; SASAOpts(alg, cls) is new, and SASAOpts(alg, cls, pr) new_with_pr (A2, A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAOpts.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAOpts.algorithm"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAOpts::algorithm"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAOpts.classifier"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAOpts::classifier"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.SASAOpts.probeRadius"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAOpts::probe_radius"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.ShrakeRupley"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAAlgorithm::ShrakeRupley"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.Unclassified"
+rust = ["rdkit_cxx::chem::rd_free_sasa::SASAClass::Unclassified"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdFreeSASA.classifyAtoms"
+rust = ["rdkit_cxx::chem::rd_free_sasa::classify_atoms", "rdkit_cxx::chem::rd_free_sasa::classify_atoms_with_options"]
 
 [[entry]]
 python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder"
