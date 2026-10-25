@@ -13,7 +13,6 @@ license = "BSD-3-Clause"
 repository = "https://github.com/skearnes/rdkit-cxx"
 links = "rdkit_cxx"
 publish = false
-include = ["/build.rs", "/src/", "/wrapper/", "/README.md", "/LICENSE"]
 
 [workspace]
 members = [".", "downstream"]
