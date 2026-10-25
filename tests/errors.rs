@@ -68,6 +68,14 @@ fn each_rdkit_exception_maps_to_its_variant() {
             message: message("smiles_parse")
         }
     );
+    for kind in ["sln_parse", "reaction_parse"] {
+        assert_eq!(
+            raise(kind).unwrap_err(),
+            Error::Parse {
+                message: message(kind)
+            }
+        );
+    }
     assert_eq!(
         raise("std").unwrap_err(),
         Error::Runtime {

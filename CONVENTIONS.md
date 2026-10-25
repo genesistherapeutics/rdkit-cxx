@@ -58,7 +58,7 @@ rule changes the rule first.
   | `KeyErrorException` | `Key` |
   | `ValueErrorException`, `RDKit::ConformerException` | `Value` |
   | `RDKit::BadFileException` | `Os` |
-  | `RDKit::SmilesParse::SmilesParseException`, `RDKit::FileParseException` | `Parse` |
+  | `RDKit::SmilesParse::SmilesParseException`, `RDKit::FileParseException`, `RDKit::SLNParseException`, `RDKit::ChemicalReactionParserException` | `Parse` |
   | `Invar::Invariant` (with `toUserString()`), any other exception | `Runtime` |
 
 - **E5.** Every bridge's `include!` list starts with `"rdkit-cxx/errors.h"`,
