@@ -23,6 +23,7 @@ pub(crate) mod descriptors;
 pub(crate) mod descriptors_3d;
 pub(crate) mod determine_bonds;
 pub(crate) mod distance_geometry;
+pub(crate) mod draw;
 pub(crate) mod embedder;
 pub(crate) mod enumerate;
 pub(crate) mod errors;

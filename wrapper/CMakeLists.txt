@@ -94,6 +94,8 @@ set(RDKIT_CXX_SOURCES
   src/mol_align.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
+  src/draw.cpp
+  src/draw_checks.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -161,6 +163,46 @@ foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::${target}>\n")
 endforeach()
+
+# RDKit::MolDraw2D cannot be linked like the targets above: conda-forge's
+# package names Cairo::Cairo in its link interface without defining it, and
+# FreeType's include directory, which librdkit-dev does not install, in its
+# include directories, so CMake refuses it. The wrappers take what they need
+# by hand: the library; its compile definitions, which say whether it was
+# built with Cairo and FreeType (RDConfig.h, which defines them empty, leaves
+# out FreeType), so every wrapper source sees the macros the library was
+# built with; and Cairo, whose functions MolDraw2DCairo.h calls inline.
+get_target_property(rdkit_cxx_moldraw2d_definitions RDKit::MolDraw2D
+  INTERFACE_COMPILE_DEFINITIONS)
+if(rdkit_cxx_moldraw2d_definitions)
+  foreach(definition IN LISTS rdkit_cxx_moldraw2d_definitions)
+    string(REGEX REPLACE "^-D" "" definition "${definition}")
+    # RDConfig.h defines these empty; matching it avoids a redefinition.
+    if(NOT definition MATCHES "=")
+      string(APPEND definition "=")
+    endif()
+    target_compile_definitions(rdkitcxx PRIVATE "${definition}")
+  endforeach()
+endif()
+string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::MolDraw2D>\n")
+if(rdkit_cxx_moldraw2d_definitions MATCHES "RDK_BUILD_CAIRO_SUPPORT")
+  get_target_property(rdkit_cxx_moldraw2d_location RDKit::MolDraw2D
+    IMPORTED_LOCATION_RELEASE)
+  if(NOT rdkit_cxx_moldraw2d_location)
+    get_target_property(rdkit_cxx_moldraw2d_location RDKit::MolDraw2D
+      IMPORTED_LOCATION)
+  endif()
+  get_filename_component(rdkit_cxx_rdkit_lib_dir
+    "${rdkit_cxx_moldraw2d_location}" DIRECTORY)
+  get_filename_component(rdkit_cxx_rdkit_prefix
+    "${rdkit_cxx_rdkit_lib_dir}" DIRECTORY)
+  find_path(RDKIT_CXX_CAIRO_INCLUDE_DIR cairo.h
+    HINTS "${rdkit_cxx_rdkit_prefix}/include" PATH_SUFFIXES cairo REQUIRED)
+  find_library(RDKIT_CXX_CAIRO_LIBRARY cairo
+    HINTS "${rdkit_cxx_rdkit_lib_dir}" REQUIRED)
+  target_include_directories(rdkitcxx PRIVATE "${RDKIT_CXX_CAIRO_INCLUDE_DIR}")
+  string(APPEND link_libraries "${RDKIT_CXX_CAIRO_LIBRARY}\n")
+endif()
 
 # MolBundle's pickles instantiate Boost.Serialization archives in the
 # wrappers, when RDKit was built with them.

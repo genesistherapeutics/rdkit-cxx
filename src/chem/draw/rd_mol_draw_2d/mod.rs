@@ -1,0 +1,11 @@
+// Copyright (c) 2026 Steven Kearnes
+// All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+//! Mirrors `rdkit.Chem.Draw.rdMolDraw2D`: 2D drawings of molecules and
+//! reactions as SVG or PNG.
+
+mod options;
+
+pub use options::*;

@@ -73,6 +73,7 @@ const BRIDGES: &[&str] = &[
     "mol_align",
     "chem_reactions",
     "enumerate",
+    "draw",
 ];
 
 fn main() {
