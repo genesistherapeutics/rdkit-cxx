@@ -9,6 +9,8 @@ CI runs tests/threads.rs under DRD (CONVENTIONS.md U4). DRD also reports Rust's
 own thread bookkeeping, which synchronizes with atomics it cannot see, so this
 script fails only on reports that involve RDKit: an access to an RDKit
 library's static data, or a conflicting access made from RDKit or wrapper code.
+glibc's stdio, which locks in ways DRD cannot see either, is suppressed by
+tests/drd.supp instead.
 """
 
 import argparse

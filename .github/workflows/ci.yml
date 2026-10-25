@@ -95,7 +95,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Threads do not race on RDKit's global state
         env:
-          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind --tool=drd --log-file=target/drd.log
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind --tool=drd --suppressions=tests/drd.supp --log-file=target/drd.log
         run: |
           cargo test --test threads
           python3 tests/check_drd_log.py target/drd.log
