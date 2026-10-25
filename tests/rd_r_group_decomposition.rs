@@ -321,6 +321,87 @@ fn core_bond_types() {
     ));
 }
 
+// The core with its first atom replaced by the SMARTS.
+fn with_first_atom(smarts: &str) -> Mol {
+    let mut mol = RWMol::from(mol_from_smarts(smarts).unwrap());
+    mol.insert_mol(&mol_from_smiles("CCC(=O)C[*:1]").unwrap());
+    mol.add_bond_with_order(0, 1, BondType::Single).unwrap();
+    mol.update_property_cache_with_strict(false).unwrap();
+    mol.into()
+}
+
+// doTautomers matches with RDKit's tautomer queries, whose check reads a
+// recursive SMARTS's own matches at the template's modified atoms: Python
+// fails a precondition on a bond between atoms it read past the match.
+#[test]
+fn recursive_cores_with_tautomers() {
+    let mols = mols(&["CCCC(=O)CCl", "CCCC(O)=CBr", "CC(C)CC(=O)CO"]);
+    let tautomers = RGroupDecompositionParameters {
+        do_tautomers: true,
+        ..RGroupDecompositionParameters::default()
+    };
+    let (rows, unmatched) =
+        r_group_decompose_as_smiles_with_options(&[with_first_atom("[CH3]")], &mols, &tautomers)
+            .unwrap();
+    assert_eq!(rows.len(), 3);
+    assert!(unmatched.is_empty());
+    assert_eq!(rows[1]["Core"], "CC(CC(O)=C[*:1])[*:2]");
+
+    let recursive = [with_first_atom("[$([CH3])]")];
+    assert!(matches!(
+        r_group_decompose_with_options(&recursive, &mols, &tautomers),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        RGroupDecomposition::new_with_params(&recursive, &tautomers),
+        Err(Error::Value { .. })
+    ));
+    let (rows, unmatched) = r_group_decompose_as_smiles_with_options(
+        &recursive,
+        &mols,
+        &RGroupDecompositionParameters::default(),
+    )
+    .unwrap();
+    assert_eq!(rows.len(), 2);
+    assert_eq!(rows[0]["Core"], "O=C(CC[*:2])C[*:1]");
+    assert_eq!(unmatched, [1]);
+}
+
+// doEnumeration enumerates the cores' link nodes, which RDKit trusts:
+// Python segfaults on a link node over a double bond.
+#[test]
+fn link_node_cores() {
+    let core = |text: &str, nodes: &str| {
+        let mut mol = mol_from_smiles(text).unwrap();
+        mol.set_prop("_molLinkNodes", nodes);
+        mol
+    };
+    let enumeration = RGroupDecompositionParameters {
+        do_enumeration: true,
+        ..RGroupDecompositionParameters::default()
+    };
+    let target = mols(&["C1=CCCC1CO"]);
+    let (rows, unmatched) = r_group_decompose_as_smiles_with_options(
+        &[core("C1CCCC1", "1 3 2 2 1 2 3")],
+        &target,
+        &enumeration,
+    )
+    .unwrap();
+    assert!(rows.is_empty());
+    assert_eq!(unmatched, [0]);
+    let bad = [core("C1=CCC1", "1 3 2 1 2 1 4")];
+    assert!(matches!(
+        r_group_decompose_with_options(&bad, &target, &enumeration),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        RGroupDecomposition::new_with_params(&bad, &enumeration),
+        Err(Error::Value { .. })
+    ));
+    // Without enumeration the link nodes are not read.
+    RGroupDecomposition::new(&bad).unwrap();
+}
+
 #[test]
 fn relabel() {
     let mut mol = mol_from_smiles("[*:1]c1ccccc1[1*]").unwrap();

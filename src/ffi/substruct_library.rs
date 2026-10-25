@@ -12,6 +12,8 @@ pub(crate) mod ffi {
 
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type MolBundle = crate::ffi::mol_bundle::ffi::MolBundle;
+        type TautomerQuery = crate::ffi::tautomer_query::ffi::TautomerQuery;
+        type ExtendedQueryMol = crate::ffi::generalized_substruct::ffi::ExtendedQueryMol;
         type BitVect = crate::ffi::data_structs::ffi::BitVect;
         type SubstructMatchParametersData =
             crate::ffi::substruct::ffi::SubstructMatchParametersData;
@@ -118,6 +120,56 @@ pub(crate) mod ffi {
         fn substruct_library_has_match_mol_bundle(
             view: &SubstructLibrary,
             query: &MolBundle,
+            ranged: bool,
+            start_idx: u32,
+            end_idx: u32,
+            params: &SubstructMatchParametersData,
+        ) -> Result<bool>;
+        fn substruct_library_get_matches_tautomer_query(
+            view: &SubstructLibrary,
+            query: &TautomerQuery,
+            ranged: bool,
+            start_idx: u32,
+            end_idx: u32,
+            params: &SubstructMatchParametersData,
+            max_results: i32,
+        ) -> Result<Vec<u32>>;
+        fn substruct_library_count_matches_tautomer_query(
+            view: &SubstructLibrary,
+            query: &TautomerQuery,
+            ranged: bool,
+            start_idx: u32,
+            end_idx: u32,
+            params: &SubstructMatchParametersData,
+        ) -> Result<u32>;
+        fn substruct_library_has_match_tautomer_query(
+            view: &SubstructLibrary,
+            query: &TautomerQuery,
+            ranged: bool,
+            start_idx: u32,
+            end_idx: u32,
+            params: &SubstructMatchParametersData,
+        ) -> Result<bool>;
+        fn substruct_library_get_matches_extended_query_mol(
+            view: &SubstructLibrary,
+            query: &ExtendedQueryMol,
+            ranged: bool,
+            start_idx: u32,
+            end_idx: u32,
+            params: &SubstructMatchParametersData,
+            max_results: i32,
+        ) -> Result<Vec<u32>>;
+        fn substruct_library_count_matches_extended_query_mol(
+            view: &SubstructLibrary,
+            query: &ExtendedQueryMol,
+            ranged: bool,
+            start_idx: u32,
+            end_idx: u32,
+            params: &SubstructMatchParametersData,
+        ) -> Result<u32>;
+        fn substruct_library_has_match_extended_query_mol(
+            view: &SubstructLibrary,
+            query: &ExtendedQueryMol,
             ranged: bool,
             start_idx: u32,
             end_idx: u32,

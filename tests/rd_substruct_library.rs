@@ -4,7 +4,12 @@
 // license that can be found in the LICENSE file.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_generalized_substruct::{
+    CreateExtendedQueryMolParams, ExtendedQueryMol, create_extended_query_mol,
+    create_extended_query_mol_with_params,
+};
 use rdkit_cxx::chem::rd_substruct_library::*;
+use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
 use rdkit_cxx::chem::*;
 use rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect;
 
@@ -598,6 +603,188 @@ fn pickled_search_orders_are_checked() {
     // Boost reads the same objects.
     let result = unsafe { SubstructLibrary::from_pickle(&pickle) };
     assert!(matches!(result, Err(Error::Index { index: 7, len: 1 })));
+}
+
+fn tautomer_library(fingerprints: Option<FPHolderBase>, smiles: &[&str]) -> SubstructLibrary {
+    let mut lib = SubstructLibrary::new(MolHolder::default().into(), fingerprints, None);
+    for s in smiles {
+        lib.add_mol(&mol_from_smiles(s).unwrap()).unwrap();
+    }
+    lib
+}
+
+const PYRIDONES: [&str; 5] = ["Oc1ccccn1", "O=c1cccc[nH]1", "CCO", "Oc1ccccc1", "CC(=O)C"];
+
+fn tautomer_query(smiles: &str) -> TautomerQuery {
+    TautomerQuery::new(&mol_from_smiles(smiles).unwrap()).unwrap()
+}
+
+fn extended_query(smiles: &str) -> ExtendedQueryMol {
+    create_extended_query_mol(&mol_from_smiles(smiles).unwrap()).unwrap()
+}
+
+#[test]
+fn tautomer_and_extended_queries() {
+    let lib = tautomer_library(Some(TautomerPatternHolder::default().into()), &PYRIDONES);
+    let pyridone = tautomer_query("O=c1cccc[nH]1");
+    assert_eq!(lib.get_matches_tautomer_query(&pyridone).unwrap(), [0, 1]);
+    assert_eq!(lib.count_matches_tautomer_query(&pyridone).unwrap(), 2);
+    assert!(lib.has_match_tautomer_query(&pyridone).unwrap());
+    assert_eq!(
+        lib.get_matches_tautomer_query_range(&pyridone, 1, 3)
+            .unwrap(),
+        [1]
+    );
+    let one = GetMatchesParams {
+        max_results: 1,
+        ..Default::default()
+    };
+    assert_eq!(
+        lib.get_matches_tautomer_query_with_params(&pyridone, &one)
+            .unwrap(),
+        [0]
+    );
+    let acetone = tautomer_query("CC(=O)C");
+    assert_eq!(lib.get_matches_tautomer_query(&acetone).unwrap(), [4]);
+    assert_eq!(lib.count_matches_tautomer_query(&acetone).unwrap(), 1);
+
+    let extended = extended_query("O=c1cccc[nH]1");
+    assert_eq!(
+        lib.get_matches_extended_query_mol(&extended).unwrap(),
+        [0, 1]
+    );
+    assert_eq!(lib.count_matches_extended_query_mol(&extended).unwrap(), 2);
+    assert!(
+        !lib.has_match_extended_query_mol_range(&extended, 2, 3)
+            .unwrap()
+    );
+    let ethanol = create_extended_query_mol_with_params(
+        &mol_from_smiles("CCO").unwrap(),
+        &CreateExtendedQueryMolParams {
+            do_tautomers: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(lib.get_matches_extended_query_mol(&ethanol).unwrap(), [2]);
+    let benzene = create_extended_query_mol(&mol_from_smarts("c1ccccc1").unwrap()).unwrap();
+    assert_eq!(lib.get_matches_extended_query_mol(&benzene).unwrap(), [3]);
+
+    // Without tautomer fingerprints RDKit searches every molecule.
+    for fingerprints in [None, Some(PatternHolder::default().into())] {
+        let lib = tautomer_library(fingerprints, &PYRIDONES);
+        assert_eq!(lib.get_matches_tautomer_query(&pyridone).unwrap(), [0, 1]);
+        assert_eq!(
+            lib.get_matches_extended_query_mol(&extended).unwrap(),
+            [0, 1]
+        );
+    }
+
+    // A recursive query in a template whose query modifies no atoms or
+    // bonds is never read past.
+    for (smarts, matches) in [("[$(O=c)]=c1cccc[nH]1", [1]), ("[$([OH])]c1ccccn1", [0])] {
+        let query = TautomerQuery::new(&mol_from_smarts(smarts).unwrap()).unwrap();
+        assert!(query.get_modified_atoms().is_empty());
+        assert_eq!(lib.get_matches_tautomer_query(&query).unwrap(), matches);
+        assert_eq!(lib.count_matches_tautomer_query(&query).unwrap(), 1);
+    }
+
+    let handles: Vec<_> = (0..4)
+        .map(|_| {
+            std::thread::spawn(|| {
+                let lib =
+                    tautomer_library(Some(TautomerPatternHolder::default().into()), &PYRIDONES);
+                let query = tautomer_query("O=c1cccc[nH]1");
+                let extended = extended_query("O=c1cccc[nH]1");
+                (0..10)
+                    .map(|_| {
+                        (
+                            lib.get_matches_tautomer_query(&query).unwrap(),
+                            lib.count_matches_extended_query_mol(&extended).unwrap(),
+                        )
+                    })
+                    .collect::<Vec<_>>()
+            })
+        })
+        .collect();
+    for handle in handles {
+        for (matches, count) in handle.join().unwrap() {
+            assert_eq!(matches, [0, 1]);
+            assert_eq!(count, 2);
+        }
+    }
+}
+
+// The template with its first atom replaced by the SMARTS.
+fn with_first_atom(smarts: &str) -> Mol {
+    let mut mol = RWMol::from(mol_from_smarts(smarts).unwrap());
+    mol.insert_mol(&mol_from_smiles("CCC(=O)C").unwrap());
+    mol.add_bond_with_order(0, 1, BondType::Single).unwrap();
+    mol.update_property_cache_with_strict(false).unwrap();
+    mol.into()
+}
+
+#[test]
+fn recursive_tautomer_templates() {
+    let lib = tautomer_library(
+        Some(TautomerPatternHolder::default().into()),
+        &[
+            "CCCC(=O)C",
+            "CCCC(O)=C",
+            "OCCC(=O)C",
+            "CCC=C(O)C",
+            "CC(C)CC(=O)C",
+        ],
+    );
+    let plain = with_first_atom("[CH3]");
+    let query = TautomerQuery::new(&plain).unwrap();
+    assert_eq!(
+        lib.get_matches_tautomer_query(&query).unwrap(),
+        [0, 1, 3, 4]
+    );
+    let extended = create_extended_query_mol(&plain).unwrap();
+    assert_eq!(
+        lib.get_matches_extended_query_mol(&extended).unwrap(),
+        [0, 1, 3, 4]
+    );
+
+    // RDKit's tautomer check reads the recursive SMARTS's one-atom matches
+    // at the modified atoms 2, 4, and 5: Python's GetMatches reads atom
+    // 2532319792 of six for the query, and finds nothing for the extended
+    // query.
+    let recursive = with_first_atom("[$([CH3])]");
+    let query = TautomerQuery::new(&recursive).unwrap();
+    assert_eq!(query.get_modified_atoms(), [2, 4, 5]);
+    assert!(matches!(
+        lib.get_matches_tautomer_query(&query),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        lib.count_matches_tautomer_query_range(&query, 0, 2),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        lib.has_match_tautomer_query(&query),
+        Err(Error::Value { .. })
+    ));
+    let extended = create_extended_query_mol(&recursive).unwrap();
+    assert!(matches!(
+        lib.get_matches_extended_query_mol(&extended),
+        Err(Error::Value { .. })
+    ));
+    // Without tautomers the extended query is a plain one.
+    let extended = create_extended_query_mol_with_params(
+        &recursive,
+        &CreateExtendedQueryMolParams {
+            do_tautomers: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        lib.get_matches_extended_query_mol(&extended).unwrap(),
+        [0, 4]
+    );
 }
 
 // Searches match under control_c_mutex; libraries searched on several

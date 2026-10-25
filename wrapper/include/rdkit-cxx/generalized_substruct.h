@@ -23,6 +23,11 @@ namespace rdkit_cxx {
 
 using ExtendedQueryMol = RDKit::GeneralizedSubstruct::ExtendedQueryMol;
 
+// For the wrappers that enumerate molecules with MolEnumerator: throws
+// ValueErrorException for link nodes the enumerator would read past an
+// empty vector on (generalized_substruct.cpp says why).
+void check_link_nodes(const RDKit::ROMol &mol);
+
 // Shared structs, defined by other bridges.
 struct AdjustQueryParametersData;
 struct IndexList;

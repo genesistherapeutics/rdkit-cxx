@@ -22,6 +22,7 @@
 #include "rdkit-cxx/ffi/substruct_library.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/substruct.h"
+#include "rdkit-cxx/tautomer_checks.h"
 
 namespace rdkit_cxx {
 
@@ -442,6 +443,32 @@ std::vector<unsigned int> find(const SubstructLibrary &view,
   return bundle_matches(view, query, range, p, max_results);
 }
 
+std::vector<unsigned int> find(const SubstructLibrary &view,
+                               const TautomerQuery &query, Range range,
+                               const RDKit::SubstructMatchParameters &p,
+                               int max_results) {
+  check_rdkit_tautomer_match(query);
+  return view.getMatches(query, range.start, range.end, p, kOneThread,
+                         max_results);
+}
+
+std::vector<unsigned int> find(const SubstructLibrary &view,
+                               const ExtendedQueryMol &query, Range range,
+                               const RDKit::SubstructMatchParameters &p,
+                               int max_results) {
+  using XQ = ExtendedQueryMol;
+  if (const auto *tautomers = std::get_if<XQ::TautomerQuery_T>(&query.xqmol)) {
+    check_rdkit_tautomer_match(**tautomers);
+  }
+  if (const auto *bundle = std::get_if<XQ::TautomerBundle_T>(&query.xqmol)) {
+    for (const auto &tautomers : **bundle) {
+      check_rdkit_tautomer_match(*tautomers);
+    }
+  }
+  return view.getMatches(query, range.start, range.end, p, kOneThread,
+                         max_results);
+}
+
 template <class Query>
 std::vector<unsigned int> search(const SubstructLibrary &view,
                                  const Query &query, bool ranged,
@@ -524,6 +551,50 @@ bool substruct_library_has_match(const SubstructLibrary &view,
 
 bool substruct_library_has_match_mol_bundle(
     const SubstructLibrary &view, const MolBundle &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params) {
+  return has_match(view, query, ranged, start_idx, end_idx, params);
+}
+
+rust::Vec<std::uint32_t> substruct_library_get_matches_tautomer_query(
+    const SubstructLibrary &view, const TautomerQuery &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params, std::int32_t max_results) {
+  return get_matches(view, query, ranged, start_idx, end_idx, params,
+                     max_results);
+}
+
+std::uint32_t substruct_library_count_matches_tautomer_query(
+    const SubstructLibrary &view, const TautomerQuery &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params) {
+  return count_matches(view, query, ranged, start_idx, end_idx, params);
+}
+
+bool substruct_library_has_match_tautomer_query(
+    const SubstructLibrary &view, const TautomerQuery &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params) {
+  return has_match(view, query, ranged, start_idx, end_idx, params);
+}
+
+rust::Vec<std::uint32_t> substruct_library_get_matches_extended_query_mol(
+    const SubstructLibrary &view, const ExtendedQueryMol &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params, std::int32_t max_results) {
+  return get_matches(view, query, ranged, start_idx, end_idx, params,
+                     max_results);
+}
+
+std::uint32_t substruct_library_count_matches_extended_query_mol(
+    const SubstructLibrary &view, const ExtendedQueryMol &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params) {
+  return count_matches(view, query, ranged, start_idx, end_idx, params);
+}
+
+bool substruct_library_has_match_extended_query_mol(
+    const SubstructLibrary &view, const ExtendedQueryMol &query, bool ranged,
     std::uint32_t start_idx, std::uint32_t end_idx,
     const SubstructMatchParametersData &params) {
   return has_match(view, query, ranged, start_idx, end_idx, params);

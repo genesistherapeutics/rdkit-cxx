@@ -156,11 +156,15 @@ pub struct RGroupDecompositionParameters {
     /// atoms. Mirrors
     /// `RGroupDecompositionParameters.allowMultipleCoresInSameMol`.
     pub allow_multiple_cores_in_same_mol: bool,
-    /// Matches the cores' tautomers. Mirrors
+    /// Matches the cores' tautomers. RDKit's tautomer matcher reads the
+    /// matches of a recursive SMARTS (`$(...)`) as the core's, past their
+    /// end, so a core with one is `Error::Value`. Mirrors
     /// `RGroupDecompositionParameters.doTautomers`.
     pub do_tautomers: bool,
     /// Enumerates the cores' link nodes, position variation, and repeat
-    /// units. Mirrors `RGroupDecompositionParameters.doEnumeration`.
+    /// units. Link nodes RDKit's enumerator would read past an empty list
+    /// on (as `rd_generalized_substruct` checks them) are `Error::Value`.
+    /// Mirrors `RGroupDecompositionParameters.doEnumeration`.
     pub do_enumeration: bool,
     /// Includes the molecule, with the matched atoms and bonds as
     /// properties. Mirrors

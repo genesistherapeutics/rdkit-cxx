@@ -33,8 +33,10 @@
 #include <GraphMol/SubstructLibrary/SubstructLibrary.h>
 
 #include "rdkit-cxx/data_structs.h"
+#include "rdkit-cxx/generalized_substruct.h"
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/mol_bundle.h"
+#include "rdkit-cxx/tautomer_query.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -123,9 +125,11 @@ void substruct_library_view_set_search_order(
 std::uint32_t substruct_library_add_mol(SubstructLibrary &view,
                                         const RWMol &mol);
 
-// The searches, for a molecule or a bundle. With ranged false, the whole
-// library (start_idx and end_idx are ignored). RDKit always runs them on
-// one thread (above).
+// The searches, for a molecule, a bundle, a tautomer query, or an extended
+// query molecule. With ranged false, the whole library (start_idx and
+// end_idx are ignored). RDKit always runs them on one thread (above), and
+// matches tautomer queries with its own TautomerQuery::substructOf, so
+// their templates are checked (tautomer_checks.h).
 rust::Vec<std::uint32_t> substruct_library_get_matches(
     const SubstructLibrary &view, const RWMol &query, bool ranged,
     std::uint32_t start_idx, std::uint32_t end_idx,
@@ -148,6 +152,31 @@ bool substruct_library_has_match(const SubstructLibrary &view,
                                  const SubstructMatchParametersData &params);
 bool substruct_library_has_match_mol_bundle(
     const SubstructLibrary &view, const MolBundle &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params);
+
+rust::Vec<std::uint32_t> substruct_library_get_matches_tautomer_query(
+    const SubstructLibrary &view, const TautomerQuery &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params, std::int32_t max_results);
+std::uint32_t substruct_library_count_matches_tautomer_query(
+    const SubstructLibrary &view, const TautomerQuery &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params);
+bool substruct_library_has_match_tautomer_query(
+    const SubstructLibrary &view, const TautomerQuery &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params);
+rust::Vec<std::uint32_t> substruct_library_get_matches_extended_query_mol(
+    const SubstructLibrary &view, const ExtendedQueryMol &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params, std::int32_t max_results);
+std::uint32_t substruct_library_count_matches_extended_query_mol(
+    const SubstructLibrary &view, const ExtendedQueryMol &query, bool ranged,
+    std::uint32_t start_idx, std::uint32_t end_idx,
+    const SubstructMatchParametersData &params);
+bool substruct_library_has_match_extended_query_mol(
+    const SubstructLibrary &view, const ExtendedQueryMol &query, bool ranged,
     std::uint32_t start_idx, std::uint32_t end_idx,
     const SubstructMatchParametersData &params);
 

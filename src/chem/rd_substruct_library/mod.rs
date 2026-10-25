@@ -21,6 +21,11 @@
 //! by member, as RDKit's single thread finds them, where its threads sort
 //! them and can cut earlier members' matches short.
 //!
+//! RDKit's tautomer matcher reads the matches of a recursive query in a
+//! tautomer query's template as the template's own, past their end, so a
+//! search for a `TautomerQuery`, or an `ExtendedQueryMol` of tautomers,
+//! whose template has a recursive SMARTS (`$(...)`) is `Error::Value`.
+//!
 //! ```no_run
 //! use rdkit_cxx::chem::rd_substruct_library::{
 //!     CachedSmilesMolHolder, PatternHolder, SubstructLibrary,
@@ -53,6 +58,8 @@ pub use holders::{
     MolHolderType, PatternHolder, TautomerPatternHolder,
 };
 
+use crate::chem::rd_generalized_substruct::ExtendedQueryMol;
+use crate::chem::rd_tautomer_query::TautomerQuery;
 use crate::chem::rdchem::{Mol, MolBundle, SubstructMatchParameters};
 use crate::error::expect_ok;
 use crate::ffi::substruct_library::ffi;
@@ -135,93 +142,216 @@ pub struct SubstructLibrary {
     search_order: Vec<u32>,
 }
 
-/// Defines a search's eight forms: a molecule or a bundle, the whole
-/// library or a range, Python's defaults or parameters.
+/// A query, borrowed as C++ for one call.
+#[derive(Clone, Copy)]
+enum RawQuery<'a> {
+    Mol(&'a crate::ffi::mol::ffi::RWMol),
+    Bundle(&'a crate::ffi::mol_bundle::ffi::MolBundle),
+    Tautomer(&'a crate::ffi::tautomer_query::ffi::TautomerQuery),
+    Extended(&'a crate::ffi::generalized_substruct::ffi::ExtendedQueryMol),
+}
+
+/// Whether a search has a range, and the range.
+#[derive(Clone, Copy)]
+struct Range {
+    ranged: bool,
+    start_idx: u32,
+    end_idx: u32,
+}
+
+type Data = crate::ffi::substruct::ffi::SubstructMatchParametersData;
+type Raw<T> = std::result::Result<T, cxx::Exception>;
+
+impl RawQuery<'_> {
+    fn get_matches(
+        self,
+        view: &ffi::SubstructLibrary,
+        r: Range,
+        p: &Data,
+        max: i32,
+    ) -> Raw<Vec<u32>> {
+        let (ranged, start, end) = (r.ranged, r.start_idx, r.end_idx);
+        match self {
+            RawQuery::Mol(q) => {
+                ffi::substruct_library_get_matches(view, q, ranged, start, end, p, max)
+            }
+            RawQuery::Bundle(q) => {
+                ffi::substruct_library_get_matches_mol_bundle(view, q, ranged, start, end, p, max)
+            }
+            RawQuery::Tautomer(q) => ffi::substruct_library_get_matches_tautomer_query(
+                view, q, ranged, start, end, p, max,
+            ),
+            RawQuery::Extended(q) => ffi::substruct_library_get_matches_extended_query_mol(
+                view, q, ranged, start, end, p, max,
+            ),
+        }
+    }
+
+    fn count_matches(self, view: &ffi::SubstructLibrary, r: Range, p: &Data) -> Raw<u32> {
+        let (ranged, start, end) = (r.ranged, r.start_idx, r.end_idx);
+        match self {
+            RawQuery::Mol(q) => {
+                ffi::substruct_library_count_matches(view, q, ranged, start, end, p)
+            }
+            RawQuery::Bundle(q) => {
+                ffi::substruct_library_count_matches_mol_bundle(view, q, ranged, start, end, p)
+            }
+            RawQuery::Tautomer(q) => {
+                ffi::substruct_library_count_matches_tautomer_query(view, q, ranged, start, end, p)
+            }
+            RawQuery::Extended(q) => ffi::substruct_library_count_matches_extended_query_mol(
+                view, q, ranged, start, end, p,
+            ),
+        }
+    }
+
+    fn has_match(self, view: &ffi::SubstructLibrary, r: Range, p: &Data) -> Raw<bool> {
+        let (ranged, start, end) = (r.ranged, r.start_idx, r.end_idx);
+        match self {
+            RawQuery::Mol(q) => ffi::substruct_library_has_match(view, q, ranged, start, end, p),
+            RawQuery::Bundle(q) => {
+                ffi::substruct_library_has_match_mol_bundle(view, q, ranged, start, end, p)
+            }
+            RawQuery::Tautomer(q) => {
+                ffi::substruct_library_has_match_tautomer_query(view, q, ranged, start, end, p)
+            }
+            RawQuery::Extended(q) => {
+                ffi::substruct_library_has_match_extended_query_mol(view, q, ranged, start, end, p)
+            }
+        }
+    }
+}
+
+/// A query a library searches for (Python's overloads by query type, A5).
+trait LibraryQuery {
+    fn with_raw<T>(&self, f: impl FnOnce(RawQuery<'_>) -> T) -> T;
+}
+
+impl LibraryQuery for Mol {
+    fn with_raw<T>(&self, f: impl FnOnce(RawQuery<'_>) -> T) -> T {
+        f(RawQuery::Mol(self.as_ffi()))
+    }
+}
+
+impl LibraryQuery for MolBundle {
+    fn with_raw<T>(&self, f: impl FnOnce(RawQuery<'_>) -> T) -> T {
+        self.with_ffi(|bundle| f(RawQuery::Bundle(bundle)))
+    }
+}
+
+impl LibraryQuery for TautomerQuery {
+    fn with_raw<T>(&self, f: impl FnOnce(RawQuery<'_>) -> T) -> T {
+        f(RawQuery::Tautomer(self.as_ffi()))
+    }
+}
+
+impl LibraryQuery for ExtendedQueryMol {
+    fn with_raw<T>(&self, f: impl FnOnce(RawQuery<'_>) -> T) -> T {
+        f(RawQuery::Extended(self.as_ffi()))
+    }
+}
+
+/// Defines the twelve searches for one query type: `GetMatches`,
+/// `CountMatches`, and `HasMatch`, each over the whole library or a range,
+/// with Python's defaults or parameters.
 macro_rules! searches {
     (
-        $python:literal, $out:ty, $params:ty;
-        $name:ident, $with_params:ident, $range:ident, $range_with_params:ident,
-        $bundle:ident, $bundle_with_params:ident, $bundle_range:ident,
-        $bundle_range_with_params:ident;
-        |$view:ident, $query:ident, $ranged:ident, $start:ident, $end:ident, $p:ident| $mol_call:expr,
-        $bundle_call:expr
+        $type:ty, $what:literal;
+        $gm:ident, $gmp:ident, $gmr:ident, $gmrp:ident;
+        $cm:ident, $cmp:ident, $cmr:ident, $cmrp:ident;
+        $hm:ident, $hmp:ident, $hmr:ident, $hmrp:ident
     ) => {
-        #[doc = concat!("Mirrors `SubstructLibrary.", $python, "(query)`.")]
-        pub fn $name(&self, query: &Mol) -> Result<$out> {
-            self.$with_params(query, &<$params>::default())
+        #[doc = concat!("The molecules that match ", $what, ", at most 1000. Mirrors `SubstructLibrary.GetMatches(query)`.")]
+        pub fn $gm(&self, query: &$type) -> Result<Vec<u32>> {
+            self.$gmp(query, &GetMatchesParams::default())
         }
 
-        #[doc = concat!("Mirrors `SubstructLibrary.", $python, "(query, parameters, ...)` and its keyword form.")]
-        pub fn $with_params(&self, query: &Mol, params: &$params) -> Result<$out> {
-            self.search(None, |$view, $ranged, $start, $end| {
-                let ($query, $p) = (query.as_ffi(), params);
-                $mol_call
+        #[doc = concat!("Mirrors `SubstructLibrary.GetMatches(query, parameters, numThreads, maxResults)`, for ", $what, ", and its keyword form.")]
+        pub fn $gmp(&self, query: &$type, params: &GetMatchesParams) -> Result<Vec<u32>> {
+            self.search(None, query, |view, range, raw| {
+                raw.get_matches(view, range, &params.parameters.to_ffi(), params.max_results)
             })
         }
 
         #[doc = concat!(
-            "Searches the molecules (positions in the search order, if it is set) from `start_idx` up to `end_idx`, ",
-            "which is clipped to the library. A `start_idx` past the end is `Error::Index`, and an `end_idx` ",
-            "at or before it `Error::Runtime`. Mirrors `SubstructLibrary.", $python, "(query, startIdx, endIdx)`."
+            "The molecules that match ", $what, " from `start_idx` up to `end_idx` (positions in the search ",
+            "order, if it is set), which is clipped to the library. A `start_idx` past the end is `Error::Index`, ",
+            "and an `end_idx` at or before it `Error::Runtime`. Mirrors `SubstructLibrary.GetMatches(query, startIdx, endIdx)`."
         )]
-        pub fn $range(&self, query: &Mol, start_idx: u32, end_idx: u32) -> Result<$out> {
-            self.$range_with_params(query, start_idx, end_idx, &<$params>::default())
+        pub fn $gmr(&self, query: &$type, start_idx: u32, end_idx: u32) -> Result<Vec<u32>> {
+            self.$gmrp(query, start_idx, end_idx, &GetMatchesParams::default())
         }
 
-        #[doc = concat!("Mirrors `SubstructLibrary.", $python, "(query, startIdx, endIdx, parameters, ...)` and its keyword form.")]
-        pub fn $range_with_params(
+        #[doc = concat!("Mirrors `SubstructLibrary.GetMatches(query, startIdx, endIdx, parameters, numThreads, maxResults)`, for ", $what, ", and its keyword form.")]
+        pub fn $gmrp(
             &self,
-            query: &Mol,
+            query: &$type,
             start_idx: u32,
             end_idx: u32,
-            params: &$params,
-        ) -> Result<$out> {
-            self.search(Some((start_idx, end_idx)), |$view, $ranged, $start, $end| {
-                let ($query, $p) = (query.as_ffi(), params);
-                $mol_call
+            params: &GetMatchesParams,
+        ) -> Result<Vec<u32>> {
+            self.search(Some((start_idx, end_idx)), query, |view, range, raw| {
+                raw.get_matches(view, range, &params.parameters.to_ffi(), params.max_results)
             })
         }
 
-        #[doc = concat!(
-            "The molecules any of the bundle's members match. A bundle of more than one member needs ",
-            "(members - 1) times the molecules searched below 2^31, or RDKit's count overflows `int` ",
-            "(`Error::Value`). Mirrors `SubstructLibrary.", $python, "(query: MolBundle)`."
-        )]
-        pub fn $bundle(&self, query: &MolBundle) -> Result<$out> {
-            self.$bundle_with_params(query, &<$params>::default())
+        #[doc = concat!("The number of molecules that match ", $what, ". Mirrors `SubstructLibrary.CountMatches(query)`.")]
+        pub fn $cm(&self, query: &$type) -> Result<u32> {
+            self.$cmp(query, &CountMatchesParams::default())
         }
 
-        #[doc = concat!("Mirrors `SubstructLibrary.", $python, "(query: MolBundle, parameters, ...)` and its keyword form.")]
-        pub fn $bundle_with_params(&self, query: &MolBundle, params: &$params) -> Result<$out> {
-            query.with_ffi(|$query| {
-                self.search(None, |$view, $ranged, $start, $end| {
-                    let $p = params;
-                    $bundle_call
-                })
+        #[doc = concat!("Mirrors `SubstructLibrary.CountMatches(query, parameters, numThreads)`, for ", $what, ", and its keyword form.")]
+        pub fn $cmp(&self, query: &$type, params: &CountMatchesParams) -> Result<u32> {
+            self.search(None, query, |view, range, raw| {
+                raw.count_matches(view, range, &params.parameters.to_ffi())
             })
         }
 
-        #[doc = concat!("Mirrors `SubstructLibrary.", $python, "(query: MolBundle, startIdx, endIdx)`.")]
-        pub fn $bundle_range(&self, query: &MolBundle, start_idx: u32, end_idx: u32) -> Result<$out> {
-            self.$bundle_range_with_params(query, start_idx, end_idx, &<$params>::default())
+        #[doc = concat!("As `", stringify!($gmr), "`, counted. Mirrors `SubstructLibrary.CountMatches(query, startIdx, endIdx)`.")]
+        pub fn $cmr(&self, query: &$type, start_idx: u32, end_idx: u32) -> Result<u32> {
+            self.$cmrp(query, start_idx, end_idx, &CountMatchesParams::default())
         }
 
-        #[doc = concat!(
-            "Mirrors `SubstructLibrary.", $python,
-            "(query: MolBundle, startIdx, endIdx, parameters, ...)` and its keyword form."
-        )]
-        pub fn $bundle_range_with_params(
+        #[doc = concat!("Mirrors `SubstructLibrary.CountMatches(query, startIdx, endIdx, parameters, numThreads)`, for ", $what, ", and its keyword form.")]
+        pub fn $cmrp(
             &self,
-            query: &MolBundle,
+            query: &$type,
             start_idx: u32,
             end_idx: u32,
-            params: &$params,
-        ) -> Result<$out> {
-            query.with_ffi(|$query| {
-                self.search(Some((start_idx, end_idx)), |$view, $ranged, $start, $end| {
-                    let $p = params;
-                    $bundle_call
-                })
+            params: &CountMatchesParams,
+        ) -> Result<u32> {
+            self.search(Some((start_idx, end_idx)), query, |view, range, raw| {
+                raw.count_matches(view, range, &params.parameters.to_ffi())
+            })
+        }
+
+        #[doc = concat!("Whether any molecule matches ", $what, ". Mirrors `SubstructLibrary.HasMatch(query)`.")]
+        pub fn $hm(&self, query: &$type) -> Result<bool> {
+            self.$hmp(query, &HasMatchParams::default())
+        }
+
+        #[doc = concat!("Mirrors `SubstructLibrary.HasMatch(query, parameters, numThreads)`, for ", $what, ", and its keyword form.")]
+        pub fn $hmp(&self, query: &$type, params: &HasMatchParams) -> Result<bool> {
+            self.search(None, query, |view, range, raw| {
+                raw.has_match(view, range, &params.parameters.to_ffi())
+            })
+        }
+
+        #[doc = concat!("As `", stringify!($gmr), "`, for any match. Mirrors `SubstructLibrary.HasMatch(query, startIdx, endIdx)`.")]
+        pub fn $hmr(&self, query: &$type, start_idx: u32, end_idx: u32) -> Result<bool> {
+            self.$hmrp(query, start_idx, end_idx, &HasMatchParams::default())
+        }
+
+        #[doc = concat!("Mirrors `SubstructLibrary.HasMatch(query, startIdx, endIdx, parameters, numThreads)`, for ", $what, ", and its keyword form.")]
+        pub fn $hmrp(
+            &self,
+            query: &$type,
+            start_idx: u32,
+            end_idx: u32,
+            params: &HasMatchParams,
+        ) -> Result<bool> {
+            self.search(Some((start_idx, end_idx)), query, |view, range, raw| {
+                raw.has_match(view, range, &params.parameters.to_ffi())
             })
         }
     };
@@ -294,14 +424,22 @@ impl SubstructLibrary {
         Ok(view)
     }
 
+    // Runs one search of the query on a view of the library, over the
+    // range if there is one.
     fn search<T>(
         &self,
         range: Option<(u32, u32)>,
-        f: impl FnOnce(&ffi::SubstructLibrary, bool, u32, u32) -> std::result::Result<T, cxx::Exception>,
+        query: &impl LibraryQuery,
+        f: impl FnOnce(&ffi::SubstructLibrary, Range, RawQuery<'_>) -> Raw<T>,
     ) -> Result<T> {
         let view = self.view(true)?;
         let (start_idx, end_idx) = range.unwrap_or((0, 0));
-        Ok(f(&view, range.is_some(), start_idx, end_idx)?)
+        let range = Range {
+            ranged: range.is_some(),
+            start_idx,
+            end_idx,
+        };
+        Ok(query.with_raw(|raw| f(&view, range, raw))?)
     }
 
     /// The molecule holder. Mirrors `SubstructLibrary.GetMolHolder`.
@@ -352,43 +490,42 @@ impl SubstructLibrary {
     }
 
     searches!(
-        "GetMatches", Vec<u32>, GetMatchesParams;
-        get_matches, get_matches_with_params, get_matches_range, get_matches_range_with_params,
+        Mol, "the query";
+        get_matches, get_matches_with_params, get_matches_range, get_matches_range_with_params;
+        count_matches, count_matches_with_params, count_matches_range,
+        count_matches_range_with_params;
+        has_match, has_match_with_params, has_match_range, has_match_range_with_params
+    );
+
+    searches!(
+        MolBundle, "any of the bundle's members (member by member, each skipping the molecules earlier members matched)";
         get_matches_mol_bundle, get_matches_mol_bundle_with_params, get_matches_mol_bundle_range,
         get_matches_mol_bundle_range_with_params;
-        |view, query, ranged, start, end, p| ffi::substruct_library_get_matches(
-            view, query, ranged, start, end, &p.parameters.to_ffi(), p.max_results,
-        ),
-        ffi::substruct_library_get_matches_mol_bundle(
-            view, query, ranged, start, end, &p.parameters.to_ffi(), p.max_results,
-        )
-    );
-
-    searches!(
-        "CountMatches", u32, CountMatchesParams;
-        count_matches, count_matches_with_params, count_matches_range,
-        count_matches_range_with_params, count_matches_mol_bundle,
-        count_matches_mol_bundle_with_params, count_matches_mol_bundle_range,
-        count_matches_mol_bundle_range_with_params;
-        |view, query, ranged, start, end, p| ffi::substruct_library_count_matches(
-            view, query, ranged, start, end, &p.parameters.to_ffi(),
-        ),
-        ffi::substruct_library_count_matches_mol_bundle(
-            view, query, ranged, start, end, &p.parameters.to_ffi(),
-        )
-    );
-
-    searches!(
-        "HasMatch", bool, HasMatchParams;
-        has_match, has_match_with_params, has_match_range, has_match_range_with_params,
+        count_matches_mol_bundle, count_matches_mol_bundle_with_params,
+        count_matches_mol_bundle_range, count_matches_mol_bundle_range_with_params;
         has_match_mol_bundle, has_match_mol_bundle_with_params, has_match_mol_bundle_range,
-        has_match_mol_bundle_range_with_params;
-        |view, query, ranged, start, end, p| ffi::substruct_library_has_match(
-            view, query, ranged, start, end, &p.parameters.to_ffi(),
-        ),
-        ffi::substruct_library_has_match_mol_bundle(
-            view, query, ranged, start, end, &p.parameters.to_ffi(),
-        )
+        has_match_mol_bundle_range_with_params
+    );
+
+    searches!(
+        TautomerQuery, "any of the tautomer query's tautomers (a template with a recursive query is `Error::Value`; see the module docs)";
+        get_matches_tautomer_query, get_matches_tautomer_query_with_params,
+        get_matches_tautomer_query_range, get_matches_tautomer_query_range_with_params;
+        count_matches_tautomer_query, count_matches_tautomer_query_with_params,
+        count_matches_tautomer_query_range, count_matches_tautomer_query_range_with_params;
+        has_match_tautomer_query, has_match_tautomer_query_with_params,
+        has_match_tautomer_query_range, has_match_tautomer_query_range_with_params
+    );
+
+    searches!(
+        ExtendedQueryMol, "the extended query (one whose tautomer templates have a recursive query is `Error::Value`; see the module docs)";
+        get_matches_extended_query_mol, get_matches_extended_query_mol_with_params,
+        get_matches_extended_query_mol_range, get_matches_extended_query_mol_range_with_params;
+        count_matches_extended_query_mol, count_matches_extended_query_mol_with_params,
+        count_matches_extended_query_mol_range,
+        count_matches_extended_query_mol_range_with_params;
+        has_match_extended_query_mol, has_match_extended_query_mol_with_params,
+        has_match_extended_query_mol_range, has_match_extended_query_mol_range_with_params
     );
 
     /// A copy of the molecule at `idx`, as `MolHolderBase::get_mol`.

@@ -21,8 +21,10 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/rgroup.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
+#include "rdkit-cxx/generalized_substruct.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/substruct.h"
+#include "rdkit-cxx/tautomer_checks.h"
 
 // RDKit exports relabelMappedDummies but does not install RGroupUtils.h,
 // which declares it; this is RDKit 2026.09's declaration (CMake checks the
@@ -118,7 +120,14 @@ void check_label(std::int64_t label) {
 // MCS alignment runs findMCS on the cores with RDKit's default bond
 // comparison, MCSBondCompareOrder, which indexes a table by both bonds'
 // types up to ZERO; a molecule pickle can carry any type up to 127, which
-// would be read past the table.
+// would be read past the table. doEnumeration enumerates the cores with
+// MolEnumerator, whose link nodes check_link_nodes checks (Python segfaults
+// on a link node over a double bond). doTautomers matches with RDKit's
+// TautomerQuery::substructOf, which reads a recursive query's matches past
+// their end (tautomer_checks.h; Python fails a precondition on a bond
+// between atoms it read there); RDKit makes its tautomer query of the core
+// less its terminal R groups, whose modified atoms are not known here, so
+// any recursive query is refused.
 void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
                  const RDKit::RGroupDecompositionParameters &p) {
   bool mcs = !p.onlyMatchAtRGroups && (p.alignment & RDKit::MCS);
@@ -148,6 +157,12 @@ void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
           check_label(mdl);
         }
       }
+    }
+    if (p.doEnumeration) {
+      check_link_nodes(*core);
+    }
+    if (p.doTautomers) {
+      check_tautomer_template(*core);
     }
     if (mcs) {
       for (const auto *bond : core->bonds()) {
