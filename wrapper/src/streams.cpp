@@ -9,6 +9,7 @@
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <random>
 #include <sstream>
 #include <utility>
 
@@ -23,6 +24,57 @@ constexpr std::size_t kChunk = std::size_t{1} << 16;
 constexpr char kV30[] = "M  V30 ";
 constexpr char kStereoGroup[] = "MDLV30/STE";
 constexpr std::size_t kStereoGroupPrefix = sizeof(kStereoGroup) - 1;
+
+std::uint64_t rotl(std::uint64_t x, int b) {
+  return (x << b) | (x >> (64 - b));
+}
+
+// SipHash-2-4 (Aumasson and Bernstein, 2012): input cannot be made to collide
+// without the key.
+std::uint64_t siphash(const std::uint64_t key[2], const char *data,
+                      std::size_t n) {
+  std::uint64_t v0 = 0x736f6d6570736575ULL ^ key[0];
+  std::uint64_t v1 = 0x646f72616e646f6dULL ^ key[1];
+  std::uint64_t v2 = 0x6c7967656e657261ULL ^ key[0];
+  std::uint64_t v3 = 0x7465646279746573ULL ^ key[1];
+  auto round = [&] {
+    v0 += v1;
+    v1 = rotl(v1, 13) ^ v0;
+    v0 = rotl(v0, 32);
+    v2 += v3;
+    v3 = rotl(v3, 16) ^ v2;
+    v0 += v3;
+    v3 = rotl(v3, 21) ^ v0;
+    v2 += v1;
+    v1 = rotl(v1, 17) ^ v2;
+    v2 = rotl(v2, 32);
+  };
+  const auto *p = reinterpret_cast<const unsigned char *>(data);
+  const std::size_t whole = n - n % 8;
+  for (std::size_t i = 0; i < whole; i += 8) {
+    std::uint64_t m = 0;
+    for (int j = 7; j >= 0; --j) {
+      m = (m << 8) | p[i + j];
+    }
+    v3 ^= m;
+    round();
+    round();
+    v0 ^= m;
+  }
+  std::uint64_t last = static_cast<std::uint64_t>(n) << 56;
+  for (std::size_t j = 0; j < n % 8; ++j) {
+    last |= static_cast<std::uint64_t>(p[whole + j]) << (8 * j);
+  }
+  v3 ^= last;
+  round();
+  round();
+  v0 ^= last;
+  v2 ^= 0xff;
+  for (int i = 0; i < 4; ++i) {
+    round();
+  }
+  return v0 ^ v1 ^ v2 ^ v3;
+}
 
 }  // namespace
 
@@ -120,6 +172,10 @@ void check_input_text(std::string_view text) {
 
 CheckedStreambuf::CheckedStreambuf(std::unique_ptr<std::streambuf> source)
     : d_source(std::move(source)), d_buffer(new char[kChunk]) {
+  std::random_device random;
+  for (auto &k : d_key) {
+    k = (std::uint64_t{random()} << 32) ^ random();
+  }
   setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
 }
 
@@ -130,82 +186,157 @@ std::string CheckedStreambuf::error() const {
   return d_error;
 }
 
+// Bytes from `at` on may not be delivered, because of `why`.
 void CheckedStreambuf::refuse(const std::string &why, std::uint64_t at) {
-  {
-    std::lock_guard<std::mutex> lock(d_error_mutex);
-    if (d_error.empty()) {
-      d_error = why;
-    }
+  if (at >= d_limit) {
+    return;
   }
-  d_limit = std::min(d_limit, at);
-  d_failed.store(true, std::memory_order_release);
+  d_limit = at;
+  std::lock_guard<std::mutex> lock(d_error_mutex);
+  d_error = why;
 }
 
-// Scans the bytes from d_scanned up to `offset`, which a seek skipped, and
-// leaves the source at `offset`.
-bool CheckedStreambuf::scan_to(std::uint64_t offset) {
+// RDKit asked for a byte it may not have. The stream stays failed.
+CheckedStreambuf::int_type CheckedStreambuf::hit() {
+  d_failed.store(true, std::memory_order_release);
+  setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
+  return traits_type::eof();
+}
+
+void CheckedStreambuf::changed() {
+  refuse("the input changed while RDKit read it", 0);
+  d_failed.store(true, std::memory_order_release);
+  setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
+}
+
+// Reads chunk `chunk` into the buffer, up to the chunk's end or the source's.
+// Bytes of it scanned before must read as they did; the rest are scanned now.
+// False if the source changed.
+bool CheckedStreambuf::fill(std::uint64_t chunk) {
   using off = std::streambuf::off_type;
-  if (d_source->pubseekpos(static_cast<off>(d_scanned), std::ios_base::in) ==
-      pos_type(off(-1))) {
+  const std::uint64_t base = chunk * kChunk;
+  if (d_loaded != chunk) {
+    d_loaded = chunk;
+    d_have = 0;
+  }
+  if (d_have == kChunk) {
+    return true;
+  }
+  const std::size_t had = d_have;
+  const std::uint64_t from = base + had;
+  if (d_source_pos != from) {
+    if (d_source->pubseekpos(static_cast<off>(from), std::ios_base::in) ==
+        pos_type(off(-1))) {
+      d_source_pos = UINT64_MAX;
+      return true;  // nothing more to read
+    }
+    d_source_pos = from;
+  }
+  auto n = d_source->sgetn(d_buffer.get() + had,
+                           static_cast<std::streamsize>(kChunk - had));
+  if (n > 0) {
+    d_source_pos += static_cast<std::uint64_t>(n);
+    d_have += static_cast<std::size_t>(n);
+  }
+  if (d_have < kChunk && base + d_have < d_least_end) {
+    return false;  // it ends sooner than it did
+  }
+  d_least_end = std::max(d_least_end, base + d_have);
+  std::size_t known = 0;
+  std::uint64_t expected = 0;
+  if (chunk < d_hashes.size()) {
+    known = kChunk;
+    expected = d_hashes[chunk];
+  } else if (chunk == d_hashes.size() && d_scanned > base) {
+    known = static_cast<std::size_t>(d_scanned - base);
+    expected = d_tail_hash;
+  }
+  if (d_have < known) {
+    return false;  // shorter than it was
+  }
+  if (had < known && siphash(d_key, d_buffer.get(), known) != expected) {
     return false;
   }
-  while (d_scanned < offset) {
-    auto want = static_cast<std::streamsize>(
-        std::min<std::uint64_t>(kChunk, offset - d_scanned));
-    auto n = d_source->sgetn(d_buffer.get(), want);
-    if (n <= 0) {
-      break;  // the offset is past the end
-    }
-    auto ok = d_scanner.feed(d_buffer.get(), static_cast<std::size_t>(n));
+  if (d_scanned >= base && d_scanned < base + d_have && d_scanned < d_limit) {
+    auto seen = static_cast<std::size_t>(d_scanned - base);
+    std::size_t fresh = d_have - seen;
+    auto ok = d_scanner.feed(d_buffer.get() + seen, fresh);
     d_scanned += ok;
-    if (ok < static_cast<std::size_t>(n)) {
+    if (ok < fresh) {
       refuse(d_scanner.error(), d_scanned);
-      return false;
+    }
+    if (d_scanned == base + kChunk) {
+      d_hashes.push_back(siphash(d_key, d_buffer.get(), kChunk));
+    } else {
+      d_tail_hash = siphash(d_key, d_buffer.get(),
+                            static_cast<std::size_t>(d_scanned - base));
     }
   }
-  return d_source->pubseekpos(static_cast<off>(offset), std::ios_base::in) !=
-         pos_type(off(-1));
+  return true;
 }
 
 CheckedStreambuf::int_type CheckedStreambuf::underflow() {
   if (gptr() < egptr()) {
     return traits_type::to_int_type(*gptr());
   }
-  std::uint64_t start =
+  if (failed()) {
+    return traits_type::eof();
+  }
+  const std::uint64_t pos =
       d_offset + static_cast<std::uint64_t>(egptr() - eback());
-  d_offset = start;
+  d_offset = pos;
   setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
-  if (start >= d_limit || (start > d_scanned && !scan_to(start))) {
-    return traits_type::eof();
-  }
-  auto n = d_source->sgetn(d_buffer.get(), kChunk);
-  if (n <= 0) {
-    return traits_type::eof();
-  }
-  auto deliver = static_cast<std::uint64_t>(n);
-  if (start + deliver > d_scanned) {
-    // Bytes not scanned before: scan them in order.
-    auto seen = d_scanned - start;
-    auto fresh = static_cast<std::size_t>(deliver - seen);
-    auto ok = d_scanner.feed(d_buffer.get() + seen, fresh);
-    d_scanned += ok;
-    if (ok < fresh) {
-      refuse(d_scanner.error(), d_scanned);
+  const std::uint64_t chunk = pos / kChunk;
+  // First scan the chunks before it that a seek skipped.
+  for (std::uint64_t c = d_scanned / kChunk; c < chunk && d_scanned < d_limit;
+       ++c) {
+    if (!fill(c)) {
+      changed();
+      return traits_type::eof();
+    }
+    if (d_have < kChunk) {
+      return traits_type::eof();  // the source ends before pos
     }
   }
-  deliver = std::min(deliver, d_limit - start);
-  setg(d_buffer.get(), d_buffer.get(), d_buffer.get() + deliver);
-  if (deliver == 0) {
+  if (pos >= d_limit) {
+    return hit();
+  }
+  if (!fill(chunk)) {
+    changed();
     return traits_type::eof();
   }
+  const std::uint64_t base = chunk * kChunk;
+  const std::uint64_t end = std::min(base + d_have, d_limit);
+  if (pos >= end) {
+    return pos >= d_limit ? hit() : traits_type::eof();
+  }
+  d_offset = base;
+  setg(d_buffer.get(), d_buffer.get() + (pos - base),
+       d_buffer.get() + (end - base));
   return traits_type::to_int_type(*gptr());
 }
 
+// The source moved to `pos`. A position in the chunk in the buffer is
+// delivered from it.
 CheckedStreambuf::pos_type CheckedStreambuf::moved(pos_type pos) {
-  if (pos != pos_type(off_type(-1))) {
-    d_offset = static_cast<std::uint64_t>(off_type(pos));
-    setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
+  if (pos == pos_type(off_type(-1))) {
+    d_source_pos = UINT64_MAX;
+    return pos;
   }
+  const auto to = static_cast<std::uint64_t>(off_type(pos));
+  d_source_pos = to;
+  if (d_loaded != UINT64_MAX && !failed()) {
+    const std::uint64_t base = d_loaded * kChunk;
+    const std::uint64_t end = std::min(base + d_have, d_limit);
+    if (to >= base && to < end) {
+      d_offset = base;
+      setg(d_buffer.get(), d_buffer.get() + (to - base),
+           d_buffer.get() + (end - base));
+      return pos;
+    }
+  }
+  d_offset = to;
+  setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
   return pos;
 }
 
@@ -220,6 +351,20 @@ CheckedStreambuf::pos_type CheckedStreambuf::seekoff(
       return pos_type(here);
     }
     return seekpos(pos_type(here + off), which);
+  }
+  if (dir == std::ios_base::end) {
+    // RDKit reads up to the end it finds, so the source may not have shrunk.
+    auto end = d_source->pubseekoff(0, std::ios_base::end, std::ios_base::in);
+    if (end != pos_type(off_type(-1))) {
+      if (static_cast<std::uint64_t>(off_type(end)) < d_least_end) {
+        changed();
+        return moved(pos_type(off_type(-1)));
+      }
+      d_least_end = static_cast<std::uint64_t>(off_type(end));
+      if (off == 0) {
+        return moved(end);
+      }
+    }
   }
   return moved(d_source->pubseekoff(off, dir, std::ios_base::in));
 }

@@ -48,4 +48,5 @@ pub(crate) mod sln_parse;
 pub(crate) mod stereo;
 pub(crate) mod substance_group;
 pub(crate) mod substruct;
+pub(crate) mod suppliers;
 pub(crate) mod transforms;

@@ -234,8 +234,14 @@ rule changes the rule first.
   per character (about 300 bytes of stack each), so such lines are refused
   past 4000 characters. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
-  RDKit returns. Python file objects are bound as `Read` and `Write` values,
-  read and written through the same streams.
+  RDKit asks for that byte, from that call and every later one: RDKit's
+  readers trust the positions they record, and a cut-off read can record
+  `tellg`'s −1. RDKit's random-access suppliers reread their files, so a
+  checked stream also keeps a keyed hash of each 64 KiB chunk it scanned and
+  fails when a chunk rereads differently or the file ends sooner than it did,
+  so RDKit parses only the bytes that were checked. Python file objects are
+  bound as `Read` and `Write` values, read and written through the same
+  streams.
 
 ## Properties
 
@@ -316,7 +322,9 @@ rule changes the rule first.
   `float` → `f64`. `str` → `&str` in, `String` out. File names →
   `impl AsRef<Path>`, or a named `P: AsRef<Path>` in methods and associated
   functions, whose manifest entries set `rust_generics = "<&str>"` so the
-  path test can name them. Tuples of indices → `Vec<u32>`, nested →
+  path test can name them (or a list, one per Rust path, with `""` for a
+  path that is not generic). Python file objects → `R: Read + Send +
+  'static` or `W: Write + Send + 'static` (U9). Tuples of indices → `Vec<u32>`, nested →
   `Vec<Vec<u32>>`. `None`-able results → `Option`. NumPy coordinate arrays →
   `Vec<Point3D>`; other NumPy matrices → rows, `Vec<Vec<f64>>` (or `i32`
   for integer matrices). `dict` → `BTreeMap<String, _>`.

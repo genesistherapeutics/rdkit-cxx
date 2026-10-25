@@ -19,8 +19,9 @@
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
-// breaks either limit, recording why. Callers check failed() after each call
-// into RDKit and throw.
+// breaks either limit, recording why. Bytes are scanned ahead of what RDKit
+// asks for, so the stream fails only once RDKit asks for a refused byte, and
+// stays failed. Callers check failed() after each call into RDKit and throw.
 
 #pragma once
 
@@ -33,6 +34,7 @@
 #include <streambuf>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace rdkit_cxx {
 
@@ -73,9 +75,12 @@ class InputScanner {
 void check_input_text(std::string_view text);
 
 // A streambuf over `source` that delivers only bytes InputScanner accepts.
-// Seeks pass through to the source; bytes past the furthest point read are
-// scanned before they are delivered, and a forward seek past it scans the
-// skipped bytes first.
+// It reads the source in aligned chunks. Bytes past the furthest point read
+// are scanned before they are delivered (a forward seek past it scans the
+// skipped bytes first), and bytes read again after a seek must be the bytes
+// scanned: each scanned chunk keeps a keyed hash, and a chunk that reads
+// differently, or a source that ends before an end it has shown (a file that
+// changed underneath), fails the stream.
 class CheckedStreambuf : public std::streambuf {
  public:
   explicit CheckedStreambuf(std::unique_ptr<std::streambuf> source);
@@ -83,7 +88,8 @@ class CheckedStreambuf : public std::streambuf {
   CheckedStreambuf(const CheckedStreambuf &) = delete;
   CheckedStreambuf &operator=(const CheckedStreambuf &) = delete;
 
-  // Whether the scan refused input; safe to call from another thread.
+  // Whether RDKit asked for refused input; safe to call from another
+  // thread.
   bool failed() const { return d_failed.load(std::memory_order_acquire); }
   std::string error() const;
 
@@ -94,17 +100,32 @@ class CheckedStreambuf : public std::streambuf {
   pos_type seekpos(pos_type pos, std::ios_base::openmode which) override;
 
  private:
-  bool scan_to(std::uint64_t offset);
+  bool fill(std::uint64_t chunk);
   void refuse(const std::string &why, std::uint64_t at);
+  int_type hit();
+  void changed();
   pos_type moved(pos_type pos);
 
   std::unique_ptr<std::streambuf> d_source;
   std::unique_ptr<char[]> d_buffer;
-  // The offset of the buffer's first byte, the bytes scanned so far, and the
-  // first byte that may not be delivered.
+  // Where the source is (UINT64_MAX if unknown), and the chunk in the
+  // buffer, with how many of its bytes are there.
+  std::uint64_t d_source_pos = 0;
+  std::uint64_t d_loaded = UINT64_MAX;
+  std::size_t d_have = 0;
+  // The offset of the get area's first byte, the bytes scanned so far, and
+  // the first byte that may not be delivered.
   std::uint64_t d_offset = 0;
   std::uint64_t d_scanned = 0;
   std::uint64_t d_limit = UINT64_MAX;
+  // The size below which the source may not shrink: the bytes it has shown,
+  // and the end a seek reported.
+  std::uint64_t d_least_end = 0;
+  // The hashes of each fully scanned chunk and of the scanned part of the
+  // next, under a random key.
+  std::vector<std::uint64_t> d_hashes;
+  std::uint64_t d_tail_hash = 0;
+  std::uint64_t d_key[2] = {};
   InputScanner d_scanner;
   std::atomic<bool> d_failed{false};
   mutable std::mutex d_error_mutex;
@@ -116,7 +137,7 @@ class CheckedIStream : public std::istream {
  public:
   explicit CheckedIStream(std::unique_ptr<std::streambuf> source);
   const CheckedStreambuf &checked() const { return d_buf; }
-  // Throws ValueErrorException if the scan refused input.
+  // Throws ValueErrorException if RDKit asked for refused input.
   void check() const;
 
  private:

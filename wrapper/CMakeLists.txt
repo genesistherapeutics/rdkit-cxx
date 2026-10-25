@@ -76,6 +76,7 @@ set(RDKIT_CXX_SOURCES
   src/file_checks.cpp
   src/streams.cpp
   src/png.cpp
+  src/suppliers.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

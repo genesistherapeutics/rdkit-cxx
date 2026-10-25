@@ -19,6 +19,7 @@ const BRIDGES: &[&str] = &[
     "mol",
     "molfiles",
     "png",
+    "suppliers",
     "atom",
     "bond",
     "props",
