@@ -18,6 +18,7 @@
 #include <GraphMol/Depictor/RDDepictor.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDConfig.h>
+#include <coordgen/sketcherMinimizerAtom.h>
 
 #include "rdkit-cxx/mol_checks.h"
 
@@ -42,15 +43,6 @@ int coord_gen_bond_order(const RDKit::Bond *bond) {
   }
 }
 
-// As sketcherMinimizerAtom::isMetal in coordgen 3.0.2.
-bool coord_gen_is_metal(unsigned z) {
-  const std::pair<unsigned, unsigned> ranges[] = {
-      {3, 4}, {11, 13}, {19, 32}, {37, 51}, {55, 84}, {87, 112}};
-  return std::any_of(std::begin(ranges), std::end(ranges), [z](const auto &r) {
-    return r.first <= z && z <= r.second;
-  });
-}
-
 // sketcherMinimizer::canonicalOrdering orders atoms by Morgan scores it sums
 // in int (sketcherMinimizer::morganScores), which overflow for long chains:
 // a chain of 40 carbons. This repeats the sums in 64 bits on the graph
@@ -70,8 +62,8 @@ void check_coord_gen_morgan_scores(const RDKit::ROMol &mol, bool zobs) {
     // double bond to a metal zero-order unless either atom has one bond.
     if (zobs && (order == 1 || order == 2) && begin->getDegree() != 1 &&
         end->getDegree() != 1 &&
-        (coord_gen_is_metal(begin->getAtomicNum()) ||
-         coord_gen_is_metal(end->getAtomicNum()))) {
+        (sketcherMinimizerAtom::isMetal(begin->getAtomicNum()) ||
+         sketcherMinimizerAtom::isMetal(end->getAtomicNum()))) {
       order = 0;
     }
     if (order != 0) {

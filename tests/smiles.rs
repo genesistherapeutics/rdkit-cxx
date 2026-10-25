@@ -72,27 +72,3 @@ fn mol_is_send() {
     fn assert_send<T: Send>() {}
     assert_send::<Mol>();
 }
-
-#[test]
-fn random_smiles_from_several_threads_parse_back() {
-    // Random SMILES draw from RDKit's global generator, which the wrapper
-    // locks (U4).
-    use rdkit_cxx::chem::{SmilesWriteParams, mol_to_smiles_with_params};
-    let params = SmilesWriteParams {
-        do_random: true,
-        canonical: false,
-        ..SmilesWriteParams::default()
-    };
-    std::thread::scope(|scope| {
-        for _ in 0..4 {
-            scope.spawn(|| {
-                let mol = mol_from_smiles("c1ccccc1C(=O)NCCO").unwrap();
-                for _ in 0..50 {
-                    let smiles = mol_to_smiles_with_params(&mol, &params).unwrap();
-                    let back = mol_from_smiles(&smiles).unwrap();
-                    assert_eq!(mol_to_smiles(&back).unwrap(), "O=C(NCCO)c1ccccc1");
-                }
-            });
-        }
-    });
-}

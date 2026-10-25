@@ -28,8 +28,8 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/depictor.rs.h"
+#include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
-#include "rdkit-cxx/random_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -275,7 +275,7 @@ unsigned compute_2d_coords(RWMol &mol, const Compute2DCoordsData &data) {
   auto lock = lock_depiction();
   // Random bond flips (nSample and nFlipsPerSample) draw from RDKit's
   // generator.
-  auto random_lock = lock_random_generator();
+  std::lock_guard<std::mutex> random_lock(random_mutex());
   check_compute_2d_coords_mol(mol, data.force_rdkit);
   MatrixCacheGuard guard(mol);
   BondLengthOverride bond_length(data.bond_length);
@@ -308,7 +308,7 @@ unsigned compute_2d_coords_mimic_distmat(
   }
   check_bond_length(data.bond_length);
   auto lock = lock_depiction();
-  auto random_lock = lock_random_generator();
+  std::lock_guard<std::mutex> random_lock(random_mutex());
   // compute2DCoordsMimicDistMat always uses RDKit's depictor.
   check_rdkit_depictor_mol(mol);
   MatrixCacheGuard guard(mol);
@@ -365,7 +365,7 @@ void generate_depiction_matching_3d_structure(
     RWMol &mol, const RWMol &reference, int conf_id, const RWMol &ref_patt,
     bool has_ref_patt, bool accept_failure, bool force_rdkit) {
   auto lock = lock_depiction();
-  auto random_lock = lock_random_generator();
+  std::lock_guard<std::mutex> random_lock(random_mutex());
   // It mimics the reference's distances with RDKit's depictor, or with
   // acceptFailure falls back to compute2DCoords without forceRDKit.
   check_rdkit_depictor_mol(mol);

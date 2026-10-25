@@ -11,6 +11,8 @@
 #include <string>
 
 #include <Geometry/point.h>
+// Includes coordgen's headers, from third_party/coordgen.
+#include <GraphMol/CoordGen.h>
 #include <GraphMol/ROMol.h>
 #include <RDGeneral/Exceptions.h>
 
@@ -20,65 +22,11 @@
 #include "rdkit-cxx/ffi/coord_gen.rs.h"
 #include "rdkit-cxx/util.h"
 
-// GraphMol/CoordGen.h includes coordgen's own headers, which conda-forge's
-// librdkit-dev does not install, so this file declares the two pieces of it
-// that it uses: CoordGenParams, copied token for token (CMakeLists.txt fails
-// the build if the installed header's differs), and addCoords<ROMol>, which
-// libRDKitDepictor defines and exports (RDDepictor.cpp instantiates it). The
-// copy names coordgen's precision constants, which sketcherMinimizer.h
-// defines like these, so both definitions of CoordGenParams are the same
-// (the constants are const, internal, and never odr-used).
-static const float SKETCHER_STANDARD_PRECISION = 1.f;
-static const float SKETCHER_QUICK_PRECISION = 0.2f;
-static const float SKETCHER_BEST_PRECISION = 3.f;
-
-namespace RDKit {
-namespace CoordGen {
-
-// clang-format off
-// BEGIN CoordGen.h
-struct CoordGenParams {
-  const float sketcherCoarsePrecision = 0.01f;
-  const float sketcherStandardPrecision = SKETCHER_STANDARD_PRECISION;
-  const float sketcherBestPrecision = SKETCHER_BEST_PRECISION;
-  const float sketcherQuickPrecision = SKETCHER_QUICK_PRECISION;
-  RDGeom::INT_POINT2D_MAP
-      coordMap;  // coordinates for fixing particular atoms of a template
-  const ROMol *templateMol = nullptr;  // a molecule to use as a template
-  double coordgenScaling = 50.0;       // at the time this was written, coordgen
-  // returned coordinates with a single bond
-  // length of 50.
-  std::string templateFileDir = "";
-  float minimizerPrecision =
-      sketcherCoarsePrecision;     // controls sketch precision
-  bool dbg_useConstrained = true;  // debugging
-  bool dbg_useFixed = false;       // debugging
-  bool treatNonterminalBondsToMetalAsZeroOrder =
-      false;  // set non-terminal bonds to metal atoms to be zero-order bonds
-};
-// END CoordGen.h
-// clang-format on
-
-template <typename T>
-unsigned int addCoords(T &mol, const CoordGenParams *params = nullptr);
-
-}  // namespace CoordGen
-}  // namespace RDKit
-
 namespace rdkit_cxx {
 
 namespace {
 
 using RDKit::CoordGen::CoordGenParams;
-
-// The parameters add_coords_default uses. RDKit's are a header static,
-// CoordGen::defaultParams, one copy per translation unit, so this file keeps
-// its own, as rdCoordGen's wrapper does. Read and written under
-// lock_depiction().
-CoordGenParams &default_params() {
-  static CoordGenParams params;
-  return params;
-}
 
 // A template coordinate as CoordGen receives it, times coordgenScaling.
 void check_template_coordinate(double v, double scaling) {
@@ -163,16 +111,19 @@ void add_coords(RWMol &mol, const CoordGenParamsData &data,
   add_coords_with(mol, params);
 }
 
+// CoordGen::defaultParams is a header static, one copy per translation unit;
+// this one is the wrapper's, as rdCoordGen's is its own. Read and written
+// under lock_depiction().
 void add_coords_default(RWMol &mol) {
   auto lock = lock_depiction();
-  add_coords_with(mol, default_params());
+  add_coords_with(mol, RDKit::CoordGen::defaultParams);
 }
 
 // As SetDefaultTemplateFileDir in External/CoordGen/nbWrap/rdCoordGen.cpp.
 void set_default_template_file_dir(rust::Slice<const std::uint8_t> dir) {
   auto path = to_path(dir);
   auto lock = lock_depiction();
-  default_params().templateFileDir = path;
+  RDKit::CoordGen::defaultParams.templateFileDir = path;
 }
 
 }  // namespace rdkit_cxx
