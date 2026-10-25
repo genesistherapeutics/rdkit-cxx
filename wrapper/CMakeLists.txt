@@ -70,6 +70,7 @@ set(RDKIT_CXX_SOURCES
   src/transforms.cpp
   src/rdqueries.cpp
   src/chem_reactions.cpp
+  src/enumerate.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

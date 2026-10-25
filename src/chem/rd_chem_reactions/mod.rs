@@ -21,6 +21,7 @@
 //! Python's `ChemicalReactionException` and `ChemicalReactionParserException`
 //! are `Error::Value` and `Error::Parse` (CONVENTIONS.md E4).
 
+mod enumerate;
 mod fingerprints;
 mod io;
 mod reaction;
@@ -33,6 +34,7 @@ use crate::chem::Mol;
 use crate::chem::rdmolops::with_borrowed_mols_shared;
 use crate::ffi::chem_reactions::ffi;
 
+pub use enumerate::*;
 pub use fingerprints::*;
 pub use io::*;
 pub use reaction::{

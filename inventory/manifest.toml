@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -17,6 +17,18 @@ rust = ["rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels", "rdkit_cxx::chem::
 python = "rdkit.Chem.rdCIPLabeler.MaxIterationsExceeded"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Runtime"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.CartesianProductStrategy"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.CartesianProductStrategy.__copy__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy::clone"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.CartesianProductStrategy.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ChemicalReaction"
@@ -240,6 +252,154 @@ python = "rdkit.Chem.rdChemReactions.CreateStructuralFingerprintForReaction"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::create_structural_fingerprint_for_reaction", "rdkit_cxx::chem::rd_chem_reactions::create_structural_fingerprint_for_reaction_with_reaction_finger_print_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibrary"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibrary.GetReagents"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::get_reagents"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibrary.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::default", "rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::new", "rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::new_with_params", "rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::new_with_enumerator", "rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::new_with_enumerator_and_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary"]
+name_exception = "EnumerateLibrary is the only library class, so it takes its base's methods"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.GetEnumerator"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::get_enumerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.GetPosition"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::get_position"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.GetReaction"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::get_reaction"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.GetState"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::get_state"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.InitFromString"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::init_from_string"]
+overloads_note = "the str and bytes overloads share init_from_string's &[u8]"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.ResetState"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::reset_state"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.Serialize"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.SetState"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::set_state"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.__bool__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::has_next"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.__iter__"
+reason = "Python's iterator protocol: EnumerateLibrary is an Iterator"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.__next__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.next"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.nextSmiles"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::next_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryCanSerialize"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::enumerate_library_can_serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationParams"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationParams.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationParams.reagentMaxMatchCount"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationParams::reagent_max_match_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationParams.sanePartialProducts"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationParams::sane_partial_products"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.GetNumPermutations"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::get_num_permutations"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.GetPosition"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::get_position"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.Initialize"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::initialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.Skip"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::skip"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.Type"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::type_"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.__bool__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::has_next"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.__copy__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::clone"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.__next__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.next"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::next"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EvenSamplePairsStrategy"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EvenSamplePairsStrategy"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EvenSamplePairsStrategy.Stats"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EvenSamplePairsStrategy::stats"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EvenSamplePairsStrategy.__copy__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EvenSamplePairsStrategy::clone"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EvenSamplePairsStrategy.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::EvenSamplePairsStrategy::default"]
+
+[[entry]]
 python = "rdkit.Chem.rdChemReactions.FingerprintType"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType"]
 
@@ -310,6 +470,30 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::mrv_file_is_reaction"]
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.PreprocessReaction"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::preprocess_reaction", "rdkit_cxx::chem::rd_chem_reactions::preprocess_reaction_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RandomSampleAllBBsStrategy"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::RandomSampleAllBBsStrategy"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RandomSampleAllBBsStrategy.__copy__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::RandomSampleAllBBsStrategy::clone"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RandomSampleAllBBsStrategy.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::RandomSampleAllBBsStrategy::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RandomSampleStrategy"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::RandomSampleStrategy"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RandomSampleStrategy.__copy__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::RandomSampleStrategy::clone"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.RandomSampleStrategy.__init__"
+rust = ["rdkit_cxx::chem::rd_chem_reactions::RandomSampleStrategy::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams"

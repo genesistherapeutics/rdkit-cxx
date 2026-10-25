@@ -118,8 +118,8 @@ rule changes the rule first.
   (validation writes its product templates' properties), so they, `initialize`,
   and `validate` take `&mut self`; a reaction is not initialized behind a
   shared reference. Classes that hold molecules RDKit may write through const
-  (`ChemicalReaction`) are `Send` and not `Sync`, as S1 says of molecules,
-  and their bridges record why in a `SAFETY` comment.
+  (`ChemicalReaction`, `EnumerateLibrary`) are `Send` and not `Sync`, as S1
+  says of molecules, and their bridges record why in a `SAFETY` comment.
 
 ## Unchecked input
 
@@ -138,7 +138,11 @@ rule changes the rule first.
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, and so
   are reaction pickles, which are molecule pickles framed by counts and tags
-  RDKit checks.
+  RDKit checks. Boost.Serialization archives of polymorphic objects
+  (`EnumerateLibrary`'s `Serialize` and `GetState`) are not: Boost trusts
+  their class and object ids, so the functions that read them are
+  `unsafe fn`s whose contract is bytes RDKit wrote, and the wrappers check
+  only what such bytes can still get wrong (a state from another library).
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones

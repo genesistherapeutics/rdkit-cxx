@@ -54,6 +54,7 @@ const BRIDGES: &[&str] = &[
     "mmpa",
     "deprotect",
     "chem_reactions",
+    "enumerate",
 ];
 
 fn main() {
