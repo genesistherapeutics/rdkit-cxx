@@ -237,3 +237,48 @@ fn depiction_refuses_what_the_depictor_would_mishandle() {
     ));
     mol_metadata_to_png_string(&mol, PNG).unwrap();
 }
+
+#[test]
+fn pickles_cannot_give_plain_info_the_pdb_type() {
+    // A pickle recorded in the metadata goes through the monomer-type checks
+    // that molecule pickles do (U10): RDKit casts any info of type PDBRESIDUE
+    // to AtomPDBResidueInfo, reading past the end of a plain one.
+    let mut mol = smiles("C");
+    let params = AtomMonomerInfoParams {
+        name: "MARK".into(),
+        ..Default::default()
+    };
+    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
+        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
+    );
+    let mut pkl = mol.to_binary();
+    // The info's name (a u32 length, then its bytes), then its type as a byte.
+    let at = pkl
+        .windows(9)
+        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .unwrap()
+        + 8;
+    let chunk = |pkl: &[u8]| {
+        let mut data = b"rdkitPKL\0".to_vec();
+        data.extend_from_slice(pkl);
+        with_chunk(PNG, b"tEXt", &data)
+    };
+    let png = chunk(&pkl);
+    let read = mol_from_png_string(&png).unwrap();
+    let info = read
+        .get_atom_with_idx(0)
+        .unwrap()
+        .get_monomer_info()
+        .unwrap();
+    assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
+    pkl[at] = 1;
+    let png = chunk(&pkl);
+    assert!(matches!(
+        mol_from_png_string(&png),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        mols_from_png_string(&png),
+        Err(Error::Value { .. })
+    ));
+}
