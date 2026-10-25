@@ -126,6 +126,12 @@ void check_depiction_conformer(const RDKit::Conformer &conf, const char *what) {
   }
 }
 
+void check_bond_length(double bond_length) {
+  if (bond_length > 0) {
+    check_depiction_coordinate(bond_length, "bondLength");
+  }
+}
+
 const RDKit::Conformer *find_conformer(const RDKit::ROMol &mol, int id) {
   if (mol.getNumConformers() == 0) {
     return nullptr;

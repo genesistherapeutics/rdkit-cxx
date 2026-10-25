@@ -36,37 +36,6 @@ namespace rdkit_cxx {
 
 namespace {
 
-// Python's Compute2DCoords and Compute2DCoordsMimicDistmat set
-// RDDepict::BOND_LEN for one call when bondLength > 0. This restores it even
-// when RDKit throws. Its owner holds lock_depiction().
-class BondLengthOverride {
- public:
-  explicit BondLengthOverride(double bond_length)
-      : d_old(RDDepict::BOND_LEN), d_set(bond_length > 0) {
-    if (d_set) {
-      RDDepict::BOND_LEN = bond_length;
-    }
-  }
-  ~BondLengthOverride() {
-    if (d_set) {
-      RDDepict::BOND_LEN = d_old;
-    }
-  }
-  BondLengthOverride(const BondLengthOverride &) = delete;
-  BondLengthOverride &operator=(const BondLengthOverride &) = delete;
-
- private:
-  double d_old;
-  bool d_set;
-};
-
-// A bond length the depictor scales every coordinate by.
-void check_bond_length(double bond_length) {
-  if (bond_length > 0) {
-    check_depiction_coordinate(bond_length, "bondLength");
-  }
-}
-
 RDDepict::ConstrainedDepictionParams to_params(
     const ConstrainedDepictionParamsData &data) {
   RDDepict::ConstrainedDepictionParams params;

@@ -104,8 +104,8 @@ rust::Vec<IndexList> get_matches(const Target &target, const Query &query,
 
 }  // namespace
 
-SubstructMatchParametersData substruct_match_parameters_default() {
-  RDKit::SubstructMatchParameters p;
+SubstructMatchParametersData substruct_params_to_data(
+    const RDKit::SubstructMatchParameters &p) {
   rust::Vec<rust::String> atom_properties;
   for (const auto &prop : p.atomProperties) {
     atom_properties.push_back(prop);
@@ -114,24 +114,38 @@ SubstructMatchParametersData substruct_match_parameters_default() {
   for (const auto &prop : p.bondProperties) {
     bond_properties.push_back(prop);
   }
-  return SubstructMatchParametersData{p.useChirality,
-                                      p.useEnhancedStereo,
-                                      p.aromaticMatchesConjugated,
-                                      p.aromaticMatchesSingleOrDouble,
-                                      p.useGenericMatchers,
-                                      p.useQueryQueryMatches,
-                                      p.recursionPossible,
-                                      p.uniquify,
-                                      p.maxMatches,
-                                      p.maxRecursiveMatches,
-                                      p.numThreads,
-                                      std::move(atom_properties),
-                                      std::move(bond_properties),
-                                      p.specifiedStereoQueryMatchesUnspecified,
-                                      p.extraAtomCheckOverridesDefaultCheck,
-                                      p.extraBondCheckOverridesDefaultCheck,
-                                      static_cast<bool>(p.extraAtomCheck),
-                                      to_data(RDKit::AtomCoordsMatchFunctor())};
+  // Only an AtomCoordsMatchFunctor has a Rust counterpart; other callables
+  // come from C++ alone.
+  const auto *matcher =
+      p.extraAtomCheck.target<RDKit::AtomCoordsMatchFunctor>();
+  return SubstructMatchParametersData{
+      p.useChirality,
+      p.useEnhancedStereo,
+      p.aromaticMatchesConjugated,
+      p.aromaticMatchesSingleOrDouble,
+      p.useGenericMatchers,
+      p.useQueryQueryMatches,
+      p.recursionPossible,
+      p.uniquify,
+      p.maxMatches,
+      p.maxRecursiveMatches,
+      p.numThreads,
+      std::move(atom_properties),
+      std::move(bond_properties),
+      p.specifiedStereoQueryMatchesUnspecified,
+      p.extraAtomCheckOverridesDefaultCheck,
+      p.extraBondCheckOverridesDefaultCheck,
+      matcher != nullptr,
+      to_data(matcher ? *matcher : RDKit::AtomCoordsMatchFunctor())};
+}
+
+RDKit::SubstructMatchParameters substruct_params_from_data(
+    const SubstructMatchParametersData &data) {
+  return params_from(data);
+}
+
+SubstructMatchParametersData substruct_match_parameters_default() {
+  return substruct_params_to_data(RDKit::SubstructMatchParameters());
 }
 
 AtomCoordsMatcherData atom_coords_matcher_default() {
