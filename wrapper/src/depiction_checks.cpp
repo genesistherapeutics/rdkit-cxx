@@ -194,6 +194,9 @@ void check_rdkit_depictor_mol(const RDKit::ROMol &mol) {
 
 void check_coord_gen_mol(const RDKit::ROMol &mol,
                          bool treat_nonterminal_bonds_to_metal_as_zobs) {
+  // sketcherMinimizerMolecule::totalCharge sums each fragment's charges in
+  // int (U9).
+  check_formal_charge_sum(mol);
   check_coord_gen_morgan_scores(mol, treat_nonterminal_bonds_to_metal_as_zobs);
 }
 

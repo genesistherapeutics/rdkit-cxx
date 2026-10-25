@@ -21,8 +21,9 @@
 //! atom without neighbors, and a trigonal-bipyramidal atom with more than
 //! three equatorial neighbors (RDKit reads past its tables for both).
 //! Through CoordGen, when it is preferred, they refuse molecules whose
-//! Morgan scores overflow CoordGen's `int`, such as a chain of 40 carbons;
-//! `force_rdkit` depicts those with RDKit's depictor.
+//! Morgan scores overflow CoordGen's `int`, such as a chain of 40 carbons,
+//! or whose formal charges do (U9); `force_rdkit` depicts those with
+//! RDKit's depictor.
 
 use std::collections::BTreeMap;
 use std::marker::PhantomData;

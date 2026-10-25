@@ -13,9 +13,11 @@
 //! finite, or above 3.5e8 (CoordGen casts six times it to `int`, and a
 //! negative one makes it read a solution from an empty map); template
 //! coordinates that are not finite or, times `coordgen_scaling`, beyond 5e6
-//! (CoordGen computes in `float` and squares sums of their products); and
+//! (CoordGen computes in `float` and squares sums of their products);
 //! molecules whose Morgan scores overflow the `int` CoordGen sums them in,
-//! such as a chain of 40 carbons.
+//! such as a chain of 40 carbons; and molecules whose formal charges'
+//! magnitudes sum past `i32::MAX`, which CoordGen also sums in `int`
+//! (CONVENTIONS.md U9).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
