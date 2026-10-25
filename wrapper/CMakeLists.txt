@@ -72,6 +72,7 @@ set(RDKIT_CXX_SOURCES
   src/descriptors.cpp
   src/descriptors_3d.cpp
   src/dclv.cpp
+  src/properties.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).

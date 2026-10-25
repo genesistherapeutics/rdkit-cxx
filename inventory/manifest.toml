@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -1065,6 +1065,10 @@ name_exception = "MQNs is one word, and the trailing underscore is dropped: mqns
 overloads_note = "force, which RDKit ignores, is not bound (U8)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.MakePropertyRangeQuery"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::make_property_range_query"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.NumRotatableBondsOptions"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::NumRotatableBondsOptions"]
 
@@ -1089,6 +1093,70 @@ python = "rdkit.Chem.rdMolDescriptors.PEOE_VSA_"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::peoe_vsa", "rdkit_cxx::chem::rd_mol_descriptors::peoe_vsa_with_bins"]
 name_exception = "the trailing underscore is dropped: peoe_vsa"
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.AnnotateProperties"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::annotate_properties"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.ComputeProperties"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::compute_properties", "rdkit_cxx::chem::rd_mol_descriptors::Properties::compute_properties_with_annotate_mol"]
+overloads_note = "annotateMol writes the molecule's properties, so compute_properties_with_annotate_mol takes &mut Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.GetAvailableProperties"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::get_available_properties"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.GetProperty"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::get_property"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.GetPropertyNames"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::get_property_names"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.RegisterProperty"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::register_property"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.Properties.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::default", "rdkit_cxx::chem::rd_mol_descriptors::Properties::new"]
+overloads_note = "Properties() is Default; Properties(propNames) is new (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PropertyRangeQuery"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyRangeQuery"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PropertyRangeQuery.Match"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyRangeQuery::match_"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.GetName"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::get_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.GetVersion"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::get_version"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.__call__"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol) -> f64>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new also takes the closure __call__ runs, which must be Send + Sync because the registry is global, and whose panics are caught at the bridge"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.SMR_VSA_"
