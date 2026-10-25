@@ -13,6 +13,7 @@ pub mod rd_deprotect;
 pub mod rd_fingerprint_generator;
 pub mod rd_mhfp_fingerprint;
 pub mod rd_mmpa;
+pub mod rd_mol_catalog;
 pub mod rd_mol_descriptors;
 pub mod rd_mol_hash;
 pub mod rd_partial_charges;

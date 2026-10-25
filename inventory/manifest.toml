@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -559,6 +559,110 @@ rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::new", "rdkit_cxx::ch
 python = "rdkit.Chem.rdMMPA.FragmentMol"
 rust = ["rdkit_cxx::chem::rd_mmpa::fragment_mol", "rdkit_cxx::chem::rd_mmpa::fragment_mol_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles_with_params"]
 overloads_note = "the (mol, minCuts, maxCuts, maxCutBonds) overload is fragment_mol_min_cuts and the bondsToCut one fragment_mol_bonds (A5); resultsAsMols=False is the _as_smiles forms (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.CreateMolCatalog"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::create_mol_catalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.AddEdge"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::add_edge"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.AddEntry"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::add_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetBitDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_bit_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetBitEntryId"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_bit_entry_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryBitId"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_bit_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryDownIds"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_down_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetFPLength"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_fp_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::from_pickle"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetMol"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetOrder"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.Serialize"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetMol"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetOrder"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::default", "rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::from_pickle"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
