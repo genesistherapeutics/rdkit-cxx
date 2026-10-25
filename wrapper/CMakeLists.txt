@@ -57,6 +57,7 @@ set(RDKIT_CXX_SOURCES
   src/adjust_query.cpp
   src/mol_checks.cpp
   src/depiction_lock.cpp
+  src/random_lock.cpp
   src/partial_charges.cpp
   src/cip_labeler.cpp
   src/mol_hash.cpp

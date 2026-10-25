@@ -145,7 +145,11 @@ rule changes the rule first.
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
   mol-block writers for a molecule without a conformer, and `molzip` with
-  `generateCoordinates`.
+  `generateCoordinates`. RDKit's random number generator
+  (`getRandomGenerator`) is another: wrappers whose call may draw from it
+  (random SMILES, the depictor's random bond flips) hold
+  `lock_random_generator()` (`random_lock.h`), after `lock_depiction()` when
+  they hold both.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

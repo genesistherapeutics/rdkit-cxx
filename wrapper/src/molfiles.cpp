@@ -17,6 +17,7 @@
 
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
+#include "rdkit-cxx/random_lock.h"
 
 namespace rdkit_cxx {
 
@@ -130,6 +131,12 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
 
 std::unique_ptr<std::string> mol_to_smiles(const RWMol &mol,
                                            const SmilesWriteParamsData &data) {
+  // Random SMILES draw from RDKit's global generator (Canon.cpp,
+  // SmilesWrite.cpp). MolToSmarts ignores doRandom.
+  std::unique_lock<std::mutex> lock;
+  if (data.do_random) {
+    lock = lock_random_generator();
+  }
   return std::make_unique<std::string>(
       RDKit::MolToSmiles(mol, write_params(data)));
 }
