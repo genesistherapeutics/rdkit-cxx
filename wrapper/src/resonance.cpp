@@ -29,8 +29,12 @@ std::unique_ptr<RWMol> to_rwmol(RDKit::ROMol *mol) {
 
 }  // namespace
 
+// Each conjugated group sums the formal charges of the conjugated atoms in
+// int (ConjElectrons in Resonance.cpp), from the supplier's own copy of the
+// molecule (U9).
 std::unique_ptr<ResonanceMolSupplier> resonance_mol_supplier_new(
     const RWMol &mol, std::uint32_t flags, std::uint32_t max_structs) {
+  check_formal_charge_sum(mol);
   // The supplier copies the molecule, so the const_cast does not write it.
   return std::make_unique<ResonanceMolSupplier>(const_cast<RWMol &>(mol), flags,
                                                 max_structs);

@@ -109,7 +109,9 @@ impl Default for CalcMolFormulaParams {
     }
 }
 
-/// The molecular formula, in Hill order. Mirrors
+/// The molecular formula, in Hill order. RDKit sums the formal charges in
+/// `int` and negates it; a molecule whose charges could overflow it (only
+/// possible with 2^24 or more atoms) is `Error::Value`. Mirrors
 /// `rdMolDescriptors.CalcMolFormula`.
 pub fn calc_mol_formula(mol: &Mol) -> Result<String> {
     calc_mol_formula_with_params(mol, &CalcMolFormulaParams::default())

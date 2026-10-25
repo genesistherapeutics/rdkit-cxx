@@ -9,6 +9,8 @@
 
 #pragma once
 
+#include <cstdint>
+
 #include <GraphMol/ROMol.h>
 
 namespace rdkit_cxx {
@@ -41,6 +43,15 @@ class MatrixCacheGuard {
 // RDKit computes a molecule's n*n matrices in int, which overflows above
 // 46340 atoms. Throws ValueErrorException for a larger molecule (U3).
 void check_matrix_size(const RDKit::ROMol &mol);
+
+// RDKit stores each atom's formal charge in 8 bits but sums charges over
+// atoms in int, which only 2^24 or more atoms can overflow (CONVENTIONS.md
+// U9). Throws ValueErrorException unless the charges' magnitudes, plus
+// headroom, sum to at most INT_MAX: then every sum of the charges over a
+// subset of the atoms, its negation, and its difference with a count of at
+// most headroom fit in int.
+void check_formal_charge_sum(const RDKit::ROMol &mol,
+                             std::int64_t headroom = 0);
 
 // RDKit's descriptors cache their results, and per-atom contributions, in a
 // molecule's computed properties, and read them back unless forced, after

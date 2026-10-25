@@ -127,7 +127,10 @@ fn sanitization_steps() {
 #[test]
 fn queries() {
     let benzoic = smiles("c1ccccc1C(=O)O");
-    assert_eq!(get_formal_charge(&smiles("[NH4+].[O-]C(=O)C.[O-]C")), -1);
+    assert_eq!(
+        get_formal_charge(&smiles("[NH4+].[O-]C(=O)C.[O-]C")).unwrap(),
+        -1
+    );
     assert_eq!(get_shortest_path(&benzoic, 0, 8).unwrap(), [0, 5, 6, 8]);
     assert!(get_shortest_path(&smiles("C.C"), 0, 1).unwrap().is_empty());
     assert_eq!(
