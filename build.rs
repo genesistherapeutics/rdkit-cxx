@@ -73,6 +73,13 @@ const BRIDGES: &[&str] = &[
     "mol_align",
     "chem_reactions",
     "enumerate",
+    "standardize",
+    "standardize_fragment",
+    "standardize_charge",
+    "standardize_normalize",
+    "standardize_validate",
+    "standardize_tautomer",
+    "standardize_pipeline",
 ];
 
 fn main() {
