@@ -80,6 +80,13 @@ const BRIDGES: &[&str] = &[
     "standardize_validate",
     "standardize_tautomer",
     "standardize_pipeline",
+    "mol_catalog",
+    "frag_catalog",
+    "filter_catalog",
+    "tautomer_query",
+    "generalized_substruct",
+    "rascal_mces",
+    "fmcs",
 ];
 
 fn main() {
