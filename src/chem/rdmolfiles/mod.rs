@@ -5,6 +5,13 @@
 
 //! Mirrors `rdkit.Chem.rdmolfiles`.
 
+mod formats;
+mod mol_blocks;
+mod png;
+mod smiles;
+mod suppliers;
+mod writers;
+
 use std::collections::BTreeMap;
 use std::path::Path;
 
@@ -14,11 +21,22 @@ use crate::error::{expect_ok, to_string};
 use crate::ffi::molfiles::ffi;
 use crate::util::path_bytes;
 
+pub use formats::*;
+pub use mol_blocks::*;
+pub use png::*;
+pub use smiles::*;
+pub(crate) use suppliers::RustReader;
+pub use suppliers::*;
+pub(crate) use writers::RustWriter;
+pub use writers::*;
+
 /// Parameters for SMILES parsing. Mirrors `rdmolfiles.SmilesParserParams`,
 /// plus `MolFromSmiles`'s `replacements` keyword (CONVENTIONS.md A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SmilesParserParams {
-    /// The amount of parser debugging output.
+    /// The amount of parser debugging output. It must be 0, or parsing is
+    /// `Error::Value`: RDKit keeps it in a global that every SMILES parse
+    /// reads without a lock.
     pub debug_parse: i32,
     /// Parses the molecule's name after the SMILES.
     pub parse_name: bool,
@@ -51,7 +69,7 @@ impl Default for SmilesParserParams {
 }
 
 impl SmilesParserParams {
-    fn to_ffi(&self) -> ffi::SmilesParserParamsData {
+    pub(crate) fn to_ffi(&self) -> ffi::SmilesParserParamsData {
         ffi::SmilesParserParamsData {
             debug_parse: self.debug_parse,
             parse_name: self.parse_name,
@@ -69,7 +87,9 @@ impl SmilesParserParams {
 /// plus `MolFromSmarts`'s `replacements` keyword (A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SmartsParserParams {
-    /// The amount of parser debugging output.
+    /// The amount of parser debugging output. It must be 0, or parsing is
+    /// `Error::Value`: RDKit keeps it in a global that every SMARTS parse
+    /// reads without a lock.
     pub debug_parse: i32,
     /// Parses the molecule's name after the SMARTS.
     pub parse_name: bool,
@@ -139,7 +159,12 @@ pub struct SmilesWriteParams {
 
 impl Default for SmilesWriteParams {
     fn default() -> SmilesWriteParams {
-        let data = expect_ok(ffi::smiles_write_params_default());
+        SmilesWriteParams::from_ffi(expect_ok(ffi::smiles_write_params_default()))
+    }
+}
+
+impl SmilesWriteParams {
+    pub(crate) fn from_ffi(data: ffi::SmilesWriteParamsData) -> SmilesWriteParams {
         SmilesWriteParams {
             do_isomeric_smiles: data.do_isomeric_smiles,
             do_kekule: data.do_kekule,
@@ -153,9 +178,7 @@ impl Default for SmilesWriteParams {
             ignore_atom_map_numbers: data.ignore_atom_map_numbers,
         }
     }
-}
 
-impl SmilesWriteParams {
     pub(crate) fn to_ffi(&self) -> ffi::SmilesWriteParamsData {
         ffi::SmilesWriteParamsData {
             do_isomeric_smiles: self.do_isomeric_smiles,
@@ -182,7 +205,9 @@ pub struct MolWriterParams {
     pub kekulize: bool,
     /// Writes V3000 even when V2000 would do.
     pub force_v3000: bool,
-    /// Coordinate precision (V3000 only).
+    /// Coordinate precision (V3000 only), at most 1000 digits; more is
+    /// `Error::Value`, since the C++ standard library formats each coordinate
+    /// in a stack buffer as long as its output.
     pub precision: u32,
     /// The conformer to write, or -1 for the default.
     pub conf_id: i32,
@@ -202,7 +227,7 @@ impl Default for MolWriterParams {
 }
 
 impl MolWriterParams {
-    fn to_ffi(&self) -> ffi::MolWriterParamsData {
+    pub(crate) fn to_ffi(&self) -> ffi::MolWriterParamsData {
         ffi::MolWriterParamsData {
             include_stereo: self.include_stereo,
             kekulize: self.kekulize,

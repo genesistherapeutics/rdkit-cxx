@@ -32,6 +32,7 @@ std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
   } else {
     RDKit::MolPickler::molFromPickle(text, mol.get());
   }
+  check_monomer_types(*mol);
   return mol;
 }
 

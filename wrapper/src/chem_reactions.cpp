@@ -37,7 +37,6 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
 #include <boost/algorithm/string.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
 #include "rdkit-cxx/adjust_query.h"
@@ -48,6 +47,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/molfiles.h"
 #include "rdkit-cxx/substruct.h"
@@ -77,16 +77,10 @@ std::unique_ptr<std::string> own(std::string text) {
   return std::make_unique<std::string>(std::move(text));
 }
 
-// The bytes of a file, read by the wrapper so RDKit reads exactly what was
-// checked.
-std::string read_file(rust::Slice<const std::uint8_t> path) {
-  auto name = to_std(path);
-  std::ifstream in(name, std::ios::binary);
-  if (!in) {
-    throw RDKit::BadFileException("Bad input file " + name);
-  }
-  return std::string(std::istreambuf_iterator<char>(in),
-                     std::istreambuf_iterator<char>());
+// The bytes of a file, read once so RDKit parses exactly what was checked
+// (U2).
+std::string read_path(rust::Slice<const std::uint8_t> path) {
+  return read_file(to_std(path));
 }
 
 const MOL_SPTR_VECT &templates(const ChemicalReaction &rxn, std::uint8_t kind) {
@@ -311,41 +305,6 @@ rust::Vec<std::uint8_t> add_metadata(const ChemicalReaction &rxn,
   }
   return to_vec(RDKit::addChemicalReactionToPNGString(
       rxn, png, include_pkl, include_smiles, include_smarts, include_rxn));
-}
-
-// MarvinMolBase::parseAtomsAndBonds (MarvinDefs.cpp) copies a bond's two
-// atom refs out of the split atomRefs2 attribute before it checks that there
-// are two, so a bond with fewer reads past the end of its vector (a segfault
-// in Python for a bond with one atom ref, or none).
-void check_bond_atom_refs(const boost::property_tree::ptree &tree) {
-  for (const auto &[name, child] : tree) {
-    if (name == "bondArray") {
-      for (const auto &[bond_name, bond] : child) {
-        if (bond_name != "bond") {
-          continue;
-        }
-        std::vector<std::string> refs;
-        boost::algorithm::split(
-            refs, bond.get<std::string>("<xmlattr>.atomRefs2", ""),
-            boost::algorithm::is_space());
-        if (refs.size() < 2) {
-          throw RDKit::FileParseException(
-              "atomRefs2 must contain two atom refs that must appear in the "
-              "atoms array in MRV file");
-        }
-      }
-    }
-    check_bond_atom_refs(child);
-  }
-}
-
-// Reads the XML as the Marvin parser does, which throws for malformed XML,
-// and checks its bonds.
-void check_marvin(const std::string &text) {
-  std::istringstream in(text);
-  boost::property_tree::ptree tree;
-  boost::property_tree::read_xml(in, tree);
-  check_bond_atom_refs(tree);
 }
 
 // Python's Compute2DCoordsForReaction sets RDDepict::BOND_LEN for one call;
@@ -835,28 +794,26 @@ std::unique_ptr<ChemicalReaction> reaction_from_smarts(
 
 std::unique_ptr<std::string> reaction_to_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
-  return own(RDKit::ChemicalReactionToRxnSmarts(
-      rxn, smiles_write_params_from_data(params)));
+  return own(RDKit::ChemicalReactionToRxnSmarts(rxn, write_params(params)));
 }
 
 std::unique_ptr<std::string> reaction_to_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
-  return own(RDKit::ChemicalReactionToRxnSmiles(
-      rxn, smiles_write_params_from_data(params)));
+  return own(RDKit::ChemicalReactionToRxnSmiles(rxn, write_params(params)));
 }
 
 std::unique_ptr<std::string> reaction_to_cx_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
-  return own(RDKit::ChemicalReactionToCXRxnSmarts(
-      rxn, smiles_write_params_from_data(params), flags));
+  return own(
+      RDKit::ChemicalReactionToCXRxnSmarts(rxn, write_params(params), flags));
 }
 
 std::unique_ptr<std::string> reaction_to_cx_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
-  return own(RDKit::ChemicalReactionToCXRxnSmiles(
-      rxn, smiles_write_params_from_data(params), flags));
+  return own(
+      RDKit::ChemicalReactionToCXRxnSmiles(rxn, write_params(params), flags));
 }
 
 std::uint32_t cx_smiles_fields_all() {
@@ -899,7 +856,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_block(rust::Str mrv,
                                                           bool sanitize,
                                                           bool remove_hs) {
   std::string text(mrv);
-  check_marvin(text);
+  check_mrv(text);
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
@@ -910,8 +867,8 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_block(rust::Str mrv,
 std::unique_ptr<ChemicalReaction> reaction_from_mrv_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs) {
   // Read here so the parser reads exactly what was checked.
-  auto text = read_file(path);
-  check_marvin(text);
+  auto text = read_path(path);
+  check_mrv(text);
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
@@ -952,7 +909,7 @@ std::unique_ptr<ReactionList> reactions_from_cdxml_block(rust::Str cdxml,
 std::unique_ptr<ReactionList> reactions_from_cdxml_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs) {
   // RDKit returns no reactions for a file it cannot open.
-  auto text = read_file(path);
+  auto text = read_path(path);
   return to_reaction_list(
       RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }
@@ -1001,7 +958,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_png_string(
 
 std::unique_ptr<ChemicalReaction> reaction_from_png_file(
     rust::Slice<const std::uint8_t> path) {
-  return reaction_from_png(read_file(path));
+  return reaction_from_png(read_path(path));
 }
 
 rust::Vec<std::uint8_t> reaction_metadata_to_png_string(
@@ -1017,7 +974,7 @@ rust::Vec<std::uint8_t> reaction_metadata_to_png_file(
     bool include_pkl, bool include_smiles, bool include_smarts,
     bool include_rxn) {
   // RDKit opens the file without checking that it opened.
-  return add_metadata(rxn, read_file(path), include_pkl, include_smiles,
+  return add_metadata(rxn, read_path(path), include_pkl, include_smiles,
                       include_smarts, include_rxn);
 }
 

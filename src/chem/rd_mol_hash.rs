@@ -48,6 +48,10 @@ pub struct MolHashParams {
 
 /// The molecule's hash. Mirrors `rdMolHash.MolHash`, which hashes a copy.
 /// `Error::Runtime` when the molecule's property cache is not up to date.
+/// The formula, mesomer, redox-pair, net-charge, tautomer, and protomer
+/// hashes sum formal charges in `int`, and the tautomer and protomer hashes
+/// hydrogen counts too; a molecule whose sums could overflow it (only
+/// possible with millions of atoms) is `Error::Value`.
 pub fn mol_hash(mol: &Mol, func: HashFunction) -> Result<String> {
     mol_hash_with_params(mol, func, &MolHashParams::default())
 }
