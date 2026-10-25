@@ -109,6 +109,9 @@ set(RDKIT_CXX_SOURCES
   src/generalized_substruct.cpp
   src/rascal_mces.cpp
   src/fmcs.cpp
+  src/scaffold_network.cpp
+  src/substruct_library.cpp
+  src/rgroup.cpp
   src/free_sasa.cpp
   src/mif.cpp
   src/shape_align.cpp
@@ -160,6 +163,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   GeneralizedSubstruct
   RascalMCES
   FMCS
+  ScaffoldNetwork
+  SubstructLibrary
+  RGroupDecomposition
   FreeSASALib
   MolInteractionFields
   PubChemShape
