@@ -84,6 +84,7 @@ const BRIDGES: &[&str] = &[
     "frag_catalog",
     "filter_catalog",
     "chemical_features",
+    "mol_chemical_features",
 ];
 
 fn main() {
