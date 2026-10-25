@@ -150,7 +150,10 @@ rule changes the rule first.
   in RDKit's sources): `MolToSmiles` with `doRandom`, and `compute2DCoords`
   when `nSamples` and `nFlipsPerSample` are both set (the defaults, which
   the mol-block writers and `molzip` use, never draw). A wrapper that needs
-  both locks takes `lock_depiction()` first.
+  both locks takes `lock_depiction()` first. Every wrapper that takes one of
+  these locks is called from `tests/threads.rs`, which CI runs under
+  Valgrind's DRD (the `races` job), failing on any race in RDKit's global
+  state or in RDKit or wrapper code (`tests/check_drd_log.py`).
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
