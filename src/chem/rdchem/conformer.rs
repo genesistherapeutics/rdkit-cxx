@@ -125,14 +125,16 @@ impl Default for Conformer {
 }
 
 /// A copy of a molecule's conformer, for the functions that take any
-/// conformer while borrowing the molecule. Mirrors `Conformer(other)`.
+/// conformer while borrowing the molecule. Mirrors `Conformer(other)`, except
+/// that the copy has no owning molecule: Python's keeps a pointer to the
+/// molecule, which the copy can outlive.
 impl From<ConformerRef<'_>> for Conformer {
     fn from(conf: ConformerRef<'_>) -> Conformer {
         Conformer::from_ffi(expect_ok(ffi::conformer_clone(conf.raw())))
     }
 }
 
-/// Mirrors `Conformer(other)`.
+/// Mirrors `Conformer(other)`; the copy has no owning molecule.
 impl Clone for Conformer {
     fn clone(&self) -> Conformer {
         Conformer::from_ffi(expect_ok(ffi::conformer_clone(self.raw())))

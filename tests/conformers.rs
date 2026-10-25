@@ -25,6 +25,17 @@ fn missing_and_added_conformers() {
     );
     assert!(got.is_3d() && got.has_owning_mol());
     assert!(std::ptr::eq(got.get_owning_mol(), &mol));
+    // A copy has no owner: RDKit's copy constructor would keep this
+    // molecule, which the copy can outlive.
+    let mut copy = Conformer::from(got);
+    assert!(!copy.has_owning_mol() && !copy.clone().has_owning_mol());
+    assert_eq!(copy.get_positions(), got.get_positions());
+    assert!(copy.is_3d() && copy.get_id() == 0);
+    copy.set_id(3);
+    copy.set_int_prop("n", 1);
+    let again = copy.clone();
+    assert_eq!(again.get_id(), 3);
+    assert_eq!(again.get_int_prop("n").unwrap(), 1);
     assert_eq!(got.get_positions().len(), 2);
     assert_eq!(
         got.get_atom_position(5).unwrap_err(),
