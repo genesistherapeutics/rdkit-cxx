@@ -127,8 +127,10 @@ pre-commit install
 Run the Release workflow from the Actions tab, on main. It publishes the
 version in `Cargo.toml` if that version has no tag yet and otherwise bumps the
 patch number first, so moving to a new RDKit series is a pull request that sets
-the version to the series' `.0` (2027.3.0 for RDKit 2027.03). It then pushes
-the release commit and a `v` tag to main and creates a GitHub release.
+the version to the series' `.0` (2027.3.0 for RDKit 2027.03). It pushes the
+release commit to main before publishing, then pushes a `v` tag and creates a
+GitHub release, so a failed publish leaves an untagged version that a rerun
+ships.
 
 The workflow publishes through crates.io trusted publishing for `release.yml`
 and pushes with the `ACTIONS_PUSH` secret, a token whose owner can bypass the

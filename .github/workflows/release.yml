@@ -5,8 +5,8 @@
 
 name: Release
 
-# Publishes the next version (.github/scripts/prepare_release.sh) to crates.io,
-# then pushes its commit and tag to main and creates a GitHub release.
+# Pushes the next version (.github/scripts/prepare_release.sh) to main,
+# publishes it to crates.io, then tags it and creates a GitHub release.
 on:
   workflow_dispatch:
 
@@ -74,28 +74,38 @@ jobs:
         run: |
           test "${PREPARED_VERSION}" = "${VERSION}"
           test "${PREPARED_TREE}" = "${TREE}"
-      # Fails before publishing rather than at the push after it.
-      - name: Main has not moved since the run started
-        run: test "$(git ls-remote origin refs/heads/main | cut -f1)" = "${GITHUB_SHA}"
+      # Pushed before publishing, so a failed publish leaves main at an untagged
+      # version, which a rerun ships as it is. The push fails if main has moved
+      # since the run started.
+      - name: Push the release commit
+        run: git push origin HEAD:main
       - name: Publish to crates.io
         run: |
-          jwt="$(curl -sS --fail-with-body \
-            -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
+          # Prints the body of a failed response, which jq would swallow.
+          request() {
+            local response
+            if ! response="$(curl -sS --fail-with-body -A "${USER_AGENT}" "$@")"; then
+              echo "Request failed: ${response}" >&2
+              return 1
+            fi
+            printf '%s' "${response}"
+          }
+          tokens=https://crates.io/api/v1/trusted_publishing/tokens
+          jwt="$(request -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
             "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=crates.io" | jq -r .value)"
           token="$(jq -n --arg jwt "${jwt}" '{jwt: $jwt}' |
-            curl -sS --fail-with-body -A "${USER_AGENT}" \
-              -H "Content-Type: application/json" --data @- \
-              https://crates.io/api/v1/trusted_publishing/tokens | jq -r .token)"
+            request -H "Content-Type: application/json" --data @- "${tokens}" |
+            jq -r .token)"
           echo "::add-mask::${token}"
-          # Revokes the token when the step ends, before it would expire.
-          trap 'curl -sS --fail-with-body -A "${USER_AGENT}" -X DELETE \
-            -H "Authorization: Bearer ${token}" \
-            https://crates.io/api/v1/trusted_publishing/tokens' EXIT
+          # Revokes the token when the step ends. A failed revoke must not fail
+          # a publish that succeeded, which would skip the tag.
+          trap 'request -X DELETE -H "Authorization: Bearer ${token}" "${tokens}" > /dev/null ||
+            echo "::warning::Could not revoke the crates.io token; it expires on its own."' EXIT
           CARGO_REGISTRY_TOKEN="${token}" cargo publish --no-verify --locked
-      - name: Push the release commit and tag
+      - name: Push the tag
         run: |
           git tag "v${VERSION}"
-          git push origin HEAD:main "v${VERSION}"
+          git push origin "v${VERSION}"
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ secrets.ACTIONS_PUSH }}
