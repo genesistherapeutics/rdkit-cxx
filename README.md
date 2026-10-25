@@ -133,7 +133,9 @@ first release of an RDKit series), and otherwise bumps the patch level with
 [bump-my-version](https://github.com/callowayproject/bump-my-version). It
 tests the release commit, builds the packaged crate, publishes it to crates.io
 through trusted publishing, pushes the version bump and a `v<version>` tag to
-`main`, and creates a GitHub release with generated notes.
+`main`, and creates a GitHub release with generated notes. A release that
+fails partway finishes when its failed jobs are re-run: each step skips what
+an earlier attempt finished, including the upload.
 
 The patch level moves only through the workflow. A new RDKit series sets the
 major and minor levels by hand, in the pull request that updates

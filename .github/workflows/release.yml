@@ -29,6 +29,7 @@ jobs:
         shell: bash -leo pipefail {0}
     outputs:
       version: ${{ steps.bump.outputs.version }}
+      commit: ${{ steps.bump.outputs.commit }}
       patch: ${{ steps.bump.outputs.patch }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -56,6 +57,11 @@ jobs:
           if [ "${status}" -eq 0 ]; then
             git config user.name github-actions
             git config user.email github-actions@github.com
+            # Dated as its parent, so every run from one commit makes the same
+            # bump commit, and a retry recognizes the crate it published.
+            GIT_AUTHOR_DATE="$(git log -1 --format=%cI)"
+            GIT_COMMITTER_DATE="${GIT_AUTHOR_DATE}"
+            export GIT_AUTHOR_DATE GIT_COMMITTER_DATE
             bump-my-version bump patch --commit --no-tag \
               --message 'Bump version: {current_version} → {new_version} [skip actions]'
             version="$(bump-my-version show current_version)"
@@ -70,6 +76,7 @@ jobs:
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "commit=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
       # Builds the crate from the files it packages. Fails while Cargo.toml
       # sets publish = false.
       - run: cargo publish -p rdkit-cxx --locked --dry-run
@@ -88,9 +95,13 @@ jobs:
     defaults:
       run:
         shell: bash
+    # Each step after the bump skips what an earlier attempt finished, so
+    # re-running the failed jobs of a release completes it.
     env:
       VERSION: ${{ needs.build.outputs.version }}
+      COMMIT: ${{ needs.build.outputs.commit }}
       PATCH: ${{ needs.build.outputs.patch }}
+      USER_AGENT: rdkit-cxx-release (https://github.com/skearnes/rdkit-cxx)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -100,18 +111,49 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           if [ -n "${PATCH}" ]; then
-            base64 -d <<< "${PATCH}" | git am
+            base64 -d <<< "${PATCH}" | git am --committer-date-is-author-date
+          fi
+          if [ "$(git rev-parse HEAD)" != "${COMMIT}" ]; then
+            echo "made $(git rev-parse HEAD), but the build job tested ${COMMIT}" >&2
+            exit 1
           fi
       - name: Install Rust
         run: |
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
+      - name: Check crates.io
+        id: crates-io
+        # A crate already there must be this commit's, uploaded by an earlier
+        # attempt; its .cargo_vcs_info.json names the commit it was packaged
+        # from.
+        run: |
+          status="$(curl -sS -o /dev/null -w '%{http_code}' -H "User-Agent: ${USER_AGENT}" \
+            "https://crates.io/api/v1/crates/rdkit-cxx/${VERSION}")"
+          case "${status}" in
+            404)
+              echo "published=false" >> "${GITHUB_OUTPUT}"
+              ;;
+            200)
+              sha1="$(curl -sSfL -H "User-Agent: ${USER_AGENT}" \
+                "https://static.crates.io/crates/rdkit-cxx/rdkit-cxx-${VERSION}.crate" \
+                | tar -xzO "rdkit-cxx-${VERSION}/.cargo_vcs_info.json" | jq -r .git.sha1)"
+              if [ "${sha1}" != "${COMMIT}" ]; then
+                echo "crates.io has rdkit-cxx ${VERSION} from ${sha1}, not ${COMMIT}" >&2
+                exit 1
+              fi
+              echo "published=true" >> "${GITHUB_OUTPUT}"
+              ;;
+            *)
+              echo "crates.io answered ${status} for rdkit-cxx ${VERSION}" >&2
+              exit 1
+              ;;
+          esac
       - name: Publish to crates.io
+        if: steps.crates-io.outputs.published == 'false'
         # Trades the job's OIDC token for a crates.io token, as
         # rust-lang/crates-io-auth-action does, and revokes it on exit.
         env:
           TOKENS_URL: https://crates.io/api/v1/trusted_publishing/tokens
-          USER_AGENT: rdkit-cxx-release (https://github.com/skearnes/rdkit-cxx)
         run: |
           jwt="$(curl -sS --fail-with-body \
             -H "Authorization: bearer ${ACTIONS_ID_TOKEN_REQUEST_TOKEN}" \
@@ -135,8 +177,14 @@ jobs:
         # commit either way, and the bump, which changes only version lines,
         # is rebased onto main when it has.
         run: |
-          git tag -a "v${VERSION}" -m "rdkit-cxx ${VERSION}"
-          git push origin "v${VERSION}"
+          tagged="$(git ls-remote --tags origin "refs/tags/v${VERSION}^{}" | cut -f1)"
+          if [ -z "${tagged}" ]; then
+            git tag -a "v${VERSION}" -m "rdkit-cxx ${VERSION}"
+            git push origin "v${VERSION}"
+          elif [ "${tagged}" != "${COMMIT}" ]; then
+            echo "v${VERSION} already tags ${tagged}, not ${COMMIT}" >&2
+            exit 1
+          fi
           if [ -n "${PATCH}" ] && ! git push origin HEAD:main; then
             git pull --rebase origin main
             git push origin HEAD:main
@@ -144,4 +192,7 @@ jobs:
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "v${VERSION}" --verify-tag --generate-notes
+        run: |
+          if ! gh release view "v${VERSION}" > /dev/null 2>&1; then
+            gh release create "v${VERSION}" --verify-tag --generate-notes
+          fi
