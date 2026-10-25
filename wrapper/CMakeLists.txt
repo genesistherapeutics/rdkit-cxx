@@ -73,6 +73,13 @@ set(RDKIT_CXX_SOURCES
   src/descriptors_3d.cpp
   src/dclv.cpp
   src/properties.cpp
+  src/standardize.cpp
+  src/standardize_fragment.cpp
+  src/standardize_charge.cpp
+  src/standardize_normalize.cpp
+  src/standardize_validate.cpp
+  src/standardize_tautomer.cpp
+  src/standardize_pipeline.cpp
   src/file_checks.cpp
   src/streams.cpp
   src/png.cpp
@@ -94,6 +101,10 @@ set(RDKIT_CXX_SOURCES
   src/mol_align.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
+  src/catalog_checks.cpp
+  src/mol_catalog.cpp
+  src/frag_catalog.cpp
+  src/filter_catalog.cpp
   src/draw.cpp
   src/draw_checks.cpp
 )
@@ -135,6 +146,10 @@ set(RDKIT_CXX_RDKIT_TARGETS
   MolAlign
   O3AAlign
   FilterCatalog
+  MolStandardize
+  Catalogs
+  MolCatalog
+  FragCatalog
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
