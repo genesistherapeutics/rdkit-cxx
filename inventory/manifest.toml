@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -2775,6 +2775,54 @@ name_exception = "an exported enum value maps to its variant, EmbedFF::Uff"
 python = "rdkit.Chem.rdDistGeom.srETKDGv3"
 rust = ["rdkit_cxx::chem::rd_dist_geom::sr_etkdg_v3"]
 name_exception = "the version stays a suffix: sr_etkdg_v3"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetAtomicCharges"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetHamiltonian"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetOrbitalEnergies"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetOverlapMatrix"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetReducedChargeMatrix"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.GetReducedOverlapPopulationMatrix"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.fermiEnergy"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.numElectrons"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.numOrbitals"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.EHTResults.totalEnergy"
+reason = "not bound: only RunMol makes one, and RunMol frees its temporary files' FILEs before reading them (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdEHTTools.RunMol"
+reason = "not bound: RDKit's EHTTools::runMol (External/YAeHMOP/EHTTools.cpp) fcloses its two temporary files and then, destroying their Tempfile holders, reads each closed FILE through fileno and fcloses it again whenever that descriptor number is open: a use after free on every call (valgrind reports the reads in Python), and a double free once another thread reuses the descriptor, which no check of the input can prevent (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput"
