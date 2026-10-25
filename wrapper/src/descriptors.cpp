@@ -6,6 +6,7 @@
 #include "rdkit-cxx/descriptors.h"
 
 #include <cmath>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <utility>
@@ -15,6 +16,9 @@
 #include <GraphMol/Descriptors/BCUT.h>
 #include <GraphMol/Descriptors/MolDescriptors.h>
 #include <GraphMol/Descriptors/OxidationNumbers.h>
+#include <GraphMol/Fingerprints/AtomPairs.h>
+#include <GraphMol/Fingerprints/MACCS.h>
+#include <GraphMol/Fingerprints/MorganFingerprints.h>
 #include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/errors.h"
@@ -294,6 +298,73 @@ rust::Vec<double> bcut_2d_atom_props(const RWMol &mol,
 rust::Vec<double> bcut_2d_atom_propname(const RWMol &mol,
                                         rust::Str atom_propname) {
   return pair_vec(Desc::BCUT2D(mol, std::string(atom_propname)));
+}
+
+// MACCS.cpp makes its patterns on first use and assigns them to a global
+// flyweight without a lock, so two first calls race (U4). The first call is
+// made once here, on an empty molecule, which makes the patterns and returns;
+// later calls only read them.
+std::unique_ptr<BitVect> get_maccs_keys_fingerprint(const RWMol &mol) {
+  static std::once_flag patterns_made;
+  std::call_once(patterns_made, [] {
+    RDKit::ROMol empty;
+    std::unique_ptr<ExplicitBitVect> fp(
+        RDKit::MACCSFingerprints::getFingerprintAsBitVect(empty));
+  });
+  return wrap_bit_vect(std::unique_ptr<ExplicitBitVect>(
+      RDKit::MACCSFingerprints::getFingerprintAsBitVect(mol)));
+}
+
+std::uint32_t get_atom_pair_atom_code(const Atom &atom,
+                                      std::uint32_t branch_subtract,
+                                      bool include_chirality) {
+  return RDKit::AtomPairs::getAtomCode(&atom, branch_subtract,
+                                       include_chirality);
+}
+
+// The codes shift by at most 16 bits, so any 32-bit codes are defined.
+std::uint32_t get_atom_pair_code(std::uint32_t atom1_code,
+                                 std::uint32_t atom2_code,
+                                 std::uint32_t distance,
+                                 bool include_chirality) {
+  return RDKit::AtomPairs::getAtomPairCode(atom1_code, atom2_code, distance,
+                                           include_chirality);
+}
+
+rust::Vec<std::uint32_t> get_connectivity_invariants(
+    const RWMol &mol, bool include_ring_membership) {
+  std::vector<std::uint32_t> invars(mol.getNumAtoms());
+  RDKit::MorganFingerprints::getConnectivityInvariants(mol, invars,
+                                                       include_ring_membership);
+  return to_vec(invars);
+}
+
+rust::Vec<std::uint32_t> get_feature_invariants(const RWMol &mol) {
+  std::vector<std::uint32_t> invars(mol.getNumAtoms());
+  RDKit::MorganFingerprints::getFeatureInvariants(mol, invars);
+  return to_vec(invars);
+}
+
+// As atomPairTypes in Code/GraphMol/Descriptors/nbWrap/rdMolDescriptors.cpp:
+// the whole table, whose last entry is unused.
+AtomPairsConstants atom_pairs_constants() {
+  namespace AP = RDKit::AtomPairs;
+  AtomPairsConstants constants;
+  constants.num_type_bits = AP::numTypeBits;
+  constants.num_pi_bits = AP::numPiBits;
+  constants.num_branch_bits = AP::numBranchBits;
+  constants.num_chiral_bits = AP::numChiralBits;
+  constants.code_size = AP::codeSize;
+  constants.num_path_bits = AP::numPathBits;
+  constants.num_atom_pair_fingerprint_bits = AP::numAtomPairFingerprintBits;
+  for (auto type : AP::atomNumberTypes) {
+    constants.atom_types.push_back(type);
+  }
+  return constants;
+}
+
+std::unique_ptr<std::string> atom_pairs_version() {
+  return std::make_unique<std::string>(RDKit::AtomPairs::atomPairsVersion);
 }
 
 }  // namespace rdkit_cxx

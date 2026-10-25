@@ -14,11 +14,25 @@ pub(crate) mod ffi {
         StrictLinkages = 2,
     }
 
+    /// `AtomPairs.h`'s constants: Python's `AtomPairsParameters`.
+    struct AtomPairsConstants {
+        num_type_bits: u32,
+        num_pi_bits: u32,
+        num_branch_bits: u32,
+        num_chiral_bits: u32,
+        code_size: u32,
+        num_path_bits: u32,
+        num_atom_pair_fingerprint_bits: u32,
+        atom_types: Vec<u32>,
+    }
+
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/descriptors.h");
 
         type RWMol = crate::ffi::mol::ffi::RWMol;
+        type Atom = crate::ffi::atom::ffi::Atom;
+        type BitVect = crate::ffi::data_structs::ffi::BitVect;
         type NumRotatableBondsOptions;
 
         fn calc_crippen_descriptors(mol: &RWMol, include_hs: bool) -> Result<Vec<f64>>;
@@ -87,5 +101,25 @@ pub(crate) mod ffi {
         fn bcut_2d(mol: &RWMol) -> Result<Vec<f64>>;
         fn bcut_2d_atom_props(mol: &RWMol, atom_props: &[f64]) -> Result<Vec<f64>>;
         fn bcut_2d_atom_propname(mol: &RWMol, atom_propname: &str) -> Result<Vec<f64>>;
+
+        fn get_maccs_keys_fingerprint(mol: &RWMol) -> Result<UniquePtr<BitVect>>;
+        fn get_atom_pair_atom_code(
+            atom: &Atom,
+            branch_subtract: u32,
+            include_chirality: bool,
+        ) -> Result<u32>;
+        fn get_atom_pair_code(
+            atom1_code: u32,
+            atom2_code: u32,
+            distance: u32,
+            include_chirality: bool,
+        ) -> Result<u32>;
+        fn get_connectivity_invariants(
+            mol: &RWMol,
+            include_ring_membership: bool,
+        ) -> Result<Vec<u32>>;
+        fn get_feature_invariants(mol: &RWMol) -> Result<Vec<u32>>;
+        fn atom_pairs_constants() -> Result<AtomPairsConstants>;
+        fn atom_pairs_version() -> Result<UniquePtr<CxxString>>;
     }
 }

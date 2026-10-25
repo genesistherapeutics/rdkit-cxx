@@ -561,6 +561,50 @@ rust = ["rdkit_cxx::chem::rd_mmpa::fragment_mol", "rdkit_cxx::chem::rd_mmpa::fra
 overloads_note = "the (mol, minCuts, maxCuts, maxCutBonds) overload is fragment_mol_min_cuts and the bondsToCut one fragment_mol_bonds (A5); resultsAsMols=False is the _as_smiles forms (A4)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.atomTypes"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::atom_types"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.codeSize"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::code_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.numAtomPairFingerprintBits"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::num_atom_pair_fingerprint_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.numBranchBits"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::num_branch_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.numChiralBits"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::num_chiral_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.numPathBits"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::num_path_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.numPiBits"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::num_pi_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.numTypeBits"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::num_type_bits"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.version"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters::version"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.BCUT2D"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::bcut_2d", "rdkit_cxx::chem::rd_mol_descriptors::bcut_2d_atom_props", "rdkit_cxx::chem::rd_mol_descriptors::bcut_2d_atom_propname"]
 name_exception = "digits stay with their letters: bcut_2d"
@@ -791,6 +835,62 @@ overloads_note = "force, which only steers RDKit's descriptor caches, is not bou
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.GetAtomFeatures"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_atom_features", "rdkit_cxx::chem::rd_mol_descriptors::get_atom_features_with_addchiral"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetAtomPairAtomCode"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_atom_pair_atom_code", "rdkit_cxx::chem::rd_mol_descriptors::get_atom_pair_atom_code_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetAtomPairCode"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_atom_pair_code", "rdkit_cxx::chem::rd_mol_descriptors::get_atom_pair_code_with_include_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetAtomPairFingerprint"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_atom_pair_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetConnectivityInvariants"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_connectivity_invariants", "rdkit_cxx::chem::rd_mol_descriptors::get_connectivity_invariants_with_include_ring_membership"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetFeatureInvariants"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_feature_invariants"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetHashedAtomPairFingerprint"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_atom_pair_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetHashedAtomPairFingerprintAsBitVect"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_atom_pair_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetHashedMorganFingerprint"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_morgan_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetHashedTopologicalTorsionFingerprint"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_topological_torsion_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetHashedTopologicalTorsionFingerprintAsBitVect"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_topological_torsion_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetMACCSKeysFingerprint"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_maccs_keys_fingerprint"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetMorganFingerprint"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_morgan_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetMorganFingerprintAsBitVect"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_morgan_generator"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetTopologicalTorsionFingerprint"
+reason = "deprecated in RDKit: use rd_fingerprint_generator::get_topological_torsion_generator"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.MQNs_"

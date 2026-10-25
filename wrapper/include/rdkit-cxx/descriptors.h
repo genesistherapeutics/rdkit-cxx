@@ -17,12 +17,17 @@
 
 #include <GraphMol/Descriptors/Lipinski.h>
 
+#include "rdkit-cxx/atom.h"
+#include "rdkit-cxx/data_structs.h"
 #include "rdkit-cxx/mol.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
 
 using NumRotatableBondsOptions = RDKit::Descriptors::NumRotatableBondsOptions;
+
+// Shared structs, defined by the bridge (src/ffi/descriptors.rs).
+struct AtomPairsConstants;
 
 // Crippen's (logP, MR).
 rust::Vec<double> calc_crippen_descriptors(const RWMol &mol, bool include_hs);
@@ -101,6 +106,23 @@ rust::Vec<double> bcut_2d_atom_props(const RWMol &mol,
                                      rust::Slice<const double> atom_props);
 rust::Vec<double> bcut_2d_atom_propname(const RWMol &mol,
                                         rust::Str atom_propname);
+
+// The fingerprints and atom codes rdMolDescriptors binds that RDKit has not
+// deprecated.
+std::unique_ptr<BitVect> get_maccs_keys_fingerprint(const RWMol &mol);
+std::uint32_t get_atom_pair_atom_code(const Atom &atom,
+                                      std::uint32_t branch_subtract,
+                                      bool include_chirality);
+std::uint32_t get_atom_pair_code(std::uint32_t atom1_code,
+                                 std::uint32_t atom2_code,
+                                 std::uint32_t distance,
+                                 bool include_chirality);
+rust::Vec<std::uint32_t> get_connectivity_invariants(
+    const RWMol &mol, bool include_ring_membership);
+rust::Vec<std::uint32_t> get_feature_invariants(const RWMol &mol);
+// AtomPairs.h's constants, as AtomPairsParameters's properties.
+AtomPairsConstants atom_pairs_constants();
+std::unique_ptr<std::string> atom_pairs_version();
 
 // For the other descriptor wrappers. MolData3Ddescriptors indexes its
 // property tables by atomic number - 1, and they cover 1 to 110: a dummy

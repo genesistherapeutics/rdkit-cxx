@@ -445,3 +445,128 @@ fn bcut() {
         Err(Error::Key { .. })
     ));
 }
+
+#[test]
+fn maccs_keys() {
+    let fp = get_maccs_keys_fingerprint(&apap()).unwrap();
+    assert_eq!(fp.get_num_bits(), 167);
+    assert_eq!(
+        fp.get_on_bits(),
+        vec![
+            92, 110, 113, 117, 127, 131, 133, 135, 139, 143, 151, 152, 154, 156, 157, 158, 159,
+            160, 161, 162, 163, 164, 165
+        ]
+    );
+    assert!(
+        get_maccs_keys_fingerprint(&Mol::default())
+            .unwrap()
+            .get_on_bits()
+            .is_empty()
+    );
+}
+
+#[test]
+fn maccs_keys_in_threads() {
+    // RDKit makes the MACCS patterns on first use, without a lock; the
+    // wrapper makes them once before any call.
+    let threads: Vec<_> = (0..4)
+        .map(|_| {
+            std::thread::spawn(|| {
+                get_maccs_keys_fingerprint(&apap())
+                    .unwrap()
+                    .get_num_on_bits()
+            })
+        })
+        .collect();
+    for thread in threads {
+        assert_eq!(thread.join().unwrap(), 23);
+    }
+}
+
+#[test]
+fn atom_pair_codes() {
+    let mol = apap();
+    let codes: Vec<u32> = mol
+        .get_atoms()
+        .map(|atom| get_atom_pair_atom_code(&atom).unwrap())
+        .collect();
+    assert_eq!(codes, vec![33, 43, 105, 66, 43, 42, 42, 43, 97, 42, 42]);
+    let branch = GetAtomPairAtomCodeParams {
+        branch_subtract: 1,
+        ..Default::default()
+    };
+    let codes: Vec<u32> = mol
+        .get_atoms()
+        .map(|atom| get_atom_pair_atom_code_with_params(&atom, &branch).unwrap())
+        .collect();
+    assert_eq!(codes, vec![32, 42, 104, 65, 42, 41, 41, 42, 96, 41, 41]);
+    let chiral = smiles("C[C@H](N)O");
+    let chirality = GetAtomPairAtomCodeParams {
+        include_chirality: true,
+        ..Default::default()
+    };
+    let codes: Vec<u32> = chiral
+        .get_atoms()
+        .map(|atom| get_atom_pair_atom_code_with_params(&atom, &chirality).unwrap())
+        .collect();
+    assert_eq!(codes, vec![33, 547, 65, 97]);
+    assert!(matches!(
+        get_atom_pair_atom_code(&Atom::from_num(6)),
+        Err(Error::Runtime { .. })
+    ));
+    assert_eq!(GetAtomPairAtomCodeParams::default().branch_subtract, 0);
+
+    assert_eq!(get_atom_pair_code(65, 98, 3).unwrap(), 1607715);
+    assert_eq!(get_atom_pair_code(98, 65, 3).unwrap(), 1607715);
+    assert_eq!(
+        get_atom_pair_code_with_include_chirality(65, 98, 3, true).unwrap(),
+        6424611
+    );
+    assert_eq!(
+        get_atom_pair_code(u32::MAX, u32::MAX, 30).unwrap(),
+        4294967294
+    );
+    assert!(matches!(
+        get_atom_pair_code(1, 2, 31),
+        Err(Error::Runtime { .. })
+    ));
+}
+
+#[test]
+fn morgan_invariants() {
+    let mol = apap();
+    assert_eq!(
+        get_connectivity_invariants(&mol).unwrap(),
+        vec![
+            2246728737, 2246699815, 864942730, 847961216, 3217380708, 3218693969, 3218693969,
+            3217380708, 864662311, 3218693969, 3218693969
+        ]
+    );
+    assert_eq!(
+        get_connectivity_invariants_with_include_ring_membership(&mol, false).unwrap(),
+        vec![
+            2246728737, 2246699815, 864942730, 847961216, 2246699815, 2246703798, 2246703798,
+            2246699815, 864662311, 2246703798, 2246703798
+        ]
+    );
+    assert_eq!(
+        get_feature_invariants(&mol).unwrap(),
+        vec![0, 0, 2, 1, 4, 4, 4, 4, 3, 4, 4]
+    );
+}
+
+#[test]
+fn atom_pairs_parameters() {
+    assert_eq!(AtomPairsParameters::version(), "1.1.0");
+    assert_eq!(AtomPairsParameters::num_type_bits(), 4);
+    assert_eq!(AtomPairsParameters::num_pi_bits(), 2);
+    assert_eq!(AtomPairsParameters::num_branch_bits(), 3);
+    assert_eq!(AtomPairsParameters::num_chiral_bits(), 2);
+    assert_eq!(AtomPairsParameters::code_size(), 9);
+    assert_eq!(AtomPairsParameters::num_path_bits(), 5);
+    assert_eq!(AtomPairsParameters::num_atom_pair_fingerprint_bits(), 23);
+    assert_eq!(
+        AtomPairsParameters::atom_types(),
+        vec![5, 6, 7, 8, 9, 14, 15, 16, 17, 33, 34, 35, 51, 52, 53, 0]
+    );
+}
