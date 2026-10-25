@@ -6,6 +6,7 @@
 #include "rdkit-cxx/molfiles.h"
 
 #include <map>
+#include <mutex>
 
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/FileParsers/FileWriters.h>
@@ -14,6 +15,7 @@
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/FileParseException.h>
 
+#include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 
 namespace rdkit_cxx {
@@ -182,14 +184,30 @@ std::unique_ptr<RWMol> mol_from_mol_file(rust::Slice<const std::uint8_t> path,
   return mol;
 }
 
+namespace {
+
+// The mol-block writers compute 2D coordinates for stereo when the molecule
+// has no conformer (prepareMol in MolFileWriter.cpp).
+std::unique_lock<std::mutex> lock_if_depicting(
+    const RWMol &mol, const MolWriterParamsData &data) {
+  if (data.include_stereo && mol.getNumConformers() == 0) {
+    return lock_depiction();
+  }
+  return {};
+}
+
+}  // namespace
+
 std::unique_ptr<std::string> mol_to_mol_block(const RWMol &mol,
                                               const MolWriterParamsData &data) {
+  auto lock = lock_if_depicting(mol, data);
   return std::make_unique<std::string>(
       RDKit::MolToMolBlock(mol, writer_params(data), data.conf_id));
 }
 
 void mol_to_mol_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                      const MolWriterParamsData &data) {
+  auto lock = lock_if_depicting(mol, data);
   RDKit::MolToMolFile(mol, to_std(path), writer_params(data), data.conf_id);
 }
 

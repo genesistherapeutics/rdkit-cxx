@@ -161,3 +161,20 @@ fn latin1_title_is_a_value_error_not_an_abort() {
     let mol = mol_from_mol_file(common::latin1_mol_file()).unwrap();
     assert!(matches!(mol_to_mol_block(&mol), Err(Error::Value { .. })));
 }
+
+#[test]
+fn mol_blocks_from_threads() {
+    // Writing a molecule without a conformer computes 2D coordinates, whose
+    // settings are globals the wrappers lock (U4).
+    let expected = mol_to_mol_block(&mol_from_smiles("C[C@H](F)Cl").unwrap()).unwrap();
+    std::thread::scope(|scope| {
+        for _ in 0..4 {
+            scope.spawn(|| {
+                for _ in 0..20 {
+                    let mol = mol_from_smiles("C[C@H](F)Cl").unwrap();
+                    assert_eq!(mol_to_mol_block(&mol).unwrap(), expected);
+                }
+            });
+        }
+    });
+}
