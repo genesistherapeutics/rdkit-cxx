@@ -6,7 +6,7 @@
  */
 
 // rdmolfiles's molecule suppliers. Each wrapper owns an RDKit supplier that
-// reads from a checked stream (CONVENTIONS.md U9), and checks the stream after
+// reads from a checked stream (CONVENTIONS.md U10), and checks the stream after
 // every call into RDKit. RDKit's MaeMolSupplier is not bound (see
 // inventory/manifest.toml).
 

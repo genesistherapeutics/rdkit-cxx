@@ -324,10 +324,11 @@ rule changes the rule first.
   functions, whose manifest entries set `rust_generics = "<&str>"` so the
   path test can name them (or a list, one per Rust path, with `""` for a
   path that is not generic). Python file objects → `R: Read + Send +
-  'static` or `W: Write + Send + 'static` (U9). Tuples of indices → `Vec<u32>`, nested →
-  `Vec<Vec<u32>>`. `None`-able results → `Option`. NumPy coordinate arrays →
-  `Vec<Point3D>`; other NumPy matrices → rows, `Vec<Vec<f64>>` (or `i32`
-  for integer matrices). `dict` → `BTreeMap<String, _>`.
+  'static` or `W: Write + Send + 'static` (U10). Tuples of indices →
+  `Vec<u32>`, nested → `Vec<Vec<u32>>`. `None`-able results → `Option`.
+  NumPy coordinate arrays → `Vec<Point3D>`; other NumPy matrices → rows,
+  `Vec<Vec<f64>>` (or `i32` for integer matrices). `dict` →
+  `BTreeMap<String, _>`.
 
 - **T3.** Nested index lists cross the bridge as `Vec<IndexList>`, and plain
   value types (`Point3D`) as cxx shared structs; both live in the `geometry`

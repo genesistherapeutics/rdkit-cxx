@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 //! The rdmolfiles functions that write RDKit's SMILES and SMARTS parser debug
-//! levels (CONVENTIONS.md U8). This binary has one test, so no other thread
+//! levels (CONVENTIONS.md U9). This binary has one test, so no other thread
 //! parses while they run. Expected values come from RDKit's Python wrappers.
 
 use rdkit_cxx::Error;

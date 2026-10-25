@@ -692,7 +692,7 @@ void create_property_list(RWMol &mol, bool bonds, std::uint8_t kind,
   }
 }
 
-// The mol-block readers check their input as U9 describes (streams.h); a file
+// The mol-block readers check their input as U10 describes (streams.h); a file
 // is read through a checked stream, so RDKit reads only checked bytes.
 std::unique_ptr<RWMol> mol_from_mol_block(rust::Str mol_block, bool sanitize,
                                           bool remove_hs, bool strict_parsing) {
