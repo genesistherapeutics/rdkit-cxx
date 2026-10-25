@@ -137,7 +137,10 @@ rule changes the rule first.
   base64, conversion to `ExplicitBitVect`) refuse them instead.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
-  `fragmentOnBRICSBonds` fills on first use). 2D depiction's settings and
+  `fragmentOnBRICSBonds` fills on first use, the descriptor property
+  registry in `Property.cpp`, and `DCLV.cpp`'s `recordCache`). State RDKit
+  makes once, on first use, is made under `std::call_once` before any other
+  call (the MACCS patterns in `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions, the
@@ -166,6 +169,18 @@ rule changes the rule first.
   2^30 (after the mass scaling) with `Error::Value`. Integer property
   queries read values the target sets, so the wrapper builds them from a
   subclass of RDKit's that compares in 64 bits; it pickles as RDKit's own.
+- **U8.** RDKit's descriptors cache their results, and per-atom
+  contributions, in a molecule's computed properties (`Crippen.cpp`,
+  `MolSurf.cpp`, `ConnectivityDescriptors.cpp`, `PMI.cpp`, and the principal
+  axes `PMI.cpp` and `PBF.cpp` read from `MolTransforms.cpp`), and read them
+  back unless forced. The caches survive the edits U6 lists and ignore the
+  conformer, and the Chi descriptors index their cached per-atom vectors by
+  atom without checking the length, so a stale one is read past its end. As
+  with matrices, no molecule Rust holds carries one between calls: a wrapper
+  whose RDKit call reads or writes one holds a `DescriptorCacheGuard`
+  (`rdkit-cxx/mol_checks.h`), which removes them by name before the call and
+  after it. Python's `force` arguments, which only steer these caches, are
+  not bound, and every result is computed afresh.
 
 ## Properties
 

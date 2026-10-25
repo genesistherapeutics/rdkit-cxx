@@ -53,6 +53,10 @@ const BRIDGES: &[&str] = &[
     "conformer_parser",
     "mmpa",
     "deprotect",
+    "descriptors",
+    "descriptors_3d",
+    "dclv",
+    "properties",
 ];
 
 fn main() {
