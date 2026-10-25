@@ -71,7 +71,7 @@ rdkit_enum! {
 /// parse reads, without a lock (`yysmiles_debug` in `SmilesParse.cpp`). No
 /// other thread may parse SMILES during the call, through this crate or inside
 /// RDKit, including the parsing threads of a live
-/// `MultithreadedSmilesMolSupplier` (CONVENTIONS.md U10).
+/// `MultithreadedSmilesMolSupplier` (CONVENTIONS.md U11).
 pub unsafe fn atom_from_smiles(smiles: &str) -> Result<Atom> {
     Ok(Atom::from_ffi(ffi::atom_from_smiles(smiles)?))
 }
@@ -85,7 +85,7 @@ pub unsafe fn atom_from_smiles(smiles: &str) -> Result<Atom> {
 /// RDKit writes the SMARTS parser's debug level, a global that every SMARTS
 /// parse reads, without a lock (`yysmarts_debug` in `SmilesParse.cpp`). No
 /// other thread may parse SMARTS during the call, through this crate or inside
-/// RDKit (U10).
+/// RDKit (U11).
 pub unsafe fn atom_from_smarts(smarts: &str) -> Result<Atom> {
     Ok(Atom::from_ffi(ffi::atom_from_smarts(smarts)?))
 }

@@ -192,7 +192,7 @@ fn malformed_pngs_are_refused() {
 
 #[test]
 fn recorded_text_is_checked() {
-    // A recorded mol block goes through the mol-block checks (U11).
+    // A recorded mol block goes through the mol-block checks (U12).
     let block = mol_to_v3k_mol_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
     let long = block.replace(
         "MDLV30/STERAC1 ATOMS=(1 2)",

@@ -7,7 +7,7 @@
 
 // The streams RDKit's readers read from. Every input the wrappers hand to
 // RDKit's text readers (mol blocks, SD files, SMILES and TDT files) is checked
-// as RDKit reads it (CONVENTIONS.md U11):
+// as RDKit reads it (CONVENTIONS.md U12):
 //
 // - RDKit counts lines in int (ForwardSDMolSupplier::d_line,
 //   TDTMolSupplier::d_line, SmilesMolSupplier::d_line, and

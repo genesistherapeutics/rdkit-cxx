@@ -5,7 +5,7 @@
 
 //! Molecule suppliers: SD, SMILES, and TDT files, one record at a time.
 //!
-//! A supplier reads its input through a checked stream (CONVENTIONS.md U11):
+//! A supplier reads its input through a checked stream (CONVENTIONS.md U12):
 //! input past RDKit's limits, or a file that changes while it is read, is
 //! `Error::Value` from the call that reaches it and from every call after. A
 //! record RDKit cannot read is an `Err` where Python yields `None`; RDKit logs
