@@ -12,6 +12,7 @@ pub(crate) mod bond;
 pub(crate) mod chem_reactions;
 pub(crate) mod chirality;
 pub(crate) mod cip_labeler;
+pub(crate) mod cluster;
 pub(crate) mod conformer;
 pub(crate) mod conformer_parser;
 pub(crate) mod coord_gen;

@@ -91,6 +91,7 @@ const BRIDGES: &[&str] = &[
     "substruct_library",
     "rgroup",
     "metric_matrix_calc",
+    "cluster",
 ];
 
 fn main() {

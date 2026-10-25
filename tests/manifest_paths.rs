@@ -4084,6 +4084,8 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::new_with_params;
     let _ = rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::from_pkl;
     use rdkit_cxx::geometry::rd_geometry::write_grid_to_file as _;
+    use rdkit_cxx::ml::cluster::clustering::murtagh_cluster as _;
+    use rdkit_cxx::ml::cluster::clustering::murtagh_dist_cluster as _;
     use rdkit_cxx::numerics::rd_alignment::get_alignment_transform as _;
     use rdkit_cxx::numerics::rd_alignment::get_alignment_transform_with_params as _;
     let _: Option<rdkit_cxx::rd_base::BlockLogs> = None;
