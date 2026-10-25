@@ -20,6 +20,7 @@ pub mod rd_fingerprint_generator;
 pub mod rd_force_field_helpers;
 pub mod rd_free_sasa;
 pub mod rd_mhfp_fingerprint;
+pub mod rd_mif;
 pub mod rd_mmpa;
 pub mod rd_mol_align;
 pub mod rd_mol_catalog;

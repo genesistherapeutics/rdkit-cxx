@@ -38,6 +38,7 @@ pub(crate) mod geometry;
 pub(crate) mod graph;
 pub(crate) mod grid;
 pub(crate) mod mhfp;
+pub(crate) mod mif;
 pub(crate) mod mmpa;
 pub(crate) mod mol;
 pub(crate) mod mol_align;
