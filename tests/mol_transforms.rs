@@ -163,6 +163,9 @@ fn centroids_and_axes() {
     );
 
     let (axes, moments) = compute_principal_axes_and_moments(&conf).unwrap().unwrap();
+    // RDKit's cache of the result is gone (U8).
+    assert!(!mol.has_prop("_principalAxes_noH"));
+    assert!(!mol.has_prop("_principalMoments_noH"));
     assert_rows_up_to_sign(
         &axes,
         &[

@@ -181,8 +181,9 @@ fn principal_axes(
 
 /// The principal axes, as rows, and moments of the inertia tensor, or
 /// `None` when the eigensolver fails (Python's `(None, None)`). Mirrors
-/// `rdMolTransforms.ComputePrincipalAxesAndMoments`; like Python, it caches
-/// the unweighted result in the molecule's computed properties.
+/// `rdMolTransforms.ComputePrincipalAxesAndMoments`. Python caches the
+/// unweighted result in the molecule's computed properties, where the PMI
+/// descriptors read it; this leaves none (U8).
 pub fn compute_principal_axes_and_moments(conf: &impl AsConformer) -> Result<AxesAndMoments> {
     compute_principal_axes_and_moments_with_params(
         conf,

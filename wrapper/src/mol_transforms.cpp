@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/mol_transforms.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -72,7 +73,9 @@ rust::Vec<double> compute_canonical_transform(const Conformer &conf,
 }
 
 // As computePrincAxesMomentsHelper in rdMolTransforms.cpp, which recomputes
-// rather than reading the molecule's cached axes (force).
+// rather than reading the molecule's cached axes (force). RDKit caches the
+// axes in the molecule's properties, where the PMI and PBF descriptors read
+// them (U8).
 bool compute_principal_axes_and_moments(const Conformer &conf,
                                         bool from_gyration_matrix,
                                         bool ignore_hs, bool has_weights,
@@ -84,6 +87,7 @@ bool compute_principal_axes_and_moments(const Conformer &conf,
     throw ValueErrorException(
         "The Python container must have length equal to conf.GetNumAtoms()");
   }
+  DescriptorCacheGuard guard(conf.getOwningMol());
   Eigen::Matrix3d eigen_axes;
   Eigen::Vector3d eigen_moments;
   const auto *weights_ptr = has_weights ? &weights_vec : nullptr;
