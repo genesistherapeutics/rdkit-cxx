@@ -18,6 +18,7 @@ mod cleanup;
 mod fragment;
 mod metal;
 mod normalize;
+mod tautomer;
 mod validate;
 
 pub use charge::*;
@@ -25,4 +26,5 @@ pub use cleanup::*;
 pub use fragment::*;
 pub use metal::*;
 pub use normalize::*;
+pub use tautomer::*;
 pub use validate::*;

@@ -62,6 +62,7 @@ pub(crate) mod standardize;
 pub(crate) mod standardize_charge;
 pub(crate) mod standardize_fragment;
 pub(crate) mod standardize_normalize;
+pub(crate) mod standardize_tautomer;
 pub(crate) mod standardize_validate;
 pub(crate) mod stereo;
 pub(crate) mod substance_group;

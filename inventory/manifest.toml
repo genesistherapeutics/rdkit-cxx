@@ -255,6 +255,14 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentValidation.__init__
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::default"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.GetDefaultTautomerScoreSubstructs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::get_default_tautomer_score_substructs"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.GetV1TautomerEnumerator"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::get_v1_tautomer_enumerator"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation"]
 
@@ -518,6 +526,38 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_
 overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ScoreHeteroHs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_hetero_hs"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ScoreRings"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_rings"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ScoreSubstructs"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_substructs", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::score_substructs_with_terms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__len__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::len"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.items"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::items"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.keys"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::keys"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.values"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::values"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.StandardizeSmiles"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::standardize_smiles"]
 
@@ -539,6 +579,108 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoValidation.__init__"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::default"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.name"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::name"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the term is a plain struct, made into RDKit's for each call"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.score"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::score"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the term is a plain struct, made into RDKit's for each call"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTerm.smarts"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SubstructTerm::smarts"]
+rust_kind = "field"
+overloads_note = "read-only in Python; the term is a plain struct, made into RDKit's for each call"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__bool__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__contains__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__delitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__eq__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__getitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__init__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__iter__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__len__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__ne__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__repr__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__setitem__"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.append"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.clear"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.count"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.extend"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.insert"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.pop"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.remove"
+reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParent"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_with_params"]
 
@@ -546,6 +688,177 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent", "r
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParentInPlace"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_in_place_mols_with_params"]
 overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Tautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Tautomer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Tautomer.kekulized"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Tautomer::kekulized"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Tautomer.tautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Tautomer::tautomer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.Canonicalize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::canonicalize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::canonicalize_with_score_func"]
+rust_generics = ["", "<fn(&rdkit_cxx::chem::Mol) -> i32>"]
+overloads_note = "(mol, scoreFunc) is canonicalize_with_score_func, whose closure's i32::MIN counts as i32::MIN + 1, since RDKit dereferences null when no tautomer scores above it"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.Enumerate"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::enumerate"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetCallback"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_callback"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetMaxTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_max_tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetMaxTransforms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_max_transforms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetReassignStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_reassign_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetRemoveBondStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_remove_bond_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.GetRemoveSp3Stereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::get_remove_sp3_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.PickCanonical"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical_with_score_func", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical_tautomer_enumerator_result", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::pick_canonical_tautomer_enumerator_result_with_score_func"]
+rust_generics = ["", "<fn(&rdkit_cxx::chem::Mol) -> i32>", "", "<fn(&rdkit_cxx::chem::Mol) -> i32>"]
+overloads_note = "iterable is molecules or a TautomerEnumeratorResult, the second with the type's suffix (A5); scoreFunc is the _with_score_func forms; no tautomers, which RDKit dereferences as null, is Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.ScoreTautomer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::score_tautomer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetCallback"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_callback"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetMaxTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_max_tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetMaxTransforms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_max_transforms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetReassignStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_reassign_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetRemoveBondStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_remove_bond_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.SetRemoveSp3Stereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::set_remove_sp3_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::new", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::clone"]
+overloads_note = "TautomerEnumerator() is Default, (params) new, which refuses transforms RDKit would read past the ends of, and (other) Clone"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumerator.tautomerScoreVersion"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerator::tautomer_score_version"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback.__call__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback::call"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol, &rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult) -> bool>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync because enumerators copied from one another share it, and whose panics are caught at the bridge"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__call__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__getitem__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::get"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__iter__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.__len__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::len"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.modifiedAtoms"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::modified_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.modifiedBonds"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::modified_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.smiles"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::smiles"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.smilesTautomerMap"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::smiles_tautomer_map"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.status"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::status"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorResult.tautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorResult::tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.Canceled"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::Canceled"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.Completed"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::Completed"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.MaxTautomersReached"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::MaxTautomersReached"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorStatus.MaxTransformsReached"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorStatus::MaxTransformsReached"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerParent"
