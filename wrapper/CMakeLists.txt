@@ -106,6 +106,7 @@ set(RDKIT_CXX_SOURCES
   src/frag_catalog.cpp
   src/filter_catalog.cpp
   src/scaffold_network.cpp
+  src/substruct_library.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -150,6 +151,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   MolCatalog
   FragCatalog
   ScaffoldNetwork
+  SubstructLibrary
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

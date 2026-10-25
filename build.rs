@@ -84,6 +84,7 @@ const BRIDGES: &[&str] = &[
     "frag_catalog",
     "filter_catalog",
     "scaffold_network",
+    "substruct_library",
 ];
 
 fn main() {

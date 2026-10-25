@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -4600,6 +4600,235 @@ rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tanimoto_dist", "rdkit_cxx::ch
 [[entry]]
 python = "rdkit.Chem.rdShapeHelpers.ShapeTverskyIndex"
 rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index", "rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.AddPatterns"
+rust = ["rdkit_cxx::chem::rd_substruct_library::add_patterns", "rdkit_cxx::chem::rd_substruct_library::add_patterns_with_num_threads", "rdkit_cxx::chem::rd_substruct_library::add_patterns_holder", "rdkit_cxx::chem::rd_substruct_library::add_patterns_holder_with_num_threads"]
+overloads_note = "the patterns overload is add_patterns_holder (A5); numThreads is accepted for parity, and the fingerprints are made on the calling thread"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedMolHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedMolHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedMolHolder.AddBinary"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedMolHolder::add_binary"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedMolHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedMolHolder::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedSmilesMolHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedSmilesMolHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedSmilesMolHolder.AddSmiles"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedSmilesMolHolder::add_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedSmilesMolHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedSmilesMolHolder::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedTrustedSmilesMolHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedTrustedSmilesMolHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedTrustedSmilesMolHolder.AddSmiles"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedTrustedSmilesMolHolder::add_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.CachedTrustedSmilesMolHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::CachedTrustedSmilesMolHolder::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase.AddFingerprint"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase::add_fingerprint"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase.AddMol"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase::add_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase.GetFingerprint"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase::get_fingerprint"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase.MakeFingerprint"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase::make_fingerprint"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase.PassesFilter"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase::passes_filter"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.FPHolderBase.__len__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::FPHolderBase::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyFromPropHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyFromPropHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyFromPropHolder.GetPropName"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyFromPropHolder::get_prop_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyFromPropHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyFromPropHolder::default", "rdkit_cxx::chem::rd_substruct_library::KeyFromPropHolder::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyHolderBase"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyHolderBase"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyHolderBase.AddKey"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyHolderBase::add_key"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyHolderBase.AddMol"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyHolderBase::add_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyHolderBase.GetKey"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyHolderBase::get_key"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyHolderBase.GetKeys"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyHolderBase::get_keys"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.KeyHolderBase.__len__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::KeyHolderBase::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.MolHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.MolHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolder::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.MolHolderBase"
+rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolderBase"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.MolHolderBase.AddMol"
+rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolderBase::add_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.MolHolderBase.GetMol"
+rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolderBase::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.MolHolderBase.__len__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolderBase::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.PatternHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::PatternHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.PatternHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::PatternHolder::default", "rdkit_cxx::chem::rd_substruct_library::PatternHolder::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.AddMol"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::add_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.CountMatches"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_range", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_range_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_mol_bundle", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_mol_bundle_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_mol_bundle_range", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::count_matches_mol_bundle_range_with_params"]
+overloads_note = "the parameters overloads are the _with_params forms, whose CountMatchesParams holds SubstructMatchParameters with the keyword form's numThreads (A3); the startIdx/endIdx overloads are _range and the MolBundle ones _mol_bundle (A5); the TautomerQuery and ExtendedQueryMol overloads wait for rdTautomerQuery and rdGeneralizedSubstruct; numThreads is accepted for parity, and the search runs on the calling thread"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.GetFpHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_fp_holder", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_fp_holder_mut"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.GetKeyHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_key_holder", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_key_holder_mut"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.GetMatches"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_range", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_range_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_mol_bundle", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_mol_bundle_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_mol_bundle_range", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_matches_mol_bundle_range_with_params"]
+overloads_note = "the parameters overloads are the _with_params forms, whose GetMatchesParams holds SubstructMatchParameters with the keyword form's numThreads and maxResults (A3); the startIdx/endIdx overloads are _range and the MolBundle ones _mol_bundle (A5); the TautomerQuery and ExtendedQueryMol overloads wait for rdTautomerQuery and rdGeneralizedSubstruct; numThreads is accepted for parity, and the search runs on the calling thread"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.GetMol"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.GetMolHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_mol_holder", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_mol_holder_mut"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.GetSearchOrder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::get_search_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.HasMatch"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_range", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_range_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_mol_bundle", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_mol_bundle_with_params", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_mol_bundle_range", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::has_match_mol_bundle_range_with_params"]
+overloads_note = "the parameters overloads are the _with_params forms, whose HasMatchParams holds SubstructMatchParameters with the keyword form's numThreads (A3); the startIdx/endIdx overloads are _range and the MolBundle ones _mol_bundle (A5); the TautomerQuery and ExtendedQueryMol overloads wait for rdTautomerQuery and rdGeneralizedSubstruct; numThreads is accepted for parity, and the search runs on the calling thread"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.InitFromStream"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::init_from_stream"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.Serialize"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.SetSearchOrder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::set_search_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.ToStream"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::to_stream"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::default", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::new", "rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::from_pickle"]
+overloads_note = "the (molecules), (molecules, fingerprints_or_keys), and (molecules, fingerprints, keys) overloads are new, with None for the holders a library lacks; the bytes and str pickle overloads share from_pickle"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__len__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::len"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibraryCanSerialize"
+rust = ["rdkit_cxx::chem::rd_substruct_library::substruct_library_can_serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.TautomerPatternHolder"
+rust = ["rdkit_cxx::chem::rd_substruct_library::TautomerPatternHolder"]
+
+[[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.TautomerPatternHolder.__init__"
+rust = ["rdkit_cxx::chem::rd_substruct_library::TautomerPatternHolder::default", "rdkit_cxx::chem::rd_substruct_library::TautomerPatternHolder::new"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"

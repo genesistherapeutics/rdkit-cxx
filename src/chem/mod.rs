@@ -29,6 +29,7 @@ pub mod rd_partial_charges;
 pub mod rd_reduced_graphs;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
+pub mod rd_substruct_library;
 pub mod rdchem;
 pub mod rdfiltercatalog;
 pub mod rdfragcatalog;
