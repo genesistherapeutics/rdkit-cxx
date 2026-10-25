@@ -217,3 +217,23 @@ fn recorded_text_is_checked() {
         Err(Error::Value { .. })
     ));
 }
+
+#[test]
+fn depiction_refuses_what_the_depictor_would_mishandle() {
+    // The mol block in the metadata depicts a molecule without a conformer,
+    // and RDKit's depictor reads the first neighbor of a square-planar atom
+    // unchecked (Python segfaults).
+    let mut mol = smiles("[Pt]");
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiSquareplanar);
+    let mol_block = PNGMetadataParams {
+        include_mol: true,
+        ..Default::default()
+    };
+    assert!(matches!(
+        mol_metadata_to_png_string_with_params(&mol, PNG, &mol_block),
+        Err(Error::Value { message }) if message.contains("square-planar")
+    ));
+    mol_metadata_to_png_string(&mol, PNG).unwrap();
+}

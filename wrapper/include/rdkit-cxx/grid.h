@@ -33,6 +33,22 @@ using UniformRealValueGrid3D = RDGeom::UniformRealValueGrid3D;
 // A shared struct, defined by the bridge (src/ffi/grid.rs).
 struct GridIndices;
 
+// Checks for the wrappers that build grids or set spheres on them through
+// other RDKit calls (shape_helpers.cpp): a new grid's parameters, before
+// initGrid casts its size; whether a point rounds to a grid point, computed
+// without RDKit's casts; and a sphere's extent and step size, which
+// setSphereOccupancy casts, on a grid or on one of the given spacing,
+// largest number of points along an axis, and bits per value.
+void check_grid_dimensions(double dim_x, double dim_y, double dim_z,
+                           double spacing, bool has_offset,
+                           const Point3D &offset);
+bool grid_contains(const UniformGrid3D &grid, const RDGeom::Point3D &point);
+void check_sphere_extent(const UniformGrid3D &grid, double radius,
+                         double step_size);
+void check_sphere_extent(double spacing, unsigned max_num,
+                         unsigned bits_per_val, double radius,
+                         double step_size);
+
 std::unique_ptr<UniformGrid3D> uniform_grid3d_new(double dim_x, double dim_y,
                                                   double dim_z, double spacing,
                                                   DiscreteValueType val_type,

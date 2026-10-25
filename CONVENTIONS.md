@@ -10,7 +10,9 @@ rule changes the rule first.
   pre-commit hook adds it (`addlicense -c "Steven Kearnes" -f
   .license-header.txt`), another hook rejects the one-line form, and CI runs
   the hooks. Generators write the same header themselves
-  (`inventory/check.py`).
+  (`inventory/check.py`). Vendored third-party files
+  (`wrapper/third_party/`) stay as their upstream ships them, under their
+  own licenses, and the hooks skip them.
 - **L2.** rustfmt formats Rust, clang-format (`.clang-format`: Google's style
   with RDKit's pointer alignment) formats C++, and ruff (`ruff.toml`) lints
   and formats Python. The pre-commit hooks in `.pre-commit-config.yaml` run
@@ -56,7 +58,7 @@ rule changes the rule first.
   | `RDKit::MolSanitizeException` | `MolSanitize` |
   | `rdkit_cxx::IndexError` | `Index` |
   | `KeyErrorException` | `Key` |
-  | `ValueErrorException`, `RDKit::ConformerException` | `Value` |
+  | `ValueErrorException`, `RDKit::ConformerException`, `RDKit::ChemicalReactionException`, `RDDepict::DepictException` | `Value` |
   | `RDKit::BadFileException` | `Os` |
   | `RDKit::SmilesParse::SmilesParseException`, `RDKit::FileParseException`, `RDKit::SLNParseException`, `RDKit::ChemicalReactionParserException` | `Parse` |
   | `Invar::Invariant` (with `toUserString()`), any other exception | `Runtime` |
@@ -112,6 +114,14 @@ rule changes the rule first.
   (`Atom`, `AtomMut`). Methods take `&dyn AsAtom` instead, so they are not
   generic and `tests/manifest_paths.rs` can name them. Methods that take any
   bond take `&dyn AsBond` (`Bond`, `BondRef`, `BondMut`).
+- **S4.** A method that may change state RDKit keeps for later calls takes
+  `&mut self`, even when Python's runs it on a const object.
+  `ChemicalReaction`'s runs initialize the reaction first when it is not
+  (validation writes its product templates' properties), so they, `initialize`,
+  and `validate` take `&mut self`; a reaction is not initialized behind a
+  shared reference. Classes that hold molecules RDKit may write through const
+  (`ChemicalReaction`, `EnumerateLibrary`) are `Send` and not `Sync`, as S1
+  says of molecules, and their bridges record why in a `SAFETY` comment.
 
 ## Unchecked input
 
@@ -126,11 +136,18 @@ rule changes the rule first.
   `rdkit-cxx/pickle_checks.h` before RDKit reads them, or, where parsing
   itself is safe, on the object right after. FPB files are read by the
   wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
-  never reads a file that changed after the check. Parsers RDKit fuzzes
+  never reads a file that changed after the check; PNG files are read and
+  their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
-  for the limits U12 checks. Text a wrapper checks before RDKit parses it is
-  read once: a file is read through a checked stream (U12) or into memory, so
-  RDKit parses the bytes that were checked.
+  for the limits U12 checks, and so are reaction pickles, which are molecule
+  pickles framed by counts and tags RDKit checks. Boost.Serialization
+  archives of polymorphic objects (`EnumerateLibrary`'s `Serialize` and
+  `GetState`) are not: Boost trusts their class and object ids, so the
+  functions that read them are `unsafe fn`s whose contract is bytes RDKit
+  wrote, and the wrappers check only what such bytes can still get wrong (a
+  state from another library). Text a wrapper checks before RDKit parses it
+  is read once: a file is read through a checked stream (U12) or into
+  memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -147,16 +164,31 @@ rule changes the rule first.
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
-  mol-block (V2000 and V3000), Marvin, ChemDraw, and PNG writers for a
-  molecule without a conformer; and `molzip` with `generateCoordinates`.
-  RDKit's random number generator (`RDGeneral/utils.cpp`) is shared by
-  every module, so it has one lock, `random_mutex()` in
-  `rdkit-cxx/global_state.h`, held for the whole call by every wrapper whose
-  RDKit call can seed it or draw from it: the SMILES and CXSMILES writers
-  with `doRandom`, `MolToRandomSmilesVect`, PNG metadata with random SMILES,
-  and `compute2DCoords` with random flips (`nFlipsPerSample`; the writers'
-  default depiction never draws). A wrapper that needs both locks takes
-  `lock_depiction()` first.
+  mol-block (V2000 and V3000), Marvin, ChemDraw, PNG, SD, and Maestro
+  writers for a molecule without a conformer, and the V2000 rxn-block
+  writer built on them (also in reaction PNG metadata) for a reaction with
+  such a template; and `molzip` with
+  `generateCoordinates`. They also check, under the lock, what the depictor
+  that will run trusts about the molecule (`check_compute_2d_coords_mol` in
+  `depiction_checks.h`). RDKit's random number generator
+  (`RDGeneral/utils.cpp`) is shared by every module, so it has one lock,
+  `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
+  every wrapper whose RDKit call can seed it or draw from it: the SMILES and
+  CXSMILES writers (for molecules and reactions) with `doRandom`,
+  `MolToRandomSmilesVect`, PNG metadata with random SMILES, the depictor's
+  sampling (`nFlipsPerSample` and random bond flips, in
+  `Compute2DCoordsForReaction` too; the writers' default depiction never
+  draws), the embedder
+  without a seed, DistGeom's `EmbedBoundsMatrix`, and MolAlign's
+  `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
+  the SIGINT handler through static variables) has its own lock,
+  `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
+  by every wrapper whose RDKit call constructs one. MolAlign's
+  `symmetrizeTerminalAtoms`, which the best-alignment functions and the
+  embedder's pruning reach, assigns a static on every call, so callers hold
+  `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
+  several of these locks takes them in this order: `lock_depiction()`,
+  `control_c_mutex()`, `symmetrize_mutex()`, then `random_mutex()`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
@@ -217,7 +249,8 @@ rule changes the rule first.
   `AtomMonomerInfo`. So no atom holds a plain info of that type, though
   Python allows one: `AtomMonomerInfo::new` refuses the type with
   `Error::Value`, as does `set_monomer_type` unless `dynamic_cast` finds PDB
-  residue info, and molecule and bundle pickles whose atoms have such an
+  residue info, and molecule and bundle pickles (and the reaction pickles
+  and `EnumerateLibrary` archives that hold them) whose atoms have such an
   info, or a type `AtomMonomerType` lacks, are refused right after RDKit
   reads them (`check_monomer_types` in `rdkit-cxx/mol_checks.h`). RDKit code
   may then trust the type; wrapper code that casts uses `dynamic_cast` all
@@ -232,7 +265,8 @@ rule changes the rule first.
   with parses the wrapper cannot see, so their Rust functions are `unsafe fn`
   whose contract is that no other thread parses SMILES or SMARTS meanwhile.
 - **U12.** Text RDKit reads with its line-oriented readers (mol blocks, SD,
-  SMILES, and TDT files) is checked as RDKit reads it, by the streams of
+  SMILES, and TDT files, and rxn blocks, whose templates are mol blocks) is
+  checked as RDKit reads it, by the streams of
   `rdkit-cxx/streams.h` (or `check_input_text` for text in memory): RDKit
   counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
   matches V3000 enhanced-stereo lines with `std::regex`, which recurses once

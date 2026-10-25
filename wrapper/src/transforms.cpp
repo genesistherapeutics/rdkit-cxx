@@ -19,6 +19,7 @@
 #include <GraphMol/Substruct/SubstructUtils.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
@@ -407,6 +408,23 @@ std::unique_lock<std::mutex> lock_if_depicting(
   return {};
 }
 
+// With generateCoordinates, molzip of a list (MolZip.cpp) depicts the zipped
+// molecule with compute2DCoords, which trusts it (depiction_checks.h). Zipping
+// is deterministic, so this zips once without coordinates and checks the
+// result first. The caller holds lock_depiction().
+template <typename Zip>
+void check_zipped_depiction(const RDKit::MolzipParams &params, Zip zip) {
+  if (!params.generateCoordinates) {
+    return;
+  }
+  auto probe = params;
+  probe.generateCoordinates = false;
+  auto zipped = zip(probe);
+  if (zipped && zipped->getNumAtoms() > 0) {
+    check_compute_2d_coords_mol(*zipped, false);
+  }
+}
+
 }  // namespace
 
 // molzip returns null when it cannot zip.
@@ -444,6 +462,9 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
     }
   }
   auto lock = lock_if_depicting(params);
+  check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
+    return RDKit::molzip(mols.mols(), probe);
+  });
   return to_rwmol(RDKit::molzip(mols.mols(), params));
 }
 
@@ -466,6 +487,9 @@ std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
     }
   }
   auto lock = lock_if_depicting(params);
+  check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
+    return RDKit::molzip(map, probe);
+  });
   return to_rwmol(RDKit::molzip(map, params));
 }
 
