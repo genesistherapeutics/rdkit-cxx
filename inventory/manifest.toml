@@ -10,6 +10,14 @@
 complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::new"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.CHARGE_CORRECTIONS"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_corrections"]
 
@@ -146,12 +154,67 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedAtomsValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedAtomsValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedRadicalValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisallowedRadicalValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::default"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisconnectOrganometallics"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisconnectOrganometallicsInPlace"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_in_place_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowAromaticBondType"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_aromatic_bond_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowAtomAliases"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_atom_aliases"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowDativeBondType"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_dative_bond_type"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowDummies"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_dummies"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowEnhancedStereo"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_enhanced_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowQueries"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::allow_queries"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentParent"
@@ -184,6 +247,28 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentRemoverFromData"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_remover_from_data", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_remover_from_data_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Is2DValidation.threshold"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::threshold"]
+rust_kind = "field"
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeParent"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_with_params"]
 
@@ -191,6 +276,20 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent", 
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeParentInPlace"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols_with_params"]
 overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.IsotopeValidation.strict"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::strict"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser"
@@ -208,6 +307,40 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentCh
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser.chooseInPlace"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::choose_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default (Python's minMedianBondLength defaults to 0, not C++'s 0.001)"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.allowAtomBondClashExemption"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::allow_atom_bond_clash_exemption"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.allowLongBondsInRings"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::allow_long_bonds_in_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.bondLengthLimit"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::bond_length_limit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.clashLimit"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::clash_limit"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Layout2DValidation.minMedianBondLength"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::min_median_bond_length"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector"
@@ -273,6 +406,30 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MolVSValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MolVSValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NeutralValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NeutralValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NoAtomValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NoAtomValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::default"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalize"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_with_params"]
 
@@ -305,6 +462,20 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalizer_from_d
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizerFromParams"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalizer_from_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RDKitValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RDKitValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::default"]
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.RDKitValidation.allowEmptyMolecules"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::allow_empty_molecules"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionize"
@@ -360,6 +531,14 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::stereo_parent_in_
 overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoValidation"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.StereoValidation.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::default"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParent"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::super_parent_with_params"]
 
@@ -397,6 +576,25 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::unchar
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.UpdateParamsFromJSON"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::update_params_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidateSmiles"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::validate_smiles"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol, bool) -> Vec<String>>"
+overloads_note = "Python subclasses the class to override validate (and copy); Rust cannot, so new takes the closure validate runs, which must be Send + Sync because MolVSValidation shares it, and whose panics are caught at the bridge; RDKit's validations convert into a ValidationMethod with From"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod.validate"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate_with_report_all_failures"]
+overloads_note = "every validation has the two forms, as the Python subclasses inherit validate"
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"

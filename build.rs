@@ -64,6 +64,7 @@ const BRIDGES: &[&str] = &[
     "standardize_fragment",
     "standardize_charge",
     "standardize_normalize",
+    "standardize_validate",
 ];
 
 fn main() {
