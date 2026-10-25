@@ -6,6 +6,7 @@
 //! Private cxx bridges, one per wrapper header (CONVENTIONS.md B3).
 
 pub(crate) mod adjust_query;
+pub(crate) mod alignment;
 pub(crate) mod atom;
 pub(crate) mod bond;
 pub(crate) mod chirality;

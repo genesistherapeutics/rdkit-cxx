@@ -85,6 +85,7 @@ set(RDKIT_CXX_SOURCES
   src/embedder.cpp
   src/distance_geometry.cpp
   src/mol_transforms.cpp
+  src/alignment.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -117,6 +118,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   DistGeometry
   DistGeomHelpers
   MolTransforms
+  Alignment
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

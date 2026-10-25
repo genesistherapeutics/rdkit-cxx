@@ -65,6 +65,7 @@ const BRIDGES: &[&str] = &[
     "embedder",
     "distance_geometry",
     "mol_transforms",
+    "alignment",
 ];
 
 fn main() {
