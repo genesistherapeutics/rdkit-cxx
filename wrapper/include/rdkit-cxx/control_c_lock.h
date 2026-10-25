@@ -13,13 +13,13 @@
 // match methods and the transforms that match, from descriptors and
 // fingerprints that type atoms by patterns (Crippen, the SMARTS counts, MACCS,
 // pattern fingerprints, feature invariants), from reactions, alignment,
-// force-field builders, depiction with templates, and standardization; the
-// embedder, DetermineBondOrders, and the CIP labeler construct one directly,
-// and so does the fingerprint code that runs the CIP labeler for chirality.
-// Every wrapper call that can construct one holds this mutex for the whole
-// RDKit call, and runs RDKit's own threads, which the mutex cannot order, on
-// the calling thread instead (CONVENTIONS.md U4). A wrapper that also needs
-// random_mutex() (global_state.h) takes this one first.
+// force-field builders, depiction with templates, standardization, the
+// catalogs, and MCS; the embedder, DetermineBondOrders, and the CIP labeler
+// construct one directly, and so does the fingerprint code that runs the CIP
+// labeler for chirality. Every wrapper call that can construct one holds this
+// mutex for the whole RDKit call, and runs RDKit's own threads, which the mutex
+// cannot order, on the calling thread instead (CONVENTIONS.md U4). A wrapper
+// that also needs random_mutex() (global_state.h) takes this one first.
 
 #pragma once
 

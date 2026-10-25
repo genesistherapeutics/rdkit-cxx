@@ -210,16 +210,21 @@ rule changes the rule first.
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
   by every wrapper whose RDKit call constructs one. Every substructure match
-  does (`Substruct/vf2.hpp`), so that is the match methods and every
-  wrapper whose RDKit call matches patterns: the transforms that match,
-  reactions, alignment, the force-field builders, Crippen and the other
-  descriptors and fingerprints that type atoms by SMARTS, depiction with
-  templates, and standardization, besides the embedder, DetermineBonds, and
-  the CIP labeler. Such a call runs on the calling thread the work RDKit
-  would split across its own threads, which the lock cannot order (the
-  wrapper's own threads take it in turn), and releases the lock
-  (`HoldControlC` and `ReleaseControlC`) while a Rust closure it calls runs
-  (a property functor, tautomer callback or score, or validation method). MolAlign's
+  does (`Substruct/vf2.hpp`), so that is the match methods and every wrapper
+  whose RDKit call matches patterns: the transforms that match, reactions,
+  alignment, the force-field builders, Crippen and the other descriptors and
+  fingerprints that type atoms by SMARTS, depiction with templates,
+  standardization, the catalogs, and MCS, besides the embedder,
+  DetermineBonds, and the CIP labeler. Such a call runs on the calling
+  thread the work RDKit would split across its own threads, which the lock
+  cannot order (the wrapper's own threads take it in turn), and releases the
+  lock while a Rust closure it calls between matches runs (a property
+  functor, tautomer callback or score, validation method, filter matcher, or
+  FMCS typer or callback; new wrappers use `HoldControlC` and
+  `ReleaseControlC`). A closure RDKit calls inside a match (FMCS's final
+  match checks) runs with the lock held, so a wrapper it calls that takes
+  this lock, or one ordered before it, fails instead
+  (`check_not_in_control_c_callback`). MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
