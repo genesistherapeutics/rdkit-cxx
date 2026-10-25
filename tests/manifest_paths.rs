@@ -291,6 +291,16 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rd_mol_descriptors::get_connectivity_invariants_with_include_ring_membership as _;
     use rdkit_cxx::chem::rd_mol_descriptors::get_feature_invariants as _;
     use rdkit_cxx::chem::rd_mol_descriptors::get_maccs_keys_fingerprint as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_with_conf_id as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usrcat as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usrcat_with_params as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_distributions as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_distributions_with_outputs as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_distributions_from_points as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_from_distributions as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_score as _;
+    use rdkit_cxx::chem::rd_mol_descriptors::get_usr_score_with_weights as _;
     use rdkit_cxx::chem::rd_mol_descriptors::mqns as _;
     let _: Option<rdkit_cxx::chem::rd_mol_descriptors::NumRotatableBondsOptions> = None;
     let _ = rdkit_cxx::chem::rd_mol_descriptors::NumRotatableBondsOptions::Default;

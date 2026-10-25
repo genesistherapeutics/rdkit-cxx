@@ -5,11 +5,19 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
+    /// A list of `f64`s; nested lists cross as `Vec<DoubleList>`.
+    struct DoubleList {
+        values: Vec<f64>,
+    }
+
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/descriptors_3d.h");
+        include!("rdkit-cxx/ffi/geometry.rs.h");
 
         type RWMol = crate::ffi::mol::ffi::RWMol;
+        type IndexList = crate::ffi::geometry::ffi::IndexList;
+        type Point3D = crate::ffi::geometry::ffi::Point3D;
 
         fn calc_pmi1(mol: &RWMol, conf_id: i32, use_atomic_masses: bool) -> Result<f64>;
         fn calc_pmi2(mol: &RWMol, conf_id: i32, use_atomic_masses: bool) -> Result<f64>;
@@ -52,5 +60,23 @@ pub(crate) mod ffi {
         ) -> Result<Vec<f64>>;
         fn calc_coulomb_mat(mol: &RWMol, conf_id: i32) -> Result<Vec<f64>>;
         fn calc_eem_charges(mol: &RWMol, conf_id: i32) -> Result<Vec<f64>>;
+
+        fn get_usr(mol: &RWMol, conf_id: i32) -> Result<Vec<f64>>;
+        fn get_usrcat(
+            mol: &RWMol,
+            has_atom_selections: bool,
+            atom_selections: &[IndexList],
+            conf_id: i32,
+        ) -> Result<Vec<f64>>;
+        fn get_usr_distributions(
+            coords: &[Point3D],
+            points: &mut Vec<Point3D>,
+        ) -> Result<Vec<DoubleList>>;
+        fn get_usr_distributions_from_points(
+            coords: &[Point3D],
+            points: &[Point3D],
+        ) -> Result<Vec<DoubleList>>;
+        fn get_usr_from_distributions(distances: &[DoubleList]) -> Result<Vec<f64>>;
+        fn get_usr_score(descriptor1: &[f64], descriptor2: &[f64], weights: &[f64]) -> Result<f64>;
     }
 }

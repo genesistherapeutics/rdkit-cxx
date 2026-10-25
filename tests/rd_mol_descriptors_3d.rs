@@ -537,3 +537,208 @@ fn eem_tables_are_checked() {
     bromo.get_atom_with_idx_mut(0).unwrap().set_atomic_num(35);
     assert_eq!(calc_eem_charges(&bromo).unwrap().len(), 20);
 }
+
+const USR: [f64; 12] = [
+    2.7999016659236347,
+    1.175907585838725,
+    -0.47153046570251544,
+    2.7938731637763445,
+    1.2189913995719395,
+    -0.6154407115370574,
+    5.07634266039561,
+    2.6393739732648003,
+    -0.3054338256853875,
+    4.8169357564172355,
+    2.587446019349795,
+    -0.4586430361058503,
+];
+
+#[test]
+fn usr() {
+    let mol = apap();
+    let usr = get_usr(&mol).unwrap();
+    assert_all_close(&usr, &USR);
+    assert_ne!(get_usr_with_conf_id(&mol, 1).unwrap(), usr);
+    assert!(matches!(
+        get_usr(&mol_from_smiles("CCO").unwrap()),
+        Err(Error::Value { .. })
+    ));
+    let mut two = mol_from_smiles("CO").unwrap();
+    two.add_conformer(&Conformer::new(2)).unwrap();
+    assert!(matches!(get_usr(&two), Err(Error::Value { .. })));
+
+    let cat = get_usrcat(&mol).unwrap();
+    assert_eq!(cat.len(), 60);
+    assert_all_close(
+        &cat[12..16],
+        &[
+            2.2927727604779036,
+            0.8602982266839411,
+            0.826826276799466,
+            2.2793797955145485,
+        ],
+    );
+    assert_all_close(
+        &cat[48..52],
+        &[
+            2.802823155653427,
+            1.3837331566664002,
+            0.0,
+            2.786484859935878,
+        ],
+    );
+    let selected = GetUSRCATParams {
+        atom_selections: Some(vec![vec![1, 2, 3], vec![5, 6, 7, 8]]),
+        ..Default::default()
+    };
+    let cat = get_usrcat_with_params(&mol, &selected).unwrap();
+    assert_eq!(cat.len(), 36);
+    assert_all_close(
+        &cat[12..15],
+        &[2.9224927289376783, 0.5987658959877975, 0.8429171414834553],
+    );
+    assert_all_close(
+        &cat[24..27],
+        &[1.7324056476401157, 0.9866472965298341, -0.7509311965521294],
+    );
+    assert_eq!(GetUSRCATParams::default().atom_selections, None);
+    assert_eq!(GetUSRCATParams::default().conf_id, -1);
+}
+
+#[test]
+fn usrcat_atom_numbers_are_checked() {
+    // RDKit reads the coordinates at each selected atom unchecked. Numbers
+    // start at 1; 0 wraps to u32::MAX, as in Python.
+    let mol = apap();
+    let selection = |numbers: Vec<u32>| GetUSRCATParams {
+        atom_selections: Some(vec![numbers]),
+        ..Default::default()
+    };
+    assert!(matches!(
+        get_usrcat_with_params(&mol, &selection(vec![21])),
+        Err(Error::Index { index: 20, len: 20 })
+    ));
+    assert!(matches!(
+        get_usrcat_with_params(&mol, &selection(vec![0])),
+        Err(Error::Index {
+            index: u32::MAX,
+            len: 20
+        })
+    ));
+    assert_eq!(
+        get_usrcat_with_params(&mol, &selection(vec![20]))
+            .unwrap()
+            .len(),
+        24
+    );
+    let empty = GetUSRCATParams {
+        atom_selections: Some(Vec::new()),
+        ..Default::default()
+    };
+    assert!(matches!(
+        get_usrcat_with_params(&mol, &empty),
+        Err(Error::Value { .. })
+    ));
+}
+
+#[test]
+fn usr_distributions() {
+    let mol = apap();
+    let coords = mol.get_conformer().unwrap().get_positions();
+    let (distances, outputs) = get_usr_distributions_with_outputs(&coords).unwrap();
+    assert_eq!(distances.len(), 4);
+    assert!(distances.iter().all(|d| d.len() == 20));
+    assert_all_close(
+        &distances[0][..3],
+        &[3.754537724171246, 2.370247099191348, 2.6426933634504404],
+    );
+    assert_all_close(&distances[3][..2], &[1.1081256291594377, 2.178510502614114]);
+    assert_eq!(outputs.points.len(), 4);
+    assert_eq!(
+        outputs.points[1],
+        Point3D {
+            x: -0.0678,
+            y: -0.0098,
+            z: 0.2545
+        }
+    );
+    assert_eq!(
+        outputs.points[2],
+        Point3D {
+            x: -4.816,
+            y: 0.4153,
+            z: 0.3833
+        }
+    );
+    assert_eq!(get_usr_distributions(&coords).unwrap(), distances);
+    assert!(matches!(
+        get_usr_distributions(&[]),
+        Err(Error::Value { .. })
+    ));
+
+    let origin = Point3D {
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+    };
+    let ones = Point3D {
+        x: 1.0,
+        y: 1.0,
+        z: 1.0,
+    };
+    let from_points = get_usr_distributions_from_points(&coords, &[origin, ones]).unwrap();
+    assert_eq!(from_points.len(), 2);
+    assert_all_close(
+        &from_points[1][..3],
+        &[3.2246595308652353, 2.3128138900482247, 3.0874962510098696],
+    );
+    assert!(matches!(
+        get_usr_distributions_from_points(&coords, &[]),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        get_usr_distributions_from_points(&[], &[origin]),
+        Err(Error::Value { .. })
+    ));
+
+    assert_all_close(&get_usr_from_distributions(&distances).unwrap(), &USR);
+    assert!(matches!(
+        get_usr_from_distributions(&[]),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        get_usr_from_distributions(&[vec![1.0], vec![]]),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        get_usr_from_distributions(&distances[..3]),
+        Err(Error::Runtime { .. })
+    ));
+}
+
+#[test]
+fn usr_score() {
+    let mut other = USR;
+    other[0] += 1.2;
+    assert_close(
+        get_usr_score(&USR, &other).unwrap(),
+        0.9090909090909091,
+        1e-12,
+    );
+    let cat = get_usrcat(&apap()).unwrap();
+    assert_eq!(get_usr_score(&cat, &cat).unwrap(), 1.0);
+    let shifted: Vec<f64> = cat.iter().map(|c| c + 0.5).collect();
+    assert_close(
+        get_usr_score_with_weights(&cat, &shifted, &[1.0, 2.0, 3.0, 4.0, 5.0]).unwrap(),
+        0.11764705882352941,
+        1e-12,
+    );
+    assert!(matches!(
+        get_usr_score(&cat, &USR),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        get_usr_score_with_weights(&cat, &cat, &[1.0]),
+        Err(Error::Value { .. })
+    ));
+}

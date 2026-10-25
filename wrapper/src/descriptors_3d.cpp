@@ -11,12 +11,14 @@
 #include <vector>
 
 #include <GraphMol/Descriptors/MolDescriptors3D.h>
+#include <GraphMol/Descriptors/USRDescriptor.h>
 #include <GraphMol/MolOps.h>
 #include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/descriptors.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/descriptors_3d.rs.h"
+#include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
@@ -92,6 +94,31 @@ unsigned int eem_atom_type(const RDKit::ROMol &mol, const RDKit::Atom *atom) {
     type = std::max(type, static_cast<unsigned int>(order));
   }
   return type;
+}
+
+RDGeom::Point3D theirs(const Point3D &p) {
+  return RDGeom::Point3D(p.x, p.y, p.z);
+}
+
+Point3D ours(const RDGeom::Point3D &p) { return Point3D{p.x, p.y, p.z}; }
+
+rust::Vec<DoubleList> to_lists(
+    const std::vector<std::vector<double>> &distributions) {
+  rust::Vec<DoubleList> lists;
+  for (const auto &values : distributions) {
+    lists.push_back(DoubleList{to_vec(values)});
+  }
+  return lists;
+}
+
+// As GetUSR and GetUSRCAT in the Python wrappers.
+void check_usr_molecule(const RWMol &mol) {
+  if (mol.getNumConformers() == 0) {
+    throw ValueErrorException("no conformers");
+  }
+  if (mol.getNumAtoms() < 3) {
+    throw ValueErrorException("too few atoms (minimum three)");
+  }
 }
 
 }  // namespace
@@ -226,6 +253,128 @@ rust::Vec<double> calc_eem_charges(const RWMol &mol, std::int32_t conf_id) {
   std::vector<double> result;
   Desc::EEM(copy, result, conf_id);
   return to_vec(result);
+}
+
+rust::Vec<double> get_usr(const RWMol &mol, std::int32_t conf_id) {
+  check_usr_molecule(mol);
+  std::vector<double> descriptor(12);
+  Desc::USR(mol, descriptor, conf_id);
+  return to_vec(descriptor);
+}
+
+// USRCAT reads the conformer's coordinates at the selected atoms without
+// checking them, so each atom number is checked first: 0, which Python's
+// subtraction wraps, and numbers past the last atom are IndexErrors.
+rust::Vec<double> get_usrcat(const RWMol &mol, bool has_atom_selections,
+                             rust::Slice<const IndexList> atom_selections,
+                             std::int32_t conf_id) {
+  check_usr_molecule(mol);
+  std::vector<std::vector<unsigned int>> atom_ids;
+  if (has_atom_selections) {
+    if (atom_selections.empty()) {
+      throw ValueErrorException("empty atom selections");
+    }
+    for (const auto &selection : atom_selections) {
+      std::vector<unsigned int> ids;
+      for (auto number : selection.indices) {
+        auto idx = number - 1;
+        check_index(idx, mol.getNumAtoms());
+        ids.push_back(idx);
+      }
+      atom_ids.push_back(std::move(ids));
+    }
+  }
+  std::vector<double> descriptor(
+      12 * ((has_atom_selections ? atom_ids.size() : 4) + 1));
+  Desc::USRCAT(mol, descriptor, atom_ids, conf_id);
+  return to_vec(descriptor);
+}
+
+rust::Vec<DoubleList> get_usr_distributions(rust::Slice<const Point3D> coords,
+                                            rust::Vec<Point3D> &points) {
+  if (coords.empty()) {
+    throw ValueErrorException("no coordinates");
+  }
+  std::vector<RDGeom::Point3D> stored;
+  stored.reserve(coords.size());
+  for (const auto &p : coords) {
+    stored.push_back(theirs(p));
+  }
+  RDGeom::Point3DConstPtrVect ptrs;
+  for (const auto &p : stored) {
+    ptrs.push_back(&p);
+  }
+  std::vector<RDGeom::Point3D> refs(4);
+  std::vector<std::vector<double>> distances(4);
+  Desc::calcUSRDistributions(ptrs, distances, refs);
+  for (const auto &p : refs) {
+    points.push_back(ours(p));
+  }
+  return to_lists(distances);
+}
+
+rust::Vec<DoubleList> get_usr_distributions_from_points(
+    rust::Slice<const Point3D> coords, rust::Slice<const Point3D> points) {
+  if (coords.empty()) {
+    throw ValueErrorException("no coordinates");
+  }
+  if (points.empty()) {
+    throw ValueErrorException("no points");
+  }
+  std::vector<RDGeom::Point3D> stored;
+  stored.reserve(coords.size());
+  for (const auto &p : coords) {
+    stored.push_back(theirs(p));
+  }
+  RDGeom::Point3DConstPtrVect ptrs;
+  for (const auto &p : stored) {
+    ptrs.push_back(&p);
+  }
+  std::vector<RDGeom::Point3D> refs;
+  for (const auto &p : points) {
+    refs.push_back(theirs(p));
+  }
+  std::vector<std::vector<double>> distances(refs.size());
+  Desc::calcUSRDistributionsFromPoints(ptrs, refs, distances);
+  return to_lists(distances);
+}
+
+rust::Vec<double> get_usr_from_distributions(
+    rust::Slice<const DoubleList> distances) {
+  if (distances.empty()) {
+    throw ValueErrorException("no distances");
+  }
+  std::vector<std::vector<double>> dist;
+  for (const auto &list : distances) {
+    if (list.values.empty()) {
+      throw ValueErrorException("distances missing");
+    }
+    dist.emplace_back(list.values.begin(), list.values.end());
+  }
+  std::vector<double> descriptor(12);
+  Desc::calcUSRFromDistributions(dist, descriptor);
+  return to_vec(descriptor);
+}
+
+// As GetUSRScore in the Python wrappers: no weights means 1 for each set of
+// 12 values.
+double get_usr_score(rust::Slice<const double> descriptor1,
+                     rust::Slice<const double> descriptor2,
+                     rust::Slice<const double> weights) {
+  if (descriptor1.size() != descriptor2.size()) {
+    throw ValueErrorException("descriptors must have the same length");
+  }
+  std::size_t num_weights = descriptor1.size() / 12;
+  std::vector<double> w(num_weights, 1.0);
+  if (!weights.empty()) {
+    if (weights.size() != num_weights) {
+      throw ValueErrorException("number of weights is not correct");
+    }
+    w.assign(weights.begin(), weights.end());
+  }
+  std::vector<double> d1(descriptor1.begin(), descriptor1.end());
+  std::vector<double> d2(descriptor2.begin(), descriptor2.end());
+  return Desc::calcUSRScore(d1, d2, w);
 }
 
 }  // namespace rdkit_cxx

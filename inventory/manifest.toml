@@ -977,6 +977,31 @@ python = "rdkit.Chem.rdMolDescriptors.GetTopologicalTorsionFingerprint"
 reason = "deprecated in RDKit: use rd_fingerprint_generator::get_topological_torsion_generator"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetUSR"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_usr", "rdkit_cxx::chem::rd_mol_descriptors::get_usr_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetUSRCAT"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_usrcat", "rdkit_cxx::chem::rd_mol_descriptors::get_usrcat_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetUSRDistributions"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_usr_distributions", "rdkit_cxx::chem::rd_mol_descriptors::get_usr_distributions_with_outputs"]
+overloads_note = "points is an output list; get_usr_distributions_with_outputs returns it (A9)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetUSRDistributionsFromPoints"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_usr_distributions_from_points"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetUSRFromDistributions"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_usr_from_distributions"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.GetUSRScore"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::get_usr_score", "rdkit_cxx::chem::rd_mol_descriptors::get_usr_score_with_weights"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.MQNs_"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::mqns"]
 name_exception = "MQNs is one word, and the trailing underscore is dropped: mqns"
