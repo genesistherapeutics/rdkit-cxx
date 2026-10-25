@@ -186,7 +186,9 @@ rule changes the rule first.
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
   registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
   decomposition's random number singleton and fingerprint-variance scoring
-  static, under `rgroup_mutex()`). State RDKit makes once, on first use, is
+  static, under `rgroup_mutex()`, and the shape modules' pharmacophore
+  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
+  and `gaussian_shape_mutex()`). State RDKit makes once, on first use, is
   made under `std::call_once` before any other call (the MACCS patterns in
   `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
@@ -217,8 +219,8 @@ rule changes the rule first.
   alignment, the force-field builders, Crippen and the other descriptors and
   fingerprints that type atoms by SMARTS, depiction with templates,
   standardization, the catalogs, MCS, SubstructLibrary, R-group
-  decomposition, scaffold networks, and chemical feature factories,
-  besides the embedder,
+  decomposition, scaffold networks, chemical feature factories, and the
+  shape modules, besides the embedder,
   DetermineBonds, and the CIP labeler. Such a call runs on the calling
   thread the work RDKit would split across its own threads, which the lock
   cannot order (the wrapper's own threads take it in turn), and releases the
