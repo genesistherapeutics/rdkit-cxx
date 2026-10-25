@@ -90,6 +90,8 @@ const BRIDGES: &[&str] = &[
     "scaffold_network",
     "substruct_library",
     "rgroup",
+    "chemical_features",
+    "mol_chemical_features",
 ];
 
 fn main() {
