@@ -279,7 +279,9 @@ fn entries_from_ffi(list: &ffi::FilterCatalogEntryList) -> Vec<FilterCatalogEntr
 /// `rdfiltercatalog.FilterCatalog`.
 ///
 /// It is `Send + Sync`: its entries are not changed in place, and RDKit runs
-/// one catalog's matchers from several threads (CONVENTIONS.md S5).
+/// one catalog's matchers from several threads (CONVENTIONS.md S5). Its
+/// matching, like every substructure match, holds a process-wide lock for
+/// RDKit's SIGINT handler (U4), so threads match one at a time.
 pub struct FilterCatalog {
     /// Never null.
     ptr: UniquePtr<ffi::FilterCatalog>,
@@ -449,7 +451,10 @@ pub fn run_filter_catalog<S: AsRef<str>>(
 /// plus `num_threads` (and at least one). A SMILES that does not parse gets
 /// one entry, "no valid RDKit molecule", without a matcher; one that fails
 /// sanitization is the call's error, as in Python. The threads are the
-/// crate's (RDKit's own count threads in 32 bits). Mirrors
+/// crate's (RDKit's own count threads in 32 bits), and only parse in
+/// parallel: every substructure match swaps the process's SIGINT handler
+/// through RDKit's static variables, so matches take turns (CONVENTIONS.md
+/// U4). Mirrors
 /// `rdfiltercatalog.RunFilterCatalog(filterCatalog, smiles, numThreads)`.
 pub fn run_filter_catalog_with_num_threads<S: AsRef<str>>(
     filter_catalog: &FilterCatalog,

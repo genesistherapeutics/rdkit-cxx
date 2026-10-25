@@ -20,9 +20,10 @@ use crate::ffi::filter_catalog::{FilterMatcherCallback, ffi};
 ///
 /// RDKit's catalogs share their matchers between threads, `run_filter_catalog`
 /// among them, so a matcher is `Send + Sync`. Each method gets its own copy
-/// of the molecule. A panic is caught where RDKit calls the method: the call
-/// that made it returns `Error::Runtime`, or, for `is_valid` called by
-/// `FilterMatcher::is_valid`, panics.
+/// of the molecule, and runs without the lock matching holds (CONVENTIONS.md
+/// U4), so it may itself call functions that match. A panic is caught where
+/// RDKit calls the method: the call that made it returns `Error::Runtime`,
+/// or, for `is_valid` called by `FilterMatcher::is_valid`, panics.
 pub trait CustomFilterMatcher: Send + Sync + 'static {
     /// Whether the matcher can match. Mirrors `FilterMatcher.IsValid`.
     fn is_valid(&self) -> bool {

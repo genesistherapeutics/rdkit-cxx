@@ -774,21 +774,100 @@ fn loading_checks_matchers() {
     assert!(is_value(unsafe { FilterCatalog::from_pickle(&archive) }));
 }
 
-// SubstructMatch writes a recursive query's matches into the query under
-// its lock; copies of a pattern that others match are made under the same
-// locks. The functional groups' patterns are recursive and shared.
+/// Matches molecules with oxygen by calling functions that match: a
+/// substructure search, a SmartsMatcher, and another Rust matcher.
+struct Reentrant {
+    oxygen: SmartsMatcher,
+    other: FilterMatcher,
+}
+
+impl CustomFilterMatcher for Reentrant {
+    fn has_match(&self, mol: &Mol) -> bool {
+        let query = mol_from_smarts("[#8]").unwrap();
+        let by_search = mol.has_substruct_match(&query).unwrap();
+        let by_matcher = self.oxygen.has_match(mol).unwrap();
+        assert_eq!(by_search, by_matcher);
+        // A matcher that does not match, while the lock is already released.
+        assert!(self.other.is_valid());
+        self.other.has_match(mol).unwrap();
+        by_matcher
+    }
+
+    fn get_matches(&self, mol: &Mol, matches: &mut Vec<FilterMatch>) -> bool {
+        let found = self.oxygen.get_matches(mol).unwrap();
+        let matched = !found.is_empty();
+        matches.extend(found);
+        matched
+    }
+}
+
+// Matching holds control_c_mutex, for RDKit's SIGINT handler, and releases
+// it while a Rust matcher runs, which may match itself. SubstructMatch writes
+// a recursive query's matches into the query under its lock; copies of a
+// pattern that others match are made under the same locks, after
+// control_c_mutex. The functional groups' patterns are recursive and shared.
 #[test]
 fn threads_share_catalogs() {
-    let catalog = Arc::new(FilterCatalog::from_catalogs(FilterCatalogs::PAINS_A));
+    let reentrant = FilterMatcher::new(
+        "reentrant",
+        Reentrant {
+            oxygen: smarts("O", "[#8]"),
+            other: FilterMatcher::new(
+                "at least",
+                AtLeast {
+                    atoms: 2,
+                    calls: Arc::new(AtomicUsize::new(0)),
+                },
+            ),
+        },
+    );
+    let mut catalog = FilterCatalog::from_catalogs(FilterCatalogs::PAINS_A);
+    catalog.add_entry(&FilterCatalogEntry::new("reentrant", &reentrant).unwrap());
+    let both = And::new(&reentrant, &smarts("C", "[#6]")).unwrap();
+    catalog.add_entry(&FilterCatalogEntry::new("reentrant and C", &both).unwrap());
+    let catalog = Arc::new(catalog);
     let groups = Arc::new(get_functional_group_hierarchy());
     let threads: Vec<_> = (0..4)
         .map(|i| {
             let catalog = catalog.clone();
             let groups = groups.clone();
             std::thread::spawn(move || {
-                for _ in 0..20 {
+                for _ in 0..10 {
+                    assert_eq!(
+                        descriptions(&catalog.get_matches(&mol("CCO")).unwrap()),
+                        ["reentrant", "reentrant and C"]
+                    );
+                    assert!(!catalog.has_match(&mol("CC")).unwrap());
+                    assert_eq!(
+                        catalog
+                            .get_first_match(&mol(HZONE))
+                            .unwrap()
+                            .unwrap()
+                            .get_description()
+                            .unwrap(),
+                        "hzone_phenol_A(479)"
+                    );
+                    // RDKit's And replaces the matches gathered before it.
+                    assert_eq!(
+                        names(&catalog.get_filter_matches(&mol("CO")).unwrap()),
+                        [
+                            ("O".to_string(), vec![(0, 1)]),
+                            ("C".to_string(), vec![(0, 0)])
+                        ]
+                    );
+                    let rows =
+                        run_filter_catalog_with_num_threads(&catalog, &["CCO", "CC", "O"], 4)
+                            .unwrap();
+                    let rows: Vec<_> = rows.iter().map(|row| descriptions(row)).collect();
+                    assert_eq!(
+                        rows,
+                        [
+                            vec!["reentrant", "reentrant and C"],
+                            vec![],
+                            vec!["reentrant"]
+                        ]
+                    );
                     if i % 2 == 0 {
-                        assert!(catalog.has_match(&mol(HZONE)).unwrap());
                         assert_eq!(groups.get_matches(&mol("c1ccccc1Cl")).unwrap().len(), 1);
                     } else {
                         assert_eq!(get_flattened_functional_group_hierarchy().len(), 52);

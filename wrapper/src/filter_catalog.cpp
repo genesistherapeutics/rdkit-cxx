@@ -17,6 +17,7 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/filter_catalog.rs.h"
@@ -91,6 +92,55 @@ bool is_empty_node(const FilterMatcherBase &matcher) {
   return node && !part<NodeMatcher>(*node);
 }
 
+// Every substructure match constructs a ControlCHandler, so the wrappers
+// whose RDKit call can match hold control_c_mutex for the whole call
+// (control_c_lock.h, CONVENTIONS.md U4). A Rust matcher's methods may call
+// such wrappers themselves, and RDKit calls them only between its matches,
+// with no ControlCHandler alive (one lives only inside a SubstructMatch,
+// which calls no matcher), so the lock is released while they run and
+// taken back after, even when they throw. This is the lock the thread's
+// innermost matching call holds.
+thread_local std::unique_lock<std::mutex> *matching_control_c = nullptr;
+
+class Matching {
+ public:
+  Matching() : d_lock(control_c_mutex()), d_outer(matching_control_c) {
+    matching_control_c = &d_lock;
+  }
+  ~Matching() { matching_control_c = d_outer; }
+  Matching(const Matching &) = delete;
+  Matching &operator=(const Matching &) = delete;
+
+ private:
+  std::unique_lock<std::mutex> d_lock;
+  std::unique_lock<std::mutex> *d_outer;
+};
+
+// Releases the thread's matching lock, if it holds it, until destroyed. A
+// callback can run while it is already released: one that calls a wrapper
+// that does not match (filter_matcher_is_valid) on another Rust matcher.
+class ReleasedForCallback {
+ public:
+  ReleasedForCallback()
+      : d_held(matching_control_c && matching_control_c->owns_lock()
+                   ? matching_control_c
+                   : nullptr) {
+    if (d_held) {
+      d_held->unlock();
+    }
+  }
+  ~ReleasedForCallback() {
+    if (d_held) {
+      d_held->lock();
+    }
+  }
+  ReleasedForCallback(const ReleasedForCallback &) = delete;
+  ReleasedForCallback &operator=(const ReleasedForCallback &) = delete;
+
+ private:
+  std::unique_lock<std::mutex> *d_held;
+};
+
 // A Rust callback gets its own copy of the molecule, as a Rust molecule,
 // without cached matrices or descriptors (U6, U8).
 std::unique_ptr<RWMol> callback_mol(const RDKit::ROMol &mol) {
@@ -111,18 +161,26 @@ class RustFilterMatcher : public FilterMatcherBase {
       : FilterMatcherBase(std::move(name)), d_callback(std::move(callback)) {}
 
   bool isValid() const override {
+    ReleasedForCallback released;
     return filter_matcher_callback_is_valid(**d_callback);
   }
 
   bool hasMatch(const RDKit::ROMol &mol) const override {
-    return filter_matcher_callback_has_match(**d_callback, callback_mol(mol));
+    auto copy = callback_mol(mol);
+    ReleasedForCallback released;
+    return filter_matcher_callback_has_match(**d_callback, std::move(copy));
   }
 
   bool getMatches(const RDKit::ROMol &mol,
                   std::vector<FilterMatch> &matches) const override {
     FilterMatchList list;
-    bool matched = filter_matcher_callback_get_matches(**d_callback,
-                                                       callback_mol(mol), list);
+    auto copy = callback_mol(mol);
+    bool matched;
+    {
+      ReleasedForCallback released;
+      matched = filter_matcher_callback_get_matches(**d_callback,
+                                                    std::move(copy), list);
+    }
     // As the Python trampoline, matches count only when the matcher matched.
     if (matched) {
       matches.insert(matches.end(), list.matches.begin(), list.matches.end());
@@ -250,14 +308,19 @@ void check_use(const FilterMatcherHandle &matcher) {
 
 // SubstructMatch records a recursive query's matches in the query, holding
 // its mutex for the whole match (RDK_BUILD_THREADSAFE_SSS), while
-// RecursiveStructureQuery::copy reads them without it. A pattern shared with
-// matchers other threads run (RDKit's copies share their patterns, as the
-// functional-group hierarchy shares its patterns with its flattened map) is
-// copied with each recursive query locked, in the order SubstructMatch
-// locks them: each atom's query tree in atom order, a recursive query
-// before its molecule's atoms' queries, and those before its children.
+// RecursiveStructureQuery::copy reads them without it. The crate's own
+// matches are serialized by control_c_mutex, which this holds too, but the
+// query locks also order it against any match RDKit makes without it. A pattern
+// shared with matchers other threads run (RDKit's copies share their patterns,
+// as the functional-group hierarchy shares its patterns with its flattened map)
+// is copied with each recursive query locked, in the order SubstructMatch locks
+// them: each atom's query tree in atom order, a recursive query before its
+// molecule's atoms' queries, and those before its children.
 std::unique_ptr<RWMol> copy_pattern(const RDKit::ROMol &pattern) {
   using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
+  // The crate's matches hold control_c_mutex and then, in SubstructMatch,
+  // the query locks; taking them in the same order cannot deadlock.
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::vector<std::unique_lock<std::mutex>> locks;
   std::unordered_set<const void *> seen;
   std::vector<const AtomQuery *> todo;
@@ -409,6 +472,7 @@ bool filter_matcher_has_match(const FilterMatcherHandle &matcher,
   if (is_empty_node(*matcher.ptr)) {
     throw ValueErrorException("a FilterHierarchyMatcher without a pattern");
   }
+  Matching matching;
   return matcher.ptr->hasMatch(mol);
 }
 
@@ -420,6 +484,7 @@ std::unique_ptr<FilterMatchList> filter_matcher_get_matches(
     throw ValueErrorException("a FilterHierarchyMatcher without a pattern");
   }
   std::vector<FilterMatch> matches;
+  Matching matching;
   if (!matcher.ptr->getMatches(mol, matches)) {
     matches.clear();
   }
@@ -631,6 +696,7 @@ void filter_catalog_entry_set_description(FilterCatalogEntryHandle &entry,
 std::unique_ptr<FilterMatchList> filter_catalog_entry_get_filter_matches(
     const FilterCatalogEntryHandle &entry, const RWMol &mol) {
   std::vector<FilterMatch> matches;
+  Matching matching;
   if (!entry.ptr->getFilterMatches(mol, matches)) {
     matches.clear();
   }
@@ -639,6 +705,7 @@ std::unique_ptr<FilterMatchList> filter_catalog_entry_get_filter_matches(
 
 bool filter_catalog_entry_has_filter_match(
     const FilterCatalogEntryHandle &entry, const RWMol &mol) {
+  Matching matching;
   return entry.ptr->hasFilterMatch(mol);
 }
 
@@ -772,12 +839,17 @@ std::unique_ptr<FilterCatalogEntryHandle> filter_catalog_get_entry(
 }
 
 bool filter_catalog_has_match(const FilterCatalog &catalog, const RWMol &mol) {
+  Matching matching;
   return catalog.hasMatch(mol);
 }
 
 std::unique_ptr<FilterCatalogEntryHandle> filter_catalog_get_first_match(
     const FilterCatalog &catalog, const RWMol &mol) {
-  auto entry = catalog.getFirstMatch(mol);
+  boost::shared_ptr<const FilterCatalogEntry> entry;
+  {
+    Matching matching;
+    entry = catalog.getFirstMatch(mol);
+  }
   if (!entry) {
     return nullptr;
   }
@@ -787,7 +859,12 @@ std::unique_ptr<FilterCatalogEntryHandle> filter_catalog_get_first_match(
 std::unique_ptr<FilterCatalogEntryList> filter_catalog_get_matches(
     const FilterCatalog &catalog, const RWMol &mol) {
   auto list = std::make_unique<FilterCatalogEntryList>();
-  for (auto &entry : catalog.getMatches(mol)) {
+  std::vector<FilterCatalog::CONST_SENTRY> entries;
+  {
+    Matching matching;
+    entries = catalog.getMatches(mol);
+  }
+  for (auto &entry : entries) {
     list->entries.push_back(
         boost::const_pointer_cast<FilterCatalogEntry>(entry));
   }
@@ -797,6 +874,7 @@ std::unique_ptr<FilterCatalogEntryList> filter_catalog_get_matches(
 
 std::unique_ptr<FilterMatchList> filter_catalog_get_filter_matches(
     const FilterCatalog &catalog, const RWMol &mol) {
+  Matching matching;
   return match_list(catalog.getFilterMatches(mol));
 }
 
@@ -806,11 +884,13 @@ bool filter_catalog_can_serialize() {
 
 // RDKit's RunFilterCatalog, on the crate's threads (threads.h). RDKit's own
 // negates a nonpositive thread count in int (undefined for INT_MIN) and
-// steps each thread's index in unsigned int, which wraps for 2^32 SMILES,
-// so threads process the same SMILES at once; its std::async tasks would
-// pass their exceptions on, but run_on_threads holds no such counts. As
-// RDKit's, a SMILES that does not parse gets the "no valid RDKit molecule"
-// entry, and a sanitization error is the call's error.
+// steps each thread's index in unsigned int, which wraps for 2^32 SMILES, so
+// threads process the same SMILES at once, and its threads' matches would
+// race on ControlCHandler's statics, which control_c_mutex cannot order.
+// Here each thread parses its SMILES and matches each molecule holding
+// control_c_mutex, so only the parsing runs in parallel. As RDKit's, a
+// SMILES that does not parse gets the "no valid RDKit molecule" entry, and
+// a sanitization error is the call's error.
 std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
     const FilterCatalog &catalog, rust::Slice<const rust::Str> smiles,
     std::int32_t num_threads) {
@@ -827,6 +907,7 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
     for (std::size_t i = t; i < texts.size(); i += n) {
       std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(texts[i]));
       if (mol) {
+        Matching matching;
         results[i] = catalog.getMatches(*mol);
       } else {
         results[i].push_back(bad_smiles_entry());

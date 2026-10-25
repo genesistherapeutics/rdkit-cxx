@@ -137,7 +137,10 @@ rule changes the rule first.
   are matched concurrently, which writes recursive queries' matches under
   each query's lock (`RDK_BUILD_THREADSAFE_SSS`), so a wrapper that copies
   such a molecule, which reads those matches, holds the same locks, taken in
-  `SubstructMatch`'s order (`copy_pattern` in `filter_catalog.cpp`).
+  `SubstructMatch`'s order after `control_c_mutex()`, as matches take them
+  (`copy_pattern` in `filter_catalog.cpp`). Matching holds
+  `control_c_mutex()` (U4) and releases it while a Rust matcher's methods
+  run, which RDKit calls between its matches.
 
 ## Unchecked input
 
