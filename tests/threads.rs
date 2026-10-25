@@ -64,7 +64,11 @@ use rdkit_cxx::chem::rd_fingerprint_generator::{
     FingerprintGenerator64, GetMorganGeneratorParams, get_morgan_feature_atom_inv_gen,
     get_morgan_generator_with_params,
 };
+use rdkit_cxx::chem::rd_fmcs::find_mcs;
 use rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule;
+use rdkit_cxx::chem::rd_generalized_substruct::{
+    self, ExtendedQueryMol, create_extended_query_mol,
+};
 use rdkit_cxx::chem::rd_mmpa::fragment_mol;
 use rdkit_cxx::chem::rd_mol_align::{
     RandomTransformParams, align_mol, get_best_rms, random_transform, random_transform_with_params,
@@ -74,7 +78,16 @@ use rdkit_cxx::chem::rd_mol_descriptors::{
     get_maccs_keys_fingerprint, get_usrcat,
 };
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
+use rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecomposition;
+use rdkit_cxx::chem::rd_rascal_mces::{find_mces, rascal_cluster};
 use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
+use rdkit_cxx::chem::rd_substruct_library::{MolHolder, SubstructLibrary};
+use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
+use rdkit_cxx::chem::rdfiltercatalog::{FilterCatalog, FilterCatalogEntry, SmartsMatcher};
+use rdkit_cxx::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog};
+use rdkit_cxx::chem::scaffolds::rd_scaffold_network::{
+    ScaffoldNetworkParams, create_scaffold_network,
+};
 use rdkit_cxx::chem::{
     Conformer, Mol, MolFragmentToSmilesParams, MolFromSCSRParams, MolToCXSmilesParams,
     MolToRandomSmilesVectParams, MolzipParams, PNGMetadataParams, ResonanceMolSupplier,
@@ -131,6 +144,11 @@ fn main() {
         templates(),
         "C1CC2CCC1C2 |(1.55254,0.75,;1.55254,-0.75,;0.125954,-1.21353,;-1.30063,-0.75,;\
          -1.30063,0.75,;0.125954,1.21353,;-0.755724,0,)|\n",
+    )
+    .unwrap();
+    std::fs::write(
+        groups(),
+        "-C(=O)O\t*-C(=O)[O;H1,-]\tcarboxylic acids\n-O\t*-[O;H1,-]\talcohols\n\n=O\t*=O\taldehydes\n",
     )
     .unwrap();
 
@@ -198,6 +216,16 @@ fn main() {
     phase(canonical_tautomer(), substruct_matches());
     phase(validated(), substruct_matches());
     phase(pipeline_run(), substruct_matches());
+    phase(filter_catalog_match(), substruct_matches());
+    phase(fragments_cataloged(), substruct_matches());
+    phase(maximum_common_substructure(), substruct_matches());
+    phase(maximum_common_edge_substructure(), substruct_matches());
+    phase(rascal_clusters(), substruct_matches());
+    phase(tautomer_query_matches(), substruct_matches());
+    phase(extended_query_matches(), substruct_matches());
+    phase(substruct_library_matches(), substruct_matches());
+    phase(rgroups_decomposed(), substruct_matches());
+    phase(scaffold_network(), substruct_matches());
 
     // The rest: the grid centroids' cache, the property registry, and
     // DCLV's surface cache.
@@ -206,6 +234,7 @@ fn main() {
     phase(dclv_surfaces(), dclv_surfaces());
 
     std::fs::remove_file(templates()).unwrap();
+    std::fs::remove_file(groups()).unwrap();
 }
 
 /// One thread's call in a phase: `run` on the input `make` builds, on the
@@ -249,6 +278,23 @@ fn amide() -> ChemicalReaction {
 fn amide_reactants() -> Vec<Mol> {
     vec![mol("CCC(=O)O"), mol("N")]
 }
+
+/// Functional groups for the fragment catalog, written by `main`.
+fn groups() -> PathBuf {
+    std::env::temp_dir().join(format!(
+        "rdkit-cxx-threads-{}-groups.txt",
+        std::process::id()
+    ))
+}
+
+/// Five of RDKit's CDK2 ligands, which Rascal clusters together.
+const CDK2: [&str; 5] = [
+    "CC(C)C(=O)COc1nc(N)nc2[nH]cnc12",
+    "Nc1nc(OCC2CCCO2)c2nc[nH]c2n1",
+    "Nc1nc(OCC2CCC(=O)N2)c2nc[nH]c2n1",
+    "Nc1nc(OCC2CCCCC2)c2nc[nH]c2n1",
+    "Nc1nc(OCC2CC=CCC2)c2nc[nH]c2n1",
+];
 
 /// Ring-system templates for the depictor, written by `main`.
 fn templates() -> PathBuf {
@@ -969,6 +1015,126 @@ fn pipeline_run() -> Call<(Pipeline, String)> {
         },
         run: |(pipeline, block)| {
             pipeline.run(&block).unwrap();
+        },
+    }
+}
+
+// The catalogs and MCS.
+fn filter_catalog_match() -> Call<(FilterCatalog, Mol)> {
+    Call {
+        make: |_| {
+            let mut catalog = FilterCatalog::default();
+            let carboxyl = SmartsMatcher::from_smarts("carboxyl", "C(=O)[OH]");
+            catalog.add_entry(&FilterCatalogEntry::new("carboxyl", &carboxyl).unwrap());
+            (catalog, mol(ASPIRIN))
+        },
+        run: |(catalog, mol)| assert!(catalog.has_match(&mol).unwrap()),
+    }
+}
+
+fn fragments_cataloged() -> Call<(FragCatalog, Mol)> {
+    Call {
+        make: |_| {
+            let params = FragCatParams::new(1, 3, groups()).unwrap();
+            (FragCatalog::new(&params), mol("OCC=CC(=O)O"))
+        },
+        run: |(mut catalog, mol)| {
+            let added = FragCatGenerator
+                .add_frags_from_mol(&mol, &mut catalog)
+                .unwrap();
+            assert_eq!(added, 3);
+        },
+    }
+}
+
+fn maximum_common_substructure() -> Call<Vec<Mol>> {
+    Call {
+        make: |_| vec![mol("c1ccccc1CCO"), mol("c1ccccc1CCN")],
+        run: |mols| assert_eq!(find_mcs(&mols).unwrap().num_atoms(), 8),
+    }
+}
+
+fn maximum_common_edge_substructure() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (mol(CDK2[1]), mol(CDK2[3])),
+        run: |(mol1, mol2)| assert!(!find_mces(&mol1, &mol2).unwrap().is_empty()),
+    }
+}
+
+// Splitting a cluster computes more MCESs.
+fn rascal_clusters() -> Call<Vec<Mol>> {
+    Call {
+        make: |_| CDK2.iter().map(|smiles| mol(smiles)).collect(),
+        run: |mols| assert_eq!(rascal_cluster(&mols).unwrap()[0], [3, 4, 1, 2, 0]),
+    }
+}
+
+fn tautomer_query_matches() -> Call<(TautomerQuery, Mol)> {
+    Call {
+        make: |_| {
+            let query = TautomerQuery::new(&mol("O=C1CCCCC1")).unwrap();
+            (query, mol("OC1=CCCCC1"))
+        },
+        run: |(query, target)| assert_eq!(query.get_substruct_matches(&target).unwrap().len(), 1),
+    }
+}
+
+fn extended_query_matches() -> Call<(ExtendedQueryMol, Mol)> {
+    Call {
+        make: |_| {
+            let query = mol("COCc1n[nH]c(F)c1 |LN:1:1.3|");
+            (
+                create_extended_query_mol(&query).unwrap(),
+                mol("COOCc1n[nH]c(F)c1"),
+            )
+        },
+        run: |(query, target)| {
+            assert_eq!(
+                rd_generalized_substruct::mol_get_substruct_matches(&target, &query)
+                    .unwrap()
+                    .len(),
+                1
+            );
+        },
+    }
+}
+
+fn substruct_library_matches() -> Call<(SubstructLibrary, Mol)> {
+    Call {
+        make: |_| {
+            let mut library = SubstructLibrary::new(MolHolder::default().into(), None, None);
+            for smiles in [ASPIRIN, "CCO", "c1ccccc1"] {
+                library.add_mol(&mol(smiles)).unwrap();
+            }
+            (library, mol_from_smarts("[OX2H]").unwrap())
+        },
+        run: |(library, query)| assert_eq!(library.get_matches(&query).unwrap(), [0, 1]),
+    }
+}
+
+// Decomposing also scores, under rgroup_mutex.
+fn rgroups_decomposed() -> Call<(RGroupDecomposition, Vec<Mol>)> {
+    Call {
+        make: |_| {
+            let decomposition = RGroupDecomposition::new(&[mol("c1ccccc1")]).unwrap();
+            (decomposition, vec![mol("c1ccccc1Cl"), mol("c1ccccc1CCO")])
+        },
+        run: |(mut decomposition, mols)| {
+            for mol in &mols {
+                decomposition.add(mol).unwrap();
+            }
+            assert!(decomposition.process());
+        },
+    }
+}
+
+fn scaffold_network() -> Call<Vec<Mol>> {
+    Call {
+        make: |_| vec![mol("c1ccccc1CC1NC(=O)CCC1"), mol("c1cccnc1CC1NC(=O)CCC1")],
+        run: |mols| {
+            let network =
+                create_scaffold_network(&mols, &ScaffoldNetworkParams::default()).unwrap();
+            assert!(!network.nodes.is_empty());
         },
     }
 }
