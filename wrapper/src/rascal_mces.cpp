@@ -8,13 +8,12 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <exception>
 #include <iterator>
 #include <limits>
 #include <list>
+#include <mutex>
 #include <set>
 #include <string>
-#include <thread>
 #include <utility>
 
 #include <GraphMol/MolOps.h>
@@ -23,6 +22,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <boost/algorithm/string.hpp>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/rascal_mces.rs.h"
@@ -186,12 +186,13 @@ rust::Vec<IndexList> to_lists(
 // (RascalCluster.cpp, RascalButinaCluster.cpp) compute their proximity graph
 // on std::threads that catch nothing, so an exception in one (a molecule
 // without ring info, an atom without a computed valence) calls
-// std::terminate, and their thread count (getNumThreadsToUse in
-// RDThreads.h) negates the option, which overflows for INT_MIN. The wrapper
-// computes the graph on its own threads, each with its own copies of the
-// molecules and keeping its first exception, and runs the rest of RDKit's
-// clustering, which those files keep to themselves, as ported from them
-// below.
+// std::terminate, and each MCES they compute matches substructures
+// (deltaYExchangePossible in RascalMCES.cpp), whose ControlCHandlers the
+// threads would construct at once (control_c_lock.h). The wrapper computes
+// the graph on the calling thread, holding control_c_mutex, and runs the rest
+// of RDKit's clustering, which those files keep to themselves, as ported
+// from them below; numThreads only changes how RDKit would split the work,
+// so it is not read.
 
 // As details::ClusNode in RascalDetails.h.
 struct ClusNode {
@@ -201,15 +202,6 @@ struct ClusNode {
 };
 
 using ProxGraph = std::vector<std::vector<ClusNode>>;
-
-// As getNumThreadsToUse, without negating INT_MIN.
-unsigned int threads_to_use(int target) {
-  if (target >= 1) {
-    return static_cast<unsigned int>(target);
-  }
-  std::int64_t res = std::int64_t{std::thread::hardware_concurrency()} + target;
-  return res >= 1 ? static_cast<unsigned int>(res) : 1;
-}
 
 // As details::calcMolMolSimilarity.
 ClusNode calc_mol_mol_similarity(const RDKit::ROMol &mol1,
@@ -240,7 +232,7 @@ ClusNode calc_mol_mol_similarity(const RDKit::ROMol &mol1,
   return cn;
 }
 
-// As details::buildProximityGraph, on the wrapper's threads.
+// As details::buildProximityGraph, on the calling thread.
 ProxGraph build_proximity_graph(const std::vector<const RDKit::ROMol *> &mols,
                                 const Rascal::RascalClusterOptions &clusOpts) {
   if (mols.size() < 2) {
@@ -257,58 +249,11 @@ ProxGraph build_proximity_graph(const std::vector<const RDKit::ROMol *> &mols,
     }
   }
   std::vector<ClusNode> molSims(toDo.size());
-  const auto numThreads =
-      std::min<std::size_t>(threads_to_use(clusOpts.numThreads), toDo.size());
-  if (numThreads <= 1) {
-    for (std::size_t k = 0; k < toDo.size(); ++k) {
-      const auto [i, j] = toDo[k];
-      molSims[k] =
-          calc_mol_mol_similarity(*mols[i], *mols[j], i, j, opts, clusOpts);
-    }
-  } else {
-    // Each thread reads only its own copies, made here, of the molecules.
-    std::vector<std::vector<std::unique_ptr<RDKit::ROMol>>> copies(numThreads);
-    for (auto &copy : copies) {
-      for (const auto *mol : mols) {
-        copy.push_back(std::make_unique<RDKit::ROMol>(*mol));
-      }
-    }
-    const std::size_t eachThread = 1 + (toDo.size() / numThreads);
-    std::vector<std::exception_ptr> errors(numThreads);
-    std::vector<std::thread> threads;
-    std::exception_ptr spawnError;
-    try {
-      for (std::size_t t = 0; t < numThreads; ++t) {
-        threads.emplace_back([&, t] {
-          try {
-            const auto start = t * eachThread;
-            const auto finish = std::min(start + eachThread, toDo.size());
-            for (auto k = start; k < finish; ++k) {
-              const auto [i, j] = toDo[k];
-              molSims[k] = calc_mol_mol_similarity(*copies[t][i], *copies[t][j],
-                                                   i, j, opts, clusOpts);
-            }
-          } catch (...) {
-            errors[t] = std::current_exception();
-          }
-        });
-      }
-    } catch (...) {
-      spawnError = std::current_exception();
-    }
-    for (auto &thread : threads) {
-      thread.join();
-    }
-    // Each thread stops at its first error, and the threads take the pairs
-    // in order, so the first error is the one a serial run raises.
-    for (const auto &error : errors) {
-      if (error) {
-        std::rethrow_exception(error);
-      }
-    }
-    if (spawnError) {
-      std::rethrow_exception(spawnError);
-    }
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  for (std::size_t k = 0; k < toDo.size(); ++k) {
+    const auto [i, j] = toDo[k];
+    molSims[k] =
+        calc_mol_mol_similarity(*mols[i], *mols[j], i, j, opts, clusOpts);
   }
   for (const auto &cn : molSims) {
     proxGraph[cn.d_mol1Num][cn.d_mol2Num] =
@@ -656,6 +601,8 @@ std::unique_ptr<RascalResultList> find_mces(const RWMol &mol1,
   auto options = options_from(opts);
   check_mols({&mol1, &mol2});
   auto list = std::make_unique<RascalResultList>();
+  // The MCES matches substructures (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   list->results = Rascal::rascalMCES(mol1, mol2, options);
   return list;
 }

@@ -303,7 +303,7 @@ fn clusters() {
     ];
     assert_eq!(rascal_cluster(&mols).unwrap(), fuzzy);
     assert_eq!(rascal_butina_cluster(&mols).unwrap(), butina);
-    // The threads change nothing but the speed.
+    // num_threads changes nothing: the pairs run on the calling thread.
     for num_threads in [1, 2, 4, 64, 0, i32::MIN] {
         let opts = RascalClusterOptions {
             num_threads,
@@ -361,7 +361,8 @@ fn clusters() {
 #[test]
 fn errors_on_cluster_threads_are_returned() {
     // A molecule without ring info makes RDKit throw. Python's threads
-    // catch nothing, so the process ends; here the error is returned.
+    // catch nothing, so the process ends; here the pairs run on the calling
+    // thread, and the error is returned.
     let without_rings = |text: &str| {
         let mut mol = smiles(text);
         mol.clear_computed_props();

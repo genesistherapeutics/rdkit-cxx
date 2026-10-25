@@ -6,6 +6,7 @@
 #include "rdkit-cxx/generalized_substruct.h"
 
 #include <cstring>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>
@@ -22,6 +23,7 @@
 #include <boost/property_tree/ptree.hpp>
 
 #include "rdkit-cxx/adjust_query.h"
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/ffi/adjust_query.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
@@ -243,10 +245,12 @@ void check_link_nodes(const RDKit::ROMol &mol) {
 }
 
 // As SubstructMatch(mol, ExtendedQueryMol, params) in XQMol.cpp, with the
-// tautomer queries matched by tautomer_query.cpp's matcher.
+// tautomer queries matched by tautomer_query.cpp's matcher, holding
+// control_c_mutex (control_c_lock.h).
 std::vector<RDKit::MatchVectType> substruct_match(
     const RDKit::ROMol &mol, const XQ &query,
     const RDKit::SubstructMatchParameters &params) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return std::visit(
       overloaded{
           [&](const XQ::RWMol_T &q) {
@@ -352,7 +356,10 @@ std::unique_ptr<std::string> extended_query_mol_to_json(
 std::unique_ptr<BitVect> extended_query_mol_pattern_fingerprint_query(
     const ExtendedQueryMol &query, std::uint32_t fingerprint_size) {
   check_fingerprint_size(fingerprint_size);
+  // Pattern fingerprints match their patterns (control_c_lock.h).
+  std::unique_lock<std::mutex> control_c(control_c_mutex());
   auto fp = query.patternFingerprintQuery(fingerprint_size);
+  control_c.unlock();
   if (!fp) {
     throw ValueErrorException("an empty query has no pattern fingerprint");
   }
@@ -366,6 +373,8 @@ std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
   if (do_enumeration) {
     check_link_nodes(mol);
   }
+  // Tautomer enumeration matches its transforms (control_c_lock.h).
+  std::unique_lock<std::mutex> control_c(control_c_mutex());
   auto query =
       std::make_unique<XQ>(RDKit::GeneralizedSubstruct::createExtendedQueryMol(
           mol, do_enumeration, do_tautomers, adjust_query_properties,
@@ -402,6 +411,7 @@ rust::Vec<IndexList> mol_get_substruct_matches_extended(
 std::unique_ptr<BitVect> pattern_fingerprint_target(
     const RWMol &target, std::uint32_t fingerprint_size) {
   check_fingerprint_size(fingerprint_size);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return wrap_bit_vect(RDKit::GeneralizedSubstruct::patternFingerprintTargetMol(
       target, fingerprint_size));
 }

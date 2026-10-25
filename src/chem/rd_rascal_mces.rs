@@ -12,9 +12,9 @@
 //! not parse, which RDKit dereferences; `complete_smallest_rings` sets
 //! `complete_aromatic_rings`, as RDKit documents but does not do (it reads
 //! ring data only the latter makes). Molecules past the sizes RDKit's `int`
-//! arithmetic allows are refused, and the clusterings run their pairs on the
-//! wrapper's threads, where an error is returned rather than ending the
-//! process.
+//! arithmetic allows are refused. Each MCES matches substructures, so the
+//! clusterings run their pairs on the calling thread (CONVENTIONS.md U4),
+//! where an error is returned rather than ending the process.
 
 use std::fmt;
 
@@ -143,8 +143,9 @@ pub struct RascalClusterOptions {
     pub cluster_merge_sim: f64,
     /// The most fragments in an MCES.
     pub max_num_frags: u32,
-    /// Threads to use: this many above 0, else all but that many of the
-    /// cores (at least one).
+    /// Threads RDKit would use: this many above 0, else all but that many
+    /// of the cores. Not read: every MCES matches substructures, which take
+    /// a lock (CONVENTIONS.md U4), so the pairs run on the calling thread.
     pub num_threads: i32,
 }
 
@@ -311,9 +312,9 @@ pub fn rascal_cluster(mols: &[Mol]) -> Result<Vec<Vec<u32>>> {
 }
 
 /// The molecules' sizes are checked as `find_mces_with_opts` checks a
-/// pair's. An error from any pair is returned (Python's ends the process
-/// when it comes from another thread). Mirrors
-/// `rdRascalMCES.RascalCluster(mols, opts)`.
+/// pair's. The pairs run on the calling thread, and an error from any is
+/// returned (Python's ends the process when it comes from another thread).
+/// Mirrors `rdRascalMCES.RascalCluster(mols, opts)`.
 pub fn rascal_cluster_with_opts(
     mols: &[Mol],
     opts: &RascalClusterOptions,

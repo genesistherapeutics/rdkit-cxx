@@ -35,7 +35,8 @@ struct SubstructMatchParametersData;
 // For the wrappers that hold tautomer queries. A query read from a pickle or
 // JSON is checked with check_tautomer_query, which throws
 // ValueErrorException for one whose indices the matcher would read past;
-// tautomer_query_substruct_of is TautomerQuery::substructOf.
+// tautomer_query_substruct_of is TautomerQuery::substructOf, whose caller
+// holds control_c_mutex (control_c_lock.h).
 void check_tautomer_query(const TautomerQuery &query);
 std::vector<RDKit::MatchVectType> tautomer_query_substruct_of(
     const TautomerQuery &query, const RDKit::ROMol &mol,
