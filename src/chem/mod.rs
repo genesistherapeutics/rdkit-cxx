@@ -31,6 +31,7 @@ pub mod rdchem;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
+pub mod scaffolds;
 
 pub use rd_cip_labeler::*;
 pub use rdchem::*;

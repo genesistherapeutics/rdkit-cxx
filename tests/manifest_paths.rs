@@ -12,6 +12,41 @@
 #[rustfmt::skip]
 #[allow(unused_imports)]
 fn manifest_paths_exist() {
+    use rdkit_cxx::chem::scaffolds::rd_scaffold_network::brics_scaffold_params as _;
+    use rdkit_cxx::chem::scaffolds::rd_scaffold_network::create_scaffold_network as _;
+    let _: Option<rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType> = None;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::Fragment;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::Generic;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::GenericBond;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::Initialize;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::RemoveAttachment;
+    let _: Option<rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge> = None;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge::to_string;
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge| { let _ = &value.begin_idx; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge| { let _ = &value.end_idx; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge| { let _ = &value.type_; };
+    let _: Option<rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork> = None;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::default;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::from_pkl;
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork| { let _ = &value.counts; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork| { let _ = &value.edges; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork| { let _ = &value.mol_counts; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork| { let _ = &value.nodes; };
+    let _: Option<rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams> = None;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::default;
+    let _ = rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::new;
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.collect_mol_counts; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.flatten_chirality; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.flatten_isotopes; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.flatten_keep_largest; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.include_generic_bond_scaffolds; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.include_generic_scaffolds; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.include_names; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.include_scaffolds_with_attachments; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.include_scaffolds_without_attachments; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.keep_only_first_fragment; };
+    let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.prune_before_fragmenting; };
+    use rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_network as _;
     use rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels as _;
     use rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels_with_params as _;
     let _: Option<rdkit_cxx::Error> = None;

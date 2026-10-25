@@ -7,7 +7,170 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.BRICSScaffoldParams"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::brics_scaffold_params"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.CreateScaffoldNetwork"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::create_scaffold_network"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.EdgeType"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.EdgeType.Fragment"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::Fragment"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.EdgeType.Generic"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::Generic"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.EdgeType.GenericBond"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::GenericBond"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.EdgeType.Initialize"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::Initialize"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.EdgeType.RemoveAttachment"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType::RemoveAttachment"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge.__str__"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge::to_string"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge.beginIdx"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge::begin_idx"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge.endIdx"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge::end_idx"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge.type"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge::type_"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__init__"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::default", "rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::from_pkl"]
+overloads_note = "the bytes and str pickle overloads share from_pkl"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.counts"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::counts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.edges"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::edges"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.molCounts"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::mol_counts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.nodes"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::nodes"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.__init__"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::default", "rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::new"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.collectMolCounts"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::collect_mol_counts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.flattenChirality"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::flatten_chirality"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.flattenIsotopes"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::flatten_isotopes"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.flattenKeepLargest"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::flatten_keep_largest"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.includeGenericBondScaffolds"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::include_generic_bond_scaffolds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.includeGenericScaffolds"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::include_generic_scaffolds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.includeNames"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::include_names"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.includeScaffoldsWithAttachments"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::include_scaffolds_with_attachments"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.includeScaffoldsWithoutAttachments"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::include_scaffolds_without_attachments"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.keepOnlyFirstFragment"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::keep_only_first_fragment"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.pruneBeforeFragmenting"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::prune_before_fragmenting"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.UpdateScaffoldNetwork"
+rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_network"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
