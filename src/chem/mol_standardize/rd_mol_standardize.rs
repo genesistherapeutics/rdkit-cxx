@@ -13,6 +13,10 @@
 //! threads standardize one molecule at once), and an exception in one ends
 //! the process.
 
+mod charge;
 mod cleanup;
+mod fragment;
 
+pub use charge::*;
 pub use cleanup::*;
+pub use fragment::*;

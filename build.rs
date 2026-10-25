@@ -61,6 +61,8 @@ const BRIDGES: &[&str] = &[
     "dclv",
     "properties",
     "standardize",
+    "standardize_fragment",
+    "standardize_charge",
 ];
 
 fn main() {

@@ -645,33 +645,295 @@ fn file_names_with_nul_are_refused() {
 }
 
 #[test]
+fn fragment_remover() {
+    let default = FragmentRemover::default();
+    let no_last = FragmentRemover::new_with_params(&FragmentRemoverParams {
+        leave_last: false,
+        ..Default::default()
+    })
+    .unwrap();
+    let skip = FragmentRemover::new_with_params(&FragmentRemoverParams {
+        skip_if_all_match: true,
+        ..Default::default()
+    })
+    .unwrap();
+    for (input, expected) in [
+        ("CN(C)C.Cl.Cl.Br", ["CN(C)C", "CN(C)C", "CN(C)C"]),
+        ("Cl.Br", ["Br", "", "Br.Cl"]),
+        ("c1ccccc1.Cl", ["c1ccccc1", "", "Cl.c1ccccc1"]),
+        ("[Na+].[Cl-]", ["[Na+]", "", "[Cl-].[Na+]"]),
+    ] {
+        let m = mol(input);
+        for (remover, want) in [&default, &no_last, &skip].into_iter().zip(expected) {
+            assert_eq!(smiles(&remover.remove(&m).unwrap()), want, "{input}");
+        }
+    }
+    let mut m = mol("Cl.Br.CCO");
+    default.remove_in_place(&mut m).unwrap();
+    assert_eq!(smiles(&m), "CCO");
+
+    let data = "// comment\nhydrogen\t[H]\nchloride\t[Cl]\n";
+    let from_data = fragment_remover_from_data(data).unwrap();
+    assert_eq!(
+        smiles(&from_data.remove(&mol("CN(C)C.Cl.Br")).unwrap()),
+        "Br.CN(C)C"
+    );
+    assert_eq!(smiles(&from_data.remove(&mol("Cl.Cl")).unwrap()), "Cl.Cl");
+    let all = fragment_remover_from_data_with_params(
+        data,
+        &FragmentRemoverFromDataParams {
+            leave_last: false,
+            skip_if_all_match: false,
+        },
+    )
+    .unwrap();
+    assert_eq!(smiles(&all.remove(&mol("Cl.Cl")).unwrap()), "");
+
+    assert!(is_value(fragment_remover_from_data("x\t[C")));
+    assert!(is_value(fragment_remover_from_data("onlyname")));
+    assert!(matches!(
+        FragmentRemover::new_with_params(&FragmentRemoverParams {
+            fragment_filename: PathBuf::from("/nonexistent"),
+            ..Default::default()
+        }),
+        Err(Error::Os { .. })
+    ));
+}
+
+#[test]
+fn largest_fragment_chooser() {
+    let heavy = CleanupParameters {
+        largest_fragment_chooser_count_heavy_atoms_only: true,
+        ..Default::default()
+    };
+    let no_count = CleanupParameters {
+        largest_fragment_chooser_use_atom_count: false,
+        ..Default::default()
+    };
+    let choosers = [
+        LargestFragmentChooser::default(),
+        LargestFragmentChooser::new_with_prefer_organic(true),
+        LargestFragmentChooser::from_params(&heavy),
+        LargestFragmentChooser::from_params(&no_count),
+    ];
+    for (input, expected) in [
+        (
+            "O=S(=O)([O-])[O-].C",
+            [
+                "O=S(=O)([O-])[O-]",
+                "C",
+                "O=S(=O)([O-])[O-]",
+                "O=S(=O)([O-])[O-]",
+            ],
+        ),
+        ("CCCCC.c1ccccc1", ["CCCCC", "CCCCC", "c1ccccc1", "c1ccccc1"]),
+        (
+            "[Na+].CC(=O)[O-]",
+            ["CC(=O)[O-]", "CC(=O)[O-]", "CC(=O)[O-]", "CC(=O)[O-]"],
+        ),
+        ("O.O.CC", ["CC", "CC", "CC", "CC"]),
+        (
+            "[2H]C([2H])([2H])[2H].CC",
+            ["CC", "CC", "[2H]C([2H])([2H])[2H]", "CC"],
+        ),
+        ("C.N", ["C", "C", "N", "N"]),
+    ] {
+        let m = mol(input);
+        for (chooser, want) in choosers.iter().zip(expected) {
+            assert_eq!(smiles(&chooser.choose(&m).unwrap()), want, "{input}");
+        }
+    }
+    let mut m = mol("CCCCC.c1ccccc1");
+    choosers[0].choose_in_place(&mut m).unwrap();
+    assert_eq!(smiles(&m), "CCCCC");
+    assert_eq!(
+        LargestFragmentChooser::from_params(&CleanupParameters::default()),
+        LargestFragmentChooser::default()
+    );
+}
+
+#[test]
+fn reionizer() {
+    assert_eq!(
+        charge_corrections(),
+        [
+            ChargeCorrection::new("[Li,Na,K]", "[Li,Na,K;X0+0]", 1),
+            ChargeCorrection::new("[Mg,Ca]", "[Mg,Ca;X0+0]", 2),
+            ChargeCorrection::new("[Cl]", "[Cl;X0+0]", -1),
+        ]
+    );
+    let cc = ChargeCorrection::new("x", "[C]", 3);
+    assert_eq!(
+        (cc.name.as_str(), cc.smarts.as_str(), cc.charge),
+        ("x", "[C]", 3)
+    );
+
+    let default = Reionizer::default();
+    let no_corrections = Reionizer::new_with_ccs("", &[]).unwrap();
+    let negative_sodium =
+        Reionizer::new_with_ccs("", &[ChargeCorrection::new("x", "[Na]", -1)]).unwrap();
+    for (input, expected) in [
+        (
+            "C1=C(C=CC(=C1)[S]([O-])=O)[S](O)(=O)=O",
+            [
+                "O=S(O)c1ccc(S(=O)(=O)[O-])cc1",
+                "O=S(O)c1ccc(S(=O)(=O)[O-])cc1",
+                "O=S(O)c1ccc(S(=O)(=O)[O-])cc1",
+            ],
+        ),
+        (
+            "[Na].CC(=O)O",
+            ["CC(=O)[O-].[Na+]", "CC(=O)O.[Na]", "CC(=O)O.[Na-]"],
+        ),
+        (
+            "[Mg].OC(=O)CC(=O)O",
+            [
+                "O=C([O-])CC(=O)[O-].[Mg+2]",
+                "O=C(O)CC(=O)O.[Mg]",
+                "O=C(O)CC(=O)O.[Mg]",
+            ],
+        ),
+        ("[Cl].CN", ["CN.[Cl-]", "CN.[Cl]", "CN.[Cl]"]),
+    ] {
+        let m = mol(input);
+        for (reionizer, want) in [&default, &no_corrections, &negative_sodium]
+            .into_iter()
+            .zip(expected)
+        {
+            assert_eq!(smiles(&reionizer.reionize(&m).unwrap()), want, "{input}");
+        }
+    }
+    let mut m = mol("C1=C(C=CC(=C1)[S]([O-])=O)[S](O)(=O)=O");
+    default.reionize_in_place(&mut m).unwrap();
+    assert_eq!(smiles(&m), "O=S(O)c1ccc(S(=O)(=O)[O-])cc1");
+    assert_eq!(
+        smiles(
+            &Reionizer::new("")
+                .unwrap()
+                .reionize(&mol("[Na].CC(=O)O"))
+                .unwrap()
+        ),
+        "CC(=O)[O-].[Na+]"
+    );
+
+    let data = "// acid base\nsulfonic\tOS(=O)(=O)[OH]\tOS(=O)(=O)[O-]\n\
+                carboxylic\tC(=O)[OH]\tC(=O)[O-]\n";
+    let from_data = reionizer_from_data(data).unwrap();
+    assert_eq!(
+        smiles(
+            &from_data
+                .reionize(&mol("C1=C(C=CC(=C1)[S]([O-])=O)[S](O)(=O)=O"))
+                .unwrap()
+        ),
+        "O=S([O-])c1ccc(S(=O)(=O)O)cc1"
+    );
+    // Python's default is no charge corrections.
+    assert_eq!(
+        smiles(&from_data.reionize(&mol("[Na].CC(=O)O")).unwrap()),
+        "CC(=O)O.[Na]"
+    );
+    let with_corrections =
+        reionizer_from_data_with_charge_corrections(data, &charge_corrections()).unwrap();
+    assert_eq!(
+        smiles(&with_corrections.reionize(&mol("[Na].CC(=O)O")).unwrap()),
+        "CC(=O)[O-].[Na+]"
+    );
+
+    assert!(matches!(
+        Reionizer::new("/nonexistent"),
+        Err(Error::Os { .. })
+    ));
+    assert!(is_value(reionizer_from_data("x\t[C\tC")));
+}
+
+#[test]
+fn charge_corrections_that_do_not_parse_are_refused() {
+    // RDKit parses each correction's SMARTS as it reionizes and dereferences
+    // the null that SMARTS that do not parse give.
+    let bad = [ChargeCorrection::new("x", "[C", 1)];
+    assert!(is_value(Reionizer::new_with_ccs("", &bad)));
+    assert!(is_value(reionizer_from_data_with_charge_corrections(
+        "carboxylic\tC(=O)[OH]\tC(=O)[O-]\n",
+        &bad
+    )));
+}
+
+#[test]
+fn uncharger() {
+    let unchargers = [
+        Uncharger::default(),
+        Uncharger::new_with_params(&UnchargerParams {
+            force: true,
+            ..Default::default()
+        }),
+        Uncharger::new_with_params(&UnchargerParams {
+            protonation_only: true,
+            ..Default::default()
+        }),
+        Uncharger::new_with_params(&UnchargerParams {
+            canonical_order: false,
+            ..Default::default()
+        }),
+    ];
+    for (input, expected) in [
+        ("C[NH3+].O=C([O-])c1ccccc1", ["CN.O=C(O)c1ccccc1"; 4]),
+        (
+            "C[N+](C)(C)C.O=C([O-])c1ccccc1.O=C([O-])c1ccccc1",
+            [
+                "C[N+](C)(C)C.O=C(O)c1ccccc1.O=C([O-])c1ccccc1",
+                "C[N+](C)(C)C.O=C(O)c1ccccc1.O=C(O)c1ccccc1",
+                "C[N+](C)(C)C.O=C(O)c1ccccc1.O=C([O-])c1ccccc1",
+                "C[N+](C)(C)C.O=C(O)c1ccccc1.O=C([O-])c1ccccc1",
+            ],
+        ),
+        (
+            "C[N+](C)(C)CC([O-])=O",
+            [
+                "C[N+](C)(C)CC(=O)[O-]",
+                "C[N+](C)(C)CC(=O)O",
+                "C[N+](C)(C)CC(=O)[O-]",
+                "C[N+](C)(C)CC(=O)[O-]",
+            ],
+        ),
+        ("CC[CH2+]", ["CCC", "CCC", "[CH2+]CC", "CCC"]),
+    ] {
+        let m = mol(input);
+        for (uncharger, want) in unchargers.iter().zip(expected) {
+            assert_eq!(smiles(&uncharger.uncharge(&m).unwrap()), want, "{input}");
+        }
+    }
+    let mut m = mol("C[NH3+].O=C([O-])c1ccccc1");
+    unchargers[0].uncharge_in_place(&mut m).unwrap();
+    assert_eq!(smiles(&m), "CN.O=C(O)c1ccccc1");
+}
+
+#[test]
 fn large_molecules_are_refused() {
-    // RDKit's reionizer sums charges, which its corrections can set to 128
-    // in magnitude, in int, and subtracts the sums, so more than
-    // i32::MAX / 255 atoms are refused (U9).
-    let atom = Atom::from_num(6);
+    // One molecule for every check, to build it once. RDKit sums formal
+    // charges in int (U9): the reionizer's corrections can set charges of
+    // 128 in magnitude, and it subtracts its sums, so it refuses more than
+    // i32::MAX / 255 atoms, as do the functions that clean up; the uncharger
+    // only shrinks charges, so it refuses charges whose magnitudes sum past
+    // i32::MAX, as 2^24 of -128 do. The tautomer score adds up to 382 per
+    // atom, besides its ring and substructure terms, so the tautomer
+    // functions refuse more than about 5.6 million atoms.
+    let mut atom = Atom::from_num(6);
+    atom.set_formal_charge(-128);
     let mut big = RWMol::default();
-    for _ in 0..i32::MAX as u32 / 255 + 1 {
+    for _ in 0..1 << 24 {
         big.add_atom(&atom);
     }
+    assert!(is_value(Uncharger::default().uncharge(&big)));
+    assert!(is_value(Uncharger::default().uncharge_in_place(&mut big)));
+    assert!(is_value(Reionizer::default().reionize(&big)));
+    assert!(is_value(Reionizer::default().reionize_in_place(&mut big)));
     assert!(is_value(cleanup(&big)));
     assert!(is_value(reionize_in_place(&mut big)));
     assert!(is_value(charge_parent(&big)));
     assert!(is_value(fragment_parent(&big)));
+    assert!(is_value(canonical_tautomer(&big)));
     let mut mols = vec![mol("CC"), Mol::from(big)];
     assert!(is_value(super_parent_in_place_mols(&mut mols, 2)));
     // Checked before any molecule is changed.
     assert_eq!(mols[0].get_num_atoms(), 2);
-}
-
-#[test]
-fn large_tautomer_scores_are_refused() {
-    // RDKit's tautomer score adds up to 382 per atom for hydrogens on P, S,
-    // Se, and Te in int, besides its ring and substructure terms.
-    let atom = Atom::from_num(6);
-    let mut big = RWMol::default();
-    for _ in 0..(i32::MAX as u32 - 47000) / 383 + 1 {
-        big.add_atom(&atom);
-    }
-    assert!(is_value(canonical_tautomer(&big)));
 }

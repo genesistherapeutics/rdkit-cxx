@@ -12,8 +12,14 @@
 #[rustfmt::skip]
 #[allow(unused_imports)]
 fn manifest_paths_exist() {
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_corrections as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::canonical_tautomer as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::canonical_tautomer_with_params as _;
+    let _: Option<rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection> = None;
+    let _ = |value: &rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection| { let _ = &value.charge; };
+    let _ = |value: &rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection| { let _ = &value.name; };
+    let _ = |value: &rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection| { let _ = &value.smarts; };
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ChargeCorrection::new;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::charge_parent_in_place as _;
@@ -49,12 +55,25 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_mols as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_in_place_mols_with_params as _;
+    let _: Option<rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover> = None;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::default;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::new_with_params;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::remove;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentRemover::remove_in_place;
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_remover_from_data as _;
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_remover_from_data_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::isotope_parent_in_place_mols_with_params as _;
+    let _: Option<rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser> = None;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::default;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::new_with_prefer_organic;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::from_params;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::choose;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::choose_in_place;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place as _;
@@ -67,6 +86,14 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_mols as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionize_in_place_mols_with_params as _;
+    let _: Option<rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer> = None;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::default;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::new::<&str>;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::new_with_ccs::<&str>;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::reionize;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Reionizer::reionize_in_place;
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionizer_from_data as _;
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::reionizer_from_data_with_charge_corrections as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::remove_fragments_in_place as _;
@@ -92,6 +119,11 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_with_params as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_mols as _;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::tautomer_parent_in_place_mols_with_params as _;
+    let _: Option<rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger> = None;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::default;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::new_with_params;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::uncharge;
+    let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Uncharger::uncharge_in_place;
     use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::update_params_from_json as _;
     use rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels as _;
     use rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels_with_params as _;
