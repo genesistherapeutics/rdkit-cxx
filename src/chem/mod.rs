@@ -7,6 +7,7 @@
 //! `rdmolops` (and `rdCIPLabeler` and `rdMolInterchange`); its other
 //! submodules are reached by path, as in Python.
 
+pub mod mol_standardize;
 pub mod rd_chem_reactions;
 pub mod rd_cip_labeler;
 pub mod rd_conformer_parser;
@@ -21,6 +22,7 @@ pub mod rd_free_sasa;
 pub mod rd_mhfp_fingerprint;
 pub mod rd_mmpa;
 pub mod rd_mol_align;
+pub mod rd_mol_catalog;
 pub mod rd_mol_descriptors;
 pub mod rd_mol_hash;
 pub mod rd_mol_transforms;
@@ -29,6 +31,8 @@ pub mod rd_reduced_graphs;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
 pub mod rdchem;
+pub mod rdfiltercatalog;
+pub mod rdfragcatalog;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
