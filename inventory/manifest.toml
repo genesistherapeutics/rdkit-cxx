@@ -146,6 +146,14 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisconnectOrganometallics"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.DisconnectOrganometallicsInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::disconnect_organometallics_in_place_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.FragmentParent"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::fragment_parent_with_params"]
 
@@ -202,6 +210,69 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.LargestFragmentChooser.choo
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::LargestFragmentChooser::choose_in_place"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.Disconnect"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::disconnect"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.DisconnectInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::disconnect_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.MetalNof"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::metal_nof"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.MetalNon"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::metal_non"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.SetMetalNof"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::set_metal_nof"]
+overloads_note = "refuses a query that is not two bonded atoms (or none), which RDKit would read past a match's end or dereference a null bond for"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.SetMetalNon"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::set_metal_non"]
+overloads_note = "refuses a query that is not two bonded atoms (or none), which RDKit would read past a match's end or dereference a null bond for"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::new", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector::new_with_options"]
+overloads_note = "MetalDisconnector(options=None): Default and new take no options, new_with_options takes them"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.adjustCharges"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::adjust_charges"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.removeHapticDummies"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::remove_haptic_dummies"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.splitAromaticC"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::split_aromatic_c"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnectorOptions.splitGrignards"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnectorOptions::split_grignards"]
+rust_kind = "field"
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalize"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_with_params"]
 
@@ -209,6 +280,31 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize", "rdki
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizeInPlace"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_with_params", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_mols", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalize_in_place_mols_with_params"]
 overloads_note = "the (mols, numThreads) overload is the _mols forms (A5), whose threads are the wrapper's: each molecule is standardized by one thread, and an error is returned rather than ending the process"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer.__init__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::default", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::new"]
+rust_generics = ["", "<&str>"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer.normalize"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::normalize"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.Normalizer.normalizeInPlace"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Normalizer::normalize_in_place"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizerFromData"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalizer_from_data"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.NormalizerFromParams"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::normalizer_from_params"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.Reionize"

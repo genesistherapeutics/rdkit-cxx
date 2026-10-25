@@ -16,7 +16,11 @@
 mod charge;
 mod cleanup;
 mod fragment;
+mod metal;
+mod normalize;
 
 pub use charge::*;
 pub use cleanup::*;
 pub use fragment::*;
+pub use metal::*;
+pub use normalize::*;

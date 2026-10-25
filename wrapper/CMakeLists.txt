@@ -76,6 +76,7 @@ set(RDKIT_CXX_SOURCES
   src/standardize.cpp
   src/standardize_fragment.cpp
   src/standardize_charge.cpp
+  src/standardize_normalize.cpp
   src/file_checks.cpp
   src/streams.cpp
   src/png.cpp

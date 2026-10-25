@@ -7,7 +7,10 @@ use std::path::PathBuf;
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::*;
-use rdkit_cxx::chem::{Atom, Mol, RWMol, mol_from_smiles, mol_to_smiles};
+use rdkit_cxx::chem::{
+    Atom, Mol, MolFromMolBlockParams, RWMol, SmilesParserParams, mol_from_mol_block_with_params,
+    mol_from_smarts, mol_from_smiles, mol_from_smiles_with_params, mol_to_smiles,
+};
 
 // Expected values come from Python's rdMolStandardize.
 
@@ -936,4 +939,290 @@ fn large_molecules_are_refused() {
     assert!(is_value(super_parent_in_place_mols(&mut mols, 2)));
     // Checked before any molecule is changed.
     assert_eq!(mols[0].get_num_atoms(), 2);
+}
+
+#[test]
+fn normalizer() {
+    let normalizer = Normalizer::default();
+    let mut nitro = mol_from_smiles_with_params(
+        "CN(=O)=O",
+        &SmilesParserParams {
+            sanitize: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    nitro.update_property_cache_with_strict(false).unwrap();
+    for (m, expected) in [
+        (mol("C[N+](=O)[O-]"), "C[N+](=O)[O-]"),
+        (nitro, "C[N+](=O)[O-]"),
+        (mol("C[S+](C)[O-]"), "C[S+](C)[O-]"),
+        (
+            mol("O=[N+]([O-])c1ccccc1.CS(C)=O"),
+            "C[S+](C)[O-].O=[N+]([O-])c1ccccc1",
+        ),
+        (mol("[CH2-][N+]#N"), "[CH2-][N+]#N"),
+    ] {
+        assert_eq!(smiles(&normalizer.normalize(&m).unwrap()), expected);
+        let mut m = m;
+        normalizer.normalize_in_place(&mut m).unwrap();
+        assert_eq!(smiles(&m), expected);
+    }
+
+    let data = "// Name\tSMIRKS\nSulfoxide to S=O\t[S+:1][O-:2]>>[S+0:1]=[O-0:2]\n";
+    let params = CleanupParameters::default();
+    let sulfoxide = mol("C[S+](C)[O-]");
+    let from_data = normalizer_from_data(data, &params).unwrap();
+    assert_eq!(smiles(&from_data.normalize(&sulfoxide).unwrap()), "CS(C)=O");
+    let from_params = normalizer_from_params(&params).unwrap();
+    assert_eq!(
+        smiles(&from_params.normalize(&sulfoxide).unwrap()),
+        "C[S+](C)[O-]"
+    );
+    let none = Normalizer::new("", 0).unwrap();
+    assert_eq!(smiles(&none.normalize(&sulfoxide).unwrap()), "C[S+](C)[O-]");
+    let with_data = CleanupParameters {
+        normalization_data: vec![(
+            "Sulfoxide to S=O".to_string(),
+            "[S+:1][O-:2]>>[S+0:1]=[O-0:2]".to_string(),
+        )],
+        ..Default::default()
+    };
+    let from_params = normalizer_from_params(&with_data).unwrap();
+    assert_eq!(
+        smiles(&from_params.normalize(&sulfoxide).unwrap()),
+        "CS(C)=O"
+    );
+
+    assert!(matches!(
+        Normalizer::new("/nonexistent", 10),
+        Err(Error::Os { .. })
+    ));
+    // RDKit's reaction parser throws its own exception (E4).
+    assert!(matches!(
+        normalizer_from_data("x\tC>>>N", &params),
+        Err(Error::Parse { .. })
+    ));
+    // A transformation with no product, or two reactants, is RDKit's error.
+    let no_product = normalizer_from_data("x\t[C:1]>>", &params).unwrap();
+    assert!(matches!(
+        no_product.normalize(&mol("CC")),
+        Err(Error::Runtime { .. })
+    ));
+    assert!(is_value(no_product.normalize_in_place(&mut mol("CC"))));
+    let two = normalizer_from_data("x\t[C:1].[O:2]>>[C:1][O:2]", &params).unwrap();
+    assert!(matches!(
+        two.normalize(&mol("C.O")),
+        Err(Error::Runtime { .. })
+    ));
+}
+
+#[test]
+fn metal_disconnector() {
+    let options = MetalDisconnectorOptions::default();
+    assert_eq!(
+        options,
+        MetalDisconnectorOptions {
+            split_grignards: false,
+            split_aromatic_c: false,
+            adjust_charges: true,
+            remove_haptic_dummies: false,
+        }
+    );
+    let default = MetalDisconnector::default();
+    assert_eq!(
+        default.metal_nof().unwrap(),
+        "[#3,#11,#19,#37,#55,#87,#4,#12,#20,#38,#56,#88,#21,#22,#23,#24,#25,#26,#27,#28,#29,#30,\
+         #13,#31,#39,#40,#41,#42,#43,#44,#45,#46,#47,#48,#49,#50,#72,#73,#74,#75,#76,#77,#78,#79,\
+         #80,#81,#82,#83]~[#7,#8,F]"
+    );
+    assert_eq!(
+        default.metal_non().unwrap(),
+        "[#13,#21,#22,#23,#24,#25,#26,#27,#28,#29,#30,#39,#40,#41,#42,#43,#44,#45,#46,#47,#48,\
+         #72,#73,#74,#75,#76,#77,#78,#79]~[B,C,#14,P,#33,#51,S,#34,#52,Cl,Br,I,#85]"
+    );
+    let split = MetalDisconnector::new_with_options(&MetalDisconnectorOptions {
+        split_grignards: true,
+        split_aromatic_c: true,
+        adjust_charges: false,
+        remove_haptic_dummies: false,
+    });
+    assert_eq!(
+        split.metal_non().unwrap(),
+        "[#3,#11,#12,#19,#13,#21,#22,#23,#24,#25,#26,#27,#28,#29,#30,#39,#40,#41,#42,#43,#44,\
+         #45,#46,#47,#48,#72,#73,#74,#75,#76,#77,#78,#79]~[B,#6,#14,P,#33,#51,S,#34,#52,Cl,Br,I,\
+         #85]"
+    );
+    for (input, expected) in [
+        (
+            "[Na]OC(=O)c1ccccc1",
+            [
+                "O=C([O-])c1ccccc1.[Na+]",
+                "O=C(O)c1ccccc1.[Na]",
+                "O=C(O)c1ccccc1.[Na]",
+                "O=C([O-])c1ccccc1.[Na+]",
+            ],
+        ),
+        (
+            "c1ccccc1[Mg]Br",
+            [
+                "[Br][Mg][c]1ccccc1",
+                "Br.[Mg].c1ccccc1",
+                "Br.[Mg].c1ccccc1",
+                "[Br][Mg][c]1ccccc1",
+            ],
+        ),
+        (
+            "C[Fe](C)Cl",
+            [
+                "[CH3-].[CH3-].[Cl-].[Fe+3]",
+                "C.C.Cl.[Fe]",
+                "C.C.Cl.[Fe]",
+                "[CH3-].[CH3-].[Cl-].[Fe+3]",
+            ],
+        ),
+        (
+            "CCO[Ti](OCC)(OCC)OCC",
+            [
+                "CC[O-].CC[O-].CC[O-].CC[O-].[Ti+4]",
+                "CCO.CCO.CCO.CCO.[Ti]",
+                "CCO.CCO.CCO.CCO.[Ti]",
+                "CC[O-].CC[O-].CC[O-].CC[O-].[Ti+4]",
+            ],
+        ),
+    ] {
+        let m = mol(input);
+        assert_eq!(smiles(&default.disconnect(&m).unwrap()), expected[0]);
+        let mut in_place = mol(input);
+        default.disconnect_in_place(&mut in_place).unwrap();
+        assert_eq!(smiles(&in_place), expected[0]);
+        assert_eq!(smiles(&split.disconnect(&m).unwrap()), expected[1]);
+        // DisconnectOrganometallics' defaults are not the options'.
+        assert_eq!(
+            smiles(&disconnect_organometallics(&m).unwrap()),
+            expected[2]
+        );
+        assert_eq!(
+            smiles(&disconnect_organometallics_with_params(&m, &options).unwrap()),
+            expected[3]
+        );
+    }
+    let mut m = mol("CC[Hg]Cl");
+    disconnect_organometallics_in_place(&mut m).unwrap();
+    assert_eq!(smiles(&m), "C[CH2][Hg][Cl]");
+    let mut m = mol("c1ccccc1[Mg]Br");
+    disconnect_organometallics_in_place_with_params(&mut m, &options).unwrap();
+    assert_eq!(smiles(&m), "[Br][Mg][c]1ccccc1");
+
+    let mut custom = MetalDisconnector::new();
+    custom
+        .set_metal_non(
+            &mol_from_smarts("[Hg,Ga,Ge,In,Sn,As,Tl,Pb,Bi,Po]~[B,C,Si,P,As,Sb,S,Se,Te,Cl,Br,I,At]")
+                .unwrap(),
+        )
+        .unwrap();
+    assert_eq!(
+        custom.metal_non().unwrap(),
+        "[#80,#31,#32,#49,#50,#33,#81,#82,#83,#84]~[B,C,#14,P,#33,#51,S,#34,#52,Cl,Br,I,#85]"
+    );
+    assert_eq!(
+        smiles(&custom.disconnect(&mol("CC[Hg]Cl")).unwrap()),
+        "[CH2-]C.[Cl-].[Hg+2]"
+    );
+    assert_eq!(
+        smiles(&default.disconnect(&mol("CC[Hg]Cl")).unwrap()),
+        "C[CH2][Hg][Cl]"
+    );
+    // A query with no atoms disconnects nothing; one from SMILES works.
+    custom.set_metal_nof(&mol_from_smarts("").unwrap()).unwrap();
+    assert_eq!(custom.metal_nof().unwrap(), "");
+    let salt = mol("[Na]OC(=O)c1ccccc1");
+    assert_eq!(
+        smiles(&custom.disconnect(&salt).unwrap()),
+        "O=C([O][Na])c1ccccc1"
+    );
+    custom.set_metal_nof(&mol("[Na]O")).unwrap();
+    assert_eq!(custom.metal_nof().unwrap(), "[Na]-[#8]");
+    assert_eq!(
+        smiles(&custom.disconnect(&salt).unwrap()),
+        "O=C([O-])c1ccccc1.[Na+]"
+    );
+}
+
+#[test]
+fn metal_queries_must_be_bonded_pairs() {
+    // RDKit reads each match's second atom and the bond between the first
+    // two without checking them: Python segfaults for these queries.
+    let mut disconnector = MetalDisconnector::default();
+    for smarts in ["[Na]", "[Na]~[O]~[C]", "[Na].[O]", "[Na]~[O].[C]"] {
+        let query = mol_from_smarts(smarts).unwrap();
+        assert!(is_value(disconnector.set_metal_nof(&query)), "{smarts}");
+        assert!(is_value(disconnector.set_metal_non(&query)), "{smarts}");
+    }
+    // The refused queries were not set.
+    assert_eq!(
+        smiles(&disconnector.disconnect(&mol("[Na]OC")).unwrap()),
+        "C[O-].[Na+]"
+    );
+}
+
+#[test]
+fn haptic_dummies() {
+    let block = "
+  Mrv2014 04192113022D
+
+  0  0  0     0  0            999 V3000
+M  V30 BEGIN CTAB
+M  V30 COUNTS 12 11 0 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C -1.4646 -0.4834 0 0
+M  V30 2 C -1.4646 1.1576 0 0
+M  V30 3 C -0.103 1.6576 0 0
+M  V30 4 C 0.8578 0.3376 0 0
+M  V30 5 C -0.103 -0.9824 0 0
+M  V30 6 * 0 0.5 0 0
+M  V30 7 Fe 0 2.5 0 0
+M  V30 8 C 1.5 2.5 0 0
+M  V30 9 C 2.5 2.5 0 0
+M  V30 10 C 3.5 2.5 0 0
+M  V30 11 C 4.5 2.5 0 0
+M  V30 12 C 5.5 2.5 0 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 2 1 2
+M  V30 2 1 2 3
+M  V30 3 2 3 4
+M  V30 4 1 4 5
+M  V30 5 1 5 1
+M  V30 6 9 6 7 ENDPTS=(5 1 2 3 4 5) ATTACH=ALL
+M  V30 7 1 7 8
+M  V30 8 1 8 9
+M  V30 9 1 9 10
+M  V30 10 1 10 11
+M  V30 11 1 11 12
+M  V30 END BOND
+M  V30 END CTAB
+M  END
+";
+    let mut m = mol_from_mol_block_with_params(
+        block,
+        &MolFromMolBlockParams {
+            sanitize: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    m.update_property_cache_with_strict(false).unwrap();
+    let remove = MetalDisconnector::new_with_options(&MetalDisconnectorOptions {
+        remove_haptic_dummies: true,
+        ..Default::default()
+    });
+    assert_eq!(
+        smiles(&remove.disconnect(&m).unwrap()),
+        "C1=CCC=C1.[CH2-]CCCC.[Fe+]"
+    );
+    assert_eq!(
+        smiles(&MetalDisconnector::default().disconnect(&m).unwrap()),
+        "C1=CCC=C1.[*]->[Fe+].[CH2-]CCCC"
+    );
 }
