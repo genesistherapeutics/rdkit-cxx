@@ -8,7 +8,9 @@
 #include <stdexcept>
 #include <vector>
 
+#include <GraphMol/ChemReactions/ReactionParser.h>
 #include <GraphMol/Conformer.h>
+#include <GraphMol/SLNParse/SLNParse.h>
 #include <GraphMol/SanitException.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/BadFileException.h>
@@ -82,6 +84,10 @@ std::string encode_current_exception() {
     return encode("Parse", "", e.what());
   } catch (const RDKit::FileParseException &e) {
     return encode("Parse", "", e.what());
+  } catch (const RDKit::SLNParseException &e) {
+    return encode("Parse", "", e.what());
+  } catch (const RDKit::ChemicalReactionParserException &e) {
+    return encode("Parse", "", e.what());
   } catch (const Invar::Invariant &e) {
     // As nanobind's translator in Code/RDBoost/nbWrap/RDBase.cpp.
     return encode("Runtime", "", e.toUserString());
@@ -116,6 +122,10 @@ void raise_for_tests(rust::Str kind_str) {
     throw RDKit::BadFileException(message);
   } else if (kind == "smiles_parse") {
     throw RDKit::SmilesParse::SmilesParseException(message);
+  } else if (kind == "sln_parse") {
+    throw RDKit::SLNParseException(message);
+  } else if (kind == "reaction_parse") {
+    throw RDKit::ChemicalReactionParserException(message);
   } else if (kind == "invariant") {
     throw Invar::Invariant("Invariant Violation", message, "false", __FILE__,
                            __LINE__);

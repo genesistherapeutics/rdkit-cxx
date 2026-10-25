@@ -7,7 +7,69 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+
+[[entry]]
+python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
+rust = ["rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels", "rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdCIPLabeler.MaxIterationsExceeded"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Runtime"
+
+[[entry]]
+python = "rdkit.Chem.rdConformerParser.AddConformersFromAmberTrajectory"
+rust = ["rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory", "rdkit_cxx::chem::rd_conformer_parser::add_conformers_from_amber_trajectory_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.Deprotect"
+rust = ["rdkit_cxx::chem::rd_deprotect::deprotect", "rdkit_cxx::chem::rd_deprotect::deprotect_with_deprotections"]
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData"]
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.__init__"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.abbreviation"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::abbreviation"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.deprotection_class"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::deprotection_class"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.example"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::example"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.full_name"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::full_name"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.isValid"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::is_valid"]
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectData.reaction_smarts"
+rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::reaction_smarts"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectInPlace"
+rust = ["rdkit_cxx::chem::rd_deprotect::deprotect_in_place", "rdkit_cxx::chem::rd_deprotect::deprotect_in_place_with_deprotections"]
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.GetDeprotections"
+rust = ["rdkit_cxx::chem::rd_deprotect::get_deprotections"]
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput"
@@ -419,6 +481,297 @@ rust_kind = "field"
 python = "rdkit.Chem.rdFingerprintGenerator.TopologicalTorsionFingerprintOptions.torsionAtomCount"
 rust = ["rdkit_cxx::chem::rd_fingerprint_generator::TopologicalTorsionFingerprintOptions::torsion_atom_count"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder"]
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.CreateShinglingFromMol"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::create_shingling_from_mol", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::create_shingling_from_mol_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length)"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.CreateShinglingFromSmiles"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::create_shingling_from_smiles", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::create_shingling_from_smiles_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length)"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.Distance"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::distance"]
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeMol"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_mol", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_mol_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length)"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeMolsBulk"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_mols_bulk", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_mols_bulk_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length); RDKit's bulk calls loop over the molecules, as these do"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeSECFPMol"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_mol", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_mol_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length)"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeSECFPMolsBulk"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_mols_bulk", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_mols_bulk_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length); RDKit's bulk calls loop over the molecules, as these do"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeSECFPSmiles"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_smiles", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_smiles_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length)"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeSECFPSmilesBulk"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_smiles_bulk", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_secfp_smiles_bulk_with_params"]
+rust_generics = "<&str>"
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length); RDKit's bulk calls loop over the molecules, as these do"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeSmiles"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_smiles", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_smiles_with_params"]
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length)"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.EncodeSmilesBulk"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_smiles_bulk", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::encode_smiles_bulk_with_params"]
+rust_generics = "<&str>"
+overloads_note = "the shingling arguments every method shares are EncodeParams (EncodeSECFPParams adds length); RDKit's bulk calls loop over the molecules, as these do"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.FromArray"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::from_array"]
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.FromStringArray"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::from_string_array"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdMHFPFingerprint.MHFPEncoder.__init__"
+rust = ["rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::new", "rdkit_cxx::chem::rd_mhfp_fingerprint::MHFPEncoder::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMMPA.FragmentMol"
+rust = ["rdkit_cxx::chem::rd_mmpa::fragment_mol", "rdkit_cxx::chem::rd_mmpa::fragment_mol_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_as_smiles_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_min_cuts_as_smiles_with_pattern", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_with_params", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles", "rdkit_cxx::chem::rd_mmpa::fragment_mol_bonds_as_smiles_with_params"]
+overloads_note = "the (mol, minCuts, maxCuts, maxCutBonds) overload is fragment_mol_min_cuts and the bondsToCut one fragment_mol_bonds (A5); resultsAsMols=False is the _as_smiles forms (A4)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.AnonymousGraph"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::AnonymousGraph"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.ArthorSubstructureOrder"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ArthorSubstructureOrder"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.AtomBondCounts"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::AtomBondCounts"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.CanonicalSmiles"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::CanonicalSmiles"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.DegreeVector"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::DegreeVector"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.ElementGraph"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ElementGraph"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.ExtendedMurcko"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ExtendedMurcko"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.AnonymousGraph"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::AnonymousGraph"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.ArthorSubstructureOrder"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ArthorSubstructureOrder"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.AtomBondCounts"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::AtomBondCounts"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.CanonicalSmiles"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::CanonicalSmiles"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.DegreeVector"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::DegreeVector"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.ElementGraph"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ElementGraph"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.ExtendedMurcko"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ExtendedMurcko"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.HetAtomProtomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomProtomer"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.HetAtomProtomerv2"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomProtomerv2"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.HetAtomTautomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomTautomer"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.HetAtomTautomerv2"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomTautomerv2"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.Mesomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::Mesomer"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.MolFormula"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::MolFormula"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.MurckoScaffold"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::MurckoScaffold"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.NetCharge"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::NetCharge"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.RedoxPair"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::RedoxPair"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.Regioisomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::Regioisomer"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.SmallWorldIndexBR"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBr"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HashFunction.SmallWorldIndexBRL"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBrl"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HetAtomProtomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomProtomer"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HetAtomProtomerv2"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomProtomerv2"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HetAtomTautomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomTautomer"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.HetAtomTautomerv2"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomTautomerv2"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.Mesomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::Mesomer"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.MolFormula"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::MolFormula"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.MolHash"
+rust = ["rdkit_cxx::chem::rd_mol_hash::mol_hash", "rdkit_cxx::chem::rd_mol_hash::mol_hash_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.MurckoScaffold"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::MurckoScaffold"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.NetCharge"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::NetCharge"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.RedoxPair"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::RedoxPair"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.Regioisomer"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::Regioisomer"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.SmallWorldIndexBR"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBr"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolHash.SmallWorldIndexBRL"
+rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBrl"]
+name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges"
+rust = ["rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges", "rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdReducedGraphs.GenerateErGFingerprintForReducedGraph"
+rust = ["rdkit_cxx::chem::rd_reduced_graphs::generate_erg_fingerprint_for_reduced_graph", "rdkit_cxx::chem::rd_reduced_graphs::generate_erg_fingerprint_for_reduced_graph_with_params"]
+name_exception = "ErG is one word: generate_erg_fingerprint_for_reduced_graph"
+overloads_note = "Python raises unless atomTypes is None, so it is not bound; the other parameters are GetErGFingerprintParams, which GetErGFingerprint shares"
+
+[[entry]]
+python = "rdkit.Chem.rdReducedGraphs.GenerateMolExtendedReducedGraph"
+rust = ["rdkit_cxx::chem::rd_reduced_graphs::generate_mol_extended_reduced_graph"]
+overloads_note = "Python raises unless atomTypes is None, so it is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdReducedGraphs.GetErGFingerprint"
+rust = ["rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint", "rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint_with_params"]
+name_exception = "ErG is one word: get_erg_fingerprint"
+overloads_note = "Python raises unless atomTypes is None, so it is not bound"
+
+[[entry]]
+python = "rdkit.Chem.rdSLNParse.MolFromQuerySLN"
+rust = ["rdkit_cxx::chem::rd_sln_parse::mol_from_query_sln", "rdkit_cxx::chem::rd_sln_parse::mol_from_query_sln_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdSLNParse.MolFromSLN"
+rust = ["rdkit_cxx::chem::rd_sln_parse::mol_from_sln", "rdkit_cxx::chem::rd_sln_parse::mol_from_sln_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdSLNParse.SLNParseException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Parse"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"

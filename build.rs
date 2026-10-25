@@ -44,6 +44,15 @@ const BRIDGES: &[&str] = &[
     "graph",
     "transforms",
     "rdqueries",
+    "partial_charges",
+    "cip_labeler",
+    "mol_hash",
+    "mhfp",
+    "reduced_graphs",
+    "sln_parse",
+    "conformer_parser",
+    "mmpa",
+    "deprotect",
 ];
 
 fn main() {

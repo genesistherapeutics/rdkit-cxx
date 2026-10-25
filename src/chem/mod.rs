@@ -7,12 +7,22 @@
 //! `rdmolops` (and `rdCIPLabeler` and `rdMolInterchange`); its other
 //! submodules are reached by path, as in Python.
 
+pub mod rd_cip_labeler;
+pub mod rd_conformer_parser;
+pub mod rd_deprotect;
 pub mod rd_fingerprint_generator;
+pub mod rd_mhfp_fingerprint;
+pub mod rd_mmpa;
+pub mod rd_mol_hash;
+pub mod rd_partial_charges;
+pub mod rd_reduced_graphs;
+pub mod rd_sln_parse;
 pub mod rdchem;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
 
+pub use rd_cip_labeler::*;
 pub use rdchem::*;
 pub use rdmolfiles::*;
 pub use rdmolops::*;

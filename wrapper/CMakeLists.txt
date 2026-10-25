@@ -56,6 +56,15 @@ set(RDKIT_CXX_SOURCES
   src/fingerprint_generator.cpp
   src/adjust_query.cpp
   src/mol_checks.cpp
+  src/partial_charges.cpp
+  src/cip_labeler.cpp
+  src/mol_hash.cpp
+  src/mhfp.cpp
+  src/reduced_graphs.cpp
+  src/sln_parse.cpp
+  src/conformer_parser.cpp
+  src/mmpa.cpp
+  src/deprotect.cpp
   src/graph.cpp
   src/transforms.cpp
   src/rdqueries.cpp
@@ -74,6 +83,14 @@ set(RDKIT_CXX_RDKIT_TARGETS
   GenericGroups
   Subgraphs
   ChemTransforms
+  PartialCharges
+  CIPLabeler
+  MolHash
+  ReducedGraphs
+  SLNParse
+  MMPA
+  ChemReactions
+  Deprotect
 )
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
