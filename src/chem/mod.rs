@@ -8,6 +8,7 @@
 //! submodules are reached by path, as in Python.
 
 pub mod mol_standardize;
+pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
 pub mod rd_cip_labeler;
 pub mod rd_conformer_parser;

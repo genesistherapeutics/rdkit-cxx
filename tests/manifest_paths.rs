@@ -355,6 +355,11 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels as _;
     use rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels_with_params as _;
     let _: Option<rdkit_cxx::Error> = None;
+    let _: Option<rdkit_cxx::chem::rd_chem_draw::CDXFormat> = None;
+    let _ = rdkit_cxx::chem::rd_chem_draw::CDXFormat::Cdx;
+    let _ = rdkit_cxx::chem::rd_chem_draw::CDXFormat::Cdxml;
+    use rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block as _;
+    use rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block_format as _;
     let _: Option<rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy> = None;
     let _ = rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy::clone;
     let _ = rdkit_cxx::chem::rd_chem_reactions::CartesianProductStrategy::default;

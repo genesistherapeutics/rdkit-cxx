@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -1306,6 +1306,51 @@ rust = ["rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels", "rdkit_cxx::chem::
 python = "rdkit.Chem.rdCIPLabeler.MaxIterationsExceeded"
 rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::Runtime"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.CDXFormat"
+rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.CDXFormat.CDX"
+rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat::Cdx"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.CDXFormat.CDXML"
+rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat::Cdxml"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.MolToChemDrawBlock"
+rust = ["rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block", "rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block_format"]
+overloads_note = "format changes the return type to bytes, which a CDX document needs, so it has its own function (A4); Python returns str for either and cannot decode CDX"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.MolsFromChemDrawBlock"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.MolsFromChemDrawFile"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.NeedsCleanPolicy"
+reason = "not bound: only the ChemDraw readers take it, and they read through the unaudited ChemDraw SDK (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustExplicitHydrogens"
+reason = "not bound: only the ChemDraw readers take it, and they read through the unaudited ChemDraw SDK (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustSource"
+reason = "not bound: only the ChemDraw readers take it, and they read through the unaudited ChemDraw SDK (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.ReactionsFromChemDrawBlock"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
+
+[[entry]]
+python = "rdkit.Chem.rdChemDraw.ReactionsFromChemDrawFile"
+reason = "not bound: RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1), as for rdmolfiles.MolsFromCDXML"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.CartesianProductStrategy"
