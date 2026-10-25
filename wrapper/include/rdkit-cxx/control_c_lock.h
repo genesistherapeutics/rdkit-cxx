@@ -17,11 +17,32 @@
 #pragma once
 
 #include <mutex>
+#include <stdexcept>
 
 namespace rdkit_cxx {
 
-// Defined inline so every wrapper source shares one mutex.
+// Set while this thread runs a Rust closure that RDKit calls from inside a
+// substructure match (FMCS's final match checks run inside vf2), so with a
+// ControlCHandler alive: the thread holds control_c_mutex, which it cannot
+// release for the closure. A wrapper the closure calls that would take the
+// mutex again (undefined for a std::mutex the thread owns), or a lock that
+// comes before it in U4's order (which could deadlock with a thread waiting
+// for this one), fails with this check instead.
+inline thread_local bool in_control_c_callback = false;
+
+inline void check_not_in_control_c_callback() {
+  if (in_control_c_callback) {
+    throw std::runtime_error(
+        "a closure RDKit calls inside a substructure match cannot call "
+        "wrappers that match substructures, depict, or take another lock "
+        "that comes before the match's (CONVENTIONS.md U4)");
+  }
+}
+
+// Defined inline so every wrapper source shares one mutex. Every lock site
+// gets the mutex here, so each checks check_not_in_control_c_callback.
 inline std::mutex &control_c_mutex() {
+  check_not_in_control_c_callback();
   static std::mutex mutex;
   return mutex;
 }

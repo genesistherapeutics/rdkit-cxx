@@ -105,6 +105,13 @@ set(RDKIT_CXX_SOURCES
   src/mol_catalog.cpp
   src/frag_catalog.cpp
   src/filter_catalog.cpp
+  src/tautomer_query.cpp
+  src/generalized_substruct.cpp
+  src/rascal_mces.cpp
+  src/fmcs.cpp
+  src/scaffold_network.cpp
+  src/substruct_library.cpp
+  src/rgroup.cpp
   src/chemical_features.cpp
   src/mol_chemical_features.cpp
 )
@@ -150,6 +157,13 @@ set(RDKIT_CXX_RDKIT_TARGETS
   Catalogs
   MolCatalog
   FragCatalog
+  TautomerQuery
+  GeneralizedSubstruct
+  RascalMCES
+  FMCS
+  ScaffoldNetwork
+  SubstructLibrary
+  RGroupDecomposition
   ChemicalFeatures
   MolChemicalFeatures
 )

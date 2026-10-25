@@ -83,6 +83,13 @@ const BRIDGES: &[&str] = &[
     "mol_catalog",
     "frag_catalog",
     "filter_catalog",
+    "tautomer_query",
+    "generalized_substruct",
+    "rascal_mces",
+    "fmcs",
+    "scaffold_network",
+    "substruct_library",
+    "rgroup",
     "chemical_features",
     "mol_chemical_features",
 ];
