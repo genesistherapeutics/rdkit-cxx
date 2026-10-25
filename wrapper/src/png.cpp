@@ -21,6 +21,7 @@
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/ffi/png.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/molfiles.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
@@ -158,7 +159,7 @@ rust::Vec<std::uint8_t> mol_to_png(const RWMol &mol, const std::string &png,
   }
   std::unique_lock<std::mutex> lock;
   if (params.includeSmiles && params.smilesWriteParams.doRandom) {
-    lock = std::unique_lock<std::mutex>(random_generator_mutex());
+    lock = std::unique_lock<std::mutex>(random_mutex());
   }
   return to_bytes(RDKit::addMolToPNGString(mol, png, params));
 }

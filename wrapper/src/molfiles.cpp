@@ -39,6 +39,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/molfiles.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
@@ -114,7 +115,7 @@ std::vector<std::string> strings(const rust::Vec<rust::String> &values) {
 
 // The randomized writers advance RDKit's global generator.
 std::unique_lock<std::mutex> random_lock(bool random) {
-  return random ? std::unique_lock<std::mutex>(random_generator_mutex())
+  return random ? std::unique_lock<std::mutex>(random_mutex())
                 : std::unique_lock<std::mutex>();
 }
 
@@ -580,7 +581,7 @@ std::unique_ptr<std::vector<std::string>> mol_to_random_smiles_vect(
     bool isomeric_smiles, bool kekule_smiles, bool all_bonds_explicit,
     bool all_hs_explicit) {
   // RDKit seeds the global generator and draws from it for each SMILES.
-  std::lock_guard<std::mutex> lock(random_generator_mutex());
+  std::lock_guard<std::mutex> lock(random_mutex());
   return std::make_unique<std::vector<std::string>>(
       RDKit::MolToRandomSmilesVect(mol, num_smiles, random_seed,
                                    isomeric_smiles, kekule_smiles,

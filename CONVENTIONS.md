@@ -149,11 +149,14 @@ rule changes the rule first.
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
   mol-block (V2000 and V3000), Marvin, ChemDraw, and PNG writers for a
   molecule without a conformer; and `molzip` with `generateCoordinates`.
-  RDKit's random-number generator (`getRandomGenerator` in
-  `RDGeneral/utils.cpp`) is another: randomized SMILES and 2D depiction's
-  random flips (`nFlipsPerSample`) draw from it, so every wrapper that can
-  reach it holds `random_generator_mutex()` (`rdkit-cxx/util.h`). A wrapper
-  that needs both takes `lock_depiction()` first.
+  RDKit's random number generator (`RDGeneral/utils.cpp`) is shared by
+  every module, so it has one lock, `random_mutex()` in
+  `rdkit-cxx/global_state.h`, held for the whole call by every wrapper whose
+  RDKit call can seed it or draw from it: the SMILES and CXSMILES writers
+  with `doRandom`, `MolToRandomSmilesVect`, PNG metadata with random SMILES,
+  and `compute2DCoords` with random flips (`nFlipsPerSample`; the writers'
+  default depiction never draws). A wrapper that needs both locks takes
+  `lock_depiction()` first.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
