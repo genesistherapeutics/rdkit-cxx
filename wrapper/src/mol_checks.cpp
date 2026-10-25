@@ -8,9 +8,11 @@
 #include <cstdlib>
 #include <limits>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include <GraphMol/MonomerInfo.h>
+#include <GraphMol/QueryOps.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDValue.h>
 #include <boost/shared_array.hpp>
@@ -96,24 +98,66 @@ void check_formal_charge_sum(const RDKit::ROMol &mol, std::int64_t headroom) {
   }
 }
 
-void check_monomer_types(const RDKit::ROMol &mol) {
+namespace {
+
+void check_monomer_info(const RDKit::Atom &atom, const std::string &which) {
   using RDKit::AtomMonomerInfo;
-  for (const auto *atom : mol.atoms()) {
-    const auto *info = atom->getMonomerInfo();
-    if (!info) {
-      continue;
+  const auto *info = atom.getMonomerInfo();
+  if (!info) {
+    return;
+  }
+  int type = info->getMonomerType();
+  if (type < AtomMonomerInfo::UNKNOWN || type > AtomMonomerInfo::OTHER) {
+    throw ValueErrorException(which + std::to_string(atom.getIdx()) +
+                              " has unknown AtomMonomerType " +
+                              std::to_string(type));
+  }
+  if (type == AtomMonomerInfo::PDBRESIDUE &&
+      !dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
+    throw ValueErrorException(
+        which + std::to_string(atom.getIdx()) +
+        " has type PDBRESIDUE, which only AtomPDBResidueInfo can have");
+  }
+}
+
+}  // namespace
+
+// MolPickler pickles a recursive query's molecule as a whole molecule, and
+// reads it back the same way, so those molecules are checked too. Their
+// queries can nest without bound, so the walk keeps its own stack, and it
+// visits each query and molecule once.
+void check_monomer_types(const RDKit::ROMol &mol) {
+  using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
+  std::vector<const RDKit::ROMol *> mols{&mol};
+  std::vector<const AtomQuery *> queries;
+  std::unordered_set<const void *> seen{&mol};
+  while (!mols.empty()) {
+    const auto *current = mols.back();
+    mols.pop_back();
+    const std::string which =
+        current == &mol ? "atom " : "atom of a recursive query's molecule, ";
+    for (const auto *atom : current->atoms()) {
+      check_monomer_info(*atom, which);
+      if (atom->hasQuery() && seen.insert(atom->getQuery()).second) {
+        queries.push_back(atom->getQuery());
+      }
     }
-    int type = info->getMonomerType();
-    if (type < AtomMonomerInfo::UNKNOWN || type > AtomMonomerInfo::OTHER) {
-      throw ValueErrorException("atom " + std::to_string(atom->getIdx()) +
-                                " has unknown AtomMonomerType " +
-                                std::to_string(type));
-    }
-    if (type == AtomMonomerInfo::PDBRESIDUE &&
-        !dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
-      throw ValueErrorException(
-          "atom " + std::to_string(atom->getIdx()) +
-          " has type PDBRESIDUE, which only AtomPDBResidueInfo can have");
+    while (!queries.empty()) {
+      const auto *query = queries.back();
+      queries.pop_back();
+      if (const auto *recursive =
+              dynamic_cast<const RDKit::RecursiveStructureQuery *>(query)) {
+        const auto *inner = recursive->getQueryMol();
+        if (inner && seen.insert(inner).second) {
+          mols.push_back(inner);
+        }
+      }
+      for (auto child = query->beginChildren(); child != query->endChildren();
+           ++child) {
+        if (seen.insert(child->get()).second) {
+          queries.push_back(child->get());
+        }
+      }
     }
   }
 }

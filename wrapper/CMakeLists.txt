@@ -101,6 +101,10 @@ set(RDKIT_CXX_SOURCES
   src/mol_align.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
+  src/catalog_checks.cpp
+  src/mol_catalog.cpp
+  src/frag_catalog.cpp
+  src/filter_catalog.cpp
   src/tautomer_query.cpp
   src/generalized_substruct.cpp
   src/rascal_mces.cpp
@@ -145,6 +149,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   O3AAlign
   FilterCatalog
   MolStandardize
+  Catalogs
+  MolCatalog
+  FragCatalog
   TautomerQuery
   GeneralizedSubstruct
   RascalMCES

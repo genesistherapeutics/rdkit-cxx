@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -3835,6 +3835,110 @@ rust = ["rdkit_cxx::chem::rd_mol_align::O3A::weights"]
 [[entry]]
 python = "rdkit.Chem.rdMolAlign.RandomTransform"
 rust = ["rdkit_cxx::chem::rd_mol_align::random_transform", "rdkit_cxx::chem::rd_mol_align::random_transform_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.CreateMolCatalog"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::create_mol_catalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.AddEdge"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::add_edge"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.AddEntry"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::add_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetBitDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_bit_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetBitEntryId"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_bit_entry_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryBitId"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_bit_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetEntryDownIds"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_entry_down_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetFPLength"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_fp_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::from_pickle"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetMol"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetOrder"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.Serialize"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetDescription"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetMol"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetOrder"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::default", "rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::from_pickle"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
@@ -7734,6 +7838,491 @@ rust = ["rdkit_cxx::chem::rdchem::ValenceType::Implicit"]
 [[entry]]
 python = "rdkit.Chem.rdchem.tossit"
 reason = "RDKit's test hook that raises IndexError"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList.AddPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList::add_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList.SetExclusionPatterns"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList::set_exclusion_patterns"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.ExclusionList.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::ExclusionList::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.AddEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::add_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_entry"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetEntryWithIdx"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_entry_with_idx"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetFilterMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_filter_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetFirstMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_first_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.HasMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::has_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.RemoveEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::remove_entry", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::remove_entry_filter_catalog_entry"]
+overloads_note = "RemoveEntry(obj) takes an index or an entry; the entry form is remove_entry_filter_catalog_entry (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::from_pickle", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::new", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::from_catalogs"]
+overloads_note = "the bytes and str pickle overloads share from_pickle, an unsafe fn (U2); FilterCatalog(params) is new and FilterCatalog(catalogs) from_catalogs (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogCanSerialize"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::filter_catalog_can_serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.ClearProp"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::clear_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetDescription"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetFilterMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_filter_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetProp"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.GetPropList"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::get_prop_list"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.HasFilterMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::has_filter_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.IsValid"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::is_valid"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.Serialize"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.SetDescription"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::set_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.SetProp"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::set_prop"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.AddCatalog"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams::add_catalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs"]
+overloads_note = "Rust has no nested types, so the flag type is the module's"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.ALL"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::ALL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.BRENK"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::BRENK"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_BMS"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_BMS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_Dundee"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_Dundee"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_Glaxo"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_Glaxo"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_Inpharmatica"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_Inpharmatica"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_LINT"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_LINT"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_MLSMR"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_MLSMR"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.CHEMBL_SureChEMBL"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::CHEMBL_SureChEMBL"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.NIH"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::NIH"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS_A"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS_A"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS_B"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS_B"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.PAINS_C"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::PAINS_C"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.FilterCatalogs.ZINC"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogs::ZINC"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalogParams::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcherMut"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher.AddChild"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::add_child", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcherMut::add_child"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher.SetPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::set_pattern", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcherMut::set_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterHierarchyMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::default", "rdkit_cxx::chem::rdfiltercatalog::FilterHierarchyMatcher::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch.atomPairs"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch::atom_pairs"]
+rust_kind = "field"
+overloads_note = "read-only in Python; a public field of a plain struct here"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatch.filterMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatch::filter_match"]
+rust_kind = "field"
+overloads_note = "read-only in Python; a public field of a plain struct here"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.GetMatches"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::get_matches"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.GetName"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::get_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.HasMatch"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::has_match"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.IsValid"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::is_valid"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::new"]
+rust_generics = "<Box<dyn rdkit_cxx::chem::rdfiltercatalog::CustomFilterMatcher>>"
+overloads_note = "Python subclasses the class to override IsValid, HasMatch, and GetMatches; Rust cannot, so new also takes a CustomFilterMatcher with those methods, which must be Send + Sync because catalogs share matchers between threads, and whose panics are caught at the bridge"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.__str__"
+reason = "Python's string protocol: FilterMatcher implements Display with get_name"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.GetFlattenedFunctionalGroupHierarchy"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::get_flattened_functional_group_hierarchy", "rdkit_cxx::chem::rdfiltercatalog::get_flattened_functional_group_hierarchy_with_normalized"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.GetFunctionalGroupHierarchy"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::get_functional_group_hierarchy"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.IntPair"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::int_pair"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.RunFilterCatalog"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::run_filter_catalog", "rdkit_cxx::chem::rdfiltercatalog::run_filter_catalog_with_num_threads"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.GetMaxCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::get_max_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.GetMinCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::get_min_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.GetPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::get_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.IsValid"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::is_valid"]
+overloads_note = "SmartsMatcher dereferences to FilterMatcher, whose is_valid runs SmartsMatcher's"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.SetMaxCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_max_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.SetMinCount"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_min_count"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.SetPattern"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_pattern", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_pattern_str"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::new", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_rhs", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_mol", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_mol_with_params", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_smarts", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_smarts_with_params"]
+overloads_note = "SmartsMatcher(name) is new and SmartsMatcher(rhs) from_rhs; the (name, mol) and (name, smarts) overloads are from_mol and from_smarts, with their counts in SmartsMatcherParams (A2, A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator.AddFragsFromMol"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator::add_frags_from_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatGenerator.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatGenerator::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetFuncGroup"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_func_group"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetLowerFragLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_lower_frag_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetNumFuncGroups"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_num_func_groups"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetTolerance"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_tolerance"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetTypeString"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_type_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.GetUpperFragLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::get_upper_frag_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.Serialize"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatParams.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatParams::new", "rdkit_cxx::chem::rdfragcatalog::FragCatParams::new_with_tol"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitDescription"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitDiscrims"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_discrims"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitEntryId"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_entry_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitFuncGroupIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_func_group_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetBitOrder"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_bit_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetCatalogParams"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_catalog_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryBitId"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_bit_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryDescription"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_description"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryDownIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_down_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryFuncGroupIds"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_func_group_ids"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetEntryOrder"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_entry_order"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetFPLength"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_fp_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.GetNumEntries"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::get_num_entries"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.Serialize"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::serialize"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__getstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::default", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::new", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::from_pickle"]
+overloads_note = "the bytes and str pickle overloads share from_pickle"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__setstate__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.GetFPForMol"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::get_fp_for_mol"]
+
+[[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.__init__"
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGFile"
