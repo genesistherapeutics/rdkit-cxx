@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -1877,6 +1877,74 @@ name_exception = "exported enum value (N7)"
 python = "rdkit.Chem.rdMolHash.SmallWorldIndexBRL"
 rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBrl"]
 name_exception = "exported enum value (N7)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.CanonicalizeConformer"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::canonicalize_conformer", "rdkit_cxx::chem::rd_mol_transforms::canonicalize_conformer_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.CanonicalizeMol"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::canonicalize_mol", "rdkit_cxx::chem::rd_mol_transforms::canonicalize_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputeCanonicalTransform"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_canonical_transform", "rdkit_cxx::chem::rd_mol_transforms::compute_canonical_transform_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputeCentroid"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_centroid", "rdkit_cxx::chem::rd_mol_transforms::compute_centroid_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputePrincipalAxesAndMoments"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments", "rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.ComputePrincipalAxesAndMomentsFromGyrationMatrix"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments_from_gyration_matrix", "rdkit_cxx::chem::rd_mol_transforms::compute_principal_axes_and_moments_from_gyration_matrix_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetAngleDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_angle_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetAngleRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_angle_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetBondLength"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_bond_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetDihedralDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_dihedral_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.GetDihedralRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::get_dihedral_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetAngleDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_angle_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetAngleRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_angle_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetBondLength"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_bond_length"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetDihedralDeg"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_dihedral_deg"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.SetDihedralRad"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::set_dihedral_rad"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolTransforms.TransformConformer"
+rust = ["rdkit_cxx::chem::rd_mol_transforms::transform_conformer"]
 
 [[entry]]
 python = "rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges"

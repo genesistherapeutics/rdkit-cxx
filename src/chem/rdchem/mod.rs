@@ -32,7 +32,7 @@ pub use atom_labels::{
     set_supplemental_smiles_label,
 };
 pub use bond::{AsBond, Bond, BondMut, BondRef};
-pub use conformer::{Conformer, ConformerMut, ConformerRef};
+pub use conformer::{AsConformer, AsConformerMut, Conformer, ConformerMut, ConformerRef};
 pub use editable_mol::EditableMol;
 pub use enums::{
     BondDir, BondStereo, BondType, ChiralType, HybridizationType, StereoDescriptor,

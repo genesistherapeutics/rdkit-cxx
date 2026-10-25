@@ -17,6 +17,7 @@ pub mod rd_mhfp_fingerprint;
 pub mod rd_mmpa;
 pub mod rd_mol_descriptors;
 pub mod rd_mol_hash;
+pub mod rd_mol_transforms;
 pub mod rd_partial_charges;
 pub mod rd_reduced_graphs;
 pub mod rd_sln_parse;
