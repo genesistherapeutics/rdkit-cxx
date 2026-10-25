@@ -42,4 +42,27 @@ class MatrixCacheGuard {
 // 46340 atoms. Throws ValueErrorException for a larger molecule (U3).
 void check_matrix_size(const RDKit::ROMol &mol);
 
+// RDKit's descriptors cache their results, and per-atom contributions, in a
+// molecule's computed properties, and read them back unless forced, after
+// edits and for other conformers; the Chi descriptors index a cached per-atom
+// vector by atom without checking its length. No molecule Rust holds keeps
+// one between calls (CONVENTIONS.md U8).
+
+// Removes every descriptor cache from the molecule's properties.
+void clear_descriptor_caches(const RDKit::ROMol &mol);
+
+// As MatrixCacheGuard, for the descriptor caches.
+class DescriptorCacheGuard {
+ public:
+  explicit DescriptorCacheGuard(const RDKit::ROMol &mol) : d_mol(mol) {
+    clear_descriptor_caches(d_mol);
+  }
+  ~DescriptorCacheGuard() { clear_descriptor_caches(d_mol); }
+  DescriptorCacheGuard(const DescriptorCacheGuard &) = delete;
+  DescriptorCacheGuard &operator=(const DescriptorCacheGuard &) = delete;
+
+ private:
+  const RDKit::ROMol &d_mol;
+};
+
 }  // namespace rdkit_cxx

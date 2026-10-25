@@ -14,6 +14,7 @@ pub(crate) mod conformer;
 pub(crate) mod conformer_parser;
 pub(crate) mod data_structs;
 pub(crate) mod deprotect;
+pub(crate) mod descriptors;
 pub(crate) mod errors;
 pub(crate) mod fingerprint_generator;
 pub(crate) mod fingerprints;
