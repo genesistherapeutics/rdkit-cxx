@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -4333,6 +4333,90 @@ rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tanimoto_dist", "rdkit_cxx::ch
 [[entry]]
 python = "rdkit.Chem.rdShapeHelpers.ShapeTverskyIndex"
 rust = ["rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index", "rdkit_cxx::chem::rd_shape_helpers::shape_tversky_index_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.PatternFingerprintTautomerTarget"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::pattern_fingerprint_tautomer_target", "rdkit_cxx::chem::rd_tautomer_query::pattern_fingerprint_tautomer_target_with_fingerprint_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetModifiedAtoms"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_modified_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetModifiedBonds"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_modified_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetSubstructMatch"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_substruct_match", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_substruct_match_with_params"]
+overloads_note = "the params form covers the keyword form"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetSubstructMatches"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_substruct_matches", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_substruct_matches_with_params"]
+overloads_note = "the params form covers the keyword form"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetSubstructMatchesWithTautomers"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_substruct_matches_with_tautomers", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_substruct_matches_with_tautomers_with_params"]
+overloads_note = "the params form covers the keyword form"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetTautomers"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_tautomers"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetTemplateMolecule"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_template_molecule"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.InitFromStream"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::init_from_stream"]
+rust_generics = "<&[u8]>"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.IsSubstructOf"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::is_substruct_of", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::is_substruct_of_with_params"]
+overloads_note = "the params form covers the keyword form"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.PatternFingerprintTemplate"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::pattern_fingerprint_template", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::pattern_fingerprint_template_with_fingerprint_size"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.ToBinary"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::to_binary"]
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.ToStream"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::to_stream"]
+rust_generics = "<Vec<u8>>"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__init__"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::default", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::from_pickle", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new_with_tautomer_transform_file"]
+rust_generics = ["", "", "", "<&str>"]
+overloads_note = "the bytes and str pickle overloads share from_pickle; new is TautomerQuery(mol), with new_with_tautomer_transform_file for its optional file"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__new__"
+reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__setstate__"
+reason = "Python's pickling protocol: to_binary and from_pickle cover it"
+
+[[entry]]
+python = "rdkit.Chem.rdTautomerQuery.TautomerQueryCanSerialize"
+rust = ["rdkit_cxx::chem::rd_tautomer_query::tautomer_query_can_serialize"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ALLOW_CHARGE_SEPARATION"

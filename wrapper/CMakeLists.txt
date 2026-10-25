@@ -101,6 +101,7 @@ set(RDKIT_CXX_SOURCES
   src/mol_align.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
+  src/tautomer_query.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -141,6 +142,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   O3AAlign
   FilterCatalog
   MolStandardize
+  TautomerQuery
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

@@ -69,5 +69,6 @@ pub(crate) mod stereo;
 pub(crate) mod substance_group;
 pub(crate) mod substruct;
 pub(crate) mod suppliers;
+pub(crate) mod tautomer_query;
 pub(crate) mod transforms;
 pub(crate) mod writers;

@@ -28,6 +28,7 @@ pub mod rd_partial_charges;
 pub mod rd_reduced_graphs;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
+pub mod rd_tautomer_query;
 pub mod rdchem;
 pub mod rdmolfiles;
 pub mod rdmolops;
