@@ -578,15 +578,11 @@ fn usr() {
             2.2793797955145485,
         ],
     );
-    assert_all_close(
-        &cat[48..52],
-        &[
-            2.802823155653427,
-            1.3837331566664002,
-            0.0,
-            2.786484859935878,
-        ],
-    );
+    assert_all_close(&cat[48..50], &[2.802823155653427, 1.3837331566664002]);
+    // A skewness of zero is the cube root of a third moment that cancels to
+    // rounding error, which the cube root magnifies (3e-6 on aarch64).
+    assert_close(cat[50], 0.0, 1e-5);
+    assert_close(cat[51], 2.786484859935878, 1e-9);
     let selected = GetUSRCATParams {
         atom_selections: Some(vec![vec![1, 2, 3], vec![5, 6, 7, 8]]),
         ..Default::default()
