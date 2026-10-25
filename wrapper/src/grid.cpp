@@ -47,38 +47,6 @@ bool inside(const Grid &grid, const RDGeom::Point3D &point) {
          in(t.z, grid.getNumZ());
 }
 
-// Checks a new grid before initGrid casts its size. RDKit's own
-// preconditions report nonpositive (and NaN) dimensions and spacings. A grid
-// with no points along an axis can't be copied, since the copy's dimension
-// is then zero, so it is rejected too.
-void check_dimensions(double dim_x, double dim_y, double dim_z, double spacing,
-                      bool has_offset, const Point3D &offset) {
-  if (!(dim_x > 0.0 && dim_y > 0.0 && dim_z > 0.0 && spacing > 0.0)) {
-    return;
-  }
-  if (!std::isfinite(spacing)) {
-    throw ValueErrorException("the grid spacing must be finite");
-  }
-  if (has_offset && !(std::isfinite(offset.x) && std::isfinite(offset.y) &&
-                      std::isfinite(offset.z))) {
-    throw ValueErrorException("the grid offset must be finite");
-  }
-  double points = 1.0;
-  for (double dim : {dim_x, dim_y, dim_z}) {
-    double n = std::floor(dim / spacing + 0.5);
-    if (!(n <= kMaxInt)) {
-      throw ValueErrorException("the grid has too many points");
-    }
-    if (n < 1.0) {
-      throw ValueErrorException("the grid has no points along an axis");
-    }
-    points *= n;
-  }
-  if (points > kMaxInt) {
-    throw ValueErrorException("the grid has too many points");
-  }
-}
-
 // computeGridIndices casts the window radius in grid points to int and sums
 // the squares of three such ints, so it must stay below sqrt(INT_MAX / 3).
 void check_window_radius(const UniformGrid3D &grid, double window_radius) {
@@ -123,12 +91,72 @@ void assign_op(Grid &grid, const Grid &other, std::uint8_t op) {
 
 }  // namespace
 
+// Checks a new grid before initGrid casts its size (grid.h). RDKit's own
+// preconditions report nonpositive (and NaN) dimensions and spacings. A grid
+// with no points along an axis can't be copied, since the copy's dimension
+// is then zero, so it is rejected too.
+void check_grid_dimensions(double dim_x, double dim_y, double dim_z,
+                           double spacing, bool has_offset,
+                           const Point3D &offset) {
+  if (!(dim_x > 0.0 && dim_y > 0.0 && dim_z > 0.0 && spacing > 0.0)) {
+    return;
+  }
+  if (!std::isfinite(spacing)) {
+    throw ValueErrorException("the grid spacing must be finite");
+  }
+  if (has_offset && !(std::isfinite(offset.x) && std::isfinite(offset.y) &&
+                      std::isfinite(offset.z))) {
+    throw ValueErrorException("the grid offset must be finite");
+  }
+  double points = 1.0;
+  for (double dim : {dim_x, dim_y, dim_z}) {
+    double n = std::floor(dim / spacing + 0.5);
+    if (!(n <= kMaxInt)) {
+      throw ValueErrorException("the grid has too many points");
+    }
+    if (n < 1.0) {
+      throw ValueErrorException("the grid has no points along an axis");
+    }
+    points *= n;
+  }
+  if (points > kMaxInt) {
+    throw ValueErrorException("the grid has too many points");
+  }
+}
+
+bool grid_contains(const UniformGrid3D &grid, const RDGeom::Point3D &point) {
+  return inside(grid, point);
+}
+
+// RDKit casts the sphere's extent in grid points to int. A negative step
+// can make it cast a negative layer number to unsigned int.
+void check_sphere_extent(double spacing, unsigned max_num,
+                         unsigned bits_per_val, double radius,
+                         double step_size) {
+  if (!(step_size >= 0.0)) {
+    throw ValueErrorException("the step size must not be negative");
+  }
+  double max_val = (1u << bits_per_val) - 1;
+  double extent = (std::abs(radius) + max_val * step_size) / spacing;
+  if (!(extent + max_num < kMaxInt)) {
+    throw ValueErrorException("the sphere is too large for the grid");
+  }
+}
+
+void check_sphere_extent(const UniformGrid3D &grid, double radius,
+                         double step_size) {
+  check_sphere_extent(
+      grid.getSpacing(),
+      std::max({grid.getNumX(), grid.getNumY(), grid.getNumZ()}),
+      grid.getOccupancyVect()->getNumBitsPerVal(), radius, step_size);
+}
+
 std::unique_ptr<UniformGrid3D> uniform_grid3d_new(double dim_x, double dim_y,
                                                   double dim_z, double spacing,
                                                   DiscreteValueType val_type,
                                                   bool has_offset,
                                                   const Point3D &offset) {
-  check_dimensions(dim_x, dim_y, dim_z, spacing, has_offset, offset);
+  check_grid_dimensions(dim_x, dim_y, dim_z, spacing, has_offset, offset);
   auto off = rd(offset);
   return std::make_unique<UniformGrid3D>(dim_x, dim_y, dim_z, spacing, val_type,
                                          has_offset ? &off : nullptr);
@@ -239,17 +267,7 @@ void uniform_grid3d_set_sphere_occupancy(UniformGrid3D &grid,
     }
     throw RDGeom::GridException("Center outside the grid boundary");
   }
-  // RDKit casts the sphere's extent in grid points to int. A negative step
-  // can make it cast a negative layer number to unsigned int.
-  if (!(step_size >= 0.0)) {
-    throw ValueErrorException("the step size must not be negative");
-  }
-  double max_val = (1u << grid.getOccupancyVect()->getNumBitsPerVal()) - 1;
-  double extent = (std::abs(radius) + max_val * step_size) / grid.getSpacing();
-  double max_num = std::max({grid.getNumX(), grid.getNumY(), grid.getNumZ()});
-  if (!(extent + max_num < kMaxInt)) {
-    throw ValueErrorException("the sphere is too large for the grid");
-  }
+  check_sphere_extent(grid, radius, step_size);
   grid.setSphereOccupancy(rd(center), radius, step_size, max_layers,
                           ignore_out_of_bound);
 }
@@ -317,7 +335,7 @@ std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_default() {
 std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_new(
     double dim_x, double dim_y, double dim_z, double spacing, bool has_offset,
     const Point3D &offset) {
-  check_dimensions(dim_x, dim_y, dim_z, spacing, has_offset, offset);
+  check_grid_dimensions(dim_x, dim_y, dim_z, spacing, has_offset, offset);
   auto off = rd(offset);
   return std::make_unique<UniformRealValueGrid3D>(dim_x, dim_y, dim_z, spacing,
                                                   has_offset ? &off : nullptr);

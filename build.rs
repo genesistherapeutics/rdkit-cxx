@@ -62,6 +62,15 @@ const BRIDGES: &[&str] = &[
     "properties",
     "depictor",
     "coord_gen",
+    "force_field",
+    "force_field_helpers",
+    "embedder",
+    "distance_geometry",
+    "mol_transforms",
+    "alignment",
+    "determine_bonds",
+    "shape_helpers",
+    "mol_align",
 ];
 
 fn main() {

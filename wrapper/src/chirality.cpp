@@ -165,11 +165,21 @@ BondWedgingParametersData bond_wedging_parameters_default() {
   return BondWedgingParametersData{params.wedgeTwoBondsIfPossible};
 }
 
+// wedgeBond requires the conformer to belong to the bond's molecule, and a
+// Rust Conformer belongs to none (conformer_clone), so a copy is added to
+// the molecule for the call and removed after it. addConformer checks the
+// number of atoms.
 void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
                      const BondWedgingParametersData &data) {
   RDKit::Chirality::BondWedgingParameters params;
   params.wedgeTwoBondsIfPossible = data.wedge_two_bonds_if_possible;
-  RDKit::Chirality::wedgeMolBonds(mol, &conformer, &params);
+  auto id = mol.addConformer(new Conformer(conformer), true);
+  struct Remove {
+    RWMol &mol;
+    unsigned id;
+    ~Remove() { mol.removeConformer(id); }
+  } remove{mol, id};
+  RDKit::Chirality::wedgeMolBonds(mol, &mol.getConformer(id), &params);
 }
 
 void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify) {

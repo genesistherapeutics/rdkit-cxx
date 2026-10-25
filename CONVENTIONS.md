@@ -158,9 +158,18 @@ rule changes the rule first.
   `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
   every wrapper whose RDKit call can seed it or draw from it: the SMILES and
   CXSMILES writers with `doRandom`, `MolToRandomSmilesVect`, PNG metadata
-  with random SMILES, and the depictor's sampling (`nFlipsPerSample` and
-  random bond flips; the writers' default depiction never draws). A wrapper
-  that needs both locks takes `lock_depiction()` first.
+  with random SMILES, the depictor's sampling (`nFlipsPerSample` and random
+  bond flips; the writers' default depiction never draws), the embedder
+  without a seed, DistGeom's `EmbedBoundsMatrix`, and MolAlign's
+  `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
+  the SIGINT handler through static variables) has its own lock,
+  `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
+  by every wrapper whose RDKit call constructs one. MolAlign's
+  `symmetrizeTerminalAtoms`, which the best-alignment functions and the
+  embedder's pruning reach, assigns a static on every call, so callers hold
+  `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
+  several of these locks takes them in this order: `lock_depiction()`,
+  `control_c_mutex()`, `symmetrize_mutex()`, then `random_mutex()`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
