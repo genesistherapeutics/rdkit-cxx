@@ -101,6 +101,10 @@ set(RDKIT_CXX_SOURCES
   src/mol_align.cpp
   src/chem_reactions.cpp
   src/enumerate.cpp
+  src/catalog_checks.cpp
+  src/mol_catalog.cpp
+  src/frag_catalog.cpp
+  src/filter_catalog.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -141,6 +145,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   O3AAlign
   FilterCatalog
   MolStandardize
+  Catalogs
+  MolCatalog
+  FragCatalog
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
