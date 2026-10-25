@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
@@ -70,6 +70,27 @@ rust = ["rdkit_cxx::chem::rd_deprotect::deprotect_in_place", "rdkit_cxx::chem::r
 [[entry]]
 python = "rdkit.Chem.rdDeprotect.GetDeprotections"
 rust = ["rdkit_cxx::chem::rd_deprotect::get_deprotections"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.DetermineBondOrders"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_bond_orders", "rdkit_cxx::chem::rd_determine_bonds::determine_bond_orders_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.DetermineBonds"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_bonds", "rdkit_cxx::chem::rd_determine_bonds::determine_bonds_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.DetermineConnectivity"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_connectivity", "rdkit_cxx::chem::rd_determine_bonds::determine_connectivity_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.MaxFindBondOrdersItersExceeded"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Runtime"
+
+[[entry]]
+python = "rdkit.Chem.rdDetermineBonds.hueckelEnabled"
+rust = ["rdkit_cxx::chem::rd_determine_bonds::hueckel_enabled"]
 
 [[entry]]
 python = "rdkit.Chem.rdDistGeom.BAD_DOUBLE_BOND_STEREO"

@@ -86,6 +86,7 @@ set(RDKIT_CXX_SOURCES
   src/distance_geometry.cpp
   src/mol_transforms.cpp
   src/alignment.cpp
+  src/determine_bonds.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -119,7 +120,14 @@ set(RDKIT_CXX_RDKIT_TARGETS
   DistGeomHelpers
   MolTransforms
   Alignment
+  DetermineBonds
 )
+
+# DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
+# RDKit has when it was built with YAeHMOP.
+if(TARGET RDKit::EHTLib)
+  list(APPEND RDKIT_CXX_RDKIT_TARGETS EHTLib)
+endif()
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
 target_include_directories(rdkitcxx PRIVATE

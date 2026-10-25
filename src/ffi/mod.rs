@@ -18,6 +18,7 @@ pub(crate) mod dclv;
 pub(crate) mod deprotect;
 pub(crate) mod descriptors;
 pub(crate) mod descriptors_3d;
+pub(crate) mod determine_bonds;
 pub(crate) mod distance_geometry;
 pub(crate) mod embedder;
 pub(crate) mod errors;

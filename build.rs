@@ -66,6 +66,7 @@ const BRIDGES: &[&str] = &[
     "distance_geometry",
     "mol_transforms",
     "alignment",
+    "determine_bonds",
 ];
 
 fn main() {

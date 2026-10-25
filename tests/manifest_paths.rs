@@ -30,6 +30,14 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rd_deprotect::deprotect_in_place as _;
     use rdkit_cxx::chem::rd_deprotect::deprotect_in_place_with_deprotections as _;
     use rdkit_cxx::chem::rd_deprotect::get_deprotections as _;
+    use rdkit_cxx::chem::rd_determine_bonds::determine_bond_orders as _;
+    use rdkit_cxx::chem::rd_determine_bonds::determine_bond_orders_with_params as _;
+    use rdkit_cxx::chem::rd_determine_bonds::determine_bonds as _;
+    use rdkit_cxx::chem::rd_determine_bonds::determine_bonds_with_params as _;
+    use rdkit_cxx::chem::rd_determine_bonds::determine_connectivity as _;
+    use rdkit_cxx::chem::rd_determine_bonds::determine_connectivity_with_params as _;
+    let _: Option<rdkit_cxx::Error> = None;
+    use rdkit_cxx::chem::rd_determine_bonds::hueckel_enabled as _;
     let _ = rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::BadDoubleBondStereo;
     let _ = rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters;
     let _ = rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::CheckChiralCenters2;
