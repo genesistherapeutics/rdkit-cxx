@@ -294,6 +294,30 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
     assert!(is_value(MolBundle::from_pkl_string(&changed)));
 }
 
+// MolPickler pickles a recursive query's molecule as a molecule, monomer
+// infos included, and reads it back the same way.
+#[test]
+fn recursive_query_molecules_are_checked() {
+    let (pkl, _) = marked_pickle();
+    let marked = Mol::from_pkl_string(&pkl).unwrap();
+    let mut query = mol_from_smarts("[#6]").unwrap();
+    add_recursive_query(&mut query, &marked, 0).unwrap();
+    // Twice nested, under an AND with the atom's own query.
+    let mut outer = mol_from_smarts("[#6]").unwrap();
+    add_recursive_query(&mut outer, &query, 0).unwrap();
+    let mut pkl = outer.to_binary();
+    let at = pkl
+        .windows(9)
+        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .unwrap()
+        + 8;
+    assert!(Mol::from_pkl_string(&pkl).is_ok());
+    pkl[at] = 1;
+    assert!(is_value(Mol::from_pkl_string(&pkl)));
+    pkl[at] = 9;
+    assert!(is_value(Mol::from_pkl_string(&pkl)));
+}
+
 // RDKit pickles PDB residue info by its type, so a real one round-trips.
 #[test]
 fn pickles_keep_pdb_residue_info() {
