@@ -33,8 +33,10 @@ namespace GS = RDKit::GaussianShape;
 // ShapeInput.cpp fills getPh4Patterns' static list of feature patterns on
 // first use, without a lock. Every construction of a shape, the only path
 // to it, holds this mutex (CONVENTIONS.md U4), before control_c_mutex(),
-// which the patterns' matches need.
+// which the patterns' matches need; so a closure that holds that one must
+// not wait for it.
 std::mutex &gaussian_shape_mutex() {
+  check_not_in_control_c_callback();
   static std::mutex mutex;
   return mutex;
 }

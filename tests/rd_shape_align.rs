@@ -634,3 +634,38 @@ fn aligns_in_threads() {
         assert_eq!(*r, results[0]);
     }
 }
+
+// An FMCS final match check runs inside a substructure match, holding
+// control_c_mutex, so it cannot wait for this module's lock, which comes
+// before it (CONVENTIONS.md U4): calls that take it fail instead.
+#[test]
+fn shapes_in_final_match_checks_fail() {
+    use rdkit_cxx::chem::rd_fmcs::{MCSFinalMatchCheck, MCSParameters, find_mcs_with_params};
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let calls = Arc::new(AtomicUsize::new(0));
+    let reference = prepare_conformer(&ethanol()).unwrap();
+    let check = {
+        let calls = Arc::clone(&calls);
+        MCSFinalMatchCheck::new(move |mol1, _, _, _, _| {
+            assert!(matches!(
+                prepare_conformer(mol1),
+                Err(Error::Runtime { .. })
+            ));
+            let mut probe = reference.clone();
+            assert!(matches!(
+                align_shapes(&reference, &mut probe),
+                Err(Error::Runtime { .. })
+            ));
+            calls.fetch_add(1, Ordering::Relaxed);
+            Ok(true)
+        })
+    };
+    let params = MCSParameters {
+        final_match_checker: Some(check),
+        ..MCSParameters::default()
+    };
+    find_mcs_with_params(&[ethanol(), ethanol2()], &params).unwrap();
+    assert!(calls.load(Ordering::Relaxed) > 0);
+    prepare_conformer(&ethanol()).unwrap();
+}

@@ -33,8 +33,10 @@ namespace {
 // Align3D::setUseCutOff(true), which assigns the dCutOff and d2CutOff that
 // every overlap reads (shape_functions2.cpp), and PrepareConformer fills
 // getPh4Patterns' static list of patterns on first use. Every call into them
-// holds this mutex (CONVENTIONS.md U4), before control_c_mutex().
+// holds this mutex (CONVENTIONS.md U4), before control_c_mutex(), so a
+// closure that holds that one must not wait for it.
 std::mutex &pubchem_shape_mutex() {
+  check_not_in_control_c_callback();
   static std::mutex mutex;
   return mutex;
 }
