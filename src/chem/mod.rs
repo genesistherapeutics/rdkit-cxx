@@ -17,6 +17,7 @@ pub mod rd_deprotect;
 pub mod rd_determine_bonds;
 pub mod rd_dist_geom;
 pub mod rd_fingerprint_generator;
+pub mod rd_fmcs;
 pub mod rd_force_field_helpers;
 pub mod rd_generalized_substruct;
 pub mod rd_mhfp_fingerprint;

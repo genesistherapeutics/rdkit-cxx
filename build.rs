@@ -83,6 +83,7 @@ const BRIDGES: &[&str] = &[
     "tautomer_query",
     "generalized_substruct",
     "rascal_mces",
+    "fmcs",
 ];
 
 fn main() {

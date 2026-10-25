@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -2730,6 +2730,379 @@ name_exception = "an exported enum value maps to its variant, EmbedFF::Uff"
 python = "rdkit.Chem.rdDistGeom.srETKDGv3"
 rust = ["rdkit_cxx::chem::rd_dist_geom::sr_etkdg_v3"]
 name_exception = "the version stays a suffix: sr_etkdg_v3"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.AtomCompare"
+rust = ["rdkit_cxx::chem::rd_fmcs::AtomCompare"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.AtomCompare.CompareAny"
+rust = ["rdkit_cxx::chem::rd_fmcs::AtomCompare::CompareAny"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.AtomCompare.CompareAnyHeavyAtom"
+rust = ["rdkit_cxx::chem::rd_fmcs::AtomCompare::CompareAnyHeavyAtom"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.AtomCompare.CompareElements"
+rust = ["rdkit_cxx::chem::rd_fmcs::AtomCompare::CompareElements"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.AtomCompare.CompareIsotopes"
+rust = ["rdkit_cxx::chem::rd_fmcs::AtomCompare::CompareIsotopes"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.BondCompare"
+rust = ["rdkit_cxx::chem::rd_fmcs::BondCompare"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.BondCompare.CompareAny"
+rust = ["rdkit_cxx::chem::rd_fmcs::BondCompare::CompareAny"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.BondCompare.CompareOrder"
+rust = ["rdkit_cxx::chem::rd_fmcs::BondCompare::CompareOrder"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.BondCompare.CompareOrderExact"
+rust = ["rdkit_cxx::chem::rd_fmcs::BondCompare::CompareOrderExact"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.FindMCS"
+rust = ["rdkit_cxx::chem::rd_fmcs::find_mcs", "rdkit_cxx::chem::rd_fmcs::find_mcs_with_params"]
+overloads_note = "the keyword overload's arguments are fields of MCSParameters, which the _with_params form takes (A3): ringMatchesRingOnly sets both compare parameters' ring_matches_ring_only, and ringCompare is MCSBondCompareParameters::set_ring_compare; find_mcs uses the keyword defaults (timeout 3600)"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAcceptance"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAcceptance"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAcceptance.__call__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAcceptance::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAcceptance.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAcceptance::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol, &rdkit_cxx::chem::Mol, &[(u32, u32)], &[(u32, u32)], &rdkit_cxx::chem::rd_fmcs::MCSParameters) -> rdkit_cxx::Result<bool>>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync and whose errors and panics stop the search and are returned"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompare"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompare"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompare.CheckAtomCharge"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompare::check_atom_charge"]
+overloads_note = "an associated function, since the closure that would call it on self has none"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompare.CheckAtomChirality"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompare::check_atom_chirality"]
+overloads_note = "an associated function, since the closure that would call it on self has none"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompare.CheckAtomRingMatch"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompare::check_atom_ring_match"]
+overloads_note = "an associated function, since the closure that would call it on self has none"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompare.__call__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompare::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompare.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompare::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters, &rdkit_cxx::chem::Mol, u32, &rdkit_cxx::chem::Mol, u32) -> rdkit_cxx::Result<bool>>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync and whose errors and panics stop the search and are returned"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.CompleteRingsOnly"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::complete_rings_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.MatchChiralTag"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::match_chiral_tag"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.MatchFormalCharge"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::match_formal_charge"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.MatchIsotope"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::match_isotope"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.MatchValences"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::match_valences"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.MaxDistance"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::max_distance"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.RingMatchesRingOnly"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::ring_matches_ring_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSAtomCompareParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSAtomCompareParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompare"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompare"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompare.CheckBondRingMatch"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompare::check_bond_ring_match"]
+overloads_note = "an associated function, since the closure that would call it on self has none"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompare.CheckBondStereo"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompare::check_bond_stereo"]
+overloads_note = "an associated function, since the closure that would call it on self has none"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompare.__call__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompare::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompare.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompare::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters, &rdkit_cxx::chem::Mol, u32, &rdkit_cxx::chem::Mol, u32) -> rdkit_cxx::Result<bool>>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync and whose errors and panics stop the search and are returned"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.CompleteRingsOnly"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters::complete_rings_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.MatchFusedRings"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters::match_fused_rings"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.MatchFusedRingsStrict"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters::match_fused_rings_strict"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.MatchStereo"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters::match_stereo"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.RingMatchesRingOnly"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters::ring_matches_ring_only"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSBondCompareParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSBondCompareParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSFinalMatchCheck"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSFinalMatchCheck"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSFinalMatchCheck.__call__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSFinalMatchCheck::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSFinalMatchCheck.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSFinalMatchCheck::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol, &rdkit_cxx::chem::Mol, &[(u32, u32)], &[(u32, u32)], &rdkit_cxx::chem::rd_fmcs::MCSParameters) -> rdkit_cxx::Result<bool>>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync and whose errors and panics stop the search and are returned"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.AtomCompareParameters"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::atom_compare_parameters"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.AtomTyper"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::atom_typer"]
+rust_kind = "field"
+overloads_note = "an AtomTyper: an AtomCompare or an MCSAtomCompare, as Python takes either"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.BondCompareParameters"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::bond_compare_parameters"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.BondTyper"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::bond_typer"]
+rust_kind = "field"
+overloads_note = "a BondTyper: a BondCompare or an MCSBondCompare, as Python takes either"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.FinalMatchChecker"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::final_match_checker"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.InitialSeed"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::initial_seed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.MaximizeBonds"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::maximize_bonds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.ProgressCallback"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::progress_callback"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.ShouldAcceptMCS"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::should_accept_mcs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.StoreAll"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::store_all"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.Threshold"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::threshold"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.Timeout"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::timeout"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.Verbose"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::verbose"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgress"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgress"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgress.__call__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgress::call"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgress.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgress::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::rd_fmcs::MCSProgressData, &rdkit_cxx::chem::rd_fmcs::MCSParameters) -> rdkit_cxx::Result<bool>>"
+overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new takes the closure __call__ runs, which must be Send + Sync and whose errors and panics stop the search and are returned"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgressData"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgressData"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgressData.__init__"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgressData::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgressData.numAtoms"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgressData::num_atoms"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgressData.numBonds"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgressData::num_bonds"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSProgressData.seedProcessed"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSProgressData::seed_processed"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult.canceled"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult::canceled"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult.degenerateSmartsQueryMolDict"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult::degenerate_smarts_query_mol_dict"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult.numAtoms"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult::num_atoms"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult.numBonds"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult::num_bonds"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult.queryMol"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult::query_mol"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.MCSResult.smartsString"
+rust = ["rdkit_cxx::chem::rd_fmcs::MCSResult::smarts_string"]
+overloads_note = "read-only in Python, so a getter"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.RingCompare"
+rust = ["rdkit_cxx::chem::rd_fmcs::RingCompare"]
+overloads_note = "only FindMCS's keyword form takes it; MCSBondCompareParameters::set_ring_compare sets the flags it stands for"
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.RingCompare.IgnoreRingFusion"
+rust = ["rdkit_cxx::chem::rd_fmcs::RingCompare::IgnoreRingFusion"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.RingCompare.PermissiveRingFusion"
+rust = ["rdkit_cxx::chem::rd_fmcs::RingCompare::PermissiveRingFusion"]
+
+[[entry]]
+python = "rdkit.Chem.rdFMCS.RingCompare.StrictRingFusion"
+rust = ["rdkit_cxx::chem::rd_fmcs::RingCompare::StrictRingFusion"]
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.AdditionalOutput"
