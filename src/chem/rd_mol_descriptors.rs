@@ -12,7 +12,9 @@
 //! computed afresh.
 
 mod descriptors;
+mod descriptors_3d;
 mod fingerprints;
 
 pub use descriptors::*;
+pub use descriptors_3d::*;
 pub use fingerprints::*;

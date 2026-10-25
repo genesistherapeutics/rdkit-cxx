@@ -616,6 +616,16 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_autocorr_2d", "rdkit_cxx::che
 name_exception = "digits stay with their letters: calc_autocorr_2d"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcAUTOCORR3D"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_autocorr_3d", "rdkit_cxx::chem::rd_mol_descriptors::calc_autocorr_3d_with_params"]
+name_exception = "digits stay with their letters: calc_autocorr_3d"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcAsphericity"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_asphericity", "rdkit_cxx::chem::rd_mol_descriptors::calc_asphericity_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcChi0n"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_chi0n"]
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
@@ -676,8 +686,22 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_chi_nv"]
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcCoulombMat"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_coulomb_mat", "rdkit_cxx::chem::rd_mol_descriptors::calc_coulomb_mat_with_conf_id"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcCrippenDescriptors"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_crippen_descriptors", "rdkit_cxx::chem::rd_mol_descriptors::calc_crippen_descriptors_with_include_hs"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcEEMcharges"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_eem_charges", "rdkit_cxx::chem::rd_mol_descriptors::calc_eem_charges_with_conf_id"]
+name_exception = "EEM and charges are separate words: calc_eem_charges"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcEccentricity"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_eccentricity", "rdkit_cxx::chem::rd_mol_descriptors::calc_eccentricity_with_params"]
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
@@ -689,9 +713,18 @@ python = "rdkit.Chem.rdMolDescriptors.CalcFractionCSP3"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_fraction_csp3"]
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcGETAWAY"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_getaway", "rdkit_cxx::chem::rd_mol_descriptors::calc_getaway_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcHallKierAlpha"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_hall_kier_alpha", "rdkit_cxx::chem::rd_mol_descriptors::calc_hall_kier_alpha_with_outputs"]
 overloads_note = "atomContribs is an output list; calc_hall_kier_alpha_with_outputs returns it (A9)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcInertialShapeFactor"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_inertial_shape_factor", "rdkit_cxx::chem::rd_mol_descriptors::calc_inertial_shape_factor_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcKappa1"
@@ -711,8 +744,22 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_labute_asa", "rdkit_cxx::chem
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcMORSE"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_morse", "rdkit_cxx::chem::rd_mol_descriptors::calc_morse_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcMolFormula"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_mol_formula", "rdkit_cxx::chem::rd_mol_descriptors::calc_mol_formula_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcNPR1"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_npr1", "rdkit_cxx::chem::rd_mol_descriptors::calc_npr1_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcNPR2"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_npr2", "rdkit_cxx::chem::rd_mol_descriptors::calc_npr2_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcNumAliphaticCarbocycles"
@@ -818,13 +865,50 @@ python = "rdkit.Chem.rdMolDescriptors.CalcOxidationNumbers"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_oxidation_numbers"]
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcPBF"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_pbf", "rdkit_cxx::chem::rd_mol_descriptors::calc_pbf_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcPMI1"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_pmi1", "rdkit_cxx::chem::rd_mol_descriptors::calc_pmi1_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcPMI2"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_pmi2", "rdkit_cxx::chem::rd_mol_descriptors::calc_pmi2_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcPMI3"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_pmi3", "rdkit_cxx::chem::rd_mol_descriptors::calc_pmi3_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcPhi"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_phi"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcRDF"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_rdf", "rdkit_cxx::chem::rd_mol_descriptors::calc_rdf_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcRadiusOfGyration"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_radius_of_gyration", "rdkit_cxx::chem::rd_mol_descriptors::calc_radius_of_gyration_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcSpherocityIndex"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_spherocity_index", "rdkit_cxx::chem::rd_mol_descriptors::calc_spherocity_index_with_conf_id"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcTPSA"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_tpsa", "rdkit_cxx::chem::rd_mol_descriptors::calc_tpsa_with_include_s_and_p"]
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.CalcWHIM"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_whim", "rdkit_cxx::chem::rd_mol_descriptors::calc_whim_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CustomProp_VSA_"

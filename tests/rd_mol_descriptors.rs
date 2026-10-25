@@ -383,7 +383,7 @@ fn autocorr_2d() {
             4.505, 4.718, 4.398, 3.239, 2.788, 1.872, 1.609, 0.0, 20.75, 19.75,
         ],
     );
-    assert!(!mol.has_prop("_distanceMatrix_Paths"));
+    assert!(!mol.has_prop("DistanceMatrix"));
 }
 
 #[test]
