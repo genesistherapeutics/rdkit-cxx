@@ -67,6 +67,7 @@ pub(crate) mod rgroup;
 pub(crate) mod ring_info;
 pub(crate) mod scaffold_network;
 pub(crate) mod shape_helpers;
+pub(crate) mod sim_div_pickers;
 pub(crate) mod sln_parse;
 pub(crate) mod standardize;
 pub(crate) mod standardize_charge;

@@ -92,6 +92,7 @@ const BRIDGES: &[&str] = &[
     "rgroup",
     "metric_matrix_calc",
     "cluster",
+    "sim_div_pickers",
 ];
 
 fn main() {

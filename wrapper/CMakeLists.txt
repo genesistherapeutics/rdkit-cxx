@@ -115,6 +115,7 @@ set(RDKIT_CXX_SOURCES
   src/metric_matrix_calc.cpp
   src/murtagh_checks.cpp
   src/cluster.cpp
+  src/sim_div_pickers.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -166,6 +167,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   SubstructLibrary
   RGroupDecomposition
   hc
+  SimDivPickers
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

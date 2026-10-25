@@ -17,6 +17,7 @@ pub mod geometry;
 pub mod ml;
 pub mod numerics;
 pub mod rd_base;
+pub mod sim_div_filters;
 mod util;
 
 pub use error::{Error, Result};
