@@ -48,6 +48,8 @@ impl FragCatParams {
     /// `FragCatParams(lLen, uLen, fgroupFilename)`. `Error::Os` for a file
     /// that cannot be read; `Error::Runtime` for `l_len > u_len`, a line
     /// without a SMARTS, or a SMARTS that does not parse, as in Python.
+    /// The generators set aside a list for every length up to `u_len`, so a
+    /// very large one exhausts memory, as in Python.
     pub fn new<P: AsRef<Path>>(
         l_len: u32,
         u_len: u32,

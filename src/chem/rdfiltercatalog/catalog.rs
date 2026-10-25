@@ -142,7 +142,7 @@ impl FilterCatalogEntry {
     }
 
     /// Whether two handles share one entry, as `remove_entry_filter_catalog_entry`
-    /// compares them.
+    /// compares them. Mirrors Python's `is` on entries.
     pub fn is_same_entry(&self, other: &FilterCatalogEntry) -> bool {
         expect_ok(ffi::filter_catalog_entry_same(self.raw(), other.raw()))
     }

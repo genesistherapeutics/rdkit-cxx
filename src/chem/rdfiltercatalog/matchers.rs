@@ -229,7 +229,9 @@ macro_rules! matcher_type {
 
 pub(crate) use matcher_type;
 
-/// `SmartsMatcher`'s counts, with Python's defaults (A2).
+/// The `minCount` and `maxCount` of `SmartsMatcher(name, mol, minCount,
+/// maxCount)` and `SmartsMatcher(name, smarts, minCount, maxCount)`, with
+/// Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SmartsMatcherParams {
     /// The fewest matches that make the matcher match.
