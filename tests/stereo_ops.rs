@@ -42,6 +42,12 @@ fn chiral_centers() {
         compute_atom_cip_ranks(&mut smiles("C[C@H](F)Cl")).unwrap(),
         [0, 1, 2, 3]
     );
+    // RDKit writes out of bounds ranking no atoms.
+    assert!(
+        compute_atom_cip_ranks(&mut Mol::default())
+            .unwrap()
+            .is_empty()
+    );
 
     assert!(
         find_meso_centers(&smiles("C[C@H](F)[C@@H](F)C"))
