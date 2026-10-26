@@ -11,6 +11,7 @@
 pub mod all_chem;
 pub mod chemical_features;
 pub mod draw;
+pub mod enumerate_stereoisomers;
 pub mod filter_catalog;
 pub mod fragment_matcher;
 pub mod graphs;
@@ -18,6 +19,7 @@ mod init;
 pub mod lipinski;
 pub mod mol_standardize;
 mod py_compat;
+pub mod randomize;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;

@@ -329,3 +329,52 @@ fn fragment_matchers() -> Result<()> {
     assert!(matches!(p.add_exclusion("C1"), Err(Error::Parse { .. })));
     Ok(())
 }
+
+// Randomize, with Python's generator seeded as `random.seed(42)` and
+// `random.seed(5)` seed it.
+#[test]
+fn randomized_atom_orders() -> Result<()> {
+    use rdkit_cxx::chem::mol_to_mol_block;
+    use rdkit_cxx::chem::randomize::{randomize_mol, randomize_mol_block};
+    use rdkit_cxx::py_random::Random;
+    let bonds = |m: &Mol| -> Vec<(u32, u32)> {
+        m.get_bonds()
+            .map(|b| (b.get_begin_atom_idx(), b.get_end_atom_idx()))
+            .collect()
+    };
+    let mut random = Random::new(42);
+    for (smiles, expected) in [
+        ("CC(=O)[O-]", &[(0, 2), (2, 3), (2, 1)][..]),
+        ("[NH3+]CC(=O)[O-]", &[(3, 0), (0, 2), (2, 4), (2, 1)]),
+        ("[O-][O-]", &[(1, 0)]),
+        (
+            "c1ccccc1O",
+            &[(0, 2), (2, 4), (4, 6), (6, 3), (3, 5), (5, 1), (5, 0)],
+        ),
+    ] {
+        let m = randomize_mol(&mol_from_smiles(smiles)?, &mut random)?;
+        assert_eq!(bonds(&m), expected, "{smiles}");
+    }
+    assert_eq!(
+        randomize_mol(&mol_from_smiles("C")?, &mut random)?.get_num_atoms(),
+        1
+    );
+    let block = mol_to_mol_block(&mol_from_smiles("OCC=O")?)?;
+    assert_eq!(
+        randomize_mol_block(&block, &mut Random::new(5))?,
+        "
+     RDKit          2D
+
+  4  3  0  0  0  0  0  0  0  0999 V2000
+    1.2990    0.7500    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+    2.5981   -0.0000    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0
+   -1.2990    0.7500    0.0000 O   0  0  0  0  0  0  0  0  0  0  0  0
+  4  3  1  0
+  3  1  1  0
+  1  2  2  0
+M  END
+"
+    );
+    Ok(())
+}

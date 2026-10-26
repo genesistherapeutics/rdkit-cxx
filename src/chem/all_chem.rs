@@ -14,6 +14,7 @@
 //! `rd_partial_charges::compute_gasteiger_charges`.
 
 pub use crate::chem::chemical_features::*;
+pub use crate::chem::enumerate_stereoisomers::{StereoEnumerationOptions, enumerate_stereoisomers};
 pub use crate::chem::rd_chem_reactions::*;
 pub use crate::chem::rd_depictor::*;
 pub use crate::chem::rd_dist_geom::*;
