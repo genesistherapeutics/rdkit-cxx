@@ -64,11 +64,10 @@ fn bit_rank_matches_python() {
         0.2516291673878228,
         0.9182958340544894,
     ];
-    assert_eq!(calc_info_gains(&vects, &acts, 2).unwrap(), gains);
-    assert_eq!(
-        rank_bits(&vects, &acts).unwrap(),
-        (vec![5, 2, 4, 1, 3, 0], gains.to_vec())
-    );
+    assert_all_close(&calc_info_gains(&vects, &acts, 2).unwrap(), &gains);
+    let (order, metrics) = rank_bits(&vects, &acts).unwrap();
+    assert_eq!(order, [5, 2, 4, 1, 3, 0]);
+    assert_all_close(&metrics, &gains);
     assert!(matches!(
         form_counts(&vects, &acts[1..], 2, 2),
         Err(Error::Value { .. })
