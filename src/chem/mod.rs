@@ -10,6 +10,7 @@
 
 pub mod all_chem;
 pub mod brics;
+pub mod chem_utils;
 pub mod chemical_features;
 pub mod draw;
 pub mod enumerate_heterocycles;

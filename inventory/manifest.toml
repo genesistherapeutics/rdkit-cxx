@@ -7,9 +7,10 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.BRICS", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FilterCatalog", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.BRICS", "rdkit.Chem.ChemUtils.AlignDepict", "rdkit.Chem.ChemUtils.SDFToCSV", "rdkit.Chem.ChemUtils.TemplateExpand", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EnumerateHeterocycles", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FilterCatalog", "rdkit.Chem.Fraggle.FraggleSim", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MolKey.InchiInfo", "rdkit.Chem.MolKey.MolKey", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.inchi", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [modules.reasons]
+"rdkit.Chem.ChemUtils.BulkTester" = "a broken legacy script: TestMolecule calls Randomize.CheckCanonicalization, which RDKit removed, so it fails every molecule that sanitizes, and TestSupplier calls the supplier's Python 2 next method"
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
 "rdkit.Chem.Draw.IPythonConsole" = "installs Jupyter display hooks for molecules and reactions"
 "rdkit.Chem.Draw.InteractiveRenderer" = "renders molecules in Jupyter with RDKit's JavaScript library"
@@ -20,6 +21,7 @@ complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.All
 "rdkit.Chem.PandasPatcher" = "patches pandas' HTML rendering for PandasTools"
 "rdkit.Chem.PandasTools" = "adds molecules and their drawings to pandas DataFrames"
 "rdkit.Chem.Pharm2D.LazyGenerator" = "unfinished: importing it raises NotImplementedError"
+"rdkit.Chem.PropertyMol" = "deprecated: a Mol subclass that pickles its properties; Rust pickles them with set_default_pickle_properties(PropertyPickleOptions::MolProps)"
 "rdkit.Chem.PyMol" = "drives a PyMOL server over XML-RPC"
 "rdkit.Chem.Subshape.demoCombined" = "a demonstration script that reads files from RDKit's source tree"
 "rdkit.Chem.Suppliers.DbMolSupplier" = "supplies molecules from rdkit.Dbase query results"
@@ -265,6 +267,59 @@ rust = ["rdkit_cxx::chem::brics::smarts_gps"]
 [[entry]]
 python = "rdkit.Chem.CanonSmiles"
 rust = ["rdkit_cxx::chem::canon_smiles", "rdkit_cxx::chem::canon_smiles_with_use_chiral"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.AlignDepict"
+rust = ["rdkit_cxx::chem::chem_utils::align_depict::align_depict", "rdkit_cxx::chem::chem_utils::align_depict::align_depict_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.initParser"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.main"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.processArgs"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.Convert"
+rust = ["rdkit_cxx::chem::chem_utils::sdf_to_csv::convert", "rdkit_cxx::chem::chem_utils::sdf_to_csv::convert_with_params"]
+overloads_note = "the supplier is an SDMolSupplier, which Python's must be to be indexed, and outFile a Write"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.existingFile"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.initParser"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.main"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.ConstructSidechains"
+rust = ["rdkit_cxx::chem::chem_utils::template_expand::construct_sidechains", "rdkit_cxx::chem::chem_utils::template_expand::construct_sidechains_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.Explode"
+rust = ["rdkit_cxx::chem::chem_utils::template_expand::explode", "rdkit_cxx::chem::chem_utils::template_expand::explode_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.MoveDummyNeighborsToBeginning"
+rust = ["rdkit_cxx::chem::chem_utils::template_expand::move_dummy_neighbors_to_beginning", "rdkit_cxx::chem::chem_utils::template_expand::move_dummy_neighbors_to_beginning_with_use_all"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.Usage"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.nDumped"
+reason = "the module's count of the molecules Explode has written, reset by each call; Rust counts within the call"
 
 [[entry]]
 python = "rdkit.Chem.ChemicalFeatures.MCFF_GetFeaturesForMol"
@@ -1270,6 +1325,24 @@ python = "rdkit.Chem.Draw.rdMolDraw2D.UpdateMolDrawOptionsFromJSON"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_mol_draw_options_from_json"]
 
 [[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.EnumerateHeterocycles"
+rust = ["rdkit_cxx::chem::enumerate_heterocycles::enumerate_heterocycles", "rdkit_cxx::chem::enumerate_heterocycles::enumerate_heterocycles_with_depth"]
+overloads_note = "the molecules come from a Heterocycles iterator, as from Python's generator"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.GetHeterocycleReactionSmarts"
+rust = ["rdkit_cxx::chem::enumerate_heterocycles::get_heterocycle_reaction_smarts"]
+overloads_note = "the named tuples are HeteroAtomReaction structs"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.GetHeterocycleReactions"
+rust = ["rdkit_cxx::chem::enumerate_heterocycles::get_heterocycle_reactions"]
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.REACTION_CACHE"
+reason = "the module's cache of GetHeterocycleReactions' reactions; Rust parses new ones for each call, since a ChemicalReaction cannot be shared between threads"
+
+[[entry]]
 python = "rdkit.Chem.EnumerateStereoisomers.EnumerateStereoisomers"
 rust = ["rdkit_cxx::chem::enumerate_stereoisomers::enumerate_stereoisomers", "rdkit_cxx::chem::enumerate_stereoisomers::enumerate_stereoisomers_with_options"]
 overloads_note = "verbose is StereoEnumerationOptions.verbose (A3); the isomers come from a Stereoisomers iterator, as from Python's generator"
@@ -1350,6 +1423,79 @@ overloads_note = "the methods Python's subclasses override are a CustomFilterMat
 [[entry]]
 python = "rdkit.Chem.FindMolChiralCenters"
 rust = ["rdkit_cxx::chem::find_mol_chiral_centers", "rdkit_cxx::chem::find_mol_chiral_centers_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.ACYC_SMARTS"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::acyc_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.CYC_SMARTS"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::cyc_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.FTYPE_ACYCLIC"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::ftype_acyclic"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.FTYPE_CYCLIC"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::ftype_cyclic"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.FTYPE_CYCLIC_ACYCLIC"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::ftype_cyclic_acyclic"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.GetFraggleSimilarity"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::get_fraggle_similarity", "rdkit_cxx::chem::fraggle::fraggle_sim::get_fraggle_similarity_with_tversky_thresh"]
+overloads_note = "the query's fragmentation is computed for each call, where Python caches it on the molecule"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.atomContrib"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::atom_contrib", "rdkit_cxx::chem::fraggle::fraggle_sim::atom_contrib_with_tversky_thresh"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.cSma1"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::c_sma1"]
+name_exception = "digits stay with their letters: c_sma1"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.cSma2"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::c_sma2"]
+name_exception = "digits stay with their letters: c_sma2"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.compute_fraggle_similarity_for_subs"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::compute_fraggle_similarity_for_subs", "rdkit_cxx::chem::fraggle::fraggle_sim::compute_fraggle_similarity_for_subs_with_tversky_thresh"]
+overloads_note = "the modified query's fingerprint is computed for each call; Python caches it by query and fragment but not threshold, so its later calls with another threshold reuse the first one's"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.delete_bonds"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::delete_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.dummyAtomQuery"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::dummy_atom_query"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.generate_fraggle_fragmentation"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::generate_fraggle_fragmentation"]
+overloads_note = "verbose, which only prints the matched atoms, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.isValidRingCut"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::is_valid_ring_cut"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.modified_query_fps"
+reason = "the module's cache of modified queries' fingerprints, keyed without the Tversky threshold; Rust computes them for each call"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.rdkitFpParams"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::rdkit_fp_params"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.select_fragments"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::select_fragments"]
 
 [[entry]]
 python = "rdkit.Chem.FragmentMatcher.FragmentMatcher"
@@ -1603,6 +1749,237 @@ rust = ["rdkit_cxx::chem::lipinski::ring_count"]
 [[entry]]
 python = "rdkit.Chem.Lipinski.RotatableBondSmarts"
 rust = ["rdkit_cxx::chem::lipinski::rotatable_bond_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo.__init__"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo.get_mobile_h"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo::get_mobile_h"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo.get_sp3_stereo"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo::get_sp3_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.all_stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::all_stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.console"
+reason = "a logging.StreamHandler the module creates for Python's logging and never uses"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.defined_stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::defined_stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.fixed_h_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::fixed_h_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.h_layer_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::h_layer_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.isotope_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::isotope_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.mobile_h_atoms_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::mobile_h_atoms_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.mobile_h_group_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::mobile_h_group_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.reconnected_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::reconnected_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.stereo_all_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::stereo_all_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.undef_stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::undef_stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.version_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::version_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.BAD_SET"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::bad_set"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.BadMoleculeException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.CHIRAL_POS"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::chiral_pos"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.CheckCTAB"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.ERROR_DICT"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::error_dict"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.ErrorBitsToText"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::error_bits_to_text"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.GET_STEREO_RE"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::get_stereo_re"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.GetInchiForCTAB"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.GetKeyForCTAB"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.INCHI_COMPUTATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::inchi_computation_error"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.INCHI_READWRITE_ERROR"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::inchi_readwrite_error"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.__getnewargs__"
+reason = "a named tuple's pickling hook"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.__repr__"
+reason = "a named tuple's repr; the struct derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.error"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult::error"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.fixed_ctab"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult::fixed_ctab"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.inchi"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult::inchi"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MOL_KEY_VERSION"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::mol_key_version"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolIdentifierException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.__getnewargs__"
+reason = "a named tuple's pickling hook"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.__repr__"
+reason = "a named tuple's repr; the struct derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.error"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::error"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.fixed_ctab"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::fixed_ctab"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.inchi"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::inchi"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.mol_key"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::mol_key"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.stereo_code"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::stereo_code"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.stereo_comment"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::stereo_comment"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.NULL_MOL"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::null_mol"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.NULL_SMILES_RE"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::null_smiles_re"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.PATTERN_NULL_MOL"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::pattern_null_mol"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.RDKIT_CONVERSION_ERROR"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::rdkit_conversion_error"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.T_NULL_MOL"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::t_null_mol"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.initStruchk"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.stereo_code_dict"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::stereo_code_dict"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.ReorderTautomers"
@@ -3459,6 +3836,55 @@ reason = "part of an abstract base class that gives Python's suppliers the itera
 python = "rdkit.Chem.TemplateAlign.AlignMolToTemplate2D"
 rust = ["rdkit_cxx::chem::template_align::align_mol_to_template_2d", "rdkit_cxx::chem::template_align::align_mol_to_template_2d_with_params"]
 name_exception = "digits stay with their letters: align_mol_to_template_2d"
+
+[[entry]]
+python = "rdkit.Chem.inchi.INCHI_AVAILABLE"
+rust = ["rdkit_cxx::chem::inchi::inchi_available"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.InchiReadWriteError"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value with InChI's message"
+
+[[entry]]
+python = "rdkit.Chem.inchi.InchiToInchiKey"
+rust = ["rdkit_cxx::chem::inchi::inchi_to_inchi_key"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolBlockToInchi"
+reason = "not ported: it calls rdinchi.MolBlockToInchi, which is not bound because the InChI library's own mol-file reader it uses trusts its input; parse the block with mol_from_mol_block and call mol_to_inchi instead"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolBlockToInchiAndAuxInfo"
+reason = "not ported: it calls rdinchi.MolBlockToInchi, which is not bound because the InChI library's own mol-file reader it uses trusts its input; parse the block with mol_from_mol_block and call mol_to_inchi_and_aux_info instead"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolFromInchi"
+rust = ["rdkit_cxx::chem::inchi::mol_from_inchi", "rdkit_cxx::chem::inchi::mol_from_inchi_with_params"]
+overloads_note = "logLevel is an InchiLogLevel"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolFromInchiAndAuxInfo"
+rust = ["rdkit_cxx::chem::inchi::mol_from_inchi_and_aux_info", "rdkit_cxx::chem::inchi::mol_from_inchi_and_aux_info_with_params"]
+overloads_note = "logLevel is an InchiLogLevel; an absent AuxInfo is empty"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolToInchi"
+rust = ["rdkit_cxx::chem::inchi::mol_to_inchi", "rdkit_cxx::chem::inchi::mol_to_inchi_with_params"]
+overloads_note = "logLevel is an InchiLogLevel"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolToInchiAndAuxInfo"
+rust = ["rdkit_cxx::chem::inchi::mol_to_inchi_and_aux_info", "rdkit_cxx::chem::inchi::mol_to_inchi_and_aux_info_with_params"]
+overloads_note = "logLevel is an InchiLogLevel"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolToInchiKey"
+rust = ["rdkit_cxx::chem::inchi::mol_to_inchi_key", "rdkit_cxx::chem::inchi::mol_to_inchi_key_with_options"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.logLevelToLogFunctionLookup"
+reason = "maps Python's logging levels to RDLogger's functions; Rust takes an InchiLogLevel, which logs as those functions do"
 
 [[entry]]
 python = "rdkit.Chem.rdAbbreviations.AbbreviationDefinition"
