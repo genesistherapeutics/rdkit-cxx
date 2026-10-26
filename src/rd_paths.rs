@@ -19,9 +19,7 @@ fn share() -> PathBuf {
         return PathBuf::from(base);
     }
     // Builds for the documentation alone (`DOCS_RS`) do not record it.
-    let Some(prefix) = option_env!("RDKIT_CXX_RDKIT_PREFIX") else {
-        panic!("the build script records RDKit's install prefix");
-    };
+    let prefix = option_env!("RDKIT_CXX_RDKIT_PREFIX").unwrap_or("");
     PathBuf::from(prefix).join("share").join("RDKit")
 }
 

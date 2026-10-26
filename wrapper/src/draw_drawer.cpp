@@ -1169,7 +1169,8 @@ void drawer_draw_molecule_with_highlights(
 // every molecule the drawer holds, with the options of the moment, so a
 // grid is drawn on a drawer that has drawn nothing else; and it places
 // molecule i in row i / (width / panelWidth), which divides by zero for a
-// panel wider than the canvas.
+// panel wider than the canvas. A missing molecule (a null pointer, Python's
+// None) leaves its panel empty, as RDKit skips it.
 void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
                            const DrawMoleculesData &data) {
   check_usable(d);
@@ -1216,7 +1217,7 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
   const auto &opts = draw.drawOptions();
   bool depicts = false;
   for (const auto &m : list) {
-    depicts = depicts || !m->getNumConformers();
+    depicts = depicts || (m && !m->getNumConformers());
   }
   const DrawingLocks locks(depicts, comic(d));
 
@@ -1229,6 +1230,9 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
   };
   std::vector<Entry> entries(n);
   for (std::size_t i = 0; i < n; ++i) {
+    if (!list[i]) {
+      continue;
+    }
     const auto &mol = static_cast<const RWMol &>(*list[i]);
     auto &e = entries[i];
     e.h.has_atoms = data.has_highlight_atoms;
@@ -1282,6 +1286,9 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
   std::size_t min_font_scale = 0;
   for (std::size_t i = 0; i < n; ++i) {
     const auto &e = entries[i];
+    if (!e.drawn) {
+      continue;
+    }
     const bool bonds =
         e.h.has_bonds || (opts.continuousHighlight && e.h.has_atoms);
     probes.push_back(std::make_unique<detail::DrawMol>(
@@ -1295,15 +1302,18 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
     const int col = n_cols > 1 ? static_cast<int>(i) % n_cols : 0;
     probes.back()->setOffsets(col * pw, row * ph);
     checked_layout(*probes.back());
+    // Indices into the probes, which skip missing molecules as RDKit's
+    // drawMols_ do.
     if (probes.back()->getScale() < probes[min_scale]->getScale()) {
-      min_scale = i;
+      min_scale = probes.size() - 1;
     }
     if (probes.back()->getFontScale() <
         probes[min_font_scale]->getFontScale()) {
-      min_font_scale = i;
+      min_font_scale = probes.size() - 1;
     }
   }
-  if (opts.drawMolsSameScale) {
+  const int drawn = static_cast<int>(probes.size());
+  if (opts.drawMolsSameScale && drawn) {
     const double scale = probes[min_scale]->getScale();
     const double font_scale = probes[min_font_scale]->getFontScale();
     for (auto &probe : probes) {
@@ -1320,7 +1330,7 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
   std::vector<std::string> legends;
   for (auto &e : entries) {
     // drawMolecules takes non-const pointers and reads through them.
-    ptrs.push_back(const_cast<RWMol *>(&e.drawn->mol()));
+    ptrs.push_back(e.drawn ? const_cast<RWMol *>(&e.drawn->mol()) : nullptr);
     atoms.push_back(e.h.atoms);
     bonds.push_back(e.h.bonds);
     atom_colours.push_back(e.h.atom_colours);
@@ -1338,9 +1348,11 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
                        data.has_radii ? &radii : nullptr,
                        data.has_conf_ids ? &conf_ids : nullptr);
   });
-  d.num_mols = static_cast<int>(n);
-  d.active_mol = static_cast<int>(n) - 1;
+  d.num_mols = drawn;
+  d.active_mol = drawn - 1;
 }
+
+void borrowed_mols_push_none(BorrowedMols &list) { list.push_none(); }
 
 void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
                           bool highlight_by_reactant,
