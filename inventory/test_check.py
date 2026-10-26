@@ -7,7 +7,7 @@
 
 import pytest
 
-from check import check, paths_source, snake_case, upper_camel_case
+from check import check, merge, paths_source, snake_case, uncovered_modules, upper_camel_case
 
 
 @pytest.mark.parametrize(
@@ -228,12 +228,56 @@ def test_paths_source():
     # parameters, where `let _ = f;` cannot infer the type.
     assert "use rdkit_cxx::rd_base::disable_log as _;" in source
     assert "let _: Option<rdkit_cxx::chem::Mol> = None;" in source
-    assert "let _ = rdkit_cxx::chem::Mol::get_num_atoms;" in source
-    assert "let _ = rdkit_cxx::chem::BondType::Single;" in source
-    assert "let _ = rdkit_cxx::chem::SanitizeFlags::SANITIZE_ALL;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::get_num_atoms;" in source
+    assert "let _ = <rdkit_cxx::chem::BondType>::Single;" in source
+    assert "let _ = <rdkit_cxx::chem::SanitizeFlags>::SANITIZE_ALL;" in source
     assert "let _ = |value: &rdkit_cxx::geometry::Point3D| { let _ = &value.x; };" in source
-    assert "let _ = rdkit_cxx::chem::Mol::from_file::<&str>;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::from_file::<&str>;" in source
     # A list gives each path its own generics.
-    assert "let _ = rdkit_cxx::chem::Mol::default;" in source
-    assert "let _ = rdkit_cxx::chem::Mol::from_reader::<std::fs::File>;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::default;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::from_reader::<std::fs::File>;" in source
     assert "__repr__" not in source
+    # A qualified path applies a generic type's default parameters.
+    assert "<rdkit_cxx::chem::Mol>::get_num_atoms" in source
+
+
+def test_a_module_reason_covers_its_names():
+    found = problems(
+        {"python": "rdkit.rdBase.DisableLog", "rust": ["rdkit_cxx::rd_base::disable_log"]},
+        complete=["rdkit.rdBase"],
+    )
+    assert len(found) == 1
+    found = check(
+        INVENTORY,
+        {"modules": {"complete": [], "reasons": {"rdkit.rdBase": "why"}}, "entry": []},
+    )
+    assert found == []
+
+
+def test_a_module_reason_for_no_module():
+    found = check(INVENTORY, {"modules": {"reasons": {"rdkit.Nope": "why"}}, "entry": []})
+    assert len(found) == 1
+
+
+def test_a_module_reason_and_complete():
+    found = check(
+        INVENTORY, {"modules": {"complete": ["rdkit.rdBase"], "reasons": {"rdkit.rdBase": "why"}}, "entry": []}
+    )
+    assert any("also marked complete" in problem for problem in found)
+
+
+def test_uncovered_modules():
+    manifest_ = {"modules": {"complete": ["rdkit.rdBase"], "reasons": {"rdkit.Chem": "why"}}, "entry": []}
+    assert uncovered_modules(INVENTORY, manifest_) == ["rdkit.Geometry.rdGeometry"]
+
+
+def test_merge():
+    merged = merge(
+        [
+            inventory(entry("rdkit.rdBase.DisableLog", "module_function")),
+            inventory(entry("rdkit.Chem.CanonSmiles", "module_function")),
+        ]
+    )
+    assert [e["python"] for e in merged["entries"]] == ["rdkit.rdBase.DisableLog", "rdkit.Chem.CanonSmiles"]
+    with pytest.raises(SystemExit):
+        merge([inventory(), {"rdkit_version": "2027.03.1", "entries": []}])

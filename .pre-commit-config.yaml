@@ -48,7 +48,7 @@ repos:
         name: inventory/check.py --write-paths
         entry: python3 inventory/check.py --write-paths tests/manifest_paths.rs
         language: system
-        files: ^inventory/(check\.py|manifest\.toml|inventory-.*\.json)$
+        files: ^inventory/(check\.py|manifest\.toml|(inventory|python)-.*\.json)$
         pass_filenames: false
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

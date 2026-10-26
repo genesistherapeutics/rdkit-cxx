@@ -542,7 +542,7 @@ rule changes the rule first.
   yet has no entry. `overloads_note` explains overloads a binding
   covers with fewer Rust paths, or does not bind yet.
 - **I3.** A module joins `complete` once every inventory entry in it is
-  mapped; CI then holds it there.
+  mapped; CI then holds it there. Ports of pure-Python modules follow R3.
 
 ## Ports of pure-Python modules
 
@@ -560,5 +560,18 @@ rule changes the rule first.
   Where Python changes process-wide state for a call
   (`SetUseLegacyStereoPerception`), the port requires the state instead
   and is `Error::Value` without it (U5).
-- **R3.** The inventory lists only nanobind modules, so ports have no
-  manifest entries.
+- **R3.** Ports are measured as bindings are. `inventory/python-<series>.json`
+  (`inventory.py --python`) lists what each pure-Python module defines,
+  leaving out tests and what it imports. Each name gets a manifest entry,
+  with Rust paths or a reason (I1, I2), and a module joins `complete` the
+  same way (I3). A module or package with no Rust counterpart by design,
+  such as Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM) or a
+  legacy subsystem (`sping`, `rdkit.Dbase`), takes one reason under
+  `[modules.reasons]` instead, which covers every name in it.
+  `inventory/manifest_add.py` merges entries, completions, and module
+  reasons into the manifest. `check.py --strict` fails on a module that is
+  neither complete nor covered by a reason. A ported class generic over a
+  Python value of any type (a container's payload, a callable) gives its
+  type parameters defaults, so the manifest can name it and its methods:
+  `tests/manifest_paths.rs` names associated items as `<Type>::item`, which
+  applies them.
