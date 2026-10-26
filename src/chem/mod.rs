@@ -15,6 +15,7 @@ pub mod draw;
 pub mod enumerate_stereoisomers;
 pub mod filter_catalog;
 pub mod fragment_matcher;
+pub mod functional_groups;
 pub mod graphs;
 mod init;
 pub mod lipinski;

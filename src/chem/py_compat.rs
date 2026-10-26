@@ -55,9 +55,98 @@ pub(crate) fn float_repr(x: f64) -> String {
     format!("{sign}{body}")
 }
 
+/// `repr(s)` of a Python `str`: single quotes unless the string holds one
+/// and no double quote, with backslashes, the quote, and characters that
+/// are not printable escaped.
+pub(crate) fn str_repr(s: &str) -> String {
+    let quote = if s.contains('\'') && !s.contains('"') {
+        '"'
+    } else {
+        '\''
+    };
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push(quote);
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c == quote => {
+                out.push('\\');
+                out.push(c);
+            }
+            // Python's str.isprintable, near enough: ASCII and Latin-1
+            // controls are escaped.
+            c if (c as u32) < 0x20 || (0x7f..0xa1).contains(&(c as u32)) || c == '\u{ad}' => {
+                out.push_str(&format!("\\x{:02x}", c as u32));
+            }
+            c => out.push(c),
+        }
+    }
+    out.push(quote);
+    out
+}
+
+/// The lines of `s` as Python's `str.splitlines()` splits them, without
+/// their line breaks.
+pub(crate) fn splitlines(s: &str) -> Vec<&str> {
+    let mut lines = Vec::new();
+    let mut start = 0;
+    let mut chars = s.char_indices().peekable();
+    while let Some((i, c)) = chars.next() {
+        let is_break = matches!(
+            c,
+            '\n' | '\r'
+                | '\x0b'
+                | '\x0c'
+                | '\x1c'
+                | '\x1d'
+                | '\x1e'
+                | '\u{85}'
+                | '\u{2028}'
+                | '\u{2029}'
+        );
+        if is_break {
+            lines.push(&s[start..i]);
+            let mut end = i + c.len_utf8();
+            if c == '\r' && chars.peek().is_some_and(|&(_, n)| n == '\n') {
+                chars.next();
+                end += 1;
+            }
+            start = end;
+        }
+    }
+    if start < s.len() {
+        lines.push(&s[start..]);
+    }
+    lines
+}
+
 #[cfg(test)]
 mod tests {
-    use super::float_repr;
+    use super::{float_repr, splitlines, str_repr};
+
+    #[test]
+    fn str_reprs_match_python() {
+        for (s, repr) in [
+            ("abc", "'abc'"),
+            ("a'b", "\"a'b\""),
+            ("a'b\"", "'a\\'b\"'"),
+            ("a\tb\n", "'a\\tb\\n'"),
+            ("back\\slash", "'back\\\\slash'"),
+            ("\x01é", "'\\x01é'"),
+        ] {
+            assert_eq!(str_repr(s), repr);
+        }
+    }
+
+    #[test]
+    fn lines_split_as_python_splits_them() {
+        assert_eq!(splitlines("a\nb\r\nc\rd\x0ce\n"), ["a", "b", "c", "d", "e"]);
+        assert_eq!(splitlines("\na\n\n"), ["", "a", ""]);
+        assert_eq!(splitlines(""), Vec::<&str>::new());
+    }
 
     #[test]
     fn float_reprs_match_python() {
