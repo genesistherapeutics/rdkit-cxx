@@ -1039,6 +1039,22 @@ fn build_synthon_shapes() {
         Err(Error::Value { .. })
     ));
 
+    // The embedder casts a sum over the atoms of a product with its
+    // hydrogens to int.
+    let iron = format!("[1*]{}", "[FeH90]".repeat(48));
+    let path = write_text(
+        "synthon-iron.txt",
+        &[HEADER, &format!("{iron}\ta\t0\tr"), "[1*]C\tb\t1\tr"],
+    );
+    let mut heavy = SynthonSpace::default();
+    heavy.read_text_file(&path).unwrap();
+    std::fs::remove_file(path).unwrap();
+    let err = heavy.build_synthon_shapes().unwrap_err();
+    assert!(
+        matches!(err, Error::Value { ref message } if message.contains("4295")),
+        "{err:?}"
+    );
+
     // A synthon without a connector would give a shape without volume.
     let path = write_text("synthon-loose.txt", &[HEADER, "CCO\ta\t0\tr"]);
     let mut loose = SynthonSpace::default();

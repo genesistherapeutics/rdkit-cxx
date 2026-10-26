@@ -1220,9 +1220,8 @@ SSS::ShapeBuildParams shape_params_from(const ShapeBuildParamsData &d) {
 //   synthon's connector, a dummy of the shape, gives it;
 // - the embedder casts the sum of the squared starting distances, which it
 //   bounds by 1000 Angstroms, to int (check_initial_coords_cast), so the
-//   molecules it embeds, a product with its hydrogens, at most 6 an atom
-//   (RDKit's largest valence) beside the atoms of the synthons, which
-//   include their explicit hydrogens and dummies, need at most 4295 atoms.
+//   molecules it embeds, a product with its hydrogens, need at most 4295
+//   atoms (largest_product_with_hs).
 // As details::countConnections: a dummy atom with an isotope from 1 to
 // MAX_CONNECTOR_NUM.
 bool has_connector(const SSS::Synthon &synthon) {
@@ -1233,6 +1232,33 @@ bool has_connector(const SSS::Synthon &synthon) {
     }
   }
   return false;
+}
+
+// The most atoms a product of the space can have with the hydrogens addHs
+// gives it: each reaction's largest synthon from each set, counting each
+// atom's explicit hydrogens and, for an atom that can have implicit ones
+// (one written without brackets), at most 4, a lone carbon's, as RDKit's
+// default valences of those elements allow.
+std::uint64_t largest_product_with_hs(SSS::SynthonSpace &space) {
+  std::uint64_t largest = 0;
+  for_each_reaction(
+      space, [&](const std::string &, const SSS::SynthonSet &reaction) {
+        std::uint64_t atoms = 0;
+        for (const auto &set : reaction.getSynthons()) {
+          std::uint64_t most = 0;
+          for (const auto &[id, synthon] : set) {
+            std::uint64_t count = 0;
+            for (const auto *atom : synthon->getOrigMol()->atoms()) {
+              count += 1 + std::uint64_t{atom->getNumExplicitHs()} +
+                       (atom->getNoImplicit() ? 0 : 4);
+            }
+            most = std::max(most, count);
+          }
+          atoms += most;
+        }
+        largest = std::max(largest, atoms);
+      });
+  return largest;
 }
 
 void check_space_for_shapes(SSS::SynthonSpace &space) {
@@ -1249,7 +1275,7 @@ void check_space_for_shapes(SSS::SynthonSpace &space) {
           }
         }
       });
-  if (largest_product(space) * 7 > 4295) {
+  if (largest_product_with_hs(space) > 4295) {
     throw ValueErrorException(
         "the space's products can have more than 4295 atoms with their "
         "hydrogens, the most the embedder takes");
