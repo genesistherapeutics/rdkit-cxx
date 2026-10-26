@@ -104,7 +104,11 @@ fn bit_rank_matches_python() {
     assert_eq!(info, res);
     // Python's ranking, whose ties NumPy orders as it likes:
     // [18, 16, 11, 9, 2, 4, 5, 19, 12, 13, 15, 14, 0, 8, 6, 7, 1, 17, 10, 3].
-    assert_eq!(&order[..6], [18, 16, 11, 9, 4, 2]);
+    // The six tied gains can round apart in RDKit's C++ on some platforms,
+    // so only their set is pinned.
+    let mut top: Vec<usize> = order[..6].to_vec();
+    top.sort_unstable();
+    assert_eq!(top, [2, 4, 9, 11, 16, 18]);
     assert!(order.windows(2).all(|w| gains[w[0]] >= gains[w[1]]));
 }
 
