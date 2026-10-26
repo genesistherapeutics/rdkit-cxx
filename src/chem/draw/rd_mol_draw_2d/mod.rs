@@ -52,6 +52,18 @@
 //!   or arc angles that are not finite, wavy lines with no room for their
 //!   waves).
 //!
+//! - Free drawing (`draw_line`, `draw_string`, and the other shapes) on a
+//!   flexible canvas before its first drawing sizes it (RDKit's Cairo
+//!   drawer has nothing to draw on, and draws text to a null context), at
+//!   coordinates that are not finite or beyond 1e9 (as given, or in pixels),
+//!   and with text as for labels and notes. In comic mode, which draws
+//!   arrows and triangles by hand, their lines must be at least 0.06 long
+//!   (RDKit's hand-drawn line can loop forever on a shorter one). Wavy
+//!   lines take at most 100000 segments, and arcs angles within 10000
+//!   degrees, the second no less than the first. Points in the molecule's frame need
+//!   a molecule drawn or `set_scale` to place them by: `Error::Runtime`
+//!   otherwise, as in Python.
+//!
 //! A drawing call that fails inside RDKit after it has started laying out
 //! the molecule leaves the drawer unable to draw (later drawing calls
 //! return `Error::Value`), since RDKit may keep the half-built molecule and

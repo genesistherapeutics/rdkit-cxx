@@ -202,8 +202,8 @@ target_include_directories(rdkitcxx PRIVATE
   # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
   # install that has it finds its own first, next to the including header.
   # vendor/GraphMol/MolDraw2D holds the drawing code's internal headers
-  # (DrawText.h, DrawMol.h, and those they include), from the same release,
-  # which no package installs (draw_drawer.cpp).
+  # (DrawText.h, DrawMol.h, and those they include, and MolDraw2DDetails.h),
+  # from the same release, which no package installs (draw_drawer.cpp).
   vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)

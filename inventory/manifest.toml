@@ -164,6 +164,26 @@ python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.ClearDrawing"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::clear_drawing"]
 
 [[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawArc"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_arc", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_arc_with_raw_coords"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawArrow"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_arrow", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_arrow_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawAttachmentLine"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_attachment_line", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_attachment_line_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawEllipse"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_ellipse", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_ellipse_with_raw_coords"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawLine"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_line", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_line_with_raw_coords"]
+
+[[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawMolecule"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule_with_params"]
 overloads_note = "both overloads: DrawMoleculeParams::highlight_bonds is None for the first, which highlights the bonds between highlighted atoms"
@@ -177,8 +197,29 @@ python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawMolecules"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecules", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecules_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawPolygon"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_polygon", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_polygon_with_raw_coords"]
+
+[[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawReaction"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_reaction", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_reaction_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawRect"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_rect", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_rect_with_raw_coords"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawString"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_string", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_string_with_raw_coords", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_string_aligned", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_string_aligned_with_raw_coords"]
+overloads_note = "the (string, pos, align) overload is draw_string_aligned (A5)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawTriangle"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_triangle", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_triangle_with_raw_coords"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawWavyLine"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_wavy_line", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_wavy_line_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.FillPolys"
@@ -191,6 +232,11 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::flexi_mode"]
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.FontSize"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::font_size"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.GetDrawCoords"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::get_draw_coords", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::get_draw_coords_int"]
+overloads_note = "the atomIndex overload is get_draw_coords_int (A5)"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.GetMolSize"
@@ -235,6 +281,10 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::set_line_width"]
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.SetOffset"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::set_offset"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.SetScale"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::set_scale", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::set_scale_with_mol"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.Width"

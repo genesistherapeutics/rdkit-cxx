@@ -40,6 +40,7 @@
 #include <GraphMol/MolDraw2D/DrawMolMCHCircleAndLine.h>
 #include <GraphMol/MolDraw2D/DrawMolMCHLasso.h>
 #include <GraphMol/MolDraw2D/DrawText.h>
+#include <GraphMol/MolDraw2D/MolDraw2DDetails.h>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
@@ -174,6 +175,8 @@ void check_font(Drawer &d) {
   }
   text.setFontScale(scale, true);
   if (!ok) {
+    // Free drawing (DrawString) draws with the font the text drawer has.
+    text.setFontFile("");
     throw ValueErrorException(
         "the font (fontFile) has glyphs RDKit cannot size: a bitmap font, or "
         "glyphs more than 8 times the font size");
@@ -359,8 +362,8 @@ void check_shapes(
     if (!ok) {
       throw ValueErrorException(
           "the drawing's geometry is degenerate: RDKit lays it out with "
-          "shapes it cannot draw (coordinates or angles that are not finite, "
-          "or wavy lines with no room for their waves)");
+          "shapes it cannot draw (coordinates or angles that are not finite "
+          "or out of range, or wavy lines with no room for their waves)");
     }
   }
 }
@@ -401,6 +404,20 @@ void checked_layout(detail::DrawMol &dm) {
   check_shapes(dm.highlights_);
 }
 
+// After SetScale, MolDraw2D::drawTheMolecule gives each molecule the
+// transformation it set (DrawMol::setTransformation), which lays the
+// molecule out again at that scale.
+void checked_transformation(const Drawer &d, detail::DrawMol &dm) {
+  if (!d.global) {
+    return;
+  }
+  dm.setTransformation(*d.global);
+  check_shapes(dm.bonds_);
+  check_shapes(dm.preShapes_);
+  check_shapes(dm.postShapes_);
+  check_shapes(dm.highlights_);
+}
+
 // MolDraw2D::setupTextDrawer's settings, which the drawing will make too.
 void set_up_text_drawer(Drawer &d) {
   auto &text = d.text->text_drawer();
@@ -416,11 +433,11 @@ void set_up_text_drawer(Drawer &d) {
 // (MolDraw2D::fixVariableDimensions).
 using Size = std::pair<int, int>;
 
-// Lays out a molecule as MolDraw2D::drawMolecule and getMolSize will, at
-// the panel size, giving its size.
+// Lays out a molecule as MolDraw2D::drawMolecule (drawing) and getMolSize
+// will, at the panel size, giving its size.
 Size check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
                   const Highlights &h, const std::vector<int> *bonds,
-                  int conf_id) {
+                  int conf_id, bool drawing = true) {
   set_up_text_drawer(d);
   RDKit::ROMol copy(mol);
   if (!mol.getRingInfo()->isSymmSssr()) {
@@ -432,6 +449,9 @@ Size check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
                         bonds, &h.atom_colours, &h.bond_colours, nullptr,
                         &h.radii, d.drawer->supportsAnnotations(), conf_id);
   checked_layout(probe);
+  if (drawing) {
+    checked_transformation(d, probe);
+  }
   return {probe.width_, probe.height_};
 }
 
@@ -457,6 +477,7 @@ Size check_mch_layout(Drawer &d, const RWMol &mol, const std::string &legend,
       break;
   }
   checked_layout(*probe);
+  checked_transformation(d, *probe);
   return {probe->width_, probe->height_};
 }
 
@@ -1072,8 +1093,9 @@ DrawSize drawer_get_mol_size(Drawer &d, const RWMol &mol,
   DrawnMol drawn(mol, d.drawer->drawOptions());
   check_drawing(d, drawn.mol(), data.conf_id, legend,
                 d.drawer->supportsAnnotations(), true);
+  const bool drawing = false;
   check_layout(d, drawn.mol(), legend, h, h.has_bonds ? &h.bonds : nullptr,
-               data.conf_id);
+               data.conf_id, drawing);
   // GetMolSize lays the molecule out in a DrawMol of its own, and leaves the
   // drawer's molecules as they were. Python's passes the bonds it is given,
   // or none.
@@ -1370,6 +1392,509 @@ void drawer_prepare_and_draw_molecule(Drawer &d, const RWMol &mol,
     throw;
   }
   opts.prepareMolsBeforeDrawing = prepare;
+}
+
+// Free drawing: lines, shapes, and text the caller places, in pixels
+// (rawCoords) or in the molecule's frame, which MolDraw2D::getDrawCoords
+// takes to pixels.
+namespace {
+
+// The largest coordinate, in pixels or in the molecule's frame, free
+// drawing takes: finite, and within float's range, in which arcPoints
+// (MolDraw2DDetails.cpp) computes ellipses (a double outside it converts
+// to float undefined).
+constexpr double kMaxFreeCoordinate = 1e9;
+
+// Point2D::normalize's zero_tolerance: it throws for a shorter vector.
+constexpr double kZeroTolerance = 1e-16;
+
+// The shortest line comic mode draws by hand, in the units it is given in.
+// handdrawnLine (MolDraw2DDetails.cpp) shifts each end by up to 0.02 in
+// each direction and then shrinks its wiggles until they are small next to
+// the line's steps, which never ends for a step of no length: its scale
+// factor sticks at the smallest denormal.
+constexpr double kMinComicLineLength = 0.06;
+
+// The most segments a wavy line takes. getWavyLineSegments rounds an odd
+// count up, which makes UINT_MAX no segments, and the drawers then read the
+// first.
+constexpr std::uint32_t kMaxWavySegments = 100000;
+
+// The largest font size free text is drawn at: DrawTextSVG::drawChar
+// converts the size to unsigned.
+constexpr double kMaxFreeFontSize = 1e6;
+
+// The largest arc angle, in degrees: drawArc steps through the arc in an
+// int count of 5 degree steps.
+constexpr double kMaxArcAngle = 1e4;
+
+RDGeom::Point2D to_rdkit(const Point2D &p) { return RDGeom::Point2D(p.x, p.y); }
+
+Point2D from_rdkit(const RDGeom::Point2D &p) { return Point2D{p.x, p.y}; }
+
+// What every free-drawing call needs: a drawer that can draw, on a canvas
+// it has set up. Before the first drawing on a flexible canvas sizes it,
+// MolDraw2DSVG would write ahead of its header, and MolDraw2DCairo has no
+// Cairo context (and FreeType's text drawer draws to it without checking).
+void check_canvas(const Drawer &d) {
+  check_usable(d);
+  if (d.drawer->width() < 0) {
+    throw ValueErrorException(
+        "a flexible canvas has nothing to draw on until its first drawing "
+        "sizes it");
+  }
+}
+
+// Whether getDrawCoords has a transformation to take molecule coordinates
+// by: SetScale's, or the last molecule drawn's (drawMols_[activeMolIdx_],
+// which it reads without checking the index).
+bool has_transform(const Drawer &d) {
+  return d.global_transform || (d.active_mol >= 0 && d.active_mol < d.num_mols);
+}
+
+void check_free_coordinate(double v) {
+  if (!(std::abs(v) <= kMaxFreeCoordinate)) {
+    throw ValueErrorException(
+        "free drawing coordinates must be finite and within 1e9 (in the "
+        "units given, and in pixels)");
+  }
+}
+
+// A point as the drawer will draw it, in pixels, checked.
+RDGeom::Point2D drawn_point(const Drawer &d, const RDGeom::Point2D &p,
+                            bool raw) {
+  check_free_coordinate(p.x);
+  check_free_coordinate(p.y);
+  if (raw) {
+    return p;
+  }
+  if (!has_transform(d)) {
+    // RDKit's PRECONDITION in getDrawCoords.
+    throw std::runtime_error("no scaling info");
+  }
+  const auto q = d.drawer->getDrawCoords(p);
+  check_free_coordinate(q.x);
+  check_free_coordinate(q.y);
+  return q;
+}
+
+// The box from a to b as the drawer will draw it: getDrawCoords scales and
+// moves, so the drawn box has the drawn corners.
+void check_drawn_box(const Drawer &d, const RDGeom::Point2D &a,
+                     const RDGeom::Point2D &b, bool raw) {
+  drawn_point(d, a, raw);
+  drawn_point(d, b, raw);
+}
+
+// The box around the line from a to b, widened by w on each side.
+void check_drawn_line_box(const Drawer &d, const RDGeom::Point2D &a,
+                          const RDGeom::Point2D &b, double w, bool raw) {
+  check_free_coordinate(w);
+  const double lo_x = std::min(a.x, b.x) - std::abs(w);
+  const double lo_y = std::min(a.y, b.y) - std::abs(w);
+  const double hi_x = std::max(a.x, b.x) + std::abs(w);
+  const double hi_y = std::max(a.y, b.y) + std::abs(w);
+  check_drawn_box(d, RDGeom::Point2D(lo_x, lo_y), RDGeom::Point2D(hi_x, hi_y),
+                  raw);
+}
+
+// getDrawLineWidth, which each shape's line takes, scales the width by the
+// last molecule drawn (scale(), reading drawMols_[activeMolIdx_]) when
+// scaleBondWidth is set.
+void check_line_width(const Drawer &d) {
+  if (d.drawer->drawOptions().scaleBondWidth &&
+      !(d.active_mol >= 0 && d.active_mol < d.num_mols)) {
+    // RDKit's PRECONDITION in scale().
+    throw std::runtime_error("bad active mol index");
+  }
+}
+
+void check_comic_line(const Drawer &d, const RDGeom::Point2D &a,
+                      const RDGeom::Point2D &b) {
+  if (d.drawer->drawOptions().comicMode &&
+      !((b - a).length() >= kMinComicLineLength)) {
+    throw ValueErrorException(
+        "comicMode cannot draw a line shorter than 0.06 (in the units it is "
+        "given in) by hand: RDKit's hand-drawn line can never end");
+  }
+}
+
+// Comic mode draws its lines with std::rand (DrawnMol).
+std::unique_lock<std::mutex> comic_lock(const Drawer &d) {
+  if (d.drawer->drawOptions().comicMode) {
+    return std::unique_lock<std::mutex>(random_mutex());
+  }
+  return {};
+}
+
+RDKit::DrawColour checked_colour(const DrawColour &colour, const char *what) {
+  const auto c = colour_from_data(colour);
+  check_colour(c, what);
+  return c;
+}
+
+void check_wavy_line(const Drawer &d, const RDGeom::Point2D &a,
+                     const RDGeom::Point2D &b, std::uint32_t n_segments,
+                     double vert_offset, bool raw) {
+  // RDKit's PRECONDITION, then the wrappers' bound.
+  if (n_segments < 2) {
+    throw std::runtime_error("too few segments");
+  }
+  if (n_segments > kMaxWavySegments) {
+    throw ValueErrorException(
+        "a wavy line takes at most 100000 segments (nSegments)");
+  }
+  check_free_coordinate(a.x);
+  check_free_coordinate(a.y);
+  check_free_coordinate(b.x);
+  check_free_coordinate(b.y);
+  // getWavyLineSegments normalizes the line's perpendicular.
+  if (!((b - a).length() >= kZeroTolerance)) {
+    throw ValueErrorException("a wavy line needs length");
+  }
+  check_drawn_line_box(d, a, b, vert_offset, raw);
+}
+
+// MolDraw2D::setScale, as RDKit computes it: the transformation it keeps
+// (globalDrawTrans_), with the molecule laid out first when given.
+void set_scale(Drawer &d, int width, int height, const Point2D &minv_data,
+               const Point2D &maxv_data, const RWMol *mol) {
+  check_usable(d);
+  auto &draw = *d.drawer;
+  // RDKit's PRECONDITIONs ask for positive sizes, from which it computes
+  // the scale; the wrappers bound them as canvases are.
+  if (width < 1) {
+    throw std::runtime_error("bad width");
+  }
+  if (height < 1) {
+    throw std::runtime_error("bad height");
+  }
+  if (width > kMaxCanvasSize || height > kMaxCanvasSize) {
+    throw ValueErrorException(
+        "SetScale's width and height must be at most 32767");
+  }
+  // It lays the transformation out at the panel size, which a flexible
+  // canvas has none of (and in flexi mode keeps none of).
+  if (draw.panelWidth() < 0 || draw.panelHeight() < 0) {
+    throw ValueErrorException(
+        "SetScale needs panels of fixed size: draw on the flexible canvas "
+        "first, outside flexi mode");
+  }
+  const auto minv = to_rdkit(minv_data);
+  const auto maxv = to_rdkit(maxv_data);
+  for (double v : {minv.x, minv.y, maxv.x, maxv.y}) {
+    if (!(std::abs(v) <= kMaxDepictionCoordinate)) {
+      throw ValueErrorException(
+          "SetScale's minv and maxv must be finite and within 1e5");
+    }
+  }
+  const auto &opts = draw.drawOptions();
+  auto &text = d.text->text_drawer();
+  double x_min, x_max, x_range, y_min, y_max, y_range;
+  double font_scale = 0;
+  bool set_font_scale = false;
+  std::unique_ptr<DrawnMol> drawn;
+  if (mol) {
+    // RDKit lays the molecule out in a DrawMol of the panel's size, as
+    // drawMoleculeWithHighlights does (rings as given, the first
+    // conformer), but draws nothing, so no std::rand.
+    const bool symmetrize = false;
+    const bool lock_random = false;
+    drawn = std::make_unique<DrawnMol>(*mol, opts, symmetrize, lock_random);
+    // DrawMol's defaults: annotations, and the first conformer.
+    const bool annotations = true;
+    check_drawing(d, drawn->mol(), -1, "", annotations, symmetrize);
+    set_up_text_drawer(d);
+    detail::DrawMol probe(drawn->mol(), "", draw.panelWidth(),
+                          draw.panelHeight(), opts, text);
+    checked_layout(probe);
+    x_min = std::min(minv.x, probe.xMin_);
+    y_min = std::min(minv.y, -probe.yMax_);
+    x_max = std::max(maxv.x, probe.xMax_);
+    y_max = std::max(maxv.y, -probe.yMin_);
+    font_scale = probe.getFontScale();
+    set_font_scale = true;
+  } else {
+    x_min = minv.x;
+    y_min = minv.y;
+    x_max = maxv.x;
+    y_max = maxv.y;
+  }
+  x_range = x_max - x_min;
+  y_range = y_max - y_min;
+  if (x_range < 1.0e-4) {
+    x_range = 1.0;
+    x_min = -0.5;
+  }
+  if (y_range < 1.0e-4) {
+    y_range = 1.0;
+    y_min = -0.5;
+  }
+  x_min -= opts.padding * x_range;
+  x_range *= 1 + 2 * opts.padding;
+  x_max = x_min + x_range;
+  y_min -= opts.padding * y_range;
+  y_range *= 1 + 2 * opts.padding;
+  y_max = y_min + y_range;
+  const double draw_width = width * (1 - 2 * opts.padding);
+  const double draw_height = height * (1 - 2 * opts.padding);
+  const double scale =
+      std::min(double(draw_width) / x_range, double(draw_height) / y_range);
+  if (!set_font_scale) {
+    const double ofs = text.fontScale();
+    text.setFontScale(scale);
+    font_scale = text.fontScale();
+    text.setFontScale(ofs, true);
+  } else {
+    font_scale *= scale / font_scale;
+  }
+  draw.setScale(width, height, minv, maxv, drawn ? &drawn->mol() : nullptr);
+  auto global = std::make_unique<detail::DrawMol>(
+      draw.panelWidth(), draw.panelHeight(), opts, text, x_min, x_max, y_min,
+      y_max, scale, font_scale);
+  global->xOffset_ -= width * opts.padding;
+  global->yOffset_ -= height * opts.padding;
+  d.global = std::move(global);
+  d.global_transform = true;
+}
+
+}  // namespace
+
+void drawer_draw_line(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                      bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto a = to_rdkit(cds1);
+  const auto b = to_rdkit(cds2);
+  check_drawn_box(d, a, b, raw_coords);
+  d.drawer->drawLine(a, b, raw_coords);
+}
+
+void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                       bool as_polygon, double frac, double angle,
+                       const DrawColour &colour, bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto col = checked_colour(colour, "color");
+  // RDKit's PRECONDITION.
+  if (!(angle > 1.0e-6)) {
+    throw std::runtime_error(
+        "Arrow angle must be positive and greater than 0.0.");
+  }
+  if (!std::isfinite(frac) || !std::isfinite(angle)) {
+    throw ValueErrorException("an arrow's frac and angle must be finite");
+  }
+  const auto begin = to_rdkit(cds1);
+  const auto end = to_rdkit(cds2);
+  drawn_point(d, begin, raw_coords);
+  drawn_point(d, end, raw_coords);
+  // The head, as drawArrow computes it: the line ends short of the tip by
+  // the mitre, and the head's sides divide by the angle's sine and cosine.
+  auto tip = end;
+  RDGeom::Point2D p1, p2;
+  detail::calcArrowHead(tip, p1, p2, begin, frac, d.drawer->getDrawLineWidth(),
+                        angle);
+  for (const auto &p : {tip, p1, p2}) {
+    drawn_point(d, p, raw_coords);
+  }
+  check_comic_line(d, begin, tip);
+  const auto random = comic_lock(d);
+  d.drawer->drawArrow(begin, end, as_polygon, frac, angle, col, raw_coords);
+}
+
+void drawer_draw_triangle(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                          const Point2D &cds3, bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto a = to_rdkit(cds1);
+  const auto b = to_rdkit(cds2);
+  const auto c = to_rdkit(cds3);
+  for (const auto &p : {a, b, c}) {
+    drawn_point(d, p, raw_coords);
+  }
+  check_comic_line(d, a, b);
+  check_comic_line(d, b, c);
+  check_comic_line(d, c, a);
+  const auto random = comic_lock(d);
+  d.drawer->drawTriangle(a, b, c, raw_coords);
+}
+
+void drawer_draw_polygon(Drawer &d, rust::Slice<const Point2D> cds,
+                         bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  // Python's helper refuses no points, and the drawers' PRECONDITION fewer
+  // than three.
+  if (cds.empty()) {
+    throw ValueErrorException("cds argument must be non-empty");
+  }
+  if (cds.size() < 3) {
+    throw std::runtime_error("must have at least three points");
+  }
+  std::vector<RDGeom::Point2D> pts;
+  pts.reserve(cds.size());
+  for (const auto &p : cds) {
+    pts.push_back(to_rdkit(p));
+    drawn_point(d, pts.back(), raw_coords);
+  }
+  d.drawer->drawPolygon(pts, raw_coords);
+}
+
+void drawer_draw_ellipse(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                         bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto a = to_rdkit(cds1);
+  const auto b = to_rdkit(cds2);
+  check_drawn_box(d, a, b, raw_coords);
+  d.drawer->drawEllipse(a, b, raw_coords);
+}
+
+void drawer_draw_rect(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                      bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto a = to_rdkit(cds1);
+  const auto b = to_rdkit(cds2);
+  check_drawn_box(d, a, b, raw_coords);
+  d.drawer->drawRect(a, b, raw_coords);
+}
+
+void drawer_draw_arc(Drawer &d, const Point2D &centre, double radius,
+                     double angle1, double angle2, bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  // drawArc takes 1 + int((angle2 - angle1) / 5) steps: below one, its
+  // step divides by zero, or it has too few points for its polygon.
+  if (!(std::abs(angle1) <= kMaxArcAngle && std::abs(angle2) <= kMaxArcAngle &&
+        angle2 >= angle1)) {
+    throw ValueErrorException(
+        "an arc's angles must be within 10000 degrees, with angle2 no less "
+        "than angle1");
+  }
+  const auto c = to_rdkit(centre);
+  check_drawn_line_box(d, c, c, radius, raw_coords);
+  d.drawer->drawArc(c, radius, angle1, angle2, raw_coords);
+}
+
+void drawer_draw_attachment_line(Drawer &d, const Point2D &cds1,
+                                 const Point2D &cds2, const DrawColour &colour,
+                                 double len, std::uint32_t n_segments,
+                                 bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto col = checked_colour(colour, "color");
+  const auto a = to_rdkit(cds1);
+  const auto b = to_rdkit(cds2);
+  check_free_coordinate(a.x);
+  check_free_coordinate(a.y);
+  check_free_coordinate(b.x);
+  check_free_coordinate(b.y);
+  check_free_coordinate(len);
+  // drawAttachmentLine draws a wavy line of length len across the line's
+  // end, along its perpendicular (calcPerpendicular, NaN for a line of no
+  // length), and passes rawCoords where drawWavyLine takes its vertical
+  // offset: the wavy line is in the molecule's frame, waving by 1 with
+  // rawCoords and not at all without.
+  const double bx = a.x - b.x;
+  const double by = a.y - b.y;
+  const double perp_len = std::sqrt(by * by + bx * bx);
+  const RDGeom::Point2D perp(-by / perp_len, bx / perp_len);
+  if (!(std::isfinite(perp.x) && std::isfinite(perp.y))) {
+    throw ValueErrorException("an attachment line needs a line with length");
+  }
+  const RDGeom::Point2D p1(b.x - perp.x * len / 2, b.y - perp.y * len / 2);
+  const RDGeom::Point2D p2(b.x + perp.x * len / 2, b.y + perp.y * len / 2);
+  const double vert_offset = raw_coords ? 1.0 : 0.0;
+  const bool wavy_raw = false;
+  check_wavy_line(d, p1, p2, n_segments, vert_offset, wavy_raw);
+  d.drawer->drawAttachmentLine(a, b, col, len, n_segments, raw_coords);
+}
+
+void drawer_draw_wavy_line(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                           const DrawColour &colour1, const DrawColour &colour2,
+                           std::uint32_t n_segments, double vert_offset,
+                           bool raw_coords) {
+  check_canvas(d);
+  check_line_width(d);
+  const auto col1 = checked_colour(colour1, "color1");
+  const auto col2 = checked_colour(colour2, "color2");
+  const auto a = to_rdkit(cds1);
+  const auto b = to_rdkit(cds2);
+  check_wavy_line(d, a, b, n_segments, vert_offset, raw_coords);
+  d.drawer->drawWavyLine(a, b, col1, col2, n_segments, vert_offset, raw_coords);
+}
+
+void drawer_draw_string(Drawer &d, rust::Str text, const Point2D &pos,
+                        std::int32_t align, bool has_align, bool raw_coords) {
+  check_canvas(d);
+  const std::string str(text);
+  // Aligned text is laid out as a run (as notes are), and the rest as an
+  // atom label, split into pieces (atomLabelToPieces).
+  if (has_align) {
+    check_annotation(str, d.freetype, "string");
+  } else {
+    check_label(str, d.freetype, "string");
+  }
+  auto talign = detail::TextAlignType::MIDDLE;
+  if (has_align) {
+    switch (align) {
+      case 0:
+        talign = detail::TextAlignType::MIDDLE;
+        break;
+      case 1:
+        talign = detail::TextAlignType::START;
+        break;
+      case 2:
+        talign = detail::TextAlignType::END;
+        break;
+      default:
+        throw ValueErrorException("align must be 0, 1, or 2");
+    }
+  }
+  const double size = d.text->text_drawer().fontSize();
+  if (!(size > 0 && size <= kMaxFreeFontSize)) {
+    throw ValueErrorException(
+        "the text drawer's font size is out of range for free text");
+  }
+  const auto p = to_rdkit(pos);
+  drawn_point(d, p, raw_coords);
+  if (has_align) {
+    d.drawer->drawString(str, p, talign, raw_coords);
+  } else {
+    d.drawer->drawString(str, p, raw_coords);
+  }
+}
+
+Point2D drawer_get_draw_coords(const Drawer &d, const Point2D &point) {
+  check_usable(d);
+  if (!has_transform(d)) {
+    throw std::runtime_error("no scaling info");
+  }
+  return from_rdkit(d.drawer->getDrawCoords(to_rdkit(point)));
+}
+
+Point2D drawer_get_atom_draw_coords(const Drawer &d, std::uint32_t atom_index) {
+  check_usable(d);
+  // RDKit's PRECONDITIONs, for the active molecule; it checks the atom.
+  if (!(d.active_mol >= 0 && d.active_mol < d.num_mols)) {
+    throw std::runtime_error("bad active mol index");
+  }
+  if (atom_index > static_cast<std::uint32_t>(INT_MAX)) {
+    throw std::runtime_error("bad atom number");
+  }
+  return from_rdkit(d.drawer->getDrawCoords(static_cast<int>(atom_index)));
+}
+
+void drawer_set_scale(Drawer &d, int width, int height, const Point2D &minv,
+                      const Point2D &maxv) {
+  set_scale(d, width, height, minv, maxv, nullptr);
+}
+
+void drawer_set_scale_with_mol(Drawer &d, int width, int height,
+                               const Point2D &minv, const Point2D &maxv,
+                               const RWMol &mol) {
+  set_scale(d, width, height, minv, maxv, &mol);
 }
 
 void svg_finish_drawing(Drawer &d) {

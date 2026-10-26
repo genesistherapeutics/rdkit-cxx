@@ -322,6 +322,101 @@ pub(crate) mod ffi {
             data: &DrawMoleculeData,
             kekulize: bool,
         ) -> Result<()>;
+        fn drawer_draw_line(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            raw_coords: bool,
+        ) -> Result<()>;
+        #[allow(clippy::too_many_arguments)]
+        fn drawer_draw_arrow(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            as_polygon: bool,
+            frac: f64,
+            angle: f64,
+            colour: &DrawColour,
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_draw_triangle(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            cds3: &Point2D,
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_draw_polygon(
+            d: Pin<&mut Drawer>,
+            cds: &[Point2D],
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_draw_ellipse(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_draw_rect(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_draw_arc(
+            d: Pin<&mut Drawer>,
+            centre: &Point2D,
+            radius: f64,
+            angle1: f64,
+            angle2: f64,
+            raw_coords: bool,
+        ) -> Result<()>;
+        #[allow(clippy::too_many_arguments)]
+        fn drawer_draw_attachment_line(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            colour: &DrawColour,
+            len: f64,
+            n_segments: u32,
+            raw_coords: bool,
+        ) -> Result<()>;
+        #[allow(clippy::too_many_arguments)]
+        fn drawer_draw_wavy_line(
+            d: Pin<&mut Drawer>,
+            cds1: &Point2D,
+            cds2: &Point2D,
+            colour1: &DrawColour,
+            colour2: &DrawColour,
+            n_segments: u32,
+            vert_offset: f64,
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_draw_string(
+            d: Pin<&mut Drawer>,
+            text: &str,
+            pos: &Point2D,
+            align: i32,
+            has_align: bool,
+            raw_coords: bool,
+        ) -> Result<()>;
+        fn drawer_get_draw_coords(d: &Drawer, point: &Point2D) -> Result<Point2D>;
+        fn drawer_get_atom_draw_coords(d: &Drawer, atom_index: u32) -> Result<Point2D>;
+        fn drawer_set_scale(
+            d: Pin<&mut Drawer>,
+            width: i32,
+            height: i32,
+            minv: &Point2D,
+            maxv: &Point2D,
+        ) -> Result<()>;
+        fn drawer_set_scale_with_mol(
+            d: Pin<&mut Drawer>,
+            width: i32,
+            height: i32,
+            minv: &Point2D,
+            maxv: &Point2D,
+            mol: &RWMol,
+        ) -> Result<()>;
         fn svg_finish_drawing(d: Pin<&mut Drawer>) -> Result<()>;
         fn svg_drawing_text(d: &Drawer) -> Result<UniquePtr<CxxString>>;
         fn svg_add_molecule_metadata(d: Pin<&mut Drawer>, mol: &RWMol, conf_id: i32) -> Result<()>;

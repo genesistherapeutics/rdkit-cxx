@@ -540,6 +540,441 @@ impl MolDraw2D {
         let size = ffi::drawer_get_mol_size(self.pin_mut(), mol.as_ffi(), &args.to_ffi())?;
         Ok((size.width, size.height))
     }
+
+    /// Draws a line in the current colour, from points in the molecule's
+    /// frame (by the last molecule drawn, or `set_scale`). Mirrors
+    /// `MolDraw2D.DrawLine(cds1, cds2)`; see the free-drawing errors in the
+    /// module documentation.
+    pub fn draw_line(&mut self, cds1: &Point2D, cds2: &Point2D) -> Result<()> {
+        self.draw_line_with_raw_coords(cds1, cds2, false)
+    }
+
+    /// As `draw_line`, from points in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawLine(cds1, cds2, rawCoords)`.
+    pub fn draw_line_with_raw_coords(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_line(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            raw_coords,
+        )?)
+    }
+
+    /// Draws an arrow from `cds1` to `cds2`. Mirrors
+    /// `MolDraw2D.DrawArrow(cds1, cds2)`.
+    pub fn draw_arrow(&mut self, cds1: &Point2D, cds2: &Point2D) -> Result<()> {
+        self.draw_arrow_with_params(cds1, cds2, &DrawArrowParams::default())
+    }
+
+    /// As `draw_arrow`, with the head's shape and colour. Mirrors
+    /// `MolDraw2D.DrawArrow`; `Error::Runtime` for an angle not above 1e-6
+    /// (RDKit's check), and `Error::Value` for a head whose points come out
+    /// beyond the coordinate bounds.
+    pub fn draw_arrow_with_params(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        params: &DrawArrowParams,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_arrow(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            params.as_polygon,
+            params.frac,
+            params.angle,
+            &params.color,
+            params.raw_coords,
+        )?)
+    }
+
+    /// Draws a triangle in the current colour, filled when `fill_polys`
+    /// is. Mirrors `MolDraw2D.DrawTriangle(cds1, cds2, cds3)`.
+    pub fn draw_triangle(&mut self, cds1: &Point2D, cds2: &Point2D, cds3: &Point2D) -> Result<()> {
+        self.draw_triangle_with_raw_coords(cds1, cds2, cds3, false)
+    }
+
+    /// As `draw_triangle`, in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawTriangle(cds1, cds2, cds3, rawCoords)`.
+    pub fn draw_triangle_with_raw_coords(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        cds3: &Point2D,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_triangle(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            cds3,
+            raw_coords,
+        )?)
+    }
+
+    /// Draws a polygon through the points. Mirrors
+    /// `MolDraw2D.DrawPolygon(cds)`; as in Python, `Error::Value` for no
+    /// points and `Error::Runtime` (RDKit's check) for one or two.
+    pub fn draw_polygon(&mut self, cds: &[Point2D]) -> Result<()> {
+        self.draw_polygon_with_raw_coords(cds, false)
+    }
+
+    /// As `draw_polygon`, in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawPolygon(cds, rawCoords)`.
+    pub fn draw_polygon_with_raw_coords(
+        &mut self,
+        cds: &[Point2D],
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_polygon(self.pin_mut(), cds, raw_coords)?)
+    }
+
+    /// Draws the ellipse in the rectangle with corners `cds1` and `cds2`.
+    /// Mirrors `MolDraw2D.DrawEllipse(cds1, cds2)`.
+    pub fn draw_ellipse(&mut self, cds1: &Point2D, cds2: &Point2D) -> Result<()> {
+        self.draw_ellipse_with_raw_coords(cds1, cds2, false)
+    }
+
+    /// As `draw_ellipse`, in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawEllipse(cds1, cds2, rawCoords)`.
+    pub fn draw_ellipse_with_raw_coords(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_ellipse(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            raw_coords,
+        )?)
+    }
+
+    /// Draws the rectangle with corners `cds1` and `cds2`. Mirrors
+    /// `MolDraw2D.DrawRect(cds1, cds2)`.
+    pub fn draw_rect(&mut self, cds1: &Point2D, cds2: &Point2D) -> Result<()> {
+        self.draw_rect_with_raw_coords(cds1, cds2, false)
+    }
+
+    /// As `draw_rect`, in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawRect(cds1, cds2, rawCoords)`.
+    pub fn draw_rect_with_raw_coords(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_rect(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            raw_coords,
+        )?)
+    }
+
+    /// Draws an arc of a circle from `angle1` to `angle2`, in degrees.
+    /// Mirrors `MolDraw2D.DrawArc(center, radius, angle1, angle2)`;
+    /// `Error::Value` for angles beyond 10000 degrees or `angle2` below
+    /// `angle1`, which RDKit steps through in too few steps (dividing by
+    /// zero, or with too few points to draw).
+    pub fn draw_arc(
+        &mut self,
+        center: &Point2D,
+        radius: f64,
+        angle1: f64,
+        angle2: f64,
+    ) -> Result<()> {
+        self.draw_arc_with_raw_coords(center, radius, angle1, angle2, false)
+    }
+
+    /// As `draw_arc`, in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawArc(center, radius, angle1, angle2, rawCoords)`.
+    pub fn draw_arc_with_raw_coords(
+        &mut self,
+        center: &Point2D,
+        radius: f64,
+        angle1: f64,
+        angle2: f64,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_arc(
+            self.pin_mut(),
+            center,
+            radius,
+            angle1,
+            angle2,
+            raw_coords,
+        )?)
+    }
+
+    /// Draws a line across the end of the line from `cds1` to `cds2`, as
+    /// for an attachment point. Mirrors
+    /// `MolDraw2D.DrawAttachmentLine(cds1, cds2, color)`.
+    pub fn draw_attachment_line(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        color: DrawColour,
+    ) -> Result<()> {
+        self.draw_attachment_line_with_params(
+            cds1,
+            cds2,
+            color,
+            &DrawAttachmentLineParams::default(),
+        )
+    }
+
+    /// As `draw_attachment_line`, with its length and segments. Mirrors
+    /// `MolDraw2D.DrawAttachmentLine`. As in RDKit, `raw_coords` is passed
+    /// where the line takes its waves' height: the line is always drawn in
+    /// the molecule's frame (so it needs a molecule drawn, or `set_scale`),
+    /// waving by 1 with `raw_coords` and not at all without.
+    pub fn draw_attachment_line_with_params(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        color: DrawColour,
+        params: &DrawAttachmentLineParams,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_attachment_line(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            &color,
+            params.len,
+            params.n_segments,
+            params.raw_coords,
+        )?)
+    }
+
+    /// Draws a wavy line, in `color1` (`color2` is unused, as in RDKit's
+    /// SVG and Cairo drawers). Mirrors
+    /// `MolDraw2D.DrawWavyLine(cds1, cds2, color1, color2)`.
+    pub fn draw_wavy_line(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        color1: DrawColour,
+        color2: DrawColour,
+    ) -> Result<()> {
+        self.draw_wavy_line_with_params(cds1, cds2, color1, color2, &DrawWavyLineParams::default())
+    }
+
+    /// As `draw_wavy_line`, with its segments and waves' height. Mirrors
+    /// `MolDraw2D.DrawWavyLine`; `Error::Runtime` for fewer than 2 segments
+    /// (RDKit's check), and `Error::Value` for more than 100000 (RDKit
+    /// rounds an odd count up, which makes `u32::MAX` none, and then reads
+    /// the first) or a line of no length.
+    pub fn draw_wavy_line_with_params(
+        &mut self,
+        cds1: &Point2D,
+        cds2: &Point2D,
+        color1: DrawColour,
+        color2: DrawColour,
+        params: &DrawWavyLineParams,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_wavy_line(
+            self.pin_mut(),
+            cds1,
+            cds2,
+            &color1,
+            &color2,
+            params.n_segments,
+            params.vert_offset,
+            params.raw_coords,
+        )?)
+    }
+
+    /// Draws text centred on `pos`, laid out as an atom label is (split at
+    /// its atoms and charges, `<sub>` and `<sup>` markup read). Mirrors
+    /// `MolDraw2D.DrawString(string, pos)`; `Error::Value` for text atom
+    /// labels may not have (see the module documentation).
+    pub fn draw_string(&mut self, string: &str, pos: &Point2D) -> Result<()> {
+        self.draw_string_with_raw_coords(string, pos, false)
+    }
+
+    /// As `draw_string`, at a position in pixels with `raw_coords`. Mirrors
+    /// `MolDraw2D.DrawString(string, pos, rawCoords)`.
+    pub fn draw_string_with_raw_coords(
+        &mut self,
+        string: &str,
+        pos: &Point2D,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_string(
+            self.pin_mut(),
+            string,
+            pos,
+            0,
+            false,
+            raw_coords,
+        )?)
+    }
+
+    /// Draws text aligned on `pos`: `align` 0 for its middle, 1 for its
+    /// start, 2 for its end. Mirrors `MolDraw2D.DrawString(string, pos,
+    /// align)`; `Error::Value` for another `align`, as in Python, or text
+    /// notes may not have.
+    pub fn draw_string_aligned(&mut self, string: &str, pos: &Point2D, align: i32) -> Result<()> {
+        self.draw_string_aligned_with_raw_coords(string, pos, align, false)
+    }
+
+    /// As `draw_string_aligned`, at a position in pixels with `raw_coords`.
+    /// Mirrors `MolDraw2D.DrawString(string, pos, align, rawCoords)`.
+    pub fn draw_string_aligned_with_raw_coords(
+        &mut self,
+        string: &str,
+        pos: &Point2D,
+        align: i32,
+        raw_coords: bool,
+    ) -> Result<()> {
+        Ok(ffi::drawer_draw_string(
+            self.pin_mut(),
+            string,
+            pos,
+            align,
+            true,
+            raw_coords,
+        )?)
+    }
+
+    /// Where a point in the molecule's frame is drawn, in pixels: by the
+    /// transformation `set_scale` set, or else the last molecule drawn.
+    /// Mirrors `MolDraw2D.GetDrawCoords(point)`; `Error::Runtime` with
+    /// neither, as in Python.
+    pub fn get_draw_coords(&self, point: &Point2D) -> Result<Point2D> {
+        Ok(ffi::drawer_get_draw_coords(self.as_ffi(), point)?)
+    }
+
+    /// Where an atom of the last molecule drawn is drawn, in pixels.
+    /// Mirrors `MolDraw2D.GetDrawCoords(atomIndex)`; `Error::Runtime`
+    /// without a molecule drawn, or for an atom it lacks, as in Python.
+    pub fn get_draw_coords_int(&self, atom_index: u32) -> Result<Point2D> {
+        Ok(ffi::drawer_get_atom_draw_coords(self.as_ffi(), atom_index)?)
+    }
+
+    /// Fixes the transformation from the molecule's frame to pixels, for a
+    /// `width` by `height` area to show `minv` to `maxv`: free drawing, and
+    /// molecules drawn after, use it. Mirrors
+    /// `MolDraw2D.SetScale(width, height, minv, maxv)`; `Error::Runtime`
+    /// for a size below 1 (RDKit's check), and `Error::Value` for one above
+    /// 32767, corners beyond 1e5, or a flexible canvas (or flexi mode),
+    /// whose panels RDKit lays the transformation out in.
+    pub fn set_scale(
+        &mut self,
+        width: i32,
+        height: i32,
+        minv: &Point2D,
+        maxv: &Point2D,
+    ) -> Result<()> {
+        Ok(ffi::drawer_set_scale(
+            self.pin_mut(),
+            width,
+            height,
+            minv,
+            maxv,
+        )?)
+    }
+
+    /// As `set_scale`, widening the area to the molecule as RDKit lays it
+    /// out. Mirrors `MolDraw2D.SetScale(width, height, minv, maxv, mol)`;
+    /// errors as `set_scale` and `draw_molecule`.
+    pub fn set_scale_with_mol(
+        &mut self,
+        width: i32,
+        height: i32,
+        minv: &Point2D,
+        maxv: &Point2D,
+        mol: &Mol,
+    ) -> Result<()> {
+        Ok(ffi::drawer_set_scale_with_mol(
+            self.pin_mut(),
+            width,
+            height,
+            minv,
+            maxv,
+            mol.as_ffi(),
+        )?)
+    }
+}
+
+/// Parameters for `MolDraw2D::draw_arrow_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DrawArrowParams {
+    /// Draws the head as a triangle, rather than two lines.
+    pub as_polygon: bool,
+    /// The head's length, as a fraction of the arrow's.
+    pub frac: f64,
+    /// The angle between the line and each side of the head, in radians.
+    pub angle: f64,
+    /// The arrow's colour (Python's `None` is black).
+    pub color: DrawColour,
+    /// Takes the points in pixels.
+    pub raw_coords: bool,
+}
+
+impl Default for DrawArrowParams {
+    fn default() -> DrawArrowParams {
+        DrawArrowParams {
+            as_polygon: false,
+            frac: 0.05,
+            angle: std::f64::consts::PI / 6.0,
+            color: DrawColour::new(0.0, 0.0, 0.0),
+            raw_coords: false,
+        }
+    }
+}
+
+/// Parameters for `MolDraw2D::draw_attachment_line_with_params`, with
+/// Python's defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DrawAttachmentLineParams {
+    /// The line's length, in the molecule's frame.
+    pub len: f64,
+    /// The number of waves' segments.
+    pub n_segments: u32,
+    /// Passed where the line takes its waves' height (see
+    /// `draw_attachment_line_with_params`).
+    pub raw_coords: bool,
+}
+
+impl Default for DrawAttachmentLineParams {
+    fn default() -> DrawAttachmentLineParams {
+        DrawAttachmentLineParams {
+            len: 1.0,
+            n_segments: 16,
+            raw_coords: false,
+        }
+    }
+}
+
+/// Parameters for `MolDraw2D::draw_wavy_line_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DrawWavyLineParams {
+    /// The number of segments (rounded up to even).
+    pub n_segments: u32,
+    /// The waves' height, in the units of the points.
+    pub vert_offset: f64,
+    /// Takes the points in pixels.
+    pub raw_coords: bool,
+}
+
+impl Default for DrawWavyLineParams {
+    fn default() -> DrawWavyLineParams {
+        DrawWavyLineParams {
+            n_segments: 16,
+            vert_offset: 0.05,
+            raw_coords: false,
+        }
+    }
 }
 
 impl fmt::Debug for MolDraw2D {

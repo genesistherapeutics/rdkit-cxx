@@ -28,6 +28,10 @@
 #include "rdkit-cxx/mol_list.h"
 #include "rust/cxx.h"
 
+namespace RDKit::MolDraw2D_detail {
+class DrawMol;
+}
+
 namespace rdkit_cxx {
 
 // Shared types, defined by the bridges (src/ffi/draw.rs, geometry.rs).
@@ -74,6 +78,11 @@ struct Drawer {
   int num_mols = 0;
   int active_mol = -1;
   bool global_transform = false;
+  // A copy of the globalDrawTrans_ SetScale made, built as RDKit built it,
+  // by which the wrappers lay out later drawings as RDKit will
+  // (DrawMol::setTransformation). It refers to the drawer's options and
+  // text drawer, so it is declared after the drawer, to be destroyed first.
+  std::unique_ptr<RDKit::MolDraw2D_detail::DrawMol> global;
   // Set when a drawing call throws: RDKit may then have kept a half-built
   // molecule, or not advanced activeMolIdx_ past it, so the drawer draws
   // no more.
@@ -145,6 +154,38 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
 void drawer_prepare_and_draw_molecule(Drawer &d, const RWMol &mol,
                                       const DrawMoleculeData &data,
                                       bool kekulize);
+void drawer_draw_line(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                      bool raw_coords);
+void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                       bool as_polygon, double frac, double angle,
+                       const DrawColour &colour, bool raw_coords);
+void drawer_draw_triangle(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                          const Point2D &cds3, bool raw_coords);
+void drawer_draw_polygon(Drawer &d, rust::Slice<const Point2D> cds,
+                         bool raw_coords);
+void drawer_draw_ellipse(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                         bool raw_coords);
+void drawer_draw_rect(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                      bool raw_coords);
+void drawer_draw_arc(Drawer &d, const Point2D &centre, double radius,
+                     double angle1, double angle2, bool raw_coords);
+void drawer_draw_attachment_line(Drawer &d, const Point2D &cds1,
+                                 const Point2D &cds2, const DrawColour &colour,
+                                 double len, std::uint32_t n_segments,
+                                 bool raw_coords);
+void drawer_draw_wavy_line(Drawer &d, const Point2D &cds1, const Point2D &cds2,
+                           const DrawColour &colour1, const DrawColour &colour2,
+                           std::uint32_t n_segments, double vert_offset,
+                           bool raw_coords);
+void drawer_draw_string(Drawer &d, rust::Str text, const Point2D &pos,
+                        std::int32_t align, bool has_align, bool raw_coords);
+Point2D drawer_get_draw_coords(const Drawer &d, const Point2D &point);
+Point2D drawer_get_atom_draw_coords(const Drawer &d, std::uint32_t atom_index);
+void drawer_set_scale(Drawer &d, int width, int height, const Point2D &minv,
+                      const Point2D &maxv);
+void drawer_set_scale_with_mol(Drawer &d, int width, int height,
+                               const Point2D &minv, const Point2D &maxv,
+                               const RWMol &mol);
 void svg_finish_drawing(Drawer &d);
 std::unique_ptr<std::string> svg_drawing_text(const Drawer &d);
 void svg_add_molecule_metadata(Drawer &d, const RWMol &mol, int conf_id);
