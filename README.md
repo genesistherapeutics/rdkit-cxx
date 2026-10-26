@@ -13,14 +13,18 @@ println!("{} {:?}", mol_to_smiles(&mol)?, mol.get_substruct_matches(&hydroxyl)?)
 # Ok::<(), rdkit_cxx::Error>(())
 ```
 
-The crate binds RDKit; it reimplements nothing. It compiles a C++ wrapper layer
-(with [cxx](https://cxx.rs) and CMake) against RDKit from conda-forge and links
-RDKit's shared libraries.
+The crate binds RDKit; it reimplements nothing in C++. It compiles a C++
+wrapper layer (with [cxx](https://cxx.rs) and CMake) against RDKit from
+conda-forge and links RDKit's shared libraries. RDKit's pure-Python modules
+are ported to Rust on top of the bindings: `rdkit.Chem.RegistrationHash` is
+`rdkit_cxx::chem::registration_hash`.
 
 Status: under development. The core slice (molecules, atoms, bonds,
 conformers, ring info, properties, SMILES, SMARTS, and molfile I/O,
 sanitization, and substructure matching) is bound, and its patterns are
-recorded in [CONVENTIONS.md](CONVENTIONS.md). Nothing is released before
+recorded in [CONVENTIONS.md](CONVENTIONS.md). [`examples/`](examples) ports
+the [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s recipes
+(`cargo run --example cookbook_hybridization`). Nothing is released before
 parity with the nanobind wrappers. The design is in
 [rdkit-logbook](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-24-rdkit-rust-bindings/README.md).
 
