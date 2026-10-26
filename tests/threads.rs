@@ -34,6 +34,7 @@ use std::collections::BTreeSet;
 use std::path::PathBuf;
 use std::thread;
 
+use rdkit_cxx::chem::draw::rd_mol_draw_2d::{MolDraw2DSVG, MolDrawOptions};
 use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::{
     FragmentRemover, MetalDisconnector, MolVSValidation, Normalizer, Pipeline, TautomerEnumerator,
     Uncharger, cleanup_in_place_mols,
@@ -159,6 +160,11 @@ fn main() {
     // thread starts keeps those reads out of the report. Globals that only
     // the locks order (the BRICS patterns) are left for the threads to fill.
     mol_to_smiles(&mol(ASPIRIN)).unwrap();
+    // And the drawers' (boost::format's, and the text drawers').
+    MolDraw2DSVG::new(100, 100)
+        .unwrap()
+        .draw_molecule(&depicted(ASPIRIN))
+        .unwrap();
     std::fs::write(
         templates(),
         "C1CC2CCC1C2 |(1.55254,0.75,;1.55254,-0.75,;0.125954,-1.21353,;-1.30063,-0.75,;\
@@ -187,6 +193,9 @@ fn main() {
     phase(bounds_matrix_embedding(), random_smiles());
     phase(random_transforms(), random_smiles());
     phase(embedded_stereoisomers(), random_smiles());
+    // Comic-mode drawing draws its lines with std::rand, under the same
+    // lock.
+    phase(comic_drawing(), comic_drawing());
 
     // 2D depiction's settings: each writer against a reader, from every
     // module that reads them.
@@ -198,6 +207,7 @@ fn main() {
     phase(default_ring_system_templates(), ring_template_coords());
     phase(prefer_coord_gen(), png_mol_block());
     phase(prefer_coord_gen(), rxn_block());
+    phase(prefer_coord_gen(), drawn_without_coords());
 
     // ControlCHandler's statics: a substructure match from each module
     // against a plain one.
@@ -682,6 +692,35 @@ fn rxn_block() -> Call<ChemicalReaction> {
                     .unwrap()
                     .starts_with("$RXN")
             )
+        },
+    }
+}
+
+// Drawing a molecule without conformers depicts it first.
+fn drawn_without_coords() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| {
+            let mut d = MolDraw2DSVG::new(200, 200).unwrap();
+            d.draw_molecule(&mol).unwrap();
+            assert!(d.get_drawing_text().unwrap().contains("<path"));
+        },
+    }
+}
+
+// Comic mode wiggles each line with std::rand (handdrawnLine in
+// MolDraw2DDetails.cpp).
+fn comic_drawing() -> Call<Mol> {
+    Call {
+        make: |_| depicted(ASPIRIN),
+        run: |mol| {
+            let mut d = MolDraw2DSVG::new(200, 200).unwrap();
+            let comic = MolDrawOptions {
+                comic_mode: true,
+                ..Default::default()
+            };
+            d.set_draw_options(&comic).unwrap();
+            d.draw_molecule(&mol).unwrap();
         },
     }
 }
