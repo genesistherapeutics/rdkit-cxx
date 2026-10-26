@@ -5,6 +5,9 @@
 
 // Ports the BitClusterer test of rdkit/ML/InfoTheory/UnitTestCorrMatGen.py,
 // with values from Python's rdkit.ML.InfoTheory modules in RDKit 2026.09.1.
+// Gains come from RDKit's C++ `InfoGain`, whose rounding differs across
+// platforms (arm64's build differs in the last bits), so they are compared
+// to within rounding.
 // Python's BitRank functions fail with NumPy 2, so their values come from
 // Python's code with `numpy.integer` read as `numpy.int64`.
 
@@ -20,6 +23,13 @@ use rdkit_cxx::ml::info_theory::entropy::*;
 use rdkit_cxx::ml::info_theory::{BitCorrMatGenerator, info_gain};
 use rdkit_cxx::rd_random;
 
+fn assert_all_close(actual: &[f64], expected: &[f64]) {
+    assert_eq!(actual.len(), expected.len());
+    for (&a, &e) in actual.iter().zip(expected) {
+        assert_close(a, e);
+    }
+}
+
 #[test]
 fn entropy_matches_python() {
     // NumPy's log can round differently from the C library's.
@@ -27,8 +37,8 @@ fn entropy_matches_python() {
     assert_eq!(py_info_entropy(&[0.0, 0.0]), 0.0);
     assert_close(py_info_entropy(&[3.0, 0.0, 7.0, 2.5]), 1.4269608142719166);
     let table = vec![vec![5.0, 1.0], vec![2.0, 7.0], vec![0.0, 3.0]];
-    assert_eq!(py_info_gain(&table).unwrap(), 0.3653023710044675);
-    assert_eq!(info_gain(&table).unwrap(), 0.3653023710044674);
+    assert_close(py_info_gain(&table).unwrap(), 0.3653023710044675);
+    assert_close(info_gain(&table).unwrap(), 0.3653023710044674);
     assert_eq!(
         py_info_gain(&[vec![0.0, 0.0], vec![0.0, 0.0]]).unwrap(),
         0.0
@@ -83,10 +93,14 @@ fn bit_rank_matches_python() {
     let (res, gains) = analyze_sparse_vects(&sv, &sacts).unwrap();
     let (a, b, c) = (0.01437846047807878, 0.10803154614559995, 0.0);
     let expected_gains = [a, a, b, c, b, a, a, a, a, b, c, b, a, a, a, a, b, c, b, a];
-    assert_eq!(gains, expected_gains);
-    assert_eq!(res[2], (2, b, 0, 2));
-    assert_eq!(res[4], (4, b, 2, 0));
-    assert_eq!(res[5], (5, a, 1, 2));
+    assert_all_close(&gains, &expected_gains);
+    for (bit, gain, n_act, n_inact) in [(2usize, b, 0, 2), (4, b, 2, 0), (5, a, 1, 2)] {
+        assert_eq!(
+            (res[bit].0, res[bit].2, res[bit].3),
+            (bit as u32, n_act, n_inact)
+        );
+        assert_close(res[bit].1, gain);
+    }
     let (order, info) = sparse_rank_bits(&sv, &sacts).unwrap();
     assert_eq!(info, res);
     // Python's ranking, whose ties NumPy orders as it likes:
