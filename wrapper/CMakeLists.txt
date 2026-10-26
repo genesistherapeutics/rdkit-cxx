@@ -126,6 +126,8 @@ set(RDKIT_CXX_SOURCES
   src/abbreviations.cpp
   src/enumerate_stereoisomers.cpp
   src/mol_enumerator.cpp
+  src/mol_processing.cpp
+  src/mol_interchange.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -188,6 +190,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   Abbreviations
   EnumerateStereoisomers
   MolEnumerator
+  MolInterchange
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
@@ -221,6 +224,13 @@ foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::${target}>\n")
 endforeach()
+
+# rdMolProcessing reads gzipped files with Boost.Iostreams' gzip filter, as
+# RDKit's gzstream does, when RDKit was built with it.
+if(TARGET Boost::iostreams)
+  target_link_libraries(rdkitcxx PUBLIC Boost::iostreams)
+  string(APPEND link_libraries "$<TARGET_LINKER_FILE:Boost::iostreams>\n")
+endif()
 
 # MolBundle's pickles instantiate Boost.Serialization archives in the
 # wrappers, when RDKit was built with them.

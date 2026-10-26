@@ -78,6 +78,10 @@ use rdkit_cxx::chem::rd_mol_descriptors::{
     get_maccs_keys_fingerprint, get_usrcat,
 };
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
+use rdkit_cxx::chem::rd_mol_processing::{
+    GetFingerprintsForMolsInFileParams, SupplierOptions,
+    get_fingerprints_for_mols_in_file_with_params,
+};
 use rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecomposition;
 use rdkit_cxx::chem::rd_rascal_mces::{find_mces, rascal_cluster};
 use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
@@ -205,6 +209,8 @@ fn main() {
     phase(seeded_embedding(), substruct_matches());
     phase(experimental_torsions(), substruct_matches());
     phase(feature_morgan_fp(), substruct_matches());
+    phase(feature_fps_in_file(), substruct_matches());
+    phase(fps_in_file(), substruct_matches());
     phase(scsr_hbonds(), substruct_matches());
     phase(cip_labels(), substruct_matches());
     phase(bonds_from_xyz(), substruct_matches());
@@ -906,6 +912,63 @@ fn feature_morgan_fp() -> Call<(FingerprintGenerator64, Mol)> {
         run: |(generator, mol)| {
             generator.get_fingerprint(&mol).unwrap();
         },
+    }
+}
+
+/// A SMILES file for thread `i`, which the call removes.
+fn smiles_file(i: u32) -> PathBuf {
+    let path =
+        std::env::temp_dir().join(format!("rdkit-cxx-threads-{}-{i}.smi", std::process::id()));
+    std::fs::write(
+        &path,
+        format!("SMILES\tName\n{ASPIRIN}\ta\nc1ccccc1O\tb\nCCN\tc\n"),
+    )
+    .unwrap();
+    path
+}
+
+fn fps_in_file_with(generator: &FingerprintGenerator64, path: PathBuf) {
+    let params = GetFingerprintsForMolsInFileParams {
+        generator: Some(generator),
+        options: SupplierOptions {
+            num_threads: 2,
+            ..Default::default()
+        },
+    };
+    let fps = get_fingerprints_for_mols_in_file_with_params(&path, &params).unwrap();
+    assert_eq!(fps.len(), 3);
+    std::fs::remove_file(&path).unwrap();
+}
+
+/// rdMolProcessing with feature invariants: RDKit's threads parse, and the
+/// calling thread fingerprints under the Ctrl-C lock.
+fn feature_fps_in_file() -> Call<(FingerprintGenerator64, PathBuf)> {
+    Call {
+        make: |i| {
+            let features = GetMorganGeneratorParams {
+                atom_invariants_generator: Some(get_morgan_feature_atom_inv_gen()),
+                ..Default::default()
+            };
+            (
+                get_morgan_generator_with_params(&features).unwrap(),
+                smiles_file(i),
+            )
+        },
+        run: |(generator, path)| fps_in_file_with(&generator, path),
+    }
+}
+
+/// rdMolProcessing without a lock: RDKit's threads fingerprint the molecules
+/// they parse, in the wrapper's write callback.
+fn fps_in_file() -> Call<(FingerprintGenerator64, PathBuf)> {
+    Call {
+        make: |i| {
+            (
+                get_morgan_generator_with_params(&GetMorganGeneratorParams::default()).unwrap(),
+                smiles_file(i),
+            )
+        },
+        run: |(generator, path)| fps_in_file_with(&generator, path),
     }
 }
 
