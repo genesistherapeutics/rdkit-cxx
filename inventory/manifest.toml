@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.Lipinski", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [modules.reasons]
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
@@ -174,6 +174,91 @@ rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_sss_bits"]
 [[entry]]
 python = "rdkit.Avalon.pyAvalonTools.avalonSimilarityBits"
 rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_similarity_bits"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Pairs.ExplainPairScore"
+rust = ["rdkit_cxx::chem::atom_pairs::pairs::explain_pair_score", "rdkit_cxx::chem::atom_pairs::pairs::explain_pair_score_include_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Pairs.GetAtomPairFingerprintAsBitVect"
+rust = ["rdkit_cxx::chem::atom_pairs::pairs::get_atom_pair_fingerprint_as_bit_vect"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Pairs.fpLen"
+rust = ["rdkit_cxx::chem::atom_pairs::pairs::fp_len"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Pairs.numFpBits"
+rust = ["rdkit_cxx::chem::atom_pairs::pairs::num_fp_bits"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Pairs.numPathBits"
+rust = ["rdkit_cxx::chem::atom_pairs::pairs::num_path_bits"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Pairs.pyScorePair"
+rust = ["rdkit_cxx::chem::atom_pairs::pairs::py_score_pair", "rdkit_cxx::chem::atom_pairs::pairs::py_score_pair_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.AssignPattyTypes"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::assign_patty_types", "rdkit_cxx::chem::atom_pairs::sheridan::assign_patty_types_with_defns"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.GetBPFingerprint"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::get_bp_fingerprint", "rdkit_cxx::chem::atom_pairs::sheridan::get_bp_fingerprint_with_fpfn"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.GetBTFingerprint"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::get_bt_fingerprint", "rdkit_cxx::chem::atom_pairs::sheridan::get_bt_fingerprint_with_fpfn"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.fpLen"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::fp_len"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.numFpBits"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::num_fp_bits"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.numPathBits"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::num_path_bits"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Sheridan.typMap"
+rust = ["rdkit_cxx::chem::atom_pairs::sheridan::typ_map"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Torsions.ExplainPathScore"
+rust = ["rdkit_cxx::chem::atom_pairs::torsions::explain_path_score", "rdkit_cxx::chem::atom_pairs::torsions::explain_path_score_with_size"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Torsions.GetTopologicalTorsionFingerprintAsIds"
+rust = ["rdkit_cxx::chem::atom_pairs::torsions::get_topological_torsion_fingerprint_as_ids", "rdkit_cxx::chem::atom_pairs::torsions::get_topological_torsion_fingerprint_as_ids_with_target_size"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Torsions.pyScorePath"
+rust = ["rdkit_cxx::chem::atom_pairs::torsions::py_score_path", "rdkit_cxx::chem::atom_pairs::torsions::py_score_path_with_atom_codes"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Utils.BitsInCommon"
+rust = ["rdkit_cxx::chem::atom_pairs::utils::bits_in_common"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Utils.CosineSimilarity"
+rust = ["rdkit_cxx::chem::atom_pairs::utils::cosine_similarity"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Utils.DiceSimilarity"
+rust = ["rdkit_cxx::chem::atom_pairs::utils::dice_similarity", "rdkit_cxx::chem::atom_pairs::utils::dice_similarity_with_bounds"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Utils.Dot"
+rust = ["rdkit_cxx::chem::atom_pairs::utils::dot"]
+
+[[entry]]
+python = "rdkit.Chem.AtomPairs.Utils.ExplainAtomCode"
+rust = ["rdkit_cxx::chem::atom_pairs::utils::explain_atom_code", "rdkit_cxx::chem::atom_pairs::utils::explain_atom_code_include_chirality"]
+overloads_note = "branchSubtract, which Python accepts and ignores, is not bound; includeChirality changes the result (A4)"
 
 [[entry]]
 python = "rdkit.Chem.Draw.DebugDraw"
@@ -1501,6 +1586,14 @@ rust = ["rdkit_cxx::chem::lipinski::ring_count"]
 [[entry]]
 python = "rdkit.Chem.Lipinski.RotatableBondSmarts"
 rust = ["rdkit_cxx::chem::lipinski::rotatable_bond_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.MACCSkeys.maccsKeys"
+rust = ["rdkit_cxx::chem::maccs_keys::maccs_keys"]
+
+[[entry]]
+python = "rdkit.Chem.MACCSkeys.smartsPatts"
+rust = ["rdkit_cxx::chem::maccs_keys::smarts_patts"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -3049,6 +3142,38 @@ rust_kind = "field"
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.UpdateScaffoldNetwork"
 rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_network"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.CalculateTFD"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::calculate_tfd", "rdkit_cxx::chem::torsion_fingerprints::calculate_tfd_with_weights"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.CalculateTorsionAngles"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::calculate_torsion_angles", "rdkit_cxx::chem::torsion_fingerprints::calculate_torsion_angles_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.CalculateTorsionLists"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::calculate_torsion_lists", "rdkit_cxx::chem::torsion_fingerprints::calculate_torsion_lists_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.CalculateTorsionWeights"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::calculate_torsion_weights", "rdkit_cxx::chem::torsion_fingerprints::calculate_torsion_weights_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.GetBestTFDBetweenMolecules"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::get_best_tfd_between_molecules", "rdkit_cxx::chem::torsion_fingerprints::get_best_tfd_between_molecules_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.GetTFDBetweenConformers"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::get_tfd_between_conformers", "rdkit_cxx::chem::torsion_fingerprints::get_tfd_between_conformers_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.GetTFDBetweenMolecules"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::get_tfd_between_molecules", "rdkit_cxx::chem::torsion_fingerprints::get_tfd_between_molecules_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.TorsionFingerprints.GetTFDMatrix"
+rust = ["rdkit_cxx::chem::torsion_fingerprints::get_tfd_matrix", "rdkit_cxx::chem::torsion_fingerprints::get_tfd_matrix_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.rdAbbreviations.AbbreviationDefinition"
