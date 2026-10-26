@@ -368,6 +368,15 @@ fn mae_files_are_refused() {
 }
 
 #[test]
+fn thread_counts_above_1024_are_refused() {
+    // RDKit's supplier starts every thread before it reads.
+    let smi = write("threads.smi", smiles_file(&SMILES).as_bytes());
+    for num_threads in [1025, i32::MAX] {
+        assert!(matches!(read(&smi, num_threads), Err(Error::Value { .. })));
+    }
+}
+
+#[test]
 fn name_columns_below_minus_one_are_refused() {
     // RDKit's SMILES suppliers would read before a line's fields.
     let smi = write("names.smi", smiles_file(&SMILES).as_bytes());

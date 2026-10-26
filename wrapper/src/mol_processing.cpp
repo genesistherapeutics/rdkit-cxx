@@ -326,6 +326,10 @@ Fingerprints run(const std::string &path, const Gen &gen,
   }
   // RDKit negates the count in int (getNumThreadsToUse), which is undefined
   // for INT_MIN; num_threads_to_use computes in 64 bits.
+  if (options.numWriterThreads > static_cast<int>(kMaxSupplierThreads)) {
+    throw ValueErrorException("numThreads must be at most " +
+                              std::to_string(kMaxSupplierThreads));
+  }
   unsigned num_threads = num_threads_to_use(options.numWriterThreads);
   bool threaded = num_threads > 1 && format != "tdt";
   Fingerprinter<Gen> fp{gen, checked_gen};
