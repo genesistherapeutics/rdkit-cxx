@@ -27,6 +27,10 @@ namespace Desc = RDKit::Descriptors;
 // and getAvailableProperties read it (U4). Every wrapper that touches it
 // holds this lock; none calls a functor while holding it.
 std::mutex &registry_mutex() {
+  // A leaf: held for one RDKit call that takes no other lock, so a closure
+  // running under control_c_mutex (U4) can take it without deadlock. A
+  // wrapper that takes another lock while holding it must first call
+  // check_not_in_control_c_callback(), as rgroup_mutex() does.
   static std::mutex mutex;
   return mutex;
 }

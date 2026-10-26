@@ -38,6 +38,9 @@ RDKIT_RGROUPDECOMPOSITION_EXPORT void relabelMappedDummies(
 namespace rdkit_cxx {
 
 std::mutex &rgroup_mutex() {
+  // Taken before control_c_mutex (U4; Locks below), so a closure that runs
+  // with that held fails here rather than wait for it.
+  check_not_in_control_c_callback();
   static std::mutex mutex;
   return mutex;
 }

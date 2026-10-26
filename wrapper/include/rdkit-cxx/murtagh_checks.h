@@ -23,6 +23,10 @@ namespace rdkit_cxx {
 // this mutex for the whole RDKit call (U4). Defined inline so every wrapper
 // source shares one mutex.
 inline std::mutex &murtagh_mutex() {
+  // A leaf: held for one RDKit call that takes no other lock, so a closure
+  // running under control_c_mutex (U4) can take it without deadlock. A
+  // wrapper that takes another lock while holding it must first call
+  // check_not_in_control_c_callback(), as rgroup_mutex() does.
   static std::mutex mutex;
   return mutex;
 }

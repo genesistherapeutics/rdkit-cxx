@@ -781,3 +781,48 @@ fn unknown_bond_types_are_refused() {
         other => panic!("{other:?}"),
     }
 }
+
+// A final match check runs inside a substructure match, holding
+// control_c_mutex. R-group decomposition takes its own lock before that one
+// (CONVENTIONS.md U4), so while another thread decomposes, holding the
+// R-group lock and waiting for the match's, a check that decomposed would
+// deadlock with it. The check's call fails instead.
+#[test]
+fn r_group_decomposition_in_final_match_checks_fails() {
+    use rdkit_cxx::chem::rd_r_group_decomposition::r_group_decompose;
+    use std::sync::mpsc;
+    use std::time::Duration;
+    let (in_check, check_entered) = mpsc::channel();
+    let (done, finished) = mpsc::channel();
+    let matcher = {
+        let done = done.clone();
+        std::thread::spawn(move || {
+            let check = MCSFinalMatchCheck::new(move |_, _, _, _, _| {
+                let _ = in_check.send(());
+                // Let the other thread take the R-group lock first.
+                std::thread::sleep(Duration::from_millis(300));
+                let result = r_group_decompose(&[mol("c1ccccc1")], &[mol("Cc1ccccc1")]);
+                assert!(matches!(result, Err(Error::Runtime { .. })), "{result:?}");
+                Ok(true)
+            });
+            let params = MCSParameters {
+                final_match_checker: Some(check),
+                ..MCSParameters::default()
+            };
+            find_mcs_with_params(&mols(&["CCO", "CCN"]), &params).unwrap();
+            done.send("matcher").unwrap();
+        })
+    };
+    check_entered.recv_timeout(Duration::from_secs(60)).unwrap();
+    let decomposer = std::thread::spawn(move || {
+        r_group_decompose(&[mol("c1ccccc1")], &[mol("Cc1ccccc1")]).unwrap();
+        done.send("decomposer").unwrap();
+    });
+    for _ in 0..2 {
+        finished
+            .recv_timeout(Duration::from_secs(60))
+            .expect("the threads deadlocked");
+    }
+    matcher.join().unwrap();
+    decomposer.join().unwrap();
+}
