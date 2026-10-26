@@ -5,7 +5,9 @@
 
 //! Rust bindings for RDKit's C++ API, mirroring its Python wrappers.
 
+pub mod avalon;
 pub mod chem;
+pub mod data_manip;
 pub mod data_structs;
 pub mod distance_geometry;
 pub mod error;
@@ -13,8 +15,10 @@ mod ffi;
 mod flags;
 pub mod force_field;
 pub mod geometry;
+pub mod ml;
 pub mod numerics;
 pub mod rd_base;
+pub mod sim_div_filters;
 mod util;
 
 pub use error::{Error, Result};

@@ -20,6 +20,7 @@
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -169,9 +170,11 @@ MS::RWMOL_SPTR_PAIR checked_make_parent(RDKit::RWMOL_SPTR mol,
 // for a molecule without a conformer (prepareMol in MolFileWriter.cpp), so
 // it holds the depiction lock then and checks the molecule under it (U4).
 // serialize records its writers' exceptions as output errors; so does this
-// for the check's.
+// for the check's. Serializing matches nothing, and the depiction lock comes
+// before control_c_mutex (U4), so pipeline_run's is released for it.
 void locked_serialize(MS::RWMOL_SPTR_PAIR output, MS::PipelineResult &result,
                       const MS::PipelineOptions &options) {
+  ReleaseControlC release;
   std::unique_lock<std::mutex> lock;
   if (!output.first->getNumConformers() || !output.second->getNumConformers()) {
     lock = lock_depiction();
@@ -242,7 +245,11 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
 PipelineResultData pipeline_run(const Pipeline &pipeline, rust::Str mol_data) {
   std::string block(mol_data);
   check_input_text(block);
-  auto result = pipeline.run(block);
+  // Validating and standardizing match substructures (control_c_lock.h).
+  auto result = [&] {
+    HoldControlC control_c;
+    return pipeline.run(block);
+  }();
   PipelineResultData data;
   data.status = static_cast<std::uint32_t>(result.status);
   data.stage = result.stage;

@@ -57,8 +57,8 @@ jobs:
           cat missing.out
           grep -F "or set RDKIT_PREFIX" missing.out
 
-  # Builds the crate from its package, as cargo publish verifies it, so a file
-  # that include in Cargo.toml leaves out fails here rather than at release.
+  # Builds the crate from the files Cargo.toml's include list packages, as the
+  # Release workflow does before it publishes.
   package:
     runs-on: ubuntu-24.04
     defaults:
@@ -73,7 +73,7 @@ jobs:
           cache-environment: false
           cache-downloads: false
       - uses: dtolnay/rust-toolchain@stable
-      - run: cargo package --locked
+      - run: cargo package -p rdkit-cxx --locked
 
   inventory:
     runs-on: ubuntu-24.04

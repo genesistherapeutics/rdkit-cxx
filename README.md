@@ -122,19 +122,28 @@ pip install pre-commit
 pre-commit install
 ```
 
-### Releases
+## Releases
 
-Run the Release workflow from the Actions tab, on main. It publishes the
-version in `Cargo.toml` if that version has no tag yet and otherwise bumps the
-patch number first, so moving to a new RDKit series is a pull request that sets
-the version to the series' `.0` (2027.3.0 for RDKit 2027.03). It pushes the
-release commit to main before publishing, then pushes a `v` tag and creates a
-GitHub release, so a failed publish leaves an untagged version that a rerun
-ships.
+Releases are cut by hand: run the
+[Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
+on `main` from the Actions tab. Merging to `main` publishes nothing.
 
-The workflow publishes through crates.io trusted publishing for `release.yml`
-and pushes with the `ACTIONS_PUSH` secret, a token whose owner can bypass the
-main branch ruleset.
+The workflow releases the version in `Cargo.toml` if no tag has it yet (the
+first release of an RDKit series), and otherwise bumps the patch level with
+[bump-my-version](https://github.com/callowayproject/bump-my-version). It
+tests the release commit, builds the packaged crate, publishes it to crates.io
+through trusted publishing, pushes the version bump and a `v<version>` tag to
+`main`, and creates a GitHub release with generated notes. A release that
+fails partway finishes when its failed jobs are re-run: each step skips what
+an earlier attempt finished, including the upload.
+
+The patch level moves only through the workflow. A new RDKit series sets the
+major and minor levels by hand, in the pull request that updates
+`environment.yml`:
+
+```sh
+bump-my-version bump --new-version 2027.3.0
+```
 
 ## License
 

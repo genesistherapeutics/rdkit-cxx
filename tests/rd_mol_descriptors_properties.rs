@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_mol_descriptors::*;
-use rdkit_cxx::chem::{Mol, mol_from_smiles};
+use rdkit_cxx::chem::{Mol, mol_from_smarts, mol_from_smiles};
 
 fn apap() -> Mol {
     mol_from_smiles("CC(=O)Nc1ccc(O)cc1").unwrap()
@@ -222,6 +222,22 @@ fn rust_property_functors() {
     assert_eq!(properties.compute_properties(&apap()).unwrap()[0], 11.0);
     let updated = Properties::new(&["rustHeavyAtoms"]).unwrap();
     assert_eq!(updated.compute_properties(&apap()).unwrap(), vec![-1.0]);
+}
+
+#[test]
+fn rust_property_functors_can_match_substructures() {
+    // Computing properties holds control_c_mutex, released while a Rust
+    // functor runs, so its closure can call wrappers that take it.
+    let hydroxyls = PythonPropertyFunctor::new("rustHydroxyls", "1.0.0", |mol| {
+        let query = mol_from_smarts("[OX2H]").unwrap();
+        mol.get_substruct_matches(&query).unwrap().len() as f64
+    });
+    Properties::register_property(&hydroxyls);
+    let properties = Properties::new(&["NumHBD", "rustHydroxyls", "NumHBA"]).unwrap();
+    assert_eq!(
+        properties.compute_properties(&apap()).unwrap(),
+        vec![2.0, 1.0, 2.0]
+    );
 }
 
 #[test]

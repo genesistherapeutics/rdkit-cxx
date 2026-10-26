@@ -112,6 +112,17 @@ set(RDKIT_CXX_SOURCES
   src/scaffold_network.cpp
   src/substruct_library.cpp
   src/rgroup.cpp
+  src/chemical_features.cpp
+  src/mol_chemical_features.cpp
+  src/free_sasa.cpp
+  src/mif.cpp
+  src/shape_align.cpp
+  src/gaussian_shape.cpp
+  src/metric_matrix_calc.cpp
+  src/murtagh_checks.cpp
+  src/cluster.cpp
+  src/sim_div_pickers.cpp
+  src/info_theory.cpp
   src/mol_processing.cpp
   src/mol_interchange.cpp
 )
@@ -164,6 +175,15 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ScaffoldNetwork
   SubstructLibrary
   RGroupDecomposition
+  ChemicalFeatures
+  MolChemicalFeatures
+  FreeSASALib
+  MolInteractionFields
+  PubChemShape
+  GaussianShape
+  hc
+  SimDivPickers
+  InfoTheory
   MolInterchange
 )
 
@@ -181,12 +201,17 @@ target_include_directories(rdkitcxx PRIVATE
   third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
-  # Declarations RDKit's installed headers need (compat/maeparser).
+  # Declarations RDKit's installed headers need (compat/maeparser), and
+  # names they include that RDKit installs elsewhere
+  # (compat/GraphMol/GaussianShape).
   compat
   # conda-forge's librdkit-dev 2026.09 installs DistGeomHelpers/
   # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it
   # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
   # install that has it finds its own first, next to the including header.
+  # It installs none of ML/InfoTheory's headers (RDKit::InfoTheory's), so
+  # vendor/ML/InfoTheory holds them, from the same release; an install
+  # that has them finds its own first, earlier on the path.
   vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)

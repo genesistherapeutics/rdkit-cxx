@@ -88,8 +88,13 @@ void check_property_table_atoms(const RWMol &mol) {
   }
 }
 
+// Crippen's contributions type the atoms by substructure matches, as do the
+// descriptors below that read them (SlogP_VSA, SMR_VSA, BCUT2D), the counts
+// Lipinski.cpp makes from SMARTS, and the MQNs, which include those counts
+// (control_c_lock.h).
 rust::Vec<double> calc_crippen_descriptors(const RWMol &mol, bool include_hs) {
   DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   double logp = 0.0;
   double mr = 0.0;
   Desc::calcCrippenDescriptors(mol, logp, mr, include_hs);
@@ -122,11 +127,16 @@ std::unique_ptr<std::string> calc_mol_formula(const RWMol &mol,
 
 #define RDKIT_CXX_COUNT(name, function) \
   std::uint32_t name(const RWMol &mol) { return function(mol); }
+#define RDKIT_CXX_COUNT_MATCHES(name, function)               \
+  std::uint32_t name(const RWMol &mol) {                      \
+    std::lock_guard<std::mutex> control_c(control_c_mutex()); \
+    return function(mol);                                     \
+  }
 
 RDKIT_CXX_COUNT(calc_num_lipinski_hbd, Desc::calcLipinskiHBD)
 RDKIT_CXX_COUNT(calc_num_lipinski_hba, Desc::calcLipinskiHBA)
-RDKIT_CXX_COUNT(calc_num_hbd, Desc::calcNumHBD)
-RDKIT_CXX_COUNT(calc_num_hba, Desc::calcNumHBA)
+RDKIT_CXX_COUNT_MATCHES(calc_num_hbd, Desc::calcNumHBD)
+RDKIT_CXX_COUNT_MATCHES(calc_num_hba, Desc::calcNumHBA)
 RDKIT_CXX_COUNT(calc_num_rings, Desc::calcNumRings)
 RDKIT_CXX_COUNT(calc_num_aromatic_rings, Desc::calcNumAromaticRings)
 RDKIT_CXX_COUNT(calc_num_saturated_rings, Desc::calcNumSaturatedRings)
@@ -145,16 +155,18 @@ RDKIT_CXX_COUNT(calc_num_aliphatic_carbocycles,
                 Desc::calcNumAliphaticCarbocycles)
 RDKIT_CXX_COUNT(calc_num_heavy_atoms, Desc::calcNumHeavyAtoms)
 RDKIT_CXX_COUNT(calc_num_atoms, Desc::calcNumAtoms)
-RDKIT_CXX_COUNT(calc_num_heteroatoms, Desc::calcNumHeteroatoms)
-RDKIT_CXX_COUNT(calc_num_amide_bonds, Desc::calcNumAmideBonds)
+RDKIT_CXX_COUNT_MATCHES(calc_num_heteroatoms, Desc::calcNumHeteroatoms)
+RDKIT_CXX_COUNT_MATCHES(calc_num_amide_bonds, Desc::calcNumAmideBonds)
 RDKIT_CXX_COUNT(calc_num_atom_stereo_centers, Desc::numAtomStereoCenters)
 RDKIT_CXX_COUNT(calc_num_unspecified_atom_stereo_centers,
                 Desc::numUnspecifiedAtomStereoCenters)
 
 #undef RDKIT_CXX_COUNT
+#undef RDKIT_CXX_COUNT_MATCHES
 
 std::uint32_t calc_num_rotatable_bonds(const RWMol &mol,
                                        NumRotatableBondsOptions strict) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return Desc::calcNumRotatableBonds(mol, strict);
 }
 
@@ -183,12 +195,14 @@ std::uint32_t calc_num_bridgehead_atoms(const RWMol &mol,
 rust::Vec<double> slogp_vsa(const RWMol &mol, rust::Slice<const double> bins) {
   auto lbins = checked_bins(bins);
   DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_vec(Desc::calcSlogP_VSA(mol, lbins ? &*lbins : nullptr));
 }
 
 rust::Vec<double> smr_vsa(const RWMol &mol, rust::Slice<const double> bins) {
   auto lbins = checked_bins(bins);
   DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_vec(Desc::calcSMR_VSA(mol, lbins ? &*lbins : nullptr));
 }
 
@@ -208,6 +222,7 @@ rust::Vec<double> custom_prop_vsa(const RWMol &mol, rust::Str custom_prop_name,
 }
 
 rust::Vec<std::uint32_t> mqns(const RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_vec(Desc::calcMQNs(mol));
 }
 
@@ -290,6 +305,7 @@ rust::Vec<double> calc_autocorr_2d(const RWMol &mol,
 // that keeps the molecule's computed properties (U8).
 rust::Vec<double> bcut_2d(const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_vec(Desc::BCUT2D(mol));
 }
 
@@ -307,8 +323,10 @@ rust::Vec<double> bcut_2d_atom_propname(const RWMol &mol,
 // MACCS.cpp makes its patterns on first use and assigns them to a global
 // flyweight without a lock, so two first calls race (U4). The first call is
 // made once here, on an empty molecule, which makes the patterns and returns;
-// later calls only read them.
+// later calls only read them. Every call matches the patterns
+// (control_c_lock.h).
 std::unique_ptr<BitVect> get_maccs_keys_fingerprint(const RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   static std::once_flag patterns_made;
   std::call_once(patterns_made, [] {
     RDKit::ROMol empty;
@@ -348,8 +366,10 @@ rust::Vec<std::uint32_t> get_connectivity_invariants(
   return to_vec(invars);
 }
 
+// The feature invariants come from substructure matches (control_c_lock.h).
 rust::Vec<std::uint32_t> get_feature_invariants(const RWMol &mol) {
   std::vector<std::uint32_t> invars(mol.getNumAtoms());
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   RDKit::MorganFingerprints::getFeatureInvariants(mol, invars);
   return to_vec(invars);
 }

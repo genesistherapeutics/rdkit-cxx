@@ -13,7 +13,6 @@
 #include <utility>
 #include <vector>
 
-#include <GraphMol/Chirality.h>
 #include <GraphMol/FileParsers/GeneralFileReader.h>
 #include <GraphMol/Fingerprints/MorganGenerator.h>
 #include <RDGeneral/BadFileException.h>
@@ -205,26 +204,19 @@ auto checked(const Input &in, F &&f) -> decltype(f()) {
 
 // Fingerprints one molecule from the file, after the checks the generator's
 // own calls make (check_fingerprint_mol), and with its matrix caches cleared
-// around the call (U6). `lock` holds control_c_mutex for the call, for a
-// generator that may construct a ControlCHandler, when the call runs on one
-// of RDKit's threads.
+// around the call (U6).
 template <class Gen>
 struct Fingerprinter {
   const Gen &gen;
   // The generator to check molecules for; null for the default one, whose
   // fingerprints trust nothing check_fingerprint_mol checks.
   const FpGenerator *checked_gen;
-  bool lock;
 
   std::unique_ptr<ExplicitBitVect> operator()(RDKit::ROMol &mol) const {
     if (checked_gen) {
       check_fingerprint_mol(*checked_gen, mol);
     }
     MatrixCacheGuard guard(mol);
-    std::unique_lock<std::mutex> control_c;
-    if (lock) {
-      control_c = std::unique_lock<std::mutex>(control_c_mutex());
-    }
     RDKit::FingerprintFuncArguments args;
     return gen.getFingerprint(mol, args);
   }
@@ -248,28 +240,11 @@ Fingerprints read_in_order(const Input &in, S &suppl, const F &fp) {
   return results;
 }
 
-// As mtWorker in MolProcessing.cpp: RDKit's parsing threads fingerprint each
-// molecule they read (its writer callback), and the results come back in
-// input order, up to the last record that has one. A record RDKit cannot read
-// has none, and nor does one whose fingerprint throws: RDKit's threads catch
-// everything their callback throws (MultithreadedMolSupplier::writer), so
-// nothing escapes them to call std::terminate.
-template <class S, class F>
-Fingerprints read_in_threads(
-    const Input &in, S &suppl, const F &fp, std::mutex &mutex,
-    std::map<unsigned, std::unique_ptr<ExplicitBitVect>> &by_record) {
-  suppl.setWriteCallback(
-      [&](RDKit::RWMol &mol, const std::string &, unsigned int record) {
-        auto result = fp(mol);
-        std::lock_guard<std::mutex> lock(mutex);
-        by_record[record] = std::move(result);
-      });
-  while (!suppl.atEnd()) {
-    checked(in, [&] { suppl.next(); });
-  }
-  in.check();
-  // Every thread has ended: atEnd is true only once the last one has.
-  std::lock_guard<std::mutex> lock(mutex);
+// The results of mtWorker in MolProcessing.cpp: in input order, up to the
+// last record that has a fingerprint, which a record RDKit cannot read lacks.
+using ByRecord = std::map<unsigned, std::unique_ptr<ExplicitBitVect>>;
+
+Fingerprints in_record_order(ByRecord &by_record) {
   Fingerprints results;
   if (!by_record.empty()) {
     // Record ids start at 1 (MultithreadedMolSupplier::d_currentRecordId);
@@ -284,9 +259,59 @@ Fingerprints read_in_threads(
   return results;
 }
 
+// As mtWorker: RDKit's parsing threads fingerprint each molecule they read
+// (its write callback). A molecule whose fingerprint throws has none: RDKit's
+// threads catch everything their callback throws
+// (MultithreadedMolSupplier::writer), so nothing escapes them to call
+// std::terminate (CONVENTIONS.md S6).
+template <class S, class F>
+Fingerprints read_in_threads(const Input &in, S &suppl, const F &fp,
+                             std::mutex &mutex, ByRecord &by_record) {
+  suppl.setWriteCallback(
+      [&](RDKit::RWMol &mol, const std::string &, unsigned int record) {
+        auto result = fp(mol);
+        std::lock_guard<std::mutex> lock(mutex);
+        by_record[record] = std::move(result);
+      });
+  while (!suppl.atEnd()) {
+    checked(in, [&] { suppl.next(); });
+  }
+  in.check();
+  // Every thread has ended: atEnd is true only once the last one has.
+  std::lock_guard<std::mutex> lock(mutex);
+  return in_record_order(by_record);
+}
+
+// As mtWorker, for a generator that may construct a ControlCHandler, which
+// RDKit's threads would construct under no lock (U4): they only parse, and
+// this thread, which holds control_c_mutex, fingerprints the molecules as
+// they come, skipping any whose fingerprint throws, as RDKit's threads do.
+template <class S, class F>
+Fingerprints read_in_threads_fingerprint_here(const Input &in, S &suppl,
+                                              const F &fp) {
+  ByRecord by_record;
+  while (!suppl.atEnd()) {
+    auto mol = checked(in, [&] { return suppl.next(); });
+    if (!mol) {
+      continue;
+    }
+    auto record = suppl.getLastRecordId();
+    try {
+      by_record[record] = fp(*mol);
+    } catch (...) {
+      // As MultithreadedMolSupplier::writer, which drops the molecule.
+    }
+  }
+  in.check();
+  return in_record_order(by_record);
+}
+
+// `control_c` holds control_c_mutex if the generator may construct a
+// ControlCHandler (lock_control_c_for), for the whole call.
 template <class Gen>
 Fingerprints run(const std::string &path, const Gen &gen,
-                 const FpGenerator *checked_gen, bool needs_lock,
+                 const FpGenerator *checked_gen,
+                 std::unique_lock<std::mutex> control_c,
                  const Options &options) {
   std::string format;
   std::string compression;
@@ -303,25 +328,20 @@ Fingerprints run(const std::string &path, const Gen &gen,
   // for INT_MIN; num_threads_to_use computes in 64 bits.
   unsigned num_threads = num_threads_to_use(options.numWriterThreads);
   bool threaded = num_threads > 1 && format != "tdt";
-  if (needs_lock) {
-    // A closure RDKit calls inside a match may not wait for threads that
-    // need the lock it holds.
-    check_not_in_control_c_callback();
-  }
-  // RDKit's threads take the lock for each fingerprint; this thread, which
-  // the lock can order, takes it for the whole call.
-  std::unique_lock<std::mutex> control_c;
-  if (needs_lock && !threaded) {
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
-  }
-  Fingerprinter<Gen> fp{gen, checked_gen, needs_lock && threaded};
+  Fingerprinter<Gen> fp{gen, checked_gen};
+  auto read_threaded = [&](auto &suppl, std::mutex &mutex,
+                           ByRecord &by_record) {
+    return control_c.owns_lock()
+               ? read_in_threads_fingerprint_here(in, suppl, fp)
+               : read_in_threads(in, suppl, fp, mutex, by_record);
+  };
 
   FP::MultithreadedMolSupplier::Parameters params;
   params.numWriterThreads = num_threads;
   // Declared before the suppliers, whose threads write them until the
   // suppliers are destroyed.
   std::mutex mutex;
-  std::map<unsigned, std::unique_ptr<ExplicitBitVect>> by_record;
+  ByRecord by_record;
   // The suppliers do not own the stream, which outlives them (as build in
   // suppliers.cpp).
   if (format == "sdf") {
@@ -334,7 +354,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
         return std::make_unique<FP::MultithreadedSDMolSupplier>(
             in.stream(), false, params, parse_params);
       });
-      return read_in_threads(in, *suppl, fp, mutex, by_record);
+      return read_threaded(*suppl, mutex, by_record);
     }
     auto suppl = checked(in, [&] {
       return std::make_unique<FP::ForwardSDMolSupplier>(in.stream(), false,
@@ -366,7 +386,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
       return std::make_unique<FP::MultithreadedSmilesMolSupplier>(
           in.stream(), false, params, parse_params);
     });
-    return read_in_threads(in, *suppl, fp, mutex, by_record);
+    return read_threaded(*suppl, mutex, by_record);
   }
   auto suppl = checked(in, [&] {
     return std::make_unique<FP::SmilesMolSupplier>(in.stream(), false,
@@ -414,24 +434,17 @@ std::unique_ptr<FingerprintList> get_fingerprints_for_mols_in_file(
   auto opts = to_options(options);
   std::unique_ptr<RDKit::FingerprintGenerator<std::uint32_t>> morgan(
       RDKit::MorganFingerprint::getMorganGenerator<std::uint32_t>(3));
-  bool needs_lock = !RDKit::Chirality::getUseLegacyStereoPerception();
-  return to_list(run(to_path(path), *morgan, nullptr, needs_lock, opts));
+  return to_list(
+      run(to_path(path), *morgan, nullptr, lock_control_c_for_cip(), opts));
 }
 
-// A generator may construct a ControlCHandler when it finds feature
-// invariants, by substructure matches (MorganFeatureAtomInvGenerator, which
-// names itself in the generator's info string), and when it runs the CIP
-// labeler (lock_control_c_for_cip).
 std::unique_ptr<FingerprintList>
 get_fingerprints_for_mols_in_file_with_generator(
     rust::Slice<const std::uint8_t> path, const FpGenerator &generator,
     const SupplierOptionsData &options) {
   auto opts = to_options(options);
-  bool needs_lock =
-      generator.infoString().find("MorganFeatureInvariantGenerator") !=
-          std::string::npos ||
-      !RDKit::Chirality::getUseLegacyStereoPerception();
-  return to_list(run(to_path(path), generator, &generator, needs_lock, opts));
+  return to_list(run(to_path(path), generator, &generator,
+                     lock_control_c_for(generator), opts));
 }
 
 }  // namespace rdkit_cxx

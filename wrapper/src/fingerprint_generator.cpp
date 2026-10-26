@@ -264,7 +264,7 @@ auto with_args(const FpGenerator &gen, const RWMol &mol,
       from_atoms.get(), ignore_atoms.get(), data.conf_id, ao.get(),
       atom_invariants.get(), bond_invariants.get());
   MatrixCacheGuard guard(mol);
-  auto control_c = lock_control_c_for_cip();
+  auto control_c = lock_control_c_for(gen);
   auto result = call(args);
   ao.copy_to(outputs);
   return result;
@@ -307,8 +307,9 @@ bool is_bits(FingerprintOutput output) {
 // count-bounds check) would call std::terminate. Here each thread keeps its
 // first exception, and the call rethrows it. Each molecule is read by one
 // thread only, as RDKit's own split does. RDKit's threads would each
-// construct a ControlCHandler when they run the CIP labeler, so a call that
-// may run it (lock_control_c_for_cip) runs on this thread alone.
+// construct a ControlCHandler when they match feature patterns or run the
+// CIP labeler, so a call that may (lock_control_c_for) runs on this thread
+// alone.
 std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
                                           BorrowedMols &mols,
                                           FingerprintOutput output,
@@ -332,7 +333,7 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
       result->int_vects[i] = counts(gen, *list[i], output, args);
     }
   };
-  auto control_c = lock_control_c_for_cip();
+  auto control_c = lock_control_c_for(gen);
   unsigned n =
       control_c.owns_lock() ? 1 : RDKit::getNumThreadsToUse(num_threads);
   if (n <= 1 || list.size() <= 1) {
@@ -366,6 +367,19 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
 }
 
 }  // namespace
+
+// Holds control_c_mutex while the generator may construct a ControlCHandler:
+// always for feature invariants, which MorganFeatureAtomInvGenerator finds
+// by substructure matches (a generator that has one names it in its info
+// string), and otherwise when it may run the CIP labeler
+// (lock_control_c_for_cip).
+std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen) {
+  if (gen.infoString().find("MorganFeatureInvariantGenerator") !=
+      std::string::npos) {
+    return std::unique_lock<std::mutex>(control_c_mutex());
+  }
+  return lock_control_c_for_cip();
+}
 
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,

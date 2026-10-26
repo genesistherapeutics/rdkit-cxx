@@ -183,16 +183,16 @@ rust::Vec<IndexList> to_lists(
 
 // ---------------------------------------------------------------------------
 // The clustering. RDKit's rascalCluster and rascalButinaCluster
-// (RascalCluster.cpp, RascalButinaCluster.cpp) compute their proximity graph
-// on std::threads that catch nothing, so an exception in one (a molecule
-// without ring info, an atom without a computed valence) calls
-// std::terminate, and each MCES they compute matches substructures
-// (deltaYExchangePossible in RascalMCES.cpp), whose ControlCHandlers the
-// threads would construct at once (control_c_lock.h). The wrapper computes
-// the graph on the calling thread, holding control_c_mutex, and runs the rest
-// of RDKit's clustering, which those files keep to themselves, as ported
-// from them below; numThreads only changes how RDKit would split the work,
-// so it is not read.
+// (RascalCluster.cpp, RascalButinaCluster.cpp) compute their proximity graph on
+// std::threads that catch nothing, so an exception in one (a molecule without
+// ring info, an atom without a computed valence) calls std::terminate, and each
+// MCES they compute matches substructures (deltaYExchangePossible in
+// RascalMCES.cpp), whose ControlCHandlers the threads would construct at once
+// (control_c_lock.h). The wrapper computes the graph on the calling thread,
+// holding control_c_mutex (as it does for the MCESs that splitting clusters
+// computes), and runs the rest of RDKit's clustering, which those files keep to
+// themselves, as ported from them below; numThreads only changes how RDKit
+// would split the work, so it is not read.
 
 // As details::ClusNode in RascalDetails.h.
 struct ClusNode {
@@ -309,10 +309,11 @@ double g_ij(const std::shared_ptr<RDKit::ROMol> &mol, double a, double b,
   return g;
 }
 
-// As details::makeSubClusters.
+// As details::makeSubClusters, whose MCESs match substructures too.
 std::vector<std::vector<unsigned int>> make_sub_clusters(
     const std::vector<ClusNode> &nbors,
     const Rascal::RascalClusterOptions &clusOpts) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::vector<std::vector<unsigned int>> subClusters;
 
   std::vector<const ClusNode *> tmpNbors;

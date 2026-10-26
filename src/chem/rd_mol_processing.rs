@@ -9,10 +9,11 @@
 //! RDKit's `getFingerprintsForMolsInFile` opens the file itself, so the
 //! wrapper does what it does with RDKit's own suppliers and generators, over
 //! a stream it checks as RDKit reads it (CONVENTIONS.md U12). RDKit's parsing
-//! threads fingerprint the molecules they read, as in Python; a generator
-//! that may construct RDKit's Ctrl-C handler (feature invariants, or the CIP
-//! labeler under the new stereo perception) holds the crate's lock for each
-//! fingerprint (U4).
+//! threads fingerprint the molecules they read, as in Python, except with a
+//! generator that may construct RDKit's Ctrl-C handler (feature invariants,
+//! or the CIP labeler under the new stereo perception): then RDKit's threads
+//! only parse, and the calling thread, which holds the crate's lock,
+//! fingerprints the molecules (U4).
 
 use std::path::Path;
 

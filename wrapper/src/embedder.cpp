@@ -385,6 +385,8 @@ rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
   std::vector<std::tuple<unsigned int, std::vector<unsigned int>,
                          CFF::TorsionAnglePtrVariant>>
       torsions;
+  // It matches the torsion patterns (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   CFF::getExperimentalTorsions(mol, details, torsions,
                                use_exp_torsion_angle_prefs,
                                use_small_ring_torsions, use_macrocycle_torsions,

@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 #include <GraphMol/Fingerprints/FingerprintGenerator.h>
@@ -103,6 +104,11 @@ std::unique_ptr<FingerprintList> fp_generator_bulk(const FpGenerator &gen,
 std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
                                               FPType fp_type,
                                               FingerprintOutput output);
+// Holds control_c_mutex while the generator may construct a ControlCHandler
+// (control_c_lock.h): for feature invariants, which it finds by substructure
+// matches, and when it may run the CIP labeler (lock_control_c_for_cip).
+std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen);
+
 // What a fingerprint of `mol` without arguments trusts, checked as the
 // generator's own calls check it: throws ValueErrorException for a molecule
 // whose matrices or 3D distances RDKit's int arithmetic and casts cannot hold.

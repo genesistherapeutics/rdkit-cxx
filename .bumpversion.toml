@@ -1,0 +1,35 @@
+# Copyright (c) 2026 Steven Kearnes
+# All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# The Release workflow (.github/workflows/release.yml) bumps the patch level
+# and commits. The major and minor levels name the RDKit release series
+# (build.rs), so they move by hand with environment.yml (README.md, Releases).
+
+[tool.bumpversion]
+current_version = "2026.9.0"
+
+[[tool.bumpversion.files]]
+filename = "Cargo.toml"
+search = """
+name = "rdkit-cxx"
+version = "{current_version}"
+"""
+replace = """
+name = "rdkit-cxx"
+version = "{new_version}"
+"""
+
+[[tool.bumpversion.files]]
+filename = "Cargo.lock"
+search = """
+[[package]]
+name = "rdkit-cxx"
+version = "{current_version}"
+"""
+replace = """
+[[package]]
+name = "rdkit-cxx"
+version = "{new_version}"
+"""
