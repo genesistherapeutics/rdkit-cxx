@@ -27,18 +27,21 @@ mod sealed {
 
 /// A molecule holder's class: `MolHolder`, `CachedMolHolder`,
 /// `CachedSmilesMolHolder`, or `CachedTrustedSmilesMolHolder`.
+/// A Rust addition, for Python's duck typing; sealed.
 pub trait MolHolderType: sealed::Sealed {
     #[doc(hidden)]
     const KIND: u8;
 }
 
 /// A fingerprint holder's class: `PatternHolder` or `TautomerPatternHolder`.
+/// A Rust addition, for Python's duck typing; sealed.
 pub trait FPHolderType: sealed::Sealed {
     #[doc(hidden)]
     const KIND: u8;
 }
 
 /// A key holder's class: `KeyFromPropHolder`.
+/// A Rust addition, for Python's duck typing; sealed.
 pub trait KeyHolderType: sealed::Sealed {}
 
 /// Molecules for a library, of any of the holder classes. Mirrors

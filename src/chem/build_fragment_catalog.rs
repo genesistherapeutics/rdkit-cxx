@@ -177,7 +177,7 @@ pub fn build_catalog_with_params(mols: &[Mol], params: &BuildCatalogParams) -> R
 
 /// Per bit, whether a molecule lacks (0) or has (1) it, per activity, the
 /// number of molecules: numpy's `nBits x 2 x nActs` array of `int32`, which
-/// wraps.
+/// wraps. A Rust addition, naming the array `ScoreMolecules` returns.
 pub type ScoreTable = Vec<[Vec<i32>; 2]>;
 
 /// Parameters for `score_molecules_with_params`, with Python's defaults

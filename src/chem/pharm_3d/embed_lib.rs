@@ -464,6 +464,7 @@ impl Default for EmbedPharmacophoreParams {
 
 /// What [`embed_pharmacophore`] returns: the bounds matrix, the
 /// embeddings, and the number of failed attempts.
+/// A Rust addition, naming Python's tuple.
 pub type EmbeddedPharmacophore = (Vec<Vec<f64>>, Vec<Mol>, u32);
 
 /// The pharmacophore's embeddings of the molecule: up to `count` attempts,
@@ -1060,7 +1061,7 @@ fn check_match(
     Ok(Some(atom_match))
 }
 
-/// A feature assignment and its atoms.
+/// A feature assignment and its atoms. A Rust addition, naming Python's tuple.
 pub type FeatureAssignment<'f, 'a> = (Vec<&'f MolChemicalFeature<'a>>, Vec<Vec<u32>>);
 
 /// Parameters for [`constrained_enum_with_params`], with Python's
@@ -1139,7 +1140,7 @@ fn enumerate_assignments<'f, 'a>(
 
 /// A match of features to a pharmacophore: the bounds, the features
 /// assigned to the pharmacophore's, and the bounds' sizes before and after
-/// downsampling.
+/// downsampling. A Rust addition, naming Python's tuple.
 pub type PharmacophoreMatch<'f, 'a> = (
     Vec<Vec<f64>>,
     Vec<&'f MolChemicalFeature<'a>>,

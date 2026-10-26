@@ -277,6 +277,7 @@ impl fmt::Debug for SDMolSupplier {
 }
 
 /// The molecules of an `SDMolSupplier`, from where it stands.
+/// A Rust addition: Python iterates the supplier itself.
 #[derive(Debug)]
 pub struct SDMols<'s> {
     suppl: &'s mut SDMolSupplier,
@@ -445,6 +446,7 @@ impl fmt::Debug for ForwardSDMolSupplier<'_> {
 }
 
 /// The molecules of a `ForwardSDMolSupplier` not yet read.
+/// A Rust addition: Python iterates the supplier itself.
 pub struct ForwardSDMols<'s> {
     suppl: Pin<&'s mut ffi::ForwardSDMolSupplier>,
     done: bool,
@@ -663,6 +665,7 @@ pub fn smiles_mol_supplier_from_text_with_params(
 }
 
 /// The molecules of a `SmilesMolSupplier`, from where it stands.
+/// A Rust addition: Python iterates the supplier itself.
 #[derive(Debug)]
 pub struct SmilesMols<'s> {
     suppl: &'s mut SmilesMolSupplier,
@@ -846,6 +849,7 @@ impl fmt::Debug for TDTMolSupplier {
 }
 
 /// The molecules of a `TDTMolSupplier`, from where it stands.
+/// A Rust addition: Python iterates the supplier itself.
 #[derive(Debug)]
 pub struct TDTMols<'s> {
     suppl: &'s mut TDTMolSupplier,
@@ -1042,6 +1046,7 @@ impl fmt::Debug for MultithreadedSDMolSupplier {
 }
 
 /// The molecules of a `MultithreadedSDMolSupplier` not yet returned.
+/// A Rust addition: Python iterates the supplier itself.
 #[derive(Debug)]
 pub struct MultithreadedSDMols<'s> {
     suppl: &'s mut MultithreadedSDMolSupplier,
@@ -1206,6 +1211,7 @@ impl fmt::Debug for MultithreadedSmilesMolSupplier {
 }
 
 /// The molecules of a `MultithreadedSmilesMolSupplier` not yet returned.
+/// A Rust addition: Python iterates the supplier itself.
 #[derive(Debug)]
 pub struct MultithreadedSmilesMols<'s> {
     suppl: &'s mut MultithreadedSmilesMolSupplier,

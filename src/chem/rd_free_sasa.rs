@@ -111,7 +111,9 @@ pub enum SASAClass {
 /// `rdFreeSASA.SASAOpts` (A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SASAOpts {
+    /// The surface algorithm.
     pub algorithm: SASAAlgorithm,
+    /// How atoms get radii and classes.
     pub classifier: SASAClassifier,
     /// The radius of the solvent probe, in Å.
     pub probe_radius: f64,
@@ -183,6 +185,7 @@ pub struct CalcSASAParams<'a> {
     /// A query atom that limits the result to the atoms it matches, such as
     /// `make_free_sasa_polar_atom_query`'s; `None` for every atom.
     pub query: Option<&'a dyn AsAtom>,
+    /// The algorithm, classifier, and probe radius.
     pub opts: SASAOpts,
 }
 

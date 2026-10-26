@@ -3,7 +3,23 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Mirrors `rdkit.Chem.rdmolops`.
+//! Mirrors `rdkit.Chem.rdmolops`: hydrogens, sanitization, kekulization,
+//! aromaticity, fragments, rings, stereochemistry, query adjustment, and
+//! the classic RDKit, layered, and pattern fingerprints.
+//!
+//! Operations that change a molecule in place take `&mut Mol`, as
+//! [`sanitize_mol`] does; those that return a new molecule take `&Mol`, as
+//! [`add_hs`] does.
+//!
+//! ```no_run
+//! use rdkit_cxx::chem::{add_hs, get_mol_frags, mol_from_smiles, remove_hs};
+//!
+//! let mol = mol_from_smiles("CC(=O)[O-].[Na+]")?;
+//! assert_eq!(get_mol_frags(&mol), [vec![0, 1, 2, 3], vec![4]]);
+//! let with_hs = add_hs(&mol)?;
+//! assert_eq!(remove_hs(&with_hs)?.get_num_atoms(), mol.get_num_atoms());
+//! # Ok::<(), rdkit_cxx::Error>(())
+//! ```
 
 mod adjust_query;
 mod fingerprints;

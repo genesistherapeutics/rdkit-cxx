@@ -251,7 +251,7 @@ pub fn transform_mol_with_params(
     tform: &[Vec<f64>],
     params: &TransformMolParams,
 ) -> Result<()> {
-    if tform.len() < 3 || tform.iter().take(3).any(|row| row.len() != 4) {
+    if tform.len() != 4 || tform.iter().any(|row| row.len() != 4) {
         return Err(Error::Value {
             message: "the transform must be 4x4".to_owned(),
         });

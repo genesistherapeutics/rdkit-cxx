@@ -77,6 +77,7 @@ pub fn get_usrcat_with_params(mol: &Mol, params: &GetUSRCATParams) -> Result<Vec
 }
 
 /// What `get_usr_distributions_with_outputs` fills in (A9).
+/// A Rust addition, for Python's output argument (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
 #[non_exhaustive]
 pub struct GetUSRDistributionsOutputs {

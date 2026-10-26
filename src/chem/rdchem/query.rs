@@ -45,6 +45,7 @@ impl CompositeQueryType {
 /// Parameters for `expand_query_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpandQueryParams {
+    /// How the queries combine.
     pub how: CompositeQueryType,
     /// Keeps this query ahead of the other one.
     pub maintain_order: bool,

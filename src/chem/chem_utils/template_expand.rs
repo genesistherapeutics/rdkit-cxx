@@ -29,6 +29,7 @@ use crate::{Error, Result};
 
 /// A sidechain: its 1-based position in its supplier, and the molecule,
 /// whose first atom attaches to the template.
+/// A Rust addition, naming Python's sidechain tuples.
 pub type Sidechain = (usize, Mol);
 
 fn dummy() -> Mol {

@@ -49,7 +49,7 @@ impl Default for ReactionToCXSmartsParams {
 }
 
 /// Parameters for `reaction_to_cx_smiles_with_params`: those of the SMARTS
-/// form.
+/// form. A Rust addition (A2).
 pub type ReactionToCXSmilesParams = ReactionToCXSmartsParams;
 
 /// Parameters for `reaction_from_rxn_block_with_params`, with Python's
@@ -75,7 +75,7 @@ impl Default for ReactionFromRxnBlockParams {
 }
 
 /// Parameters for `reaction_from_rxn_file_with_params`: those of the block
-/// form.
+/// form. A Rust addition (A2).
 pub type ReactionFromRxnFileParams = ReactionFromRxnBlockParams;
 
 /// Parameters for `reaction_from_mrv_block_with_params`, with Python's
@@ -89,7 +89,7 @@ pub struct ReactionFromMrvBlockParams {
 }
 
 /// Parameters for `reaction_from_mrv_file_with_params`: those of the block
-/// form.
+/// form. A Rust addition (A2).
 pub type ReactionFromMrvFileParams = ReactionFromMrvBlockParams;
 
 /// Parameters for `reactions_from_cdxml_block_with_params`, with Python's

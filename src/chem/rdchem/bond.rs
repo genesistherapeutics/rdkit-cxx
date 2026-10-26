@@ -228,7 +228,7 @@ mod sealed {
 }
 
 /// A bond that methods taking another bond read: `Bond`, `BondRef`, or
-/// `BondMut` (CONVENTIONS.md S3).
+/// `BondMut` (CONVENTIONS.md S3). A Rust addition; sealed.
 pub trait AsBond: sealed::BondLike {}
 
 impl sealed::BondLike for Bond {

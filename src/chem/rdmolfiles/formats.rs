@@ -38,6 +38,7 @@ macro_rules! defaults {
 defaults! {
     /// Parameters for `mol_from_tpl_block_with_params`, with Python's defaults.
     MolFromTPLBlockParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Skips the first conformer, as for TPLs written by CombiCode.
         skip_first_conf: bool = false,
@@ -47,6 +48,7 @@ defaults! {
 defaults! {
     /// Parameters for `mol_from_tpl_file_with_params`, with Python's defaults.
     MolFromTPLFileParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Skips the first conformer, as for TPLs written by CombiCode.
         skip_first_conf: bool = false,
@@ -148,6 +150,7 @@ defaults! {
     /// Parameters for `mol_from_mol2_block_with_params`, with Python's
     /// defaults.
     MolFromMol2BlockParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -160,6 +163,7 @@ defaults! {
     /// Parameters for `mol_from_mol2_file_with_params`, with Python's
     /// defaults.
     MolFromMol2FileParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -212,6 +216,7 @@ defaults! {
     /// Parameters for `mol_from_mrv_block_with_params`, with Python's
     /// defaults.
     MolFromMrvBlockParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -222,6 +227,7 @@ defaults! {
     /// Parameters for `mol_from_mrv_file_with_params`, with Python's
     /// defaults.
     MolFromMrvFileParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -268,9 +274,11 @@ pub fn mol_from_mrv_file_with_params(
 defaults! {
     /// Parameters for `mol_to_mrv_block_with_params`, with Python's defaults.
     MolToMrvBlockParams {
+        /// Writes stereochemistry.
         include_stereo: bool = true,
         /// The conformer to write, or -1 for the default.
         conf_id: i32 = -1,
+        /// Kekulizes the molecule before writing.
         kekulize: bool = true,
         /// Indents the XML.
         pretty_print: bool = false,
@@ -280,9 +288,11 @@ defaults! {
 defaults! {
     /// Parameters for `mol_to_mrv_file_with_params`, with Python's defaults.
     MolToMrvFileParams {
+        /// Writes stereochemistry.
         include_stereo: bool = true,
         /// The conformer to write, or -1 for the default.
         conf_id: i32 = -1,
+        /// Kekulizes the molecule before writing.
         kekulize: bool = true,
         /// Indents the XML.
         pretty_print: bool = false,
@@ -400,6 +410,7 @@ defaults! {
     /// Parameters for `mol_from_pdb_block_with_params`, with Python's
     /// defaults.
     MolFromPDBBlockParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -415,6 +426,7 @@ defaults! {
     /// Parameters for `mol_from_pdb_file_with_params`, with Python's
     /// defaults.
     MolFromPDBFileParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -527,6 +539,7 @@ defaults! {
     MolToCMLBlockParams {
         /// The conformer to write, or -1 for the default.
         conf_id: i32 = -1,
+        /// Kekulizes the molecule before writing.
         kekulize: bool = true,
     }
 }
@@ -536,6 +549,7 @@ defaults! {
     MolToCMLFileParams {
         /// The conformer to write, or -1 for the default.
         conf_id: i32 = -1,
+        /// Kekulizes the molecule before writing.
         kekulize: bool = true,
     }
 }
@@ -579,6 +593,7 @@ defaults! {
     /// Parameters for `mol_from_rdkit_svg_with_params`, with Python's
     /// defaults.
     MolFromRDKitSVGParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// Removes hydrogens (only with `sanitize`).
         remove_hs: bool = true,
@@ -620,6 +635,7 @@ defaults! {
     /// Parameters for `mol_from_sequence_with_params`, with Python's
     /// defaults.
     MolFromSequenceParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// 0 for L-protein, 1 for D-protein, 2 to 5 for RNA and 6 to 9 for DNA
         /// (no caps, 5' cap, 3' cap, both caps).
@@ -630,6 +646,7 @@ defaults! {
 defaults! {
     /// Parameters for `mol_from_fasta_with_params`, with Python's defaults.
     MolFromFASTAParams {
+        /// Sanitizes the molecule.
         sanitize: bool = true,
         /// As `MolFromSequenceParams::flavor`.
         flavor: i32 = 0,

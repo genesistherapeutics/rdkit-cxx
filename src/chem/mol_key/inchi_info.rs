@@ -201,7 +201,7 @@ pub struct Sp3Stereo {
 }
 
 /// A layer's mobile hydrogens: the number of groups, and the groups,
-/// separated by commas.
+/// separated by commas. A Rust addition, naming Python's tuple.
 pub type MobileH = (u32, String);
 
 /// An InChI's layers: by connection layer (`id`, or `id_disconnected` and

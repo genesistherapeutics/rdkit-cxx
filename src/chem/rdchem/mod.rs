@@ -3,7 +3,27 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Mirrors `rdkit.Chem.rdchem`.
+//! Mirrors `rdkit.Chem.rdchem`: molecules ([`Mol`], [`RWMol`]), atoms,
+//! bonds, conformers, ring info, stereo groups, substance groups,
+//! properties, substructure matching, and the periodic table.
+//!
+//! Atoms, bonds, and conformers reached through a molecule are views that
+//! borrow it: `XRef<'m>` to read, `XMut<'m>` to edit, found by index.
+//! Standalone [`Atom`]s exist where Python has a constructor, for adding
+//! to an [`RWMol`] or building queries. [`Mol`] is `Send` and not `Sync`
+//! (CONVENTIONS.md S1).
+//!
+//! ```no_run
+//! use rdkit_cxx::chem::mol_from_smiles;
+//!
+//! let mut mol = mol_from_smiles("C[NH3+]")?;
+//! for atom in mol.get_atoms() {
+//!     println!("{} {}", atom.get_symbol()?, atom.get_formal_charge());
+//! }
+//! mol.get_atom_with_idx_mut(1)?.set_formal_charge(0);
+//! mol.set_prop("_Name", "methylamine");
+//! # Ok::<(), rdkit_cxx::Error>(())
+//! ```
 
 mod atom;
 mod atom_labels;

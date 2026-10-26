@@ -336,4 +336,20 @@ fn subshape_objects_and_helpers() {
         .get_atom_position(0)
         .unwrap();
     assert!(close(b.x - a.x, 2.0, 1e-12) && b.y == a.y && b.z == a.z);
+    // Only a 4x4 transform will do.
+    for bad in [
+        shift[..3].to_vec(),
+        [shift.clone(), shift[..1].to_vec()].concat(),
+    ] {
+        assert!(matches!(
+            transform_mol(&mut m, &bad),
+            Err(rdkit_cxx::Error::Value { .. })
+        ));
+    }
+    let mut ragged = shift.clone();
+    ragged[3].push(0.0);
+    assert!(matches!(
+        transform_mol(&mut m, &ragged),
+        Err(rdkit_cxx::Error::Value { .. })
+    ));
 }

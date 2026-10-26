@@ -26,10 +26,12 @@ use crate::{Error, Result};
 
 /// One torsion of a torsion list: the atom quartets that describe a bond or
 /// ring, and the deviation that normalizes it.
+/// A Rust addition, naming Python's tuple.
 pub type Torsion = (Vec<[u32; 4]>, f64);
 
 /// One torsion's angles in degrees (one for a ring, the mean of its
 /// quartets' absolute angles), and the deviation that normalizes it.
+/// A Rust addition, naming Python's tuple.
 pub type TorsionAngles = (Vec<f64>, f64);
 
 /// How [`calculate_torsion_lists_with_params`] normalizes the torsions of

@@ -226,6 +226,7 @@ impl BitSource {
 
 /// The stereoisomers of a molecule, made as they are asked for. Built by
 /// [`enumerate_stereoisomers`].
+/// A Rust addition: the iterator of Python's generator.
 pub struct Stereoisomers {
     tm: Mol,
     flippers: Vec<Flipper>,

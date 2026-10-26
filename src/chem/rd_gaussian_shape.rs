@@ -319,6 +319,7 @@ impl Clone for ShapeInput {
 pub struct ShapeInputParams {
     /// The conformer; -1 for all of them.
     pub conf_id: i32,
+    /// How the shapes are built.
     pub shape_opt: ShapeInputOptions,
     /// The options whose distance cutoff the shapes' volumes use.
     pub overlay_opts: ShapeOverlayOptions,
@@ -360,6 +361,7 @@ impl Default for ShapeToMolParams {
 pub struct BestSimilarityParams {
     /// Stops at the first overlay that scores above this; -1 for none.
     pub threshold: f64,
+    /// How the shapes are overlaid and scored.
     pub overlay_opts: ShapeOverlayOptions,
 }
 
@@ -521,8 +523,11 @@ impl ShapeInput {
 /// Parameters for `align_mol_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct AlignMolParams {
+    /// How the reference's shape is built.
     pub ref_opts: ShapeInputOptions,
+    /// How the fit's shape is built.
     pub fit_opts: ShapeInputOptions,
+    /// How the shapes are overlaid and scored.
     pub overlay_opts: ShapeOverlayOptions,
     /// The reference's conformer; -1 for all of them, of which the active
     /// shape is the first (after sorting).
@@ -573,7 +578,9 @@ pub fn align_mol_with_params(
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct AlignMolShapeInputParams {
+    /// How the fit's shape is built.
     pub fit_opts: ShapeInputOptions,
+    /// How the shapes are overlaid and scored.
     pub overlay_opts: ShapeOverlayOptions,
     /// The fit's conformer; -1 for all of them.
     pub fit_conf_id: i32,
@@ -716,8 +723,11 @@ pub fn score_shape_with_overlay_opts(
 /// Python's defaults (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ScoreMoleculeAllConformersParams {
+    /// How the reference's shape is built.
     pub ref_opts: ShapeInputOptions,
+    /// How the fit's shape is built.
     pub fit_opts: ShapeInputOptions,
+    /// How the shapes are overlaid and scored.
     pub overlay_opts: ShapeOverlayOptions,
 }
 

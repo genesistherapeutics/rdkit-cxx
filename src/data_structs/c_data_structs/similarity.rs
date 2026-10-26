@@ -334,6 +334,7 @@ pub fn tversky_similarity<B: BitVect>(bv1: &B, bv2: &B, a: f64, b: f64) -> Resul
 }
 
 /// As [`tversky_similarity`], or 1 minus it when `return_distance`.
+/// Mirrors `cDataStructs.TverskySimilarity(bv1, bv2, a, b, returnDistance)`.
 pub fn tversky_similarity_with_return_distance<B: BitVect>(
     bv1: &B,
     bv2: &B,
@@ -345,11 +346,13 @@ pub fn tversky_similarity_with_return_distance<B: BitVect>(
 }
 
 /// As [`tversky_similarity`], against a pickle (A5).
+/// Mirrors `cDataStructs.TverskySimilarity(bv1, pkl, a, b)`.
 pub fn tversky_similarity_bytes<B: BitVect>(bv1: &B, pkl: &[u8], a: f64, b: f64) -> Result<f64> {
     similarity_bytes(bv1, pkl, TVERSKY, a, b, false)
 }
 
 /// As [`tversky_similarity_bytes`], or 1 minus it when `return_distance`.
+/// Mirrors `cDataStructs.TverskySimilarity(bv1, pkl, a, b, returnDistance)`.
 pub fn tversky_similarity_bytes_with_return_distance<B: BitVect>(
     bv1: &B,
     pkl: &[u8],
@@ -372,6 +375,8 @@ pub fn bulk_tversky_similarity<'a, B: BitVect + 'a>(
 }
 
 /// As [`bulk_tversky_similarity`], or distances when `return_distance`.
+/// Mirrors `cDataStructs.BulkTverskySimilarity(bv1, bvList, a, b,
+/// returnDistance)`.
 pub fn bulk_tversky_similarity_with_return_distance<'a, B: BitVect + 'a>(
     bv1: &B,
     bv_list: impl IntoIterator<Item = &'a B>,
@@ -505,6 +510,7 @@ pub fn bulk_dice_similarity_sparse_int_vect<'a, S: SparseIntVectType + 'a>(
 
 /// As [`bulk_dice_similarity_sparse_int_vect`], or distances when
 /// `return_distance`.
+/// Mirrors `cDataStructs.BulkDiceSimilarity(siv1, sivList, returnDistance)`.
 pub fn bulk_dice_similarity_sparse_int_vect_with_return_distance<'a, S: SparseIntVectType + 'a>(
     v1: &S,
     v2: impl IntoIterator<Item = &'a S>,
@@ -524,6 +530,8 @@ pub fn bulk_tanimoto_similarity_sparse_int_vect<'a, S: SparseIntVectType + 'a>(
 
 /// As [`bulk_tanimoto_similarity_sparse_int_vect`], or distances when
 /// `return_distance`.
+/// Mirrors `cDataStructs.BulkTanimotoSimilarity(siv1, sivList,
+/// returnDistance)`.
 pub fn bulk_tanimoto_similarity_sparse_int_vect_with_return_distance<
     'a,
     S: SparseIntVectType + 'a,
@@ -548,6 +556,8 @@ pub fn bulk_tversky_similarity_sparse_int_vect<'a, S: SparseIntVectType + 'a>(
 
 /// As [`bulk_tversky_similarity_sparse_int_vect`], or distances when
 /// `return_distance`.
+/// Mirrors `cDataStructs.BulkTverskySimilarity(siv1, sivList, a, b,
+/// returnDistance)`.
 pub fn bulk_tversky_similarity_sparse_int_vect_with_return_distance<
     'a,
     S: SparseIntVectType + 'a,
@@ -630,7 +640,7 @@ pub fn all_probe_bits_match<B: BitVect>(probe: &B, ref_: &B) -> Result<bool> {
 }
 
 /// As [`all_probe_bits_match`], against the pickle of a vector of the same
-/// type (A5).
+/// type (A5). Mirrors `cDataStructs.AllProbeBitsMatch(probe, pkl)`.
 pub fn all_probe_bits_match_bytes<B: BitVect>(probe: &B, ref_: &[u8]) -> Result<bool> {
     Ok(ffi::bit_vect_all_probe_bits_match_pkl(
         probe.bit_vect(),

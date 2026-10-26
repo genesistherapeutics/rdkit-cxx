@@ -11,7 +11,7 @@
 
 use std::fmt;
 
-/// The result of a fallible RDKit call.
+/// The result of a fallible RDKit call. A Rust addition.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// An error RDKit raised, by the Python exception nanobind would raise.
@@ -19,30 +19,65 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[non_exhaustive]
 pub enum Error {
     /// Unparsable input. Python returns `None`.
-    Parse { message: String },
+    Parse {
+        /// What RDKit's parser reported.
+        message: String,
+    },
     /// An atom whose valence is not allowed (`AtomValenceException`).
-    AtomValence { atom_idx: u32, message: String },
+    AtomValence {
+        /// The atom's index.
+        atom_idx: u32,
+        /// RDKit's message.
+        message: String,
+    },
     /// An aromatic atom outside a ring (`AtomKekulizeException`).
-    AtomKekulize { atom_idx: u32, message: String },
+    AtomKekulize {
+        /// The atom's index.
+        atom_idx: u32,
+        /// RDKit's message.
+        message: String,
+    },
     /// Atoms that could not be kekulized (`KekulizeException`).
     Kekulize {
+        /// The atoms' indices.
         atom_indices: Vec<u32>,
+        /// RDKit's message.
         message: String,
     },
     /// Another sanitization failure (`MolSanitizeException`).
-    MolSanitize { message: String },
-    /// An index out of range (`IndexError`). `index` is negative for a
-    /// Python-style index from the end that reaches past the start.
-    Index { index: i64, len: usize },
+    MolSanitize {
+        /// RDKit's message.
+        message: String,
+    },
+    /// An index out of range (`IndexError`).
+    Index {
+        /// The index; negative for a Python-style index from the end that
+        /// reaches past the start.
+        index: i64,
+        /// The length of what was indexed.
+        len: usize,
+    },
     /// A missing key (`KeyError`).
-    Key { key: String },
+    Key {
+        /// The key.
+        key: String,
+    },
     /// A bad value (`ValueError`), including invalid UTF-8.
-    Value { message: String },
+    Value {
+        /// What was wrong.
+        message: String,
+    },
     /// Any other failure (`RuntimeError`), including RDKit invariant
     /// violations.
-    Runtime { message: String },
+    Runtime {
+        /// RDKit's message.
+        message: String,
+    },
     /// A file that could not be opened (`OSError`).
-    Os { message: String },
+    Os {
+        /// What failed.
+        message: String,
+    },
 }
 
 impl fmt::Display for Error {

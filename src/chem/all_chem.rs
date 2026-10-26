@@ -352,6 +352,7 @@ pub struct ProductReactants {
 /// asked for: each set of products, for each combination of reactants, one
 /// from each set, the last set varying fastest. Built by
 /// [`enumerate_library_from_reaction`].
+/// A Rust addition: the iterator of Python's generator.
 pub struct EnumerateLibraryFromReaction<'a> {
     reaction: &'a mut ChemicalReaction,
     sidechain_sets: &'a [Vec<Mol>],

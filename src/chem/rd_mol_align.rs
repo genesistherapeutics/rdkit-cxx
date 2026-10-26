@@ -54,7 +54,7 @@ fn from_pairs(pairs: Vec<IndexPair>) -> Vec<(u32, u32)> {
 }
 
 /// A best alignment: the RMSD, the transform (4 x 4, as rows), and the atom
-/// map, as (probe, reference) pairs.
+/// map, as (probe, reference) pairs. A Rust addition, naming Python's tuple.
 pub type BestAlignment = (f64, Vec<Vec<f64>>, Vec<(u32, u32)>);
 
 fn rows(values: &[f64]) -> Vec<Vec<f64>> {
