@@ -249,18 +249,30 @@ pub fn compute_l1_norm_real_value_vect(v1: &RealValueVect, v2: &RealValueVect) -
     Ok(ffi::real_value_vect_compute_l1_norm(v1.raw(), v2.raw())?)
 }
 
-/// A vector `convert_to_numpy_array` takes, with its values' type.
-pub trait ConvertToNumpyArray {
-    type Value;
+mod sealed {
+    pub trait Values {
+        fn values(&self) -> Vec<<Self as super::ConvertToNumpyArray>::Value>
+        where
+            Self: super::ConvertToNumpyArray;
+    }
+}
 
-    #[doc(hidden)]
-    fn __values(&self) -> Vec<Self::Value>;
+/// A vector `convert_to_numpy_array` takes, with its values' type. A Rust
+/// addition, for the vector types `ConvertToNumpyArray` accepts; it is
+/// sealed, so only this crate's vectors implement it.
+pub trait ConvertToNumpyArray: sealed::Values {
+    /// The type of the vector's values in the array: `u32` for
+    /// `DiscreteValueVect`, `f64` for `RealValueVect`, and `i32` for the bit
+    /// and sparse-int vectors, as NumPy's array would hold them.
+    type Value;
 }
 
 impl ConvertToNumpyArray for DiscreteValueVect {
     type Value = u32;
+}
 
-    fn __values(&self) -> Vec<u32> {
+impl sealed::Values for DiscreteValueVect {
+    fn values(&self) -> Vec<u32> {
         (0..self.len())
             .map(|i| self.get_val(i).expect("the index is in range"))
             .collect()
@@ -269,8 +281,10 @@ impl ConvertToNumpyArray for DiscreteValueVect {
 
 impl ConvertToNumpyArray for RealValueVect {
     type Value = f64;
+}
 
-    fn __values(&self) -> Vec<f64> {
+impl sealed::Values for RealValueVect {
+    fn values(&self) -> Vec<f64> {
         (0..self.len())
             .map(|i| self.get_val(i).expect("the index is in range"))
             .collect()
@@ -279,8 +293,10 @@ impl ConvertToNumpyArray for RealValueVect {
 
 impl ConvertToNumpyArray for ExplicitBitVect {
     type Value = i32;
+}
 
-    fn __values(&self) -> Vec<i32> {
+impl sealed::Values for ExplicitBitVect {
+    fn values(&self) -> Vec<i32> {
         self.to_list().into_iter().map(i32::from).collect()
     }
 }
@@ -290,8 +306,10 @@ macro_rules! sparse_int_vect_numpy {
         $(
             impl ConvertToNumpyArray for $name {
                 type Value = i32;
+            }
 
-                fn __values(&self) -> Vec<i32> {
+            impl sealed::Values for $name {
+                fn values(&self) -> Vec<i32> {
                     self.to_list()
                 }
             }
@@ -309,5 +327,5 @@ sparse_int_vect_numpy!(
 /// Every value of the vector, as Python writes them into `destArray`.
 /// Mirrors `cDataStructs.ConvertToNumpyArray`.
 pub fn convert_to_numpy_array<V: ConvertToNumpyArray>(v: &V) -> Vec<V::Value> {
-    v.__values()
+    v.values()
 }
