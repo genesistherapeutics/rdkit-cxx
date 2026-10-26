@@ -35,7 +35,9 @@ pub(crate) mod ffi {
 
         fn mol_get_num_conformers(mol: &RWMol) -> Result<u32>;
         fn mol_get_conformer(mol: &RWMol, id: i32) -> Result<&Conformer>;
-        fn mol_get_conformer_mut(mol: Pin<&mut RWMol>, id: i32) -> Result<Pin<&mut Conformer>>;
+        fn mol_find_conformer(mol: &RWMol, id: u32) -> Result<&Conformer>;
+        fn mol_find_conformer_mut(mol: Pin<&mut RWMol>, id: u32) -> Result<Pin<&mut Conformer>>;
+        fn mol_set_conformer_id(mol: Pin<&mut RWMol>, current: u32, id: u32) -> Result<()>;
         fn mol_get_conformer_at(mol: &RWMol, position: u32) -> Result<&Conformer>;
         fn mol_add_conformer(
             mol: Pin<&mut RWMol>,

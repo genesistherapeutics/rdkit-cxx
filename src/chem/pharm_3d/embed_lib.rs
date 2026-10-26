@@ -237,7 +237,7 @@ pub fn embed_mol_with_outputs(
         },
     )?;
     let mut conf = Conformer::new(n_ats);
-    conf.set_id(0);
+    conf.set_id(0)?;
     for i in 0..n_ats {
         let p = *coords
             .get(i as usize)
