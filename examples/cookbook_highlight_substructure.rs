@@ -24,7 +24,7 @@ use rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDrawOptions;
 use rdkit_cxx::chem::draw::{DrawMolWithMatchesParams, draw_mol_with_matches_as_svg_with_params};
 use rdkit_cxx::chem::{mol_from_smarts, mol_from_smiles};
 
-/// The highlight colour, `MolDrawOptions::highlight_colour`'s default.
+/// The highlight color, `MolDrawOptions::highlight_colour`'s default.
 const HIGHLIGHT: &str = "#FF7F7F";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
