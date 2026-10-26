@@ -18,6 +18,7 @@
 use crate::data_structs::SparseBitVect;
 use crate::ml::info_theory::rd_info_theory::info_gain;
 use crate::{Error, Result};
+use std::fmt;
 
 fn index_error(index: usize, len: usize) -> Error {
     Error::index(index, len)
@@ -116,24 +117,33 @@ pub fn calc_info_gains_with_n_possible_bit_vals(
 
 /// A metric for [`rank_bits_with_params`]: given the vectors, the
 /// activities, the number of possible activities, and the number of
-/// possible bit values, a value for each bit.
-pub type MetricFunc = fn(&[Vec<u32>], &[u32], usize, usize) -> Result<Vec<f64>>;
+/// possible bit values, a value for each bit. A Rust addition, naming the
+/// type of Python's `metricFunc`; any function or closure will do.
+pub type MetricFunc = dyn Fn(&[Vec<u32>], &[u32], usize, usize) -> Result<Vec<f64>>;
 
 /// Parameters for [`rank_bits_with_params`], with Python's defaults (A2).
-#[derive(Clone, Copy, Debug)]
-pub struct RankBitsParams {
+#[derive(Clone, Copy)]
+pub struct RankBitsParams<'a> {
     /// The number of values a bit takes.
     pub n_possible_bit_vals: usize,
     /// The metric bits are ranked by.
-    pub metric_func: MetricFunc,
+    pub metric_func: &'a MetricFunc,
 }
 
-impl Default for RankBitsParams {
-    fn default() -> RankBitsParams {
+impl Default for RankBitsParams<'_> {
+    fn default() -> Self {
         RankBitsParams {
             n_possible_bit_vals: 2,
-            metric_func: calc_info_gains_with_n_possible_bit_vals,
+            metric_func: &calc_info_gains_with_n_possible_bit_vals,
         }
+    }
+}
+
+impl fmt::Debug for RankBitsParams<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("RankBitsParams")
+            .field("n_possible_bit_vals", &self.n_possible_bit_vals)
+            .finish_non_exhaustive()
     }
 }
 
@@ -230,10 +240,6 @@ pub fn analyze_sparse_vects(
     Ok((res, gains))
 }
 
-/// A metric for [`sparse_rank_bits_with_metric_func`]: the analysis of
-/// each bit, and a value to rank each by.
-pub type SparseMetricFunc = fn(&[SparseBitVect], &[u32]) -> Result<(Vec<BitInfo>, Vec<f64>)>;
-
 /// The analyzed bits ranked by information gain, largest first (as
 /// indices into the analysis), and the analysis of each, as
 /// [`analyze_sparse_vects`] gives it. Mirrors
@@ -252,7 +258,7 @@ pub fn sparse_rank_bits(
 pub fn sparse_rank_bits_with_metric_func(
     bit_vects: &[SparseBitVect],
     act_vals: &[u32],
-    metric_func: SparseMetricFunc,
+    metric_func: impl Fn(&[SparseBitVect], &[u32]) -> Result<(Vec<BitInfo>, Vec<f64>)>,
 ) -> Result<(Vec<usize>, Vec<BitInfo>)> {
     let (info, metrics) = metric_func(bit_vects, act_vals)?;
     Ok((rank(&metrics), info))

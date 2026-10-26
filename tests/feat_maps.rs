@@ -502,7 +502,7 @@ fn points(xs_weights: &[(f64, f64)]) -> String {
         .join("\n")
 }
 
-fn distance(method: MergeMethod) -> MergeFeatPointsParams {
+fn distance(method: MergeMethod) -> MergeFeatPointsParams<'static> {
     MergeFeatPointsParams {
         merge_metric: MergeMetric::Distance,
         merge_method: method,

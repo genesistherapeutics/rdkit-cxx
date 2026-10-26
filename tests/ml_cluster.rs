@@ -564,6 +564,16 @@ fn resemblance_matches_python() {
         resemblance::calc_metric_matrix(&clusters, resemblance::euclidean_distance).unwrap(),
         [5.0, 10.0, 5.0]
     );
+    // The metric may be a closure that captures.
+    let scale = 2.0;
+    let scaled = |points: &[Vec<f64>]| {
+        let distances = resemblance::euclidean_distance(points)?;
+        Ok(distances.into_iter().map(|d| d * scale).collect())
+    };
+    assert_eq!(
+        resemblance::calc_metric_matrix(&clusters, scaled).unwrap(),
+        [10.0, 20.0, 10.0]
+    );
     assert_eq!(resemblance::methods()[0].0, "Euclidean");
 }
 

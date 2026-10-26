@@ -14,7 +14,9 @@ use crate::ml::cluster::clusters::Cluster;
 use crate::ml::py_format::format_f;
 use crate::{Error, Result};
 
-/// A metric: it takes points and returns their metric matrix.
+/// A metric: it takes points and returns their metric matrix. A Rust
+/// addition, for the entries of [`methods`]; `calc_metric_matrix` takes any
+/// function or closure.
 pub type Metric = fn(&[Vec<f64>]) -> Result<Vec<f64>>;
 
 /// The Euclidean distances between the points, as a metric matrix. Mirrors
@@ -52,7 +54,10 @@ pub fn euclidean_distance(in_data: &[Vec<f64>]) -> Result<Vec<f64>> {
 ///
 /// Python's raises `TypeError` in RDKit 2026.09.1 (it hands the metric a
 /// `map` object, which has no length); this hands it the positions.
-pub fn calc_metric_matrix(in_data: &[Cluster], metric_func: Metric) -> Result<Vec<f64>> {
+pub fn calc_metric_matrix(
+    in_data: &[Cluster],
+    metric_func: impl Fn(&[Vec<f64>]) -> Result<Vec<f64>>,
+) -> Result<Vec<f64>> {
     let positions: Vec<Vec<f64>> = in_data.iter().map(|c| c.get_position().to_vec()).collect();
     metric_func(&positions)
 }

@@ -460,8 +460,8 @@ pub fn enumerate_library_from_reaction_return_reactants<'a>(
 /// A function that makes the force field `constrained_embed` cleans up with,
 /// for the molecule's conformer 0. Mirrors `ConstrainedEmbed`'s
 /// `getForceField` argument, which Python calls as `getForceField(mol,
-/// confId=0)`.
-pub type GetForceField = fn(&mut Mol) -> Result<ForceField<'_>>;
+/// confId=0)`; any function or closure will do.
+pub type GetForceField = dyn Fn(&mut Mol) -> Result<ForceField<'_>>;
 
 /// UFF's force field for the molecule's conformer 0, `constrained_embed`'s
 /// default. Mirrors `rdForceFieldHelpers.UFFGetMoleculeForceField(mol,
@@ -478,8 +478,8 @@ fn uff_force_field(mol: &mut Mol) -> Result<ForceField<'_>> {
 
 /// Parameters for `constrained_embed_with_params`, with Python's defaults
 /// (A2).
-#[derive(Clone, Debug)]
-pub struct ConstrainedEmbedParams {
+#[derive(Clone)]
+pub struct ConstrainedEmbedParams<'a> {
     /// Pulls the matched atoms toward the core's positions with extra
     /// points while cleaning up; otherwise constrains their distances.
     pub use_tethers: bool,
@@ -488,20 +488,20 @@ pub struct ConstrainedEmbedParams {
     /// The embedder's random seed.
     pub randomseed: i32,
     /// Makes the force field for the cleanup.
-    pub get_force_field: GetForceField,
+    pub get_force_field: &'a GetForceField,
     /// The embedder's other arguments, which Python passes as keywords;
     /// their `coord_map` and `random_seed` are replaced. The default is
     /// `EmbedMolecule`'s keyword defaults.
     pub embed_params: EmbedParameters,
 }
 
-impl Default for ConstrainedEmbedParams {
-    fn default() -> ConstrainedEmbedParams {
+impl Default for ConstrainedEmbedParams<'_> {
+    fn default() -> Self {
         ConstrainedEmbedParams {
             use_tethers: true,
             core_conf_id: -1,
             randomseed: 2342,
-            get_force_field: uff_force_field,
+            get_force_field: &uff_force_field,
             embed_params: EmbedParameters {
                 use_exp_torsion_angle_prefs: true,
                 use_basic_knowledge: true,
