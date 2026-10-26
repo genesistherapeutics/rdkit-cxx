@@ -19,7 +19,6 @@
 
 namespace RDKit {
 namespace MolDraw2D_detail {
-using RDGeom::Point2D;
 
 // for holding dimensions of the rectangle round a string.
 struct StringRect {

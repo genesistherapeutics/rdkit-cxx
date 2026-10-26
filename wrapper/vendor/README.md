@@ -8,7 +8,7 @@ copies of them, unmodified, from the release it is named for:
 
 | Directory | Copied from |
 | --- | --- |
-| `2026.09.1/` | [`Release_2026_09_1`](https://github.com/rdkit/rdkit/tree/Release_2026_09_1) |
+| `2026.03.6/` | [`Release_2026_03_6`](https://github.com/rdkit/rdkit/tree/Release_2026_03_6) |
 
 They are RDKit's code, under RDKit's BSD 3-clause license
 ([`../third_party/rdkit/LICENSE`](../third_party/rdkit/LICENSE)).
@@ -25,8 +25,8 @@ with a directory here, and compiles against that directory.
 
 ## Supporting a new RDKit release
 
-When conda-forge has a new release of the series, `rdkit-series.yml` opens
-an issue. Copy the same files from the new release's tag into a directory
-named for it (`2026.09.2/`), check what changed since the last directory
-(`git diff --no-index`), update the wrappers that use any changed class, add
-the row above, and release a patch (README, Releases).
+RDKit 2026.03.6 is the last release of the 2026.03 series. To support an
+earlier one, copy the same files from its tag into a directory named for it
+(`2026.03.5/`), check what changed against this one (`git diff --no-index`),
+update the wrappers that use any changed class, add the row above, and
+release a patch (README, Releases).

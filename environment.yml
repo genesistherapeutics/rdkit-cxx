@@ -7,7 +7,7 @@ name: rdkit-cxx
 channels:
   - conda-forge
 dependencies:
-  - librdkit-dev 2026.09.1
+  - librdkit-dev 2026.03.6
   - libboost-devel
   - cxx-compiler
   - cmake >=3.22
