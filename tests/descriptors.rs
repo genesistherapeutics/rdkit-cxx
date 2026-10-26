@@ -26,6 +26,15 @@ fn same(actual: f64, expected: f64) -> bool {
         || (actual - expected).abs() <= 1e-12 * expected.abs().max(1.0)
 }
 
+/// Agrees with Python's value to the last bits another platform's build of
+/// RDKit (fused multiply-adds, its math library) may change.
+fn assert_close(actual: f64, expected: f64) {
+    assert!(
+        (actual - expected).abs() <= 1e-12 * expected.abs().max(1.0),
+        "{actual} != {expected}"
+    );
+}
+
 #[test]
 fn calc_mol_descriptors_match_python() {
     let text = include_str!("data/calc_mol_descriptors.tsv");
@@ -163,10 +172,10 @@ fn doctests() {
 fn partial_charges_match_python() {
     // Python's Max/MinPartialCharge and Max/MinAbsPartialCharge, with repr.
     let m = mol("CC(=O)Nc1ccc(O)cc1");
-    assert_eq!(max_partial_charge(&m).unwrap(), 0.22074743631242583);
-    assert_eq!(min_partial_charge(&m).unwrap(), -0.5079643157925783);
-    assert_eq!(max_abs_partial_charge(&m).unwrap(), 0.5079643157925783);
-    assert_eq!(min_abs_partial_charge(&m).unwrap(), 0.22074743631242583);
+    assert_close(max_partial_charge(&m).unwrap(), 0.22074743631242583);
+    assert_close(min_partial_charge(&m).unwrap(), -0.5079643157925783);
+    assert_close(max_abs_partial_charge(&m).unwrap(), 0.5079643157925783);
+    assert_close(min_abs_partial_charge(&m).unwrap(), 0.22074743631242583);
     // RDKit has no Gasteiger parameters for plutonium, which gets NaN, and
     // Python's min and max pass NaN on.
     let m = mol("CC[Pu]");

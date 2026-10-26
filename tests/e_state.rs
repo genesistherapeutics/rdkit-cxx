@@ -269,6 +269,18 @@ fn vsa_reference_file() {
     assert_eq!(rows, 97);
 }
 
+/// Agrees with Python's values to the last bits another platform's build of
+/// RDKit (fused multiply-adds) may change in the surface areas.
+fn assert_all_close(actual: &[f64], expected: &[f64]) {
+    assert_eq!(actual.len(), expected.len());
+    for (a, e) in actual.iter().zip(expected) {
+        assert!(
+            (a - e).abs() <= 1e-12 * e.abs().max(1.0),
+            "{actual:?} != {expected:?}"
+        );
+    }
+}
+
 #[test]
 fn vsa_functions_match_python() {
     // Python's EState_VSA functions, printed with repr.
@@ -277,9 +289,9 @@ fn vsa_functions_match_python() {
     assert_eq!(e_state_vsa::vsa_bins().len(), 9);
     assert_eq!(e_state_vsa::estate_bins().len(), 10);
     let all = e_state_vsa::e_state_vsa(&m).unwrap();
-    assert_eq!(
-        all,
-        [
+    assert_all_close(
+        &all,
+        &[
             0.0,
             0.0,
             5.749511833283905,
@@ -290,8 +302,8 @@ fn vsa_functions_match_python() {
             0.0,
             5.106527394840706,
             0.0,
-            0.0
-        ]
+            0.0,
+        ],
     );
     let fns = [
         e_state_vsa::e_state_vsa1,
@@ -310,9 +322,9 @@ fn vsa_functions_match_python() {
         assert_eq!(f(&m).unwrap(), *value);
     }
     let all = e_state_vsa::vsa_e_state(&m).unwrap();
-    assert_eq!(
-        all,
-        [
+    assert_all_close(
+        &all,
+        &[
             0.0,
             0.0,
             8.632222222222222,
@@ -322,8 +334,8 @@ fn vsa_functions_match_python() {
             0.0,
             0.0,
             0.0,
-            0.0
-        ]
+            0.0,
+        ],
     );
     let fns = [
         e_state_vsa::vsa_e_state1,
@@ -342,5 +354,5 @@ fn vsa_functions_match_python() {
     }
     // Unsorted bins bin as Python's bisect does.
     let custom = e_state_vsa::e_state_vsa_with_bins(&m, &[5.0, 1.0]).unwrap();
-    assert_eq!(custom, [5.749511833283905, 0.0, 35.43836273714876]);
+    assert_all_close(&custom, &[5.749511833283905, 0.0, 35.43836273714876]);
 }

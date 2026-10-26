@@ -82,15 +82,24 @@ fn doctests() {
     }
 }
 
+/// Agrees with Python's value to the last bits that the platform's `exp`
+/// and `log` may change.
+fn assert_close(actual: f64, expected: f64) {
+    assert!(
+        (actual - expected).abs() <= 1e-12 * expected.abs(),
+        "{actual} != {expected}"
+    );
+}
+
 #[test]
 fn weights_match_python() {
     // Python's weights_max, weights_mean, weights_none, and default, printed
     // with repr.
     let m = mol("c1cc2OCOc2cc1OCC1CNCCC1c1ccc(F)cc1");
-    assert_eq!(weights_max(&m).unwrap(), 0.9245739032271649);
-    assert_eq!(weights_mean(&m).unwrap(), 0.9339413767145557);
-    assert_eq!(weights_none(&m).unwrap(), 0.937329699400303);
-    assert_eq!(default(&m).unwrap(), 0.9339413767145557);
+    assert_close(weights_max(&m).unwrap(), 0.9245739032271649);
+    assert_close(weights_mean(&m).unwrap(), 0.9339413767145557);
+    assert_close(weights_none(&m).unwrap(), 0.937329699400303);
+    assert_close(default(&m).unwrap(), 0.9339413767145557);
     let given = QedParams {
         qed_properties: Some(QEDproperties {
             mw: 300.0,
@@ -104,8 +113,8 @@ fn weights_match_python() {
         }),
         ..QedParams::default()
     };
-    assert_eq!(qed_with_params(&m, &given).unwrap(), 0.9391885840701519);
-    assert_eq!(ads(2.0, &ads_parameters()["ALOGP"]), 0.9559756451041136);
+    assert_close(qed_with_params(&m, &given).unwrap(), 0.9391885840701519);
+    assert_close(ads(2.0, &ads_parameters()["ALOGP"]), 0.9559756451041136);
 }
 
 #[test]

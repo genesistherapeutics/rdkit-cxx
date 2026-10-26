@@ -338,7 +338,7 @@ fn values_match_python() {
             case.labute_asa[1],
             what,
         );
-        assert_eq!(py_labute_asa(&m).unwrap(), case.py_labute_asa[0], "{what}");
+        almost_equal(py_labute_asa(&m).unwrap(), case.py_labute_asa[0], what);
         almost_equal(
             py_labute_asa_with_include_hs(&m, false).unwrap(),
             case.py_labute_asa[1],

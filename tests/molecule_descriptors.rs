@@ -15,6 +15,13 @@ use rdkit_cxx::chem::rd_mol_descriptors::bcut_2d;
 use rdkit_cxx::chem::reduced_graphs::{get_erg_fingerprint, tanimoto_similarity};
 use rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator;
 
+/// Agrees with Python's value, NaN with NaN, to the last bits that BCUT2D's
+/// eigensolver may change across platforms.
+fn same(actual: f64, expected: f64) -> bool {
+    (actual.is_nan() && expected.is_nan())
+        || (actual - expected).abs() <= 1e-12 * expected.abs().max(1.0)
+}
+
 #[test]
 fn calc_vals() {
     let calc = MolecularDescriptorCalculator::new(&["MolLogP", "Chi1v"]);
@@ -77,20 +84,20 @@ fn matches_python() {
         ]
     );
     let values = calc.calc_descriptors(&mol_from_smiles("CCC(=O)O").unwrap());
-    assert_eq!(
-        values,
-        [
-            0.481,
-            1.4883911147617317,
-            37.3,
-            777.0,
-            0.0,
-            1.0,
-            0.0,
-            16.365026720551658,
-            0.6666666666666666
-        ]
-    );
+    let expected = [
+        0.481,
+        1.4883911147617317,
+        37.3,
+        777.0,
+        0.0,
+        1.0,
+        0.0,
+        16.365026720551658,
+        0.6666666666666666,
+    ];
+    for (v, e) in values.iter().zip(expected) {
+        assert!(same(*v, e), "{v} != {e}");
+    }
     // Python reads RDKit's autocorrelation tables past their end for a
     // dummy atom (CONVENTIONS.md U1), and gets 0 for AUTOCORR2D_5; here the
     // function refuses the molecule, so the descriptor is NaN.
@@ -107,7 +114,7 @@ fn matches_python() {
         1.0,
     ];
     for (v, e) in values.iter().zip(expected) {
-        assert!(v == &e || (v.is_nan() && e.is_nan()), "{v} != {e}");
+        assert!(same(*v, e), "{v} != {e}");
     }
 }
 
