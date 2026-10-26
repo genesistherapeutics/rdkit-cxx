@@ -112,8 +112,9 @@ use rdkit_cxx::chem::{
     fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
     mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
-    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
+    mol_to_cdxml_block, mol_to_cx_smiles_with_params, mol_to_mol_block,
+    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
+    molzip_fragments_with_params, pattern_fingerprint,
 };
 use rdkit_cxx::chem::{rd_gaussian_shape, rd_shape_align};
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
@@ -276,6 +277,7 @@ fn main() {
     phase(pubchem_shape_alignment(), pubchem_shape_scores());
     phase(gaussian_shapes(), gaussian_shapes());
     phase(murtagh_clusters(), hierarchical_picks());
+    phase(cdxml_blocks(), cdxml_blocks());
 
     std::fs::remove_file(templates()).unwrap();
     std::fs::remove_file(groups()).unwrap();
@@ -1379,6 +1381,15 @@ fn inchi_read() -> Call<String> {
     Call {
         make: |_| "InChI=1S/CH3NO2/c1-2(3)4/h1H3".to_string(),
         run: |inchi| assert!(inchi_to_mol(&inchi).unwrap().mol.is_some()),
+    }
+}
+
+// The ChemDraw library fills its attribute-name maps on the first CDXML
+// write (chemdraw_mutex), which this phase must make.
+fn cdxml_blocks() -> Call<Mol> {
+    Call {
+        make: |_| depicted("CCO"),
+        run: |mol| assert!(mol_to_cdxml_block(&mol).unwrap().contains("BondLength")),
     }
 }
 

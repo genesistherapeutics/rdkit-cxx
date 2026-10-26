@@ -208,7 +208,9 @@ rule changes the rule first.
   static, under `rgroup_mutex()`, and the shape modules' pharmacophore
   patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
   and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
-  hierarchical clustering, under `murtagh_mutex()`). State RDKit makes once,
+  hierarchical clustering, under `murtagh_mutex()`, and the ChemDraw
+  library's attribute-name maps, which it fills behind an unlocked check,
+  under `chemdraw_mutex()`). State RDKit makes once,
   on first use, is
   made under `std::call_once` before any other call (the MACCS patterns in
   `MACCS.cpp`). 2D depiction's settings and
