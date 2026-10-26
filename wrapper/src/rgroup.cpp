@@ -23,6 +23,7 @@
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/generalized_substruct.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/mol_enumerator.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_checks.h"
 
@@ -106,7 +107,7 @@ void check_params(const RDKit::RGroupDecompositionParameters &p) {
 // bits) into ints and
 // keeps one past the largest in int (setLabel's maxLabel = label + 1, and
 // prepareCore's rlabel + 1 for an aligned core), which overflows for
-// INT_MAX; relabelling adds one per atom past that. Labels are refused at
+// INT_MAX; relabeling adds one per atom past that. Labels are refused at
 // 2^30 and above: RDKit's R-group labels are below 1000 elsewhere (the MDL
 // labels setAtomRLabel writes, atom map numbers).
 constexpr std::int64_t kMaxLabel = std::int64_t{1} << 30;
@@ -123,7 +124,8 @@ void check_label(std::int64_t label) {
 // would be read past the table (unpickling refuses one, check_pickled_mol;
 // this checks again in case another path sets one). doEnumeration enumerates
 // the cores with MolEnumerator, whose link nodes check_link_nodes checks
-// (Python segfaults on a link node over a double bond). doTautomers matches
+// (Python segfaults on a link node over a double bond), and whose recursion
+// and removals check_enumerate checks. doTautomers matches
 // with RDKit's TautomerQuery::substructOf, which reads a recursive query's
 // matches past their end (tautomer_checks.h; Python fails a precondition on a
 // bond between atoms it read there); RDKit makes its tautomer query of the core
@@ -166,6 +168,9 @@ void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
     }
     if (p.doEnumeration) {
       check_link_nodes(*core);
+      // RGroupDecompData enumerates each core with
+      // MolEnumerator::enumerate(core).
+      check_enumerate(*core, true, true, true);
     }
     if (p.doTautomers) {
       check_tautomer_template(*core);

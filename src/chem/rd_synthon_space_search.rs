@@ -417,8 +417,8 @@ impl SubstructureResult {
         expect_ok(ffi::substructure_result_get_timed_out(&self.ptr))
     }
 
-    /// Whether a Ctrl-C cancelled the search; a search that returns
-    /// cancelled is an error instead, so this is false. Mirrors
+    /// Whether a Ctrl-C canceled the search; a search that returns
+    /// canceled is an error instead, so this is false. Mirrors
     /// `SubstructureResult.GetCancelled`.
     pub fn get_cancelled(&self) -> bool {
         expect_ok(ffi::substructure_result_get_cancelled(&self.ptr))

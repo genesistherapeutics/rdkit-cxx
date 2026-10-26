@@ -66,7 +66,7 @@ pub fn labelled_atoms(svg: &str) -> BTreeSet<u32> {
         .collect()
 }
 
-/// The colours the SVG fills or strokes with.
+/// The colors the SVG fills or strokes with.
 pub fn colours(svg: &str) -> BTreeSet<String> {
     ["fill:#", "stroke:#"]
         .iter()

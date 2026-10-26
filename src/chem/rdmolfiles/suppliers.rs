@@ -859,8 +859,10 @@ pub struct MultithreadedSDMolSupplierParams {
     pub remove_hs: bool,
     /// Rejects malformed records rather than reading what it can.
     pub strict_parsing: bool,
-    /// The parsing threads: 0 for one per core, and fewer counting back from
-    /// it. Above `i32::MAX` is `Error::Value`: RDKit negates it as an `int`.
+    /// The parsing threads: 0 for one per core. More than 1024 is
+    /// `Error::Value`: RDKit starts every one at the first read. If the
+    /// system cannot start them all, that read is `Error::Runtime`, and so is
+    /// every read after it.
     pub num_writer_threads: u32,
     /// The records read ahead; 0, which never lets RDKit's threads finish, and
     /// sizes above `u32::MAX` are `Error::Value`.

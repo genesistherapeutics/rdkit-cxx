@@ -32,6 +32,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/mol_enumerator.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_query.h"
 #include "rdkit-cxx/util.h"
@@ -449,6 +450,8 @@ std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
     const AdjustQueryParametersData &adjust_query_parameters) {
   if (do_enumeration) {
     check_link_nodes(mol);
+    // createExtendedQueryMol enumerates with MolEnumerator::enumerate(mol).
+    check_enumerate(mol, true, true, true);
   }
   // Enumerating removes atoms from copies (position variation, repeat
   // units), and tautomer enumeration writes SMILES, which removes atoms from

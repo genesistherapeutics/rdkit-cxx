@@ -284,7 +284,7 @@ class ParentChains {
 };
 
 // What RDKit's code after a read trusts about the space it holds:
-// - summarise counts reactions by their number of synthon sets in an array
+// - summarize counts reactions by their number of synthon sets in an array
 //   of MAX_CONNECTOR_NUM + 1 (a write past it for more sets), and
 //   buildAddAndSubtractFPs converts a product of up to 79 samples per set,
 //   times 0.75, to int (undefined past INT_MAX, from 5 sets);
@@ -1016,11 +1016,11 @@ void check_query(const ExtendedQueryMol &query) {
 // Results and callbacks.
 
 // Python raises KeyboardInterrupt for a search RDKit's SIGINT handler
-// cancelled.
+// canceled.
 std::unique_ptr<SearchResults> finish(SSS::SearchResults results,
                                       const char *what) {
   if (results.getCancelled()) {
-    throw std::runtime_error(std::string(what) + " cancelled");
+    throw std::runtime_error(std::string(what) + " canceled");
   }
   return std::make_unique<SearchResults>(std::move(results));
 }
@@ -1390,7 +1390,7 @@ std::unique_ptr<SynthonSpace> synthon_space_new() {
 
 void synthon_space_read_text_file(SynthonSpace &space,
                                   rust::Slice<const std::uint8_t> path) {
-  read_text(space, to_path(path), "Database read cancelled");
+  read_text(space, to_path(path), "Database read canceled");
 }
 
 void synthon_space_read_db_file(SynthonSpace &space,
@@ -1489,7 +1489,7 @@ void synthon_space_build_synthon_shapes(SynthonSpace &space,
   }
   check_interim_file(params);
   if (cancelled) {
-    throw std::runtime_error("Shape building cancelled");
+    throw std::runtime_error("Shape building canceled");
   }
 }
 

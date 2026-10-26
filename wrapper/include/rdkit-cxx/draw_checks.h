@@ -55,9 +55,9 @@ void check_colour(const RDKit::DrawColour &colour, const char *what);
 // and its text as check_annotation and check_label check it.
 void check_draw_options(const RDKit::MolDrawOptions &opts);
 
-// RDKit's JSON option parser reads each colour's components by stepping an
+// RDKit's JSON option parser reads each color's components by stepping an
 // iterator three times without checking for the end of the node
-// (get_rgba in MolDrawOptionsJSONParsers.cpp). Throws unless every colour
+// (get_rgba in MolDrawOptionsJSONParsers.cpp). Throws unless every color
 // option, and every atom palette entry, has at least three components.
 void check_json_options(const std::string &json);
 
@@ -133,7 +133,7 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
                      bool annotations, bool symmetrized);
 
 // Highlight indices (RDKit keeps them as int and draws them by index, as
-// Python's pythonObjectToVect checks), colours, and radii.
+// Python's pythonObjectToVect checks), colors, and radii.
 void check_highlight_atoms(const RDKit::ROMol &mol,
                            const std::vector<int> &atoms);
 void check_highlight_bonds(const RDKit::ROMol &mol,

@@ -33,7 +33,7 @@
 //! - Options within the bounds RDKit's layout needs (`set_draw_options`
 //!   checks them): padding up to 0.45, font sizes up to 512 pixels, scaling
 //!   factors from 0.1 to 1000, line widths up to 64, highlight radii up to
-//!   16, colour components from 0 to 1, and so on.
+//!   16, color components from 0 to 1, and so on.
 //! - Text RDKit can lay out: legends, notes, labels, and other text of at
 //!   most 10000 bytes, each line or label with a normal (not super- or
 //!   subscript) character, and no subscript before the first; atom labels
@@ -64,7 +64,7 @@
 //!   in Python).
 //! - Contours (`contour_and_draw_grid`, `contour_and_draw_gaussians`) of
 //!   values and levels finite and within 1e300 (an infinite one makes
-//!   RDKit's fill colours NaN), of gaussians with widths from 1e-100 to
+//!   RDKit's fill colors NaN), of gaussians with widths from 1e-100 to
 //!   1e100, which RDKit divides by, and on grids of at most 1e8 points.
 //!
 //! A drawing call that fails inside RDKit after it has started laying out

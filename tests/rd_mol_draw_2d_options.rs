@@ -4,8 +4,8 @@
 // license that can be found in the LICENSE file.
 
 // MolDrawOptions and the functions that change it. Expected values are from
-// Python's rdMolDraw2D; Python reads colour tuples as 32-bit floats, so
-// colours are compared with a tolerance.
+// Python's rdMolDraw2D; Python reads color tuples as 32-bit floats, so
+// colors are compared with a tolerance.
 
 mod common;
 
@@ -195,7 +195,7 @@ fn update_from_json() {
     );
     assert_colour(o.highlight_colour, (0.1, 0.2, 0.3, 1.0));
     assert_colour(o.get_atom_palette()[&6], (0.5, 0.5, 0.5, 0.5));
-    // The colour scheme sets the dark palette first.
+    // The color scheme sets the dark palette first.
     assert_colour(o.get_atom_palette()[&7], (0.33, 0.41, 0.92, 1.0));
     assert_eq!(o.legend_position, LegendPosition::Top);
     assert_eq!(
@@ -217,7 +217,7 @@ fn update_from_json() {
     update_mol_draw_options_from_json(&mut o, "").unwrap();
 }
 
-// RDKit's get_rgba steps past the end of a colour with fewer than three
+// RDKit's get_rgba steps past the end of a color with fewer than three
 // components (Python segfaults); the wrapper refuses it.
 #[test]
 fn json_colours_need_three_components() {

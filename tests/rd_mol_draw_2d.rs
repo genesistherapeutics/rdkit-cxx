@@ -866,7 +866,7 @@ fn multi_colour_highlights() {
     let bonds = BTreeMap::from([(0, vec![red()]), (5, vec![blue(), green()])]);
     let radii = BTreeMap::from([(0, 0.4)]);
     let multipliers = BTreeMap::from([(0, 2)]);
-    // Python's counts of each colour in the SVG.
+    // Python's counts of each color in the SVG.
     for (style, counts) in [
         (MultiColourHighlightStyle::CircleAndLine, (9, 4, 4)),
         (MultiColourHighlightStyle::Lasso, (5, 1, 1)),
@@ -1079,7 +1079,7 @@ fn reactions() {
     fresh()
         .draw_reaction(&reaction_from_smarts("CC>O>C=C").unwrap())
         .unwrap();
-    // highlightByReactant with no colours: RDKit takes them modulo zero.
+    // highlightByReactant with no colors: RDKit takes them modulo zero.
     let no_colours = DrawReactionParams {
         highlight_by_reactant: true,
         highlight_colors_reactants: Some(vec![]),
