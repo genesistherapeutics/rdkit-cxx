@@ -60,6 +60,9 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
   if (query->getNumAtoms() < 2) {
     throw ValueErrorException("the pattern must match a bond: two atoms");
   }
+  // fragmentMol cuts bonds of a copy (fragmentOnBonds) and writes the
+  // pieces as SMILES, which trusts what check_removals checks.
+  check_removals(mol);
   Results results;
   // fragmentMol matches the pattern (control_c_lock.h).
   std::lock_guard<std::mutex> control_c(control_c_mutex());
@@ -80,6 +83,7 @@ std::unique_ptr<MolList> fragment_mol_bonds(
   for (auto idx : bonds_to_cut) {
     check_index(idx, mol.getNumBonds());
   }
+  check_removals(mol);
   Results results;
   RDKit::MMPA::fragmentMol(
       mol, results,

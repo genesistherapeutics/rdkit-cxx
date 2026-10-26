@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/mol_checks.h"
 
+#include <algorithm>
 #include <cerrno>
 #include <cmath>
 #include <cstdlib>
@@ -12,6 +13,7 @@
 #include <map>
 #include <string>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include <GraphMol/MonomerInfo.h>
@@ -125,13 +127,46 @@ void check_monomer_info(const RDKit::Atom &atom, const std::string &which) {
   }
 }
 
+// MolPickler casts each byte it reads for an enum without checking it
+// (static_cast in _addAtomFromPickle, _addBondFromPickle, _depickleStereo),
+// and the Rust enums, which mirror RDKit's, have no variant for a value
+// past the last one: their conversion panics. RDKit's enums count from 0.
+void check_enum(int value, int last, const std::string &what) {
+  if (value < 0 || value > last) {
+    throw ValueErrorException(what + " has unknown value " +
+                              std::to_string(value));
+  }
+}
+
+void check_enum_values(const RDKit::ROMol &mol, const std::string &which) {
+  for (const auto *atom : mol.atoms()) {
+    const auto at = which + "atom " + std::to_string(atom->getIdx());
+    check_enum(atom->getChiralTag(), RDKit::Atom::CHI_OCTAHEDRAL,
+               at + "'s ChiralType");
+    check_enum(atom->getHybridization(), RDKit::Atom::OTHER,
+               at + "'s HybridizationType");
+  }
+  for (const auto *bond : mol.bonds()) {
+    const auto at = which + "bond " + std::to_string(bond->getIdx());
+    check_enum(bond->getBondType(), RDKit::Bond::ZERO, at + "'s BondType");
+    check_enum(bond->getBondDir(), RDKit::Bond::UNKNOWN, at + "'s BondDir");
+    check_enum(bond->getStereo(), RDKit::Bond::STEREOATROPCCW,
+               at + "'s BondStereo");
+  }
+  for (const auto &group : mol.getStereoGroups()) {
+    check_enum(static_cast<int>(group.getGroupType()),
+               static_cast<int>(RDKit::StereoGroupType::STEREO_AND),
+               which + "stereo group's StereoGroupType");
+  }
+}
+
 }  // namespace
 
 // MolPickler pickles a recursive query's molecule as a whole molecule, and
 // reads it back the same way, so those molecules are checked too. Their
 // queries can nest without bound, so the walk keeps its own stack, and it
 // visits each query and molecule once.
-void check_monomer_types(const RDKit::ROMol &mol) {
+void check_pickled_mol(const RDKit::ROMol &mol) {
   using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
   std::vector<const RDKit::ROMol *> mols{&mol};
   std::vector<const AtomQuery *> queries;
@@ -139,6 +174,9 @@ void check_monomer_types(const RDKit::ROMol &mol) {
   while (!mols.empty()) {
     const auto *current = mols.back();
     mols.pop_back();
+    const std::string where =
+        current == &mol ? "" : "a recursive query's molecule's ";
+    check_enum_values(*current, where);
     const std::string which =
         current == &mol ? "atom " : "atom of a recursive query's molecule, ";
     for (const auto *atom : current->atoms()) {
@@ -265,6 +303,188 @@ void check_substance_group_parents(const RDKit::ROMol &mol) {
 void check_removals(const RDKit::ROMol &mol) {
   check_bond_end_points(mol);
   check_substance_group_parents(mol);
+}
+
+// A depth-first search of the graph whose edges lead from each group to
+// every group with its PARENT's index, with its own stack: a path in it is
+// a chain RDKit may follow.
+void check_removals(const std::vector<const RDKit::ROMol *> &mols) {
+  std::vector<const RDKit::SubstanceGroup *> groups;
+  for (const auto *mol : mols) {
+    check_removals(*mol);
+    for (const auto &sgroup : RDKit::getSubstanceGroups(*mol)) {
+      groups.push_back(&sgroup);
+    }
+  }
+  std::map<unsigned, std::vector<std::size_t>> by_index;
+  std::vector<const std::vector<std::size_t> *> next(groups.size(), nullptr);
+  std::vector<unsigned> parents(groups.size());
+  std::vector<char> has_parent(groups.size(), 0);
+  for (std::size_t i = 0; i < groups.size(); ++i) {
+    unsigned index;
+    if (groups[i]->getPropIfPresent("index", index)) {
+      by_index[index].push_back(i);
+    }
+    has_parent[i] = groups[i]->getPropIfPresent("PARENT", parents[i]);
+  }
+  for (std::size_t i = 0; i < groups.size(); ++i) {
+    if (has_parent[i]) {
+      auto found = by_index.find(parents[i]);
+      if (found != by_index.end()) {
+        next[i] = &found->second;
+      }
+    }
+  }
+  // 0: not reached, 1: on the stack, 2: done, with its longest chain.
+  std::vector<char> state(groups.size(), 0);
+  std::vector<unsigned> longest(groups.size(), 0);
+  std::vector<std::pair<std::size_t, std::size_t>> stack;
+  for (std::size_t start = 0; start < groups.size(); ++start) {
+    if (state[start]) {
+      continue;
+    }
+    state[start] = 1;
+    stack.emplace_back(start, 0);
+    while (!stack.empty()) {
+      const auto node = stack.back().first;
+      const auto pos = stack.back().second;
+      if (next[node] && pos < next[node]->size()) {
+        stack.back().second = pos + 1;
+        const auto child = (*next[node])[pos];
+        if (state[child] == 1) {
+          throw ValueErrorException(
+              "the substance groups' PARENT chains can form a cycle once "
+              "RDKit combines the molecules, which it would follow forever "
+              "when it removes an atom or bond");
+        }
+        if (state[child] == 0) {
+          state[child] = 1;
+          stack.emplace_back(child, 0);
+        }
+        continue;
+      }
+      unsigned length = 0;
+      if (next[node]) {
+        for (auto child : *next[node]) {
+          length = std::max(length, longest[child] + 1);
+        }
+      }
+      if (length > MAX_PARENT_CHAIN) {
+        throw ValueErrorException(
+            "the substance groups' PARENT chains can grow longer than " +
+            std::to_string(MAX_PARENT_CHAIN) +
+            " once RDKit combines the molecules, which RDKit follows "
+            "recursively");
+      }
+      longest[node] = length;
+      state[node] = 2;
+      stack.pop_back();
+    }
+  }
+}
+
+namespace {
+
+// The group, holding `bonds` instead of its own, with its ids.
+RDKit::StereoGroup with_bonds(const RDKit::StereoGroup &group,
+                              std::vector<RDKit::Bond *> bonds) {
+  RDKit::StereoGroup res(group.getGroupType(), group.getAtoms(), bonds,
+                         group.getReadId());
+  res.setWriteId(group.getWriteId());
+  return res;
+}
+
+}  // namespace
+
+// replaceBond deletes the old bond, so the groups' pointers to it are found
+// first, by position, and never read once it is gone.
+void replace_bond(RDKit::RWMol &mol, unsigned idx, RDKit::Bond *bond,
+                  bool preserve_props, bool keep_s_groups) {
+  const RDKit::Bond *old_bond =
+      idx < mol.getNumBonds() ? mol.getBondWithIdx(idx) : nullptr;
+  std::vector<std::vector<bool>> held;
+  bool any = false;
+  for (const auto &group : mol.getStereoGroups()) {
+    std::vector<bool> positions;
+    for (const auto *member : group.getBonds()) {
+      positions.push_back(member == old_bond);
+      any = any || member == old_bond;
+    }
+    held.push_back(std::move(positions));
+  }
+  mol.replaceBond(idx, bond, preserve_props, keep_s_groups);
+  if (!any) {
+    return;
+  }
+  auto *new_bond = mol.getBondWithIdx(idx);
+  const auto &groups = mol.getStereoGroups();
+  std::vector<RDKit::StereoGroup> updated;
+  updated.reserve(groups.size());
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    const auto &members = groups[g].getBonds();
+    std::vector<RDKit::Bond *> bonds;
+    bonds.reserve(members.size());
+    for (std::size_t i = 0; i < members.size(); ++i) {
+      bonds.push_back(held[g][i] ? new_bond : members[i]);
+    }
+    updated.push_back(with_bonds(groups[g], std::move(bonds)));
+  }
+  mol.setStereoGroups(std::move(updated));
+}
+
+bool has_stereo_group_bonds(const RDKit::ROMol &mol) {
+  for (const auto &group : mol.getStereoGroups()) {
+    if (!group.getBonds().empty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void clear_stereo_group_bonds(RDKit::ROMol &mol) {
+  if (!has_stereo_group_bonds(mol)) {
+    return;
+  }
+  std::vector<RDKit::StereoGroup> stripped;
+  for (const auto &group : mol.getStereoGroups()) {
+    stripped.push_back(with_bonds(group, {}));
+  }
+  mol.setStereoGroups(std::move(stripped));
+}
+
+StereoGroupBondGuard::StereoGroupBondGuard(RDKit::ROMol &mol) : d_mol(mol) {
+  if (!has_stereo_group_bonds(mol)) {
+    return;
+  }
+  for (const auto &group : mol.getStereoGroups()) {
+    std::vector<unsigned> indices;
+    for (const auto *bond : group.getBonds()) {
+      indices.push_back(bond->getIdx());
+    }
+    d_bonds.push_back(std::move(indices));
+  }
+  clear_stereo_group_bonds(mol);
+}
+
+// The guarded calls keep the groups and the bonds' indices; were they to
+// change, the groups would be left without bonds, which is safe.
+StereoGroupBondGuard::~StereoGroupBondGuard() {
+  const auto &groups = d_mol.getStereoGroups();
+  if (d_bonds.empty() || groups.size() != d_bonds.size()) {
+    return;
+  }
+  std::vector<RDKit::StereoGroup> restored;
+  restored.reserve(groups.size());
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    std::vector<RDKit::Bond *> bonds;
+    for (auto idx : d_bonds[g]) {
+      if (idx < d_mol.getNumBonds()) {
+        bonds.push_back(d_mol.getBondWithIdx(idx));
+      }
+    }
+    restored.push_back(with_bonds(groups[g], std::move(bonds)));
+  }
+  d_mol.setStereoGroups(std::move(restored));
 }
 
 }  // namespace rdkit_cxx

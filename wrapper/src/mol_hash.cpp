@@ -37,6 +37,9 @@ std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
     default:
       break;
   }
+  // The hashes write SMILES, and the scaffold and regioisomer hashes remove
+  // atoms or bonds, both of which trust what check_removals checks.
+  check_removals(mol);
   // As Code/GraphMol/MolHash/nbWrap/rdMolHash.cpp, which hashes a copy:
   // MolHash edits the molecule it is given.
   RWMol copy(mol);

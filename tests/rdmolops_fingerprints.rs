@@ -126,10 +126,13 @@ fn layered_and_pattern_fingerprints() {
     );
 
     let mut bundle = MolBundle::default();
+    // An empty bundle has no fingerprint (Python's None).
+    assert!(pattern_fingerprint_mol_bundle(&bundle).unwrap().is_none());
     bundle.add_mol(&smiles("CCO"));
     bundle.add_mol(&smiles("CCN"));
     assert_eq!(
         pattern_fingerprint_mol_bundle(&bundle)
+            .unwrap()
             .unwrap()
             .get_num_on_bits(),
         11

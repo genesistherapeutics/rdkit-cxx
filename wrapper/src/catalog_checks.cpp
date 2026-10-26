@@ -30,7 +30,7 @@ std::int32_t read_int32(std::istream &ss) {
 void check_entry_mol(std::istream &ss) {
   RDKit::ROMol mol;
   RDKit::MolPickler::molFromPickle(ss, mol);
-  check_monomer_types(mol);
+  check_pickled_mol(mol);
 }
 
 void check_entry_text(std::istream &ss, std::size_t size) {

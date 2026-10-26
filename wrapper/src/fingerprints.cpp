@@ -177,6 +177,11 @@ std::unique_ptr<BitVect> pattern_fingerprint_mol_bundle(
       bundle, params.fp_size,
       only_bits(params.has_set_only_bits, set_only_bits),
       params.tautomer_fingerprints));
+  // RDKit returns null for an empty bundle (Python's None), which
+  // wrap_bit_vect would dereference; Rust gets a null pointer instead.
+  if (!fp) {
+    return nullptr;
+  }
   return wrap_bit_vect(std::move(fp));
 }
 

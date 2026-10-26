@@ -120,18 +120,24 @@ void check_label(std::int64_t label) {
 // MCS alignment runs findMCS on the cores with RDKit's default bond
 // comparison, MCSBondCompareOrder, which indexes a table by both bonds'
 // types up to ZERO; a molecule pickle can carry any type up to 127, which
-// would be read past the table. doEnumeration enumerates the cores with
-// MolEnumerator, whose link nodes check_link_nodes checks (Python segfaults
-// on a link node over a double bond). doTautomers matches with RDKit's
-// TautomerQuery::substructOf, which reads a recursive query's matches past
-// their end (tautomer_checks.h; Python fails a precondition on a bond
-// between atoms it read there); RDKit makes its tautomer query of the core
+// would be read past the table (unpickling refuses one, check_pickled_mol;
+// this checks again in case another path sets one). doEnumeration enumerates
+// the cores with MolEnumerator, whose link nodes check_link_nodes checks
+// (Python segfaults on a link node over a double bond). doTautomers matches
+// with RDKit's TautomerQuery::substructOf, which reads a recursive query's
+// matches past their end (tautomer_checks.h; Python fails a precondition on a
+// bond between atoms it read there); RDKit makes its tautomer query of the core
 // less its terminal R groups, whose modified atoms are not known here, so
 // any recursive query is refused.
+//
+// The decomposition removes atoms from copies of the cores and of the
+// molecules it adds (their matching cores, replaceCore, getMolFrags, the
+// R groups' hydrogens), which trusts what check_removals checks.
 void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
                  const RDKit::RGroupDecompositionParameters &p) {
   bool mcs = !p.onlyMatchAtRGroups && (p.alignment & RDKit::MCS);
   for (const auto &core : cores) {
+    check_removals(*core);
     for (const auto *atom : core->atoms()) {
       // A label of another type, which RDKit's own read refuses too, is
       // left to RDKit.
@@ -254,12 +260,14 @@ std::unique_ptr<RGroupDecomposition> r_group_decomposition_new(
 
 std::int32_t r_group_decomposition_add(RGroupDecomposition &decomp,
                                        const RWMol &mol) {
+  check_removals(mol);
   Locks locks;
   return decomp.add(mol);
 }
 
 MatchingCoreResult r_group_decomposition_get_matching_core_idx(
     RGroupDecomposition &decomp, const RWMol &mol) {
+  check_removals(mol);
   std::vector<RDKit::MatchVectType> matches;
   int idx;
   {
@@ -313,6 +321,9 @@ RGroupDecomposeResult r_group_decompose(
     const RGroupDecompositionParametersData &params, bool as_rows) {
   auto t0 = std::chrono::steady_clock::now();
   RGroupDecomposeResult res{{std::make_unique<MolList>(), {}}, {}};
+  for (const auto &mol : mols.mols()) {
+    check_removals(*mol);
+  }
   Locks locks;
   auto decomp = make_decomposition(cores, params);
   std::uint32_t idx = 0;

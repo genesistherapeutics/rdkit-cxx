@@ -165,8 +165,12 @@ rule changes the rule first.
   never reads a file that changed after the check; PNG files are read and
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
-  for the limits U12 checks, and so are reaction pickles, which are molecule
-  pickles framed by counts and tags RDKit checks. Catalog pickles
+  for the limits U12 checks and a molecule pickle's enum values, which
+  MolPickler casts unchecked (bond types, directions, and stereo, atoms'
+  chiral tags and hybridizations, stereo groups' types) and which the Rust
+  enums cannot hold past RDKit's last value: `check_pickled_mol` refuses
+  them where U10 checks monomer types. So are reaction pickles, which are
+  molecule pickles framed by counts and tags RDKit checks. Catalog pickles
   (`MolCatalog`, `FragCatalog`, and their entries) frame molecule pickles
   with lengths and indices RDKit trusts, so `rdkit-cxx/catalog_checks.h`
   reads each as RDKit will, with RDKit's readers for the molecules and
@@ -335,7 +339,7 @@ rule changes the rule first.
   reaction pickles, `EnumerateLibrary` archives, and catalog pickles and
   archives that hold them) whose atoms have such an info, or a type
   `AtomMonomerType` lacks, are refused right after RDKit reads them
-  (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also checks the
+  (`check_pickled_mol` in `rdkit-cxx/mol_checks.h`, which also checks the
   molecules of recursive queries, as MolPickler pickles them whole, and
   walks the queries with its own stack). RDKit code may then trust the
   type; wrapper code that casts uses `dynamic_cast` all the same. RDKit code
@@ -374,6 +378,15 @@ rule changes the rule first.
   a stream that fails, so the wrappers own the output (a file they open, or
   the Rust writer), hand RDKit the stream without ownership, and check it
   after every call: a failed write is `Error::Os` from then on.
+- **U13.** `RWMol::replaceBond` deletes the bond it replaces but, unlike
+  `replaceAtom`, leaves the stereo groups that held it (an atropisomer's)
+  pointing at it, for copying, pickling, and the writers to read. So the
+  wrappers replace bonds with `replace_bond` (`rdkit-cxx/mol_checks.h`),
+  which points those groups at the new bond, and an RDKit call that replaces
+  bonds of a molecule Rust will see runs under a `StereoGroupBondGuard`,
+  which takes the bonds out of the groups and puts back those then at the
+  same indices (or on a copy whose groups hold no bonds, if nothing returns
+  it); `mol_checks.h` lists RDKit's calls and why the others need neither.
 
 ## Properties
 
@@ -392,9 +405,15 @@ rule changes the rule first.
   bond's `_MolFileBondEndPts` without checks and follows the substance
   groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
   wrapper whose RDKit call removes atoms or bonds from a molecule, or from
-  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
-  Where RDKit combines molecules before it removes from them (a synthon
-  space's products), their chains are checked together.
+  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first,
+  before any edit in place. Such calls include, besides the removals and
+  the functions named for them, everything that splits a molecule into its
+  fragments (`getMolFrags` with molecules, and so the SMILES writer for a
+  molecule of several fragments, and what writes SMILES: hashes, tautomer
+  enumeration, SMILES holders), the standardizer, and the embedder. Where
+  RDKit combines molecules before it removes from them (`molzip`,
+  `replaceSubstructs`, a synthon space's products), their chains are
+  checked together, since RDKit does not renumber the groups' indices.
   The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
   and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
 

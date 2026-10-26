@@ -186,8 +186,11 @@ std::mutex &brics_mutex() {
 
 // deleteSubstructs, replaceSubstructs, replaceSidechains, replaceCore with a
 // query, and fragmentOnBRICSBonds match substructures (control_c_lock.h).
+// These, MurckoDecompose, and the fragmenters remove atoms or bonds from a
+// copy of the molecule, which trusts what check_removals checks.
 std::unique_ptr<RWMol> delete_substructs(const RWMol &mol, const RWMol &query,
                                          bool only_frags, bool use_chirality) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_rwmol(
       RDKit::deleteSubstructs(mol, query, only_frags, use_chirality));
@@ -198,6 +201,9 @@ std::unique_ptr<MolList> replace_substructs(
     const RWMol &mol, const RWMol &query, const RWMol &replacement,
     bool replace_all, std::uint32_t replacement_connection_point,
     bool use_chirality) {
+  // The copy gains the replacement's substance groups before RDKit removes
+  // the match.
+  check_removals({&mol, &replacement});
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   auto results =
       RDKit::replaceSubstructs(mol, query, replacement, replace_all,
@@ -214,6 +220,7 @@ std::unique_ptr<MolList> replace_substructs(
 std::unique_ptr<RWMol> replace_sidechains(const RWMol &mol,
                                           const RWMol &core_query,
                                           bool use_chirality) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::replaceSidechains(mol, core_query, use_chirality));
 }
@@ -229,6 +236,7 @@ std::unique_ptr<RWMol> replace_core_with_matches(
     match.emplace_back(static_cast<int>(pair.first),
                        static_cast<int>(pair.second));
   }
+  check_removals(mol);
   return to_rwmol(RDKit::replaceCore(mol, core, match, replace_dummies,
                                      label_by_index, require_dummy_match));
 }
@@ -237,6 +245,7 @@ std::unique_ptr<RWMol> replace_core(const RWMol &mol, const RWMol &core_query,
                                     bool replace_dummies, bool label_by_index,
                                     bool require_dummy_match,
                                     bool use_chirality) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::replaceCore(mol, core_query, replace_dummies,
                                      label_by_index, require_dummy_match,
@@ -246,6 +255,7 @@ std::unique_ptr<RWMol> replace_core(const RWMol &mol, const RWMol &core_query,
 // MurckoDecompose computes the distance matrix on its const input, with
 // force, and reads its paths (U6).
 std::unique_ptr<RWMol> murcko_decompose(const RWMol &mol) {
+  check_removals(mol);
   MatrixCacheGuard guard(mol);
   return to_rwmol(RDKit::MurckoDecompose(mol));
 }
@@ -351,6 +361,7 @@ std::unique_ptr<RWMol> fragment_on_bonds(
     rust::Vec<std::uint32_t> &cuts_per_atom) {
   auto indices = check_fragment_args(mol, bond_indices, has_dummy_labels,
                                      dummy_labels, has_bond_types, bond_types);
+  check_removals(mol);
   auto labels = to_label_pairs(dummy_labels);
   std::vector<BondType> types(bond_types.begin(), bond_types.end());
   std::vector<unsigned> cuts(mol.getNumAtoms());
@@ -370,6 +381,7 @@ std::unique_ptr<MolList> fragment_on_some_bonds(
     rust::Vec<IndexList> &cuts_per_atom) {
   auto indices = check_fragment_args(mol, bond_indices, has_dummy_labels,
                                      dummy_labels, has_bond_types, bond_types);
+  check_removals(mol);
   auto labels = to_label_pairs(dummy_labels);
   std::vector<BondType> types(bond_types.begin(), bond_types.end());
   std::vector<std::vector<unsigned>> cuts;
@@ -392,6 +404,7 @@ std::unique_ptr<MolList> fragment_on_some_bonds(
 }
 
 std::unique_ptr<RWMol> fragment_on_brics_bonds(const RWMol &mol) {
+  check_removals(mol);
   std::lock_guard<std::mutex> lock(brics_mutex());
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::MolFragmenter::fragmentOnBRICSBonds(mol));
@@ -438,12 +451,16 @@ void check_zipped_depiction(const RDKit::MolzipParams &params, Zip zip) {
 
 }  // namespace
 
-// molzip returns null when it cannot zip.
+// molzip returns null when it cannot zip. It combines the molecules and then
+// removes their dummy atoms (check_removals); a list's fragments after the
+// first are written as SMILES first, which removes atoms from copies of a
+// fragment with several components.
 std::unique_ptr<RWMol> molzip(const RWMol &a, const RWMol &b,
                               const MolzipParamsData &data) {
   auto params = to_params(data);
   check_zip_labels(a, params, false);
   check_zip_labels(b, params, false);
+  check_removals({&a, &b});
   auto lock = lock_if_depicting(params);
   return to_rwmol(RDKit::molzip(a, b, params));
 }
@@ -452,6 +469,7 @@ std::unique_ptr<RWMol> molzip_single(const RWMol &a,
                                      const MolzipParamsData &data) {
   auto params = to_params(data);
   check_zip_labels(a, params, false);
+  check_removals(a);
   auto lock = lock_if_depicting(params);
   return to_rwmol(RDKit::molzip(a, params));
 }
@@ -472,6 +490,14 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
       break;
     }
   }
+  std::vector<const RDKit::ROMol *> parts;
+  for (const auto &mol : mols.mols()) {
+    parts.push_back(mol.get());
+    if (params.label == RDKit::MolzipLabel::FragmentOnBonds) {
+      break;
+    }
+  }
+  check_removals(parts);
   auto lock = lock_if_depicting(params);
   check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
     return RDKit::molzip(mols.mols(), probe);
@@ -497,6 +523,13 @@ std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
       check_zip_labels(*mol, params, true);
     }
   }
+  std::vector<const RDKit::ROMol *> parts;
+  for (const auto &[name, mol] : map) {
+    if (params.label != RDKit::MolzipLabel::FragmentOnBonds || name == "Core") {
+      parts.push_back(mol.get());
+    }
+  }
+  check_removals(parts);
   auto lock = lock_if_depicting(params);
   check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
     return RDKit::molzip(map, probe);

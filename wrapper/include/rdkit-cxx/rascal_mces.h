@@ -52,8 +52,9 @@ RDKit::RascalMCES::RascalOptions rascal_options_from(
 inline constexpr std::int64_t kRascalMaxSquared = 46340;
 
 // Checks molecules whose MCESs RDKit will compute, pairwise: each one's
-// matrices (check_matrix_size), and at most one with more than
-// kRascalMaxSquared atoms and bonds. Throws ValueErrorException.
+// matrices (check_matrix_size) and what its results' removals trust
+// (check_removals), and at most one with more than kRascalMaxSquared atoms
+// and bonds. Throws ValueErrorException.
 void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols);
 
 RascalOptionsData rascal_options_default();

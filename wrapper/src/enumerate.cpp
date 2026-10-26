@@ -495,7 +495,7 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_from_string(
   for (const auto &group : loaded.getReagents()) {
     for (const auto &mol : group) {
       if (mol) {
-        check_monomer_types(*mol);
+        check_pickled_mol(*mol);
       }
     }
   }

@@ -192,7 +192,7 @@ std::vector<const FilterMatcherBase *> parts(const FilterMatcherBase &matcher,
           "a SmartsMatcher without a pattern cannot be pickled");
     }
     if (walk == Walk::Load && pattern) {
-      check_monomer_types(*pattern);
+      check_pickled_mol(*pattern);
     }
   } else if (const auto *m = dynamic_cast<const And *>(&matcher)) {
     // A missing argument makes the matcher invalid, which RDKit checks.

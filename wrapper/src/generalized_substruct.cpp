@@ -5,7 +5,9 @@
 
 #include "rdkit-cxx/generalized_substruct.h"
 
+#include <cstdint>
 #include <cstring>
+#include <limits>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -15,10 +17,12 @@
 
 #include <GraphMol/MolBundle.h>
 #include <GraphMol/MolEnumerator/LinkNode.h>
+#include <GraphMol/MolEnumerator/MolEnumerator.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/Substruct/SubstructMatch.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/types.h>
+#include <boost/make_shared.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -165,7 +169,7 @@ void check_extended_query_mol(const XQ &query) {
             if (!mol) {
               throw ValueErrorException("an ExtendedQueryMol has no molecule");
             }
-            check_monomer_types(*mol);
+            check_pickled_mol(*mol);
           },
           [](const XQ::MolBundle_T &bundle) {
             if (!bundle || bundle->empty()) {
@@ -177,7 +181,7 @@ void check_extended_query_mol(const XQ &query) {
                 throw ValueErrorException(
                     "an ExtendedQueryMol's bundle has a null molecule");
               }
-              check_monomer_types(*mol);
+              check_pickled_mol(*mol);
             }
           },
           [](const XQ::TautomerQuery_T &query) {
@@ -343,8 +347,17 @@ std::unique_ptr<ExtendedQueryMol> extended_query_mol_clone(
       query.xqmol);
 }
 
+// ExtendedQueryMol::toBinary (TextIO.cpp) writes a tautomer bundle's size in
+// 16 bits and then every query, so a larger bundle (JSON can hold one, and
+// so can an enumeration) would read back as its first size mod 2^16 queries.
 rust::Vec<std::uint8_t> extended_query_mol_to_binary(
     const ExtendedQueryMol &query) {
+  if (const auto *bundle = std::get_if<XQ::TautomerBundle_T>(&query.xqmol);
+      bundle && *bundle &&
+      (*bundle)->size() > std::numeric_limits<std::uint16_t>::max()) {
+    throw ValueErrorException(
+        "RDKit's binary form holds at most 65535 tautomer queries");
+  }
   return to_bytes(query.toBinary());
 }
 
@@ -366,6 +379,70 @@ std::unique_ptr<BitVect> extended_query_mol_pattern_fingerprint_query(
   return wrap_bit_vect(std::move(fp));
 }
 
+namespace {
+
+// As MolOps::adjustQueryProperties(mol, params), which copies the molecule
+// and replaces its bonds with RWMol::replaceBond: that leaves the copy's
+// stereo groups pointing at the deleted bonds (replace_bond), so the copy's
+// groups are guarded.
+boost::shared_ptr<RDKit::ROMol> adjusted(
+    const RDKit::ROMol &mol,
+    const RDKit::MolOps::AdjustQueryParameters &params) {
+  auto res = boost::make_shared<RDKit::RWMol>(mol);
+  StereoGroupBondGuard guard(*res);
+  RDKit::MolOps::adjustQueryProperties(*res, &params);
+  return res;
+}
+
+// As GeneralizedSubstruct::createExtendedQueryMol in XQMol.cpp, with the
+// query properties adjusted by `adjusted` and the tautomer queries made by
+// make_tautomer_query, since RDKit's adjustQueryProperties and
+// TautomerQuery::fromMol leave stereo groups pointing at bonds they delete.
+XQ create_extended_query(const RDKit::ROMol &mol, bool do_enumeration,
+                         bool do_tautomers, bool adjust_query_properties,
+                         const RDKit::MolOps::AdjustQueryParameters &params) {
+  RDKit::MolBundle bundle;
+  if (do_enumeration) {
+    bundle = RDKit::MolEnumerator::enumerate(mol);
+  }
+  if (bundle.empty()) {
+    // Nothing enumerated: the molecule itself.
+    bundle.addMol(boost::make_shared<RDKit::ROMol>(mol));
+  }
+  RDKit::MolBundle adjusted_bundle;
+  for (const auto &bmol : bundle.getMols()) {
+    adjusted_bundle.addMol(adjust_query_properties ? adjusted(*bmol, params)
+                                                   : bmol);
+  }
+  if (adjusted_bundle.size() == 1) {
+    const auto &lmol = *adjusted_bundle.getMol(0);
+    if (do_tautomers) {
+      auto tq = make_tautomer_query(lmol);
+      if (tq->getTautomers().size() != 1) {
+        return XQ(std::move(tq));
+      }
+    }
+    // No tautomers, just one molecule.
+    return XQ(std::make_unique<RWMol>(lmol));
+  }
+  if (do_tautomers) {
+    bool had_tautomers = false;
+    auto queries =
+        std::make_unique<std::vector<std::unique_ptr<TautomerQuery>>>();
+    for (const auto &bmol : adjusted_bundle.getMols()) {
+      auto tq = make_tautomer_query(*bmol);
+      had_tautomers = had_tautomers || tq->getTautomers().size() > 1;
+      queries->push_back(std::move(tq));
+    }
+    if (had_tautomers) {
+      return XQ(std::move(queries));
+    }
+  }
+  return XQ(std::make_unique<RDKit::MolBundle>(adjusted_bundle));
+}
+
+}  // namespace
+
 std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
     const RWMol &mol, bool do_enumeration, bool do_tautomers,
     bool adjust_query_properties,
@@ -373,12 +450,18 @@ std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
   if (do_enumeration) {
     check_link_nodes(mol);
   }
+  // Enumerating removes atoms from copies (position variation, repeat
+  // units), and tautomer enumeration writes SMILES, which removes atoms from
+  // copies of a molecule of several fragments (check_removals); adjusting
+  // removes nothing.
+  if (do_enumeration || do_tautomers) {
+    check_removals(mol);
+  }
   // Tautomer enumeration matches its transforms (control_c_lock.h).
   std::unique_lock<std::mutex> control_c(control_c_mutex());
-  auto query =
-      std::make_unique<XQ>(RDKit::GeneralizedSubstruct::createExtendedQueryMol(
-          mol, do_enumeration, do_tautomers, adjust_query_properties,
-          adjust_query_params_from_data(adjust_query_parameters)));
+  auto query = std::make_unique<XQ>(create_extended_query(
+      mol, do_enumeration, do_tautomers, adjust_query_properties,
+      adjust_query_params_from_data(adjust_query_parameters)));
   check_extended_query_mol(*query);
   return query;
 }

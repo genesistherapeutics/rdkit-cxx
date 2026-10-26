@@ -32,7 +32,7 @@ std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
   } else {
     RDKit::MolPickler::molFromPickle(text, mol.get());
   }
-  check_monomer_types(*mol);
+  check_pickled_mol(*mol);
   return mol;
 }
 
@@ -174,14 +174,20 @@ unsigned rwmol_add_bond(RWMol &mol, unsigned begin_atom_idx,
   return num_bonds;
 }
 
+// RWMol's removals parse the bonds' _MolFileBondEndPts and follow the
+// substance groups' PARENT chains unchecked (check_removals), so they are
+// checked before anything is removed. In a batch the removals happen at the
+// commit, which checks again.
 void rwmol_remove_atom(RWMol &mol, unsigned idx) {
   check_index(idx, mol.getNumAtoms());
+  check_removals(mol);
   mol.removeAtom(idx);
 }
 
 void rwmol_remove_bond(RWMol &mol, unsigned idx1, unsigned idx2) {
   check_index(idx1, mol.getNumAtoms());
   check_index(idx2, mol.getNumAtoms());
+  check_removals(mol);
   mol.removeBond(idx1, idx2);
   clear_matrix_caches(mol);
 }
@@ -197,9 +203,15 @@ void rwmol_replace_atom(RWMol &mol, unsigned index, const Atom &new_atom,
 void rwmol_replace_bond(RWMol &mol, unsigned index, const Bond &new_bond,
                         bool preserve_props, bool keep_s_groups) {
   check_index(index, mol.getNumBonds());
-  // replaceBond copies the bond.
-  mol.replaceBond(index, const_cast<Bond *>(&new_bond), preserve_props,
-                  keep_s_groups);
+  if (!keep_s_groups) {
+    // replaceBond then removes the substance groups that hold the bond as
+    // a bond removal does, following their PARENT chains unchecked.
+    check_removals(mol);
+  }
+  // replaceBond copies the bond. RDKit's would leave a stereo group that
+  // held the old bond pointing at it, deleted (replace_bond).
+  replace_bond(mol, index, const_cast<Bond *>(&new_bond), preserve_props,
+               keep_s_groups);
 }
 
 void rwmol_insert_mol(RWMol &mol, const RWMol &other) {
@@ -209,7 +221,11 @@ void rwmol_insert_mol(RWMol &mol, const RWMol &other) {
 
 void rwmol_begin_batch_edit(RWMol &mol) { mol.beginBatchEdit(); }
 
-void rwmol_commit_batch_edit(RWMol &mol) { mol.commitBatchEdit(); }
+// A failed check leaves the batch open and the molecule as it was.
+void rwmol_commit_batch_edit(RWMol &mol) {
+  check_removals(mol);
+  mol.commitBatchEdit();
+}
 
 void rwmol_rollback_batch_edit(RWMol &mol) { mol.rollbackBatchEdit(); }
 

@@ -101,6 +101,10 @@ std::vector<MatchVectType> all_matches(const ROMol &prb, const ROMol &ref,
   std::unique_ptr<RDKit::RWMol> symmetrized;
   if (symmetrize) {
     symmetrized = std::make_unique<RDKit::RWMol>(prb);
+    // symmetrizeTerminalAtoms replaces bonds with RWMol::replaceBond, which
+    // leaves stereo groups pointing at the bonds it deletes (replace_bond);
+    // the copy is only matched, without its groups' bonds.
+    clear_stereo_group_bonds(*symmetrized);
     std::lock_guard<std::mutex> lock(symmetrize_mutex());
     MolAlign::details::symmetrizeTerminalAtoms(*symmetrized);
   }

@@ -10,8 +10,10 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 #include <GraphMol/ROMol.h>
+#include <GraphMol/RWMol.h>
 
 namespace rdkit_cxx {
 
@@ -76,13 +78,21 @@ class DescriptorCacheGuard {
   const RDKit::ROMol &d_mol;
 };
 
-// RDKit takes a monomer info's type for its class and casts an info of type
-// PDBRESIDUE to AtomPDBResidueInfo, so only one of those may have it
-// (CONVENTIONS.md U10). A pickle can give an atom a plain info of that type,
-// or a type AtomMonomerType lacks; throws ValueErrorException for either,
-// in the molecule or in the molecules of its recursive queries, which RDKit
-// pickles as molecules.
-void check_monomer_types(const RDKit::ROMol &mol);
+// What a molecule pickle, which MolPickler reads without these checks, can
+// give a molecule that RDKit or Rust trusts:
+// - RDKit takes a monomer info's type for its class and casts an info of
+//   type PDBRESIDUE to AtomPDBResidueInfo, so only one of those may have it
+//   (CONVENTIONS.md U10). A pickle can give an atom a plain info of that
+//   type, or a type AtomMonomerType lacks.
+// - MolPickler casts the bytes it reads for atoms' chiral tags and
+//   hybridizations, bonds' types, directions, and stereo, and stereo
+//   groups' types to the enums unchecked, and the Rust enums have no
+//   variant for a value RDKit's lacks (U2).
+// Throws ValueErrorException for any of these, in the molecule or in the
+// molecules of its recursive queries, which RDKit pickles as molecules.
+// Every wrapper that reads a molecule pickle, alone or inside another
+// format, calls it on the molecules it read.
+void check_pickled_mol(const RDKit::ROMol &mol);
 
 // RWMol::removeAtom and batchRemoveAtoms (so commitBatchEdit too) rewrite
 // every bond's _MolFileBondEndPts, a property any caller can set: they read
@@ -108,5 +118,64 @@ void check_substance_group_parents(const RDKit::ROMol &mol);
 // bonds from it (or a copy): check_bond_end_points and
 // check_substance_group_parents.
 void check_removals(const RDKit::ROMol &mol);
+
+// As check_removals, for an RDKit call that combines the molecules
+// (insertMol, combineMols) and then removes atoms or bonds: RDKit does not
+// renumber the substance groups' indices, so the combination's PARENT
+// chains can run through the groups of several molecules. Which group an
+// index finds depends on which molecules RDKit combines and in what order
+// (molzip leaves out fragments whose SMILES repeat), so this follows every
+// group with the PARENT's index, and refuses a cycle or a chain longer than
+// MAX_PARENT_CHAIN through any of them.
+void check_removals(const std::vector<const RDKit::ROMol *> &mols);
+
+// RWMol::replaceBond deletes the bond it replaces but, unlike replaceAtom,
+// leaves the molecule's stereo groups (an atropisomer's group holds its bond)
+// pointing at it, a pointer that copying, pickling, stereo perception, and
+// the CXSMILES and mol-block writers then read (CONVENTIONS.md U13).
+//
+// RDKit's own calls of it that the wrappers reach, where a group can hold
+// the bond and be read after, are guarded: adjustQueryProperties
+// (adjust_query.cpp, generalized_substruct.cpp, reactions' adjust_templates,
+// and the depictor's allowRGroups) and TautomerQuery::fromMol (replaced by
+// tautomer_query.cpp's own). MolInterchange's reader is refused such a
+// document (mol_interchange.cpp). The others leave no pointer that is read:
+// MolFragmenter replaces bonds it has just added; ReactionRunner's products'
+// groups hold no bonds; the mol-file parser replaces coordinate bonds before
+// stereo perception puts bonds in groups; the adjustments of R-group
+// decomposition's prepareCore and of the abbreviations replace no bonds; and
+// the copies that symmetrizeTerminalAtoms (in the embedder's pruning) and
+// R-group decomposition (its matching core, and its tautomer query's
+// template) replace bonds in are only matched, which reads groups' atoms.
+
+// As RWMol::replaceBond, and then points the stereo groups that held the old
+// bond at the new one, as replaceAtom does for atoms.
+void replace_bond(RDKit::RWMol &mol, unsigned idx, RDKit::Bond *bond,
+                  bool preserve_props, bool keep_s_groups);
+
+// Whether any of the molecule's stereo groups holds a bond.
+bool has_stereo_group_bonds(const RDKit::ROMol &mol);
+
+// Takes the bonds out of the molecule's stereo groups, for a copy that an
+// RDKit call replaces bonds in and that nothing returns afterwards.
+void clear_stereo_group_bonds(RDKit::ROMol &mol);
+
+// Takes the bonds out of the molecule's stereo groups when it is made, for
+// an RDKit call that replaces bonds without renumbering bonds or stereo
+// groups (adjustQueryProperties), and when it is destroyed, even when the
+// call throws, puts back into each group the bonds now at the indices it
+// held, as replace_bond does.
+class StereoGroupBondGuard {
+ public:
+  explicit StereoGroupBondGuard(RDKit::ROMol &mol);
+  ~StereoGroupBondGuard();
+  StereoGroupBondGuard(const StereoGroupBondGuard &) = delete;
+  StereoGroupBondGuard &operator=(const StereoGroupBondGuard &) = delete;
+
+ private:
+  RDKit::ROMol &d_mol;
+  // Each group's bond indices; empty when no group held a bond.
+  std::vector<std::vector<unsigned>> d_bonds;
+};
 
 }  // namespace rdkit_cxx

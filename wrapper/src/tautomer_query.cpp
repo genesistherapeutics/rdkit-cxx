@@ -99,7 +99,11 @@ std::unique_ptr<TautomerQuery> from_mol(
   for (auto idx : modified_bonds) {
     RDKit::QueryBond query_bond;
     query_bond.setQuery(RDKit::makeSingleOrDoubleOrAromaticBondQuery());
-    templ->replaceBond(idx, &query_bond, true);
+    // RDKit's replaceBond would leave a stereo group that held the bond
+    // pointing at it, deleted, for pickling and copying to read.
+    const bool preserve_props = true;
+    const bool keep_s_groups = true;
+    replace_bond(*templ, idx, &query_bond, preserve_props, keep_s_groups);
   }
 
   // As fromMol: the enumerator's quick copies lack the molecule's
@@ -205,14 +209,14 @@ rust::Vec<std::uint32_t> to_indices(const std::vector<size_t> &indices) {
 // indices.
 void check_tautomer_query(const TautomerQuery &query) {
   const auto &templ = query.getTemplateMolecule();
-  check_monomer_types(templ);
+  check_pickled_mol(templ);
   const auto num_atoms = templ.getNumAtoms();
   const auto tautomers = query.getTautomers();
   for (const auto &tautomer : tautomers) {
     if (!tautomer) {
       throw ValueErrorException("a TautomerQuery has a null tautomer");
     }
-    check_monomer_types(*tautomer);
+    check_pickled_mol(*tautomer);
     if (tautomer->getNumAtoms() != num_atoms) {
       throw ValueErrorException(
           "a tautomer and its query's template have different numbers of "
@@ -316,9 +320,18 @@ std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
   MolStandardize::TautomerCatalogParams params(
       to_path(tautomer_transform_file));
   check_transforms(params);
+  // The enumerator writes the molecule and its tautomers as SMILES, which
+  // removes atoms from copies of a molecule of several fragments.
+  check_removals(mol);
   // The enumerator matches its transforms (control_c_lock.h).
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return from_mol(mol, params);
+}
+
+std::unique_ptr<TautomerQuery> make_tautomer_query(const RDKit::ROMol &query) {
+  // An empty path reads RDKit's default transforms, as fromMol's default.
+  MolStandardize::TautomerCatalogParams params("");
+  return from_mol(query, params);
 }
 
 std::unique_ptr<TautomerQuery> tautomer_query_from_pickle(

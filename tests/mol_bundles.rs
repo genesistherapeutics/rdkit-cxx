@@ -146,7 +146,7 @@ fn editable_mol() {
     assert_eq!(em.get_mol().get_num_atoms(), 3);
     em.begin_batch_edit().unwrap();
     em.remove_atom(0).unwrap();
-    em.commit_batch_edit();
+    em.commit_batch_edit().unwrap();
     assert_eq!(em.get_mol().get_num_atoms(), 2);
 
     em.replace_atom(0, &Atom::from_num(7)).unwrap();

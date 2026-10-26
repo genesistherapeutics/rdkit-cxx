@@ -55,7 +55,9 @@ void check_erg_arguments(const RDKit::ROMol &mol, std::int32_t min_path,
 
 // The reduced graph marks features found by substructure matches
 // (control_c_lock.h).
+// It removes atoms from a copy of the molecule (check_removals).
 std::unique_ptr<RWMol> reduced_graph(const RWMol &mol) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::ROMol> graph(
       RDKit::ReducedGraphs::generateMolExtendedReducedGraph(mol));

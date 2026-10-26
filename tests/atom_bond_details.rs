@@ -240,7 +240,7 @@ fn rwmol_details() {
     batch.remove_atom(3).unwrap();
     // Removals wait for the commit, so indices stay valid.
     assert_eq!(batch.get_num_atoms(), 4);
-    batch.commit_batch_edit();
+    batch.commit_batch_edit().unwrap();
     assert_eq!(mol_to_smiles(&batch).unwrap(), "CC");
     batch.begin_batch_edit().unwrap();
     batch.remove_atom(0).unwrap();

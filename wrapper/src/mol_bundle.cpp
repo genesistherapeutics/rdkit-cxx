@@ -45,7 +45,7 @@ std::unique_ptr<MolList> mol_bundle_from_pkl_string(
       std::string(reinterpret_cast<const char *>(pkl.data()), pkl.size()));
   auto list = std::make_unique<MolList>();
   for (const auto &mol : bundle.getMols()) {
-    check_monomer_types(*mol);
+    check_pickled_mol(*mol);
     list->push(std::make_unique<RWMol>(*mol));
   }
   return list;

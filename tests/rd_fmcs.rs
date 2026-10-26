@@ -768,23 +768,16 @@ fn unhex(text: &str) -> Vec<u8> {
 #[test]
 fn unknown_bond_types_are_refused() {
     // Python's pickle of C=C with the bond's type byte set to 30, past
-    // Bond::ZERO, which RDKit's order comparisons read past their table.
+    // Bond::ZERO, which RDKit's order comparisons would read past their
+    // table. The pickle itself is refused (check_pickled_mol), so no such
+    // bond reaches FindMCS.
     let pkl = unhex(concat!(
         "efbeadde00000000100000000400000000000000020000000100000080010600",
         "680000000302020600680000000302020b0001081e4200000000170400000000",
         "00000016"
     ));
-    let odd = Mol::from_pkl_string(&pkl).unwrap();
-    let pair = [odd.clone(), odd];
-    for compare in [BondCompare::CompareOrder, BondCompare::CompareOrderExact] {
-        let result = find_mcs_with_params(&pair, &with(|p| p.bond_typer = compare.into()));
-        assert!(matches!(result, Err(Error::Value { .. })), "{compare:?}");
+    match Mol::from_pkl_string(&pkl) {
+        Err(Error::Value { message }) => assert!(message.contains("BondType"), "{message}"),
+        other => panic!("{other:?}"),
     }
-    // CompareAny does not read the type.
-    let any = find_mcs_with_params(
-        &pair,
-        &with(|p| p.bond_typer = BondCompare::CompareAny.into()),
-    )
-    .unwrap();
-    assert_eq!((any.num_atoms(), any.num_bonds()), (2, 1));
 }
