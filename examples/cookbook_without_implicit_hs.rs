@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let mut m = mol_from_smiles("[Pt](Cl)(Cl)(N)N")?;
-    // The nitrogens are labelled H3N and NH3.
+    // The nitrogens are labeled H3N and NH3.
     let svg = show(&m, MOL_SIZE, &console)?;
     write_image("without_implicit_hs_default.svg", &svg)?;
     assert_eq!(label_lengths(&svg), [2, 2, 2, 3, 3]);

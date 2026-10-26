@@ -228,15 +228,17 @@ def test_paths_source():
     # parameters, where `let _ = f;` cannot infer the type.
     assert "use rdkit_cxx::rd_base::disable_log as _;" in source
     assert "let _: Option<rdkit_cxx::chem::Mol> = None;" in source
-    assert "let _ = rdkit_cxx::chem::Mol::get_num_atoms;" in source
-    assert "let _ = rdkit_cxx::chem::BondType::Single;" in source
-    assert "let _ = rdkit_cxx::chem::SanitizeFlags::SANITIZE_ALL;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::get_num_atoms;" in source
+    assert "let _ = <rdkit_cxx::chem::BondType>::Single;" in source
+    assert "let _ = <rdkit_cxx::chem::SanitizeFlags>::SANITIZE_ALL;" in source
     assert "let _ = |value: &rdkit_cxx::geometry::Point3D| { let _ = &value.x; };" in source
-    assert "let _ = rdkit_cxx::chem::Mol::from_file::<&str>;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::from_file::<&str>;" in source
     # A list gives each path its own generics.
-    assert "let _ = rdkit_cxx::chem::Mol::default;" in source
-    assert "let _ = rdkit_cxx::chem::Mol::from_reader::<std::fs::File>;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::default;" in source
+    assert "let _ = <rdkit_cxx::chem::Mol>::from_reader::<std::fs::File>;" in source
     assert "__repr__" not in source
+    # A qualified path applies a generic type's default parameters.
+    assert "<rdkit_cxx::chem::Mol>::get_num_atoms" in source
 
 
 def test_a_module_reason_covers_its_names():

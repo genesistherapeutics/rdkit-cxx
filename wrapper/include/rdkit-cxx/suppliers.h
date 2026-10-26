@@ -79,12 +79,15 @@ class MultithreadedSDMolSupplier {
   SupplierInput input;
   std::unique_ptr<RDKit::v2::FileParsers::MultithreadedSDMolSupplier> suppl;
   bool started = false;
+  // Whether starting its threads failed (suppliers.cpp, mt_next).
+  bool broken = false;
 };
 
 class MultithreadedSmilesMolSupplier {
  public:
   SupplierInput input;
   std::unique_ptr<RDKit::v2::FileParsers::MultithreadedSmilesMolSupplier> suppl;
+  bool broken = false;
 };
 
 // Shared structs, defined by the bridge (src/ffi/suppliers.rs).

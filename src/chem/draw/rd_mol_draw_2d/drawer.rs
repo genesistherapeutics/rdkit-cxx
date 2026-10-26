@@ -47,9 +47,9 @@ pub struct DrawMoleculeParams {
     /// Bonds to highlight; `None` highlights those between highlighted
     /// atoms (Python's first overload).
     pub highlight_bonds: Option<Vec<u32>>,
-    /// Highlight colours of atoms, by index.
+    /// Highlight colors of atoms, by index.
     pub highlight_atom_colors: BTreeMap<u32, DrawColour>,
-    /// Highlight colours of bonds, by index.
+    /// Highlight colors of bonds, by index.
     pub highlight_bond_colors: BTreeMap<u32, DrawColour>,
     /// Highlight radii of atoms, by index, in molecule coordinates.
     pub highlight_atom_radii: BTreeMap<u32, f64>,
@@ -81,9 +81,9 @@ pub struct GetMolSizeParams {
     pub highlight_atoms: Vec<u32>,
     /// Bonds to highlight.
     pub highlight_bonds: Vec<u32>,
-    /// Highlight colours of atoms, by index.
+    /// Highlight colors of atoms, by index.
     pub highlight_atom_colors: BTreeMap<u32, DrawColour>,
-    /// Highlight colours of bonds, by index.
+    /// Highlight colors of bonds, by index.
     pub highlight_bond_colors: BTreeMap<u32, DrawColour>,
     /// Highlight radii of atoms, by index, in molecule coordinates.
     pub highlight_atom_radii: BTreeMap<u32, f64>,
@@ -117,9 +117,9 @@ pub struct DrawMoleculesParams {
     /// Bonds to highlight in each molecule; without them, and with
     /// `continuous_highlight`, the bonds between highlighted atoms.
     pub highlight_bonds: Option<Vec<Vec<u32>>>,
-    /// Highlight colours of each molecule's atoms.
+    /// Highlight colors of each molecule's atoms.
     pub highlight_atom_colors: Option<Vec<BTreeMap<u32, DrawColour>>>,
-    /// Highlight colours of each molecule's bonds.
+    /// Highlight colors of each molecule's bonds.
     pub highlight_bond_colors: Option<Vec<BTreeMap<u32, DrawColour>>>,
     /// Highlight radii of each molecule's atoms.
     pub highlight_atom_radii: Option<Vec<BTreeMap<u32, f64>>>,
@@ -134,9 +134,9 @@ pub struct DrawMoleculesParams {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct DrawReactionParams {
     /// Highlights each reactant's mapped atoms, and the product atoms they
-    /// map to, in a colour of its own.
+    /// map to, in a color of its own.
     pub highlight_by_reactant: bool,
-    /// The reactants' colours, in turn; `None` for the options'
+    /// The reactants' colors, in turn; `None` for the options'
     /// `highlight_colour_palette`.
     pub highlight_colors_reactants: Option<Vec<DrawColour>>,
     /// The conformer of each reactant, product, and agent, by its position
@@ -254,7 +254,7 @@ impl MolDraw2D {
         Ok(ffi::drawer_set_offset(self.pin_mut(), x, y)?)
     }
 
-    /// Sets the colour of drawing and filling. Mirrors `MolDraw2D.SetColour`;
+    /// Sets the color of drawing and filling. Mirrors `MolDraw2D.SetColour`;
     /// `Error::Value` unless every component is from 0 to 1, and
     /// `Error::Runtime` for a Cairo drawer on a flexible canvas before
     /// anything is drawn on it, as in Python.
@@ -262,7 +262,7 @@ impl MolDraw2D {
         Ok(ffi::drawer_set_colour(self.pin_mut(), &tpl)?)
     }
 
-    /// Fills the drawing with the background colour. Mirrors
+    /// Fills the drawing with the background color. Mirrors
     /// `MolDraw2D.ClearDrawing`; `Error::Value` on a flexible canvas before
     /// anything is drawn on it, which RDKit would set up at -1 by -1
     /// pixels, for good.
@@ -301,7 +301,7 @@ impl MolDraw2D {
     /// Draws a molecule with highlights, a conformer, or a legend. Mirrors
     /// `MolDraw2D.DrawMolecule`, both overloads (see `DrawMoleculeParams`).
     /// `Error::Index` for a highlighted atom or bond past the end, and
-    /// `Error::Value` for a missing conformer, a colour outside 0 to 1, or
+    /// `Error::Value` for a missing conformer, a color outside 0 to 1, or
     /// a radius outside 0 to 16, and as `draw_molecule`.
     pub fn draw_molecule_with_params(
         &mut self,
@@ -324,16 +324,16 @@ impl MolDraw2D {
         )?)
     }
 
-    /// Draws a molecule with highlights of several colours: each atom in
+    /// Draws a molecule with highlights of several colors: each atom in
     /// `highlight_atom_map` and bond in `highlight_bond_map` with its
-    /// colours, in the `multi_colour_highlight_style` of the options, atoms
+    /// colors, in the `multi_colour_highlight_style` of the options, atoms
     /// with the radii in `highlight_radii` (else `highlight_radius`) and
     /// bonds with their line widths multiplied as in
     /// `highlight_linewidth_multipliers`. Mirrors
     /// `MolDraw2D.DrawMoleculeWithHighlights`.
     ///
     /// `Error::Index` for an atom or bond past the end, and `Error::Value`
-    /// for a colour outside 0 to 1, a radius not above 0 or beyond 16 (or a
+    /// for a color outside 0 to 1, a radius not above 0 or beyond 16 (or a
     /// `highlight_radius` of 0: RDKit grows a highlight of no radius until
     /// it meets its bonds, which never happens), a multiplier outside 0 to
     /// 64, and as `draw_molecule`.
@@ -489,9 +489,9 @@ impl MolDraw2D {
 
     /// As `draw_reaction`, with highlights or conformers. Mirrors
     /// `MolDraw2D.DrawReaction`; `Error::Value` for an empty list of
-    /// colours with `highlight_by_reactant` (RDKit takes each reactant's
-    /// colour modulo their number), fewer conformer ids than the largest
-    /// group of templates, or a colour outside 0 to 1.
+    /// colors with `highlight_by_reactant` (RDKit takes each reactant's
+    /// color modulo their number), fewer conformer ids than the largest
+    /// group of templates, or a color outside 0 to 1.
     pub fn draw_reaction_with_params(
         &mut self,
         rxn: &ChemicalReaction,
@@ -541,7 +541,7 @@ impl MolDraw2D {
         Ok((size.width, size.height))
     }
 
-    /// Draws a line in the current colour, from points in the molecule's
+    /// Draws a line in the current color, from points in the molecule's
     /// frame (by the last molecule drawn, or `set_scale`). Mirrors
     /// `MolDraw2D.DrawLine(cds1, cds2)`; see the free-drawing errors in the
     /// module documentation.
@@ -571,7 +571,7 @@ impl MolDraw2D {
         self.draw_arrow_with_params(cds1, cds2, &DrawArrowParams::default())
     }
 
-    /// As `draw_arrow`, with the head's shape and colour. Mirrors
+    /// As `draw_arrow`, with the head's shape and color. Mirrors
     /// `MolDraw2D.DrawArrow`; `Error::Runtime` for an angle not above 1e-6
     /// (RDKit's check), and `Error::Value` for a head whose points come out
     /// beyond the coordinate bounds.
@@ -593,7 +593,7 @@ impl MolDraw2D {
         )?)
     }
 
-    /// Draws a triangle in the current colour, filled when `fill_polys`
+    /// Draws a triangle in the current color, filled when `fill_polys`
     /// is. Mirrors `MolDraw2D.DrawTriangle(cds1, cds2, cds3)`.
     pub fn draw_triangle(&mut self, cds1: &Point2D, cds2: &Point2D, cds3: &Point2D) -> Result<()> {
         self.draw_triangle_with_raw_coords(cds1, cds2, cds3, false)
@@ -791,7 +791,7 @@ impl MolDraw2D {
         )?)
     }
 
-    /// Draws text centred on `pos`, laid out as an atom label is (split at
+    /// Draws text centered on `pos`, laid out as an atom label is (split at
     /// its atoms and charges, `<sub>` and `<sup>` markup read). Mirrors
     /// `MolDraw2D.DrawString(string, pos)`; `Error::Value` for text atom
     /// labels may not have (see the module documentation).
@@ -914,7 +914,7 @@ pub struct DrawArrowParams {
     pub frac: f64,
     /// The angle between the line and each side of the head, in radians.
     pub angle: f64,
-    /// The arrow's colour (Python's `None` is black).
+    /// The arrow's color (Python's `None` is black).
     pub color: DrawColour,
     /// Takes the points in pixels.
     pub raw_coords: bool,
@@ -1300,9 +1300,9 @@ pub struct PrepareAndDrawMoleculeParams {
     pub highlight_atoms: Vec<u32>,
     /// Bonds to highlight.
     pub highlight_bonds: Vec<u32>,
-    /// Highlight colours of atoms, by index.
+    /// Highlight colors of atoms, by index.
     pub highlight_atom_colors: BTreeMap<u32, DrawColour>,
-    /// Highlight colours of bonds, by index.
+    /// Highlight colors of bonds, by index.
     pub highlight_bond_colors: BTreeMap<u32, DrawColour>,
     /// Highlight radii of atoms, by index, in molecule coordinates.
     pub highlight_atom_radii: BTreeMap<u32, f64>,
@@ -1369,9 +1369,9 @@ pub struct DrawMoleculeACS1996Params {
     pub highlight_atoms: Vec<u32>,
     /// Bonds to highlight (none are highlighted for the atoms alone).
     pub highlight_bonds: Vec<u32>,
-    /// Highlight colours of atoms, by index.
+    /// Highlight colors of atoms, by index.
     pub highlight_atom_colors: BTreeMap<u32, DrawColour>,
-    /// Highlight colours of bonds, by index.
+    /// Highlight colors of bonds, by index.
     pub highlight_bond_colors: BTreeMap<u32, DrawColour>,
     /// Highlight radii of atoms, by index, in molecule coordinates.
     pub highlight_atom_radii: BTreeMap<u32, f64>,
@@ -1533,7 +1533,7 @@ pub fn update_drawer_params_from_json(drawer: &mut MolDraw2D, json: &str) -> Res
     Ok(ffi::drawer_update_params_from_json(drawer.pin_mut(), json)?)
 }
 
-/// Sets dark-mode colours on the drawer's options. Mirrors
+/// Sets dark-mode colors on the drawer's options. Mirrors
 /// `rdMolDraw2D.SetDarkMode(MolDraw2D)`.
 pub fn set_dark_mode_mol_draw_2d(d2d: &mut MolDraw2D) {
     ffi::drawer_set_dark_mode(d2d.pin_mut());

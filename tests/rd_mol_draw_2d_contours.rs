@@ -279,7 +279,7 @@ fn grids_are_checked() {
         .unwrap();
     contour_and_draw_grid_with_params(&mut drawn, &data, &xs, &ys, &unscaled).unwrap();
 
-    // Values RDKit's fill would make NaN colours of, which the SVG drawer
+    // Values RDKit's fill would make NaN colors of, which the SVG drawer
     // converts to int.
     for bad in [f64::NAN, f64::INFINITY, 1e301] {
         let mut values = data.clone();

@@ -9,6 +9,7 @@
 //! other submodules are reached by path, as in Python.
 
 pub mod all_chem;
+pub mod atom_pairs;
 pub mod brics;
 pub mod build_fragment_catalog;
 pub mod chem_utils;
@@ -16,6 +17,9 @@ pub mod chemical_features;
 pub mod draw;
 pub mod enumerate_heterocycles;
 pub mod enumerate_stereoisomers;
+pub mod feat_finder_cli;
+pub mod feat_maps;
+pub mod features;
 pub mod filter_catalog;
 pub mod fraggle;
 pub mod fragment_catalog;
@@ -25,9 +29,12 @@ pub mod graphs;
 pub mod inchi;
 mod init;
 pub mod lipinski;
+pub mod maccs_keys;
 pub mod mol_key;
 pub mod mol_standardize;
+pub mod pharm_2d;
 mod py_compat;
+mod py_math;
 pub mod randomize;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
@@ -83,6 +90,7 @@ pub mod satis;
 pub mod scaffolds;
 pub mod simple_enum;
 pub mod template_align;
+pub mod torsion_fingerprints;
 
 pub use inchi::{
     InchiLogLevel, MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key,

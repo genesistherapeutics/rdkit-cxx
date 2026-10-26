@@ -11,7 +11,7 @@ cargo run --example cookbook_hybridization
 The drawing recipes write their images to `target/cookbook/`. Where a recipe
 shows a molecule in Jupyter, the example draws it as Jupyter does
 (`IPythonConsole`'s `molSize` and `drawOptions`), as an SVG, and checks what
-the drawing holds: the indices, notes, CIP labels, highlights, and colours
+the drawing holds: the indices, notes, CIP labels, highlights, and colors
 the recipe adds. Where the recipe draws with `MolDraw2DCairo`, the example
 writes the PNG and checks its size.
 

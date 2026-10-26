@@ -129,7 +129,7 @@ fn nothing_to_enumerate_and_errors() {
 }
 
 // Position variation removes the dummy atom before the link nodes are
-// labelled, which brings the node's atoms to indices 62 to 64.
+// labeled, which brings the node's atoms to indices 62 to 64.
 #[test]
 fn position_variation_then_link_nodes() {
     let mut mol = smiles("*Cl.c1ccccc1OCN |m:0:2.3|");
