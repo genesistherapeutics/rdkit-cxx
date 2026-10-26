@@ -24,7 +24,8 @@ use crate::{Error, Result};
 
 /// The functional groups `build_catalog` removes by default: RDKit's
 /// `Data/FunctionalGroups.txt`.
-const DEFAULT_FUNCTIONAL_GROUPS: &str = include_str!("data/FunctionalGroups.txt");
+const DEFAULT_FUNCTIONAL_GROUPS: &str =
+    include_str!("../../wrapper/third_party/rdkit/Data/FunctionalGroups.txt");
 
 /// Where the molecules' activities come from. Python's `actName` and `acts`
 /// arguments.

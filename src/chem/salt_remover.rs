@@ -7,8 +7,9 @@
 //! fragments, as definitions of salts match them, from molecules.
 //!
 //! Python reads its default salts from `Salts.txt` in RDKit's data
-//! directory; the crate embeds that file (`src/chem/data/Salts.txt`), so
-//! the default needs no data directory.
+//! directory; the crate embeds that file
+//! (`wrapper/third_party/rdkit/Data/Salts.txt`), so the default needs no data
+//! directory.
 
 use std::path::{Path, PathBuf};
 
@@ -19,7 +20,7 @@ use crate::chem::{
 use crate::{Error, Result};
 
 /// The salts RDKit ships, as SMARTS, one per line.
-const DEFAULT_SALTS: &str = include_str!("data/Salts.txt");
+const DEFAULT_SALTS: &str = include_str!("../../wrapper/third_party/rdkit/Data/Salts.txt");
 
 /// The format of salt definitions. Python's `InputFormat` is a class of
 /// string constants. Mirrors `SaltRemover.InputFormat`.

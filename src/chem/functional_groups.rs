@@ -9,9 +9,9 @@
 //!
 //! Python reads its default hierarchy from `Functional_Group_Hierarchy.txt`
 //! in RDKit's data directory; the crate embeds that file
-//! (`src/chem/data/Functional_Group_Hierarchy.txt`). Python also keeps the
-//! last hierarchy it built in module globals, and returns it again unless
-//! asked to `force` a new one; here each call builds a new one.
+//! (`wrapper/third_party/rdkit/Data/Functional_Group_Hierarchy.txt`). Python
+//! also keeps the last hierarchy it built in module globals, and returns it
+//! again unless asked to `force` a new one; here each call builds a new one.
 
 use std::path::{Path, PathBuf};
 
@@ -22,7 +22,8 @@ use crate::{Error, Result};
 
 /// RDKit's functional group hierarchy, as `BuildFuncGroupHierarchy` reads it
 /// by default.
-pub(crate) const DEFAULT_HIERARCHY: &str = include_str!("data/Functional_Group_Hierarchy.txt");
+pub(crate) const DEFAULT_HIERARCHY: &str =
+    include_str!("../../wrapper/third_party/rdkit/Data/Functional_Group_Hierarchy.txt");
 
 /// A functional group, and the more specific groups under it. Mirrors
 /// `FunctionalGroups.FGHierarchyNode`.
