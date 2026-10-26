@@ -9,6 +9,7 @@
 //! other submodules are reached by path, as in Python.
 
 pub mod all_chem;
+pub mod brics;
 pub mod chemical_features;
 pub mod draw;
 pub mod enumerate_stereoisomers;
