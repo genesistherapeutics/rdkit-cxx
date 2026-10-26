@@ -7,7 +7,32 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.Lipinski", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+
+[modules.reasons]
+"rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
+"rdkit.Chem.Draw.IPythonConsole" = "installs Jupyter display hooks for molecules and reactions"
+"rdkit.Chem.Draw.InteractiveRenderer" = "renders molecules in Jupyter with RDKit's JavaScript library"
+"rdkit.Chem.Draw.MolDrawing" = "the legacy drawing code, which draws on sping canvases; rdMolDraw2D, which is bound, replaced it"
+"rdkit.Chem.Fingerprints.DbFpSupplier" = "supplies fingerprints from rdkit.Dbase query results"
+"rdkit.Chem.MCS" = "a deprecated wrapper over the legacy pure-Python MCS search (rdkit.Chem.fmcs); rdFMCS, which is bound, replaced it"
+"rdkit.Chem.MolDb" = "builds and reads molecule databases through rdkit.Dbase"
+"rdkit.Chem.PandasPatcher" = "patches pandas' HTML rendering for PandasTools"
+"rdkit.Chem.PandasTools" = "adds molecules and their drawings to pandas DataFrames"
+"rdkit.Chem.Pharm2D.LazyGenerator" = "unfinished: importing it raises NotImplementedError"
+"rdkit.Chem.PyMol" = "drives a PyMOL server over XML-RPC"
+"rdkit.Chem.Subshape.demoCombined" = "a demonstration script that reads files from RDKit's source tree"
+"rdkit.Chem.Suppliers.DbMolSupplier" = "supplies molecules from rdkit.Dbase query results"
+"rdkit.Chem.fmcs" = "the legacy pure-Python MCS search, which rdFMCS (bound) replaced"
+"rdkit.DataStructs.HierarchyVis" = "draws on sping canvases, and does not import (it imports sping as a top-level package)"
+"rdkit.Dbase" = "database helpers over Python's DB-API connections; Rust programs use their own database crates"
+"rdkit.ML.Cluster.ClusterVis" = "draws cluster trees on sping canvases"
+"rdkit.ML.MLUtils.VoteImg" = "draws vote images with PIL"
+"rdkit.VLib" = "a framework for pipelines of Python supplier, filter, and output nodes; Rust iterators fill that role"
+"rdkit.sping" = "a legacy drawing library (PDF, PostScript, SVG, PIL, Tk, Qt, and wx canvases) that predates rdMolDraw2D; Rust draws with rdMolDraw2D, which is bound"
+"rdkit.utils.cactvs" = "runs the CACTVS toolkit's command-line program to draw images"
+"rdkit.utils.chemdraw" = "drives ChemDraw through Windows COM"
+"rdkit.utils.chemdraw_qax" = "drives ChemDraw through a Qt ActiveX control"
 
 [[entry]]
 python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
@@ -1148,6 +1173,130 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_drawer_params_from_json"]
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.UpdateMolDrawOptionsFromJSON"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_mol_draw_options_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.FractionCSP3"
+rust = ["rdkit_cxx::chem::lipinski::fraction_csp3"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.HAcceptorSmarts"
+rust = ["rdkit_cxx::chem::lipinski::h_acceptor_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.HDonorSmarts"
+rust = ["rdkit_cxx::chem::lipinski::h_donor_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.HeavyAtomCount"
+rust = ["rdkit_cxx::chem::lipinski::heavy_atom_count"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.HeteroatomSmarts"
+rust = ["rdkit_cxx::chem::lipinski::heteroatom_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NHOHCount"
+rust = ["rdkit_cxx::chem::lipinski::nhoh_count"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NHOHSmarts"
+rust = ["rdkit_cxx::chem::lipinski::nhoh_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NOCount"
+rust = ["rdkit_cxx::chem::lipinski::no_count"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NOCountSmarts"
+rust = ["rdkit_cxx::chem::lipinski::no_count_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAliphaticCarbocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_aliphatic_carbocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAliphaticHeterocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_aliphatic_heterocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAliphaticRings"
+rust = ["rdkit_cxx::chem::lipinski::num_aliphatic_rings"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAmideBonds"
+rust = ["rdkit_cxx::chem::lipinski::num_amide_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAromaticCarbocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_aromatic_carbocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAromaticHeterocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_aromatic_heterocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAromaticRings"
+rust = ["rdkit_cxx::chem::lipinski::num_aromatic_rings"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumAtomStereoCenters"
+rust = ["rdkit_cxx::chem::lipinski::num_atom_stereo_centers"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumBridgeheadAtoms"
+rust = ["rdkit_cxx::chem::lipinski::num_bridgehead_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumHAcceptors"
+rust = ["rdkit_cxx::chem::lipinski::num_h_acceptors"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumHDonors"
+rust = ["rdkit_cxx::chem::lipinski::num_h_donors"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumHeteroatoms"
+rust = ["rdkit_cxx::chem::lipinski::num_heteroatoms"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumHeterocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_heterocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumRotatableBonds"
+rust = ["rdkit_cxx::chem::lipinski::num_rotatable_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumSaturatedCarbocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_saturated_carbocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumSaturatedHeterocycles"
+rust = ["rdkit_cxx::chem::lipinski::num_saturated_heterocycles"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumSaturatedRings"
+rust = ["rdkit_cxx::chem::lipinski::num_saturated_rings"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumSpiroAtoms"
+rust = ["rdkit_cxx::chem::lipinski::num_spiro_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.NumUnspecifiedAtomStereoCenters"
+rust = ["rdkit_cxx::chem::lipinski::num_unspecified_atom_stereo_centers"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.Phi"
+rust = ["rdkit_cxx::chem::lipinski::phi"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.RingCount"
+rust = ["rdkit_cxx::chem::lipinski::ring_count"]
+
+[[entry]]
+python = "rdkit.Chem.Lipinski.RotatableBondSmarts"
+rust = ["rdkit_cxx::chem::lipinski::rotatable_bond_smarts"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -2437,6 +2586,102 @@ overloads_note = "Python subclasses the class to override validate (and copy); R
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod.validate"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate_with_report_all_failures"]
 overloads_note = "every validation has the two forms, as the Python subclasses inherit validate"
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.ATOM_PROP_MAP_NUMBER"
+rust = ["rdkit_cxx::chem::registration_hash::atom_prop_map_number"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.DEFAULT_CXFLAG"
+rust = ["rdkit_cxx::chem::registration_hash::default_cxflag"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.EMPTY_MOL_TAUTOMER_HASH"
+rust = ["rdkit_cxx::chem::registration_hash::empty_mol_tautomer_hash"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.ENHANCED_STEREO_GROUP_REGEX"
+rust = ["rdkit_cxx::chem::registration_hash::enhanced_stereo_group_regex"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.ENHANCED_STEREO_GROUP_WEIGHTS"
+rust = ["rdkit_cxx::chem::registration_hash::enhanced_stereo_group_weights"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.EnhancedStereoUpdateMode"
+rust = ["rdkit_cxx::chem::registration_hash::EnhancedStereoUpdateMode"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.EnhancedStereoUpdateMode.ADD_WEIGHTS"
+rust = ["rdkit_cxx::chem::registration_hash::EnhancedStereoUpdateMode::AddWeights"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.EnhancedStereoUpdateMode.REMOVE_WEIGHTS"
+rust = ["rdkit_cxx::chem::registration_hash::EnhancedStereoUpdateMode::RemoveWeights"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.GetMolHash"
+rust = ["rdkit_cxx::chem::registration_hash::get_mol_hash", "rdkit_cxx::chem::registration_hash::get_mol_hash_with_hash_scheme"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.GetMolLayers"
+rust = ["rdkit_cxx::chem::registration_hash::get_mol_layers", "rdkit_cxx::chem::registration_hash::get_mol_layers_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.GetNoStereoLayers"
+rust = ["rdkit_cxx::chem::registration_hash::get_no_stereo_layers", "rdkit_cxx::chem::registration_hash::get_no_stereo_layers_with_enable_tautomer_hash_v2"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.GetStereoTautomerHash"
+rust = ["rdkit_cxx::chem::registration_hash::get_stereo_tautomer_hash", "rdkit_cxx::chem::registration_hash::get_stereo_tautomer_hash_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.CANONICAL_SMILES"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::CanonicalSmiles"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.ESCAPE"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::Escape"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.FORMULA"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::Formula"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.NO_STEREO_SMILES"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::NoStereoSmiles"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.NO_STEREO_TAUTOMER_HASH"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::NoStereoTautomerHash"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.SGROUP_DATA"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::SgroupData"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashLayer.TAUTOMER_HASH"
+rust = ["rdkit_cxx::chem::registration_hash::HashLayer::TautomerHash"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashScheme"
+rust = ["rdkit_cxx::chem::registration_hash::HashScheme"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashScheme.ALL_LAYERS"
+rust = ["rdkit_cxx::chem::registration_hash::HashScheme::AllLayers"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashScheme.STEREO_INSENSITIVE_LAYERS"
+rust = ["rdkit_cxx::chem::registration_hash::HashScheme::StereoInsensitiveLayers"]
+
+[[entry]]
+python = "rdkit.Chem.RegistrationHash.HashScheme.TAUTOMER_INSENSITIVE_LAYERS"
+rust = ["rdkit_cxx::chem::registration_hash::HashScheme::TautomerInsensitiveLayers"]
 
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.BRICSScaffoldParams"

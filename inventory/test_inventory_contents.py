@@ -44,3 +44,47 @@ def test_sanitize_flags_are_an_int_enum(by_name):
 def test_entries_are_sorted_and_unique(inventory):
     names = [entry["python"] for entry in inventory["entries"]]
     assert names == sorted(set(names))
+
+
+PYTHON_INVENTORY = pathlib.Path(__file__).parent / "python-2026.09.json"
+
+
+@pytest.fixture(scope="module")
+def python_inventory():
+    return json.loads(PYTHON_INVENTORY.read_text())
+
+
+@pytest.fixture(scope="module")
+def python_by_name(python_inventory):
+    return {entry["python"]: entry for entry in python_inventory["entries"]}
+
+
+def test_python_entries(python_by_name, python_inventory):
+    assert python_inventory["rdkit_version"] == "2026.09.1"
+    assert python_by_name["rdkit.Chem.FindMolChiralCenters"]["kind"] == "module_function"
+    assert python_by_name["rdkit.Chem.Lipinski.HDonorSmarts"]["kind"] == "module_attribute"
+    assert python_by_name["rdkit.Chem.RegistrationHash.HashLayer.CANONICAL_SMILES"]["kind"] == "enum_value"
+    assert python_by_name["rdkit.ML.Cluster.Butina.ClusterData"]["kind"] == "module_function"
+
+
+def test_python_entries_made_at_import(python_by_name):
+    # Lambdas and functions modules make as they import are named for the
+    # attribute that holds them; descList is assigned through `global`.
+    assert python_by_name["rdkit.Chem.Lipinski.NumHDonors"]["overloads"] == ["def NumHDonors(x)"]
+    assert python_by_name["rdkit.Chem.Fragments.fr_Al_COO"]["kind"] == "module_function"
+    assert python_by_name["rdkit.Chem.Descriptors.descList"]["kind"] == "module_attribute"
+
+
+def test_python_entries_leave_out_imports_tests_and_loggers(python_by_name):
+    assert "rdkit.Chem.AllChem.EmbedMolecule" not in python_by_name  # from rdDistGeom
+    assert "rdkit.Chem.AllChem.logger" not in python_by_name
+    assert not any(".UnitTest" in name or ".conftest" in name for name in python_by_name)
+
+
+def test_python_signatures_hold_no_addresses(python_inventory):
+    assert not any(" at 0x" in overload for entry in python_inventory["entries"] for overload in entry["overloads"])
+
+
+def test_python_entries_are_sorted_and_unique(python_inventory):
+    names = [entry["python"] for entry in python_inventory["entries"]]
+    assert names == sorted(set(names))

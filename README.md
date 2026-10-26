@@ -227,10 +227,12 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Parity
 
-[`inventory/`](inventory) measures coverage of the nanobind modules.
-`inventory-2026.09.json` lists every class, function, method, property, and
-enum value they expose; `manifest.toml` maps each to Rust paths or to the
-reason it has none. CI runs:
+[`inventory/`](inventory) measures coverage of the nanobind modules and of
+RDKit's pure-Python modules. `inventory-2026.09.json` lists every class,
+function, method, property, and enum value the nanobind modules expose, and
+`python-2026.09.json` what each pure-Python module defines; `manifest.toml`
+maps each to Rust paths or to the reason it has none, given for the name or,
+for Python-ecosystem glue and legacy code, for its whole module. CI runs:
 
 ```sh
 python3 -m pytest inventory
@@ -254,6 +256,7 @@ cmake -S rdkit-release -B rdkit-release/build -G Ninja -DCMAKE_BUILD_TYPE=Releas
   -DRDK_BUILD_XYZ2MOL_SUPPORT=ON -DRDK_BUILD_YAEHMOP_SUPPORT=ON
 cmake --build rdkit-release/build --target install
 python3 inventory/inventory.py --rdkit-path rdkit-release --output inventory/inventory-2026.09.json
+python3 inventory/inventory.py --rdkit-path rdkit-release --python --output inventory/python-2026.09.json
 ```
 
 The build needs RDKit's dependencies and `nanobind` 2.x (conda-forge:

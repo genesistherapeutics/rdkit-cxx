@@ -3,16 +3,18 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-"""Checks the parity manifest against the nanobind inventory.
+"""Checks the parity manifest against the inventories.
 
-The inventory (inventory-<series>.json, written by inventory.py) lists every
-class, function, method, property, and enum value RDKit's nanobind modules
-expose. The manifest (manifest.toml) maps each to Rust paths, or to a reason it
-has none. This script reports manifest entries that are malformed, misnamed
-(CONVENTIONS.md N2-N5), or missing from the inventory, and inventory entries
-left unmapped in modules marked complete (I3). With --write-paths it also
-writes a Rust test that names every mapped path, so `cargo test` fails when a
-manifest path does not exist.
+The inventories, written by inventory.py, list every class, function, method,
+property, and enum value RDKit's nanobind modules expose
+(inventory-<series>.json) and that its pure-Python modules define
+(python-<series>.json). The manifest (manifest.toml) maps each to Rust paths,
+or to a reason it has none, given for the name or for its whole module
+(`[modules.reasons]`, CONVENTIONS.md R3). This script reports manifest entries
+that are malformed, misnamed (N2-N5), or missing from the inventories, and
+inventory entries left unmapped in modules marked complete (I3) or in no
+module at all. With --write-paths it also writes a Rust test that names every
+mapped path, so `cargo test` fails when a manifest path does not exist.
 """
 
 import argparse
@@ -23,7 +25,7 @@ import sys
 import tomllib
 
 HERE = pathlib.Path(__file__).parent
-DEFAULT_INVENTORY = HERE / "inventory-2026.09.json"
+DEFAULT_INVENTORIES = [HERE / "inventory-2026.09.json", HERE / "python-2026.09.json"]
 DEFAULT_MANIFEST = HERE / "manifest.toml"
 
 # addlicense's BSD header, so the generated file matches what it writes.
@@ -84,6 +86,23 @@ def name_problem(python: str, kind: str, item: dict, rust: str) -> str | None:
     return f"{python}: Rust name {segment!r} is neither {expected!r} nor {expected + '_'!r}... (N2-N4)"
 
 
+def module_reason(module: str, reasons: dict[str, str]) -> str | None:
+    """The reason given for a module or for a package holding it."""
+    while module:
+        if module in reasons:
+            return reasons[module]
+        module = module.rpartition(".")[0]
+    return None
+
+
+def merge(inventories: list[dict]) -> dict:
+    versions = {inventory["rdkit_version"] for inventory in inventories}
+    if len(versions) != 1:
+        raise SystemExit(f"the inventories are for different RDKit versions: {sorted(versions)}")
+    entries = [entry for inventory in inventories for entry in inventory["entries"]]
+    return {"rdkit_version": versions.pop(), "entries": entries}
+
+
 def check(inventory: dict, manifest: dict) -> list[str]:
     entries = {e["python"]: e for e in inventory["entries"]}
     classes = {name for name, e in entries.items() if e["kind"] == "class"}
@@ -119,10 +138,19 @@ def check(inventory: dict, manifest: dict) -> list[str]:
             problems.append(
                 f"{python}: {overloads} overloads but {len(rust)} Rust paths; bind each or add overloads_note"
             )
-    complete = set(manifest.get("modules", {}).get("complete", []))
+    modules = manifest.get("modules", {})
+    complete = set(modules.get("complete", []))
+    reasons = modules.get("reasons", {})
+    known = {module_of(name, classes) for name in entries}
+    for module in reasons:
+        if not any(m == module or m.startswith(module + ".") for m in known):
+            problems.append(f"{module}: has a reason but is not in the inventory")
+        if module in complete:
+            problems.append(f"{module}: has a reason and is also marked complete")
     for name in entries:
-        if name not in mapped and module_of(name, classes) in complete:
-            problems.append(f"{name}: unmapped in complete module {module_of(name, classes)}")
+        module = module_of(name, classes)
+        if name not in mapped and module in complete:
+            problems.append(f"{name}: unmapped in complete module {module}")
     return problems
 
 
@@ -153,6 +181,17 @@ def generics_of(item: dict) -> list[str | None]:
     return [generics] * len(paths)
 
 
+def uncovered_modules(inventory: dict, manifest: dict) -> list[str]:
+    """Inventory modules neither complete nor covered by a reason (R3)."""
+    entries = {e["python"]: e for e in inventory["entries"]}
+    classes = {name for name, e in entries.items() if e["kind"] == "class"}
+    modules = manifest.get("modules", {})
+    complete = set(modules.get("complete", []))
+    reasons = modules.get("reasons", {})
+    found = {module_of(name, classes) for name in entries}
+    return sorted(m for m in found if m not in complete and module_reason(m, reasons) is None)
+
+
 def paths_source(manifest: dict) -> str:
     lines = [
         *LICENSE_HEADER,
@@ -176,22 +215,40 @@ def paths_source(manifest: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--inventory", type=pathlib.Path, default=DEFAULT_INVENTORY)
+    parser.add_argument(
+        "--inventory", type=pathlib.Path, action="append", help="an inventory to check against (default: both)"
+    )
     parser.add_argument("--manifest", type=pathlib.Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--write-paths", type=pathlib.Path, help="write the Rust path test here")
+    parser.add_argument(
+        "--strict", action="store_true", help="also fail on modules neither complete nor covered by a reason"
+    )
     args = parser.parse_args()
-    inventory = json.loads(args.inventory.read_text())
+    inventory = merge([json.loads(path.read_text()) for path in args.inventory or DEFAULT_INVENTORIES])
     manifest = tomllib.loads(args.manifest.read_text())
     problems = check(inventory, manifest)
+    if args.strict:
+        problems += [
+            f"{module}: neither complete nor covered by a reason" for module in uncovered_modules(inventory, manifest)
+        ]
     for problem in problems:
         print(problem, file=sys.stderr)
     if args.write_paths:
         args.write_paths.write_text(paths_source(manifest))
-    names = {e["python"] for e in inventory["entries"]}
-    items = [item for item in manifest.get("entry", []) if item["python"] in names]
+    entries = {e["python"]: e for e in inventory["entries"]}
+    classes = {name for name, e in entries.items() if e["kind"] == "class"}
+    items = [item for item in manifest.get("entry", []) if item["python"] in entries]
     with_reason = sum("reason" in item for item in items)
+    listed = {item["python"] for item in items}
+    reasons = manifest.get("modules", {}).get("reasons", {})
+    by_module = sum(
+        name not in listed and module_reason(module_of(name, classes), reasons) is not None for name in entries
+    )
     complete = len(manifest.get("modules", {}).get("complete", []))
-    print(f"mapped {len(items)} of {len(names)} entries ({with_reason} with a reason); complete modules: {complete}")
+    print(
+        f"mapped {len(items) + by_module} of {len(entries)} entries ({with_reason} with a reason, "
+        f"{by_module} by their module's); complete modules: {complete}, modules with a reason: {len(reasons)}"
+    )
     return 1 if problems else 0
 
 
