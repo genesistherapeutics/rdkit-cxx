@@ -5,4 +5,10 @@
 
 //! Mirrors `rdkit.ML.Cluster`.
 
+pub mod butina;
+pub mod cluster_utils;
 pub mod clustering;
+pub mod clusters;
+pub mod murtagh;
+pub mod resemblance;
+pub mod standardize;

@@ -26,7 +26,7 @@ pub mod maccs_keys;
 pub mod mol_standardize;
 pub mod mol_surf;
 pub mod pharm_2d;
-mod py_math;
+pub(crate) mod py_math;
 mod py_util;
 pub mod qed;
 pub mod rd_abbreviations;

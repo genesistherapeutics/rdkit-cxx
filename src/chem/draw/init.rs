@@ -15,7 +15,7 @@
 //! these change a copy.
 
 use std::collections::BTreeMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 use crate::chem::draw::rd_mol_draw_2d::{
     DrawColour, DrawMoleculeParams, DrawMoleculesParams, DrawReactionParams, MolDraw2D,
@@ -915,25 +915,14 @@ fn draw_reaction(
     )
 }
 
-/// RDKit's data directory, as Python's `RDConfig.RDDataDir` finds it:
-/// `$RDBASE/Data`, else the `share/RDKit/Data` of the RDKit this crate was
-/// built against.
-fn rd_data_dir() -> PathBuf {
-    match std::env::var_os("RDBASE") {
-        Some(base) => PathBuf::from(base).join("Data"),
-        None => PathBuf::from(option_env!("RDKIT_CXX_RDKIT_PREFIX").unwrap_or(""))
-            .join("share")
-            .join("RDKit")
-            .join("Data"),
-    }
-}
-
 /// Sets the options to draw in comic mode, in RDKit's Comic Neue font.
 /// Mirrors `Draw.SetComicMode`; `Error::Value` when the font's path (in
 /// RDKit's data directory, `$RDBASE/Data` when `RDBASE` is set) is not
 /// UTF-8.
 pub fn set_comic_mode(opts: &mut MolDrawOptions) -> Result<()> {
-    let font = rd_data_dir().join("Fonts").join("ComicNeue-Regular.ttf");
+    let font = crate::rd_paths::rd_data_dir()
+        .join("Fonts")
+        .join("ComicNeue-Regular.ttf");
     opts.font_file = font
         .into_os_string()
         .into_string()
