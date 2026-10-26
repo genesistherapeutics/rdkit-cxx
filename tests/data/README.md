@@ -10,3 +10,6 @@ From RDKit's source tree, under RDKit's BSD license:
 - `AlexRxn.mrv`: `Code/GraphMol/MarvinParse/test_data`
 - `RiboseFullname.mol`: `Code/GraphMol/FileParsers/test_data/macromols`, with
   trailing whitespace trimmed
+- `amide_space.txt`, `amide_space_error.txt`, `triazole_space.txt`,
+  `extended_query.csv`, `doebner_miller_space.txt`:
+  `Code/GraphMol/SynthonSpaceSearch/data`
