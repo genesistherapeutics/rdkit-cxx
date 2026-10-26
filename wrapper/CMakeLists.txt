@@ -126,6 +126,8 @@ set(RDKIT_CXX_SOURCES
   src/abbreviations.cpp
   src/enumerate_stereoisomers.cpp
   src/mol_enumerator.cpp
+  src/mol_processing.cpp
+  src/mol_interchange.cpp
   src/draw.cpp
   src/draw_checks.cpp
   src/draw_drawer.cpp
@@ -191,6 +193,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   Abbreviations
   EnumerateStereoisomers
   MolEnumerator
+  MolInterchange
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
@@ -227,6 +230,13 @@ foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::${target}>\n")
 endforeach()
+
+# rdMolProcessing reads gzipped files with Boost.Iostreams' gzip filter, as
+# RDKit's gzstream does, when RDKit was built with it.
+if(TARGET Boost::iostreams)
+  target_link_libraries(rdkitcxx PUBLIC Boost::iostreams)
+  string(APPEND link_libraries "$<TARGET_LINKER_FILE:Boost::iostreams>\n")
+endif()
 
 # RDKit::MolDraw2D cannot be linked like the targets above: conda-forge's
 # package names Cairo::Cairo in its link interface without defining it, and
