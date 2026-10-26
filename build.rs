@@ -98,6 +98,7 @@ const BRIDGES: &[&str] = &[
     "gaussian_shape",
     "abbreviations",
     "enumerate_stereoisomers",
+    "mol_enumerator",
 ];
 
 fn main() {

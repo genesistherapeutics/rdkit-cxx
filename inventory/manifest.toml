@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -5590,6 +5590,60 @@ python = "rdkit.Chem.rdMolDescriptors.SlogP_VSA_"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::slogp_vsa", "rdkit_cxx::chem::rd_mol_descriptors::slogp_vsa_with_bins"]
 name_exception = "SlogP is one word, and the trailing underscore is dropped: slogp_vsa"
 overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.Enumerate"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::enumerate", "rdkit_cxx::chem::rd_mol_enumerator::enumerate_with_max_per_operation", "rdkit_cxx::chem::rd_mol_enumerator::enumerate_with_params"]
+overloads_note = "(mol, maxPerOperation) is enumerate and enumerate_with_max_per_operation (A2); (mol, enumParams) is enumerate_with_params (A3)"
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.EnumeratorType"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::EnumeratorType"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.EnumeratorType.LinkNode"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::EnumeratorType::LinkNode"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.EnumeratorType.PositionVariation"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::EnumeratorType::PositionVariation"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.EnumeratorType.RepeatUnit"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::EnumeratorType::RepeatUnit"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.SetEnumerationOperator"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::set_enumeration_operator"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.__init__"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::default", "rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::new"]
+overloads_note = "MolEnumeratorParams() is Default, and (typ) new; the operation is also the public field operation, which Python cannot read"
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.doRandom"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::do_random"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.maxToEnumerate"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::max_to_enumerate"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.randomSeed"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::random_seed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.sanitize"
+rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::sanitize"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdMolHash.AnonymousGraph"

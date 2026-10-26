@@ -33,6 +33,11 @@ impl MolBundle {
         })
     }
 
+    /// A bundle of molecules RDKit returned (W8).
+    pub(crate) fn from_mols(mols: Vec<Mol>) -> MolBundle {
+        MolBundle { mols }
+    }
+
     /// Calls `f` with a C++ bundle that borrows the molecules.
     pub(crate) fn with_ffi<T>(&self, f: impl FnOnce(&ffi::MolBundle) -> T) -> T {
         let mut bundle: UniquePtr<ffi::MolBundle> = expect_ok(ffi::mol_bundle_new());
