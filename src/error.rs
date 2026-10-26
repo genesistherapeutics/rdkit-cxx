@@ -11,13 +11,7 @@
 
 use std::fmt;
 
-<<<<<<< HEAD
-use crate::ffi::errors::ffi;
-
 /// The result of a fallible RDKit call. A Rust addition.
-=======
-/// The result of a fallible RDKit call.
->>>>>>> api-future-proof
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// An error RDKit raised, by the Python exception nanobind would raise.
