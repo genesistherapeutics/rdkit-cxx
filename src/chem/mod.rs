@@ -68,6 +68,7 @@ pub mod rdinchi;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
+pub mod recap;
 pub mod registration_hash;
 pub mod salt_remover;
 pub mod satis;
