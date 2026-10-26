@@ -19,10 +19,7 @@ pub struct TopNContainer<E = ()> {
 }
 
 fn index_error(index: i64, len: usize) -> Error {
-    Error::Index {
-        index: u32::try_from(index.unsigned_abs()).unwrap_or(u32::MAX),
-        len: u32::try_from(len).unwrap_or(u32::MAX),
-    }
+    Error::Index { index, len }
 }
 
 impl<E> TopNContainer<E> {

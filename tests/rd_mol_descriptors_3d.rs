@@ -674,7 +674,7 @@ fn usrcat_atom_numbers_are_checked() {
     assert!(matches!(
         get_usrcat_with_params(&mol, &selection(vec![0])),
         Err(Error::Index {
-            index: u32::MAX,
+            index: 4_294_967_295,
             len: 20
         })
     ));

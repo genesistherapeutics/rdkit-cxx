@@ -20,6 +20,8 @@ pub(crate) mod ffi {
         fn mol_to_binary(mol: &RWMol, has_flags: bool, flags: u32) -> Result<Vec<u8>>;
         fn get_default_pickle_properties() -> Result<u32>;
         fn set_default_pickle_properties(props: u32) -> Result<()>;
+        // Only the crate's unit tests call this.
+        #[allow(dead_code)]
         fn property_pickle_option_values() -> Result<Vec<u32>>;
         fn mol_clone(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn mol_get_num_atoms(mol: &RWMol) -> Result<u32>;

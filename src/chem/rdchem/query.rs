@@ -22,6 +22,7 @@ use crate::ffi::query::ffi;
 /// RDKit's enum has no fixed underlying type, so cxx cannot check it; it
 /// crosses as `i32`, and tests check each variant's effect.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum CompositeQueryType {
     /// Mirrors `COMPOSITE_AND`.
     CompositeAnd,
@@ -44,6 +45,7 @@ impl CompositeQueryType {
 /// Parameters for `expand_query_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExpandQueryParams {
+    /// How the queries combine.
     pub how: CompositeQueryType,
     /// Keeps this query ahead of the other one.
     pub maintain_order: bool,

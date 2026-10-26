@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <exception>
 #include <string>
 
@@ -19,17 +20,18 @@
 
 namespace rdkit_cxx {
 
-// Thrown by wrappers that check an index argument (E3).
+// Thrown by wrappers that check an index argument (E3). The index is signed,
+// as Python's are, and Rust's `Error::Index` carries both values whole.
 class IndexError : public std::exception {
  public:
-  IndexError(unsigned index, unsigned len);
+  IndexError(std::int64_t index, std::uint64_t len);
   const char *what() const noexcept override { return d_msg.c_str(); }
-  unsigned index() const { return d_index; }
-  unsigned len() const { return d_len; }
+  std::int64_t index() const { return d_index; }
+  std::uint64_t len() const { return d_len; }
 
  private:
-  unsigned d_index;
-  unsigned d_len;
+  std::int64_t d_index;
+  std::uint64_t d_len;
   std::string d_msg;
 };
 

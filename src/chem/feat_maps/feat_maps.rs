@@ -13,12 +13,13 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use crate::chem::feat_maps::feat_map_point::{FeatMapPoint, FeatureLike};
-use crate::chem::py_math::py_sum;
+use crate::py::py_sum;
 use crate::{Error, Result};
 
 /// How [`FeatMap::score_feats`] scores each feature. Mirrors
 /// `FeatMaps.FeatMapScoreMode`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum FeatMapScoreMode {
     /// Against every matching feature of the map.
     #[default]
@@ -31,7 +32,8 @@ pub enum FeatMapScoreMode {
 
 /// How feature directions weigh in a score. Mirrors
 /// `FeatMaps.FeatDirScoreMode`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum FeatDirScoreMode {
     /// Directions are ignored.
     #[default]
@@ -44,7 +46,8 @@ pub enum FeatDirScoreMode {
 }
 
 /// A feature's scoring profile. Mirrors `FeatMaps.FeatMapParams.FeatProfile`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum FeatProfile {
     /// A Gaussian of width `width`.
     #[default]
@@ -93,6 +96,7 @@ pub struct FeatMapInitParams {
 /// The scores [`FeatMap::score_feats_with_outputs`] fills in, as Python's
 /// output arguments (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct ScoreFeatsOutputs {
     /// Each map feature's score. Mirrors `mapScoreVect`.
     pub map_score_vect: Vec<f64>,
@@ -183,10 +187,7 @@ impl FeatMap {
     }
 
     fn index_error(&self, i: usize) -> Error {
-        Error::Index {
-            index: i as u32,
-            len: self.feats.len() as u32,
-        }
+        Error::index(i, self.feats.len())
     }
 
     /// The point at `i`; `Error::Index` past the end. Mirrors

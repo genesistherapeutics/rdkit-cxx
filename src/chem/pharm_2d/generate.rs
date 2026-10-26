@@ -35,18 +35,14 @@ fn shortest_paths_match(
     let dists_to_check = point_dists(m.len())?;
     let bins = factory.get_bins();
     let (Some(first), Some(last)) = (bins.first(), bins.last()) else {
-        return Err(Error::Index { index: 0, len: 0 });
+        return Err(Error::index(0, 0));
     };
     let (min_d, max_d) = (f64::from(first.0), f64::from(last.1));
     let entry = |i: u32, j: u32| -> Result<f64> {
-        let row = d_mat.get(i as usize).ok_or(Error::Index {
-            index: i,
-            len: d_mat.len() as u32,
-        })?;
-        row.get(j as usize).copied().ok_or(Error::Index {
-            index: j,
-            len: row.len() as u32,
-        })
+        let row = d_mat.get(i as usize).ok_or(Error::index(i, d_mat.len()))?;
+        row.get(j as usize)
+            .copied()
+            .ok_or(Error::index(j, row.len()))
     };
     let mut dist = Vec::with_capacity(dists_to_check.len());
     for &(pt0, pt1) in dists_to_check {
@@ -157,10 +153,10 @@ pub fn gen_2d_fingerprint_with_outputs(
         let match_perms = perm
             .iter()
             .map(|&x| {
-                feat_matches.get(x).cloned().ok_or(Error::Index {
-                    index: x as u32,
-                    len: feat_matches.len() as u32,
-                })
+                feat_matches
+                    .get(x)
+                    .cloned()
+                    .ok_or(Error::index(x, feat_matches.len()))
             })
             .collect::<Result<Vec<_>>>()?;
         let matches_to_map = get_unique_combinations(&match_perms, &feat_classes)?;

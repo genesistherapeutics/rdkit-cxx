@@ -13,19 +13,27 @@ use crate::ffi::props::ffi;
 use crate::{Error, Result};
 
 /// A property value, as `GetPropsAsDict` and `GetProp(autoConvert=True)`
-/// convert it.
+/// convert it. A Rust addition, for the Python values they return.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum PropValue {
+    /// An `int`.
     Int(i32),
+    /// An `unsigned int`.
     Unsigned(u32),
     /// Also holds C++ `float` values.
     Double(f64),
+    /// A `bool`.
     Bool(bool),
+    /// A string.
     String(String),
+    /// A vector of `int`s.
     IntVec(Vec<i32>),
+    /// A vector of `unsigned int`s.
     UnsignedVec(Vec<u32>),
     /// Also holds C++ `float` vectors.
     DoubleVec(Vec<f64>),
+    /// A vector of strings.
     StringVec(Vec<String>),
     /// An empty value. Python's `None`.
     None,

@@ -320,7 +320,7 @@ fn quant_data_set() {
     );
     let again = MLQuantDataSet::new_with_params(
         d.get_all_data(),
-        MLDataSetParams {
+        &MLDataSetParams {
             var_names: Some(d.get_var_names().to_vec()),
             q_bounds: Some(d.get_quant_bounds().to_vec()),
             pt_names: Some(d.get_pt_names().to_vec()),

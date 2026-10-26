@@ -16,7 +16,13 @@ use crate::geometry::rd_geometry::Point3D;
 /// A chemical feature as the feature-map code reads one: a family, a
 /// type, a position, and perhaps directions. Python reads these from any
 /// feature object; its `featDirs` attribute, which only feature-map points
-/// have, is [`feat_dirs`](FeatureLike::feat_dirs).
+/// have, is [`feat_dirs`](FeatureLike::feat_dirs). A Rust addition, for
+/// Python's duck typing.
+///
+/// The trait is meant to be implemented: as Python's feature-map code takes
+/// any object with these methods, a type of your own can implement it and
+/// go wherever a feature does. A method added to it later will have a
+/// default body, so such implementations keep compiling.
 pub trait FeatureLike {
     /// The feature's family (`GetFamily`).
     fn feature_family(&self) -> String;

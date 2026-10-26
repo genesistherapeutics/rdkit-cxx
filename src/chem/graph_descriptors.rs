@@ -19,12 +19,12 @@
 use std::collections::{BTreeMap, HashMap};
 use std::hash::Hash;
 
-use crate::chem::py_math::{np_sum, py_sum};
 use crate::chem::rd_mol_descriptors as descriptors;
 use crate::chem::{
     GetDistanceMatrixParams, Mol, get_adjacency_matrix, get_distance_matrix_with_params,
 };
 use crate::ml::info_theory::rd_info_theory::info_entropy;
+use crate::py::{np_sum, py_sum};
 use crate::{Error, Result};
 
 /// Hall and Kier's alpha values by element symbol, for sp, sp2, and sp3

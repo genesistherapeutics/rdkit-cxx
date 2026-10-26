@@ -19,6 +19,7 @@ use crate::chem::rdmolfiles::{CDXMLFormat, mol_to_cdxml_block, mol_to_cdxml_bloc
 /// `rdmolfiles.CDXMLFormat` onto this enum, so the writer here goes the other
 /// way, through `rdmolfiles`' checked writer.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum CDXFormat {
     /// Binary CDX. Mirrors `CDXFormat.CDX`.
     Cdx,

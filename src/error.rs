@@ -11,9 +11,7 @@
 
 use std::fmt;
 
-use crate::ffi::errors::ffi;
-
-/// The result of a fallible RDKit call.
+/// The result of a fallible RDKit call. A Rust addition.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// An error RDKit raised, by the Python exception nanobind would raise.
@@ -21,29 +19,65 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[non_exhaustive]
 pub enum Error {
     /// Unparsable input. Python returns `None`.
-    Parse { message: String },
+    Parse {
+        /// What RDKit's parser reported.
+        message: String,
+    },
     /// An atom whose valence is not allowed (`AtomValenceException`).
-    AtomValence { atom_idx: u32, message: String },
+    AtomValence {
+        /// The atom's index.
+        atom_idx: u32,
+        /// RDKit's message.
+        message: String,
+    },
     /// An aromatic atom outside a ring (`AtomKekulizeException`).
-    AtomKekulize { atom_idx: u32, message: String },
+    AtomKekulize {
+        /// The atom's index.
+        atom_idx: u32,
+        /// RDKit's message.
+        message: String,
+    },
     /// Atoms that could not be kekulized (`KekulizeException`).
     Kekulize {
+        /// The atoms' indices.
         atom_indices: Vec<u32>,
+        /// RDKit's message.
         message: String,
     },
     /// Another sanitization failure (`MolSanitizeException`).
-    MolSanitize { message: String },
+    MolSanitize {
+        /// RDKit's message.
+        message: String,
+    },
     /// An index out of range (`IndexError`).
-    Index { index: u32, len: u32 },
+    Index {
+        /// The index; negative for a Python-style index from the end that
+        /// reaches past the start.
+        index: i64,
+        /// The length of what was indexed.
+        len: usize,
+    },
     /// A missing key (`KeyError`).
-    Key { key: String },
+    Key {
+        /// The key.
+        key: String,
+    },
     /// A bad value (`ValueError`), including invalid UTF-8.
-    Value { message: String },
+    Value {
+        /// What was wrong.
+        message: String,
+    },
     /// Any other failure (`RuntimeError`), including RDKit invariant
     /// violations.
-    Runtime { message: String },
+    Runtime {
+        /// RDKit's message.
+        message: String,
+    },
     /// A file that could not be opened (`OSError`).
-    Os { message: String },
+    Os {
+        /// What failed.
+        message: String,
+    },
 }
 
 impl fmt::Display for Error {
@@ -104,8 +138,10 @@ pub(crate) fn decode(what: &str) -> Error {
             }),
         "MolSanitize" => Some(Error::MolSanitize { message }),
         "Index" => payload.split_once(' ').and_then(|(index, len)| {
-            number(index)
-                .zip(number(len))
+            index
+                .parse()
+                .ok()
+                .zip(len.parse().ok())
                 .map(|(index, len)| Error::Index { index, len })
         }),
         "Key" => Some(Error::Key {
@@ -118,6 +154,17 @@ pub(crate) fn decode(what: &str) -> Error {
         _ => None,
     };
     error.unwrap_or_else(runtime)
+}
+
+impl Error {
+    /// An `Index` error for `index` into a sequence of `len` items; an index
+    /// past `i64`'s range saturates.
+    pub(crate) fn index<I: TryInto<i64>>(index: I, len: usize) -> Error {
+        Error::Index {
+            index: index.try_into().unwrap_or(i64::MAX),
+            len,
+        }
+    }
 }
 
 /// Unwraps the result of a bridge call that cannot fail for any input the safe
@@ -145,12 +192,135 @@ pub(crate) fn to_string(text: cxx::UniquePtr<cxx::CxxString>) -> Result<String> 
         })
 }
 
-#[doc(hidden)]
-pub fn __raise_for_tests(kind: &str) -> Result<()> {
-    Ok(ffi::raise_for_tests(kind)?)
+/// Throws the C++ exception `kind` names, for the unit tests of the mapping.
+#[cfg(test)]
+pub(crate) fn raise_for_tests(kind: &str) -> Result<()> {
+    Ok(crate::ffi::errors::ffi::raise_for_tests(kind)?)
 }
 
-#[doc(hidden)]
-pub fn __raise_unexpected_for_tests() {
-    expect_ok(ffi::raise_for_tests("std"));
+/// Unwraps an unexpected exception, which panics.
+#[cfg(test)]
+pub(crate) fn raise_unexpected_for_tests() {
+    expect_ok(crate::ffi::errors::ffi::raise_for_tests("std"));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Error, raise_for_tests as raise, raise_unexpected_for_tests};
+
+    fn message(kind: &str) -> String {
+        format!("test {kind}")
+    }
+
+    #[test]
+    fn each_rdkit_exception_maps_to_its_variant() {
+        assert_eq!(
+            raise("atom_valence").unwrap_err(),
+            Error::AtomValence {
+                atom_idx: 3,
+                message: message("atom_valence")
+            }
+        );
+        assert_eq!(
+            raise("atom_kekulize").unwrap_err(),
+            Error::AtomKekulize {
+                atom_idx: 2,
+                message: message("atom_kekulize")
+            }
+        );
+        assert_eq!(
+            raise("kekulize").unwrap_err(),
+            Error::Kekulize {
+                atom_indices: vec![0, 1, 2, 3, 4],
+                message: message("kekulize")
+            }
+        );
+        assert_eq!(
+            raise("mol_sanitize").unwrap_err(),
+            Error::MolSanitize {
+                message: message("mol_sanitize")
+            }
+        );
+        assert_eq!(
+            raise("index").unwrap_err(),
+            Error::Index { index: 9, len: 3 }
+        );
+        assert_eq!(
+            raise("negative_index").unwrap_err(),
+            Error::Index { index: -5, len: 3 }
+        );
+        assert_eq!(raise("key").unwrap_err(), Error::Key { key: "nope".into() });
+        assert_eq!(
+            raise("value").unwrap_err(),
+            Error::Value {
+                message: message("value")
+            }
+        );
+        for kind in ["conformer", "reaction"] {
+            assert_eq!(
+                raise(kind).unwrap_err(),
+                Error::Value {
+                    message: message(kind)
+                }
+            );
+        }
+        assert_eq!(
+            raise("depict").unwrap_err(),
+            Error::Value {
+                message: message("depict")
+            }
+        );
+        assert_eq!(
+            raise("bad_file").unwrap_err(),
+            Error::Os {
+                message: message("bad_file")
+            }
+        );
+        assert_eq!(
+            raise("smiles_parse").unwrap_err(),
+            Error::Parse {
+                message: message("smiles_parse")
+            }
+        );
+        for kind in ["sln_parse", "reaction_parse"] {
+            assert_eq!(
+                raise(kind).unwrap_err(),
+                Error::Parse {
+                    message: message(kind)
+                }
+            );
+        }
+        assert_eq!(
+            raise("std").unwrap_err(),
+            Error::Runtime {
+                message: message("std")
+            }
+        );
+        assert!(matches!(raise("invariant").unwrap_err(),
+                         Error::Runtime { message } if message.contains("test invariant")));
+    }
+
+    #[test]
+    fn display_includes_the_message() {
+        assert!(
+            raise("value")
+                .unwrap_err()
+                .to_string()
+                .contains("test value")
+        );
+    }
+
+    #[test]
+    fn display_shows_negative_indices() {
+        assert_eq!(
+            Error::Index { index: -5, len: 2 }.to_string(),
+            "index -5 is out of range for length 2"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "unexpected RDKit exception: test std")]
+    fn unexpected_exceptions_panic() {
+        raise_unexpected_for_tests();
+    }
 }

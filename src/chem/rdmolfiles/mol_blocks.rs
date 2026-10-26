@@ -83,7 +83,9 @@ rdkit_enum! {
 pub struct MolFromSCSRParams {
     /// Keeps leaving groups on atoms that are not bonded out of the template.
     pub include_leaving_groups: bool,
+    /// Which template names to use.
     pub scsr_template_names: SCSRTemplateNames,
+    /// How hydrogen bonds between bases are kept.
     pub scsr_base_hbond_options: SCSRBaseHbondOptions,
     /// Sanitizes the molecule.
     pub sanitize: bool,

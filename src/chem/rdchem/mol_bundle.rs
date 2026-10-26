@@ -64,10 +64,9 @@ impl MolBundle {
 
     /// Mirrors `MolBundle.GetMol`.
     pub fn get_mol(&self, idx: usize) -> Result<&Mol> {
-        self.mols.get(idx).ok_or_else(|| Error::Index {
-            index: u32::try_from(idx).unwrap_or(u32::MAX),
-            len: u32::try_from(self.mols.len()).unwrap_or(u32::MAX),
-        })
+        self.mols
+            .get(idx)
+            .ok_or_else(|| Error::index(idx, self.mols.len()))
     }
 
     /// The number of molecules. Mirrors `MolBundle.Size`.

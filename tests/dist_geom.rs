@@ -533,17 +533,16 @@ fn experimental_torsions() {
     let mol = with_hs("CCOC");
     let torsions = get_experimental_torsions(&mol).unwrap();
     assert_eq!(torsions.len(), 2);
+    let torsion = &torsions[0];
+    assert_eq!(torsion.bond_index, 1);
+    assert_eq!(torsion.torsion_index, 9);
+    assert_eq!(torsion.smarts, "[C:1][CH2:2]!@;-[O:3][CX4:4]");
+    assert_eq!(torsion.atom_indices, [0, 1, 2, 3]);
     assert_eq!(
-        torsions[0],
-        ExperimentalTorsion {
-            bond_index: 1,
-            torsion_index: 9,
-            smarts: "[C:1][CH2:2]!@;-[O:3][CX4:4]".to_owned(),
-            atom_indices: vec![0, 1, 2, 3],
-            terms: TorsionTerms::Cosine {
-                v: vec![0.0, 0.0, 2.5, 0.0, 0.0, 0.0],
-                signs: vec![1; 6],
-            },
+        torsion.terms,
+        TorsionTerms::Cosine {
+            v: vec![0.0, 0.0, 2.5, 0.0, 0.0, 0.0],
+            signs: vec![1; 6],
         }
     );
     let torsions = get_experimental_torsions_with_params(&mol, &etkdg_v4()).unwrap();

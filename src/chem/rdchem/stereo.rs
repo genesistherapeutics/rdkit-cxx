@@ -83,8 +83,11 @@ impl StereoGroup {
 /// (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CreateStereoGroupParams {
+    /// The group's atoms.
     pub atom_ids: Vec<u32>,
+    /// The group's bonds.
     pub bond_ids: Vec<u32>,
+    /// The group's id as read from a file; 0 for none.
     pub read_id: u32,
 }
 
@@ -146,11 +149,15 @@ impl RWMol {
 /// A potential stereo element. Mirrors `rdchem.StereoInfo`, which
 /// `rdmolops.FindPotentialStereo` returns.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct StereoInfo {
+    /// The kind of stereo element. Mirrors `StereoInfo.type`.
     pub type_: StereoType,
+    /// Whether the element's stereo is specified.
     pub specified: StereoSpecified,
     /// The atom or bond index, or `StereoInfo::NOATOM`.
     pub centered_on: u32,
+    /// The element's stereo descriptor.
     pub descriptor: StereoDescriptor,
     /// For the non-tetrahedral cases.
     pub permutation: u32,

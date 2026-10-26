@@ -33,6 +33,7 @@ use crate::ffi::free_sasa::ffi;
 /// The algorithm FreeSASA computes areas with. Mirrors
 /// `rdFreeSASA.SASAAlgorithm`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SASAAlgorithm {
     /// Lee and Richards' slices. Mirrors `LeeRichards`.
     LeeRichards,
@@ -60,6 +61,7 @@ impl SASAAlgorithm {
 /// The classifier that gives atoms of PDB residues their radii and
 /// classes. Mirrors `rdFreeSASA.SASAClassifier`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SASAClassifier {
     /// Mirrors `Protor`.
     Protor,
@@ -95,6 +97,7 @@ impl SASAClassifier {
 /// `SASAClassName` property holds the name (`Apolar`, `Polar`, or
 /// `Unclassified`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SASAClass {
     /// Mirrors `Unclassified` (0).
     Unclassified,
@@ -108,7 +111,9 @@ pub enum SASAClass {
 /// `rdFreeSASA.SASAOpts` (A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct SASAOpts {
+    /// The surface algorithm.
     pub algorithm: SASAAlgorithm,
+    /// How atoms get radii and classes.
     pub classifier: SASAClassifier,
     /// The radius of the solvent probe, in Å.
     pub probe_radius: f64,
@@ -180,7 +185,18 @@ pub struct CalcSASAParams<'a> {
     /// A query atom that limits the result to the atoms it matches, such as
     /// `make_free_sasa_polar_atom_query`'s; `None` for every atom.
     pub query: Option<&'a dyn AsAtom>,
+    /// The algorithm, classifier, and probe radius.
     pub opts: SASAOpts,
+}
+
+impl std::fmt::Debug for CalcSASAParams<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CalcSASAParams")
+            .field("conf_idx", &self.conf_idx)
+            .field("query", &self.query.map(|_| ".."))
+            .field("opts", &self.opts)
+            .finish()
+    }
 }
 
 impl Default for CalcSASAParams<'_> {

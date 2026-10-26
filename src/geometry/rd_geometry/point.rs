@@ -251,10 +251,7 @@ impl PointND {
         if idx < self.len() {
             Ok(idx as usize)
         } else {
-            Err(Error::Index {
-                index: idx,
-                len: self.len(),
-            })
+            Err(Error::index(idx, self.len() as usize))
         }
     }
 

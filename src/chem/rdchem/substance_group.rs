@@ -18,7 +18,9 @@ use crate::geometry::Point3D;
 /// A crossing bond's connection state. Mirrors `rdchem.SubstanceGroupCState`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SubstanceGroupCState {
+    /// The crossing bond.
     pub bond_idx: u32,
+    /// The bond's display vector.
     pub vector: Point3D,
 }
 
@@ -45,6 +47,7 @@ pub struct SubstanceGroupAttach {
     pub a_idx: u32,
     /// The leaving atom, or -1 for none.
     pub lv_idx: i32,
+    /// The attachment point's id.
     pub id: String,
 }
 
@@ -350,6 +353,7 @@ pub fn get_mol_substance_group_with_idx(mol: &Mol, idx: u32) -> Result<Substance
 }
 
 /// As [`get_mol_substance_group_with_idx`], to edit the group.
+/// Mirrors `rdchem.GetMolSubstanceGroupWithIdx` (A6).
 pub fn get_mol_substance_group_with_idx_mut(
     mol: &mut Mol,
     idx: u32,

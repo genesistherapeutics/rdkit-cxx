@@ -13,8 +13,8 @@ use std::fs::File;
 use std::io::{BufReader, Seek, SeekFrom};
 use std::path::Path;
 
+use crate::py::{py_float, py_int, py_split, py_strip};
 use crate::utils::fileutils::read_line;
-use crate::utils::{py_float, py_int, py_split, py_strip};
 use crate::{Error, Result};
 
 /// Parameters for [`ReFile::new_with_params`], with Python's defaults (A2).
@@ -136,7 +136,8 @@ impl ReFile {
 
 /// How [`read_data_file_with_params`] reads values. Mirrors the types
 /// `files.ReadDataFile`'s `dataType` takes.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum DataType {
     /// Floats, as Python's `float`, `numpy.float32`, and `numpy.float64`
     /// read them.
@@ -214,10 +215,7 @@ pub fn read_data_file_with_params(
     for line in &data_lines {
         let mut split_line = py_split(line);
         if params.dep_var_col >= split_line.len() {
-            return Err(Error::Index {
-                index: u32::try_from(params.dep_var_col).unwrap_or(u32::MAX),
-                len: u32::try_from(split_line.len()).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(params.dep_var_col, split_line.len()));
         }
         dep_var_vect.push(conv(split_line.remove(params.dep_var_col))?);
         if split_line.len() != n_ind_vars {

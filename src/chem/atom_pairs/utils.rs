@@ -17,9 +17,19 @@ use crate::{Error, Result};
 /// branch subtraction), and number of pi electrons, as Python's tuple.
 pub type AtomCodeExplanation = (String, u32, u32);
 
-/// An [`AtomCodeExplanation`] with the atom's CIP label (`""`, `"R"`, or
-/// `"S"`) last.
-pub type ChiralAtomCodeExplanation = (String, u32, u32, String);
+/// An [`AtomCodeExplanation`] with the atom's CIP label: Python's 4-tuple.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct ChiralAtomCodeExplanation {
+    /// The element symbol.
+    pub symbol: String,
+    /// The number of heavy neighbors, less the branch subtraction.
+    pub n_branch: u32,
+    /// The number of pi electrons.
+    pub n_pi: u32,
+    /// The CIP label: `""`, `"R"`, or `"S"`.
+    pub chirality: String,
+}
 
 fn mask(bits: u32) -> u64 {
     (1u64 << bits) - 1
@@ -64,7 +74,12 @@ pub fn explain_atom_code_include_chirality(code: u64) -> Result<ChiralAtomCodeEx
             });
         }
     };
-    Ok((symbol, n_branch, n_pi, chirality.to_owned()))
+    Ok(ChiralAtomCodeExplanation {
+        symbol,
+        n_branch,
+        n_pi,
+        chirality: chirality.to_owned(),
+    })
 }
 
 /// The number of bit ids two sorted lists share, counting a duplicate once

@@ -269,6 +269,8 @@ pub(crate) mod ffi {
             params: Pin<&mut FilterCatalogParams>,
             catalogs: u32,
         ) -> Result<bool>;
+        // Only the crate's unit tests call this.
+        #[allow(dead_code)]
         fn filter_catalogs_values() -> Result<Vec<u32>>;
 
         fn filter_catalog_new() -> Result<UniquePtr<FilterCatalog>>;

@@ -181,6 +181,7 @@ impl PipelineOptions {
 /// A message a pipeline run logged. Mirrors
 /// `rdMolStandardize.PipelineLogEntry`.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct PipelineLogEntry {
     /// What happened. Mirrors `PipelineLogEntry.status`.
     pub status: PipelineStatus,
@@ -190,6 +191,7 @@ pub struct PipelineLogEntry {
 
 /// What a pipeline run did. Mirrors `rdMolStandardize.PipelineResult`.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct PipelineResult {
     /// Every status the run logged, combined. Mirrors
     /// `PipelineResult.status`.

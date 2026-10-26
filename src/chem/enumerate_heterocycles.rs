@@ -322,6 +322,7 @@ pub fn get_heterocycle_reactions() -> Vec<ChemicalReaction> {
 
 /// The heterocycles of a molecule, made as they are asked for. Built by
 /// [`enumerate_heterocycles`].
+/// A Rust addition: the iterator of Python's generator.
 pub struct Heterocycles {
     reactions: Vec<ChemicalReaction>,
     depth: Option<u32>,
@@ -331,6 +332,12 @@ pub struct Heterocycles {
     pending: VecDeque<Mol>,
     seen: HashSet<String>,
     done: bool,
+}
+
+impl std::fmt::Debug for Heterocycles {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Heterocycles").finish_non_exhaustive()
+    }
 }
 
 impl Heterocycles {

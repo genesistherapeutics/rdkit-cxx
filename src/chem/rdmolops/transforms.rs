@@ -411,6 +411,7 @@ impl Default for FragmentOnBondsParams {
 
 /// What Python's `cutsPerAtom` output argument receives (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct FragmentOnBondsOutputs {
     /// The number of broken bonds at each atom.
     pub cuts_per_atom: Vec<u32>,

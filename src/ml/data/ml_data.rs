@@ -11,10 +11,13 @@
 
 use std::fmt;
 
+use crate::py::float_repr;
 use crate::{Error, Result};
 
 /// A value in an [`MLDataSet`]: what RDKit's readers make of a field.
+/// A Rust addition, for the Python values a data set holds.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum Value {
     /// An integer.
     Int(i64),
@@ -32,46 +35,6 @@ impl Value {
             Value::Float(x) => Some(*x),
             Value::Str(_) => None,
         }
-    }
-}
-
-/// Python's `repr` of a float: the shortest text that reads back as it,
-/// in positional notation for exponents from -4 to 15.
-pub(crate) fn float_repr(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".to_owned();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.to_owned();
-    }
-    let sci = format!("{x:e}");
-    let (mantissa, exp) = sci.split_once('e').expect("{:e} has an exponent");
-    let exp: i32 = exp.parse().expect("{:e} has an integer exponent");
-    let (sign, mantissa) = match mantissa.strip_prefix('-') {
-        Some(m) => ("-", m),
-        None => ("", mantissa),
-    };
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    if (-4..16).contains(&exp) {
-        let n = digits.len() as i32;
-        let text = if exp < 0 {
-            format!("0.{}{digits}", "0".repeat((-exp - 1) as usize))
-        } else if exp + 1 >= n {
-            format!("{digits}{}.0", "0".repeat((exp + 1 - n) as usize))
-        } else {
-            let (a, b) = digits.split_at((exp + 1) as usize);
-            format!("{a}.{b}")
-        };
-        format!("{sign}{text}")
-    } else {
-        let (first, rest) = digits.split_at(1);
-        let mant = if rest.is_empty() {
-            first.to_owned()
-        } else {
-            format!("{first}.{rest}")
-        };
-        let esign = if exp < 0 { '-' } else { '+' };
-        format!("{sign}{mant}e{esign}{:02}", exp.abs())
     }
 }
 
@@ -142,9 +105,7 @@ impl Default for MLDataSetParams {
 }
 
 fn first_row_len<T>(data: &[Vec<T>]) -> Result<usize> {
-    data.first()
-        .map(Vec::len)
-        .ok_or(Error::Index { index: 0, len: 0 })
+    data.first().map(Vec::len).ok_or(Error::index(0, 0))
 }
 
 /// The getters both data sets share.
@@ -208,7 +169,7 @@ impl MLDataSet {
     ///
     /// Errors as [`new_with_params`](Self::new_with_params).
     pub fn new(data: Vec<Vec<Value>>) -> Result<MLDataSet> {
-        MLDataSet::new_with_params(data, MLDataSetParams::default())
+        MLDataSet::new_with_params(data, &MLDataSetParams::default())
     }
 
     /// Mirrors `MLDataSet(data, nVars, nPts, nPossibleVals, qBounds,
@@ -218,7 +179,13 @@ impl MLDataSet {
     /// the quantization bounds are given, or for a row shorter than the
     /// first, as Python raises; `Error::Value` for an infinite or NaN float
     /// in a column whose values are counted.
-    pub fn new_with_params(data: Vec<Vec<Value>>, params: MLDataSetParams) -> Result<MLDataSet> {
+    pub fn new_with_params(data: Vec<Vec<Value>>, params: &MLDataSetParams) -> Result<MLDataSet> {
+        MLDataSet::from_params(data, params.clone())
+    }
+
+    /// As [`new_with_params`](MLDataSet::new_with_params), taking the
+    /// parameters.
+    pub(crate) fn from_params(data: Vec<Vec<Value>>, params: MLDataSetParams) -> Result<MLDataSet> {
         let n_results = params.n_results;
         let n_vars = match params.n_vars {
             Some(n) => n,
@@ -261,20 +228,14 @@ impl MLDataSet {
         let mut cols: Vec<usize> = (0..n_vars).collect();
         for (i, bounds) in self.q_bounds.iter().enumerate() {
             if !bounds.is_empty() {
-                let slot = n_possible.get_mut(i).ok_or(Error::Index {
-                    index: u32::try_from(i).unwrap_or(u32::MAX),
-                    len: u32::try_from(n_vars).unwrap_or(u32::MAX),
-                })?;
+                let slot = n_possible.get_mut(i).ok_or(Error::index(i, n_vars))?;
                 *slot = bounds.len() as i64;
                 cols.retain(|&c| c != i);
             }
         }
         for pt in &self.data {
             for col in cols.clone() {
-                let d = pt.get(col).ok_or(Error::Index {
-                    index: u32::try_from(col).unwrap_or(u32::MAX),
-                    len: u32::try_from(pt.len()).unwrap_or(u32::MAX),
-                })?;
+                let d = pt.get(col).ok_or(Error::index(col, pt.len()))?;
                 match integral(d)? {
                     Some(Some(fl)) => n_possible[col] = n_possible[col].max(fl),
                     _ => {
@@ -297,10 +258,7 @@ impl MLDataSet {
             .pt_names
             .get(idx)
             .zip(self.data.get(idx))
-            .ok_or(Error::Index {
-                index: u32::try_from(idx).unwrap_or(u32::MAX),
-                len: u32::try_from(self.data.len()).unwrap_or(u32::MAX),
-            })?;
+            .ok_or(Error::index(idx, self.data.len()))?;
         let mut res = vec![Value::Str(name.clone())];
         res.extend(row.iter().cloned());
         Ok(res)
@@ -318,10 +276,7 @@ impl MLDataSet {
             });
         }
         if idx >= self.data.len() || idx >= self.pt_names.len() {
-            return Err(Error::Index {
-                index: u32::try_from(idx).unwrap_or(u32::MAX),
-                len: u32::try_from(self.data.len()).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(idx, self.data.len()));
         }
         let mut val = val.into_iter();
         let Some(Value::Str(name)) = val.next() else {
@@ -429,7 +384,7 @@ impl MLQuantDataSet {
     ///
     /// Errors as [`new_with_params`](Self::new_with_params).
     pub fn new(data: Vec<Vec<i64>>) -> Result<MLQuantDataSet> {
-        MLQuantDataSet::new_with_params(data, MLDataSetParams::default())
+        MLQuantDataSet::new_with_params(data, &MLDataSetParams::default())
     }
 
     /// Mirrors `MLQuantDataSet(data, nVars, nPts, nPossibleVals, qBounds,
@@ -439,7 +394,19 @@ impl MLQuantDataSet {
     /// `Error::Index` for no rows unless the number of variables is given;
     /// `Error::Value` for rows of different lengths (which NumPy cannot
     /// make an integer array of) or no rows and no possible values.
-    pub fn new_with_params(data: Vec<Vec<i64>>, params: MLDataSetParams) -> Result<MLQuantDataSet> {
+    pub fn new_with_params(
+        data: Vec<Vec<i64>>,
+        params: &MLDataSetParams,
+    ) -> Result<MLQuantDataSet> {
+        MLQuantDataSet::from_params(data, params.clone())
+    }
+
+    /// As [`new_with_params`](MLQuantDataSet::new_with_params), taking the
+    /// parameters.
+    pub(crate) fn from_params(
+        data: Vec<Vec<i64>>,
+        params: MLDataSetParams,
+    ) -> Result<MLQuantDataSet> {
         let ncols = data.first().map_or(0, Vec::len);
         if data.iter().any(|row| row.len() != ncols) {
             return Err(Error::Value {
@@ -494,10 +461,7 @@ impl MLQuantDataSet {
                     .get(i)
                     .zip(self.data.get(i))
                     .map(|(n, r)| (n.clone(), r.clone()))
-                    .ok_or(Error::Index {
-                        index: u32::try_from(i).unwrap_or(u32::MAX),
-                        len: u32::try_from(self.data.len()).unwrap_or(u32::MAX),
-                    })
+                    .ok_or(Error::index(i, self.data.len()))
             })
             .collect()
     }

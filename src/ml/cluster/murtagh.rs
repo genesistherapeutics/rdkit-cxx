@@ -74,7 +74,7 @@ pub fn methods() -> Vec<(&'static str, i32, &'static str)> {
 fn to_clusters(n_pts: usize, ia: &[i64], ib: &[i64], crit: &[f64]) -> Result<Vec<Cluster>> {
     let mut cs: Vec<Option<Cluster>> = (0..n_pts)
         .map(|i| {
-            Some(Cluster::new_with_params(ClusterParams {
+            Some(Cluster::from_params(ClusterParams {
                 metric: 0.0,
                 data: Some(i as f64),
                 index: i as i64 + 1,
@@ -98,7 +98,7 @@ fn to_clusters(n_pts: usize, ia: &[i64], ib: &[i64], crit: &[f64]) -> Result<Vec
         // Python puts the merged cluster where the first one was, and
         // returns the last one made.
         let at = (ia[i] - 1) as usize;
-        cs[at] = Some(Cluster::new_with_params(ClusterParams {
+        cs[at] = Some(Cluster::from_params(ClusterParams {
             metric: crit[i],
             children: vec![c1, c2],
             index: (n_pts + i + 1) as i64,

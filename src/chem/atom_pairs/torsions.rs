@@ -66,10 +66,9 @@ pub fn py_score_path_with_atom_codes(
         let sub = branch_subtract(i, size);
         let code = match atom_codes {
             Some(atom_codes) => {
-                let code = *atom_codes.get(idx as usize).ok_or(Error::Index {
-                    index: idx,
-                    len: atom_codes.len() as u32,
-                })?;
+                let code = *atom_codes
+                    .get(idx as usize)
+                    .ok_or(Error::index(idx, atom_codes.len()))?;
                 // Python's integers go negative here; RDKit's codes do not.
                 code.checked_sub(sub).ok_or_else(|| Error::Value {
                     message: format!("atom code {code} is smaller than {sub}"),

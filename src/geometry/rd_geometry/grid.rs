@@ -217,7 +217,9 @@ grid_type!(
 /// (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct UniformGrid3DParams {
+    /// The distance between grid points.
     pub spacing: f64,
+    /// How many bits each grid point's value takes.
     pub val_type: DiscreteValueType,
     /// The grid's corner; `None` centers the grid on the origin.
     pub off_set: Option<Point3D>,
@@ -331,6 +333,7 @@ impl UniformGrid3D {
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct UniformRealValueGrid3DParams {
+    /// The distance between grid points.
     pub spacing: f64,
     /// The grid's corner; `None` centers the grid on the origin.
     pub off_set: Option<Point3D>,

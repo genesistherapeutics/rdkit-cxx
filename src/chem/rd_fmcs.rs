@@ -59,6 +59,7 @@ rdkit_enum! {
 /// [`MCSBondCompareParameters::set_ring_compare`] sets the flags it stands
 /// for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum RingCompare {
     /// Mirrors `RingCompare.IgnoreRingFusion`.
     IgnoreRingFusion,
@@ -483,6 +484,7 @@ impl MCSAcceptance {
 /// a closure, as Python's `MCSParameters.AtomTyper` takes an `AtomCompare`
 /// or an `MCSAtomCompare`.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub enum AtomTyper {
     /// One of RDKit's comparisons.
     Compare(AtomCompare),
@@ -506,6 +508,7 @@ impl From<MCSAtomCompare> for AtomTyper {
 /// a closure, as Python's `MCSParameters.BondTyper` takes a `BondCompare` or
 /// an `MCSBondCompare`.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub enum BondTyper {
     /// One of RDKit's comparisons.
     Compare(BondCompare),
@@ -689,6 +692,7 @@ impl MCSParameters {
 
 /// A maximum common substructure. Mirrors `rdFMCS.MCSResult`.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct MCSResult {
     num_atoms: u32,
     num_bonds: u32,

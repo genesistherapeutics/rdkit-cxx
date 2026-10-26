@@ -5,8 +5,8 @@
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::{
-    Atom, BondType, ChiralType, HybridizationType, Mol, RWMol, ReplaceAtomParams, mol_from_smiles,
-    mol_to_smiles,
+    Atom, Bond, BondType, ChiralType, HybridizationType, Mol, RWMol, ReplaceAtomParams,
+    mol_from_smiles, mol_to_smiles,
 };
 
 fn smiles(mol: &Mol) -> String {
@@ -198,4 +198,5 @@ fn rwmol_derefs_to_mol_and_is_send() {
     fn assert_send<T: Send>() {}
     assert_send::<RWMol>();
     assert_send::<Atom>();
+    assert_send::<Bond>();
 }

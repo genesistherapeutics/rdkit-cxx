@@ -27,6 +27,11 @@ From RDKit's source tree, under RDKit's BSD license:
   with trailing whitespace trimmed
 - `witch-salts.sdf`, `c6h6-cdk.smi`, `4DJU_lig.pdb`, `4FTR_lig.mol`, `NCI_5K_TPSA.csv`:
   `rdkit/Chem/test_data`, with trailing whitespace trimmed
+- `Crippen.csv`, `PP_descrs_regress.csv`, `descriptors_multiconf.sdf`:
+  `rdkit/Chem/test_data`
+- `EState_VSA.csv`: `rdkit/Chem/EState/test_data`
+- `NCI_200_qed.csv`: `rdkit/Chem/test_data/QED`
+- `first_200.tpsa.csv`: `Data/NCI`
 
 Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
 
@@ -40,3 +45,6 @@ Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
 - `cdk2-syn-clip100.smi`: the molecules (with their hydrogens) and names
   pickled in `rdkit/Chem/Pharm3D/test_data/cdk2-syn-clip100.pkl.gz`, written by
   `Chem.MolToSmiles`; each SMILES reads back to the same SMILES and atom count
+- `calc_mol_descriptors.tsv`: `Descriptors.CalcMolDescriptors` of a set of
+  molecules, one row each, with the `repr` of each value and `None` where a
+  descriptor failed (`tests/descriptors.rs`)

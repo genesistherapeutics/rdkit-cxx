@@ -38,10 +38,7 @@ pub(crate) fn py_fixed(x: f64, width: usize, precision: usize, space_sign: bool)
 }
 
 fn index_error(i: usize, len: usize) -> Error {
-    Error::Index {
-        index: i as u32,
-        len: len as u32,
-    }
+    Error::index(i, len)
 }
 
 /// A pharmacophore: features with lower and upper bounds on the distances
@@ -275,11 +272,9 @@ pub struct ExplicitPharmacophore {
 impl ExplicitPharmacophore {
     /// A pharmacophore of these features and radii; lists of different
     /// lengths are `Error::Value`. Python makes an empty one if either list
-    /// is empty. Mirrors `ExplicitPharmacophore(feats, radii)`.
-    pub fn new_with_params(
-        feats: &[FreeChemicalFeature],
-        radii: &[f64],
-    ) -> Result<ExplicitPharmacophore> {
+    /// is empty. Mirrors `ExplicitPharmacophore(feats, radii)`; its
+    /// defaults, `None`, make the empty pharmacophore `default` makes.
+    pub fn new(feats: &[FreeChemicalFeature], radii: &[f64]) -> Result<ExplicitPharmacophore> {
         let mut res = ExplicitPharmacophore::default();
         if !feats.is_empty() && !radii.is_empty() {
             res.initialize_feats(feats.to_vec(), radii.to_vec())?;
@@ -343,7 +338,7 @@ impl ExplicitPharmacophore {
     /// Reads the pharmacophore from a file's lines; `Error::Os` if it
     /// cannot be read and `Error::Value` if it is not UTF-8. Mirrors
     /// `ExplicitPharmacophore.initFromFile`.
-    pub fn init_from_file<R: Read>(&mut self, mut in_f: R) -> Result<()> {
+    pub fn init_from_file<R: Read + ?Sized>(&mut self, in_f: &mut R) -> Result<()> {
         let mut text = String::new();
         in_f.read_to_string(&mut text)
             .map_err(|err| match err.kind() {

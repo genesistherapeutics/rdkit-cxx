@@ -91,6 +91,12 @@ pub struct UsingCoordGen {
     _not_send: PhantomData<*const ()>,
 }
 
+impl std::fmt::Debug for UsingCoordGen {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UsingCoordGen").finish_non_exhaustive()
+    }
+}
+
 impl UsingCoordGen {
     /// Prefers CoordGen, or not, until the guard is dropped. Mirrors
     /// `UsingCoordGen(temp_state)` and its `__enter__`.

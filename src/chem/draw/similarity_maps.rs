@@ -14,8 +14,8 @@
 //! needs bit vectors; other fingerprints take a metric of their own
 //! (`dice_similarity_sparse_int_vect`, say).
 //!
-//! Python's matplotlib colormaps are not ported: a map's colours are given
-//! as three colours. Python's atom-pair, topological-torsion, and Morgan
+//! Python's matplotlib colormaps are not ported: a map's colors are given
+//! as three colors. Python's atom-pair, topological-torsion, and Morgan
 //! fingerprint functions call `rdMolDescriptors`' deprecated fingerprint
 //! functions; these compute the same fingerprints with the generators that
 //! replace them, in the generators' vector types. Each of Python's
@@ -30,6 +30,7 @@ use crate::chem::draw::rd_mol_draw_2d::{
 };
 use crate::chem::rd_depictor::compute_2d_coords;
 use std::collections::BTreeMap;
+use std::fmt;
 
 use crate::chem::rd_fingerprint_generator::{
     AdditionalOutput, FingerprintGenerator64, GetAtomPairGeneratorParams, GetFingerprintParams,
@@ -120,7 +121,7 @@ pub fn get_standardized_weights(weights: &[f64]) -> Result<(Vec<f64>, f64)> {
 /// `colors`, and `alpha`, which it ignores, are not ported.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GetSimilarityMapFromWeightsParams {
-    /// The colours of the lowest, middle, and highest weights; `None` for
+    /// The colors of the lowest, middle, and highest weights; `None` for
     /// `ContourParams`' map.
     pub color_map: Option<[DrawColour; 3]>,
     /// The Gaussians' width; `None` for 0.3 times the first bond's length
@@ -261,18 +262,26 @@ fn round2(x: f64) -> f64 {
 
 /// Parameters for `get_similarity_map_for_fingerprint_with_params`, with
 /// Python's defaults (A2): the metric, and the drawing's parameters.
-#[derive(Clone, Debug)]
-pub struct GetSimilarityMapForFingerprintParams<F> {
-    /// The similarity metric.
-    pub metric: fn(&F, &F) -> Result<f64>,
+#[derive(Clone)]
+pub struct GetSimilarityMapForFingerprintParams<'a, F> {
+    /// The similarity metric; any function or closure will do.
+    pub metric: &'a dyn Fn(&F, &F) -> Result<f64>,
     /// The parameters of `get_similarity_map_from_weights_with_params`.
     pub map: GetSimilarityMapFromWeightsParams,
 }
 
-impl<F: BitVect> Default for GetSimilarityMapForFingerprintParams<F> {
-    fn default() -> GetSimilarityMapForFingerprintParams<F> {
+impl<F> fmt::Debug for GetSimilarityMapForFingerprintParams<'_, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("GetSimilarityMapForFingerprintParams")
+            .field("map", &self.map)
+            .finish_non_exhaustive()
+    }
+}
+
+impl<F: BitVect> Default for GetSimilarityMapForFingerprintParams<'_, F> {
+    fn default() -> Self {
         GetSimilarityMapForFingerprintParams {
-            metric: dice_similarity::<F>,
+            metric: &dice_similarity::<F>,
             map: GetSimilarityMapFromWeightsParams::default(),
         }
     }
@@ -452,27 +461,35 @@ pub fn get_atomic_weights_for_fingerprint_generator_use_counts_with_metric(
 /// Parameters for `get_similarity_map_for_fingerprint_generator_with_params`
 /// and its `use_counts` form, with Python's defaults (A2): the metric, and
 /// the drawing's parameters.
-#[derive(Clone, Debug)]
-pub struct GetSimilarityMapForFingerprintGeneratorParams<F> {
-    /// The similarity metric.
-    pub metric: fn(&F, &F) -> Result<f64>,
+#[derive(Clone)]
+pub struct GetSimilarityMapForFingerprintGeneratorParams<'a, F> {
+    /// The similarity metric; any function or closure will do.
+    pub metric: &'a dyn Fn(&F, &F) -> Result<f64>,
     /// The parameters of `get_similarity_map_from_weights_with_params`.
     pub map: GetSimilarityMapFromWeightsParams,
 }
 
-impl Default for GetSimilarityMapForFingerprintGeneratorParams<ExplicitBitVect> {
+impl<F> fmt::Debug for GetSimilarityMapForFingerprintGeneratorParams<'_, F> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("GetSimilarityMapForFingerprintGeneratorParams")
+            .field("map", &self.map)
+            .finish_non_exhaustive()
+    }
+}
+
+impl Default for GetSimilarityMapForFingerprintGeneratorParams<'_, ExplicitBitVect> {
     fn default() -> Self {
         GetSimilarityMapForFingerprintGeneratorParams {
-            metric: dice_similarity::<ExplicitBitVect>,
+            metric: &dice_similarity::<ExplicitBitVect>,
             map: GetSimilarityMapFromWeightsParams::default(),
         }
     }
 }
 
-impl Default for GetSimilarityMapForFingerprintGeneratorParams<UIntSparseIntVect> {
+impl Default for GetSimilarityMapForFingerprintGeneratorParams<'_, UIntSparseIntVect> {
     fn default() -> Self {
         GetSimilarityMapForFingerprintGeneratorParams {
-            metric: crate::data_structs::dice_similarity_sparse_int_vect::<UIntSparseIntVect>,
+            metric: &crate::data_structs::dice_similarity_sparse_int_vect::<UIntSparseIntVect>,
             map: GetSimilarityMapFromWeightsParams::default(),
         }
     }

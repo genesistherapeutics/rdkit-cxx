@@ -17,6 +17,7 @@ use crate::ffi::monomer_info::ffi;
 /// RDKit's enum has no fixed underlying type, so cxx cannot check it; it
 /// crosses as `i32`, and a test sends every variant through C++.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum AtomMonomerType {
     /// Mirrors `UNKNOWN`.
     Unknown,
@@ -125,10 +126,15 @@ macro_rules! monomer_setters {
 /// (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AtomMonomerInfoParams {
+    /// The atom's name in the monomer.
     pub name: String,
+    /// The residue's name.
     pub residue_name: String,
+    /// The residue's number.
     pub res_num: i32,
+    /// The chain's id.
     pub chain_id: String,
+    /// The monomer's class.
     pub monomer_class: String,
 }
 
@@ -224,17 +230,29 @@ monomer_setters!(AtomMonomerInfo);
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct AtomPDBResidueInfoParams {
+    /// The atom's serial number.
     pub serial_number: i32,
+    /// The alternate location indicator.
     pub alt_loc: String,
+    /// The residue's name.
     pub residue_name: String,
+    /// The residue's number.
     pub residue_number: i32,
+    /// The chain's id.
     pub chain_id: String,
+    /// The residue's insertion code.
     pub insertion_code: String,
+    /// The atom's occupancy.
     pub occupancy: f64,
+    /// The atom's temperature factor.
     pub temp_factor: f64,
+    /// Whether the atom is a `HETATM`.
     pub is_hetero_atom: bool,
+    /// The secondary structure's code.
     pub secondary_structure: u32,
+    /// The segment's number.
     pub segment_number: u32,
+    /// The monomer's class.
     pub monomer_class: String,
 }
 
@@ -441,9 +459,25 @@ monomer_setters!(AtomPDBResidueInfo);
 
 /// `AtomMonomerType` values as C++ sees them, for a round-trip test. PDB
 /// residue info takes every type.
-#[doc(hidden)]
-pub fn __monomer_type_round_trip_for_tests(typ: AtomMonomerType) -> AtomMonomerType {
+#[cfg(test)]
+pub(crate) fn monomer_type_round_trip_for_tests(typ: AtomMonomerType) -> AtomMonomerType {
     let mut info = AtomPDBResidueInfo::default();
     info.set_monomer_type(typ);
     info.get_monomer_type()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn monomer_types_round_trip() {
+        for typ in [
+            AtomMonomerType::Unknown,
+            AtomMonomerType::Pdbresidue,
+            AtomMonomerType::Other,
+        ] {
+            assert_eq!(monomer_type_round_trip_for_tests(typ), typ);
+        }
+    }
 }

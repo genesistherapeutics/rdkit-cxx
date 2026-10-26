@@ -175,7 +175,9 @@ impl fmt::Debug for FPBReader {
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct MultiFPBReaderNeighborsParams {
+    /// The least similarity of a neighbor.
     pub threshold: f64,
+    /// The threads to search with; 0 for the hardware's.
     pub num_threads: u32,
 }
 
@@ -233,10 +235,9 @@ impl MultiFPBReader {
 
     /// Mirrors `MultiFPBReader.GetReader`.
     pub fn get_reader(&self, which: u32) -> Result<&FPBReader> {
-        self.readers.get(which as usize).ok_or(Error::Index {
-            index: which,
-            len: self.len(),
-        })
+        self.readers
+            .get(which as usize)
+            .ok_or(Error::index(which, self.len() as usize))
     }
 
     /// Initializes the readers. Mirrors `MultiFPBReader.Init`.

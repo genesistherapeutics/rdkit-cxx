@@ -24,6 +24,12 @@ pub struct Normalizer {
     ptr: UniquePtr<ffi::Normalizer>,
 }
 
+impl std::fmt::Debug for Normalizer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Normalizer").finish_non_exhaustive()
+    }
+}
+
 /// RDKit's built-in transformations and at most 200 restarts. Mirrors
 /// `Normalizer()`.
 impl Default for Normalizer {

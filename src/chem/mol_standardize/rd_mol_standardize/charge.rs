@@ -72,6 +72,12 @@ pub struct Reionizer {
     ptr: UniquePtr<ffi::Reionizer>,
 }
 
+impl std::fmt::Debug for Reionizer {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Reionizer").finish_non_exhaustive()
+    }
+}
+
 /// RDKit's built-in acid-base pairs and `charge_corrections()`. Mirrors
 /// `Reionizer()`.
 impl Default for Reionizer {
@@ -161,6 +167,12 @@ pub fn reionizer_from_data_with_charge_corrections(
 pub struct Uncharger {
     /// Never null.
     ptr: UniquePtr<ffi::Uncharger>,
+}
+
+impl std::fmt::Debug for Uncharger {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Uncharger").finish_non_exhaustive()
+    }
 }
 
 /// Parameters for `Uncharger::new_with_params`, with Python's defaults

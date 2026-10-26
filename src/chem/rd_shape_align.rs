@@ -104,6 +104,12 @@ pub struct ShapeInput {
     ptr: UniquePtr<ffi::PubChemShapeInput>,
 }
 
+impl std::fmt::Debug for ShapeInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ShapeInput").finish_non_exhaustive()
+    }
+}
+
 impl Clone for ShapeInput {
     fn clone(&self) -> ShapeInput {
         ShapeInput {
@@ -169,6 +175,7 @@ impl ShapeInput {
 pub struct PrepareConformerParams {
     /// The conformer; -1 for the first.
     pub conf_id: i32,
+    /// How the shape is built.
     pub opts: ShapeInputOptions,
 }
 

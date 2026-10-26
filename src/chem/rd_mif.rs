@@ -124,6 +124,12 @@ pub struct Coulomb {
     ptr: UniquePtr<ffi::Coulomb>,
 }
 
+impl std::fmt::Debug for Coulomb {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Coulomb").finish_non_exhaustive()
+    }
+}
+
 /// Parameters for `Coulomb::new_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CoulombParams {
@@ -246,6 +252,12 @@ functor!(
 /// `rdMIF.CoulombDielectric`.
 pub struct CoulombDielectric {
     ptr: UniquePtr<ffi::CoulombDielectric>,
+}
+
+impl std::fmt::Debug for CoulombDielectric {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CoulombDielectric").finish_non_exhaustive()
+    }
 }
 
 /// Parameters for `CoulombDielectric::new_with_params`, with Python's
@@ -374,6 +386,12 @@ pub struct MMFFVdWaals {
     ptr: UniquePtr<ffi::MMFFVdWaals>,
 }
 
+impl std::fmt::Debug for MMFFVdWaals {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MMFFVdWaals").finish_non_exhaustive()
+    }
+}
+
 /// Parameters for `MMFFVdWaals::new_with_params`, with Python's defaults
 /// (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -439,6 +457,12 @@ pub struct UFFVdWaals {
     ptr: UniquePtr<ffi::UFFVdWaals>,
 }
 
+impl std::fmt::Debug for UFFVdWaals {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("UFFVdWaals").finish_non_exhaustive()
+    }
+}
+
 /// Parameters for `UFFVdWaals::new_with_params`, with Python's defaults
 /// (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -498,6 +522,12 @@ functor!(
 /// it. Mirrors `rdMIF.HBond`.
 pub struct HBond {
     ptr: UniquePtr<ffi::HBond>,
+}
+
+impl std::fmt::Debug for HBond {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("HBond").finish_non_exhaustive()
+    }
 }
 
 /// Parameters for `HBond::new_with_params`, with Python's defaults (A2).
@@ -565,6 +595,12 @@ functor!(
 /// `rdMIF.Hydrophilic`.
 pub struct Hydrophilic {
     ptr: UniquePtr<ffi::Hydrophilic>,
+}
+
+impl std::fmt::Debug for Hydrophilic {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Hydrophilic").finish_non_exhaustive()
+    }
 }
 
 /// Parameters for `Hydrophilic::new_with_params`, with Python's defaults

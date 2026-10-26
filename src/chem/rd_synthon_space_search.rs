@@ -236,6 +236,7 @@ pub struct ShapeBuildParams {
 /// molecule with conformers, or `None` when it fails.
 /// `ShapeBuildParams::set_user_conformer_generator` says how the build calls
 /// it. The C++ counterpart is `SynthonSpaceSearch::UserConfGenerator`.
+/// A Rust addition, for the callable Python passes.
 #[derive(Clone)]
 pub struct UserConformerGenerator(Arc<ConformerFn>);
 
@@ -365,6 +366,7 @@ pub struct ConvertTextToDBFileParams<'a> {
 pub struct SubstructureSearchParams {
     /// How the query is matched to the synthons and the hits.
     pub substruct_match_params: SubstructMatchParameters,
+    /// The search's other parameters.
     pub params: SynthonSpaceSearchParams,
 }
 
@@ -375,6 +377,7 @@ pub type SubstructureSearchIncrementalParams = SubstructureSearchParams;
 /// The results of a search: the hits, as copies of RDKit's, and how the
 /// search went. Python's searches return it for every kind of search.
 /// Mirrors `rdSynthonSpaceSearch.SubstructureResult`.
+#[non_exhaustive]
 pub struct SubstructureResult {
     /// Never null.
     ptr: UniquePtr<ffi::SearchResults>,

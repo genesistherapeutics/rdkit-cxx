@@ -13,6 +13,7 @@ use std::path::Path;
 
 use crate::chem::Mol;
 use crate::data_structs::ExplicitBitVect;
+use crate::py::{parse_float, parse_int};
 use crate::{Error, Result};
 
 pub use crate::chem::rdfragcatalog::*;
@@ -74,20 +75,6 @@ fn universal_lines(text: &str) -> Vec<String> {
     text.split_inclusive('\n').map(str::to_owned).collect()
 }
 
-/// `int(s)` of a Python string of decimal digits, with whitespace around.
-pub(crate) fn py_int(s: &str) -> Result<i64> {
-    s.trim().parse().map_err(|_| Error::Value {
-        message: format!("invalid literal for int() with base 10: '{s}'"),
-    })
-}
-
-/// `float(s)` of a Python string, with whitespace around.
-pub(crate) fn py_float(s: &str) -> Result<f64> {
-    s.trim().parse().map_err(|_| Error::Value {
-        message: format!("could not convert string to float: '{s}'"),
-    })
-}
-
 /// The bits of a gains file, as `BuildFragmentCatalog.OutputGainsData`
 /// writes them: a header line, then per bit its id, description, gain, and
 /// counts per class. Mirrors `FragmentCatalog.ProcessGainsFile(fileName)`.
@@ -118,7 +105,7 @@ pub fn process_gains_file_with_params(
         }
         let split: Vec<&str> = line.split(params.delim.as_str()).map(str::trim).collect();
         let mut bit = BitGainsInfo {
-            id: py_int(split[0])?,
+            id: parse_int(split[0])?,
             ..BitGainsInfo::default()
         };
         let mut col = 1;
@@ -126,12 +113,12 @@ pub fn process_gains_file_with_params(
             bit.description = split.get(col).ok_or_else(missing)?.to_string();
             col += 1;
         }
-        bit.gain = py_float(split.get(col).ok_or_else(missing)?)?;
+        bit.gain = parse_float(split.get(col).ok_or_else(missing)?)?;
         col += 1;
         bit.n_per_class = Some(
             split[col.min(split.len())..]
                 .iter()
-                .map(|s| py_int(s))
+                .map(|s| parse_int(s))
                 .collect::<Result<_>>()?,
         );
         res.push(bit);
@@ -143,6 +130,7 @@ pub fn process_gains_file_with_params(
 }
 
 /// The links between bits of a catalog: from `build_adjacency_list`.
+/// A Rust addition, naming Python's adjacency list.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AdjacencyList {
     /// Per bit, in the order first given, the bits of the fragments one
@@ -226,10 +214,7 @@ pub fn get_mols_matching_bit<'m>(
 ) -> Result<Vec<&'m Mol>> {
     let mut res = Vec::new();
     for (i, mol) in mols.iter().enumerate() {
-        let fp = fps.get(i).ok_or(Error::Index {
-            index: u32::try_from(i).unwrap_or(u32::MAX),
-            len: u32::try_from(fps.len()).unwrap_or(u32::MAX),
-        })?;
+        let fp = fps.get(i).ok_or(Error::index(i, fps.len()))?;
         if fp.get_bit(bit)? {
             res.push(mol);
         }

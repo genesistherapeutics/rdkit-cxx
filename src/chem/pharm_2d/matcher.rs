@@ -69,10 +69,9 @@ pub fn get_atoms_matching_bit_with_params(
     };
     let mut choices = Vec::new();
     for &feat_idx in &feat_combo {
-        let tmp = matching_atoms.get(feat_idx).ok_or(Error::Index {
-            index: feat_idx as u32,
-            len: matching_atoms.len() as u32,
-        })?;
+        let tmp = matching_atoms
+            .get(feat_idx)
+            .ok_or(Error::index(feat_idx, matching_atoms.len()))?;
         if tmp.is_empty() {
             return Ok(Vec::new());
         }
@@ -91,14 +90,10 @@ pub fn get_atoms_matching_bit_with_params(
         }
     };
     let entry = |i: u32, j: u32| -> Result<f64> {
-        let row = d_mat.get(i as usize).ok_or(Error::Index {
-            index: i,
-            len: d_mat.len() as u32,
-        })?;
-        row.get(j as usize).copied().ok_or(Error::Index {
-            index: j,
-            len: row.len() as u32,
-        })
+        let row = d_mat.get(i as usize).ok_or(Error::index(i, d_mat.len()))?;
+        row.get(j as usize)
+            .copied()
+            .ok_or(Error::index(j, row.len()))
     };
     let dists_to_check = point_dists(n_pts)?;
     let bins = sig_factory.get_bins();
@@ -106,15 +101,11 @@ pub fn get_atoms_matching_bit_with_params(
     for mut proto_pharm in get_all_combinations(&choices) {
         let mut passes = true;
         for (i, &(a1, a2)) in dists_to_check.iter().enumerate() {
-            let (d_low, d_high) = *bins.get(scaffold[i]).ok_or(Error::Index {
-                index: scaffold[i] as u32,
-                len: bins.len() as u32,
-            })?;
+            let (d_low, d_high) = *bins
+                .get(scaffold[i])
+                .ok_or(Error::index(scaffold[i], bins.len()))?;
             let first = |atoms: &Vec<u32>| -> Result<u32> {
-                atoms
-                    .first()
-                    .copied()
-                    .ok_or(Error::Index { index: 0, len: 0 })
+                atoms.first().copied().ok_or(Error::index(0, 0))
             };
             let dist = entry(first(&proto_pharm[a1])?, first(&proto_pharm[a2])?)?;
             if dist < f64::from(d_low) || dist >= f64::from(d_high) {

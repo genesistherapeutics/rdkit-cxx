@@ -140,6 +140,7 @@ pub fn error_bits_to_text(err: u32) -> Vec<&'static str> {
 /// An InChI from a checked structure. Mirrors the `InchiResult` named
 /// tuple `MolKey.GetInchiForCTAB` returns.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct InchiResult {
     /// The error bits.
     pub error: u32,
@@ -152,6 +153,7 @@ pub struct InchiResult {
 /// A molecule key and how it was made. Mirrors the `MolKeyResult` named
 /// tuple `MolKey.GetKeyForCTAB` returns.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct MolKeyResult {
     /// The key: the version, `|`, and the Base64 of an MD5 hash.
     pub mol_key: Option<String>,

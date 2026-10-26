@@ -541,7 +541,7 @@ impl SubstructLibrary {
     pub fn set_search_order(&mut self, seq: &[u32]) -> Result<()> {
         let len = self.len();
         if let Some(&index) = seq.iter().find(|&&idx| idx >= len) {
-            return Err(Error::Index { index, len });
+            return Err(Error::index(index, len as usize));
         }
         self.search_order = seq.to_vec();
         Ok(())
@@ -574,7 +574,7 @@ impl SubstructLibrary {
 
     /// Writes `serialize`'s bytes; a failed write is `Error::Os`. Mirrors
     /// `SubstructLibrary.ToStream`.
-    pub fn to_stream(&self, stream: &mut dyn Write) -> Result<()> {
+    pub fn to_stream<W: Write + ?Sized>(&self, stream: &mut W) -> Result<()> {
         let pickle = self.serialize()?;
         stream
             .write_all(&pickle)
@@ -592,7 +592,7 @@ impl SubstructLibrary {
     /// # Safety
     ///
     /// As `from_pickle`: the stream must hold bytes `serialize` returned.
-    pub unsafe fn init_from_stream(&mut self, stream: &mut dyn Read) -> Result<()> {
+    pub unsafe fn init_from_stream<R: Read + ?Sized>(&mut self, stream: &mut R) -> Result<()> {
         let mut pickle = Vec::new();
         stream.read_to_end(&mut pickle).map_err(|err| Error::Os {
             message: err.to_string(),

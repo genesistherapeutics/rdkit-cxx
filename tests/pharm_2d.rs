@@ -36,6 +36,7 @@ fn sig_len(sig: &Signature) -> u64 {
         Signature::Bits(bits) => bits.get_num_bits().into(),
         Signature::Counts(counts) => counts.get_length() as u64,
         Signature::LongCounts(counts) => counts.get_length() as u64,
+        other => panic!("unknown signature: {other:?}"),
     }
 }
 

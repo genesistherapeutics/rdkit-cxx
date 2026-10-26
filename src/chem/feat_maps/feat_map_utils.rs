@@ -13,10 +13,12 @@
 use crate::Result;
 use crate::chem::feat_maps::feat_map_point::{FeatMapPoint, FeatureLike};
 use crate::chem::feat_maps::feat_maps::{FeatMap, FeatMapInitParams};
+use std::fmt;
 
 /// How two merged points' positions and weights combine. Mirrors
 /// `FeatMapUtils.MergeMethod`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum MergeMethod {
     /// The weighted mean of the positions, and the mean weight.
     #[default]
@@ -28,7 +30,8 @@ pub enum MergeMethod {
 }
 
 /// What decides which points merge. Mirrors `FeatMapUtils.MergeMetric`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum MergeMetric {
     /// No points merge.
     #[default]
@@ -41,7 +44,8 @@ pub enum MergeMetric {
 
 /// How merged points' directions combine. Python accepts it and does not
 /// use it. Mirrors `FeatMapUtils.DirMergeMode`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum DirMergeMode {
     /// Directions are not merged.
     #[default]
@@ -113,8 +117,8 @@ fn points_match(f1: &FeatMapPoint, f2: &FeatMapPoint) -> bool {
 
 /// Parameters for [`merge_feat_points_with_params`], with Python's defaults
 /// (A2).
-#[derive(Clone, Copy, Debug)]
-pub struct MergeFeatPointsParams {
+#[derive(Clone, Copy)]
+pub struct MergeFeatPointsParams<'a> {
     /// What decides which points merge.
     pub merge_metric: MergeMetric,
     /// The largest distance for distance-based merging, or the smallest
@@ -125,17 +129,28 @@ pub struct MergeFeatPointsParams {
     /// How positions and weights merge.
     pub merge_method: MergeMethod,
     /// Which points may merge; by default, those of the same family.
-    pub compat_func: fn(&FeatMapPoint, &FeatMapPoint) -> bool,
+    pub compat_func: &'a dyn Fn(&FeatMapPoint, &FeatMapPoint) -> bool,
 }
 
-impl Default for MergeFeatPointsParams {
-    fn default() -> MergeFeatPointsParams {
+impl fmt::Debug for MergeFeatPointsParams<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("MergeFeatPointsParams")
+            .field("merge_metric", &self.merge_metric)
+            .field("merge_tol", &self.merge_tol)
+            .field("dir_merge_mode", &self.dir_merge_mode)
+            .field("merge_method", &self.merge_method)
+            .finish_non_exhaustive()
+    }
+}
+
+impl Default for MergeFeatPointsParams<'_> {
+    fn default() -> Self {
         MergeFeatPointsParams {
             merge_metric: MergeMetric::NoMerge,
             merge_tol: 1.5,
             dir_merge_mode: DirMergeMode::NoMerge,
             merge_method: MergeMethod::WeightedAverage,
-            compat_func: points_match,
+            compat_func: &points_match,
         }
     }
 }

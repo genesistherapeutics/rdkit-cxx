@@ -6,22 +6,6 @@
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::*;
 
-#[test]
-fn option_values_match_rdkit() {
-    let (rust, cxx) = __property_pickle_option_values_for_tests();
-    assert_eq!(rust, cxx);
-    assert_eq!(
-        PropertyPickleOptions::QueryAtomData,
-        PropertyPickleOptions::AtomProps
-    );
-    let combined = PropertyPickleOptions::MolProps | PropertyPickleOptions::AtomProps;
-    assert_eq!(combined.bits(), 0x3);
-    assert_eq!(
-        format!("{:?}", PropertyPickleOptions::AllProps),
-        "PropertyPickleOptions::AllProps"
-    );
-}
-
 // The default is process-wide, so everything that depends on it is in one test.
 #[test]
 fn pickles_round_trip() {

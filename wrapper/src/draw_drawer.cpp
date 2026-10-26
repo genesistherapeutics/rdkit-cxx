@@ -35,8 +35,8 @@
 #include <GraphMol/MolDraw2D/MolDraw2DCairo.h>
 #endif
 // The text drawer's and DrawMol's interfaces, which RDKit does not install;
-// wrapper/vendor holds RDKit's own copies, from the release the crate
-// supports.
+// wrapper/vendor/<release> holds RDKit's own copies, from the release found,
+// so the layouts the wrappers build match the library's.
 #include <GraphMol/MolDraw2D/DrawMol.h>
 #include <GraphMol/MolDraw2D/DrawMolMCHCircleAndLine.h>
 #include <GraphMol/MolDraw2D/DrawMolMCHLasso.h>

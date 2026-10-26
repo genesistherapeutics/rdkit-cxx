@@ -34,9 +34,9 @@ pub use crate::chem::*;
 // Python, where each `import *` replaces the names before it.
 pub use crate::chem::rd_chem_reactions::SanitizeFlags;
 
-use crate::chem::py_compat::float_repr;
 use crate::force_field::rd_force_field::{ForceField, MinimizeParams};
 use crate::geometry::rd_geometry::{UniformGrid3D, UniformGrid3DParams};
+use crate::py::float_repr;
 use crate::{Error, Result};
 
 /// Parameters for `transform_mol_with_params`, with Python's defaults (A2).
@@ -340,6 +340,7 @@ pub fn get_conformer_rms_matrix_with_params(
 /// the `ProductReactants` named tuple that
 /// `AllChem.EnumerateLibraryFromReaction(..., returnReactants=True)` yields.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct ProductReactants {
     /// One set of the reaction's products.
     pub products: Vec<Mol>,
@@ -351,12 +352,20 @@ pub struct ProductReactants {
 /// asked for: each set of products, for each combination of reactants, one
 /// from each set, the last set varying fastest. Built by
 /// [`enumerate_library_from_reaction`].
+/// A Rust addition: the iterator of Python's generator.
 pub struct EnumerateLibraryFromReaction<'a> {
     reaction: &'a mut ChemicalReaction,
     sidechain_sets: &'a [Vec<Mol>],
     /// The next combination, as an index into each set; `None` when done.
     next: Option<Vec<usize>>,
     pending: std::collections::VecDeque<ProductReactants>,
+}
+
+impl std::fmt::Debug for EnumerateLibraryFromReaction<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EnumerateLibraryFromReaction")
+            .finish_non_exhaustive()
+    }
 }
 
 impl EnumerateLibraryFromReaction<'_> {
@@ -430,7 +439,7 @@ pub fn enumerate_library_from_reaction<'a>(
         });
     }
     if n == 0 {
-        return Err(Error::Index { index: 0, len: 0 });
+        return Err(Error::index(0, 0));
     }
     let next = sidechain_sets
         .iter()
@@ -459,8 +468,8 @@ pub fn enumerate_library_from_reaction_return_reactants<'a>(
 /// A function that makes the force field `constrained_embed` cleans up with,
 /// for the molecule's conformer 0. Mirrors `ConstrainedEmbed`'s
 /// `getForceField` argument, which Python calls as `getForceField(mol,
-/// confId=0)`.
-pub type GetForceField = fn(&mut Mol) -> Result<ForceField<'_>>;
+/// confId=0)`; any function or closure will do.
+pub type GetForceField = dyn Fn(&mut Mol) -> Result<ForceField<'_>>;
 
 /// UFF's force field for the molecule's conformer 0, `constrained_embed`'s
 /// default. Mirrors `rdForceFieldHelpers.UFFGetMoleculeForceField(mol,
@@ -477,8 +486,8 @@ fn uff_force_field(mol: &mut Mol) -> Result<ForceField<'_>> {
 
 /// Parameters for `constrained_embed_with_params`, with Python's defaults
 /// (A2).
-#[derive(Clone, Debug)]
-pub struct ConstrainedEmbedParams {
+#[derive(Clone)]
+pub struct ConstrainedEmbedParams<'a> {
     /// Pulls the matched atoms toward the core's positions with extra
     /// points while cleaning up; otherwise constrains their distances.
     pub use_tethers: bool,
@@ -487,20 +496,31 @@ pub struct ConstrainedEmbedParams {
     /// The embedder's random seed.
     pub randomseed: i32,
     /// Makes the force field for the cleanup.
-    pub get_force_field: GetForceField,
+    pub get_force_field: &'a GetForceField,
     /// The embedder's other arguments, which Python passes as keywords;
     /// their `coord_map` and `random_seed` are replaced. The default is
     /// `EmbedMolecule`'s keyword defaults.
     pub embed_params: EmbedParameters,
 }
 
-impl Default for ConstrainedEmbedParams {
-    fn default() -> ConstrainedEmbedParams {
+impl std::fmt::Debug for ConstrainedEmbedParams<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstrainedEmbedParams")
+            .field("use_tethers", &self.use_tethers)
+            .field("core_conf_id", &self.core_conf_id)
+            .field("randomseed", &self.randomseed)
+            .field("embed_params", &self.embed_params)
+            .finish_non_exhaustive()
+    }
+}
+
+impl Default for ConstrainedEmbedParams<'_> {
+    fn default() -> Self {
         ConstrainedEmbedParams {
             use_tethers: true,
             core_conf_id: -1,
             randomseed: 2342,
-            get_force_field: uff_force_field,
+            get_force_field: &uff_force_field,
             embed_params: EmbedParameters {
                 use_exp_torsion_angle_prefs: true,
                 use_basic_knowledge: true,
@@ -587,10 +607,9 @@ pub fn constrained_embed_with_params(
             for i in 0..core.get_num_atoms() {
                 let p = conf.get_atom_position(i)?;
                 let p_idx = ff.add_extra_point_with_fixed(p.x, p.y, p.z, true) - 1;
-                let target = *match_.get(i as usize).ok_or(Error::Index {
-                    index: i,
-                    len: match_.len() as u32,
-                })?;
+                let target = *match_
+                    .get(i as usize)
+                    .ok_or(Error::index(i, match_.len()))?;
                 ff.add_distance_constraint(p_idx, target, 0.0, 0.0, 100.0)?;
             }
             ff.initialize()?;
@@ -664,10 +683,10 @@ pub fn assign_bond_orders_from_template(refmol: &Mol, mol: &Mol) -> Result<Mol> 
         );
     }
     let at = |i: u32| -> Result<u32> {
-        matching.get(i as usize).copied().ok_or(Error::Index {
-            index: i,
-            len: matching.len() as u32,
-        })
+        matching
+            .get(i as usize)
+            .copied()
+            .ok_or(Error::index(i, matching.len()))
     };
     for b in refmol.get_bonds() {
         let (atom1, atom2) = (at(b.get_begin_atom_idx())?, at(b.get_end_atom_idx())?);
