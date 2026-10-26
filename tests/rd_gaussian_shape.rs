@@ -102,14 +102,14 @@ fn assert_triple(actual: (f64, f64, f64), expected: (f64, f64, f64), tol: f64) {
     assert_close_to(actual.2, expected.2, tol);
 }
 
-fn assert_five(actual: (f64, f64, f64, f64, f64), expected: (f64, f64, f64, f64, f64)) {
+fn assert_five(actual: ShapeScores, expected: (f64, f64, f64, f64, f64)) {
     assert_triple(
-        (actual.0, actual.1, actual.2),
+        (actual.combo_score, actual.shape_score, actual.color_score),
         (expected.0, expected.1, expected.2),
         1e-6,
     );
-    assert_close_to(actual.3, expected.3, 1e-6);
-    assert_close_to(actual.4, expected.4, 1e-6);
+    assert_close_to(actual.shape_overlap_volume, expected.3, 1e-6);
+    assert_close_to(actual.color_overlap_volume, expected.4, 1e-6);
 }
 
 /// Checks that a transformation's 16 values, by rows, are a rotation and a
@@ -281,8 +281,18 @@ fn shape_options() {
     assert!(!eth.get_atom_with_idx(0).unwrap().has_prop("BespokeRadius"));
 
     let custom = vec![vec![
-        (1, Point3D::new(0.0, 0.0, 0.0), 1.0, vec![]),
-        (2, Point3D::new(1.0, 0.0, 0.0), 1.0, vec![2]),
+        CustomFeature {
+            type_: 1,
+            pos: Point3D::new(0.0, 0.0, 0.0),
+            rad: 1.0,
+            atoms: vec![],
+        },
+        CustomFeature {
+            type_: 2,
+            pos: Point3D::new(1.0, 0.0, 0.0),
+            rad: 1.0,
+            atoms: vec![2],
+        },
     ]];
     let shape = shape_with(
         &eth,
@@ -441,17 +451,24 @@ fn aligns_to_shapes() {
     );
 
     let mut fit_shape = ShapeInput::new(&phenol()).unwrap();
-    let (combo, shape, color, matrix) = align_shapes(&reference, &mut fit_shape).unwrap();
-    assert_triple((combo, shape, color), ETH_PH, 0.02);
-    assert_rigid(&matrix);
+    let aligned = align_shapes(&reference, &mut fit_shape).unwrap();
+    assert_triple(
+        (
+            aligned.combo_score,
+            aligned.shape_score,
+            aligned.color_score,
+        ),
+        ETH_PH,
+        0.02,
+    );
+    assert_rigid(&aligned.matrix);
     let colorless = ShapeOverlayOptions {
         optim_mode: OptimMode::ShapeOnly,
         ..Default::default()
     };
     let mut fit_shape = ShapeInput::new(&phenol()).unwrap();
-    let (combo, ..) =
-        align_shapes_with_overlay_opts(&reference, &mut fit_shape, &colorless).unwrap();
-    assert_close_to(combo, 0.3493199960520435, 0.02);
+    let aligned = align_shapes_with_overlay_opts(&reference, &mut fit_shape, &colorless).unwrap();
+    assert_close_to(aligned.combo_score, 0.3493199960520435, 0.02);
 }
 
 #[test]
@@ -489,7 +506,7 @@ fn scores_in_place() {
     );
     let fit = ShapeInput::new(&eth2).unwrap();
     assert_five(score_shape(&reference, &fit), ETH_ETH2_SCORES);
-    let (combo, shape, color, _, color_overlap) = score_shape_with_overlay_opts(
+    let colorless = score_shape_with_overlay_opts(
         &reference,
         &fit,
         &ShapeOverlayOptions {
@@ -497,9 +514,12 @@ fn scores_in_place() {
             ..Default::default()
         },
     );
-    assert_close_to(shape, 0.9778488248013629, 1e-6);
-    assert_close_to(combo, shape, 1e-6);
-    assert_eq!((color, color_overlap), (0.0, 0.0));
+    assert_close_to(colorless.shape_score, 0.9778488248013629, 1e-6);
+    assert_close_to(colorless.combo_score, colorless.shape_score, 1e-6);
+    assert_eq!(
+        (colorless.color_score, colorless.color_overlap_volume),
+        (0.0, 0.0)
+    );
     assert_value_error(score_mol_with_params(
         &eth,
         &eth2,
@@ -515,7 +535,13 @@ fn compares_conformers() {
     let two = ethanol_two_confs();
     let ph = phenol();
     let before = ph.get_conformer().unwrap().get_positions();
-    let (scores, best_ref, best_fit, matrix) = score_molecule_all_conformers(&two, &ph).unwrap();
+    let ConformerScores {
+        scores,
+        best_ref_conf: best_ref,
+        best_fit_conf: best_fit,
+        matrix,
+        ..
+    } = score_molecule_all_conformers(&two, &ph).unwrap();
     assert_eq!((scores.len(), scores[0].len()), (2, 1));
     assert_close_to(scores[0][0], 0.3526061582312596, 0.02);
     assert_close_to(scores[1][0], 0.35665361038718346, 0.02);
@@ -523,8 +549,12 @@ fn compares_conformers() {
     assert!(best_ref == 0 || best_ref == 1);
     assert_rigid(&matrix);
     assert_eq!(ph.get_conformer().unwrap().get_positions(), before);
-    let (scores, best_ref, best_fit, _) =
-        score_molecule_all_conformers_with_params(&ph, &two, &Default::default()).unwrap();
+    let ConformerScores {
+        scores,
+        best_ref_conf: best_ref,
+        best_fit_conf: best_fit,
+        ..
+    } = score_molecule_all_conformers_with_params(&ph, &two, &Default::default()).unwrap();
     assert_eq!((scores.len(), scores[0].len()), (1, 2));
     assert_close_to(scores[0][0], 0.35264885636108234, 0.02);
     assert_close_to(scores[0][1], 0.3567082565391058, 0.02);
@@ -533,10 +563,10 @@ fn compares_conformers() {
 
     let mut shapes = ShapeInput::new(&two).unwrap();
     let fit = ShapeInput::new(&ph).unwrap();
-    let ((combo, shape, color), this_shape, fit_shape, matrix) =
-        shapes.best_similarity(&fit).unwrap();
+    let best = shapes.best_similarity(&fit).unwrap();
+    let (this_shape, fit_shape, matrix) = (best.best_this_shape, best.best_fit_shape, best.matrix);
     assert_triple(
-        (combo, shape, color),
+        (best.combo_score, best.shape_score, best.color_score),
         (0.3566536103871839, 0.6194420298721873, 0.09386519090218054),
         0.02,
     );
@@ -548,10 +578,15 @@ fn compares_conformers() {
         threshold: 0.99,
         ..Default::default()
     };
-    let (scores, this_shape, fit_shape, _) =
-        shapes.best_similarity_with_params(&fit, &params).unwrap();
-    assert_eq!(scores, (-1.0, -1.0, -1.0));
-    assert_eq!((this_shape, fit_shape), (u32::MAX, u32::MAX));
+    let best = shapes.best_similarity_with_params(&fit, &params).unwrap();
+    assert_eq!(
+        (best.combo_score, best.shape_score, best.color_score),
+        (-1.0, -1.0, -1.0)
+    );
+    assert_eq!(
+        (best.best_this_shape, best.best_fit_shape),
+        (u32::MAX, u32::MAX)
+    );
     assert_close(shapes.max_possible_similarity(&fit), 0.49603236154907154);
     let colorless = ShapeOverlayOptions {
         opt_param: 0.0,
@@ -597,7 +632,12 @@ fn atom_indices_are_checked() {
 #[test]
 fn custom_features_are_checked() {
     let two = ethanol_two_confs();
-    let feature = |x: f64, radius: f64| (1, Point3D::new(x, 0.0, 0.0), radius, vec![]);
+    let feature = |x: f64, radius: f64| CustomFeature {
+        type_: 1,
+        pos: Point3D::new(x, 0.0, 0.0),
+        rad: radius,
+        atoms: vec![],
+    };
     let uneven = ShapeInputOptions {
         custom_features: vec![vec![feature(0.0, 1.0), feature(1.0, 1.0)], vec![]],
         ..Default::default()

@@ -66,19 +66,89 @@ rdkit_enum! {
     }
 }
 
-/// A custom feature: its type, position, radius, and the atoms it came
-/// from (which may be empty).
-pub type CustomFeature = (u32, Point3D, f64, Vec<u32>);
+/// A custom feature, one of the tuples of
+/// `ShapeInputOptions.customFeatures`. Mirrors the C++
+/// `GaussianShape::CustomFeature`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CustomFeature {
+    /// The feature's type.
+    pub type_: u32,
+    /// The feature's position.
+    pub pos: Point3D,
+    /// The feature's radius.
+    pub rad: f64,
+    /// The atoms the feature was derived from; may be empty.
+    pub atoms: Vec<u32>,
+}
 
-/// What `ShapeInput::best_similarity` returns: the best scores
-/// (combination, shape, color), the numbers of the two shapes that reach
-/// them, and the 16 values of the fit's transformation, by rows.
-pub type BestSimilarityResult = ((f64, f64, f64), u32, u32, Vec<f64>);
+/// What `ShapeInput::best_similarity` returns: Python's tuple of the
+/// scores, the two shapes' numbers, and the transformation.
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct BestSimilarityResult {
+    /// The best combination score; -1 when no overlay beats the threshold.
+    pub combo_score: f64,
+    /// The shape score of the best overlay.
+    pub shape_score: f64,
+    /// The color score of the best overlay.
+    pub color_score: f64,
+    /// The number of this shape's shape that gave the best overlay.
+    pub best_this_shape: u32,
+    /// The number of the fit's shape that gave the best overlay.
+    pub best_fit_shape: u32,
+    /// The 16 values of the fit's transformation, by rows.
+    pub matrix: Vec<f64>,
+}
 
-/// What `score_molecule_all_conformers` returns: the combination scores by
-/// reference and fit conformer, the best pair's conformers, and its
-/// transformation's 16 values, by rows.
-pub type ConformerScores = (Vec<Vec<f64>>, i32, i32, Vec<f64>);
+/// What `score_molecule_all_conformers` returns: Python's tuple of the
+/// scores, the best pair of conformers, and its transformation.
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct ConformerScores {
+    /// The combination scores: `scores[i][j]` for reference conformer `i`
+    /// and fit conformer `j`, counted in order.
+    pub scores: Vec<Vec<f64>>,
+    /// The ID of the reference conformer of the best alignment.
+    pub best_ref_conf: i32,
+    /// The ID of the fit conformer of the best alignment.
+    pub best_fit_conf: i32,
+    /// The 16 values of the best alignment's transformation, by rows.
+    pub matrix: Vec<f64>,
+}
+
+/// What `align_shapes` returns: Python's `(combo_score, shape_score,
+/// color_score, matrix)`.
+#[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct ShapeAlignment {
+    /// The combination score.
+    pub combo_score: f64,
+    /// The shape score.
+    pub shape_score: f64,
+    /// The color score; 0 without color features.
+    pub color_score: f64,
+    /// The 16 values of the transformation that overlays the fit on the
+    /// reference, by rows.
+    pub matrix: Vec<f64>,
+}
+
+/// What `score_mol` and `score_shape` return: Python's tuple of the
+/// scores and the overlap volumes.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct ShapeScores {
+    /// The combination score.
+    pub combo_score: f64,
+    /// The shape score.
+    pub shape_score: f64,
+    /// The color score; 0 without color features, when the combination
+    /// score is the shape score.
+    pub color_score: f64,
+    /// The volume of the shapes' overlap.
+    pub shape_overlap_volume: f64,
+    /// The volume of the color features' overlap.
+    pub color_overlap_volume: f64,
+}
 
 /// How a molecule becomes a shape. Mirrors
 /// `rdGaussianShape.ShapeInputOptions` (A3).
@@ -130,11 +200,11 @@ impl ShapeInputOptions {
                 .iter()
                 .map(|f| f.len() as u32)
                 .collect(),
-            custom_feature_types: features.clone().map(|f| f.0).collect(),
-            custom_feature_positions: features.clone().map(|f| f.1).collect(),
-            custom_feature_radii: features.clone().map(|f| f.2).collect(),
-            custom_feature_atom_counts: features.clone().map(|f| f.3.len() as u32).collect(),
-            custom_feature_atoms: features.flat_map(|f| f.3.iter().copied()).collect(),
+            custom_feature_types: features.clone().map(|f| f.type_).collect(),
+            custom_feature_positions: features.clone().map(|f| f.pos).collect(),
+            custom_feature_radii: features.clone().map(|f| f.rad).collect(),
+            custom_feature_atom_counts: features.clone().map(|f| f.atoms.len() as u32).collect(),
+            custom_feature_atoms: features.flat_map(|f| f.atoms.iter().copied()).collect(),
             atom_subset: self.atom_subset.clone(),
             atom_radii_atoms: self.atom_radii.iter().map(|&(atom, _)| atom).collect(),
             atom_radii_values: self.atom_radii.iter().map(|&(_, radius)| radius).collect(),
@@ -213,8 +283,14 @@ fn triple(scores: &[f64]) -> (f64, f64, f64) {
     (scores[0], scores[1], scores[2])
 }
 
-fn five(scores: &[f64]) -> (f64, f64, f64, f64, f64) {
-    (scores[0], scores[1], scores[2], scores[3], scores[4])
+fn five(scores: &[f64]) -> ShapeScores {
+    ShapeScores {
+        combo_score: scores[0],
+        shape_score: scores[1],
+        color_score: scores[2],
+        shape_overlap_volume: scores[3],
+        color_overlap_volume: scores[4],
+    }
 }
 
 /// A molecule's shapes, one per conformer, of which one, the active shape,
@@ -384,8 +460,8 @@ impl ShapeInput {
     }
 
     /// Overlays every pair of this shape's and the fit's shapes and returns
-    /// the best scores (combination, shape, color), the two shapes' numbers,
-    /// and the 16 values of the fit's transformation, by rows. Mirrors
+    /// the best scores, the two shapes' numbers, and the fit's
+    /// transformation. Mirrors
     /// `ShapeInput.BestSimilarity`, with the overlay errors of the module
     /// documentation.
     pub fn best_similarity(&mut self, fit_shape: &ShapeInput) -> Result<BestSimilarityResult> {
@@ -406,12 +482,14 @@ impl ShapeInput {
             params.threshold,
             &params.overlay_opts.to_ffi(),
         )?;
-        Ok((
-            triple(&result),
-            result[3] as u32,
-            result[4] as u32,
-            result[5..].to_vec(),
-        ))
+        Ok(BestSimilarityResult {
+            combo_score: result[0],
+            shape_score: result[1],
+            color_score: result[2],
+            best_this_shape: result[3] as u32,
+            best_fit_shape: result[4] as u32,
+            matrix: result[5..].to_vec(),
+        })
     }
 
     /// The best score any overlay of a shape here with one of the fit's
@@ -530,10 +608,7 @@ pub fn align_mol_shape_input_with_params(
 /// Overlays the fit's active shape on the reference's, moves it there, and
 /// returns the scores (combination, shape, color) and the 16 values of the
 /// transformation, by rows. Mirrors `rdGaussianShape.AlignShapes`.
-pub fn align_shapes(
-    ref_shape: &ShapeInput,
-    fit_shape: &mut ShapeInput,
-) -> Result<(f64, f64, f64, Vec<f64>)> {
+pub fn align_shapes(ref_shape: &ShapeInput, fit_shape: &mut ShapeInput) -> Result<ShapeAlignment> {
     align_shapes_with_overlay_opts(ref_shape, fit_shape, &ShapeOverlayOptions::default())
 }
 
@@ -542,13 +617,18 @@ pub fn align_shapes_with_overlay_opts(
     ref_shape: &ShapeInput,
     fit_shape: &mut ShapeInput,
     overlay_opts: &ShapeOverlayOptions,
-) -> Result<(f64, f64, f64, Vec<f64>)> {
+) -> Result<ShapeAlignment> {
     let result = ffi::gaussian_align_shapes(
         &ref_shape.ptr,
         fit_shape.ptr.pin_mut(),
         &overlay_opts.to_ffi(),
     )?;
-    Ok((result[0], result[1], result[2], result[3..].to_vec()))
+    Ok(ShapeAlignment {
+        combo_score: result[0],
+        shape_score: result[1],
+        color_score: result[2],
+        matrix: result[3..].to_vec(),
+    })
 }
 
 /// Parameters for `score_mol_with_params`, with Python's defaults (A2):
@@ -559,7 +639,7 @@ pub type ScoreMolParams = AlignMolParams;
 /// The scores (combination, shape, color) and the shape and color overlap
 /// volumes of two molecules where they are. Mirrors
 /// `rdGaussianShape.ScoreMol`.
-pub fn score_mol(ref_: &Mol, fit: &Mol) -> Result<(f64, f64, f64, f64, f64)> {
+pub fn score_mol(ref_: &Mol, fit: &Mol) -> Result<ShapeScores> {
     score_mol_with_params(ref_, fit, &ScoreMolParams::default())
 }
 
@@ -569,7 +649,7 @@ pub fn score_mol_with_params(
     ref_: &Mol,
     fit: &Mol,
     params: &ScoreMolParams,
-) -> Result<(f64, f64, f64, f64, f64)> {
+) -> Result<ShapeScores> {
     Ok(five(&ffi::gaussian_score_mol(
         ref_.as_ffi(),
         fit.as_ffi(),
@@ -587,10 +667,7 @@ pub type ScoreMolShapeInputParams = AlignMolShapeInputParams;
 
 /// `score_mol` with a reference shape's active shape. Mirrors
 /// `rdGaussianShape.ScoreMol(refShape, fit)`.
-pub fn score_mol_shape_input(
-    ref_shape: &ShapeInput,
-    fit: &Mol,
-) -> Result<(f64, f64, f64, f64, f64)> {
+pub fn score_mol_shape_input(ref_shape: &ShapeInput, fit: &Mol) -> Result<ShapeScores> {
     score_mol_shape_input_with_params(ref_shape, fit, &ScoreMolShapeInputParams::default())
 }
 
@@ -600,7 +677,7 @@ pub fn score_mol_shape_input_with_params(
     ref_shape: &ShapeInput,
     fit: &Mol,
     params: &ScoreMolShapeInputParams,
-) -> Result<(f64, f64, f64, f64, f64)> {
+) -> Result<ShapeScores> {
     Ok(five(&ffi::gaussian_score_mol_shape_input(
         &ref_shape.ptr,
         fit.as_ffi(),
@@ -612,7 +689,7 @@ pub fn score_mol_shape_input_with_params(
 
 /// The scores and overlap volumes of two shapes' active shapes where they
 /// are. Mirrors `rdGaussianShape.ScoreShape`.
-pub fn score_shape(ref_shape: &ShapeInput, fit_shape: &ShapeInput) -> (f64, f64, f64, f64, f64) {
+pub fn score_shape(ref_shape: &ShapeInput, fit_shape: &ShapeInput) -> ShapeScores {
     score_shape_with_overlay_opts(ref_shape, fit_shape, &ShapeOverlayOptions::default())
 }
 
@@ -621,7 +698,7 @@ pub fn score_shape_with_overlay_opts(
     ref_shape: &ShapeInput,
     fit_shape: &ShapeInput,
     overlay_opts: &ShapeOverlayOptions,
-) -> (f64, f64, f64, f64, f64) {
+) -> ShapeScores {
     five(&expect_ok(ffi::gaussian_score_shape(
         &ref_shape.ptr,
         &fit_shape.ptr,
@@ -671,5 +748,10 @@ pub fn score_molecule_all_conformers_with_params(
         .map(<[f64]>::to_vec)
         .collect();
     let rest = &result[2 + num_ref * num_fit..];
-    Ok((scores, rest[0] as i32, rest[1] as i32, rest[2..].to_vec()))
+    Ok(ConformerScores {
+        scores,
+        best_ref_conf: rest[0] as i32,
+        best_fit_conf: rest[1] as i32,
+        matrix: rest[2..].to_vec(),
+    })
 }
