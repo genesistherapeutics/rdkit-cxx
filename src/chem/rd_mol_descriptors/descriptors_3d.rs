@@ -10,6 +10,14 @@
 //! Each takes a conformer id, −1 for the default conformer. A molecule
 //! without conformers is `Error::Runtime`, as in Python, and a missing id
 //! `Error::Value`.
+//!
+//! The moments and the indices from them, the plane of best fit, WHIM,
+//! GETAWAY, and EEM solve matrices of the coordinates, and Eigen leaves its
+//! output uninitialized when they are not finite, so for them coordinates
+//! beyond 1e9 or not finite are `Error::Value`, as are WHIM's custom weights.
+//! GETAWAY and EEM divide by the atoms' distances, so two atoms within 1e-6
+//! of each other are `Error::Value` there too, as embedding `[Na+].[Cl-]`
+//! leaves them.
 
 use crate::Result;
 use crate::chem::Mol;
@@ -280,8 +288,8 @@ custom_property_params! {
 }
 
 /// The 273 GETAWAY descriptors. `Error::Value` for a molecule without atoms
-/// (where RDKit crashes), for coordinates beyond 1e9 or not finite (which
-/// make RDKit sort NaN, which is undefined), and above 46340 atoms (U3).
+/// (where RDKit crashes), for the coordinates the module refuses, and above
+/// 46340 atoms (U3).
 /// For a disconnected molecule RDKit loops to its distance between
 /// fragments, 10^8, which takes seconds even for two atoms. Mirrors
 /// `rdMolDescriptors.CalcGETAWAY`.

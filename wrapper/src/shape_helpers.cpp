@@ -20,6 +20,7 @@
 #include <GraphMol/ShapeHelpers/ShapeUtils.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/coordinate_checks.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 
@@ -78,6 +79,8 @@ std::vector<Sphere> spheres(const Conformer &conf,
 void check_shape_grids(const Conformer &conf1, const Conformer &conf2,
                        double spacing, DiscreteValueType bits_per_point,
                        double vdw_scale, double step_size, bool ignore_hs) {
+  check_finite_coordinates(conf1, "the shape grids");
+  check_finite_coordinates(conf2, "the shape grids");
   std::unique_ptr<RDGeom::Transform3D> trans(
       MolTransforms::computeCanonicalTransform(conf1));
   RDGeom::Point3D lower1, upper1, lower2, upper2, lower, upper;
