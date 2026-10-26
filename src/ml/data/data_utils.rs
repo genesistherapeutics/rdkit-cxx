@@ -22,17 +22,16 @@ use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
-use crate::ml::data::ml_data::{MLDataSet, MLDataSetParams, MLQuantDataSet, Value, float_repr};
+use crate::ml::data::ml_data::{MLDataSet, MLDataSetParams, MLQuantDataSet, Value};
+use crate::py::float_repr;
+use crate::py::{py_float, py_int, py_strip};
 use crate::rd_random;
 use crate::utils::fileutils::{move_to_matching_line, read_line};
-use crate::utils::{py_float, py_int, py_strip, read_line_universal};
+use crate::utils::read_line_universal;
 use crate::{Error, Result};
 
 fn index_error(index: usize, len: usize) -> Error {
-    Error::Index {
-        index: u32::try_from(index).unwrap_or(u32::MAX),
-        len: u32::try_from(len).unwrap_or(u32::MAX),
-    }
+    Error::index(index, len)
 }
 
 fn os_error(e: std::io::Error) -> Error {
@@ -60,8 +59,8 @@ fn list_repr(values: &[f64]) -> String {
 ///
 /// `Error::Index` for fewer bounds than names; `Error::Os` when writing
 /// fails.
-pub fn write_data<W: Write>(
-    out_file: &mut W,
+pub fn write_data(
+    out_file: &mut impl Write,
     var_names: &[String],
     q_bounds: &[Vec<f64>],
     examples: &[Vec<Value>],
@@ -232,7 +231,7 @@ pub fn build_quant_data_set(file_name: impl AsRef<Path>) -> Result<MLQuantDataSe
     let mut in_file = open(file_name.as_ref())?;
     let (var_names, q_bounds) = read_vars(&mut in_file)?;
     let (pt_names, examples) = read_quant_examples(&mut in_file)?;
-    MLQuantDataSet::new_with_params(
+    MLQuantDataSet::from_params(
         examples,
         MLDataSetParams {
             q_bounds: Some(q_bounds),
@@ -251,7 +250,7 @@ pub fn build_data_set(file_name: impl AsRef<Path>) -> Result<MLDataSet> {
     let mut in_file = open(file_name.as_ref())?;
     let (var_names, q_bounds) = read_vars(&mut in_file)?;
     let (pt_names, examples) = read_general_examples(&mut in_file)?;
-    MLDataSet::new_with_params(
+    MLDataSet::from_params(
         examples,
         MLDataSetParams {
             q_bounds: Some(q_bounds),
@@ -447,7 +446,7 @@ pub fn text_to_data_with_params<I: IntoIterator<Item = Vec<String>>>(
                 .collect(),
         );
     }
-    MLDataSet::new_with_params(
+    MLDataSet::from_params(
         vals,
         MLDataSetParams {
             var_names: Some(kept_names),

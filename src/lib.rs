@@ -141,6 +141,7 @@ pub mod force_field;
 pub mod geometry;
 pub mod ml;
 pub mod numerics;
+mod py;
 pub mod rd_base;
 pub mod rd_logger;
 pub mod rd_paths;

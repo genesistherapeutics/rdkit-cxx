@@ -577,6 +577,7 @@ pub fn get_molecule_bounds_matrix_embed_parameters_with_params(
 
 /// An experimental torsion's terms.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum TorsionTerms {
     /// A cosine series, versions 1 and 2: Python's `V` and `signs`.
     Cosine { v: Vec<f64>, signs: Vec<i32> },
@@ -591,6 +592,7 @@ pub enum TorsionTerms {
 /// A bond matched by an experimental torsion pattern: one of the
 /// dictionaries `rdDistGeom.GetExperimentalTorsions` returns.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ExperimentalTorsion {
     /// Python's `bondIndex`.
     pub bond_index: u32,

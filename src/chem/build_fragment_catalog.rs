@@ -16,10 +16,10 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::chem::Mol;
-use crate::chem::fragment_catalog::{py_float, py_int};
 use crate::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog, FragFPGenerator};
 use crate::data_structs::ExplicitBitVect;
 use crate::ml::info_theory::{InfoBitRanker, InfoType};
+use crate::py::{parse_float, parse_int};
 use crate::{Error, Result};
 
 /// The functional groups `build_catalog` removes by default: RDKit's
@@ -30,6 +30,7 @@ const DEFAULT_FUNCTIONAL_GROUPS: &str =
 /// Where the molecules' activities come from. Python's `actName` and `acts`
 /// arguments.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Activities {
     /// The property of each molecule named by the first molecule's last
     /// property. Python's default.
@@ -70,17 +71,14 @@ impl<'a> ActivityReader<'a> {
     /// The activity of the `i`-th molecule.
     fn get(&self, i: usize, mol: &Mol) -> Result<i64> {
         match &self.name {
-            Some(name) => py_int(&mol.get_prop(name)?),
-            None => self.values.get(i).copied().ok_or(Error::Index {
-                index: to_u32(i),
-                len: to_u32(self.values.len()),
-            }),
+            Some(name) => parse_int(&mol.get_prop(name)?),
+            None => self
+                .values
+                .get(i)
+                .copied()
+                .ok_or(Error::index(i, self.values.len())),
         }
     }
-}
-
-fn to_u32(n: usize) -> u32 {
-    u32::try_from(n).unwrap_or(u32::MAX)
 }
 
 /// The index `i` of a numpy axis of length `len`, negative from the end.
@@ -90,10 +88,7 @@ fn np_index(i: i64, len: usize) -> Result<usize> {
     usize::try_from(j)
         .ok()
         .filter(|&j| j < len)
-        .ok_or(Error::Index {
-            index: u32::try_from(i).unwrap_or(u32::MAX),
-            len: to_u32(len),
-        })
+        .ok_or(Error::index(i, len))
 }
 
 /// Parameters for `build_catalog_with_params`, with Python's defaults (A2).
@@ -317,10 +312,7 @@ pub fn score_from_lists_with_params(
     let mut table = new_table(catalog.get_fp_length(), params.n_acts);
     let reader = ActivityReader::new(&params.activities, mols.first())?;
     for i in 0..n_pts {
-        let index_error = |len: usize| Error::Index {
-            index: to_u32(i),
-            len: to_u32(len),
-        };
+        let index_error = |len: usize| Error::index(i, len);
         let mol = mols.get(i).ok_or_else(|| index_error(mols.len()))?;
         let act = np_index(reader.get(i, mol)?, params.n_acts)?;
         let bits = bit_lists
@@ -465,10 +457,7 @@ pub fn calc_gains_from_fps_with_params(
     fps: &[ExplicitBitVect],
     params: &CalcGainsFromFpsParams,
 ) -> Result<Vec<Vec<f64>>> {
-    let index_error = |i: usize| Error::Index {
-        index: to_u32(i),
-        len: to_u32(fps.len()),
-    };
+    let index_error = |i: usize| Error::index(i, fps.len());
     let n_bits = fps.first().ok_or_else(|| index_error(0))?.get_num_bits();
     let reader = ActivityReader::new(&params.activities, mols.first())?;
     let mut ranker = new_ranker(n_bits, params.n_acts, params.bias_list.as_deref())?;
@@ -540,10 +529,7 @@ pub fn output_gains_data_with_n_acts(
     writeln!(out_f, "{header},{}", act_headers.join(",")).map_err(os_error)?;
     for entry in gains {
         if entry.len() < 2 {
-            return Err(Error::Index {
-                index: to_u32(entry.len()),
-                len: to_u32(entry.len()),
-            });
+            return Err(Error::index(entry.len(), entry.len()));
         }
         // Python's `int(entry[0])`, then the catalog's unsigned index.
         let id = entry[0].trunc();
@@ -615,7 +601,7 @@ pub fn process_gains_data_with_params(
     for line in text.split_inclusive('\n').skip(1) {
         let split: Vec<&str> = line.trim().split(params.delim.as_str()).collect();
         let id = split.get(params.id_col).ok_or_else(missing)?;
-        let gain = py_float(split.get(params.gain_col).ok_or_else(missing)?)?;
+        let gain = parse_float(split.get(params.gain_col).ok_or_else(missing)?)?;
         res.push((id.to_string(), gain));
     }
     Ok(res)

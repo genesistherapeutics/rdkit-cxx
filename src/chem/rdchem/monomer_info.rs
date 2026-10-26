@@ -17,6 +17,7 @@ use crate::ffi::monomer_info::ffi;
 /// RDKit's enum has no fixed underlying type, so cxx cannot check it; it
 /// crosses as `i32`, and a test sends every variant through C++.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum AtomMonomerType {
     /// Mirrors `UNKNOWN`.
     Unknown,

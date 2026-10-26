@@ -15,6 +15,7 @@
 
 use std::fmt;
 use std::io::Read;
+use std::marker::PhantomData;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
 use std::pin::Pin;
@@ -32,6 +33,21 @@ use crate::{Error, Result};
 pub(crate) struct RustReader(Box<dyn Read + Send>);
 
 impl RustReader {
+    /// Boxes `reader` for C++, which may keep it no longer than `'r`.
+    ///
+    /// The box's lifetime is erased, as `RustWriter::boxed` erases a
+    /// writer's: the supplier that owns the C++ object that owns the box
+    /// never lends it, and carries `'r` with an explicit `Drop`, so the
+    /// borrow checker keeps `'r` alive until the supplier, and with it the
+    /// box, is dropped.
+    fn boxed<'r, R: Read + Send + 'r>(reader: R) -> Box<RustReader> {
+        let reader: Box<dyn Read + Send + 'r> = Box::new(reader);
+        // SAFETY: as above. The two types differ only in the trait object's
+        // lifetime bound, so they have one layout.
+        let reader: Box<dyn Read + Send + 'static> = unsafe { std::mem::transmute(reader) };
+        Box::new(RustReader(reader))
+    }
+
     /// Reads into `buf`, retrying interrupted reads; a panic is an error, so
     /// it does not unwind into C++.
     pub(crate) fn read(&mut self, buf: &mut [u8]) -> std::result::Result<usize, String> {
@@ -307,25 +323,27 @@ impl Default for ForwardSDMolSupplierParams {
 
 /// The molecules of an SD stream, read once, in order. Mirrors
 /// `rdmolfiles.ForwardSDMolSupplier`.
-pub struct ForwardSDMolSupplier {
+///
+/// A supplier reading a Rust reader borrows it for `'r`; one reading a file
+/// is `ForwardSDMolSupplier<'static>`.
+pub struct ForwardSDMolSupplier<'r> {
     /// Never null.
     ptr: UniquePtr<ffi::ForwardSDMolSupplier>,
+    input: PhantomData<&'r mut ()>,
 }
 
-unsafe impl Send for ForwardSDMolSupplier {}
+unsafe impl Send for ForwardSDMolSupplier<'_> {}
 
-impl ForwardSDMolSupplier {
-    fn raw(&self) -> &ffi::ForwardSDMolSupplier {
-        self.ptr.as_ref().unwrap()
-    }
+/// Drops the borrowed input with the supplier, so the borrow must outlive
+/// it (an explicit `Drop` makes the borrow checker require that).
+impl Drop for ForwardSDMolSupplier<'_> {
+    fn drop(&mut self) {}
+}
 
-    fn raw_mut(&mut self) -> Pin<&mut ffi::ForwardSDMolSupplier> {
-        self.ptr.pin_mut()
-    }
-
+impl ForwardSDMolSupplier<'static> {
     /// A supplier for an SD file; one that cannot be opened is `Error::Os`.
     /// Mirrors `ForwardSDMolSupplier(filename)`.
-    pub fn new<P: AsRef<Path>>(filename: P) -> Result<ForwardSDMolSupplier> {
+    pub fn new<P: AsRef<Path>>(filename: P) -> Result<ForwardSDMolSupplier<'static>> {
         ForwardSDMolSupplier::new_with_params(filename, &ForwardSDMolSupplierParams::default())
     }
 
@@ -334,7 +352,7 @@ impl ForwardSDMolSupplier {
     pub fn new_with_params<P: AsRef<Path>>(
         filename: P,
         params: &ForwardSDMolSupplierParams,
-    ) -> Result<ForwardSDMolSupplier> {
+    ) -> Result<ForwardSDMolSupplier<'static>> {
         Ok(ForwardSDMolSupplier {
             ptr: non_null(ffi::forward_sd_mol_supplier_from_file(
                 path_bytes(filename.as_ref()),
@@ -342,13 +360,25 @@ impl ForwardSDMolSupplier {
                 params.remove_hs,
                 params.strict_parsing,
             )?),
+            input: PhantomData,
         })
     }
+}
 
-    /// A supplier reading `fileobj`, such as a decompressing reader. A read
-    /// error ends the input, and the call that met it is `Error::Os`.
-    /// Mirrors `ForwardSDMolSupplier(fileobj)`.
-    pub fn from_fileobj<R: Read + Send + 'static>(fileobj: R) -> Result<ForwardSDMolSupplier> {
+impl<'r> ForwardSDMolSupplier<'r> {
+    fn raw(&self) -> &ffi::ForwardSDMolSupplier {
+        self.ptr.as_ref().unwrap()
+    }
+
+    fn raw_mut(&mut self) -> Pin<&mut ffi::ForwardSDMolSupplier> {
+        self.ptr.pin_mut()
+    }
+
+    /// A supplier reading `fileobj`, such as a decompressing reader, which
+    /// it keeps until it is dropped. A read error ends the input, and the
+    /// call that met it is `Error::Os`. Mirrors
+    /// `ForwardSDMolSupplier(fileobj)`.
+    pub fn from_fileobj<R: Read + Send + 'r>(fileobj: R) -> Result<ForwardSDMolSupplier<'r>> {
         ForwardSDMolSupplier::from_fileobj_with_params(
             fileobj,
             &ForwardSDMolSupplierParams::default(),
@@ -357,17 +387,18 @@ impl ForwardSDMolSupplier {
 
     /// Mirrors `ForwardSDMolSupplier(fileobj, sanitize, removeHs,
     /// strictParsing)`.
-    pub fn from_fileobj_with_params<R: Read + Send + 'static>(
+    pub fn from_fileobj_with_params<R: Read + Send + 'r>(
         fileobj: R,
         params: &ForwardSDMolSupplierParams,
-    ) -> Result<ForwardSDMolSupplier> {
+    ) -> Result<ForwardSDMolSupplier<'r>> {
         Ok(ForwardSDMolSupplier {
             ptr: non_null(ffi::forward_sd_mol_supplier_from_reader(
-                Box::new(RustReader(Box::new(fileobj))),
+                RustReader::boxed(fileobj),
                 params.sanitize,
                 params.remove_hs,
                 params.strict_parsing,
             )?),
+            input: PhantomData,
         })
     }
 
@@ -400,13 +431,13 @@ impl ForwardSDMolSupplier {
     /// The molecules not yet read. Mirrors `iter(ForwardSDMolSupplier)`.
     pub fn mols(&mut self) -> ForwardSDMols<'_> {
         ForwardSDMols {
-            suppl: self,
+            suppl: self.raw_mut(),
             done: false,
         }
     }
 }
 
-impl fmt::Debug for ForwardSDMolSupplier {
+impl fmt::Debug for ForwardSDMolSupplier<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("ForwardSDMolSupplier")
             .finish_non_exhaustive()
@@ -414,10 +445,17 @@ impl fmt::Debug for ForwardSDMolSupplier {
 }
 
 /// The molecules of a `ForwardSDMolSupplier` not yet read.
-#[derive(Debug)]
 pub struct ForwardSDMols<'s> {
-    suppl: &'s mut ForwardSDMolSupplier,
+    suppl: Pin<&'s mut ffi::ForwardSDMolSupplier>,
     done: bool,
+}
+
+impl fmt::Debug for ForwardSDMols<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ForwardSDMols")
+            .field("done", &self.done)
+            .finish_non_exhaustive()
+    }
 }
 
 /// The next molecule. Mirrors `next(ForwardSDMolSupplier)`, which also stops
@@ -426,11 +464,15 @@ impl Iterator for ForwardSDMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done || expect_ok(ffi::forward_sd_mol_supplier_at_end(self.suppl.as_mut())) {
             return None;
         }
-        let mol = ffi::forward_sd_mol_supplier_next(self.suppl.raw_mut());
-        if self.suppl.at_end() && self.suppl.get_eof_hit_on_read() {
+        let mol = ffi::forward_sd_mol_supplier_next(self.suppl.as_mut());
+        if expect_ok(ffi::forward_sd_mol_supplier_at_end(self.suppl.as_mut()))
+            && expect_ok(ffi::forward_sd_mol_supplier_get_eof_hit_on_read(
+                &self.suppl,
+            ))
+        {
             return None;
         }
         Some(step(&mut self.done, mol))

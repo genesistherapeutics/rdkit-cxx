@@ -249,6 +249,7 @@ pub struct TopologicalTorsionFingerprintOptions {
 /// A generator's type-specific options: Python's subclasses of
 /// `FingerprintOptions`.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum FingerprintKindOptions {
     /// Mirrors `MorganFingerprintOptions`.
     Morgan(MorganFingerprintOptions),

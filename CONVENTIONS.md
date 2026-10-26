@@ -371,7 +371,7 @@ rule changes the rule first.
   fails when a chunk rereads differently or the file ends sooner than it did,
   so RDKit parses only the bytes that were checked. Python file objects are
   bound as `Read` values, read through the same streams, and `Write`
-  values, which a writer may borrow for its lifetime. Gzipped files are
+  values, which a supplier or writer may borrow for its lifetime. Gzipped files are
   decompressed as RDKit's `gzstream` decompresses them and checked after;
   the stream RDKit reads them through throws for every seek and tell, as
   `gzstream`'s does. RDKit's writers ignore
@@ -472,7 +472,17 @@ rule changes the rule first.
   `<Name>Data` with the same fields (maps as parallel key and value vectors),
   converted by a private `to_ffi`; its `Default` comes from a wrapper that
   returns the C++ defaults. Structs that A2 defines, with no Python class,
-  write Python's defaults in Rust.
+  write Python's defaults in Rust. Parameter structs stay exhaustive, so
+  callers can write `S { x, ..Default::default() }`, and so a patch release
+  never adds a field to one: an option RDKit adds in a patch release waits
+  for the crate's next series. That is safe because A3's `<Name>Data`
+  starts from a default-constructed C++ object, so a C++ field Rust does
+  not know keeps RDKit's default. Structs only the crate builds (`*Outputs`,
+  `*Result`, and the other values functions return) are
+  `#[non_exhaustive]`, so they can gain fields; a struct callers also
+  build, to pass back in (`ExcludedVolume`, `ChargeCorrection`,
+  `CustomFeature`, or `BitInfo`, which a caller's metric returns), stays
+  exhaustive.
 - **A8.** File paths cross the bridge as bytes
   (`Path::as_os_str().as_encoded_bytes()`), never as `&str`.
 - **A9.** Python output arguments that carry information nothing else
@@ -480,12 +490,34 @@ rule changes the rule first.
   from a `<name>_with_outputs` function, which takes the same parameters and
   returns the result with an outputs struct. An in-out argument is an
   `Option` field of the parameters, and its updated value is in the outputs.
+- **A10.** A function or closure the caller supplies is taken as `impl Fn`
+  in a free function's arguments and as `&'a dyn Fn` in a parameter
+  struct's field or a method's arguments (S3's reason: the path test names
+  methods), so a closure that captures will do. Static tables of RDKit's or
+  Python's own functions (`desc_list`, `similarity_functions`, the
+  fragments) keep `fn` pointers. An alias that names a callback's
+  signature is the trait object type (`MetricFunc = dyn Fn(...)`).
+- **A11.** Streams a call reads or writes whole are taken by `&mut`: `&mut
+  impl Read` and `&mut impl Write` in free functions, a named `R: Read +
+  ?Sized` or `W: Write + ?Sized` in methods (with `rust_generics` in the
+  manifest, T1). Readers and writers that keep a stream take it by value
+  (T1).
 
 ## Types
 
 - **N6.** C++ enums cross the bridge as cxx shared enums declared with the C++
   names, so cxx checks every value against RDKit's header. The public enum is
-  a separate Rust enum (N4), converted by `rdkit_enum!`.
+  a separate Rust enum (N4), converted by `rdkit_enum!`. Every public enum is
+  `#[non_exhaustive]`, so a later series can add values without a breaking
+  change, except namespace enums with no values (`AtomPairsParameters`).
+  `from_ffi` panics on a value the Rust enum lacks: the build accepts only
+  the RDKit releases whose headers were checked against these enums, so
+  such a value is a bug in the crate, not a reachable input. `Error`'s
+  variants stay exhaustive, since callbacks build them.
+- **N9.** Traits callers are not meant to implement are sealed, by a
+  supertrait in a private module (`AsAtom`, `ConvertToNumpyArray`). An open
+  trait (`CustomFilterMatcher`, `FeatureLike`) says it is meant to be
+  implemented, and a method added to it later has a default body.
 - **T1.** Atom and bond indices are `u32`; conformer ids are `i32`, since
   they can be −1. A Python `int` otherwise follows the C++ parameter type.
   `float` → `f64`. `str` → `&str` in, `String` out. File names →
@@ -493,11 +525,17 @@ rule changes the rule first.
   functions, whose manifest entries set `rust_generics = "<&str>"` so the
   path test can name them (or a list, one per Rust path, with `""` for a
   path that is not generic). Python file objects → `R: Read + Send +
-  'static` or `W: Write + Send + 'static` (U12). Tuples of indices →
+  'r` or `W: Write + Send + 'w` (U12), which the reader or writer borrows
+  for its lifetime parameter (`ForwardSDMolSupplier<'r>`, `SDWriter<'w>`);
+  one made from a file name has `'static`. Tuples of indices →
   `Vec<u32>`, nested → `Vec<Vec<u32>>`. `None`-able results → `Option`.
   NumPy coordinate arrays → `Vec<Point3D>`; other NumPy matrices → rows,
   `Vec<Vec<f64>>` (or `i32` for integer matrices). `dict` →
-  `BTreeMap<String, _>`.
+  `BTreeMap<String, _>`, unless its order is Python's, by insertion
+  (`CalcMolDescriptors`), which a `Vec` of pairs keeps. A returned tuple of
+  two or three values → a Rust tuple; of four or more → a named struct whose
+  fields take the names RDKit's or Python's documentation gives them
+  (A7 decides whether it is `#[non_exhaustive]`).
 
 - **T3.** Nested index lists cross the bridge as `Vec<IndexList>`, and plain
   value types (`Point3D`) as cxx shared structs; both live in the `geometry`

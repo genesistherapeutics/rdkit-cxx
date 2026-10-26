@@ -48,6 +48,7 @@ fn strings(values: UniquePtr<CxxVector<CxxString>>) -> Result<Vec<String>> {
 /// Accessors return copies. A result is `Send`, but not `Sync`, and has no
 /// `Clone`: the one a callback is lent shares its tautomers with the
 /// enumeration under way.
+#[non_exhaustive]
 pub struct TautomerEnumeratorResult {
     /// Never null.
     ptr: UniquePtr<ffi::TautomerEnumeratorResult>,
@@ -89,10 +90,7 @@ impl TautomerEnumeratorResult {
             i64::from(pos)
         };
         if index < 0 || index >= len as i64 {
-            return Err(Error::Index {
-                index: pos as u32,
-                len: len as u32,
-            });
+            return Err(Error::index(pos, len));
         }
         Ok(Mol::from_ffi(ffi::tautomer_result_tautomer(
             self.raw(),

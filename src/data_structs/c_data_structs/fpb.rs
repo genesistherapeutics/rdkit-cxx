@@ -233,10 +233,9 @@ impl MultiFPBReader {
 
     /// Mirrors `MultiFPBReader.GetReader`.
     pub fn get_reader(&self, which: u32) -> Result<&FPBReader> {
-        self.readers.get(which as usize).ok_or(Error::Index {
-            index: which,
-            len: self.len(),
-        })
+        self.readers
+            .get(which as usize)
+            .ok_or(Error::index(which, self.len() as usize))
     }
 
     /// Initializes the readers. Mirrors `MultiFPBReader.Init`.

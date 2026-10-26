@@ -72,10 +72,7 @@ pub fn align_depict_with_params(
     } else {
         let conf = core.get_conformer()?;
         for (i, &idx) in match_.iter().enumerate() {
-            let core_idx = *core_match.get(i).ok_or(Error::Index {
-                index: i as u32,
-                len: core_match.len() as u32,
-            })?;
+            let core_idx = *core_match.get(i).ok_or(Error::index(i, core_match.len()))?;
             let pt3 = conf.get_atom_position(core_idx)?;
             coord_map.insert(idx, Point2D::new(pt3.x, pt3.y));
         }

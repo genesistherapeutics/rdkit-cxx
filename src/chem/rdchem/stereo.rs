@@ -146,6 +146,7 @@ impl RWMol {
 /// A potential stereo element. Mirrors `rdchem.StereoInfo`, which
 /// `rdmolops.FindPotentialStereo` returns.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct StereoInfo {
     pub type_: StereoType,
     pub specified: StereoSpecified,

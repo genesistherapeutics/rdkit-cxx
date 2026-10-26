@@ -43,6 +43,10 @@ fn each_rdkit_exception_maps_to_its_variant() {
         raise("index").unwrap_err(),
         Error::Index { index: 9, len: 3 }
     );
+    assert_eq!(
+        raise("negative_index").unwrap_err(),
+        Error::Index { index: -5, len: 3 }
+    );
     assert_eq!(raise("key").unwrap_err(), Error::Key { key: "nope".into() });
     assert_eq!(
         raise("value").unwrap_err(),
@@ -101,6 +105,14 @@ fn display_includes_the_message() {
             .unwrap_err()
             .to_string()
             .contains("test value")
+    );
+}
+
+#[test]
+fn display_shows_negative_indices() {
+    assert_eq!(
+        Error::Index { index: -5, len: 2 }.to_string(),
+        "index -5 is out of range for length 2"
     );
 }
 

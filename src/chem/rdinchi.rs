@@ -19,6 +19,7 @@ use crate::ffi::inchi::ffi;
 /// What `InchiToMol` returns: the molecule, and the InChI library's return
 /// code, message, and log. Mirrors the tuple `rdinchi.InchiToMol` returns.
 #[derive(Debug)]
+#[non_exhaustive]
 pub struct InchiToMolResult {
     /// The molecule; `None` when InChI cannot read the string (Python's
     /// `None`).
@@ -36,6 +37,7 @@ pub struct InchiToMolResult {
 /// code, message, log, and auxiliary information. Mirrors the tuple
 /// `rdinchi.MolToInchi` returns.
 #[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
 pub struct MolToInchiResult {
     /// The InChI; empty when InChI failed.
     pub inchi: String,

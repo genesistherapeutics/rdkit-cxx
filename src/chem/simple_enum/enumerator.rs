@@ -93,7 +93,9 @@ pub fn enumerate_reaction_with_unique_products_only<'a>(
 ) -> Result<Box<dyn Iterator<Item = Result<Vec<Mol>>> + 'a>> {
     // Python preprocesses with the defaults, whatever its funcGroupFilename
     // and propName arguments are.
-    let (_, n_error, n_reacts, _, _) = rd_chem_reactions::preprocess_reaction(reaction)?;
+    let PreprocessReactionResult {
+        n_error, n_reacts, ..
+    } = rd_chem_reactions::preprocess_reaction(reaction)?;
     if n_error != 0 {
         return Err(Error::Value {
             message: "bad reaction".to_owned(),

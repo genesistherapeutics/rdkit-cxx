@@ -15,6 +15,7 @@ use crate::{Error, Result};
 /// A property value, as `GetPropsAsDict` and `GetProp(autoConvert=True)`
 /// convert it.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum PropValue {
     Int(i32),
     Unsigned(u32),

@@ -15,7 +15,6 @@
 use std::collections::BTreeMap;
 
 use crate::Result;
-use crate::chem::py_math::py_sum;
 use crate::chem::rd_mol_descriptors::{
     self as descriptors, NumRotatableBondsOptions, calc_num_hbd,
     calc_num_rotatable_bonds_with_strict,
@@ -23,6 +22,7 @@ use crate::chem::rd_mol_descriptors::{
 use crate::chem::{
     Mol, crippen, delete_substructs, get_sssr, mol_from_smarts, mol_surf, remove_hs,
 };
+use crate::py::py_sum;
 
 /// The eight properties QED weighs, or their weights. Python's namedtuple
 /// `QEDproperties`; the derived `Debug` and `Clone` stand in for its

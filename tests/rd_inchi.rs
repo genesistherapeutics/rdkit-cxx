@@ -86,15 +86,13 @@ fn inchis_and_keys() {
     }
 
     let acetic = inchi("CC(=O)O");
+    assert_eq!(acetic.inchi, "InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)");
+    assert_eq!(acetic.retcode, 0);
+    assert_eq!(acetic.message, "");
+    assert_eq!(acetic.log, STANDARD_LOG);
     assert_eq!(
-        acetic,
-        MolToInchiResult {
-            inchi: "InChI=1S/C2H4O2/c1-2(3)4/h1H3,(H,3,4)".into(),
-            retcode: 0,
-            message: String::new(),
-            log: STANDARD_LOG.into(),
-            aux_info: "AuxInfo=1/1/N:1,2,3,4/E:(3,4)/rA:4CCOO/rB:s1;d2;s2;/rC:;;;;".into(),
-        }
+        acetic.aux_info,
+        "AuxInfo=1/1/N:1,2,3,4/E:(3,4)/rA:4CCOO/rB:s1;d2;s2;/rC:;;;;"
     );
 }
 

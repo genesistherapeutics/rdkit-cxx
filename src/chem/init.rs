@@ -66,6 +66,7 @@ pub fn canon_smiles_with_use_chiral(smi: &str, use_chiral: bool) -> Result<Strin
 /// The supplier [`supplier_from_filename`] makes, by the file's extension.
 /// Python returns the supplier itself.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum FileMolSupplier {
     /// For `.sdf` files.
     SD(SDMolSupplier),

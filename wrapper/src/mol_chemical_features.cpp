@@ -100,8 +100,7 @@ std::unique_ptr<MolChemicalFeature> factory_get_mol_feature(
     std::int32_t idx, rust::Str include_only, std::int32_t conf_id) {
   auto feats = features(factory, mol, include_only, conf_id);
   if (idx < 0 || static_cast<std::size_t>(idx) >= feats.size()) {
-    throw IndexError(static_cast<unsigned>(idx),
-                     static_cast<unsigned>(feats.size()));
+    throw IndexError(idx, feats.size());
   }
   auto it = feats.begin();
   std::advance(it, idx);

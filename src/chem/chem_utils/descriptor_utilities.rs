@@ -74,9 +74,9 @@ impl VectorDescriptorWrapper {
         let Ok(results) = (self.func)(mol) else {
             return Ok(f64::NAN);
         };
-        results.get(index as usize).copied().ok_or(Error::Index {
-            index,
-            len: u32::try_from(results.len()).unwrap_or(u32::MAX),
-        })
+        results
+            .get(index as usize)
+            .copied()
+            .ok_or(Error::index(index, results.len()))
     }
 }

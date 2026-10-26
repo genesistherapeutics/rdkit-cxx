@@ -33,8 +33,9 @@ pub enum Error {
     },
     /// Another sanitization failure (`MolSanitizeException`).
     MolSanitize { message: String },
-    /// An index out of range (`IndexError`).
-    Index { index: u32, len: u32 },
+    /// An index out of range (`IndexError`). `index` is negative for a
+    /// Python-style index from the end that reaches past the start.
+    Index { index: i64, len: usize },
     /// A missing key (`KeyError`).
     Key { key: String },
     /// A bad value (`ValueError`), including invalid UTF-8.
@@ -104,8 +105,10 @@ pub(crate) fn decode(what: &str) -> Error {
             }),
         "MolSanitize" => Some(Error::MolSanitize { message }),
         "Index" => payload.split_once(' ').and_then(|(index, len)| {
-            number(index)
-                .zip(number(len))
+            index
+                .parse()
+                .ok()
+                .zip(len.parse().ok())
                 .map(|(index, len)| Error::Index { index, len })
         }),
         "Key" => Some(Error::Key {
@@ -118,6 +121,17 @@ pub(crate) fn decode(what: &str) -> Error {
         _ => None,
     };
     error.unwrap_or_else(runtime)
+}
+
+impl Error {
+    /// An `Index` error for `index` into a sequence of `len` items; an index
+    /// past `i64`'s range saturates.
+    pub(crate) fn index<I: TryInto<i64>>(index: I, len: usize) -> Error {
+        Error::Index {
+            index: index.try_into().unwrap_or(i64::MAX),
+            len,
+        }
+    }
 }
 
 /// Unwraps the result of a bridge call that cannot fail for any input the safe

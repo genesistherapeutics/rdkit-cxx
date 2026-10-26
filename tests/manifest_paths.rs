@@ -1481,7 +1481,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume>::new_with_params;
     let _: Option<rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore> = None;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::default;
-    let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::new_with_params;
+    let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::new;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::to_string;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::get_feature;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::get_features;
@@ -3312,10 +3312,10 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::has_match_extended_query_mol_with_params;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::has_match_extended_query_mol_range;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::has_match_extended_query_mol_range_with_params;
-    let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::init_from_stream;
+    let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::init_from_stream::<&[u8]>;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::serialize;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::set_search_order;
-    let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::to_stream;
+    let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::to_stream::<Vec<u8>>;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::default;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::new;
     let _ = <rdkit_cxx::chem::rd_substruct_library::SubstructLibrary>::from_pickle;

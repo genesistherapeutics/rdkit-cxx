@@ -360,7 +360,7 @@ pub fn explode_with_params(
     };
     if sidechains.is_empty() {
         // Python indexes the first list.
-        return Err(Error::Index { index: 0, len: 0 });
+        return Err(Error::index(0, 0));
     }
     let mut exploder = Exploder {
         sidechains,

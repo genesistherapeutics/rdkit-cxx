@@ -162,6 +162,11 @@ fn forward_supplier() {
     )
     .unwrap();
     assert_eq!(file.mols().count(), 3);
+    // A supplier may borrow its reader.
+    let text = three_sd();
+    let mut borrowed = ForwardSDMolSupplier::from_fileobj(text.as_bytes()).unwrap();
+    assert_eq!(names(borrowed.mols()), ["methanol", "ring", "ethane"]);
+    drop(borrowed);
     assert!(matches!(
         ForwardSDMolSupplier::new("does-not-exist.sdf"),
         Err(Error::Os { .. })

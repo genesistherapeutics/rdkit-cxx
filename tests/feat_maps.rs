@@ -432,7 +432,7 @@ fn parser_matches_python() {
     let mut lines = FeatMapParser::default();
     lines.set_data_lines(PARSER_DATA.split('\n').map(str::to_owned).collect());
     assert_eq!(families(lines), ["Acceptor", "Aromatic", "Acceptor"]);
-    let file = FeatMapParser::from_file(PARSER_DATA.as_bytes()).unwrap();
+    let file = FeatMapParser::from_file(&mut PARSER_DATA.as_bytes()).unwrap();
     assert_eq!(families(file), ["Acceptor", "Aromatic", "Acceptor"]);
 
     // Continued lines join with their backslash, which Python keeps in the
@@ -502,7 +502,7 @@ fn points(xs_weights: &[(f64, f64)]) -> String {
         .join("\n")
 }
 
-fn distance(method: MergeMethod) -> MergeFeatPointsParams {
+fn distance(method: MergeMethod) -> MergeFeatPointsParams<'static> {
     MergeFeatPointsParams {
         merge_metric: MergeMetric::Distance,
         merge_method: method,

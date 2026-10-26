@@ -98,10 +98,7 @@ impl Logger {
             usize::try_from(idx)
                 .ok()
                 .and_then(|idx| LEVELS.get(idx).copied())
-                .ok_or(Error::Index {
-                    index: i.unsigned_abs(),
-                    len: 4,
-                })
+                .ok_or(Error::index(i, 4))
         };
         for i in val..4 {
             enable_log(log(i)?);

@@ -168,6 +168,7 @@ pub(crate) fn matches_from_ffi(list: &ffi::FilterMatchList) -> Vec<FilterMatch> 
 /// Matches from `filter_match_ops::Not` and `ExclusionList` have no atom
 /// pairs, since what they match is an absence.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct FilterMatch {
     /// Mirrors `FilterMatch.filterMatch`.
     pub filter_match: FilterMatcher,

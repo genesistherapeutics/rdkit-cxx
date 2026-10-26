@@ -11,7 +11,9 @@
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::mol_from_smiles;
 use rdkit_cxx::chem::rdmolops::rdk_fingerprint;
-use rdkit_cxx::data_structs::{ExplicitBitVect, dice_similarity};
+use rdkit_cxx::data_structs::{
+    ExplicitBitVect, dice_similarity, tanimoto_similarity, tversky_similarity,
+};
 use rdkit_cxx::sim_div_filters::similarity_pickers::*;
 
 const DATA: [(&str, &str); 12] = [
@@ -45,7 +47,7 @@ fn id(idx: usize) -> &'static str {
 fn top_n_overall_picker() {
     let fps = data_set();
     let probe = [fp("COC")];
-    let mut picker = TopNOverallPicker::new_with_params(PickerParams {
+    let mut picker = TopNOverallPicker::new_with_params(&PickerParams {
         num_to_pick: 2,
         probe_fps: &probe,
         data_set: &fps,
@@ -55,6 +57,26 @@ fn top_n_overall_picker() {
     let (idx, score) = picker.get(0).unwrap();
     assert_eq!((id(idx.unwrap()), score), ("ether-1", 1.0));
     assert_eq!(id(picker.get(1).unwrap().0.unwrap()), "ether-2");
+
+    // The metric may be a closure that captures; Tversky with weights 1 and
+    // 1 is Tanimoto.
+    let (alpha, beta) = (1.0, 1.0);
+    let tversky = |a: &ExplicitBitVect, b: &ExplicitBitVect| tversky_similarity(a, b, alpha, beta);
+    let mut by_tversky = TopNOverallPicker::new_with_params(&PickerParams {
+        num_to_pick: 2,
+        probe_fps: &probe,
+        data_set: &fps,
+        sim_metric: &tversky,
+    });
+    let mut by_tanimoto = TopNOverallPicker::new_with_params(&PickerParams {
+        num_to_pick: 2,
+        probe_fps: &probe,
+        data_set: &fps,
+        sim_metric: &tanimoto_similarity,
+    });
+    for i in 0..2 {
+        assert_eq!(by_tversky.get(i).unwrap(), by_tanimoto.get(i).unwrap());
+    }
 
     let probes = [fp("COC"), fp("CC(=O)O")];
     let expected = [
@@ -72,7 +94,7 @@ fn top_n_overall_picker() {
         ("arom-4", 0.017241379310344827),
     ];
     for n in [2, 3, 5, 12, 14] {
-        let mut picker = TopNOverallPicker::new_with_params(PickerParams {
+        let mut picker = TopNOverallPicker::new_with_params(&PickerParams {
             num_to_pick: n,
             probe_fps: &probes,
             data_set: &fps,
@@ -89,6 +111,14 @@ fn top_n_overall_picker() {
             }
         }
         assert!(matches!(picker.get(n as i64), Err(Error::Index { .. })));
+        let past_start = -(n as i64) - 1;
+        assert_eq!(
+            picker.get(past_start),
+            Err(Error::Index {
+                index: past_start,
+                len: n
+            })
+        );
     }
     picker.make_picks_with_force(true).unwrap();
 }
@@ -97,7 +127,7 @@ fn top_n_overall_picker() {
 fn spread_picker() {
     let fps = data_set();
     let probe = [fp("COC")];
-    let mut picker = SpreadPicker::new_with_params(PickerParams {
+    let mut picker = SpreadPicker::new_with_params(&PickerParams {
         num_to_pick: 2,
         probe_fps: &probe,
         data_set: &fps,
@@ -108,7 +138,7 @@ fn spread_picker() {
     assert_eq!(id(picker.get(1).unwrap().0), "ether-2");
 
     let probes = [fp("COC"), fp("CC(=O)O")];
-    let mut picker = SpreadPicker::new_with_params(PickerParams {
+    let mut picker = SpreadPicker::new_with_params(&PickerParams {
         num_to_pick: 3,
         probe_fps: &probes,
         data_set: &fps,
@@ -138,11 +168,11 @@ fn spread_picker() {
         ("arom-4", 0.028985507246376812),
     ];
     for n in [2, 3, 5, 12] {
-        let mut picker = SpreadPicker::new_with_params(PickerParams {
+        let mut picker = SpreadPicker::new_with_params(&PickerParams {
             num_to_pick: n,
             probe_fps: &probes,
             data_set: &fps,
-            sim_metric: dice_similarity,
+            sim_metric: &dice_similarity,
         });
         let picks: Vec<(&str, f64)> = (0..n as i64)
             .map(|i| {
@@ -153,14 +183,14 @@ fn spread_picker() {
         assert_eq!(picks, expected[..n]);
     }
     // More probes than picks: Python fails with an IndexError.
-    let mut picker = SpreadPicker::new_with_params(PickerParams {
+    let mut picker = SpreadPicker::new_with_params(&PickerParams {
         num_to_pick: 1,
         probe_fps: &probes,
         data_set: &fps,
         ..Default::default()
     });
     assert!(matches!(picker.len(), Err(Error::Index { .. })));
-    let mut no_probes = SpreadPicker::new_with_params(PickerParams {
+    let mut no_probes = SpreadPicker::new_with_params(&PickerParams {
         num_to_pick: 1,
         data_set: &fps,
         ..Default::default()

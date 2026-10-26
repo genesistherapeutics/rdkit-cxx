@@ -551,7 +551,7 @@ fn builds() -> Result<()> {
         ..Default::default()
     };
     assert_eq!(
-        smiles_of(brics_build_with_params(&frags, &fixed, &mut Random::new(0))),
+        smiles_of(brics_build_with_params(&frags, &mut Random::new(0), &fixed)),
         [
             r"c1ccc(-c2ccccn2)nc1",
             r"CCCOc1ccccn1",
@@ -636,8 +636,8 @@ fn builds() -> Result<()> {
     assert_eq!(
         smiles_of(brics_build_with_params(
             &frags,
-            &partial,
-            &mut Random::new(7)
+            &mut Random::new(7),
+            &partial
         )),
         [
             r"[3*]Oc1ccccn1",
@@ -679,7 +679,7 @@ fn builds() -> Result<()> {
         ..Default::default()
     };
     assert_eq!(
-        smiles_of(brics_build_with_params(&frags, &all, &mut Random::new(7))),
+        smiles_of(brics_build_with_params(&frags, &mut Random::new(7), &all)),
         [
             r"CCCOc1ccccn1",
             r"CCCOCCC",
@@ -712,8 +712,8 @@ fn builds() -> Result<()> {
     assert_eq!(
         smiles_of(brics_build_with_params(
             &frags,
-            &seeded,
-            &mut Random::new(0)
+            &mut Random::new(0),
+            &seeded
         )),
         [
             r"c1ccc(-c2ccccn2)cc1",
@@ -807,7 +807,7 @@ fn builds_deeper() -> Result<()> {
         scramble_reagents: false,
         ..Default::default()
     };
-    let ms: Vec<String> = brics_build_with_params(&catalog, &params, &mut Random::new(0))
+    let ms: Vec<String> = brics_build_with_params(&catalog, &mut Random::new(0), &params)
         .map(|x| {
             let mut x = x.unwrap();
             sanitize_mol(&mut x).unwrap();
@@ -859,7 +859,7 @@ fn builds_deeper() -> Result<()> {
         max_depth: 4,
         ..Default::default()
     };
-    let ms: Vec<String> = brics_build_with_params(&catalog, &params, &mut Random::new(23))
+    let ms: Vec<String> = brics_build_with_params(&catalog, &mut Random::new(23), &params)
         .map(|x| {
             let mut x = x.unwrap();
             sanitize_mol(&mut x).unwrap();
@@ -927,7 +927,7 @@ fn module_attributes() -> Result<()> {
         r"[$([C;D2,D3]-[#6]):1]=;!@[$([C;D2,D3]-[#6]):2]>>[7*]-[*:1].[7*]-[*:2]"
     );
     assert_eq!(
-        mol_to_smarts(&bond_matchers()[1][2].3)?,
+        mol_to_smarts(&bond_matchers()[1][2].patt)?,
         r"[$([O&D2]-&!@[#0,#6,#1])]-&!@[$([c&$(c(:[c,n,o,s]):[n,o,s])])]"
     );
     assert_eq!(

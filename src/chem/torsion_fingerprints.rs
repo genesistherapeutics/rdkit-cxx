@@ -13,7 +13,6 @@
 //! The sums, means, and standard deviations are Python's and NumPy's, so
 //! the values match Python's to the last bit.
 
-use crate::chem::py_math::{np_std, py_sum};
 use crate::chem::rd_fingerprint_generator::{
     AdditionalOutput, GetFingerprintParams, GetMorganGeneratorParams,
     get_morgan_generator_with_params,
@@ -22,6 +21,7 @@ use crate::chem::rd_mol_descriptors::get_connectivity_invariants;
 use crate::chem::rdchem::{AtomRef, Conformer, Mol};
 use crate::chem::{get_distance_matrix, get_symm_sssr, mol_from_smarts, mol_to_smiles};
 use crate::geometry::rd_geometry::compute_signed_dihedral_angle;
+use crate::py::{np_std, py_sum};
 use crate::{Error, Result};
 
 /// One torsion of a torsion list: the atom quartets that describe a bond or
@@ -35,6 +35,7 @@ pub type TorsionAngles = (Vec<f64>, f64);
 /// How [`calculate_torsion_lists_with_params`] normalizes the torsions of
 /// bonds outside rings. Mirrors the `maxDev` argument's strings.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MaxDev {
     /// Every torsion by 180 degrees (`'equal'`).
     #[default]
@@ -398,14 +399,11 @@ fn find_central_bond(mol: &Mol, distmat: &[Vec<f64>]) -> Result<(u32, u32)> {
     }
     // Python sorts the (std, index) tuples; the deviations are never NaN.
     stds.sort_by(|a, b| a.partial_cmp(b).expect("the deviations are finite"));
-    let len = stds.len() as u32;
+    let len = stds.len();
     let aid1 = stds.first().ok_or(Error::Index { index: 0, len })?.1;
     let mut i = 1;
     loop {
-        let &(_, aid2) = stds.get(i).ok_or(Error::Index {
-            index: i as u32,
-            len,
-        })?;
+        let &(_, aid2) = stds.get(i).ok_or(Error::index(i, len))?;
         if mol.get_bond_between_atoms(aid1, aid2)?.is_some() {
             return Ok((aid1, aid2));
         }
@@ -588,10 +586,7 @@ fn same_atom_order(mol1: &Mol, mol2: &Mol) -> Result<Mol> {
         let mut conf = Conformer::new(mol1.get_num_atoms());
         conf.set_id(conf2.get_id());
         for i in 0..mol1.get_num_atoms() {
-            let j = *m.get(i as usize).ok_or(Error::Index {
-                index: i,
-                len: m.len() as u32,
-            })?;
+            let j = *m.get(i as usize).ok_or(Error::index(i, m.len()))?;
             conf.set_atom_position(i, conf2.get_atom_position(j)?)?;
         }
         mol3.add_conformer(&conf)?;
