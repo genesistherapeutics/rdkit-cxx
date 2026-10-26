@@ -24,10 +24,10 @@ fingerprints, `Draw`, Butina clustering, and more) is ported to Rust on top of
 those bindings, and computes what Python computes: `rdkit.Chem.QED` is
 `rdkit_cxx::chem::qed`.
 
-Coverage: every name in RDKit 2026.09's Python interface, in its nanobind
+Coverage: every name in RDKit 2026.09's Python interface, in its compiled
 modules and its Python modules, has a Rust counterpart or a recorded reason it
-has none ([Parity](#parity)). Of the 3,910 names the nanobind modules expose,
-3,478 are bound. Of the 2,605 its Python modules define, 1,017 are ported; the
+has none ([Parity](#parity)). Of the 4,039 names the compiled modules expose,
+3,467 are bound. Of the 2,607 its Python modules define, 1,016 are ported; the
 rest are Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM), legacy
 code whose replacement is bound (the sping canvases, the Python MCS search),
 command-line plumbing, Python protocol hooks, or deprecated.

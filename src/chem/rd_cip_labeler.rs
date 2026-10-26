@@ -15,9 +15,9 @@ use crate::ffi::cip_labeler::ffi;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AssignCIPLabelsParams {
     /// The atoms to label. With neither list, every atom and bond is
-    /// labeled.
+    /// labeled. Python treats an empty list as `None`.
     pub atoms_to_label: Option<Vec<u32>>,
-    /// The bonds to label.
+    /// The bonds to label. Python treats an empty list as `None`.
     pub bonds_to_label: Option<Vec<u32>>,
     /// The labeler's iteration limit, 0 for none. Exceeding it is
     /// `Error::Runtime` (Python's `RuntimeError`).

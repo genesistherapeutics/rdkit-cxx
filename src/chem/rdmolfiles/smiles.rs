@@ -168,11 +168,13 @@ pub fn mol_to_cx_smarts_with_isomeric_smiles(mol: &Mol, isomeric_smiles: bool) -
 pub struct MolFragmentToSmilesParams {
     /// The SMILES writer's parameters.
     pub params: SmilesWriteParams,
-    /// The bonds to include; `None` for every bond between the atoms.
+    /// The bonds to include; `None` for every bond between the atoms, and an
+    /// empty list for none (Python treats an empty list as `None`).
     pub bonds_to_use: Option<Vec<u32>>,
     /// A symbol for each atom of the molecule, written in place of its SMILES.
+    /// Python ignores an empty list.
     pub atom_symbols: Option<Vec<String>>,
-    /// A symbol for each bond of the molecule.
+    /// A symbol for each bond of the molecule. Python ignores an empty list.
     pub bond_symbols: Option<Vec<String>>,
 }
 
@@ -233,7 +235,8 @@ pub fn mol_fragment_to_cx_smiles_with_params(
 /// `mol_fragment_to_cx_smarts_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct MolFragmentToSmartsParams {
-    /// The bonds to include; `None` for every bond between the atoms.
+    /// The bonds to include; `None` for every bond between the atoms, and an
+    /// empty list for none (Python treats an empty list as `None`).
     pub bonds_to_use: Option<Vec<u32>>,
     /// Includes stereochemistry and isotopes.
     pub isomeric_smarts: bool,
@@ -416,7 +419,7 @@ pub fn canonical_rank_atoms_with_params(
 pub struct CanonicalRankAtomsInFragmentParams {
     /// The bonds to use; `None` for none.
     pub bonds_to_use: Option<Vec<u32>>,
-    /// A symbol for each atom of the molecule.
+    /// A symbol for each atom of the molecule. Python ignores an empty list.
     pub atom_symbols: Option<Vec<String>>,
     /// Breaks ties; otherwise equal ranks mark symmetry classes.
     pub break_ties: bool,
@@ -424,7 +427,9 @@ pub struct CanonicalRankAtomsInFragmentParams {
     pub include_chirality: bool,
     /// Ranks by isotope too.
     pub include_isotopes: bool,
-    /// Ranks by atom map number too.
+    /// Ranks by atom map number too. Python's binding passes
+    /// `includeChiralPresence` in its place, so it ranks by atom maps only
+    /// with `includeChiralPresence`, and never by chiral presence.
     pub include_atom_maps: bool,
     /// Ranks by whether an atom has a chiral tag too.
     pub include_chiral_presence: bool,
