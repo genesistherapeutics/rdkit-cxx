@@ -73,7 +73,10 @@ impl Default for InchiToMolParams {
 /// The molecule an InChI describes, with InChI's return code, message, and
 /// log. A string InChI cannot read gives no molecule (`mol` is `None`), not
 /// an error; a molecule that fails sanitization is the sanitization error.
-/// Mirrors `rdinchi.InchiToMol`.
+/// An atom with 128 or more hydrogens of a kind is `Error::Value`: InChI
+/// keeps the counts in a signed char, and RDKit reads a negative isotopic
+/// count as about 4.3 billion and adds that many atoms. Mirrors
+/// `rdinchi.InchiToMol`.
 ///
 /// ```no_run
 /// use rdkit_cxx::chem::rdinchi::inchi_to_mol;

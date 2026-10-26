@@ -305,7 +305,53 @@ void check_inchi_input(const RWMol &mol) {
 
 }  // namespace
 
+namespace {
+
+// InChI keeps each atom's hydrogen counts, isotopic ones too, in signed
+// chars (inchi_Atom::num_iso_H), and InchiToMol copies the isotopic ones
+// into unsigned ints (ISOTOPES_t in inchi.cpp): a count of 128 or more
+// reads as about 4.3 billion, and InchiToMol adds that many hydrogen atoms.
+// The counts follow H, D, or T in the hydrogen layers (/h) and the isotopic
+// ones (/i and the sublayers after it); the formula, with its total count,
+// is the second layer, and the fixed-H (/f) and reconnected (/r) layers
+// open with formulas too.
+void check_inchi_h_counts(std::string_view inchi) {
+  std::size_t layer = 0;
+  std::size_t start = 0;
+  while (start <= inchi.size()) {
+    auto end = inchi.find('/', start);
+    if (end == std::string_view::npos) {
+      end = inchi.size();
+    }
+    auto text = inchi.substr(start, end - start);
+    if (layer >= 2 && !text.empty() && (text[0] == 'h' || text[0] == 'i')) {
+      for (std::size_t i = 0; i < text.size(); ++i) {
+        if (text[i] != 'H' && text[i] != 'D' && text[i] != 'T') {
+          continue;
+        }
+        unsigned count = 0;
+        std::size_t j = i + 1;
+        for (; j < text.size() && text[j] >= '0' && text[j] <= '9'; ++j) {
+          count = std::min(count * 10 + (text[j] - '0'), 1000u);
+        }
+        if (count >= 128) {
+          throw ValueErrorException(
+              "InChI keeps an atom's hydrogen counts in a signed char, so it "
+              "cannot hold " +
+              std::string(text.substr(i, j - i)));
+        }
+        i = j - 1;
+      }
+    }
+    ++layer;
+    start = end + 1;
+  }
+}
+
+}  // namespace
+
 InchiToMolData inchi_to_mol(rust::Str inchi, bool sanitize, bool remove_hs) {
+  check_inchi_h_counts(std::string_view(inchi.data(), inchi.size()));
   RDKit::ExtraInchiReturnValues rv;
   std::unique_ptr<RWMol> mol;
   {
