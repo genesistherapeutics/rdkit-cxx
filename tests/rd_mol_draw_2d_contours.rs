@@ -195,7 +195,11 @@ fn contours_of_gaussians() {
         173.72888034295804,
         150.0,
     );
-    assert_eq!(counts(&mut d), (199, 6));
+    // The contour lines are traced through floating-point crossings, and
+    // arm64 splits one of them differently (198 paths there, 199 on x86-64).
+    let (paths, dashed) = counts(&mut d);
+    assert_eq!(dashed, 6);
+    assert!((195..=203).contains(&paths), "{paths} paths");
 }
 
 #[test]
