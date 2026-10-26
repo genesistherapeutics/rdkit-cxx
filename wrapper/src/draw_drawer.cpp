@@ -145,6 +145,13 @@ bool uses_freetype(TextDrawer &text) {
 // coordinate NaN), and a font's glyphs set the size of every label.
 constexpr double kMaxGlyphSize = 8.0;
 
+// The shortest line comic mode draws by hand, in the units it is given in.
+// handdrawnLine (MolDraw2DDetails.cpp) shifts each end by up to 0.02 in
+// each direction and then shrinks its wiggles until they are small next to
+// the line's steps, which never ends for a step of no length: its scale
+// factor sticks at the smallest denormal.
+constexpr double kMinComicLineLength = 0.06;
+
 // Loads the font as MolDraw2D::setupTextDrawer will (it then finds the font
 // loaded), and measures two of each byte's glyph: their width and height
 // must be finite and within kMaxGlyphSize font sizes (each).
@@ -683,6 +690,35 @@ class ReactionLayout {
   // The canvas's size once drawReaction has sized it.
   Size canvas_size() const { return d_canvas; }
 
+  // Comic mode draws the plus signs and the arrow's shaft by hand, which
+  // never ends for a line of no length (kMinComicLineLength). A plus's
+  // strokes are plusWidth / 3 pixels long, in int, and drawArrow pulls the
+  // shaft's end back by its mitre, 0.5 * lineWidth / sin(pi / 6), with
+  // the line width the last component's scale gives (getDrawLineWidth).
+  void check_comic(const RDKit::MolDraw2D &drawer) const {
+    const bool plus = d_final_plus_width != 0 &&
+                      (d_reagents.size() > 1 || d_products.size() > 1);
+    const auto stroke = d_final_plus_width > 30 ? 10 : d_final_plus_width / 3;
+    if (plus && stroke == 0) {
+      throw ValueErrorException(
+          "comicMode cannot draw the reaction's plus signs on a canvas this "
+          "small: they would be lines of no length");
+    }
+    double line_width = drawer.lineWidth();
+    if (drawer.drawOptions().scaleBondWidth) {
+      line_width = std::max(0.0, line_width * last_drawn().getScale() * 0.02);
+    }
+    const double shaft =
+        d_arrow_length > 1.0e-6
+            ? std::abs(d_arrow_length - 0.5 * line_width / std::sin(M_PI / 6))
+            : 0.0;
+    if (!(shaft >= kMinComicLineLength)) {
+      throw ValueErrorException(
+          "comicMode cannot draw the reaction's arrow on a canvas this small: "
+          "its shaft would be shorter than 0.06");
+    }
+  }
+
  private:
   // makeReactionComponents and makeReactionDrawMol.
   void components(const std::vector<RDKit::ROMOL_SPTR> &bits, int height,
@@ -823,6 +859,27 @@ class ReactionLayout {
       check_pixels(first_scale());
       plus_width = static_cast<std::int64_t>(first_scale());
     }
+    // With room for 5 more pixels at each gap, plusWidth grows by 5; the
+    // arrow spans 2 plusWidths, or the agents and half a plusWidth around
+    // each (calcReactionOffsets).
+    d_final_plus_width = plus_width;
+    std::int64_t gaps = (d_reagents.empty() ? 0 : d_reagents.size() - 1) +
+                        (d_products.empty() ? 0 : d_products.size() - 1) + 1 +
+                        (d_agents.empty() ? 2 : d_agents.size() - 1);
+    if (width_to_use - reaction_width(d_reagents, d_products, d_agents,
+                                      opts.padding, arrow_mult, plus_width) >
+        gaps * 5) {
+      d_final_plus_width += 5;
+    }
+    if (d_agents.empty()) {
+      d_arrow_length = double(arrow_mult * d_final_plus_width);
+    } else {
+      std::int64_t length = d_final_plus_width / 2;
+      for (const auto &dm : d_agents) {
+        length += dm->width_ + d_final_plus_width / 2;
+      }
+      d_arrow_length = double(length);
+    }
     // With room to spare, plusWidth grows by 5.
     tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
                          arrow_mult, plus_width + 5);
@@ -840,6 +897,18 @@ class ReactionLayout {
     }
   }
 
+  // The last component drawReaction draws, whose scale is the drawer's when
+  // it draws the arrow.
+  const detail::DrawMol &last_drawn() const {
+    if (!d_products.empty()) {
+      return *d_products.back();
+    }
+    if (!d_agents.empty()) {
+      return *d_agents.back();
+    }
+    return *d_reagents.back();
+  }
+
   double first_scale() const {
     if (!d_reagents.empty()) {
       return d_reagents.front()->scale_;
@@ -855,6 +924,8 @@ class ReactionLayout {
   const std::vector<int> *d_conf_ids;
   std::map<int, RDKit::DrawColour> d_colours;
   std::int64_t d_plus_width = 0;
+  std::int64_t d_final_plus_width = 0;
+  double d_arrow_length = 0;
   Size d_canvas;
   std::vector<std::unique_ptr<detail::DrawMol>> d_reagents, d_products,
       d_agents;
@@ -1400,6 +1471,9 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
                               has_colours ? &cols : nullptr,
                               has_conf_ids ? &ids : nullptr);
   check_canvas_fits(d, layout.canvas_size());
+  if (comic(d)) {
+    layout.check_comic(*d.drawer);
+  }
   const auto components = static_cast<int>(layout.num_components());
   drawing_call(d, [&] {
     d.drawer->drawReaction(rxn, highlight_by_reactant,
@@ -1444,13 +1518,6 @@ constexpr double kMaxFreeCoordinate = 1e9;
 
 // Point2D::normalize's zero_tolerance: it throws for a shorter vector.
 constexpr double kZeroTolerance = 1e-16;
-
-// The shortest line comic mode draws by hand, in the units it is given in.
-// handdrawnLine (MolDraw2DDetails.cpp) shifts each end by up to 0.02 in
-// each direction and then shrinks its wiggles until they are small next to
-// the line's steps, which never ends for a step of no length: its scale
-// factor sticks at the smallest denormal.
-constexpr double kMinComicLineLength = 0.06;
 
 // The most segments a wavy line takes. getWavyLineSegments rounds an odd
 // count up, which makes UINT_MAX no segments, and the drawers then read the
