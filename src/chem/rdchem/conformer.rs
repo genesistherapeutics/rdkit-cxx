@@ -195,6 +195,7 @@ impl fmt::Debug for ConformerRef<'_> {
 
 /// A conformer in a molecule, borrowed exclusively for editing. It holds the
 /// conformer's id and finds it on each call (W2).
+/// A Rust addition: Python's `Conformer`, borrowed to edit.
 pub struct ConformerMut<'m> {
     mol: &'m mut Mol,
     id: i32,
@@ -252,11 +253,11 @@ pub(crate) mod sealed {
 }
 
 /// A conformer the module-level functions read: `Conformer`, `ConformerRef`,
-/// or `ConformerMut` (CONVENTIONS.md S3).
+/// or `ConformerMut` (CONVENTIONS.md S3). A Rust addition; sealed.
 pub trait AsConformer: sealed::ConformerLike {}
 
 /// A conformer the module-level functions write: `Conformer` or
-/// `ConformerMut`.
+/// `ConformerMut`. A Rust addition; sealed (CONVENTIONS.md S3).
 pub trait AsConformerMut: sealed::ConformerLikeMut {}
 
 impl sealed::ConformerLike for Conformer {

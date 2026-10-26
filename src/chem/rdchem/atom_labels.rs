@@ -28,9 +28,11 @@ mod sealed {
 }
 
 /// An atom the module-level functions read: `Atom`, `AtomRef`, or `AtomMut`.
+/// A Rust addition; sealed (CONVENTIONS.md S3).
 pub trait AsAtom: sealed::AtomLike {}
 
 /// An atom the module-level functions write: `Atom` or `AtomMut`.
+/// A Rust addition; sealed (CONVENTIONS.md S3).
 pub trait AsAtomMut: sealed::AtomLikeMut {}
 
 impl sealed::AtomLike for Atom {

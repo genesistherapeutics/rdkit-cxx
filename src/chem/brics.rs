@@ -272,6 +272,7 @@ pub fn dummy_pattern() -> Mol {
 
 /// A bond BRICS would cleave: its atoms, and the labels of their
 /// environments, without letters.
+/// A Rust addition, naming the tuples `FindBRICSBonds` yields.
 pub type BRICSBond = ((u32, u32), (String, String));
 
 /// The bonds BRICS would cleave, each once, in the order of
@@ -454,6 +455,7 @@ impl Default for BRICSDecomposeParams {
 }
 
 /// What `brics_decompose_with_outputs` returns besides the fragments.
+/// A Rust addition, for Python's output arguments (A9).
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub struct BRICSDecomposeOutputs {
@@ -650,6 +652,7 @@ enum Step {
 
 /// New molecules built from BRICS fragments, made as they are asked for.
 /// Built by [`brics_build`].
+/// A Rust addition: the iterator of Python's generator.
 pub struct BRICSBuild<'a> {
     fragments: &'a [Mol],
     random: &'a mut Random,

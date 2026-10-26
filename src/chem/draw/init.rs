@@ -1543,10 +1543,12 @@ pub fn draw_morgan_envs_as_png_with_params(
 /// Morgan bit information, as the fingerprint generators'
 /// `AdditionalOutput::get_bit_info_map` gives it: each bit's `(atom,
 /// radius)` environments.
+/// A Rust addition, naming Python's `bitInfo` dictionary.
 pub type MorganBitInfo = BTreeMap<u64, Vec<(u32, u32)>>;
 
 /// RDKit-fingerprint bit information, as `rdk_fingerprint_with_outputs`
 /// gives it (`bit_info`): each bit's paths, as bond indices.
+/// A Rust addition, naming Python's `bitInfo` dictionary.
 pub type RDKitBitInfo = BTreeMap<u64, Vec<Vec<u32>>>;
 
 /// `bit_info[bit_id][which_example]`, with Python's `KeyError` and

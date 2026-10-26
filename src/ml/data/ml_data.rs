@@ -15,6 +15,7 @@ use crate::py::float_repr;
 use crate::{Error, Result};
 
 /// A value in an [`MLDataSet`]: what RDKit's readers make of a field.
+/// A Rust addition, for the Python values a data set holds.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum Value {

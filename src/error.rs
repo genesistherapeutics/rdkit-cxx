@@ -13,7 +13,7 @@ use std::fmt;
 
 use crate::ffi::errors::ffi;
 
-/// The result of a fallible RDKit call.
+/// The result of a fallible RDKit call. A Rust addition.
 pub type Result<T> = std::result::Result<T, Error>;
 
 /// An error RDKit raised, by the Python exception nanobind would raise.

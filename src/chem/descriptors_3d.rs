@@ -154,6 +154,7 @@ pub fn pbf_with_conf_id(mol: &Mol, conf_id: i32) -> Result<f64> {
 }
 
 /// A 3D descriptor: a function of a molecule and a conformer id.
+/// A Rust addition, naming the functions of `descList`.
 pub type Descriptor3DFn = fn(&Mol, i32) -> Result<f64>;
 
 /// Defines the conformer-id forms of the moment descriptors that

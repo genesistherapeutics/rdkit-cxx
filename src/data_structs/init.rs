@@ -25,6 +25,7 @@ fn zero_division() -> Error {
 }
 
 /// A similarity metric on bit vectors.
+/// A Rust addition, naming the functions of `similarityFunctions`.
 pub type SimilarityFunction<B> = fn(&B, &B) -> Result<f64>;
 
 /// The similarity metrics on bit vectors, as `(name, function,

@@ -18,6 +18,7 @@ use crate::geometry::rd_geometry::Point3D;
 use crate::{Error, Result};
 
 /// A feature's directions, each a start and an end, and how to draw them.
+/// A Rust addition, naming what Python's `Get*FeatVects` functions return.
 pub type FeatVects = (Vec<(Point3D, Point3D)>, &'static str);
 
 fn assertion(message: &str) -> Error {

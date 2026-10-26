@@ -130,6 +130,7 @@ pub fn process_gains_file_with_params(
 }
 
 /// The links between bits of a catalog: from `build_adjacency_list`.
+/// A Rust addition, naming Python's adjacency list.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct AdjacencyList {
     /// Per bit, in the order first given, the bits of the fragments one

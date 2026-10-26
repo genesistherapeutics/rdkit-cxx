@@ -10,7 +10,7 @@ use crate::Result;
 use crate::ml::data::stats;
 
 /// A standardization: it takes a data matrix (rows of points) and returns
-/// the standardized one.
+/// the standardized one. A Rust addition, naming the functions of `methods`.
 pub type Standardization = fn(&[Vec<f64>]) -> Result<Vec<Vec<f64>>>;
 
 /// Standardizes each column by its mean and sample standard deviation, with

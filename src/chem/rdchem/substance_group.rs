@@ -353,6 +353,7 @@ pub fn get_mol_substance_group_with_idx(mol: &Mol, idx: u32) -> Result<Substance
 }
 
 /// As [`get_mol_substance_group_with_idx`], to edit the group.
+/// Mirrors `rdchem.GetMolSubstanceGroupWithIdx` (A6).
 pub fn get_mol_substance_group_with_idx_mut(
     mol: &mut Mol,
     idx: u32,

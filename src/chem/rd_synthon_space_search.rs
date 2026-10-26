@@ -236,6 +236,7 @@ pub struct ShapeBuildParams {
 /// molecule with conformers, or `None` when it fails.
 /// `ShapeBuildParams::set_user_conformer_generator` says how the build calls
 /// it. The C++ counterpart is `SynthonSpaceSearch::UserConfGenerator`.
+/// A Rust addition, for the callable Python passes.
 #[derive(Clone)]
 pub struct UserConformerGenerator(Arc<ConformerFn>);
 

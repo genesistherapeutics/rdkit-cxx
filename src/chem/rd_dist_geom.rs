@@ -576,6 +576,7 @@ pub fn get_molecule_bounds_matrix_embed_parameters_with_params(
 }
 
 /// An experimental torsion's terms.
+/// A Rust addition, for the keys of Python's dictionary.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum TorsionTerms {

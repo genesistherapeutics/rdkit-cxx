@@ -13,7 +13,7 @@ use crate::ffi::props::ffi;
 use crate::{Error, Result};
 
 /// A property value, as `GetPropsAsDict` and `GetProp(autoConvert=True)`
-/// convert it.
+/// convert it. A Rust addition, for the Python values they return.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum PropValue {

@@ -262,10 +262,11 @@ impl RGroupDecompositionParameters {
 
 /// One molecule's decomposition: its core and R groups by label (`Core`,
 /// `R1`, ..., and `Mol` with `include_target_mol_in_results`).
+/// A Rust addition, naming Python's dictionary.
 pub type RGroupRow<T> = BTreeMap<String, T>;
 
 /// Each label's molecules, one per decomposed molecule (an empty molecule
-/// where one has no such group).
+/// where one has no such group). A Rust addition, naming Python's dictionary.
 pub type RGroupColumns<T> = BTreeMap<String, Vec<T>>;
 
 /// Moves the named molecules out of a table, in order, with their labels.

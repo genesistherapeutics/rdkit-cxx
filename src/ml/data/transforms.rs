@@ -9,6 +9,7 @@
 use crate::ml::data::ml_data::MLDataSet;
 
 /// A data transformation, which changes a data set.
+/// A Rust addition, naming the functions of `GetAvailTransforms`.
 pub type Transform = fn(&mut MLDataSet);
 
 fn center_t_form(_data_set: &mut MLDataSet) {}

@@ -48,6 +48,7 @@ fn count_matches(mol: &Mol, code: &str, count_unique: bool) -> Result<u32> {
 }
 
 /// A fragment count: a function of a molecule.
+/// A Rust addition, naming the functions of `fns`.
 pub type FragmentFn = fn(&Mol) -> Result<u32>;
 
 /// Defines a function per pattern, and its form taking `count_unique`.
