@@ -400,8 +400,24 @@ fn explained(symbol: &str, n_branch: u32, n_pi: u32) -> utils::AtomCodeExplanati
     (symbol.to_owned(), n_branch, n_pi)
 }
 
-fn chiral(symbol: &str, n_branch: u32, n_pi: u32, label: &str) -> utils::ChiralAtomCodeExplanation {
+type Chiral = (String, u32, u32, String);
+
+fn chiral(symbol: &str, n_branch: u32, n_pi: u32, label: &str) -> Chiral {
     (symbol.to_owned(), n_branch, n_pi, label.to_owned())
+}
+
+fn chiral_tuple(e: &utils::ChiralAtomCodeExplanation) -> Chiral {
+    (e.symbol.clone(), e.n_branch, e.n_pi, e.chirality.clone())
+}
+
+fn chiral_pair(
+    pair: (
+        utils::ChiralAtomCodeExplanation,
+        u32,
+        utils::ChiralAtomCodeExplanation,
+    ),
+) -> (Chiral, u32, Chiral) {
+    (chiral_tuple(&pair.0), pair.1, chiral_tuple(&pair.2))
 }
 
 #[test]
@@ -455,18 +471,18 @@ fn utils_doctests() {
     );
     let code = code_with("C[C@H](F)Cl", 1, true);
     assert_eq!(
-        utils::explain_atom_code_include_chirality(code).unwrap(),
+        chiral_tuple(&utils::explain_atom_code_include_chirality(code).unwrap()),
         chiral("C", 3, 0, "R")
     );
     assert_eq!(utils::explain_atom_code(code), explained("C", 3, 0));
     let code = code_with("C[C@H](F)Cl", 0, true);
     assert_eq!(
-        utils::explain_atom_code_include_chirality(code).unwrap(),
+        chiral_tuple(&utils::explain_atom_code_include_chirality(code).unwrap()),
         chiral("C", 1, 0, "")
     );
     let code = code_with("C[C@@H](F)Cl", 1, true);
     assert_eq!(
-        utils::explain_atom_code_include_chirality(code).unwrap(),
+        chiral_tuple(&utils::explain_atom_code_include_chirality(code).unwrap()),
         chiral("C", 3, 0, "S")
     );
     // Python's chirality dictionary has no 3, and the last type is a dummy.
@@ -577,13 +593,13 @@ fn pairs_doctests() {
     );
     let s = pairs::py_score_pair_with_params(&atom(0), &atom(1), 1, &chiral_params).unwrap();
     assert_eq!(
-        pairs::explain_pair_score_include_chirality(s).unwrap(),
+        chiral_pair(pairs::explain_pair_score_include_chirality(s).unwrap()),
         (chiral("C", 1, 0, ""), 1, chiral("C", 3, 0, "R"))
     );
     let s = pairs::py_score_pair_with_params(&a1, &a3, 1, &chiral_params).unwrap();
     assert_eq!(s, 69420129);
     assert_eq!(
-        pairs::explain_pair_score_include_chirality(s).unwrap(),
+        chiral_pair(pairs::explain_pair_score_include_chirality(s).unwrap()),
         (chiral("C", 3, 0, "R"), 1, chiral("C", 3, 0, "S"))
     );
 
