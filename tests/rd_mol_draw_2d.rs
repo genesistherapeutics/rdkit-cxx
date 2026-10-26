@@ -842,3 +842,287 @@ fn comic_mode_needs_bonds_with_length() {
         .unwrap();
     assert_value_error(d.draw_molecule(&m));
 }
+
+fn red() -> DrawColour {
+    DrawColour::new(1.0, 0.0, 0.0)
+}
+
+fn blue() -> DrawColour {
+    DrawColour::new(0.0, 0.0, 1.0)
+}
+
+fn green() -> DrawColour {
+    DrawColour::new(0.0, 1.0, 0.0)
+}
+
+#[test]
+fn multi_colour_highlights() {
+    let m = mol("c1ccccc1O");
+    let atoms = BTreeMap::from([
+        (0, vec![red(), blue()]),
+        (1, vec![green()]),
+        (6, vec![red()]),
+    ]);
+    let bonds = BTreeMap::from([(0, vec![red()]), (5, vec![blue(), green()])]);
+    let radii = BTreeMap::from([(0, 0.4)]);
+    let multipliers = BTreeMap::from([(0, 2)]);
+    // Python's counts of each colour in the SVG.
+    for (style, counts) in [
+        (MultiColourHighlightStyle::CircleAndLine, (9, 4, 4)),
+        (MultiColourHighlightStyle::Lasso, (5, 1, 1)),
+    ] {
+        let mut d = svg();
+        let opts = MolDrawOptions {
+            multi_colour_highlight_style: style,
+            ..Default::default()
+        };
+        d.set_draw_options(&opts).unwrap();
+        d.draw_molecule_with_highlights(&m, "mch", &atoms, &bonds, &radii, &multipliers)
+            .unwrap();
+        d.finish_drawing();
+        let text = d.get_drawing_text().unwrap();
+        let count = |c: &str| text.matches(c).count();
+        assert_eq!(
+            (count("#FF0000"), count("#0000FF"), count("#00FF00")),
+            counts,
+            "{style:?}"
+        );
+    }
+    // RDKit draws the first conformer whatever confId is.
+    let mut d = svg();
+    d.draw_molecule_with_highlights_with_conf_id(&m, "", &atoms, &bonds, &radii, &multipliers, 7)
+        .unwrap();
+}
+
+#[test]
+fn multi_colour_highlights_are_checked() {
+    let m = mol("c1ccccc1O");
+    let none = BTreeMap::new();
+    let no_radii = BTreeMap::new();
+    let no_multipliers = BTreeMap::new();
+    for style in [
+        MultiColourHighlightStyle::CircleAndLine,
+        MultiColourHighlightStyle::Lasso,
+    ] {
+        let mut d = svg();
+        let opts = MolDrawOptions {
+            multi_colour_highlight_style: style,
+            ..Default::default()
+        };
+        d.set_draw_options(&opts).unwrap();
+        // DrawMolMCHLasso sets bits of an unchecked atom index.
+        let far = BTreeMap::from([(99, vec![red()])]);
+        assert_index_error(d.draw_molecule_with_highlights(
+            &m,
+            "",
+            &far,
+            &none,
+            &no_radii,
+            &no_multipliers,
+        ));
+        assert_index_error(d.draw_molecule_with_highlights(
+            &m,
+            "",
+            &none,
+            &far,
+            &no_radii,
+            &no_multipliers,
+        ));
+        let nan = BTreeMap::from([(0, vec![DrawColour::new(f64::NAN, 0.0, 0.0)])]);
+        assert_value_error(d.draw_molecule_with_highlights(
+            &m,
+            "",
+            &nan,
+            &none,
+            &no_radii,
+            &no_multipliers,
+        ));
+        let atoms = BTreeMap::from([(0, vec![red()])]);
+        for r in [0.0, 17.0, f64::NAN] {
+            let radii = BTreeMap::from([(0, r)]);
+            assert_value_error(d.draw_molecule_with_highlights(
+                &m,
+                "",
+                &atoms,
+                &none,
+                &radii,
+                &no_multipliers,
+            ));
+        }
+        let multipliers = BTreeMap::from([(0, 100)]);
+        assert_value_error(d.draw_molecule_with_highlights(
+            &m,
+            "",
+            &atoms,
+            &none,
+            &no_radii,
+            &multipliers,
+        ));
+        assert_value_error(d.draw_molecule_with_highlights(
+            &m,
+            "<sub>x",
+            &atoms,
+            &none,
+            &no_radii,
+            &no_multipliers,
+        ));
+        let opts = MolDrawOptions {
+            highlight_radius: 0.0,
+            ..opts
+        };
+        d.set_draw_options(&opts).unwrap();
+        assert_value_error(d.draw_molecule_with_highlights(
+            &m,
+            "",
+            &atoms,
+            &none,
+            &no_radii,
+            &no_multipliers,
+        ));
+        // Nothing to highlight needs no radius.
+        d.draw_molecule_with_highlights(&m, "", &none, &none, &no_radii, &no_multipliers)
+            .unwrap();
+    }
+}
+
+#[test]
+fn grids() {
+    let mols: Vec<Mol> = ["CCO", "c1ccccc1", "CN", "O=C=O"]
+        .into_iter()
+        .map(mol)
+        .collect();
+    let panels = MolDraw2DSVGParams {
+        panel_width: 300,
+        panel_height: 300,
+        ..Default::default()
+    };
+    let mut d = MolDraw2DSVG::new_with_params(600, 600, &panels).unwrap();
+    let params = DrawMoleculesParams {
+        legends: Some(["a", "b", "c", "d"].map(String::from).to_vec()),
+        highlight_atoms: Some(vec![vec![0], vec![], vec![1], vec![]]),
+        ..Default::default()
+    };
+    d.draw_molecules_with_params(&mols, &params).unwrap();
+    d.finish_drawing();
+    let text = d.get_drawing_text().unwrap();
+    // Python's counts.
+    assert_eq!(text.matches("class='bond-0").count(), 7);
+    assert_eq!(text.matches("#FF7F7F").count(), 4);
+    // A drawer that has drawn holds molecules RDKit would lay out again.
+    assert_value_error(d.draw_molecules(&mols));
+
+    let fresh = || MolDraw2DSVG::new_with_params(600, 600, &panels).unwrap();
+    fresh().draw_molecules(&[]).unwrap();
+    let short = DrawMoleculesParams {
+        legends: Some(vec!["a".into()]),
+        ..Default::default()
+    };
+    assert_value_error(fresh().draw_molecules_with_params(&mols, &short));
+    let bad_index = DrawMoleculesParams {
+        highlight_atoms: Some(vec![vec![9], vec![], vec![], vec![]]),
+        ..Default::default()
+    };
+    assert_index_error(fresh().draw_molecules_with_params(&mols, &bad_index));
+    let bad_legend = DrawMoleculesParams {
+        legends: Some(["a", "<sub>b", "c", "d"].map(String::from).to_vec()),
+        ..Default::default()
+    };
+    assert_value_error(fresh().draw_molecules_with_params(&mols, &bad_legend));
+    // RDKit puts molecule i in row i / (width / panelWidth).
+    let wide = MolDraw2DSVGParams {
+        panel_width: 700,
+        panel_height: 300,
+        ..Default::default()
+    };
+    assert_value_error(
+        MolDraw2DSVG::new_with_params(600, 600, &wide)
+            .unwrap()
+            .draw_molecules(&mols),
+    );
+    assert_value_error(MolDraw2DSVG::new(-1, -1).unwrap().draw_molecules(&mols));
+    // Empty lists are not given, as in Python.
+    let empty = DrawMoleculesParams {
+        legends: Some(vec![]),
+        ..Default::default()
+    };
+    fresh().draw_molecules_with_params(&mols, &empty).unwrap();
+}
+
+#[test]
+fn reactions() {
+    use rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts;
+    let rxn = reaction_from_smarts("[C:1]=[O:2].[N:3]>>[C:1](-[N:3])-[O:2]").unwrap();
+    let mut d = MolDraw2DSVG::new(600, 200).unwrap();
+    let params = DrawReactionParams {
+        highlight_by_reactant: true,
+        highlight_colors_reactants: Some(vec![red(), blue()]),
+        ..Default::default()
+    };
+    d.draw_reaction_with_params(&rxn, &params).unwrap();
+    d.finish_drawing();
+    let text = d.get_drawing_text().unwrap();
+    assert_eq!(
+        (
+            text.matches("#FF0000").count(),
+            text.matches("#0000FF").count()
+        ),
+        (12, 4)
+    );
+    assert_value_error(d.draw_reaction(&rxn));
+
+    let mut flexi = MolDraw2DSVG::new(-1, -1).unwrap();
+    flexi.draw_reaction(&rxn).unwrap();
+    let (w, h) = (flexi.width(), flexi.height());
+    assert!((w - 231).abs() <= 1 && (h - 25).abs() <= 1, "{w} {h}");
+
+    let fresh = || MolDraw2DSVG::new(600, 200).unwrap();
+    fresh()
+        .draw_reaction(&reaction_from_smarts("CC>O>C=C").unwrap())
+        .unwrap();
+    // highlightByReactant with no colours: RDKit takes them modulo zero.
+    let no_colours = DrawReactionParams {
+        highlight_by_reactant: true,
+        highlight_colors_reactants: Some(vec![]),
+        ..Default::default()
+    };
+    assert_value_error(fresh().draw_reaction_with_params(&rxn, &no_colours));
+    let bad_colour = DrawReactionParams {
+        highlight_by_reactant: true,
+        highlight_colors_reactants: Some(vec![DrawColour::new(2.0, 0.0, 0.0)]),
+        ..Default::default()
+    };
+    assert_value_error(fresh().draw_reaction_with_params(&rxn, &bad_colour));
+    // RDKit indexes confIds by position in each group: two reactants here.
+    let short = DrawReactionParams {
+        conf_ids: Some(vec![-1]),
+        ..Default::default()
+    };
+    assert_value_error(fresh().draw_reaction_with_params(&rxn, &short));
+    // Without reactants or products RDKit converts DBL_MAX to int.
+    for smarts in [">>", ">O>"] {
+        assert_value_error(fresh().draw_reaction(&reaction_from_smarts(smarts).unwrap()));
+    }
+}
+
+#[test]
+fn multi_colour_bond_highlights_need_bond_length() {
+    // RDKit grows the atoms' highlights forever to meet the NaN lines of a
+    // bond with no length.
+    let mut m = depicted("CCO");
+    let p = m.get_conformer().unwrap().get_atom_position(0).unwrap();
+    m.get_conformer_mut()
+        .unwrap()
+        .set_atom_position(1, p)
+        .unwrap();
+    let atoms = BTreeMap::from([(0, vec![red()]), (1, vec![blue()])]);
+    let bonds = BTreeMap::from([(0, vec![red()])]);
+    let mut d = svg();
+    assert_value_error(d.draw_molecule_with_highlights(
+        &m,
+        "",
+        &atoms,
+        &bonds,
+        &BTreeMap::new(),
+        &BTreeMap::new(),
+    ));
+}

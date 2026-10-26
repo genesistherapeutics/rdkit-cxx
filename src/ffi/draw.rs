@@ -159,6 +159,57 @@ pub(crate) mod ffi {
         legend: String,
     }
 
+    /// The colours of one atom's or bond's multi-colour highlight.
+    struct ColourList {
+        colours: Vec<DrawColour>,
+    }
+
+    /// `MolDraw2D.DrawMoleculeWithHighlights`'s arguments, maps as parallel
+    /// keys and values.
+    struct DrawMoleculeWithHighlightsData {
+        legend: String,
+        atom_keys: Vec<u32>,
+        atom_colours: Vec<ColourList>,
+        bond_keys: Vec<u32>,
+        bond_colours: Vec<ColourList>,
+        radii_keys: Vec<u32>,
+        radii_values: Vec<f64>,
+        multiplier_keys: Vec<u32>,
+        multiplier_values: Vec<i32>,
+        conf_id: i32,
+    }
+
+    /// Highlight colours by atom or bond index.
+    struct IndexColourMap {
+        keys: Vec<u32>,
+        values: Vec<DrawColour>,
+    }
+
+    /// Highlight radii by atom index.
+    struct IndexRadiusMap {
+        keys: Vec<u32>,
+        values: Vec<f64>,
+    }
+
+    /// `MolDraw2D.DrawMolecules`'s optional lists, one entry per molecule,
+    /// each with whether it was given.
+    struct DrawMoleculesData {
+        has_highlight_atoms: bool,
+        highlight_atoms: Vec<IndexList>,
+        has_highlight_bonds: bool,
+        highlight_bonds: Vec<IndexList>,
+        has_atom_colours: bool,
+        atom_colours: Vec<IndexColourMap>,
+        has_bond_colours: bool,
+        bond_colours: Vec<IndexColourMap>,
+        has_radii: bool,
+        radii: Vec<IndexRadiusMap>,
+        has_conf_ids: bool,
+        conf_ids: Vec<i32>,
+        has_legends: bool,
+        legends: Vec<String>,
+    }
+
     /// A width and height in pixels.
     struct DrawSize {
         width: i32,
@@ -173,6 +224,8 @@ pub(crate) mod ffi {
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type Point2D = crate::ffi::geometry::ffi::Point2D;
         type RWMol = crate::ffi::mol::ffi::RWMol;
+        type BorrowedMols = crate::ffi::molops::ffi::BorrowedMols;
+        type ChemicalReaction = crate::ffi::chem_reactions::ffi::ChemicalReaction;
         type LegendPosition;
         type MultiColourHighlightStyle;
         type DrawElement;
@@ -243,6 +296,26 @@ pub(crate) mod ffi {
             mol: &RWMol,
             data: &DrawMoleculeData,
         ) -> Result<DrawSize>;
+        fn drawer_draw_molecule_with_highlights(
+            d: Pin<&mut Drawer>,
+            mol: &RWMol,
+            data: &DrawMoleculeWithHighlightsData,
+        ) -> Result<()>;
+        fn drawer_draw_molecules(
+            d: Pin<&mut Drawer>,
+            mols: Pin<&mut BorrowedMols>,
+            data: &DrawMoleculesData,
+        ) -> Result<()>;
+        #[allow(clippy::too_many_arguments)]
+        fn drawer_draw_reaction(
+            d: Pin<&mut Drawer>,
+            rxn: &ChemicalReaction,
+            highlight_by_reactant: bool,
+            colours: &Vec<DrawColour>,
+            has_colours: bool,
+            conf_ids: &Vec<i32>,
+            has_conf_ids: bool,
+        ) -> Result<()>;
         fn drawer_prepare_and_draw_molecule(
             d: Pin<&mut Drawer>,
             mol: &RWMol,

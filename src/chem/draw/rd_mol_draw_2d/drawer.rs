@@ -14,8 +14,11 @@ use cxx::UniquePtr;
 use super::options::{DrawColour, MolDrawOptions};
 use crate::Result;
 use crate::chem::Mol;
+use crate::chem::rd_chem_reactions::ChemicalReaction;
+use crate::chem::rdmolops::with_borrowed_mols_shared;
 use crate::error::{expect_ok, to_string};
 use crate::ffi::draw::ffi;
+use crate::ffi::geometry::ffi::IndexList;
 use crate::geometry::Point2D;
 
 /// A molecule drawer. Mirrors `rdMolDraw2D.MolDraw2D`, the base class of
@@ -100,6 +103,43 @@ impl Default for GetMolSizeParams {
             legend: String::new(),
         }
     }
+}
+
+/// Parameters for `MolDraw2D::draw_molecules_with_params`, with Python's
+/// defaults (A2). Each list, when given, has an entry for each molecule;
+/// an empty list is not given, as in Python.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DrawMoleculesParams {
+    /// Atoms to highlight in each molecule.
+    pub highlight_atoms: Option<Vec<Vec<u32>>>,
+    /// Bonds to highlight in each molecule; without them, and with
+    /// `continuous_highlight`, the bonds between highlighted atoms.
+    pub highlight_bonds: Option<Vec<Vec<u32>>>,
+    /// Highlight colours of each molecule's atoms.
+    pub highlight_atom_colors: Option<Vec<BTreeMap<u32, DrawColour>>>,
+    /// Highlight colours of each molecule's bonds.
+    pub highlight_bond_colors: Option<Vec<BTreeMap<u32, DrawColour>>>,
+    /// Highlight radii of each molecule's atoms.
+    pub highlight_atom_radii: Option<Vec<BTreeMap<u32, f64>>>,
+    /// The conformer of each molecule to draw.
+    pub conf_ids: Option<Vec<i32>>,
+    /// The legend of each molecule.
+    pub legends: Option<Vec<String>>,
+}
+
+/// Parameters for `MolDraw2D::draw_reaction_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DrawReactionParams {
+    /// Highlights each reactant's mapped atoms, and the product atoms they
+    /// map to, in a colour of its own.
+    pub highlight_by_reactant: bool,
+    /// The reactants' colours, in turn; `None` for the options'
+    /// `highlight_colour_palette`.
+    pub highlight_colors_reactants: Option<Vec<DrawColour>>,
+    /// The conformer of each reactant, product, and agent, by its position
+    /// in its group.
+    pub conf_ids: Option<Vec<i32>>,
 }
 
 /// The highlights and text of one molecule, as the bridge carries them.
@@ -275,6 +315,195 @@ impl MolDraw2D {
             self.pin_mut(),
             mol.as_ffi(),
             &args.to_ffi(),
+        )?)
+    }
+
+    /// Draws a molecule with highlights of several colours: each atom in
+    /// `highlight_atom_map` and bond in `highlight_bond_map` with its
+    /// colours, in the `multi_colour_highlight_style` of the options, atoms
+    /// with the radii in `highlight_radii` (else `highlight_radius`) and
+    /// bonds with their line widths multiplied as in
+    /// `highlight_linewidth_multipliers`. Mirrors
+    /// `MolDraw2D.DrawMoleculeWithHighlights`.
+    ///
+    /// `Error::Index` for an atom or bond past the end, and `Error::Value`
+    /// for a colour outside 0 to 1, a radius not above 0 or beyond 16 (or a
+    /// `highlight_radius` of 0: RDKit grows a highlight of no radius until
+    /// it meets its bonds, which never happens), a multiplier outside 0 to
+    /// 64, and as `draw_molecule`.
+    pub fn draw_molecule_with_highlights(
+        &mut self,
+        mol: &Mol,
+        legend: &str,
+        highlight_atom_map: &BTreeMap<u32, Vec<DrawColour>>,
+        highlight_bond_map: &BTreeMap<u32, Vec<DrawColour>>,
+        highlight_radii: &BTreeMap<u32, f64>,
+        highlight_linewidth_multipliers: &BTreeMap<u32, i32>,
+    ) -> Result<()> {
+        self.draw_molecule_with_highlights_with_conf_id(
+            mol,
+            legend,
+            highlight_atom_map,
+            highlight_bond_map,
+            highlight_radii,
+            highlight_linewidth_multipliers,
+            -1,
+        )
+    }
+
+    /// As `draw_molecule_with_highlights`, with Python's `confId`. Mirrors
+    /// `MolDraw2D.DrawMoleculeWithHighlights(..., confId)`. RDKit passes
+    /// `confId` where its layout takes whether to draw annotations, so it
+    /// draws the first conformer whatever `conf_id` is, and no annotations
+    /// for a `conf_id` of 0, as in Python.
+    #[allow(clippy::too_many_arguments)]
+    pub fn draw_molecule_with_highlights_with_conf_id(
+        &mut self,
+        mol: &Mol,
+        legend: &str,
+        highlight_atom_map: &BTreeMap<u32, Vec<DrawColour>>,
+        highlight_bond_map: &BTreeMap<u32, Vec<DrawColour>>,
+        highlight_radii: &BTreeMap<u32, f64>,
+        highlight_linewidth_multipliers: &BTreeMap<u32, i32>,
+        conf_id: i32,
+    ) -> Result<()> {
+        let lists = |map: &BTreeMap<u32, Vec<DrawColour>>| -> Vec<ffi::ColourList> {
+            map.values()
+                .map(|colours| ffi::ColourList {
+                    colours: colours.clone(),
+                })
+                .collect()
+        };
+        let data = ffi::DrawMoleculeWithHighlightsData {
+            legend: legend.to_owned(),
+            atom_keys: highlight_atom_map.keys().copied().collect(),
+            atom_colours: lists(highlight_atom_map),
+            bond_keys: highlight_bond_map.keys().copied().collect(),
+            bond_colours: lists(highlight_bond_map),
+            radii_keys: highlight_radii.keys().copied().collect(),
+            radii_values: highlight_radii.values().copied().collect(),
+            multiplier_keys: highlight_linewidth_multipliers.keys().copied().collect(),
+            multiplier_values: highlight_linewidth_multipliers.values().copied().collect(),
+            conf_id,
+        };
+        Ok(ffi::drawer_draw_molecule_with_highlights(
+            self.pin_mut(),
+            mol.as_ffi(),
+            &data,
+        )?)
+    }
+
+    /// Draws the molecules in a grid of panels (the panel size the drawer
+    /// was made with). Mirrors `MolDraw2D.DrawMolecules(mols)`.
+    ///
+    /// The drawer needs a canvas of fixed size, panels that fit on it, and
+    /// nothing drawn yet: RDKit lays out again every molecule a drawer holds,
+    /// with the options of the moment, when it draws a grid. `Error::Value`
+    /// otherwise, and as `draw_molecule` for each molecule.
+    pub fn draw_molecules(&mut self, mols: &[Mol]) -> Result<()> {
+        self.draw_molecules_with_params(mols, &DrawMoleculesParams::default())
+    }
+
+    /// As `draw_molecules`, with highlights, conformers, or legends.
+    /// Mirrors `MolDraw2D.DrawMolecules`; `Error::Value` for a list whose
+    /// length is not the number of molecules, and as
+    /// `draw_molecule_with_params`.
+    pub fn draw_molecules_with_params(
+        &mut self,
+        mols: &[Mol],
+        params: &DrawMoleculesParams,
+    ) -> Result<()> {
+        fn given<T>(list: &Option<Vec<T>>) -> Option<&Vec<T>> {
+            list.as_ref().filter(|v| !v.is_empty())
+        }
+        let colour_maps =
+            |list: &Option<Vec<BTreeMap<u32, DrawColour>>>| -> Vec<ffi::IndexColourMap> {
+                given(list)
+                    .map(|maps| {
+                        maps.iter()
+                            .map(|m| ffi::IndexColourMap {
+                                keys: m.keys().copied().collect(),
+                                values: m.values().copied().collect(),
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default()
+            };
+        let index_lists = |list: &Option<Vec<Vec<u32>>>| -> Vec<IndexList> {
+            given(list)
+                .map(|lists| {
+                    lists
+                        .iter()
+                        .map(|v| IndexList { indices: v.clone() })
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        let data = ffi::DrawMoleculesData {
+            has_highlight_atoms: given(&params.highlight_atoms).is_some(),
+            highlight_atoms: index_lists(&params.highlight_atoms),
+            has_highlight_bonds: given(&params.highlight_bonds).is_some(),
+            highlight_bonds: index_lists(&params.highlight_bonds),
+            has_atom_colours: given(&params.highlight_atom_colors).is_some(),
+            atom_colours: colour_maps(&params.highlight_atom_colors),
+            has_bond_colours: given(&params.highlight_bond_colors).is_some(),
+            bond_colours: colour_maps(&params.highlight_bond_colors),
+            has_radii: given(&params.highlight_atom_radii).is_some(),
+            radii: given(&params.highlight_atom_radii)
+                .map(|maps| {
+                    maps.iter()
+                        .map(|m| ffi::IndexRadiusMap {
+                            keys: m.keys().copied().collect(),
+                            values: m.values().copied().collect(),
+                        })
+                        .collect()
+                })
+                .unwrap_or_default(),
+            has_conf_ids: given(&params.conf_ids).is_some(),
+            conf_ids: given(&params.conf_ids).cloned().unwrap_or_default(),
+            has_legends: given(&params.legends).is_some(),
+            legends: given(&params.legends).cloned().unwrap_or_default(),
+        };
+        let inner = self.pin_mut();
+        with_borrowed_mols_shared(mols.iter().map(|m| ("", m)), |list| {
+            Ok(ffi::drawer_draw_molecules(inner, list, &data)?)
+        })
+    }
+
+    /// Draws a reaction: its reactants, an arrow with its agents, and its
+    /// products. Mirrors `MolDraw2D.DrawReaction(rxn)`.
+    ///
+    /// The drawer needs nothing drawn yet: RDKit lays the reaction out
+    /// against every molecule a drawer holds. `Error::Value` otherwise, for
+    /// a reaction with neither reactants nor products, and as
+    /// `draw_molecule` for each template.
+    pub fn draw_reaction(&mut self, rxn: &ChemicalReaction) -> Result<()> {
+        self.draw_reaction_with_params(rxn, &DrawReactionParams::default())
+    }
+
+    /// As `draw_reaction`, with highlights or conformers. Mirrors
+    /// `MolDraw2D.DrawReaction`; `Error::Value` for an empty list of
+    /// colours with `highlight_by_reactant` (RDKit takes each reactant's
+    /// colour modulo their number), fewer conformer ids than the largest
+    /// group of templates, or a colour outside 0 to 1.
+    pub fn draw_reaction_with_params(
+        &mut self,
+        rxn: &ChemicalReaction,
+        params: &DrawReactionParams,
+    ) -> Result<()> {
+        let empty_colours = Vec::new();
+        let empty_ids = Vec::new();
+        Ok(ffi::drawer_draw_reaction(
+            self.pin_mut(),
+            rxn.as_ffi(),
+            params.highlight_by_reactant,
+            params
+                .highlight_colors_reactants
+                .as_ref()
+                .unwrap_or(&empty_colours),
+            params.highlight_colors_reactants.is_some(),
+            params.conf_ids.as_ref().unwrap_or(&empty_ids),
+            params.conf_ids.is_some(),
         )?)
     }
 

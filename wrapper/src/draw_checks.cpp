@@ -506,13 +506,13 @@ void check_link_nodes(const RDKit::ROMol &mol,
 
 // DrawMol::bondInsideRing walks each ring a double bond is in, from both of
 // the bond's atoms, to the ring's next atom, and reads the coordinates of
-// atom -1 when there is none. RDKit recomputes ring information that is not
-// symmetrized SSSR before drawing (MolDraw2D::drawMolecule), so only rings
-// it keeps are checked: every ring bond's atoms must have another bond in
-// the ring.
-void check_drawn_rings(const RDKit::ROMol &mol) {
+// atom -1 when there is none. MolDraw2D::drawMolecule recomputes ring
+// information that is not symmetrized SSSR before drawing, so only rings it
+// keeps are checked (all of them when it draws them as given): every ring
+// bond's atoms must have another bond in the ring.
+void check_drawn_rings(const RDKit::ROMol &mol, bool symmetrized) {
   const auto *info = mol.getRingInfo();
-  if (!info->isInitialized() || !info->isSymmSssr()) {
+  if (!info->isInitialized() || (symmetrized && !info->isSymmSssr())) {
     return;
   }
   const auto num_bonds = mol.getNumBonds();
@@ -844,7 +844,7 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
 
 void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
                      const RDKit::MolDrawOptions &opts, bool freetype,
-                     bool annotations) {
+                     bool annotations, bool symmetrized) {
   // Coordinates: DrawMol draws conf_id, and positions data substance groups
   // from the first conformer (getSGroupDataLabels).
   std::vector<RDGeom::Point2D> coords;
@@ -873,7 +873,7 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
       }
     }
   }
-  check_drawn_rings(mol);
+  check_drawn_rings(mol, symmetrized);
   check_attachments(mol, opts);
   if (!coords.empty() && annotations) {
     check_link_nodes(mol, coords);

@@ -14,13 +14,18 @@
 // RDK_BUILD_FREETYPE_SUPPORT (but for a Windows-only member), and the build
 // defines both as the library was built (wrapper/CMakeLists.txt).
 #include <cstdint>
+#include <list>
+#include <map>
 #include <memory>
+#include <vector>
 
+#include <GraphMol/ChemReactions/Reaction.h>
 #include <GraphMol/MolDraw2D/MolDraw2D.h>
 #include <GraphMol/MolDraw2D/MolDraw2DHelpers.h>
 #include <GraphMol/RWMol.h>
 #include <RDGeneral/RDConfig.h>
 
+#include "rdkit-cxx/mol_list.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -29,10 +34,13 @@ namespace rdkit_cxx {
 struct DrawColour;
 struct MolDrawOptionsData;
 struct DrawMoleculeData;
+struct DrawMoleculeWithHighlightsData;
+struct DrawMoleculesData;
 struct DrawSize;
 struct Point2D;
 
 using RDKit::RWMol;
+using ChemicalReaction = RDKit::ChemicalReaction;
 
 // Enums cxx checks against RDKit's (CONVENTIONS.md N6). DrawElement is a
 // plain enum unless USE_BETTER_ENUMS is defined, which the wrappers never do.
@@ -68,6 +76,18 @@ struct Drawer {
   // molecule, or not advanced activeMolIdx_ past it, so the drawer draws
   // no more.
   bool failed = false;
+  // The highlights of each DrawMoleculeWithHighlights call. RDKit's
+  // DrawMolMCH keeps references to them (mcHighlightAtomMap_ and the
+  // others), and reads them again whenever it lays the molecule out anew,
+  // as later calls can (drawMolecules redraws every molecule the drawer
+  // holds), so they live as long as the drawer.
+  struct MultiHighlights {
+    std::map<int, std::vector<RDKit::DrawColour>> atoms;
+    std::map<int, std::vector<RDKit::DrawColour>> bonds;
+    std::map<int, double> radii;
+    std::map<int, int> multipliers;
+  };
+  std::list<MultiHighlights> multi_highlights;
 };
 
 MolDrawOptionsData mol_draw_options_default();
@@ -110,6 +130,16 @@ void drawer_draw_molecule(Drawer &d, const RWMol &mol,
                           const DrawMoleculeData &data);
 DrawSize drawer_get_mol_size(Drawer &d, const RWMol &mol,
                              const DrawMoleculeData &data);
+void drawer_draw_molecule_with_highlights(
+    Drawer &d, const RWMol &mol, const DrawMoleculeWithHighlightsData &data);
+void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
+                           const DrawMoleculesData &data);
+void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
+                          bool highlight_by_reactant,
+                          const rust::Vec<DrawColour> &colours,
+                          bool has_colours,
+                          const rust::Vec<std::int32_t> &conf_ids,
+                          bool has_conf_ids);
 void drawer_prepare_and_draw_molecule(Drawer &d, const RWMol &mol,
                                       const DrawMoleculeData &data,
                                       bool kekulize);

@@ -169,6 +169,18 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule", "rdki
 overloads_note = "both overloads: DrawMoleculeParams::highlight_bonds is None for the first, which highlights the bonds between highlighted atoms"
 
 [[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawMoleculeWithHighlights"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule_with_highlights", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule_with_highlights_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawMolecules"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecules", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecules_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.DrawReaction"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_reaction", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_reaction_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.FillPolys"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::fill_polys"]
 

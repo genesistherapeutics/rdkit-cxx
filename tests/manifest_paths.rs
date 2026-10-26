@@ -42,6 +42,12 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::clear_drawing;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule_with_params;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule_with_highlights;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecule_with_highlights_with_conf_id;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecules;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_molecules_with_params;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_reaction;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_reaction_with_params;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::fill_polys;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::flexi_mode;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::font_size;

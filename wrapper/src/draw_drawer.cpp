@@ -6,8 +6,11 @@
 // The drawers: MolDraw2DSVG (and MolDraw2DCairo), and the functions that
 // draw with them.
 
+#include <algorithm>
 #include <climits>
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -17,6 +20,7 @@
 #include <utility>
 #include <vector>
 
+#include <GraphMol/ChemReactions/ReactionParser.h>
 #include <GraphMol/Depictor/RDDepictor.h>
 #include <GraphMol/MolDraw2D/MolDraw2D.h>
 #include <GraphMol/MolDraw2D/MolDraw2DSVG.h>
@@ -27,6 +31,8 @@
 // wrapper/vendor holds RDKit's own copies, from the release the crate
 // supports.
 #include <GraphMol/MolDraw2D/DrawMol.h>
+#include <GraphMol/MolDraw2D/DrawMolMCHCircleAndLine.h>
+#include <GraphMol/MolDraw2D/DrawMolMCHLasso.h>
 #include <GraphMol/MolDraw2D/DrawText.h>
 
 #include "rdkit-cxx/control_c_lock.h"
@@ -146,7 +152,8 @@ std::vector<int> to_ints(const rust::Vec<std::uint32_t> &v) {
 // A molecule as DrawMol will draw it, and the locks drawing it needs.
 // DrawMol gives a molecule without conformers 2D coordinates
 // (initDrawMolecule), after MolDraw2D::drawMolecule has symmetrized its
-// rings; this does the same on a copy, under the depiction lock, so the
+// rings (drawMoleculeWithHighlights does not: symmetrize); this does the
+// same on a copy, under the depiction lock, so the
 // coordinates can be checked before RDKit draws, and DrawMol depicts no
 // more. Depiction matches ring templates to the molecule (control_c_lock.h).
 // Comic mode draws its lines with std::rand (handdrawnLine in
@@ -154,13 +161,15 @@ std::vector<int> to_ints(const rust::Vec<std::uint32_t> &v) {
 // drawing holds random_mutex() too.
 class DrawnMol {
  public:
-  DrawnMol(const RWMol &mol, const RDKit::MolDrawOptions &opts) : d_mol(&mol) {
+  DrawnMol(const RWMol &mol, const RDKit::MolDrawOptions &opts,
+           bool symmetrize = true, bool lock_random = true)
+      : d_mol(&mol) {
     if (!mol.getNumConformers()) {
       auto depict = lock_depiction();
       std::lock_guard<std::mutex> control_c(control_c_mutex());
       d_copy = std::make_unique<RWMol>(mol);
       MatrixCacheGuard guard(*d_copy);
-      if (!d_copy->getRingInfo()->isSymmSssr()) {
+      if (symmetrize && !d_copy->getRingInfo()->isSymmSssr()) {
         RDKit::MolOps::symmetrizeSSSR(*d_copy);
       }
       check_compute_2d_coords_mol(*d_copy, false);
@@ -168,7 +177,7 @@ class DrawnMol {
       RDDepict::compute2DCoords(*d_copy, nullptr, canon_orient);
       d_mol = d_copy.get();
     }
-    if (opts.comicMode) {
+    if (opts.comicMode && lock_random) {
       d_random = std::unique_lock<std::mutex>(random_mutex());
     }
   }
@@ -366,17 +375,360 @@ void check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
   checked_layout(probe);
 }
 
+// As check_layout, for drawMoleculeWithHighlights's DrawMolMCH, which RDKit
+// builds from the molecule as given (it does not symmetrize its rings).
+void check_mch_layout(Drawer &d, const RWMol &mol, const std::string &legend,
+                      const Drawer::MultiHighlights &h, int conf_id) {
+  set_up_text_drawer(d);
+  auto &opts = d.drawer->drawOptions();
+  std::unique_ptr<detail::DrawMol> probe;
+  switch (opts.multiColourHighlightStyle) {
+    case RDKit::MultiColourHighlightStyle::CIRCLEANDLINE:
+      probe = std::make_unique<detail::DrawMolMCHCircleAndLine>(
+          mol, legend, d.drawer->panelWidth(), d.drawer->panelHeight(), opts,
+          d.text->text_drawer(), h.atoms, h.bonds, h.radii, h.multipliers,
+          conf_id);
+      break;
+    case RDKit::MultiColourHighlightStyle::LASSO:
+      probe = std::make_unique<detail::DrawMolMCHLasso>(
+          mol, legend, d.drawer->panelWidth(), d.drawer->panelHeight(), opts,
+          d.text->text_drawer(), h.atoms, h.bonds, h.radii, h.multipliers,
+          conf_id);
+      break;
+  }
+  checked_layout(*probe);
+}
+
+// A size RDKit's layout computes in double and keeps in int: refused unless
+// finite and well within int's range, so the sums RDKit makes of such sizes
+// stay in it.
+void check_pixels(double v) {
+  if (!(std::abs(v) <= INT_MAX / 8)) {
+    throw ValueErrorException(
+        "the drawing comes out too large (or degenerate) for RDKit's pixel "
+        "arithmetic, which it does in int");
+  }
+}
+
+// DrawMol::setScale, and the checks checked_layout makes after it.
+void checked_set_scale(detail::DrawMol &dm, double scale, double font_scale,
+                       bool ignore_font_limits) {
+  if (!(scale > 0 && std::isfinite(scale) && font_scale > 0 &&
+        std::isfinite(font_scale))) {
+    refuse_layout();
+  }
+  dm.setScale(scale, font_scale, ignore_font_limits);
+  check_shapes(dm.bonds_);
+  check_shapes(dm.preShapes_);
+  check_shapes(dm.postShapes_);
+  check_shapes(dm.highlights_);
+}
+
+// DrawMol::shrinkToFit converts its extents times its scale to int.
+void checked_shrink_to_fit(detail::DrawMol &dm) {
+  check_pixels(dm.xRange_ * dm.scale_);
+  check_pixels(dm.yRange_ * dm.scale_);
+  dm.shrinkToFit(false);
+  if (!(dm.width_ >= 1 && dm.height_ >= 1)) {
+    refuse_layout();
+  }
+}
+
+// MolDraw2D::reactionWidth, in 64 bits.
+std::int64_t reaction_width(
+    const std::vector<std::unique_ptr<detail::DrawMol>> &reagents,
+    const std::vector<std::unique_ptr<detail::DrawMol>> &products,
+    const std::vector<std::unique_ptr<detail::DrawMol>> &agents, double padding,
+    std::int64_t arrow_mult, std::int64_t gap) {
+  std::int64_t tot = 0;
+  if (!reagents.empty()) {
+    for (const auto &dm : reagents) {
+      tot += dm->width_;
+    }
+    tot += gap * static_cast<std::int64_t>(reagents.size() - 1);
+    tot += gap / 2;
+  }
+  if (agents.empty()) {
+    tot += arrow_mult * gap;
+  } else {
+    tot += gap / 2;
+    for (const auto &dm : agents) {
+      tot += dm->width_ + gap / 2;
+    }
+  }
+  if (!products.empty()) {
+    tot += gap / 2;
+    for (const auto &dm : products) {
+      tot += dm->width_;
+    }
+    tot += gap * static_cast<std::int64_t>(products.size() - 1);
+  }
+  const double total = tot + 2.0 * padding * tot;
+  check_pixels(total);
+  return static_cast<std::int64_t>(total);
+}
+
+// MolDraw2D::drawReaction lays its reactants, products, and agents out, each
+// as a DrawMol of the panel's height and a width of its own (with no
+// padding), scales them to the smallest scale of their group, shrinks them
+// to fit, scales them down again to fit the canvas's width
+// (calcReactionOffsets), and once more for the component padding
+// (drawReactionPart), all in pixels it keeps in int. The layout is repeated
+// here, on a copy of the reaction, with each scale and size checked before
+// RDKit divides by it or converts it to int. It reads every DrawMol the
+// drawer holds, so a reaction is drawn on a drawer that has drawn nothing
+// else.
+class ReactionLayout {
+ public:
+  ReactionLayout(Drawer &d, const RDKit::ChemicalReaction &rxn,
+                 bool by_reactant,
+                 const std::vector<RDKit::DrawColour> *colours,
+                 const std::vector<int> *conf_ids)
+      : d_drawer(d), d_rxn(rxn), d_conf_ids(conf_ids) {
+    auto &opts = d.drawer->drawOptions();
+    // findReactionHighlights, after ChemicalReactionToRxnMol, which sets the
+    // templates' atoms' reaction roles.
+    std::unique_ptr<RDKit::ROMol> rxn_mol(
+        RDKit::ChemicalReactionToRxnMol(d_rxn));
+    if (by_reactant) {
+      const auto *cols = colours ? colours : &opts.highlightColourPalette;
+      // It takes each reactant's colour modulo their number.
+      if (cols->empty()) {
+        throw ValueErrorException(
+            "highlightByReactant needs at least one colour");
+      }
+      for (std::size_t m = 0; m < d_rxn.getReactants().size(); ++m) {
+        for (const auto atom : d_rxn.getReactants()[m]->atoms()) {
+          int role = -1;
+          if (atom->getPropIfPresent("molRxnRole", role) && role == 1 &&
+              atom->getAtomMapNum()) {
+            d_colours.insert(std::make_pair(atom->getAtomMapNum(),
+                                            (*cols)[m % cols->size()]));
+          }
+        }
+      }
+    }
+    const int panel_height = d.drawer->panelHeight();
+    const int use_height = panel_height > 0
+                               ? panel_height * (1.0 - 2.0 * opts.padding)
+                               : panel_height;
+    double min_scale = std::numeric_limits<double>::max();
+    double min_font_scale = 0;
+    components(d_rxn.getReactants(), use_height, d_reagents, min_scale,
+               min_font_scale);
+    components(d_rxn.getProducts(), use_height, d_products, min_scale,
+               min_font_scale);
+    for (auto *group : {&d_reagents, &d_products}) {
+      for (auto &dm : *group) {
+        checked_set_scale(*dm, min_scale, min_font_scale, true);
+        checked_shrink_to_fit(*dm);
+      }
+    }
+    // plusWidth = minScale, in int: DBL_MAX for a reaction with neither
+    // reactants nor products.
+    if (d_reagents.empty() && d_products.empty()) {
+      throw ValueErrorException(
+          "a reaction needs a reactant or a product to be drawn");
+    }
+    check_pixels(min_scale);
+    d_plus_width = static_cast<std::int64_t>(min_scale);
+    const int agent_height = int(0.4 * use_height);
+    min_scale = std::numeric_limits<double>::max();
+    components(d_rxn.getAgents(), agent_height, d_agents, min_scale,
+               min_font_scale);
+    for (auto &dm : d_agents) {
+      checked_set_scale(*dm, min_scale, min_font_scale, true);
+      checked_shrink_to_fit(*dm);
+    }
+    offsets(opts);
+  }
+
+  std::size_t num_components() const {
+    return d_reagents.size() + d_products.size() + d_agents.size();
+  }
+
+ private:
+  // makeReactionComponents and makeReactionDrawMol.
+  void components(const std::vector<RDKit::ROMOL_SPTR> &bits, int height,
+                  std::vector<std::unique_ptr<detail::DrawMol>> &dms,
+                  double &min_scale, double &min_font_scale) {
+    auto &opts = d_drawer.drawer->drawOptions();
+    for (std::size_t m = 0; m < bits.size(); ++m) {
+      std::vector<int> atoms, bonds;
+      std::map<int, RDKit::DrawColour> atom_map, bond_map;
+      const int cid = d_conf_ids ? (*d_conf_ids)[m] : -1;
+      auto *frag = static_cast<RWMol *>(bits[m].get());
+      for (auto atom : frag->atoms()) {
+        auto ai = d_colours.find(atom->getAtomMapNum());
+        for (auto bond : frag->bonds()) {
+          auto begi = d_colours.find(bond->getBeginAtom()->getAtomMapNum());
+          if (begi != d_colours.end()) {
+            auto endi = d_colours.find(bond->getEndAtom()->getAtomMapNum());
+            if (endi != d_colours.end() && begi->second == endi->second) {
+              bonds.push_back(bond->getIdx());
+              bond_map.insert(std::make_pair(bond->getIdx(), begi->second));
+            }
+          }
+        }
+        if (ai != d_colours.end()) {
+          atoms.push_back(atom->getIdx());
+          atom_map.insert(std::make_pair(atom->getIdx(), ai->second));
+          atom->setAtomMapNum(0);
+        }
+      }
+      auto &mol = *frag;
+      mol.updatePropertyCache(false);
+      if (opts.prepareMolsBeforeDrawing) {
+        RDKit::MolOps::KekulizeIfPossible(mol, false);
+        RDKit::MolOps::setHybridization(mol);
+      }
+      if (!mol.getNumConformers()) {
+        // The caller holds the depiction locks.
+        MatrixCacheGuard guard(mol);
+        check_compute_2d_coords_mol(mol, false);
+        const bool canon_orient = true;
+        RDDepict::compute2DCoords(mol, nullptr, canon_orient);
+      } else {
+        if (!find_conformer(mol, cid)) {
+          throw RDKit::ConformerException("Bad Conformer Id");
+        }
+        detail::centerMolForDrawing(mol, cid);
+      }
+      RDKit::MolDraw2DUtils::prepareMolForDrawing(mol, false, false);
+      const bool symmetrized = false;
+      check_drawn_mol(mol, cid, opts, d_drawer.freetype,
+                      d_drawer.drawer->supportsAnnotations(), symmetrized);
+      const double padding = opts.padding;
+      opts.padding = 0.0;
+      try {
+        dms.push_back(std::make_unique<detail::DrawMol>(
+            mol, "", -1, height, opts, d_drawer.text->text_drawer(), &atoms,
+            &bonds, &atom_map, &bond_map, nullptr, nullptr,
+            d_drawer.drawer->supportsAnnotations(), cid, true));
+      } catch (...) {
+        opts.padding = padding;
+        throw;
+      }
+      opts.padding = padding;
+      checked_layout(*dms.back());
+      if (dms.back()->getScale() < min_scale) {
+        min_scale = dms.back()->getScale();
+        min_font_scale = dms.back()->getFontScale();
+      }
+    }
+  }
+
+  std::vector<detail::DrawMol *> all() const {
+    std::vector<detail::DrawMol *> res;
+    for (const auto *group : {&d_reagents, &d_products, &d_agents}) {
+      for (const auto &dm : *group) {
+        res.push_back(dm.get());
+      }
+    }
+    return res;
+  }
+
+  // drawReaction's height for a flexible canvas, calcReactionOffsets, and
+  // drawReactionPart's scales.
+  void offsets(const RDKit::MolDrawOptions &opts) {
+    const auto &d = *d_drawer.drawer;
+    if (d.height() == -1) {
+      int height = -1;
+      for (const auto *dm : all()) {
+        height = std::max(height, dm->height_);
+      }
+      check_pixels(height + height * 2.0 * opts.padding);
+    }
+    const std::int64_t arrow_mult = 2;
+    std::int64_t plus_width = d_plus_width;
+    std::int64_t width_to_use =
+        d.panelWidth() == -1 ? d.width() : d.panelWidth();
+    if (width_to_use == -1) {
+      width_to_use = reaction_width(d_reagents, d_products, d_agents,
+                                    opts.padding, arrow_mult, plus_width);
+    }
+    auto tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
+                              arrow_mult, plus_width);
+    for (int i = 0; i < 5; ++i) {
+      int max_width = std::numeric_limits<int>::lowest();
+      for (const auto *dm : all()) {
+        max_width = std::max(max_width, dm->width_);
+      }
+      plus_width = max_width / 4;
+      plus_width =
+          plus_width > width_to_use / 20 ? width_to_use / 20 : plus_width;
+      const auto old_tot = tot;
+      if (tot <= 0) {
+        refuse_layout();
+      }
+      const double stretch =
+          double(width_to_use * (1 - 2.0 * opts.padding)) / tot;
+      if (!(stretch < 1.0)) {
+        break;
+      }
+      for (auto *dm : all()) {
+        checked_set_scale(*dm, stretch * dm->getScale(),
+                          stretch * dm->getFontScale(), false);
+        checked_shrink_to_fit(*dm);
+      }
+      tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
+                           arrow_mult, plus_width);
+      if (std::abs(double(tot - old_tot)) < 0.01 * width_to_use) {
+        break;
+      }
+    }
+    if (!d_reagents.empty() || !d_products.empty()) {
+      // plusWidth = the first reactant's (or product's) scale, in int.
+      check_pixels(first_scale());
+      plus_width = static_cast<std::int64_t>(first_scale());
+    }
+    // With room to spare, plusWidth grows by 5.
+    tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
+                         arrow_mult, plus_width + 5);
+    check_pixels(double(width_to_use) + d.offset().x);
+    check_pixels(tot / (1 + 2.0 * opts.padding));
+    // drawReactionPart: each component's scale, less the component
+    // padding.
+    for (auto *dm : all()) {
+      const double wp = dm->width_ * opts.componentPadding;
+      const double hp = dm->height_ * opts.componentPadding;
+      const double scale = std::min((dm->width_ - 2 * wp) / dm->width_,
+                                    (dm->height_ - 2 * hp) / dm->height_) *
+                           dm->getScale();
+      checked_set_scale(*dm, scale, scale, true);
+    }
+  }
+
+  double first_scale() const {
+    if (!d_reagents.empty()) {
+      return d_reagents.front()->scale_;
+    }
+    if (!d_products.empty()) {
+      return d_products.front()->scale_;
+    }
+    return 0;
+  }
+
+  Drawer &d_drawer;
+  RDKit::ChemicalReaction d_rxn;
+  const std::vector<int> *d_conf_ids;
+  std::map<int, RDKit::DrawColour> d_colours;
+  std::int64_t d_plus_width = 0;
+  std::vector<std::unique_ptr<detail::DrawMol>> d_reagents, d_products,
+      d_agents;
+};
+
 // What drawing a molecule on the drawer trusts, beyond the options, which
 // the setters check: the drawing area, the font, the legend, and the
 // molecule as DrawMol sees it.
 void check_drawing(Drawer &d, const RWMol &mol, int conf_id,
-                   const std::string &legend) {
+                   const std::string &legend, bool annotations,
+                   bool symmetrized) {
   const auto &opts = d.drawer->drawOptions();
   check_draw_area(d.drawer->panelWidth(), d.drawer->panelHeight(), opts);
   check_font(d);
   check_legend(legend, opts, d.freetype);
-  check_drawn_mol(mol, conf_id, opts, d.freetype,
-                  d.drawer->supportsAnnotations());
+  check_drawn_mol(mol, conf_id, opts, d.freetype, annotations, symmetrized);
 }
 
 // Without highlight bonds, Python's first DrawMolecule overload highlights
@@ -388,7 +740,8 @@ void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
   const auto h = read_highlights(mol, data);
   const std::string legend(data.legend);
   DrawnMol drawn(mol, d.drawer->drawOptions());
-  check_drawing(d, drawn.mol(), data.conf_id, legend);
+  check_drawing(d, drawn.mol(), data.conf_id, legend,
+                d.drawer->supportsAnnotations(), true);
   // The bonds RDKit highlights: as given, or, for Python's first overload,
   // those between highlighted atoms, as MolDraw2D::drawMolecule finds them.
   std::vector<int> atom_bonds;
@@ -407,6 +760,83 @@ void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
   });
   ++d.num_mols;
   ++d.active_mol;
+}
+
+// DrawMoleculeWithHighlights's maps as RDKit takes them, checked: indices
+// (DrawMolMCHLasso sets bits of an atom's index without checking it),
+// colours, radii, and line width multipliers, which getHighlightBondWidth
+// multiplies the line width by and DrawMolMCHCircleAndLine converts to int.
+// A highlight of no radius makes
+// DrawMolMCHCircleAndLine::fixHighlightJoinProblems grow it, by multiples,
+// forever, so radii (and highlightRadius, for atoms without one) must be
+// positive.
+Drawer::MultiHighlights read_multi_highlights(
+    const RWMol &mol, const DrawMoleculeWithHighlightsData &data,
+    const RDKit::MolDrawOptions &opts) {
+  Drawer::MultiHighlights h;
+  auto colours = [](const ColourList &list) {
+    std::vector<RDKit::DrawColour> res;
+    for (const auto &c : list.colours) {
+      res.push_back(colour_from_data(c));
+      check_colour(res.back(), "highlight colour");
+    }
+    return res;
+  };
+  for (std::size_t i = 0; i < data.atom_keys.size(); ++i) {
+    check_index(data.atom_keys[i], mol.getNumAtoms());
+    h.atoms[static_cast<int>(data.atom_keys[i])] =
+        colours(data.atom_colours[i]);
+  }
+  for (std::size_t i = 0; i < data.bond_keys.size(); ++i) {
+    check_index(data.bond_keys[i], mol.getNumBonds());
+    h.bonds[static_cast<int>(data.bond_keys[i])] =
+        colours(data.bond_colours[i]);
+  }
+  for (std::size_t i = 0; i < data.radii_keys.size(); ++i) {
+    const double r = data.radii_values[i];
+    if (!(r > 0 && r <= kMaxHighlightRadius)) {
+      throw ValueErrorException(
+          "multi-colour highlight radii must be above 0 and at most 16");
+    }
+    h.radii[static_cast<int>(data.radii_keys[i])] = r;
+  }
+  for (std::size_t i = 0; i < data.multiplier_keys.size(); ++i) {
+    const int m = data.multiplier_values[i];
+    if (!(m >= 0 && m <= 64)) {
+      throw ValueErrorException(
+          "highlight line width multipliers must be from 0 to 64");
+    }
+    h.multipliers[static_cast<int>(data.multiplier_keys[i])] = m;
+  }
+  if ((!h.atoms.empty() || !h.bonds.empty()) && !(opts.highlightRadius > 0)) {
+    throw ValueErrorException(
+        "multi-colour highlights need a positive highlightRadius");
+  }
+  return h;
+}
+
+// DrawMolMCHCircleAndLine draws a highlighted bond's colours along the
+// bond's perpendicular, which a bond whose atoms are at one position makes
+// NaN, and fixHighlightJoinProblems then grows the atoms' highlights,
+// forever, to meet those lines.
+void check_mch_bonds(const RWMol &mol, const Drawer::MultiHighlights &h,
+                     const RDKit::MolDrawOptions &opts) {
+  if (opts.multiColourHighlightStyle !=
+          RDKit::MultiColourHighlightStyle::CIRCLEANDLINE ||
+      h.bonds.empty() || !mol.getNumConformers()) {
+    return;
+  }
+  const auto &conf = mol.getConformer();
+  for (const auto &[idx, colours] : h.bonds) {
+    const auto *bond = mol.getBondWithIdx(idx);
+    const auto &a = conf.getAtomPos(bond->getBeginAtomIdx());
+    const auto &b = conf.getAtomPos(bond->getEndAtomIdx());
+    if (a.x == b.x && a.y == b.y) {
+      throw ValueErrorException(
+          "a highlighted bond's atoms are at one position, so RDKit's "
+          "multi-colour highlight of it never ends");
+    }
+  }
 }
 
 }  // namespace
@@ -528,7 +958,8 @@ DrawSize drawer_get_mol_size(Drawer &d, const RWMol &mol,
   const auto h = read_highlights(mol, data);
   const std::string legend(data.legend);
   DrawnMol drawn(mol, d.drawer->drawOptions());
-  check_drawing(d, drawn.mol(), data.conf_id, legend);
+  check_drawing(d, drawn.mol(), data.conf_id, legend,
+                d.drawer->supportsAnnotations(), true);
   check_layout(d, drawn.mol(), legend, h, h.has_bonds ? &h.bonds : nullptr,
                data.conf_id);
   // GetMolSize lays the molecule out in a DrawMol of its own, and leaves the
@@ -539,6 +970,273 @@ DrawSize drawer_get_mol_size(Drawer &d, const RWMol &mol,
       h.has_bonds ? &h.bonds : nullptr, &h.atom_colours, &h.bond_colours,
       &h.radii, data.conf_id);
   return DrawSize{size.first, size.second};
+}
+
+void drawer_draw_molecule_with_highlights(
+    Drawer &d, const RWMol &mol, const DrawMoleculeWithHighlightsData &data) {
+  check_usable(d);
+  const auto &opts = d.drawer->drawOptions();
+  auto h = read_multi_highlights(mol, data, opts);
+  const std::string legend(data.legend);
+  const bool symmetrize = false;
+  DrawnMol drawn(mol, opts, symmetrize);
+  check_mch_bonds(drawn.mol(), h, opts);
+  // DrawMolMCH passes confId where DrawMol takes includeAnnotations, so
+  // RDKit draws the first conformer, with annotations unless confId is 0.
+  check_drawing(d, drawn.mol(), -1, legend, data.conf_id != 0, symmetrize);
+  check_mch_layout(d, drawn.mol(), legend, h, data.conf_id);
+  d.multi_highlights.push_back(std::move(h));
+  const auto &kept = d.multi_highlights.back();
+  drawing_call(d, [&] {
+    d.drawer->drawMoleculeWithHighlights(drawn.mol(), legend, kept.atoms,
+                                         kept.bonds, kept.radii,
+                                         kept.multipliers, data.conf_id);
+  });
+  ++d.num_mols;
+  ++d.active_mol;
+}
+
+// MolDraw2D::drawMolecules lays out each molecule as drawMolecule does (but
+// with its rings as given), at the panel size, offset to its panel, then
+// gives them all the smallest scale (drawMolsSameScale). It does that for
+// every molecule the drawer holds, with the options of the moment, so a
+// grid is drawn on a drawer that has drawn nothing else; and it places
+// molecule i in row i / (width / panelWidth), which divides by zero for a
+// panel wider than the canvas.
+void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
+                           const DrawMoleculesData &data) {
+  check_usable(d);
+  const auto &list = mols.mols();
+  const std::size_t n = list.size();
+  if (!n) {
+    return;
+  }
+  auto check_length = [n](bool has, std::size_t len, const char *what) {
+    if (has && len != n) {
+      throw ValueErrorException(std::string("If ") + what +
+                                " is provided it must be the same length as "
+                                "the molecule list.");
+    }
+  };
+  check_length(data.has_highlight_atoms, data.highlight_atoms.size(),
+               "highlightAtoms");
+  check_length(data.has_highlight_bonds, data.highlight_bonds.size(),
+               "highlightBonds");
+  check_length(data.has_atom_colours, data.atom_colours.size(),
+               "highlightAtomColors");
+  check_length(data.has_bond_colours, data.bond_colours.size(),
+               "highlightBondColors");
+  check_length(data.has_radii, data.radii.size(), "highlightAtomRadii");
+  check_length(data.has_conf_ids, data.conf_ids.size(), "confIds");
+  check_length(data.has_legends, data.legends.size(), "legends");
+  auto &draw = *d.drawer;
+  if (!(draw.width() > 0 && draw.height() > 0)) {
+    throw ValueErrorException("DrawMolecules needs a canvas of fixed size");
+  }
+  if (d.num_mols || d.global_transform) {
+    throw ValueErrorException(
+        "DrawMolecules lays out again every molecule the drawer holds; draw "
+        "the grid on a new drawer");
+  }
+  const int pw = draw.panelWidth();
+  const int ph = draw.panelHeight();
+  if (pw > draw.width() || ph > draw.height()) {
+    throw ValueErrorException("the panels must fit on the canvas");
+  }
+  const int n_cols = draw.width() / pw;
+  const int n_rows = draw.height() / ph;
+  check_pixels(double(n_rows > 1 ? (n - 1) / n_cols : 0) * ph);
+  const auto &opts = draw.drawOptions();
+
+  struct Entry {
+    std::unique_ptr<DrawnMol> drawn;
+    Highlights h;
+    std::vector<int> bonds;
+    std::string legend;
+    int conf_id;
+  };
+  std::vector<Entry> entries(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    const auto &mol = static_cast<const RWMol &>(*list[i]);
+    auto &e = entries[i];
+    e.h.has_atoms = data.has_highlight_atoms;
+    if (e.h.has_atoms) {
+      const auto &v = data.highlight_atoms[i].indices;
+      e.h.atoms.assign(v.begin(), v.end());
+    }
+    e.h.has_bonds = data.has_highlight_bonds;
+    if (e.h.has_bonds) {
+      const auto &v = data.highlight_bonds[i].indices;
+      e.h.bonds.assign(v.begin(), v.end());
+    }
+    check_highlight_atoms(mol, e.h.atoms);
+    check_highlight_bonds(mol, e.h.bonds);
+    auto read_colours = [](const IndexColourMap &m,
+                           std::map<int, RDKit::DrawColour> &res) {
+      for (std::size_t k = 0; k < m.keys.size(); ++k) {
+        res[static_cast<int>(m.keys[k])] = colour_from_data(m.values[k]);
+      }
+      check_highlight_colours(res);
+    };
+    if (data.has_atom_colours) {
+      read_colours(data.atom_colours[i], e.h.atom_colours);
+    }
+    if (data.has_bond_colours) {
+      read_colours(data.bond_colours[i], e.h.bond_colours);
+    }
+    if (data.has_radii) {
+      const auto &m = data.radii[i];
+      for (std::size_t k = 0; k < m.keys.size(); ++k) {
+        e.h.radii[static_cast<int>(m.keys[k])] = m.values[k];
+      }
+      check_highlight_radii(e.h.radii);
+    }
+    e.conf_id = data.has_conf_ids ? data.conf_ids[i] : -1;
+    e.legend = data.has_legends ? std::string(data.legends[i]) : "";
+    // RDKit draws each molecule as given, without symmetrizing its rings;
+    // the random lock waits for the depictions to finish (U4's order).
+    const bool symmetrize = false;
+    const bool lock_random = false;
+    e.drawn = std::make_unique<DrawnMol>(mol, opts, symmetrize, lock_random);
+    check_drawing(d, e.drawn->mol(), e.conf_id, e.legend,
+                  draw.supportsAnnotations(), symmetrize);
+    if (e.h.has_bonds) {
+      e.bonds = e.h.bonds;
+    } else if (opts.continuousHighlight && e.h.has_atoms) {
+      detail::getBondHighlightsForAtoms(e.drawn->mol(), e.h.atoms, e.bonds);
+    }
+  }
+  std::unique_lock<std::mutex> random;
+  if (opts.comicMode) {
+    random = std::unique_lock<std::mutex>(random_mutex());
+  }
+  set_up_text_drawer(d);
+  std::vector<std::unique_ptr<detail::DrawMol>> probes;
+  std::size_t min_scale = 0;
+  std::size_t min_font_scale = 0;
+  for (std::size_t i = 0; i < n; ++i) {
+    const auto &e = entries[i];
+    const bool bonds =
+        e.h.has_bonds || (opts.continuousHighlight && e.h.has_atoms);
+    probes.push_back(std::make_unique<detail::DrawMol>(
+        e.drawn->mol(), e.legend, pw, ph, opts, d.text->text_drawer(),
+        e.h.has_atoms ? &e.h.atoms : nullptr, bonds ? &e.bonds : nullptr,
+        data.has_atom_colours ? &e.h.atom_colours : nullptr,
+        data.has_bond_colours ? &e.h.bond_colours : nullptr, nullptr,
+        data.has_radii ? &e.h.radii : nullptr, draw.supportsAnnotations(),
+        e.conf_id));
+    const int row = n_rows > 1 ? static_cast<int>(i) / n_cols : 0;
+    const int col = n_cols > 1 ? static_cast<int>(i) % n_cols : 0;
+    probes.back()->setOffsets(col * pw, row * ph);
+    checked_layout(*probes.back());
+    if (probes.back()->getScale() < probes[min_scale]->getScale()) {
+      min_scale = i;
+    }
+    if (probes.back()->getFontScale() <
+        probes[min_font_scale]->getFontScale()) {
+      min_font_scale = i;
+    }
+  }
+  if (opts.drawMolsSameScale) {
+    const double scale = probes[min_scale]->getScale();
+    const double font_scale = probes[min_font_scale]->getFontScale();
+    for (auto &probe : probes) {
+      checked_set_scale(*probe, scale, font_scale, true);
+    }
+  }
+  probes.clear();
+
+  std::vector<RDKit::ROMol *> ptrs;
+  std::vector<std::vector<int>> atoms, bonds;
+  std::vector<std::map<int, RDKit::DrawColour>> atom_colours, bond_colours;
+  std::vector<std::map<int, double>> radii;
+  std::vector<int> conf_ids;
+  std::vector<std::string> legends;
+  for (auto &e : entries) {
+    // drawMolecules takes non-const pointers and reads through them.
+    ptrs.push_back(const_cast<RWMol *>(&e.drawn->mol()));
+    atoms.push_back(e.h.atoms);
+    bonds.push_back(e.h.bonds);
+    atom_colours.push_back(e.h.atom_colours);
+    bond_colours.push_back(e.h.bond_colours);
+    radii.push_back(e.h.radii);
+    conf_ids.push_back(e.conf_id);
+    legends.push_back(e.legend);
+  }
+  drawing_call(d, [&] {
+    draw.drawMolecules(ptrs, data.has_legends ? &legends : nullptr,
+                       data.has_highlight_atoms ? &atoms : nullptr,
+                       data.has_highlight_bonds ? &bonds : nullptr,
+                       data.has_atom_colours ? &atom_colours : nullptr,
+                       data.has_bond_colours ? &bond_colours : nullptr,
+                       data.has_radii ? &radii : nullptr,
+                       data.has_conf_ids ? &conf_ids : nullptr);
+  });
+  d.num_mols = static_cast<int>(n);
+  d.active_mol = static_cast<int>(n) - 1;
+}
+
+void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
+                          bool highlight_by_reactant,
+                          const rust::Vec<DrawColour> &colours,
+                          bool has_colours,
+                          const rust::Vec<std::int32_t> &conf_ids,
+                          bool has_conf_ids) {
+  check_usable(d);
+  if (d.num_mols || d.global_transform) {
+    throw ValueErrorException(
+        "DrawReaction lays out the reaction against every molecule the "
+        "drawer holds; draw it on a new drawer");
+  }
+  std::vector<RDKit::DrawColour> cols;
+  for (const auto &c : colours) {
+    cols.push_back(colour_from_data(c));
+    check_colour(cols.back(), "highlightColorsReactants");
+  }
+  const std::vector<int> ids(conf_ids.begin(), conf_ids.end());
+  // makeReactionComponents indexes confIds from 0 for the reactants, the
+  // products, and the agents alike.
+  const std::size_t groups =
+      std::max({rxn.getReactants().size(), rxn.getProducts().size(),
+                rxn.getAgents().size()});
+  if (has_conf_ids && ids.size() < groups) {
+    throw ValueErrorException(
+        "confIds needs an entry for each reactant, product, and agent "
+        "position");
+  }
+  // RDKit depicts the templates without coordinates (makeReactionDrawMol),
+  // matching ring templates to them (control_c_lock.h); the wrappers' layout
+  // does so first, on a copy.
+  bool depicts = false;
+  for (const auto *group :
+       {&rxn.getReactants(), &rxn.getProducts(), &rxn.getAgents()}) {
+    for (const auto &t : *group) {
+      depicts = depicts || !t->getNumConformers();
+    }
+  }
+  std::unique_lock<std::mutex> depict, control_c, random;
+  if (depicts) {
+    depict = lock_depiction();
+    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+  }
+  if (d.drawer->drawOptions().comicMode) {
+    random = std::unique_lock<std::mutex>(random_mutex());
+  }
+  check_draw_area(d.drawer->panelWidth(), d.drawer->panelHeight(),
+                  d.drawer->drawOptions());
+  check_font(d);
+  set_up_text_drawer(d);
+  const ReactionLayout layout(d, rxn, highlight_by_reactant,
+                              has_colours ? &cols : nullptr,
+                              has_conf_ids ? &ids : nullptr);
+  const auto components = static_cast<int>(layout.num_components());
+  drawing_call(d, [&] {
+    d.drawer->drawReaction(rxn, highlight_by_reactant,
+                           has_colours ? &cols : nullptr,
+                           has_conf_ids ? &ids : nullptr);
+  });
+  d.num_mols = components;
+  d.active_mol = components - 1;
 }
 
 void drawer_prepare_and_draw_molecule(Drawer &d, const RWMol &mol,

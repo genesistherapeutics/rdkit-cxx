@@ -124,10 +124,13 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
 // normalizes. `conf_id` is the conformer to be drawn; a molecule without
 // conformers is checked as RDKit's depiction will lay it out, which the
 // caller checks with check_compute_2d_coords_mol. `annotations` says whether
-// the drawer draws annotations (MolDraw2D::supportsAnnotations).
+// the drawer draws annotations (MolDraw2D::supportsAnnotations), and
+// `symmetrized` whether RDKit symmetrizes the molecule's rings before it
+// draws (MolDraw2D::drawMolecule does; drawMoleculeWithHighlights does not,
+// and draws whatever rings the molecule has).
 void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
                      const RDKit::MolDrawOptions &opts, bool freetype,
-                     bool annotations);
+                     bool annotations, bool symmetrized);
 
 // Highlight indices (RDKit keeps them as int and draws them by index, as
 // Python's pythonObjectToVect checks), colours, and radii.
