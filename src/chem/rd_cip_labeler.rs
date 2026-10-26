@@ -20,7 +20,7 @@ pub struct AssignCIPLabelsParams {
     /// The bonds to label.
     pub bonds_to_label: Option<Vec<u32>>,
     /// The labeler's iteration limit, 0 for none. Exceeding it is
-    /// `Error::Runtime` (Python's `MaxIterationsExceeded`).
+    /// `Error::Runtime` (Python's `RuntimeError`).
     pub max_recursive_iterations: u32,
 }
 

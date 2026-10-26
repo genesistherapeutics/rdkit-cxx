@@ -3,8 +3,9 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-# Maps each name in RDKit's nanobind modules to its Rust paths, or to the
-# reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
+# Maps each name in RDKit's Python modules (conda-forge's Boost.Python build)
+# to its Rust paths, or to the reason it has none. See CONVENTIONS.md I1-I3;
+# inventory/check.py checks it.
 
 [modules]
 complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.BRICS", "rdkit.Chem.BuildFragmentCatalog", "rdkit.Chem.ChemUtils.AlignDepict", "rdkit.Chem.ChemUtils.DescriptorUtilities", "rdkit.Chem.ChemUtils.SDFToCSV", "rdkit.Chem.ChemUtils.TemplateExpand", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Crippen", "rdkit.Chem.Descriptors", "rdkit.Chem.Descriptors3D", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EState.AtomTypes", "rdkit.Chem.EState.EState", "rdkit.Chem.EState.EState_VSA", "rdkit.Chem.EState.Fingerprinter", "rdkit.Chem.EnumerateHeterocycles", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.FilterCatalog", "rdkit.Chem.Fraggle.FraggleSim", "rdkit.Chem.FragmentCatalog", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.Fragments", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.GraphDescriptors", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolKey.InchiInfo", "rdkit.Chem.MolKey.MolKey", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.MolSurf", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.Pharm3D.EmbedLib", "rdkit.Chem.Pharm3D.ExcludedVolume", "rdkit.Chem.Pharm3D.Pharmacophore", "rdkit.Chem.QED", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.ReducedGraphs", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.SpacialScore", "rdkit.Chem.Subshape.BuilderUtils", "rdkit.Chem.Subshape.SubshapeAligner", "rdkit.Chem.Subshape.SubshapeBuilder", "rdkit.Chem.Subshape.SubshapeObjects", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.inchi", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs", "rdkit.DataStructs.BitEnsemble", "rdkit.DataStructs.BitUtils", "rdkit.DataStructs.LazySignature", "rdkit.DataStructs.TopNContainer", "rdkit.DataStructs.VectCollection", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Butina", "rdkit.ML.Cluster.ClusterUtils", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Cluster.Clusters", "rdkit.ML.Cluster.Murtagh", "rdkit.ML.Cluster.Resemblance", "rdkit.ML.Cluster.Standardize", "rdkit.ML.Data.DataUtils", "rdkit.ML.Data.MLData", "rdkit.ML.Data.Quantize", "rdkit.ML.Data.SplitData", "rdkit.ML.Data.Stats", "rdkit.ML.Data.Transforms", "rdkit.ML.Descriptors.Descriptors", "rdkit.ML.Descriptors.MoleculeDescriptors", "rdkit.ML.InfoTheory.BitClusterer", "rdkit.ML.InfoTheory.BitRank", "rdkit.ML.InfoTheory.entropy", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.ML.SLT.Risk", "rdkit.ML.Scoring.Scoring", "rdkit.ML.files", "rdkit.Numerics.rdAlignment", "rdkit.RDLogger", "rdkit.RDPaths", "rdkit.RDRandom", "rdkit.SimDivFilters.SimilarityPickers", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase", "rdkit.utils.chemutils", "rdkit.utils.fileutils", "rdkit.utils.listutils"]
@@ -1151,35 +1152,35 @@ name_exception = "an exported enum value maps to its constant (F1)"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__contains__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__delitem__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__getitem__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__init__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__iter__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__len__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__setitem__"
-reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+reason = "Boost.Python's binding of MolDrawOptions.atomLabels' C++ map; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.Lasso"
@@ -3804,7 +3805,7 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::CleanupParameters
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.__setattr__"
-reason = "nanobind's guard against setting attributes the class lacks; a Rust struct's fields are fixed"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.CleanupParameters.acidbaseFile"
@@ -4255,39 +4256,39 @@ overloads_note = "input RDKit cannot parse is reported in the result as in Pytho
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__contains__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__getitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__setitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.append"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.extend"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLogEntry"
@@ -4743,43 +4744,43 @@ overloads_note = "read-only in Python; the term is a plain struct, made into RDK
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__contains__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__getitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__init__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__setitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.append"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.extend"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SuperParent"
@@ -7420,7 +7421,7 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::ReactionFingerprintParams::default"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionFingerprintParams.agentWeight"
@@ -8215,7 +8216,7 @@ rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdDistGeom.EmbedParameters.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdDistGeom.EmbedParameters.basinThresh"
@@ -11559,7 +11560,7 @@ rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecompositionParameter
 
 [[entry]]
 python = "rdkit.Chem.rdRGroupDecomposition.RGroupDecompositionParameters.__setattr__"
-reason = "nanobind's attribute guard (safeSetattr), which refuses unknown attributes; a Rust struct has only its fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdRGroupDecomposition.RGroupDecompositionParameters.alignment"
@@ -16681,7 +16682,7 @@ rust = ["rdkit_cxx::chem::rdmolfiles::MolFromSCSRParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFromSCSRParams.includeLeavingGroups"
@@ -16851,7 +16852,7 @@ rust = ["rdkit_cxx::chem::rdmolfiles::MolWriterParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolWriterParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolWriterParams.forceV3000"
@@ -17014,7 +17015,7 @@ rust = ["rdkit_cxx::chem::rdmolfiles::PNGMetadataParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.PNGMetadataParams.cxSmilesFlags"
@@ -17225,7 +17226,7 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SmartsParserParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmartsParserParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmartsParserParams.allowCXSMILES"
@@ -17312,7 +17313,7 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SmilesParserParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmilesParserParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmilesParserParams.allowCXSMILES"
@@ -17354,7 +17355,7 @@ rust = ["rdkit_cxx::chem::rdmolfiles::SmilesWriteParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmilesWriteParams.__setattr__"
-reason = "Python attribute protocol; nanobind uses it to reject unknown fields"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.SmilesWriteParams.allBondsExplicit"
@@ -17892,43 +17893,43 @@ rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__contains__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__getitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__init__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__setitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.append"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.extend"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
+reason = "Boost.Python's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.CanonicalizeStereoGroups"
@@ -18690,35 +18691,35 @@ rust = ["rdkit_cxx::chem::rdmolops::translate_chiral_flag_to_stereo_groups", "rd
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__contains__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__getitem__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__init__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__setitem__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
+reason = "Boost.Python's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UnfoldedRDKFingerprintCountBased"
@@ -19255,10 +19256,6 @@ reason = "a pickling hook; Clone copies a collection"
 [[entry]]
 python = "rdkit.DataStructs.VectCollection.VectCollection.orVect"
 rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::or_vect"]
-
-[[entry]]
-python = "rdkit.DataStructs.bvtotext"
-rust = ["rdkit_cxx::data_structs::bvtotext"]
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.AllBitSimilarity"
@@ -22226,7 +22223,7 @@ reason = "the logging.StreamHandler the package gives Python's rdkit logger; RDK
 
 [[entry]]
 python = "rdkit.rdBase.AttachFileToLog"
-reason = "a no-op in RDKit's nanobind wrapper"
+reason = "a no-op in RDKit's Python wrapper"
 
 [[entry]]
 python = "rdkit.rdBase.BlockLogs"

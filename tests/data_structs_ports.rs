@@ -382,5 +382,4 @@ fn fingerprint_similarity_matches_python() {
             0.6
         ]
     );
-    assert_eq!(bvtotext(&bits(16, &[1, 5, 7, 15])), "0100010100000001");
 }

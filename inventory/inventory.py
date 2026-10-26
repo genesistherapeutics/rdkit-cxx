@@ -40,13 +40,15 @@ NB_CALLABLE_TYPES = {"nb_func", "nb_method"}
 # A Boost.Python overload's Python signature, the line before its "C++
 # signature" line in the docstring.
 BOOST_SIGNATURE = re.compile(r"^\s*(\w+)\((.*)\)\s*->\s*(.*?)\s*:\s*$")
+# The address in a default value's repr, which changes from run to run.
+ADDRESS = re.compile(r" at 0x[0-9a-f]+>")
 
 
 def is_boost_callable(obj) -> bool:
     return type(obj).__name__ == "function" and type(obj).__module__ == "Boost.Python"
 
 
-def is_nb_callable(obj) -> bool:
+def is_compiled_callable(obj) -> bool:
     """A compiled function or method, of either binding."""
     return type(obj).__name__ in NB_CALLABLE_TYPES or is_boost_callable(obj)
 
@@ -57,7 +59,7 @@ def boost_signatures(obj) -> list[str]:
     for i, line in enumerate(lines):
         if "C++ signature" in line:
             sig = next((lines[j].strip() for j in range(i - 1, -1, -1) if BOOST_SIGNATURE.match(lines[j])), "?")
-            sigs.append(sig)
+            sigs.append(ADDRESS.sub(">", sig))
     return sigs
 
 
@@ -95,7 +97,7 @@ def is_boost_reduce(name: str, obj) -> bool:
 def is_public(name: str, obj) -> bool:
     """Public names, plus the protocol methods the binding defines."""
     if name.startswith("__") and name.endswith("__"):
-        return is_nb_callable(obj) and not is_boost_reduce(name, obj)
+        return is_compiled_callable(obj) and not is_boost_reduce(name, obj)
     return not name.startswith("_")
 
 
@@ -118,7 +120,7 @@ def class_entries(cls, qualified: str) -> list[dict]:
             entries.append({"python": python, "kind": "static_method", "overloads": signatures(obj.__func__)})
         elif isinstance(obj, property) or type(obj).__name__ in {"nb_static_property", "property"}:
             entries.append({"python": python, "kind": "property", "overloads": []})
-        elif is_nb_callable(obj):
+        elif is_compiled_callable(obj):
             entries.append({"python": python, "kind": "method", "overloads": signatures(obj)})
         elif inspect.isfunction(obj):
             # A method RDKit's Python adds to the class (Mol.GetAtoms under
@@ -143,7 +145,7 @@ def module_entries(module) -> list[dict]:
             # Classes defined here; others are imports.
             if obj.__module__ == module.__name__ and obj.__qualname__ == name:
                 entries.extend(class_entries(obj, python))
-        elif is_nb_callable(obj):
+        elif is_compiled_callable(obj):
             if getattr(obj, "__module__", module.__name__) == module.__name__:
                 entries.append({"python": python, "kind": "module_function", "overloads": signatures(obj)})
         elif isinstance(obj, enum.Enum) or is_boost_enum(type(obj)):

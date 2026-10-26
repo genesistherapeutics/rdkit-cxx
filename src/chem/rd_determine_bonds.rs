@@ -129,8 +129,7 @@ pub fn determine_bond_orders(mol: &mut Mol) -> Result<()> {
 /// Mirrors `rdDetermineBonds.DetermineBondOrders(mol, charge,
 /// allowChargedFragments, embedChiral, useAtomMap, maxIterations)`. No
 /// ordering that gives the charge is `Error::Value`; running out of
-/// iterations is `Error::Runtime`, as Python's
-/// `MaxFindBondOrdersItersExceeded`.
+/// iterations is `Error::Runtime`, as Python's `RuntimeError`.
 pub fn determine_bond_orders_with_params(
     mol: &mut Mol,
     params: &DetermineBondOrdersParams,

@@ -117,7 +117,7 @@ impl Drop for UsingCoordGen {
 /// Replaces the ring system templates with those in a file: one CXSMILES per
 /// line, each a single ring system with 2D coordinates. Mirrors
 /// `rdDepictor.SetRingSystemTemplates`. `Error::Value` (Python's
-/// `DepictException`) for a file that cannot be read or holds an invalid
+/// `ValueError`) for a file that cannot be read or holds an invalid
 /// template, which leaves the templates as they were, and for template
 /// coordinates that are not finite or beyond 1e5.
 pub fn set_ring_system_templates(template_path: impl AsRef<Path>) -> Result<()> {
@@ -370,7 +370,7 @@ pub fn compute_2d_coords_mimic_distmat_with_params(
 /// reference's 2D coordinates, and returns the (reference atom, molecule
 /// atom) pairs it matched. The molecule comes back with one conformer.
 /// Mirrors `rdDepictor.GenerateDepictionMatching2DStructure(mol,
-/// reference)`. `Error::Value` (Python's `DepictException`) when the
+/// reference)`. `Error::Value` (Python's `ValueError`) when the
 /// molecule does not match the reference, or for a missing reference
 /// conformer.
 pub fn generate_depiction_matching_2d_structure(
@@ -407,7 +407,7 @@ pub fn generate_depiction_matching_2d_structure_with_params(
 /// molecule atom) pairs at the reference's coordinates. Mirrors
 /// `rdDepictor.GenerateDepictionMatching2DStructure(mol, reference,
 /// atomMap)` (A5). `Error::Index` for an atom past the end of either
-/// molecule, and `Error::Value` (Python's `DepictException`) for a map
+/// molecule, and `Error::Value` (Python's `ValueError`) for a map
 /// longer than the reference.
 pub fn generate_depiction_matching_2d_structure_atom_map(
     mol: &mut Mol,
@@ -473,7 +473,7 @@ impl Default for GenerateDepictionMatching3DStructureParams {
 /// Depicts the molecule so that its 2D distances mimic the 3D distances of
 /// the reference, by default the same molecule with 3D coordinates. Mirrors
 /// `rdDepictor.GenerateDepictionMatching3DStructure`. `Error::Value`
-/// (Python's `DepictException`) when the reference is smaller than the
+/// (Python's `ValueError`) when the reference is smaller than the
 /// molecule or the pattern matches neither, and for a missing reference
 /// conformer; `Error::Runtime` when a pattern maps to a reference atom past
 /// the reference's conformer.

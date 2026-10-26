@@ -216,14 +216,14 @@
    "python": "rdkit.Chem.Draw.rdMolDraw2D.ContourAndDrawGaussians",
    "kind": "module_function",
    "overloads": [
-    "ContourAndDrawGaussians( (MolDraw2D)drawer, (object)locs, (object)heights, (object)widths [, (int)nContours=10 [, (object)levels=None [, (ContourParams)params=<rdkit.Chem.Draw.rdMolDraw2D.ContourParams object at 0x7f4faf001f30> [, (object)mol=None]]]]) -> None :"
+    "ContourAndDrawGaussians( (MolDraw2D)drawer, (object)locs, (object)heights, (object)widths [, (int)nContours=10 [, (object)levels=None [, (ContourParams)params=<rdkit.Chem.Draw.rdMolDraw2D.ContourParams object> [, (object)mol=None]]]]) -> None :"
    ]
   },
   {
    "python": "rdkit.Chem.Draw.rdMolDraw2D.ContourAndDrawGrid",
    "kind": "module_function",
    "overloads": [
-    "ContourAndDrawGrid( (MolDraw2D)drawer, (object)data, (object)xcoords, (object)ycoords [, (int)nContours=10 [, (object)levels=None [, (ContourParams)params=<rdkit.Chem.Draw.rdMolDraw2D.ContourParams object at 0x7f4faf002020> [, (object)mol=None]]]]) -> None :"
+    "ContourAndDrawGrid( (MolDraw2D)drawer, (object)data, (object)xcoords, (object)ycoords [, (int)nContours=10 [, (object)levels=None [, (ContourParams)params=<rdkit.Chem.Draw.rdMolDraw2D.ContourParams object> [, (object)mol=None]]]]) -> None :"
    ]
   },
   {
@@ -4071,14 +4071,14 @@
    "python": "rdkit.Chem.rdChemReactions.CreateDifferenceFingerprintForReaction",
    "kind": "module_function",
    "overloads": [
-    "CreateDifferenceFingerprintForReaction( (ChemicalReaction)reaction [, (ReactionFingerprintParams)ReactionFingerPrintParams=<rdkit.Chem.rdChemReactions.ReactionFingerprintParams object at 0x7f4faf0d03c0>]) -> rdkit.DataStructs.cDataStructs.UIntSparseIntVect :"
+    "CreateDifferenceFingerprintForReaction( (ChemicalReaction)reaction [, (ReactionFingerprintParams)ReactionFingerPrintParams=<rdkit.Chem.rdChemReactions.ReactionFingerprintParams object>]) -> rdkit.DataStructs.cDataStructs.UIntSparseIntVect :"
    ]
   },
   {
    "python": "rdkit.Chem.rdChemReactions.CreateStructuralFingerprintForReaction",
    "kind": "module_function",
    "overloads": [
-    "CreateStructuralFingerprintForReaction( (ChemicalReaction)reaction [, (ReactionFingerprintParams)ReactionFingerPrintParams=<rdkit.Chem.rdChemReactions.ReactionFingerprintParams object at 0x7f4faf0d0440>]) -> rdkit.DataStructs.cDataStructs.ExplicitBitVect :"
+    "CreateStructuralFingerprintForReaction( (ChemicalReaction)reaction [, (ReactionFingerprintParams)ReactionFingerPrintParams=<rdkit.Chem.rdChemReactions.ReactionFingerprintParams object>]) -> rdkit.DataStructs.cDataStructs.ExplicitBitVect :"
    ]
   },
   {
@@ -4784,7 +4784,7 @@
    "python": "rdkit.Chem.rdChemReactions.SanitizeRxn",
    "kind": "module_function",
    "overloads": [
-    "SanitizeRxn( (ChemicalReaction)rxn [, (int)sanitizeOps=4294967295 [, (rdkit.Chem.rdmolops.AdjustQueryParameters)params=<rdkit.Chem.rdmolops.AdjustQueryParameters object at 0x7f4faf0a4d60> [, (bool)catchErrors=False]]]) -> SanitizeFlags :"
+    "SanitizeRxn( (ChemicalReaction)rxn [, (int)sanitizeOps=4294967295 [, (rdkit.Chem.rdmolops.AdjustQueryParameters)params=<rdkit.Chem.rdmolops.AdjustQueryParameters object> [, (bool)catchErrors=False]]]) -> SanitizeFlags :"
    ]
   },
   {
@@ -7239,7 +7239,7 @@
    "python": "rdkit.Chem.rdFreeSASA.CalcSASA",
    "kind": "module_function",
    "overloads": [
-    "CalcSASA( (rdkit.Chem.rdchem.Mol)mol, (object)radii [, (int)confIdx=-1 [, (rdkit.Chem.rdchem.Atom)query=None [, (SASAOpts)opts=<rdkit.Chem.rdFreeSASA.SASAOpts object at 0x7f4fae28fe60>]]]) -> float :"
+    "CalcSASA( (rdkit.Chem.rdchem.Mol)mol, (object)radii [, (int)confIdx=-1 [, (rdkit.Chem.rdchem.Atom)query=None [, (SASAOpts)opts=<rdkit.Chem.rdFreeSASA.SASAOpts object>]]]) -> float :"
    ]
   },
   {
@@ -7386,7 +7386,7 @@
    "python": "rdkit.Chem.rdFreeSASA.classifyAtoms",
    "kind": "module_function",
    "overloads": [
-    "classifyAtoms( (rdkit.Chem.rdchem.Mol)mol [, (SASAOpts)options=<rdkit.Chem.rdFreeSASA.SASAOpts object at 0x7f4fae28fdf0>]) -> object :"
+    "classifyAtoms( (rdkit.Chem.rdchem.Mol)mol [, (SASAOpts)options=<rdkit.Chem.rdFreeSASA.SASAOpts object>]) -> object :"
    ]
   },
   {
@@ -9865,8 +9865,8 @@
    "python": "rdkit.Chem.rdMolProcessing.GetFingerprintsForMolsInFile",
    "kind": "module_function",
    "overloads": [
-    "GetFingerprintsForMolsInFile( (str)filename [, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)generator=None [, (SupplierOptions)options=<rdkit.Chem.rdMolProcessing.SupplierOptions object at 0x7f4fae3446c0>]]) -> tuple :",
-    "GetFingerprintsForMolsInFile( (str)filename [, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)generator=None [, (SupplierOptions)options=<rdkit.Chem.rdMolProcessing.SupplierOptions object at 0x7f4fae344790>]]) -> tuple :"
+    "GetFingerprintsForMolsInFile( (str)filename [, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)generator=None [, (SupplierOptions)options=<rdkit.Chem.rdMolProcessing.SupplierOptions object>]]) -> tuple :",
+    "GetFingerprintsForMolsInFile( (str)filename [, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)generator=None [, (SupplierOptions)options=<rdkit.Chem.rdMolProcessing.SupplierOptions object>]]) -> tuple :"
    ]
   },
   {
@@ -10188,7 +10188,7 @@
    "python": "rdkit.Chem.rdRGroupDecomposition.RGroupDecompose",
    "kind": "module_function",
    "overloads": [
-    "RGroupDecompose( (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)cores, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)mols [, (bool)asSmiles=False [, (bool)asRows=True [, (RGroupDecompositionParameters)options=<rdkit.Chem.rdRGroupDecomposition.RGroupDecompositionParameters object at 0x7f4faf2c3b30>]]]) -> object :"
+    "RGroupDecompose( (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)cores, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)mols [, (bool)asSmiles=False [, (bool)asRows=True [, (RGroupDecompositionParameters)options=<rdkit.Chem.rdRGroupDecomposition.RGroupDecompositionParameters object>]]]) -> object :"
    ]
   },
   {
@@ -17764,7 +17764,7 @@
    "python": "rdkit.Chem.rdmolfiles.MaeWriter.GetText",
    "kind": "static_method",
    "overloads": [
-    "GetText( (rdkit.Chem.rdchem.Mol)mol [, (int)confId=-1 [, (rdkit.rdBase._vectNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE)props_list=<rdkit.rdBase._vectNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE object at 0x7f4fd8bd63c0>]]) -> str :"
+    "GetText( (rdkit.Chem.rdchem.Mol)mol [, (int)confId=-1 [, (rdkit.rdBase._vectNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE)props_list=<rdkit.rdBase._vectNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE object>]]) -> str :"
    ]
   },
   {
@@ -19832,7 +19832,7 @@
    "python": "rdkit.Chem.rdmolops.CombineMols",
    "kind": "module_function",
    "overloads": [
-    "CombineMols( (rdkit.Chem.rdchem.Mol)mol1, (rdkit.Chem.rdchem.Mol)mol2 [, (rdkit.Geometry.rdGeometry.Point3D)offset=<rdkit.Geometry.rdGeometry.Point3D object at 0x7f4fd8bd6ac0>]) -> rdkit.Chem.rdchem.Mol :"
+    "CombineMols( (rdkit.Chem.rdchem.Mol)mol1, (rdkit.Chem.rdchem.Mol)mol2 [, (rdkit.Geometry.rdGeometry.Point3D)offset=<rdkit.Geometry.rdGeometry.Point3D object>]) -> rdkit.Chem.rdchem.Mol :"
    ]
   },
   {
@@ -19853,10 +19853,10 @@
    "python": "rdkit.Chem.rdmolops.CopyMolSubset",
    "kind": "module_function",
    "overloads": [
-    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)atomIndices, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)bondIndices [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object at 0x7f4fd4b69770>]) -> rdkit.Chem.rdchem.Mol :",
-    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)atomIndices, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)bondIndices, (SubsetInfo)subsetInfo [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object at 0x7f4fd4b697e0>]) -> rdkit.Chem.rdchem.Mol :",
-    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)path [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object at 0x7f4fd4b69850>]) -> rdkit.Chem.rdchem.Mol :",
-    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)path, (SubsetInfo)subsetInfo [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object at 0x7f4fd4b69930>]) -> rdkit.Chem.rdchem.Mol :"
+    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)atomIndices, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)bondIndices [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object>]) -> rdkit.Chem.rdchem.Mol :",
+    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)atomIndices, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)bondIndices, (SubsetInfo)subsetInfo [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object>]) -> rdkit.Chem.rdchem.Mol :",
+    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)path [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object>]) -> rdkit.Chem.rdchem.Mol :",
+    "CopyMolSubset( (rdkit.Chem.rdchem.Mol)mol, (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)path, (SubsetInfo)subsetInfo [, (SubsetOptions)options=<rdkit.Chem.rdmolops.SubsetOptions object>]) -> rdkit.Chem.rdchem.Mol :"
    ]
   },
   {
@@ -20935,16 +20935,16 @@
    "python": "rdkit.Chem.rdmolops.molzip",
    "kind": "module_function",
    "overloads": [
-    "molzip( (rdkit.Chem.rdchem.Mol)a, (rdkit.Chem.rdchem.Mol)b [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object at 0x7f4fd8cbfa00>]) -> rdkit.Chem.rdchem.Mol :",
-    "molzip( (rdkit.Chem.rdchem.Mol)a [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object at 0x7f4fd8cbfab0>]) -> rdkit.Chem.rdchem.Mol :",
-    "molzip( (dict)row [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object at 0x7f4fd8cbfcc0>]) -> rdkit.Chem.rdchem.Mol :"
+    "molzip( (rdkit.Chem.rdchem.Mol)a, (rdkit.Chem.rdchem.Mol)b [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object>]) -> rdkit.Chem.rdchem.Mol :",
+    "molzip( (rdkit.Chem.rdchem.Mol)a [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object>]) -> rdkit.Chem.rdchem.Mol :",
+    "molzip( (dict)row [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object>]) -> rdkit.Chem.rdchem.Mol :"
    ]
   },
   {
    "python": "rdkit.Chem.rdmolops.molzipFragments",
    "kind": "module_function",
    "overloads": [
-    "molzipFragments( (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)mols [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object at 0x7f4fd8cbfc10>]) -> rdkit.Chem.rdchem.Mol :"
+    "molzipFragments( (rdkit.Chem.rdMolDescriptors.AtomPairsParameters)mols [, (MolzipParams)params=<rdkit.Chem.rdmolops.MolzipParams object>]) -> rdkit.Chem.rdchem.Mol :"
    ]
   },
   {

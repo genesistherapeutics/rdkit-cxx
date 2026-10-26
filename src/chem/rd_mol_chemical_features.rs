@@ -60,7 +60,7 @@ pub fn build_feature_factory(file_name: impl AsRef<Path>) -> Result<MolChemicalF
 /// A factory from feature definitions: `AtomType` lines, and
 /// `DefineFeature` blocks with a SMARTS pattern, a `Family`, optional
 /// `Weights`, and `EndFeature`. `Error::Parse` for definitions RDKit cannot
-/// parse (Python's `FeatureFileParseException`), and `Error::Value` for
+/// parse (Python's `ValueError`), and `Error::Value` for
 /// weights that do not match a pattern's atoms. Mirrors
 /// `rdMolChemicalFeatures.BuildFeatureFactoryFromString`.
 pub fn build_feature_factory_from_string(fdef_string: &str) -> Result<MolChemicalFeatureFactory> {

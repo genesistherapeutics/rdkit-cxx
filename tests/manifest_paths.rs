@@ -5462,7 +5462,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::vect_collection::VectCollection>::default;
     let _ = <rdkit_cxx::data_structs::vect_collection::VectCollection>::get_num_bits;
     let _ = <rdkit_cxx::data_structs::vect_collection::VectCollection>::or_vect;
-    use rdkit_cxx::data_structs::bvtotext as _;
     use rdkit_cxx::data_structs::c_data_structs::all_bit_similarity as _;
     use rdkit_cxx::data_structs::c_data_structs::all_probe_bits_match as _;
     use rdkit_cxx::data_structs::c_data_structs::all_probe_bits_match_bytes as _;
