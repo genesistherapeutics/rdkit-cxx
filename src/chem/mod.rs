@@ -8,6 +8,7 @@
 //! Python functions of its own (`FindMolChiralCenters`), ported here; its
 //! other submodules are reached by path, as in Python.
 
+pub mod all_chem;
 pub mod chemical_features;
 pub mod draw;
 pub mod filter_catalog;
@@ -16,6 +17,7 @@ pub mod graphs;
 mod init;
 pub mod lipinski;
 pub mod mol_standardize;
+mod py_compat;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
@@ -64,6 +66,7 @@ pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
 pub mod registration_hash;
+pub mod salt_remover;
 pub mod satis;
 pub mod scaffolds;
 pub mod template_align;
