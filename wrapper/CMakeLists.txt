@@ -132,6 +132,7 @@ set(RDKIT_CXX_SOURCES
   src/draw_checks.cpp
   src/draw_drawer.cpp
   src/synthon_space_search.cpp
+  src/inchi.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -196,6 +197,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   MolEnumerator
   MolInterchange
   SynthonSpaceSearch
+  RDInchiLib
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

@@ -52,6 +52,7 @@ pub mod rd_tautomer_query;
 pub mod rdchem;
 pub mod rdfiltercatalog;
 pub mod rdfragcatalog;
+pub mod rdinchi;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;

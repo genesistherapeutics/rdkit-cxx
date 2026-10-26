@@ -3446,6 +3446,14 @@ fn manifest_paths_exist() {
     let _: Option<rdkit_cxx::chem::rdfragcatalog::FragFPGenerator> = None;
     let _ = rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::get_fp_for_mol;
     let _ = rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::default;
+    use rdkit_cxx::chem::rdinchi::get_inchi_version as _;
+    use rdkit_cxx::chem::rdinchi::inchi_to_inchi_key as _;
+    use rdkit_cxx::chem::rdinchi::inchi_to_mol as _;
+    use rdkit_cxx::chem::rdinchi::inchi_to_mol_with_params as _;
+    use rdkit_cxx::chem::rdinchi::mol_to_inchi as _;
+    use rdkit_cxx::chem::rdinchi::mol_to_inchi_with_options as _;
+    use rdkit_cxx::chem::rdinchi::mol_to_inchi_key as _;
+    use rdkit_cxx::chem::rdinchi::mol_to_inchi_key_with_options as _;
     use rdkit_cxx::chem::rdmolfiles::add_metadata_to_png_file as _;
     use rdkit_cxx::chem::rdmolfiles::add_metadata_to_png_string as _;
     use rdkit_cxx::chem::rdmolfiles::atom_from_smarts as _;
