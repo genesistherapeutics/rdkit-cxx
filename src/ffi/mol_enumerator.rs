@@ -5,7 +5,7 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// The operations nbWrap/rdMolEnumerator.cpp names (`EnumeratorTypes`,
+    /// The operations Wrap/rdMolEnumerator.cpp names (`EnumeratorTypes`,
     /// which RDKit's headers lack).
     #[repr(u8)]
     enum EnumeratorType {

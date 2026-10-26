@@ -77,7 +77,7 @@ fn bulk<'a, B: BitVect + 'a>(
         .collect()
 }
 
-/// As NeighborWrapper in Code/DataStructs/nbWrap/wrap_BitOps.cpp: for each
+/// As NeighborWrapper in Code/DataStructs/Wrap/wrap_BitOps.cpp: for each
 /// query, the index and similarity of the first most similar vector.
 fn neighbors<'a, 'b, B: BitVect + 'a + 'b>(
     bvqueries: impl IntoIterator<Item = &'a B>,
