@@ -44,8 +44,11 @@ struct SynthonSpaceSearchParamsData;
 struct SubstructMatchParametersData;
 struct RascalOptionsData;
 struct SearchCallback;
+struct ShapeBuildParamsData;
+struct ConformerCallback;
 
 SynthonSpaceSearchParamsData synthon_space_search_params_default();
+ShapeBuildParamsData shape_build_params_default();
 
 std::unique_ptr<SynthonSpace> synthon_space_new();
 void synthon_space_read_text_file(SynthonSpace &space,
@@ -67,6 +70,9 @@ std::unique_ptr<std::string> synthon_space_get_synthon_fingerprint_type(
     const SynthonSpace &space);
 void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
                                               const FpGenerator &gen);
+void synthon_space_build_synthon_shapes(SynthonSpace &space,
+                                        const ShapeBuildParamsData &params,
+                                        ConformerCallback &generator);
 
 std::unique_ptr<SearchResults> synthon_space_substructure_search(
     SynthonSpace &space, const RWMol &query,
@@ -126,11 +132,6 @@ bool substructure_result_get_cancelled(const SearchResults &results);
 std::unique_ptr<RWMol> substructure_result_get_best_hit(
     const SearchResults &results);
 
-void convert_text_to_db_file(rust::Slice<const std::uint8_t> in_path,
-                             rust::Slice<const std::uint8_t> out_path);
-void convert_text_to_db_file_with_fp_gen(
-    rust::Slice<const std::uint8_t> in_path,
-    rust::Slice<const std::uint8_t> out_path, const FpGenerator &gen);
 std::unique_ptr<std::string> formatted_integer_string(std::int64_t value);
 
 }  // namespace rdkit_cxx

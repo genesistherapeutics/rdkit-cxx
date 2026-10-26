@@ -13,6 +13,7 @@
 #include <limits>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <regex>
 #include <set>
 #include <sstream>
@@ -36,10 +37,13 @@
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/ffi/synthon_space_search.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/gaussian_shape.h"
+#include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/rascal_mces.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/substruct.h"
+#include "rdkit-cxx/symmetrize_lock.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -957,6 +961,195 @@ void check_rascal_search(SSS::SynthonSpace *space, const RWMol &query,
   }
 }
 
+// ---------------------------------------------------------------------------
+// Shapes (buildSynthonShapes in SynthonSpace.cpp and makeShapesFromMols in
+// SynthonSpaceSearch_details.cpp).
+
+ShapeBuildParamsData to_data(const SSS::ShapeBuildParams &p) {
+  ShapeBuildParamsData d{};
+  d.num_confs = p.numConfs;
+  d.rms_threshold = p.rmsThreshold;
+  d.shape_sim_threshold = p.shapeSimThreshold;
+  d.num_threads = p.numThreads;
+  d.random_seed = p.randomSeed;
+  d.stereo_try_embedding = p.stereoEnumOpts.tryEmbedding;
+  d.stereo_only_unassigned = p.stereoEnumOpts.onlyUnassigned;
+  d.stereo_only_stereo_groups = p.stereoEnumOpts.onlyStereoGroups;
+  d.stereo_unique = p.stereoEnumOpts.unique;
+  d.stereo_max_isomers = p.stereoEnumOpts.maxIsomers;
+  d.stereo_random_seed = p.stereoEnumOpts.randomSeed;
+  d.max_synthon_atoms = p.maxSynthonAtoms;
+  d.max_embed_attempts = p.maxEmbedAttempts;
+  d.time_out = p.timeOut;
+  d.interim_file = to_bytes(p.interimFile);
+  d.interim_writes = p.interimWrites;
+  d.has_user_conformer_generator = false;
+  return d;
+}
+
+// The parameters RDKit builds shapes with. pruneShapes picks shapes with
+// RDKit's LeaderPicker at 1 - shapeSimThreshold, which a NaN threshold
+// reaches past ShapeInput's own check. RDKit's threads (numThreads) would
+// embed and match at once (control_c_lock.h) and call std::terminate on an
+// exception; the shapes do not depend on the thread count, as each
+// embedding's seed is its own. useProgressBar is not bound and stays 0.
+SSS::ShapeBuildParams shape_params_from(const ShapeBuildParamsData &d) {
+  SSS::ShapeBuildParams p;
+  p.numConfs = d.num_confs;
+  p.rmsThreshold = d.rms_threshold;
+  p.shapeSimThreshold = d.shape_sim_threshold;
+  p.randomSeed = d.random_seed;
+  p.stereoEnumOpts.tryEmbedding = d.stereo_try_embedding;
+  p.stereoEnumOpts.onlyUnassigned = d.stereo_only_unassigned;
+  p.stereoEnumOpts.onlyStereoGroups = d.stereo_only_stereo_groups;
+  p.stereoEnumOpts.unique = d.stereo_unique;
+  p.stereoEnumOpts.maxIsomers = d.stereo_max_isomers;
+  p.stereoEnumOpts.randomSeed = d.stereo_random_seed;
+  p.maxSynthonAtoms = d.max_synthon_atoms;
+  p.maxEmbedAttempts = d.max_embed_attempts;
+  p.timeOut = d.time_out;
+  p.interimFile = to_path(rust::Slice<const std::uint8_t>(
+      d.interim_file.data(), d.interim_file.size()));
+  p.interimWrites = d.interim_writes;
+  p.numThreads = 1;
+  p.useProgressBar = 0;
+  if (std::isnan(p.shapeSimThreshold)) {
+    throw ValueErrorException("shapeSimThreshold is NaN");
+  }
+  return p;
+}
+
+// What building shapes trusts about the space:
+// - buildSynthonShapes sorts each synthon's sample molecules by the heavy
+//   atoms of the first, reading front() of an empty list for a synthon whose
+//   samples all have none;
+// - each shape needs volume (gaussian_shape.cpp's checked_mol), which a
+//   synthon's connector, a dummy of the shape, gives it;
+// - the embedder casts the sum of the squared starting distances, which it
+//   bounds by 1000 Angstroms, to int (check_initial_coords_cast), so the
+//   molecules it embeds, a product with its hydrogens, at most 6 an atom
+//   (RDKit's largest valence) beside the atoms of the synthons, which
+//   include their explicit hydrogens and dummies, need at most 4295 atoms.
+// As details::countConnections: a dummy atom with an isotope from 1 to
+// MAX_CONNECTOR_NUM.
+bool has_connector(const SSS::Synthon &synthon) {
+  for (const auto *atom : synthon.getOrigMol()->atoms()) {
+    if (!atom->getAtomicNum() && atom->getIsotope() >= 1 &&
+        atom->getIsotope() <= SSS::MAX_CONNECTOR_NUM) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void check_space_for_shapes(SSS::SynthonSpace &space) {
+  for_each_reaction(
+      space, [](const std::string &name, const SSS::SynthonSet &reaction) {
+        for (const auto &set : reaction.getSynthons()) {
+          for (const auto &[id, synthon] : set) {
+            if (!synthon->getNumHeavyAtoms() || !has_connector(*synthon)) {
+              throw ValueErrorException(
+                  "synthon " + id + " of reaction " + name +
+                  " needs a heavy atom and a connector ([1*] to [4*]) for its "
+                  "shape");
+            }
+          }
+        }
+      });
+  if (largest_product(space) * 7 > 4295) {
+    throw ValueErrorException(
+        "the space's products can have more than 4295 atoms with their "
+        "hydrogens, the most the embedder takes");
+  }
+}
+
+// The locks building shapes holds, in U4's order: the shape modules'
+// pharmacophore patterns (gaussian_shape_mutex), the ControlCHandlers of
+// the embedder and the matches, the embedder's pruning
+// (symmetrize_mutex), and the random generator, which the stereoisomer
+// enumerator's embeddings draw from with no seed.
+class ShapeLocks {
+ public:
+  ShapeLocks()
+      : d_gaussian(gaussian_shape_mutex()),
+        d_control_c(std::in_place),
+        d_symmetrize(symmetrize_mutex()),
+        d_random(random_mutex()) {}
+
+  // Releases them all, in reverse, for a Rust closure, which may call
+  // wrappers that take them; RDKit calls the conformer generator between
+  // embeddings and matches, with no ControlCHandler alive. Takes them back
+  // in order, even when the closure throws.
+  class Released {
+   public:
+    explicit Released(ShapeLocks &locks) : d_locks(locks) {
+      d_locks.d_random.unlock();
+      d_locks.d_symmetrize.unlock();
+      d_control_c.emplace();
+      d_locks.d_gaussian.unlock();
+    }
+    ~Released() {
+      d_locks.d_gaussian.lock();
+      d_control_c.reset();
+      d_locks.d_symmetrize.lock();
+      d_locks.d_random.lock();
+    }
+    Released(const Released &) = delete;
+    Released &operator=(const Released &) = delete;
+
+   private:
+    ShapeLocks &d_locks;
+    std::optional<ReleaseControlC> d_control_c;
+  };
+
+ private:
+  std::unique_lock<std::mutex> d_gaussian;
+  std::optional<HoldControlC> d_control_c;
+  std::unique_lock<std::mutex> d_symmetrize;
+  std::unique_lock<std::mutex> d_random;
+};
+
+// Python's setUserConformerGenerator adapter, which RDKit calls with an
+// isomer's SMILES and the number of conformers, on this thread. RDKit maps
+// the molecule it returns onto the isomer by a substructure match,
+// dereferencing a null one (a segfault in Python), and builds shapes from
+// its conformers: None becomes an empty molecule, which matches nothing, so
+// RDKit drops the isomer as it does when its own embedding fails, and
+// conformers are checked as ShapeInput needs them. The closure's error is
+// the rust::Error it throws, which RDKit, on this thread, lets through.
+SSS::UserConfGenerator rust_conformer_generator(ConformerCallback &callback,
+                                                ShapeLocks &locks) {
+  return [&callback, &locks](
+             const std::string &smiles,
+             unsigned int num_conformers) -> std::unique_ptr<RDKit::RWMol> {
+    std::unique_ptr<RWMol> mol;
+    {
+      ShapeLocks::Released released(locks);
+      mol = call_conformer_generator(callback, smiles, num_conformers);
+    }
+    if (!mol) {
+      return std::make_unique<RWMol>();
+    }
+    check_shape_coordinates(*mol);
+    return mol;
+  };
+}
+
+// buildSynthonShapes writes its interim file with writeDBFile, which ignores
+// a failed stream, and moves it into place: the last one is checked as
+// write_db_file checks its file.
+void check_interim_file(const SSS::ShapeBuildParams &params) {
+  if (params.interimFile.empty() || !params.interimWrites ||
+      !std::filesystem::exists(params.interimFile)) {
+    return;
+  }
+  try {
+    check_db_file(params.interimFile, false);
+  } catch (const ValueErrorException &e) {
+    throw RDKit::BadFileException("could not write " + params.interimFile +
+                                  ": " + e.what());
+  }
+}
 }  // namespace
 
 SynthonSpace::SynthonSpace()
@@ -964,6 +1157,10 @@ SynthonSpace::SynthonSpace()
 
 SynthonSpaceSearchParamsData synthon_space_search_params_default() {
   return to_data(SSS::SynthonSpaceSearchParams());
+}
+
+ShapeBuildParamsData shape_build_params_default() {
+  return to_data(SSS::ShapeBuildParams());
 }
 
 std::unique_ptr<SynthonSpace> synthon_space_new() {
@@ -1053,6 +1250,26 @@ void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
   SpaceMatrixCacheGuard guard(*space.space);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   space.space->buildSynthonFingerprints(gen, 0);
+}
+
+void synthon_space_build_synthon_shapes(SynthonSpace &space,
+                                        const ShapeBuildParamsData &data,
+                                        ConformerCallback &generator) {
+  auto params = shape_params_from(data);
+  check_space_for_shapes(*space.space);
+  bool cancelled = false;
+  {
+    ShapeLocks locks;
+    if (data.has_user_conformer_generator) {
+      params.userConformerGenerator =
+          rust_conformer_generator(generator, locks);
+    }
+    space.space->buildSynthonShapes(cancelled, params);
+  }
+  check_interim_file(params);
+  if (cancelled) {
+    throw std::runtime_error("Shape building cancelled");
+  }
 }
 
 // The substructure searches construct a ControlCHandler, and match.
@@ -1277,25 +1494,6 @@ std::unique_ptr<RWMol> substructure_result_get_best_hit(
     const SearchResults &results) {
   const auto &best = results.getBestHit();
   return best ? copy_hit(*best) : nullptr;
-}
-
-// As convertTextToDBFile, which reads the text file by name: the text is
-// read with read_text_file's checks, and the database written with
-// write_db_file's.
-void convert_text_to_db_file(rust::Slice<const std::uint8_t> in_path,
-                             rust::Slice<const std::uint8_t> out_path) {
-  SynthonSpace space;
-  read_text(space, to_path(in_path), "Database conversion cancelled");
-  write_db(*space.space, to_path(out_path));
-}
-
-void convert_text_to_db_file_with_fp_gen(
-    rust::Slice<const std::uint8_t> in_path,
-    rust::Slice<const std::uint8_t> out_path, const FpGenerator &gen) {
-  SynthonSpace space;
-  read_text(space, to_path(in_path), "Database conversion cancelled");
-  synthon_space_build_synthon_fingerprints(space, gen);
-  write_db(*space.space, to_path(out_path));
 }
 
 std::unique_ptr<std::string> formatted_integer_string(std::int64_t value) {

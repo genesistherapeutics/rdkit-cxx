@@ -36,11 +36,13 @@
 //! that match substructures, depict, or take the shape modules' locks: they
 //! return `Error::Runtime`. The RASCAL search's closure can.
 //!
-//! The shape search, the shapes, and the progress bars are not bound (the
-//! manifest says why).
+//! Shapes are built (`build_synthon_shapes`) for the database files, but
+//! the shape search and the progress bars are not bound (the manifest says
+//! why).
 
 use std::fmt;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use cxx::UniquePtr;
 
@@ -52,7 +54,7 @@ use crate::chem::rd_rascal_mces::RascalOptions;
 use crate::chem::rdchem::SubstructMatchParameters;
 use crate::chem::rdmolops::mol_list_into_vec;
 use crate::error::{expect_ok, to_string};
-use crate::ffi::synthon_space_search::{SearchCallback, ffi};
+use crate::ffi::synthon_space_search::{ConformerCallback, ConformerFn, SearchCallback, ffi};
 use crate::util::{path_bytes, path_from_bytes};
 
 /// Parameters of the searches. Mirrors
@@ -178,6 +180,180 @@ impl SynthonSpaceSearchParams {
             write_possible_hits_and_stop: self.write_possible_hits_and_stop,
         }
     }
+}
+
+/// Parameters for building the synthons' shapes, Gaussian shapes of their
+/// conformers. Mirrors `rdSynthonSpaceSearch.ShapeBuildParams` (A3);
+/// `Default` reads RDKit's defaults. Its `stereoEnumOpts`, a
+/// `StereoEnumerationOptions`, are the `stereo_enum_opts_*` fields.
+#[derive(Clone)]
+pub struct ShapeBuildParams {
+    /// The most conformers per synthon.
+    pub num_confs: u32,
+    /// The RMS threshold that prunes the conformers.
+    pub rms_threshold: f64,
+    /// The similarity below which a synthon's shapes must stay apart; NaN is
+    /// `Error::Value`.
+    pub shape_sim_threshold: f64,
+    /// Not read: shapes are built on the calling thread (see the module
+    /// documentation).
+    pub num_threads: i32,
+    /// The embedding's seed; -1 for a random one.
+    pub random_seed: i32,
+    /// Keeps only stereoisomers that embed (`tryEmbedding`).
+    pub stereo_enum_opts_try_embedding: bool,
+    /// Leaves specified stereocenters as they are (`onlyUnassigned`).
+    pub stereo_enum_opts_only_unassigned: bool,
+    /// Enumerates only the stereo groups (`onlyStereoGroups`).
+    pub stereo_enum_opts_only_stereo_groups: bool,
+    /// Keeps only isomers with different canonical SMILES (`unique`).
+    pub stereo_enum_opts_unique: bool,
+    /// The most isomers; 0 for all of them (`maxIsomers`).
+    pub stereo_enum_opts_max_isomers: u64,
+    /// The enumeration's seed; -1 for a random one (`randomSeed`).
+    pub stereo_enum_opts_random_seed: i32,
+    /// Builds shapes only for synthons of at most this many heavy atoms; 0
+    /// for all.
+    pub max_synthon_atoms: u32,
+    /// The most attempts at embedding a synthon.
+    pub max_embed_attempts: u32,
+    /// The most seconds an embedding takes.
+    pub time_out: u32,
+    /// A database file the build writes the space to as it goes, to restart
+    /// from; `None` for none. RDKit writes it itself and ignores a failed
+    /// write, so the last one is checked: `Error::Os` if it does not hold a
+    /// space.
+    pub interim_file: Option<PathBuf>,
+    /// How many shapes the build makes between writes of the interim file; 0
+    /// for no writes.
+    pub interim_writes: u64,
+    /// Generates the synthons' conformers instead of RDKit's embedder;
+    /// `set_user_conformer_generator` sets it.
+    pub user_conformer_generator: Option<UserConformerGenerator>,
+}
+
+/// A conformer generator for `ShapeBuildParams`, which clones share: it
+/// gets an isomer's SMILES and the most conformers to make, and returns a
+/// molecule with conformers, or `None` when it fails.
+/// `ShapeBuildParams::set_user_conformer_generator` says how the build calls
+/// it. The C++ counterpart is `SynthonSpaceSearch::UserConfGenerator`.
+#[derive(Clone)]
+pub struct UserConformerGenerator(Arc<ConformerFn>);
+
+impl UserConformerGenerator {
+    /// A generator that runs `func`.
+    pub fn new<F>(func: F) -> UserConformerGenerator
+    where
+        F: Fn(&str, u32) -> Result<Option<Mol>> + Send + Sync + 'static,
+    {
+        UserConformerGenerator(Arc::new(func))
+    }
+
+    /// Runs the generator.
+    pub fn call(&self, smiles: &str, num_conformers: u32) -> Result<Option<Mol>> {
+        (self.0)(smiles, num_conformers)
+    }
+}
+
+impl fmt::Debug for UserConformerGenerator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("UserConformerGenerator")
+            .finish_non_exhaustive()
+    }
+}
+
+impl fmt::Debug for ShapeBuildParams {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ShapeBuildParams")
+            .field("num_confs", &self.num_confs)
+            .field("rms_threshold", &self.rms_threshold)
+            .field("shape_sim_threshold", &self.shape_sim_threshold)
+            .field("random_seed", &self.random_seed)
+            .field("interim_file", &self.interim_file)
+            .field("user_conformer_generator", &self.user_conformer_generator)
+            .finish_non_exhaustive()
+    }
+}
+
+impl Default for ShapeBuildParams {
+    fn default() -> ShapeBuildParams {
+        let d = expect_ok(ffi::shape_build_params_default());
+        ShapeBuildParams {
+            num_confs: d.num_confs,
+            rms_threshold: d.rms_threshold,
+            shape_sim_threshold: d.shape_sim_threshold,
+            num_threads: d.num_threads,
+            random_seed: d.random_seed,
+            stereo_enum_opts_try_embedding: d.stereo_try_embedding,
+            stereo_enum_opts_only_unassigned: d.stereo_only_unassigned,
+            stereo_enum_opts_only_stereo_groups: d.stereo_only_stereo_groups,
+            stereo_enum_opts_unique: d.stereo_unique,
+            stereo_enum_opts_max_isomers: d.stereo_max_isomers,
+            stereo_enum_opts_random_seed: d.stereo_random_seed,
+            max_synthon_atoms: d.max_synthon_atoms,
+            max_embed_attempts: d.max_embed_attempts,
+            time_out: d.time_out,
+            interim_file: (!d.interim_file.is_empty()).then(|| path_from_bytes(d.interim_file)),
+            interim_writes: d.interim_writes,
+            user_conformer_generator: None,
+        }
+    }
+}
+
+impl ShapeBuildParams {
+    fn to_ffi(&self) -> ffi::ShapeBuildParamsData {
+        ffi::ShapeBuildParamsData {
+            num_confs: self.num_confs,
+            rms_threshold: self.rms_threshold,
+            shape_sim_threshold: self.shape_sim_threshold,
+            num_threads: self.num_threads,
+            random_seed: self.random_seed,
+            stereo_try_embedding: self.stereo_enum_opts_try_embedding,
+            stereo_only_unassigned: self.stereo_enum_opts_only_unassigned,
+            stereo_only_stereo_groups: self.stereo_enum_opts_only_stereo_groups,
+            stereo_unique: self.stereo_enum_opts_unique,
+            stereo_max_isomers: self.stereo_enum_opts_max_isomers,
+            stereo_random_seed: self.stereo_enum_opts_random_seed,
+            max_synthon_atoms: self.max_synthon_atoms,
+            max_embed_attempts: self.max_embed_attempts,
+            time_out: self.time_out,
+            interim_file: self
+                .interim_file
+                .as_deref()
+                .map(|path| path_bytes(path).to_vec())
+                .unwrap_or_default(),
+            interim_writes: self.interim_writes,
+            has_user_conformer_generator: self.user_conformer_generator.is_some(),
+        }
+    }
+
+    /// Generates the synthons' conformers with `func` instead of RDKit's
+    /// embedder: it gets an isomer's SMILES and the most conformers to make,
+    /// and returns a molecule with conformers, or `None` when it fails, which
+    /// drops the isomer as a failed embedding does (Python's returns null,
+    /// which RDKit dereferences). RDKit maps the molecule onto the isomer by
+    /// a substructure match. `func` runs on the calling thread, with the
+    /// build's locks released, so it may embed, match, or build shapes
+    /// itself; its error, or a panic in it (as `Error::Runtime`), ends the
+    /// build, which returns it, and coordinates that are not finite or lie
+    /// beyond 1e8 are `Error::Value`. Clones of the parameters share it.
+    /// Mirrors `ShapeBuildParams.setUserConformerGenerator`.
+    pub fn set_user_conformer_generator<F>(&mut self, func: F)
+    where
+        F: Fn(&str, u32) -> Result<Option<Mol>> + Send + Sync + 'static,
+    {
+        self.user_conformer_generator = Some(UserConformerGenerator::new(func));
+    }
+}
+
+/// Parameters for `convert_text_to_db_file_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, Default)]
+pub struct ConvertTextToDBFileParams<'a> {
+    /// Fingerprints the synthons with this generator.
+    pub fp_gen: Option<&'a FingerprintGenerator64>,
+    /// Builds the synthons' shapes with these parameters.
+    pub py_shape_params: Option<ShapeBuildParams>,
 }
 
 /// Parameters for `SynthonSpace::substructure_search_with_params` and the
@@ -394,8 +570,8 @@ impl SynthonSpace {
         expect_ok(ffi::synthon_space_get_num_synthons(&self.ptr))
     }
 
-    /// The number of synthons with shapes, which only a database file can
-    /// hold here. Mirrors `SynthonSpace.GetNumSynthonsWithShapes`.
+    /// The number of synthons with shapes. Mirrors
+    /// `SynthonSpace.GetNumSynthonsWithShapes`.
     pub fn get_num_synthons_with_shapes(&self) -> u64 {
         expect_ok(ffi::synthon_space_get_num_synthons_with_shapes(&self.ptr))
     }
@@ -435,6 +611,43 @@ impl SynthonSpace {
             self.ptr.pin_mut(),
             fingerprint_generator.as_ffi(),
         )?)
+    }
+
+    /// Builds the shapes of the synthons that have none, with RDKit's
+    /// defaults: each synthon's conformers in a sample product, for each of
+    /// up to 3 stereoisomers, by ETKDGv3. Mirrors
+    /// `SynthonSpace.BuildSynthonShapes`.
+    pub fn build_synthon_shapes(&mut self) -> Result<()> {
+        self.build_synthon_shapes_with_py_params(&ShapeBuildParams::default())
+    }
+
+    /// Mirrors `SynthonSpace.BuildSynthonShapes(py_params)`. Every synthon
+    /// needs a heavy atom and a connector, and the products at most 613
+    /// atoms (so that, with their hydrogens, the embedder takes them), or the
+    /// build is `Error::Value`: RDKit sorts samples by their first, and its
+    /// shapes need volume. A space already built with `num_confs` conformers
+    /// is left as it is. Optimizers may land in other local optima on other
+    /// platforms, so the shapes may differ there.
+    pub fn build_synthon_shapes_with_py_params(
+        &mut self,
+        py_params: &ShapeBuildParams,
+    ) -> Result<()> {
+        let data = py_params.to_ffi();
+        let mut callback = ConformerCallback {
+            generator: py_params
+                .user_conformer_generator
+                .as_ref()
+                .map(|generator| &*generator.0),
+            error: None,
+        };
+        // SAFETY: the generator is lent for this call only.
+        let result = unsafe {
+            ffi::synthon_space_build_synthon_shapes(self.ptr.pin_mut(), &data, &mut callback)
+        };
+        if let Some(error) = callback.error.take() {
+            return Err(error);
+        }
+        Ok(result?)
     }
 
     /// The products that have the query as a substructure. A query without
@@ -838,33 +1051,38 @@ impl SynthonSpace {
 
 /// Reads a synthon text file, as `SynthonSpace::read_text_file` does, and
 /// writes it as a database file, as `SynthonSpace::write_db_file` does, with
-/// their errors; Python's says it uses less memory than the two, but here
-/// it is the two. Mirrors `rdSynthonSpaceSearch.ConvertTextToDBFile`.
+/// their errors; Python's says it uses less memory than the two, but RDKit's
+/// is the two as well. Mirrors `rdSynthonSpaceSearch.ConvertTextToDBFile`.
 pub fn convert_text_to_db_file(
     in_filename: impl AsRef<Path>,
     out_filename: impl AsRef<Path>,
 ) -> Result<()> {
-    Ok(ffi::convert_text_to_db_file(
-        path_bytes(in_filename.as_ref()),
-        path_bytes(out_filename.as_ref()),
-    )?)
+    convert_text_to_db_file_with_params(
+        in_filename,
+        out_filename,
+        &ConvertTextToDBFileParams::default(),
+    )
 }
 
-/// As `convert_text_to_db_file`, with the synthons fingerprinted by the
-/// generator, as `SynthonSpace::build_synthon_fingerprints` does, before the
-/// file is written. Mirrors
-/// `rdSynthonSpaceSearch.ConvertTextToDBFile(inFilename, outFilename,
-/// fpGen)`.
-pub fn convert_text_to_db_file_with_fp_gen(
+/// As `convert_text_to_db_file`, with the synthons fingerprinted, as
+/// `SynthonSpace::build_synthon_fingerprints` does, and their shapes built,
+/// as `SynthonSpace::build_synthon_shapes_with_py_params` does, before the
+/// file is written. Mirrors `rdSynthonSpaceSearch.ConvertTextToDBFile(
+/// inFilename, outFilename, fpGen, py_shapeParams)`.
+pub fn convert_text_to_db_file_with_params(
     in_filename: impl AsRef<Path>,
     out_filename: impl AsRef<Path>,
-    fp_gen: &FingerprintGenerator64,
+    params: &ConvertTextToDBFileParams<'_>,
 ) -> Result<()> {
-    Ok(ffi::convert_text_to_db_file_with_fp_gen(
-        path_bytes(in_filename.as_ref()),
-        path_bytes(out_filename.as_ref()),
-        fp_gen.as_ffi(),
-    )?)
+    let mut space = SynthonSpace::default();
+    space.read_text_file(in_filename)?;
+    if let Some(fp_gen) = params.fp_gen {
+        space.build_synthon_fingerprints(fp_gen)?;
+    }
+    if let Some(shape_params) = &params.py_shape_params {
+        space.build_synthon_shapes_with_py_params(shape_params)?;
+    }
+    space.write_db_file(out_filename)
 }
 
 /// The integer with a space between each group of 3 digits (`"1 234

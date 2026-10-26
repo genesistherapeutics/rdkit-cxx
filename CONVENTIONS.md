@@ -171,9 +171,15 @@ rule changes the rule first.
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
-  monomer infos). Text a wrapper checks before RDKit parses it
+  monomer infos). Synthon-space database files
+  (`SynthonSpace::read_db_file`), records of molecule and bit-vector
+  pickles and Boost archives of shapes at offsets RDKit trusts, are read by
+  an `unsafe fn` too, whose wrapper checks the header and offsets first.
+  Text a wrapper checks before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
-  memory, so RDKit parses the bytes that were checked.
+  memory, so RDKit parses the bytes that were checked; where RDKit reads a
+  file only by name (a synthon search's possible hits), it reads a private
+  copy of the checked lines.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones

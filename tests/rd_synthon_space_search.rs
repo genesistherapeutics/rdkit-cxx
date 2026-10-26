@@ -8,6 +8,7 @@ mod common;
 use std::path::PathBuf;
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_dist_geom::{embed_multiple_confs_with_params, etkdg_v3};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
@@ -15,6 +16,7 @@ use rdkit_cxx::chem::rd_generalized_substruct::create_extended_query_mol;
 use rdkit_cxx::chem::rd_rascal_mces::RascalOptions;
 use rdkit_cxx::chem::rd_synthon_space_search::*;
 use rdkit_cxx::chem::*;
+use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 use common::{assert_close_to, temp_path};
 
@@ -656,7 +658,15 @@ fn database_files() {
     // With fingerprints.
     let generator = morgan();
     let converted = temp_path("synthon-amide-fps.spc");
-    convert_text_to_db_file_with_fp_gen(data("amide_space.txt"), &converted, &generator).unwrap();
+    convert_text_to_db_file_with_params(
+        data("amide_space.txt"),
+        &converted,
+        &ConvertTextToDBFileParams {
+            fp_gen: Some(&generator),
+            ..Default::default()
+        },
+    )
+    .unwrap();
     let mut with_fps = SynthonSpace::default();
     // SAFETY: as above.
     unsafe { with_fps.read_db_file(&converted) }.unwrap();
@@ -832,4 +842,167 @@ fn space_is_send() {
     fn send<T: Send>() {}
     send::<SynthonSpace>();
     send::<SubstructureResult>();
+}
+
+fn quick_shapes() -> ShapeBuildParams {
+    ShapeBuildParams {
+        num_confs: 5,
+        ..Default::default()
+    }
+}
+
+/// Conformers from the crate's embedder, as Python's test makes them.
+fn embedded(smiles: &str, num_confs: u32) -> Result<Option<Mol>, Error> {
+    let mut mol = add_hs(&mol_from_smiles(smiles)?)?;
+    let mut params = etkdg_v3();
+    params.random_seed = 0xdac;
+    embed_multiple_confs_with_params(&mut mol, num_confs, &mut params)?;
+    Ok(Some(remove_hs(&mol)?))
+}
+
+#[test]
+fn shape_build_params_defaults() {
+    let p = ShapeBuildParams::default();
+    assert_eq!(p.num_confs, 100);
+    assert_eq!(p.rms_threshold, 0.5);
+    assert_eq!(p.shape_sim_threshold, 0.95);
+    assert_eq!(p.num_threads, 1);
+    assert_eq!(p.random_seed, 0xdac);
+    assert!(p.stereo_enum_opts_try_embedding);
+    assert!(p.stereo_enum_opts_only_unassigned);
+    assert!(!p.stereo_enum_opts_only_stereo_groups);
+    assert!(p.stereo_enum_opts_unique);
+    assert_eq!(p.stereo_enum_opts_max_isomers, 0);
+    assert_eq!(p.stereo_enum_opts_random_seed, 0xdac);
+    assert_eq!(p.max_synthon_atoms, 0);
+    assert_eq!(p.max_embed_attempts, 10);
+    assert_eq!(p.time_out, 60);
+    assert_eq!(p.interim_file, None);
+    assert_eq!(p.interim_writes, 1000);
+}
+
+#[test]
+fn build_synthon_shapes() {
+    let mut space = amide_space();
+    space
+        .build_synthon_shapes_with_py_params(&quick_shapes())
+        .unwrap();
+    assert_eq!(space.get_num_synthons_with_shapes(), 7);
+    // Built already with this many conformers.
+    space
+        .build_synthon_shapes_with_py_params(&quick_shapes())
+        .unwrap();
+    assert_eq!(space.get_num_synthons_with_shapes(), 7);
+
+    let file = temp_path("synthon-shapes.spc");
+    space.write_db_file(&file).unwrap();
+    let mut read = SynthonSpace::default();
+    // SAFETY: write_db_file wrote it, and nothing changes it.
+    unsafe { read.read_db_file(&file) }.unwrap();
+    assert_eq!(read.get_num_synthons_with_shapes(), 7);
+    let converted = temp_path("synthon-converted-shapes.spc");
+    convert_text_to_db_file_with_params(
+        data("amide_space.txt"),
+        &converted,
+        &ConvertTextToDBFileParams {
+            py_shape_params: Some(quick_shapes()),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    // SAFETY: as above.
+    unsafe { read.read_db_file(&converted) }.unwrap();
+    assert_eq!(read.get_num_synthons_with_shapes(), 7);
+    std::fs::remove_file(&file).unwrap();
+    std::fs::remove_file(&converted).unwrap();
+
+    // The interim file holds the space as the build goes.
+    let interim = temp_path("synthon-interim.spc");
+    let params = ShapeBuildParams {
+        interim_file: Some(interim.clone()),
+        interim_writes: 3,
+        ..quick_shapes()
+    };
+    let mut space = amide_space();
+    space.build_synthon_shapes_with_py_params(&params).unwrap();
+    // SAFETY: as above.
+    unsafe { read.read_db_file(&interim) }.unwrap();
+    assert_eq!(read.get_num_synthons(), 7);
+    assert!(read.get_num_synthons_with_shapes() > 0);
+    std::fs::remove_file(&interim).unwrap();
+
+    // pruneShapes hands a NaN to the leader picker.
+    let nan = ShapeBuildParams {
+        shape_sim_threshold: f64::NAN,
+        ..quick_shapes()
+    };
+    assert!(matches!(
+        amide_space().build_synthon_shapes_with_py_params(&nan),
+        Err(Error::Value { .. })
+    ));
+
+    // A synthon without a connector would give a shape without volume.
+    let path = write_text("synthon-loose.txt", &[HEADER, "CCO\ta\t0\tr"]);
+    let mut loose = SynthonSpace::default();
+    loose.read_text_file(&path).unwrap();
+    std::fs::remove_file(path).unwrap();
+    assert!(matches!(
+        loose.build_synthon_shapes(),
+        Err(Error::Value { .. })
+    ));
+}
+
+#[test]
+fn user_conformer_generator() {
+    let mut params = quick_shapes();
+    let calls = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
+    let counted = calls.clone();
+    params.set_user_conformer_generator(move |smiles, num_confs| {
+        counted.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        // The build's locks are released: the closure embeds and matches.
+        let mol = embedded(smiles, num_confs)?;
+        let pattern = mol_from_smarts("[#6]")?;
+        assert!(mol.as_ref().unwrap().has_substruct_match(&pattern)?);
+        Ok(mol)
+    });
+    let mut space = amide_space();
+    space.build_synthon_shapes_with_py_params(&params).unwrap();
+    assert_eq!(space.get_num_synthons_with_shapes(), 7);
+    assert!(calls.load(std::sync::atomic::Ordering::Relaxed) >= 7);
+    assert_eq!(space.get_num_reactions(), 1);
+    assert_eq!(space.get_num_products(), 12);
+
+    // None drops the isomer (Python's null is dereferenced).
+    params.set_user_conformer_generator(|_, _| Ok(None));
+    let mut space = amide_space();
+    space.build_synthon_shapes_with_py_params(&params).unwrap();
+    assert_eq!(space.get_num_synthons_with_shapes(), 0);
+
+    // An error, or a panic, ends the build.
+    params.set_user_conformer_generator(|_, _| {
+        Err(Error::Key {
+            key: "no conformers".into(),
+        })
+    });
+    let err = amide_space()
+        .build_synthon_shapes_with_py_params(&params)
+        .unwrap_err();
+    assert!(matches!(err, Error::Key { ref key } if key == "no conformers"));
+    params.set_user_conformer_generator(|_, _| panic!("no conformers"));
+    let err = amide_space()
+        .build_synthon_shapes_with_py_params(&params)
+        .unwrap_err();
+    assert!(matches!(err, Error::Runtime { .. }), "{err:?}");
+
+    // Coordinates the shapes' Gaussians cannot take.
+    params.set_user_conformer_generator(|smiles, num_confs| {
+        let mut mol = embedded(smiles, num_confs)?.unwrap();
+        mol.get_conformer_mut()?
+            .set_atom_position(0, Point3D::new(f64::NAN, 0.0, 0.0))?;
+        Ok(Some(mol))
+    });
+    let err = amide_space()
+        .build_synthon_shapes_with_py_params(&params)
+        .unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
 }

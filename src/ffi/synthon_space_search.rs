@@ -5,7 +5,7 @@
 
 use std::panic::{AssertUnwindSafe, catch_unwind};
 
-use cxx::UniquePtr;
+use cxx::{CxxString, UniquePtr};
 
 use crate::chem::Mol;
 use crate::chem::rdmolops::mol_list_into_vec;
@@ -51,6 +51,56 @@ unsafe fn call_search_callback(
     }
 }
 
+/// A user conformer generator, as `ShapeBuildParams` holds it.
+pub(crate) type ConformerFn = dyn Fn(&str, u32) -> crate::Result<Option<Mol>> + Send + Sync;
+
+/// A shape build's conformer generator, lent to C++ for one call, with the
+/// first error it returned (or the panic it raised), which the build then
+/// returns in place of the exception C++ saw.
+pub(crate) struct ConformerCallback<'a> {
+    pub(crate) generator: Option<&'a ConformerFn>,
+    pub(crate) error: Option<Error>,
+}
+
+/// Called by the shape build, on the calling thread, with an isomer's
+/// SMILES; a null molecule for `None`. An error or a panic is caught here,
+/// at the boundary, and becomes the exception C++ sees.
+///
+/// # Safety
+///
+/// As `call_search_callback`'s.
+unsafe fn call_conformer_generator(
+    callback: &mut ConformerCallback<'_>,
+    smiles: &CxxString,
+    num_conformers: u32,
+) -> Result<UniquePtr<ffi::RWMol>, String> {
+    let Some(generator) = callback.generator else {
+        return Err("RDKit called a conformer generator Rust did not set".to_string());
+    };
+    let call = || -> crate::Result<Option<Mol>> {
+        let smiles = smiles.to_str().map_err(|err| Error::Value {
+            message: format!("RDKit's SMILES is not UTF-8: {err}"),
+        })?;
+        generator(smiles, num_conformers)
+    };
+    match catch_unwind(AssertUnwindSafe(call)) {
+        Ok(Ok(Some(mol))) => Ok(mol.into_ffi()),
+        Ok(Ok(None)) => Ok(UniquePtr::null()),
+        Ok(Err(error)) => {
+            let message = error.to_string();
+            callback.error.get_or_insert(error);
+            Err(message)
+        }
+        Err(payload) => {
+            let message = panic_message(payload, "a conformer generator");
+            callback.error.get_or_insert(Error::Runtime {
+                message: message.clone(),
+            });
+            Err(message)
+        }
+    }
+}
+
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
     /// `SynthonSpaceSearch::SynthonSpaceSearchParams`, without the fields
@@ -80,8 +130,38 @@ pub(crate) mod ffi {
         write_possible_hits_and_stop: bool,
     }
 
+    /// `SynthonSpaceSearch::ShapeBuildParams`, with its
+    /// `StereoEnumerationOptions` as plain fields and a flag for the user
+    /// conformer generator, which crosses as a `ConformerCallback`.
+    struct ShapeBuildParamsData {
+        num_confs: u32,
+        rms_threshold: f64,
+        shape_sim_threshold: f64,
+        num_threads: i32,
+        random_seed: i32,
+        stereo_try_embedding: bool,
+        stereo_only_unassigned: bool,
+        stereo_only_stereo_groups: bool,
+        stereo_unique: bool,
+        stereo_max_isomers: u64,
+        stereo_random_seed: i32,
+        max_synthon_atoms: u32,
+        max_embed_attempts: u32,
+        time_out: u32,
+        interim_file: Vec<u8>,
+        interim_writes: u64,
+        has_user_conformer_generator: bool,
+    }
+
     extern "Rust" {
         type SearchCallback<'a>;
+        type ConformerCallback<'a>;
+
+        unsafe fn call_conformer_generator<'a>(
+            callback: &mut ConformerCallback<'a>,
+            smiles: &CxxString,
+            num_conformers: u32,
+        ) -> Result<UniquePtr<RWMol>>;
 
         unsafe fn call_search_callback<'a>(
             callback: &mut SearchCallback<'a>,
@@ -106,6 +186,7 @@ pub(crate) mod ffi {
         type SearchResults;
 
         fn synthon_space_search_params_default() -> Result<SynthonSpaceSearchParamsData>;
+        fn shape_build_params_default() -> Result<ShapeBuildParamsData>;
 
         fn synthon_space_new() -> Result<UniquePtr<SynthonSpace>>;
         fn synthon_space_read_text_file(space: Pin<&mut SynthonSpace>, path: &[u8]) -> Result<()>;
@@ -124,6 +205,12 @@ pub(crate) mod ffi {
         fn synthon_space_build_synthon_fingerprints(
             space: Pin<&mut SynthonSpace>,
             generator: &FpGenerator,
+        ) -> Result<()>;
+
+        unsafe fn synthon_space_build_synthon_shapes<'a>(
+            space: Pin<&mut SynthonSpace>,
+            params: &ShapeBuildParamsData,
+            generator: &mut ConformerCallback<'a>,
         ) -> Result<()>;
 
         fn synthon_space_substructure_search(
@@ -214,12 +301,6 @@ pub(crate) mod ffi {
         fn substructure_result_get_cancelled(results: &SearchResults) -> Result<bool>;
         fn substructure_result_get_best_hit(results: &SearchResults) -> Result<UniquePtr<RWMol>>;
 
-        fn convert_text_to_db_file(in_path: &[u8], out_path: &[u8]) -> Result<()>;
-        fn convert_text_to_db_file_with_fp_gen(
-            in_path: &[u8],
-            out_path: &[u8],
-            generator: &FpGenerator,
-        ) -> Result<()>;
         fn formatted_integer_string(value: i64) -> Result<UniquePtr<CxxString>>;
     }
 }
