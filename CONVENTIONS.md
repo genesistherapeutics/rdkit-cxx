@@ -141,6 +141,13 @@ rule changes the rule first.
   (`copy_pattern` in `filter_catalog.cpp`). Matching holds
   `control_c_mutex()` (U4) and releases it while a Rust matcher's methods
   run, which RDKit calls between its matches.
+- **S6.** An exception that leaves a `std::thread` calls `std::terminate`,
+  so RDKit's own threads run wrapper work only where RDKit catches what it
+  throws: `MultithreadedMolSupplier`'s parsing threads catch everything
+  their write callback throws (`MultithreadedMolSupplier::writer`), so
+  `rdMolProcessing` fingerprints each molecule there, as RDKit's
+  `getFingerprintsForMolsInFile` does. Work that needs one of U4's locks
+  does not run there: the calling thread, holding the lock, does it.
 
 ## Unchecked input
 
@@ -171,7 +178,19 @@ rule changes the rule first.
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
-  monomer infos). Text a wrapper checks before RDKit parses it
+  monomer infos). RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
+  no fuzzer covers, trusts the indices, counts, and query trees it reads,
+  so `json_to_mols` parses the document first, with the same boost::json
+  parser, checks what RDKit would read unchecked (`DocumentChecker` in
+  `mol_interchange.cpp`, which follows RDKit's reads and leaves RDKit's own
+  errors to RDKit), and hands RDKit the checked document serialized again.
+  Its queries must be ones RDKit makes, since RDKit takes a query's class
+  from its tag and its meaning from its description, while the code that
+  reads queries takes the description to imply the class: each
+  description with a class RDKit gives it, AND, OR, and XOR with two or
+  more children, and no bond XOR or null bond in an AND or OR, which
+  RDKit's own bond matcher and SMARTS writer cast. Text a wrapper checks
+  before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
@@ -184,9 +203,15 @@ rule changes the rule first.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
-  registry in `Property.cpp`, and `DCLV.cpp`'s `recordCache`). State RDKit
-  makes once, on first use, is made under `std::call_once` before any other
-  call (the MACCS patterns in `MACCS.cpp`). 2D depiction's settings and
+  registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
+  decomposition's random number singleton and fingerprint-variance scoring
+  static, under `rgroup_mutex()`, and the shape modules' pharmacophore
+  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
+  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
+  hierarchical clustering, under `murtagh_mutex()`). State RDKit makes once,
+  on first use, is
+  made under `std::call_once` before any other call (the MACCS patterns in
+  `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
@@ -199,22 +224,45 @@ rule changes the rule first.
   `depiction_checks.h`). RDKit's random number generator
   (`RDGeneral/utils.cpp`) is shared by every module, so it has one lock,
   `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
-  every wrapper whose RDKit call can seed it or draw from it: the SMILES and
-  CXSMILES writers (for molecules and reactions) with `doRandom`,
-  `MolToRandomSmilesVect`, PNG metadata with random SMILES, the depictor's
-  sampling (`nFlipsPerSample` and random bond flips, in
-  `Compute2DCoordsForReaction` too; the writers' default depiction never
-  draws), the embedder
-  without a seed, DistGeom's `EmbedBoundsMatrix`, and MolAlign's
-  `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
+  every wrapper whose RDKit call can seed it or draw from it
+  (`grep -rn 'getRandomGenerator\|getRandomVal\|getDoubleRandomSource' Code`
+  in RDKit's sources): the SMILES and CXSMILES writers (for molecules and
+  reactions) with `doRandom`, `MolToRandomSmilesVect`, PNG metadata with
+  random SMILES, the depictor's sampling (`nFlipsPerSample` and random bond
+  flips, in `Compute2DCoordsForReaction` too; the writers' default depiction
+  never draws), the embedder without a seed, DistGeom's `EmbedBoundsMatrix`,
+  and MolAlign's `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
-  by every wrapper whose RDKit call constructs one. MolAlign's
+  by every wrapper whose RDKit call constructs one. Every substructure match
+  does (`Substruct/vf2.hpp`), so that is the match methods and every wrapper
+  whose RDKit call matches patterns: the transforms that match, reactions,
+  alignment, the force-field builders, Crippen and the other descriptors and
+  fingerprints that type atoms by SMARTS, depiction with templates,
+  standardization, the catalogs, MCS, SubstructLibrary, R-group
+  decomposition, scaffold networks, chemical feature factories, and the
+  shape modules, besides the embedder,
+  DetermineBonds, and the CIP labeler. Such a call runs on the calling
+  thread the work RDKit would split across its own threads, which the lock
+  cannot order (the wrapper's own threads take it in turn), and releases the
+  lock while a Rust closure it calls between matches runs (a property
+  functor, tautomer callback or score, validation method, filter matcher, or
+  FMCS typer or callback; new wrappers use `HoldControlC` and
+  `ReleaseControlC`). A closure RDKit calls inside a match (FMCS's final
+  match checks) runs with the lock held, so a wrapper it calls that takes
+  this lock, or one ordered before it, fails instead
+  (`check_not_in_control_c_callback`). MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
-  several of these locks takes them in this order: `lock_depiction()`,
-  `control_c_mutex()`, `symmetrize_mutex()`, then `random_mutex()`.
+  several of these locks takes them in this order, after any of the locks
+  above for one module's state: `lock_depiction()`, `control_c_mutex()`,
+  `symmetrize_mutex()`, then `random_mutex()`. `tests/threads.rs`, which CI
+  runs under Valgrind's DRD (the `races` job), failing on any race in RDKit's
+  global state or in RDKit or wrapper code (`tests/check_drd_log.py`), calls,
+  from every module that writes the state one of these locks guards,
+  wrappers that write it (drawing from the generator and constructing a
+  `ControlCHandler` both write), and at least one that only reads it.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
@@ -299,7 +347,10 @@ rule changes the rule first.
   counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
   matches V3000 enhanced-stereo lines with `std::regex`, which recurses once
   per character (about 300 bytes of stack each), so such lines are refused
-  past 4000 characters. A checked stream stops delivering bytes before the
+  past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
+  run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
+  value that is empty, or in parentheses holds anything but numbers below
+  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record
@@ -308,7 +359,10 @@ rule changes the rule first.
   fails when a chunk rereads differently or the file ends sooner than it did,
   so RDKit parses only the bytes that were checked. Python file objects are
   bound as `Read` values, read through the same streams, and `Write`
-  values, which a writer may borrow for its lifetime. RDKit's writers ignore
+  values, which a writer may borrow for its lifetime. Gzipped files are
+  decompressed as RDKit's `gzstream` decompresses them and checked after;
+  the stream RDKit reads them through throws for every seek and tell, as
+  `gzstream`'s does. RDKit's writers ignore
   a stream that fails, so the wrappers own the output (a file they open, or
   the Rust writer), hand RDKit the stream without ownership, and check it
   after every call: a failed write is `Error::Os` from then on.
@@ -324,6 +378,15 @@ rule changes the rule first.
   getters are not bound: `has_prop` covers them. A class whose Python
   `GetPropsAsDict` has other defaults (`SubstanceGroup`) passes them to
   `prop_getters!`; `GetPropsAsDictParams::default()` stays `Mol`'s.
+- **P2.** Properties RDKit reads back as data, which any caller can set,
+  are input under U1. When RDKit removes atoms or bonds (`RWMol`'s removals
+  and batch edits, and the RDKit calls built on them) it parses every
+  bond's `_MolFileBondEndPts` without checks and follows the substance
+  groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
+  wrapper whose RDKit call removes atoms or bonds from a molecule, or from
+  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
+  The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
+  and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
 
 ## Documentation
 

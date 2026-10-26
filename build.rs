@@ -96,6 +96,16 @@ const BRIDGES: &[&str] = &[
     "mif",
     "shape_align",
     "gaussian_shape",
+    "metric_matrix_calc",
+    "cluster",
+    "sim_div_pickers",
+    "info_theory",
+    "abbreviations",
+    "enumerate_stereoisomers",
+    "mol_enumerator",
+    "mol_processing",
+    "mol_interchange",
+    "draw",
 ];
 
 fn main() {

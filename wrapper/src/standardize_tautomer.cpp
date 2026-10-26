@@ -8,11 +8,13 @@
 #include <climits>
 #include <cstdlib>
 #include <iterator>
+#include <mutex>
 #include <utility>
 
 #include <GraphMol/MolOps.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_tautomer.rs.h"
@@ -33,7 +35,9 @@ namespace {
 // the molecule, and a copy of the result so far that shares its tautomers
 // with RDKit's (RDKit waits while the closure runs, and the copy is dropped
 // before it resumes). A panic in it becomes an exception in Rust's half of
-// the bridge, which leaves the enumeration.
+// the bridge, which leaves the enumeration. The closure runs without the
+// enumeration's control_c_mutex, so it can call wrappers that take it; RDKit
+// calls it between matches.
 class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
  public:
   explicit RustTautomerCallback(rust::Box<TautomerCallback> callback)
@@ -44,6 +48,7 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
+    ReleaseControlC release;
     return call_tautomer_callback(
         *d_callback, std::move(copy),
         std::make_unique<TautomerEnumeratorResult>(res));
@@ -56,12 +61,14 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
 // A scoring function that calls a Rust closure with a copy of each
 // tautomer. pickCanonical starts its search at INT_MIN and dereferences the
 // best tautomer, null when none scores above that, so INT_MIN counts as
-// INT_MIN + 1.
+// INT_MIN + 1. The closure runs without control_c_mutex, as the callback's
+// does.
 boost::function<int(const RDKit::ROMol &)> scorer(const ScoreFunction &score) {
   return [&score](const RDKit::ROMol &mol) -> int {
     auto copy = std::make_unique<RWMol>(mol);
     clear_matrix_caches(*copy);
     clear_descriptor_caches(*copy);
+    ReleaseControlC release;
     int value = call_score_function(score, std::move(copy));
     return value == INT_MIN ? INT_MIN + 1 : value;
   };
@@ -186,8 +193,11 @@ void tautomer_enumerator_clear_callback(TautomerEnumerator &enumerator) {
   enumerator.setCallback(std::shared_ptr<MS::TautomerEnumeratorCallback>());
 }
 
+// Enumerating, and the default scores, match substructures
+// (control_c_lock.h); a Rust callback or score runs without the lock.
 std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
+  HoldControlC control_c;
   return std::make_unique<TautomerEnumeratorResult>(enumerator.enumerate(mol));
 }
 
@@ -196,12 +206,14 @@ std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
 std::unique_ptr<RWMol> tautomer_enumerator_canonicalize(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
   check_tautomer_score(mol);
+  HoldControlC control_c;
   return adopt_mol(enumerator.canonicalize(mol));
 }
 
 std::unique_ptr<RWMol> tautomer_enumerator_canonicalize_with(
     const TautomerEnumerator &enumerator, const RWMol &mol,
     const ScoreFunction &score) {
+  HoldControlC control_c;
   return adopt_mol(enumerator.canonicalize(mol, scorer(score)));
 }
 
@@ -233,13 +245,16 @@ std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical(
       check_default_score(*mol);
     }
   }
+  HoldControlC control_c;
   return adopt_mol(enumerator.pickCanonical(list));
 }
 
 std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical_with(
     const TautomerEnumerator &enumerator, BorrowedMols &mols,
     const ScoreFunction &score) {
-  return adopt_mol(enumerator.pickCanonical(tautomers(mols), scorer(score)));
+  auto &list = tautomers(mols);
+  HoldControlC control_c;
+  return adopt_mol(enumerator.pickCanonical(list, scorer(score)));
 }
 
 std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical_result(
@@ -250,13 +265,16 @@ std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical_result(
       check_default_score(*mol);
     }
   }
+  HoldControlC control_c;
   return adopt_mol(enumerator.pickCanonical(result));
 }
 
 std::unique_ptr<RWMol> tautomer_enumerator_pick_canonical_result_with(
     const TautomerEnumerator &enumerator,
     const TautomerEnumeratorResult &result, const ScoreFunction &score) {
-  return adopt_mol(enumerator.pickCanonical(nonempty(result), scorer(score)));
+  const auto &checked = nonempty(result);
+  HoldControlC control_c;
+  return adopt_mol(enumerator.pickCanonical(checked, scorer(score)));
 }
 
 std::unique_ptr<TautomerCallbackHandle> tautomer_callback_new(
@@ -340,6 +358,7 @@ std::int32_t score_hetero_hs(const RWMol &mol) {
 
 // The default terms' scores times their at most 1000 matches stay in int.
 std::int32_t score_substructs(const RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return TSF::scoreSubstructs(mol);
 }
 
@@ -362,11 +381,13 @@ std::int32_t score_substructs_with_terms(
                            term.smarts.data(), term.smarts.size())),
                        term.score);
   }
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return TSF::scoreSubstructs(mol, terms);
 }
 
 std::int32_t score_tautomer(const RWMol &mol) {
   check_default_score(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return TSF::scoreTautomer(mol);
 }
 

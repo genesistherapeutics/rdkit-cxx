@@ -1,0 +1,28 @@
+# Copyright (c) 2026 Steven Kearnes
+# All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Valgrind DRD suppressions for the races job (tests/threads.rs).
+#
+# Valgrind's default.supp suppresses every race whose top frame is in libc
+# (drd-libc-stdio), because glibc's FILE functions lock with primitives DRD
+# cannot intercept; fopen and fclose, for one, link each stream into a global
+# list under such a lock. Its pattern names libc-2.*.so, which glibc stopped
+# installing in 2.34, so this is the same suppression for libc.so.6.
+{
+   drd-libc-stdio-libc.so.6
+   drd:ConflictingAccess
+   obj:*/libc.so.6
+}
+
+# libstdc++ initializes std::condition_variable statically
+# (__GTHREAD_COND_INIT), so DRD never sees a pthread_cond_init, and reports
+# "not a condition variable" when one it has not seen used is destroyed, as
+# RDKit's ConcurrentQueue's can be when a MultithreadedMolSupplier ends
+# (rdMolProcessing). It is DRD's bookkeeping, not a race.
+{
+   drd-libstdcxx-static-condvar-destroy
+   drd:CondErr
+   fun:pthread_cond_destroy*
+}

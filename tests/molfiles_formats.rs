@@ -352,6 +352,64 @@ fn long_stereo_group_lines_are_refused() {
     assert!(mol_from_mol_block(&format!("{title}{}", block.split_once('\n').unwrap().1)).is_ok());
 }
 
+/// A V3000 block for `*CC` with an explicit hydrogen, whose `*` bond has the
+/// properties `props`.
+fn end_points_block(props: &str) -> String {
+    format!(
+        "\n     RDKit          3D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 4 3 0 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 C 1.5 0 0 0\nM  V30 3 H 2 1 0 0\n\
+         M  V30 4 * 0 1 0 0\nM  V30 END ATOM\nM  V30 BEGIN BOND\n\
+         M  V30 1 1 1 2\nM  V30 2 1 2 3\nM  V30 3 1 4 1 {props}\n\
+         M  V30 END BOND\nM  V30 END CTAB\nM  END\n"
+    )
+}
+
+#[test]
+fn bond_end_points_are_checked() {
+    // Removing the hydrogen rewrites the ENDPTS value; Python's values.
+    for (props, end_points) in [
+        ("ENDPTS=(1 2) ATTACH=ANY", "(1 2)"),
+        ("ENDPTS=( 2 2  3 ) ATTACH=ANY", "(1 2)"),
+        ("endpts=(2 2 3)\tATTACH=ANY", "(1 2)"),
+        ("ENDPTS=(1 4294967295) ATTACH=ANY", "(1 4294967294)"),
+        ("ENDPTS=(2 2 -\nM  V30 3) ATTACH=ANY", "(1 2)"),
+    ] {
+        let mol = mol_from_mol_block(&end_points_block(props)).unwrap();
+        assert_eq!(mol_to_smiles(&mol).unwrap(), "*CC");
+        let bond = mol.get_bond_with_idx(1).unwrap();
+        assert_eq!(bond.get_prop("_MolFileBondEndPts").unwrap(), end_points);
+    }
+    // RWMol converts these numbers to unsigned int unchecked, reads past an
+    // empty list, or reads the first character of an empty value.
+    for props in [
+        "ENDPTS=(1 1e20) ATTACH=ANY",
+        "ENDPTS=(1 -3) ATTACH=ANY",
+        "ENDPTS=(5e9 1) ATTACH=ANY",
+        "ENDPTS=(1 4294967296) ATTACH=ANY",
+        "ENDPTS=() ATTACH=ANY",
+        "ENDPTS=(  ) ATTACH=ANY",
+        "ENDPTS= ATTACH=ANY",
+        "ATTACH=ANY ENDPTS=",
+        "ATTACH=ANY ENDPTS=\r",
+        "ATTACH=ANY \"ENDPTS=\"",
+        "endpts=(1 1e20)",
+        "ENDPTS=(1 2)x) ATTACH=ANY",
+        "ENDPTS=(1 2-\nM  V30 e9) ATTACH=ANY",
+    ] {
+        let block = end_points_block(props);
+        assert!(is_value(mol_from_mol_block(&block)), "{props:?}");
+        let unsanitized = MolFromMolBlockParams {
+            sanitize: false,
+            ..Default::default()
+        };
+        assert!(
+            is_value(mol_from_mol_block_with_params(&block, &unsanitized)),
+            "{props:?}"
+        );
+    }
+}
+
 #[test]
 fn scsr_blocks() {
     // A hydrogen bond between atoms that are not template atoms, in a block

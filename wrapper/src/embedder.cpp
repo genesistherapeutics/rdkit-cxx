@@ -175,18 +175,11 @@ std::unique_ptr<NativeParams> to_native(const EmbedParametersData &d) {
   return native;
 }
 
-// The embedder trusts several of its inputs:
-// - it computes each piece's int distance matrix and minimizes it in four
-//   dimensions (check_matrix_size, check_minimize_size);
-// - CPCI's indices are checked by an invariant inside the minimizers, and
-//   the coordinate map's by RDKit with ValueError (E3 puts the wrapper's
-//   check first); with more than one fragment RDKit drops the map, except
-//   that random coordinates still index each fragment's points with it,
-//   through vector::at;
-// - with distance-geometry starting coordinates it casts a sum of squared
-//   distances to int (check_initial_coords_cast).
-void check_embed(const RWMol &mol, const EmbedParametersData &d,
-                 const DG::EmbedParameters &params) {
+// The embedder computes each piece's int distance matrix and minimizes it in
+// four dimensions (check_matrix_size, check_minimize_size). Returns the
+// number of pieces and the size of the largest.
+std::pair<unsigned, unsigned> check_embed_pieces(
+    const RDKit::ROMol &mol, const DG::EmbedParameters &params) {
   unsigned num_atoms = mol.getNumAtoms();
   if (num_atoms == 0) {
     throw ValueErrorException("molecule has no atoms");
@@ -204,6 +197,32 @@ void check_embed(const RWMol &mol, const EmbedParametersData &d,
     largest = *std::max_element(sizes.begin(), sizes.end());
   }
   check_minimize_size(largest, 4);
+  return {num_frags, largest};
+}
+
+// With distance-geometry starting coordinates the embedder casts a sum of
+// squared distances to int (check_initial_coords_cast); useRandomCoords
+// replaces the initial embedding mode.
+void check_initial_coords(const DG::EmbedParameters &params, unsigned largest,
+                          double max_bound) {
+  if (!params.useRandomCoords &&
+      params.initialEmbeddingMode == InitialEmbeddingMode::DG_EMBEDDING) {
+    check_initial_coords_cast(largest, max_bound);
+  }
+}
+
+// The embedder trusts several of its inputs:
+// - the sizes check_embed_pieces checks;
+// - CPCI's indices are checked by an invariant inside the minimizers, and
+//   the coordinate map's by RDKit with ValueError (E3 puts the wrapper's
+//   check first); with more than one fragment RDKit drops the map, except
+//   that random coordinates still index each fragment's points with it,
+//   through vector::at;
+// - the bounds behind the initial coordinates (check_initial_coords).
+void check_embed(const RWMol &mol, const EmbedParametersData &d,
+                 const DG::EmbedParameters &params) {
+  unsigned num_atoms = mol.getNumAtoms();
+  auto [num_frags, largest] = check_embed_pieces(mol, params);
 
   double max_bound = MAX_TOPOLOGICAL_BOUND;
   if (!d.coord_map_atoms.empty()) {
@@ -236,14 +255,16 @@ void check_embed(const RWMol &mol, const EmbedParametersData &d,
       max_bound = std::max(max_bound, std::abs(data[i]));
     }
   }
-  // useRandomCoords replaces the initial embedding mode.
-  if (!params.useRandomCoords &&
-      params.initialEmbeddingMode == InitialEmbeddingMode::DG_EMBEDDING) {
-    check_initial_coords_cast(largest, max_bound);
-  }
+  check_initial_coords(params, largest, max_bound);
 }
 
 }  // namespace
+
+void check_embed_mol(const RDKit::ROMol &mol,
+                     const DG::EmbedParameters &params) {
+  auto largest = check_embed_pieces(mol, params).second;
+  check_initial_coords(params, largest, MAX_TOPOLOGICAL_BOUND);
+}
 
 void check_initial_coords_cast(unsigned n, double max_bound) {
   double worst = (static_cast<double>(n) - 1.0) * max_bound * max_bound / 2.0;
@@ -385,6 +406,8 @@ rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
   std::vector<std::tuple<unsigned int, std::vector<unsigned int>,
                          CFF::TorsionAnglePtrVariant>>
       torsions;
+  // It matches the torsion patterns (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   CFF::getExperimentalTorsions(mol, details, torsions,
                                use_exp_torsion_angle_prefs,
                                use_small_ring_torsions, use_macrocycle_torsions,

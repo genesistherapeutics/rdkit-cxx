@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <climits>
 #include <exception>
+#include <mutex>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -21,6 +22,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDThreads.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/mol_checks.h"
@@ -446,6 +448,8 @@ std::unique_ptr<RWMol> standardize_copy(StandardizeOp op, const RWMol &mol,
                                         bool skip_standardize) {
   Standardizer standardizer(op, data, skip_standardize);
   standardizer.check(mol);
+  // Standardizing matches substructures (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return standardizer.copy(mol);
 }
 
@@ -454,6 +458,7 @@ void standardize_in_place(StandardizeOp op, RWMol &mol,
                           bool skip_standardize) {
   Standardizer standardizer(op, data, skip_standardize);
   standardizer.check(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   standardizer.in_place(mol);
 }
 
@@ -462,7 +467,9 @@ void standardize_in_place(StandardizeOp op, RWMol &mol,
 // rather than by the threads they run, so 0 loops forever and a negative
 // count has two threads standardize one molecule at once, and which let an
 // exception escape a thread (std::terminate). RDKit's check for a molecule
-// listed twice is not needed: Rust lends each one mutably once.
+// listed twice is not needed: Rust lends each one mutably once. Each thread
+// holds control_c_mutex while it standardizes a molecule, so the threads
+// take turns at RDKit's matching (control_c_lock.h).
 void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
                                std::int32_t num_threads,
                                const CleanupParametersData &data,
@@ -475,8 +482,10 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
   for (const auto *mol : list) {
     standardizer.check(*mol);
   }
-  run_threads(list.size(), num_threads,
-              [&](std::size_t i) { standardizer.in_place(*list[i]); });
+  run_threads(list.size(), num_threads, [&](std::size_t i) {
+    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    standardizer.in_place(*list[i]);
+  });
 }
 
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
@@ -488,6 +497,7 @@ std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
                               input);
   }
   check_reionizer_atoms(*mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   MS::cleanupInPlace(*mol);
   return std::make_unique<std::string>(RDKit::MolToSmiles(*mol));
 }

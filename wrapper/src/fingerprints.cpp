@@ -9,10 +9,12 @@
 
 #include <limits>
 #include <map>
+#include <mutex>
 #include <vector>
 
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/fingerprints.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
@@ -152,6 +154,8 @@ std::unique_ptr<BitVect> pattern_fingerprint(
   check_fp_size(params.fp_size);
   auto counts =
       optional_vector<unsigned int>(params.has_atom_counts, params.atom_counts);
+  // The pattern fingerprint matches its patterns (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<ExplicitBitVect> fp(RDKit::PatternFingerprintMol(
       mol, params.fp_size, counts.get(),
       only_bits(params.has_set_only_bits, set_only_bits),
@@ -168,6 +172,7 @@ std::unique_ptr<BitVect> pattern_fingerprint_mol_bundle(
     const MolBundle &bundle, const PatternFingerprintData &params,
     const BitVect &set_only_bits) {
   check_fp_size(params.fp_size);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<ExplicitBitVect> fp(RDKit::PatternFingerprintMol(
       bundle, params.fp_size,
       only_bits(params.has_set_only_bits, set_only_bits),

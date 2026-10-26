@@ -11,11 +11,29 @@ rust-version = "1.85"
 description = "Rust bindings for RDKit's C++ API, mirroring its Python wrappers"
 license = "BSD-3-Clause"
 repository = "https://github.com/skearnes/rdkit-cxx"
+keywords = ["bindings", "cheminformatics", "chemistry", "rdkit"]
+categories = ["api-bindings", "science"]
+include = [
+    "/CONVENTIONS.md",
+    "/LICENSE",
+    "/README.md",
+    "/build.rs",
+    "/environment.yml",
+    "/src",
+    "/tests",
+    "/wrapper",
+]
 links = "rdkit_cxx"
 publish = false
 
 [workspace]
 members = [".", "downstream"]
+
+# A plain main, so CI's race check under Valgrind's DRD sees only the threads
+# the test starts (tests/threads.rs).
+[[test]]
+name = "threads"
+harness = false
 
 [dependencies]
 cxx = "=1.0.205"

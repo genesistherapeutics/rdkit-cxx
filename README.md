@@ -80,6 +80,151 @@ run inside the environment and fail when linked any other way.) See
 - `Mol` is `Send` but not `Sync`: RDKit updates cached data inside read-only
   molecules, so parallel code gives each thread its own molecule.
 
+## How the wrappers work
+
+[CONVENTIONS.md](CONVENTIONS.md) holds the full rules. Its rule IDs are cited
+below in parentheses.
+
+### Layers
+
+Each RDKit area, such as `substruct` or `chem_reactions`, is bound in three
+layers:
+
+| Layer | Path | Role |
+| --- | --- | --- |
+| Public API | `src/chem/…` | Safe Rust that mirrors the Python module: params structs, iterators, views, `Result`s. |
+| Bridge | `src/ffi/<area>.rs` | One `#[cxx::bridge]` per area. It declares opaque C++ types and the wrapper functions, all returning `Result` (B2, B3). |
+| C++ wrapper | `wrapper/include/rdkit-cxx/<area>.h`, `wrapper/src/<area>.cpp` | Free functions in namespace `rdkit_cxx` that check their inputs, take locks, call RDKit, and copy results out (B1). |
+
+Bridges never bind RDKit's members directly. A C++ wrapper stands between
+every bridge function and RDKit, so each RDKit call has a place for its
+checks.
+
+### Building
+
+`build.rs` runs `cxx-gen` on every bridge listed in `BRIDGES`. Then CMake
+(`wrapper/CMakeLists.txt`) compiles the generated C++ and the hand-written
+wrappers as C++20 into one static library, `rdkitcxx`.
+
+- CMake finds RDKit with `find_package(rdkit CONFIG)`, under `RDKIT_PREFIX`
+  or `CONDA_PREFIX`.
+- It refuses an RDKit from a release series other than the crate's.
+- It links the RDKit libraries named in `RDKIT_CXX_RDKIT_TARGETS`.
+- With `DOCS_RS` set, the build script skips the C++, so the docs build
+  without RDKit.
+
+### One call, end to end
+
+Take `mol.get_substruct_matches(&query)`:
+
+1. **Rust:** the public method calls its bridge function with the C++
+   molecules the two `Mol`s own.
+2. **C++:** the wrapper checks whatever RDKit would trust, takes the locks the
+   call needs, calls `RDKit::SubstructMatch`, and copies the matches into a
+   `rust::Vec`.
+3. **Errors:** if anything throws, the `rust::behavior::trycatch` in
+   `rdkit-cxx/errors.h` catches it. Every bridge includes that header first
+   (E5). It encodes the exception's type and payload, such as an atom index
+   or a bad index and length, into the message cxx carries across.
+4. **Back in Rust:** `src/error.rs` decodes the message into an `Error`
+   variant, most derived type first (E4):
+   - `AtomValence { atom_idx, .. }` and the other sanitization variants;
+   - `Index`, `Key`, `Value`, `Os`, `Parse`;
+   - `Runtime` for RDKit invariants and anything else.
+
+   A C++ exception never unwinds into Rust.
+
+### Ownership
+
+- **Molecules:** every `Mol` owns a C++ `RWMol` through a `UniquePtr` (W1).
+  Functions that make molecules copy them out, so every molecule they return
+  is a Rust-owned copy (W6).
+- **Views:** atoms, bonds, and conformers are views that borrow their
+  molecule. `XRef<'m>` is shared; `XMut<'m>` is exclusive and holds an index,
+  so two mutable views can never alias (W2, W5).
+- **Borrowed containers:** when RDKit wants a container of molecules, such as
+  a `MolBundle`, a reaction's templates, or a list of fragments, the wrapper
+  builds one per call from `shared_ptr`s with no-op deleters. These borrow
+  the Rust molecules, and the container is dropped before the call returns
+  (W8).
+- **Lifetimes:** C++ objects that keep raw pointers into others carry the
+  matching Rust lifetimes. For example, a `MolChemicalFeature<'a>` borrows
+  both its molecule and its factory.
+- **Shared objects:** objects RDKit shares through `shared_ptr`s between
+  owners Rust can't see (the filter catalog's entries and matchers) are
+  copied before they change (W9).
+
+### Input RDKit trusts
+
+The rule is that no input reachable from safe Rust reaches undefined
+behavior in RDKit, even where Python's bindings allow it (U1). Where RDKit
+trusts an argument, the C++ wrapper checks it first and returns an `Error`,
+with a comment naming what RDKit would do without the check. Examples: an
+index, a size it computes in `int`, a value it casts, a pickle's lengths, a
+file's line count.
+
+- **Binary formats:** RDKit's own binary formats (bit-vector, grid, and
+  catalog pickles, FPB files, PNG chunks) are checked before RDKit reads
+  them (U2). Boost.Serialization archives can't be checked, so the functions
+  that read them are `unsafe fn`s whose contract is "bytes RDKit wrote".
+- **Cached data:** RDKit caches distance matrices and descriptor results in
+  a molecule's properties and reads stale ones past their end. Wrappers that
+  compute them clear them before and after the call, so no molecule Rust
+  holds carries one (U6, U8).
+- **Settings in environment variables:** RDKit keeps some settings in
+  environment variables, so their setters are `unsafe fn`s with
+  `std::env::set_var`'s contract (U5).
+- **Unbound names:** some RDKit functions can't be made safe from outside,
+  such as a parser that corrupts memory on malformed input, or code that
+  reads files after closing them. These are left unbound. Their entries in
+  `inventory/manifest.toml` give the reason, and the crash it was confirmed
+  by in the Python build.
+
+### Threads and RDKit's global state
+
+- **Molecules:** `Mol` is `Send` and not `Sync` (S1). The crate needs an
+  RDKit built with `RDK_BUILD_THREADSAFE_SSS`, as conda-forge's is (S2).
+- **Global locks:** RDKit writes some process-wide state without a lock.
+  Every wrapper that reaches such state holds a mutex for the whole RDKit
+  call (U4):
+  - **Random number generator:** `random_mutex()`.
+  - **2D depiction settings and CoordGen templates:** `lock_depiction()`.
+  - **Ctrl-C handler:** every substructure match constructs a
+    `ControlCHandler`, which swaps the `SIGINT` handler through static
+    variables. Every wrapper that can match therefore holds
+    `control_c_mutex()`.
+  - **Single modules:** some modules' statics have their own locks, such as
+    BRICS, R-group decomposition, the shape modules, and Murtagh's
+    clustering.
+
+  Wrappers that need several locks take them in one fixed order, so they
+  can't deadlock.
+- **RDKit's own threads:** a locked call can't order the threads RDKit would
+  start for it. Such work runs on the calling thread, or on the crate's own
+  threads, which take the lock in turn.
+- **Race checks:** CI's `races` job runs `tests/threads.rs` under Valgrind's
+  DRD. Each of its phases runs a wrapper that writes the guarded state and a
+  plain wrapper holding the same lock, on threads at once. A missing lock
+  leaves their accesses unordered, and the job fails.
+
+### Rust closures called from C++
+
+Some RDKit APIs take callbacks: filter matchers, property functors, FMCS
+typers, tautomer scores, and validation methods. A Rust closure crosses as
+an `extern "Rust"` type that the C++ subclass calls.
+
+- **Its own molecule:** the closure gets its own copy of the molecule.
+- **Panics:** a panic is caught at the boundary with `catch_unwind` and
+  becomes an exception in C++. Where RDKit lets exceptions through, it
+  reaches the caller as an `Error`. Where RDKit would not survive one, as in
+  FMCS's search, the wrapper records it, stops the search, and returns it
+  when RDKit is done.
+- **Locks:** RDKit calls most callbacks between matches, so the call's
+  `HoldControlC` releases the lock while the closure runs
+  (`ReleaseControlC`). The closure can then call other wrappers that match.
+  A closure RDKit calls inside a match runs with the lock held, and a wrapper
+  it calls that needs the lock fails instead of deadlocking.
+
 ## Parity
 
 [`inventory/`](inventory) measures coverage of the nanobind modules.
@@ -125,6 +270,33 @@ every file.
 pip install pre-commit
 pre-commit install
 ```
+
+## Releases
+
+Releases are cut by hand: run the
+[Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
+on `main` from the Actions tab. Merging to `main` publishes nothing.
+
+The workflow releases the version in `Cargo.toml` if no tag has it yet (the
+first release of an RDKit series), and otherwise bumps the patch level with
+[bump-my-version](https://github.com/callowayproject/bump-my-version). It
+tests the release commit, builds the packaged crate, publishes it to crates.io
+through trusted publishing, pushes the version bump and a `v<version>` tag to
+`main`, and creates a GitHub release with generated notes. A release that
+fails partway finishes when its failed jobs are re-run: each step skips what
+an earlier attempt finished, including the upload.
+
+The patch level moves only through the workflow. A new RDKit series sets the
+major and minor levels by hand, in the pull request that updates
+`environment.yml`:
+
+```sh
+bump-my-version bump --new-version 2027.3.0
+```
+
+The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
+conda-forge daily and opens an issue, assigned to the repository owner, when
+it has `librdkit-dev` from a series newer than `environment.yml` pins.
 
 ## License
 
