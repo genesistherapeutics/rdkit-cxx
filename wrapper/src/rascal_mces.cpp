@@ -66,58 +66,6 @@ RascalClusterOptionsData to_data(const Rascal::RascalClusterOptions &o) {
                                   o.numThreads};
 }
 
-// RDKit trusts the options (RascalMCES.cpp):
-// - makeModularProduct computes the bond distance matrices only for a
-//   maxFragSeparation above -1 but reads them for any value but -1.
-// - calcLowerBound casts a product with similarityThreshold to unsigned
-//   int; a NaN threshold passes every comparison before it.
-// - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
-//   equivalentAtoms that does not parse.
-// completeSmallestRings implies completeAromaticRings (RascalOptions.h), and
-// buildPairs reads the ring SMILES that only completeAromaticRings makes, so
-// it is set here as documented.
-Rascal::RascalOptions options_from(const RascalOptionsData &d) {
-  Rascal::RascalOptions o;
-  o.similarityThreshold = d.similarity_threshold;
-  o.completeAromaticRings =
-      d.complete_aromatic_rings || d.complete_smallest_rings;
-  o.ringMatchesRingOnly = d.ring_matches_ring_only;
-  o.completeSmallestRings = d.complete_smallest_rings;
-  o.exactConnectionsMatch = d.exact_connections_match;
-  o.singleLargestFrag = d.single_largest_frag;
-  o.minFragSize = d.min_frag_size;
-  o.maxFragSeparation = d.max_frag_separation;
-  o.allBestMCESs = d.all_best_mcess;
-  o.maxBestMCESs = d.max_best_mcess;
-  o.timeout = d.timeout;
-  o.returnEmptyMCES = d.return_empty_mces;
-  o.maxBondMatchPairs = d.max_bond_match_pairs;
-  o.equivalentAtoms = std::string(d.equivalent_atoms);
-  o.ignoreBondOrders = d.ignore_bond_orders;
-  o.ignoreAtomAromaticity = d.ignore_atom_aromaticity;
-  o.minCliqueSize = d.min_clique_size;
-
-  if (o.maxFragSeparation < -1) {
-    throw ValueErrorException("maxFragSeparation must be -1 or more");
-  }
-  if (std::isnan(o.similarityThreshold)) {
-    throw ValueErrorException("similarityThreshold is NaN");
-  }
-  // As assignEquivalentAtoms splits the classes; it refuses more than 9.
-  std::vector<std::string> classes;
-  boost::split(classes, o.equivalentAtoms, boost::is_any_of(" "),
-               boost::token_compress_on);
-  if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
-    for (const auto &smarts : classes) {
-      if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
-        throw RDKit::SmilesParse::SmilesParseException(
-            "could not parse the equivalentAtoms SMARTS '" + smarts + "'");
-      }
-    }
-  }
-  return o;
-}
-
 Rascal::RascalClusterOptions cluster_options_from(
     const RascalClusterOptionsData &d) {
   Rascal::RascalClusterOptions o;
@@ -134,32 +82,6 @@ Rascal::RascalClusterOptions cluster_options_from(
     throw ValueErrorException("similarityCutoff is NaN");
   }
   return o;
-}
-
-// tier1Sim and tier2Sim (RascalMCES.cpp) square, in int, a count of matched
-// atoms and bonds, which the atoms plus bonds of the smaller molecule bound;
-// RascalResult reads each molecule's distance matrix at indices it computes
-// in int (applyMaxFragSep, calcMaxDeltaAtomAtomDistScore).
-constexpr std::int64_t kMaxSquared = 46340;
-
-std::int64_t atoms_and_bonds(const RDKit::ROMol &mol) {
-  return std::int64_t{mol.getNumAtoms()} + mol.getNumBonds();
-}
-
-void check_mols(const std::vector<const RDKit::ROMol *> &mols) {
-  int large = 0;
-  for (const auto *mol : mols) {
-    check_matrix_size(*mol);
-    if (atoms_and_bonds(*mol) > kMaxSquared) {
-      ++large;
-    }
-  }
-  if (large > 1) {
-    throw ValueErrorException(
-        "RDKit squares a count of matched atoms and bonds in int, which "
-        "overflows when two molecules each have more than 46340 atoms and "
-        "bonds");
-  }
 }
 
 rust::Vec<IndexPair> to_pairs(const std::vector<std::pair<int, int>> &pairs) {
@@ -582,11 +504,80 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
   for (const auto &mol : mols.mols()) {
     res.push_back(mol.get());
   }
-  check_mols(res);
+  check_rascal_mols(res);
   return res;
 }
 
 }  // namespace
+
+// RDKit trusts the options (RascalMCES.cpp):
+// - makeModularProduct computes the bond distance matrices only for a
+//   maxFragSeparation above -1 but reads them for any value but -1.
+// - calcLowerBound casts a product with similarityThreshold to unsigned
+//   int; a NaN threshold passes every comparison before it.
+// - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
+//   equivalentAtoms that does not parse.
+// completeSmallestRings implies completeAromaticRings (RascalOptions.h), and
+// buildPairs reads the ring SMILES that only completeAromaticRings makes, so
+// it is set here as documented.
+Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
+  Rascal::RascalOptions o;
+  o.similarityThreshold = d.similarity_threshold;
+  o.completeAromaticRings =
+      d.complete_aromatic_rings || d.complete_smallest_rings;
+  o.ringMatchesRingOnly = d.ring_matches_ring_only;
+  o.completeSmallestRings = d.complete_smallest_rings;
+  o.exactConnectionsMatch = d.exact_connections_match;
+  o.singleLargestFrag = d.single_largest_frag;
+  o.minFragSize = d.min_frag_size;
+  o.maxFragSeparation = d.max_frag_separation;
+  o.allBestMCESs = d.all_best_mcess;
+  o.maxBestMCESs = d.max_best_mcess;
+  o.timeout = d.timeout;
+  o.returnEmptyMCES = d.return_empty_mces;
+  o.maxBondMatchPairs = d.max_bond_match_pairs;
+  o.equivalentAtoms = std::string(d.equivalent_atoms);
+  o.ignoreBondOrders = d.ignore_bond_orders;
+  o.ignoreAtomAromaticity = d.ignore_atom_aromaticity;
+  o.minCliqueSize = d.min_clique_size;
+
+  if (o.maxFragSeparation < -1) {
+    throw ValueErrorException("maxFragSeparation must be -1 or more");
+  }
+  if (std::isnan(o.similarityThreshold)) {
+    throw ValueErrorException("similarityThreshold is NaN");
+  }
+  // As assignEquivalentAtoms splits the classes; it refuses more than 9.
+  std::vector<std::string> classes;
+  boost::split(classes, o.equivalentAtoms, boost::is_any_of(" "),
+               boost::token_compress_on);
+  if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
+    for (const auto &smarts : classes) {
+      if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
+        throw RDKit::SmilesParse::SmilesParseException(
+            "could not parse the equivalentAtoms SMARTS '" + smarts + "'");
+      }
+    }
+  }
+  return o;
+}
+
+void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols) {
+  int large = 0;
+  for (const auto *mol : mols) {
+    check_matrix_size(*mol);
+    if (std::int64_t{mol->getNumAtoms()} + mol->getNumBonds() >
+        kRascalMaxSquared) {
+      ++large;
+    }
+  }
+  if (large > 1) {
+    throw ValueErrorException(
+        "RDKit squares a count of matched atoms and bonds in int, which "
+        "overflows when two molecules each have more than 46340 atoms and "
+        "bonds");
+  }
+}
 
 RascalOptionsData rascal_options_default() {
   return to_data(Rascal::RascalOptions());
@@ -599,8 +590,8 @@ RascalClusterOptionsData rascal_cluster_options_default() {
 std::unique_ptr<RascalResultList> find_mces(const RWMol &mol1,
                                             const RWMol &mol2,
                                             const RascalOptionsData &opts) {
-  auto options = options_from(opts);
-  check_mols({&mol1, &mol2});
+  auto options = rascal_options_from(opts);
+  check_rascal_mols({&mol1, &mol2});
   auto list = std::make_unique<RascalResultList>();
   // The MCES matches substructures (control_c_lock.h).
   std::lock_guard<std::mutex> control_c(control_c_mutex());

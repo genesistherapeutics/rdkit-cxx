@@ -47,6 +47,10 @@ struct TopologicalTorsionGeneratorData;
 struct FingerprintArgsData;
 struct AdditionalOutputData;
 
+// Whether the generator reads each molecule's n * n distance matrix (atom
+// pairs), which RDKit computes in int (check_matrix_size).
+bool fingerprint_reads_distance_matrix(const FpGenerator &gen);
+
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,
     std::unique_ptr<BondInvGen> bond_inv_gen);

@@ -381,6 +381,10 @@ std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen) {
   return lock_control_c_for_cip();
 }
 
+bool fingerprint_reads_distance_matrix(const FpGenerator &gen) {
+  return dynamic_cast<const AtomPairArguments *>(gen.getOptions()) != nullptr;
+}
+
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,
     std::unique_ptr<BondInvGen> bond_inv_gen) {
