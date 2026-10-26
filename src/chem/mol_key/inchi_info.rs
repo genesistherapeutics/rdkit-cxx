@@ -182,9 +182,23 @@ fn is_achiral_by_symmetry(inchi: &str) -> Result<bool> {
     Ok(find_mol_chiral_centers_with_params(&mut mol, &params).is_ok_and(|c| c.is_empty()))
 }
 
-/// A layer's sp3 stereo: the numbers of stereocenters and of undefined
-/// ones, whether the molecule is a meso form, and the stereo layer's text.
-pub type Sp3Stereo = (u32, u32, bool, String);
+/// A layer's sp3 stereo: Python's 4-tuple of the numbers of stereocenters
+/// and of undefined ones, whether the molecule is a meso form, and the
+/// stereo layer's text.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct Sp3Stereo {
+    /// The number of stereocenters.
+    pub num_stereo: u32,
+    /// The number of undefined stereocenters, at most `num_stereo`.
+    pub num_undef_stereo: u32,
+    /// Whether the molecule is a meso form (with chiral centers and a plane
+    /// of symmetry).
+    pub is_meso: bool,
+    /// The comma-separated atom numbers with sp3 stereochemistry, as the
+    /// stereo layer gives them.
+    pub stereo: String,
+}
 
 /// A layer's mobile hydrogens: the number of groups, and the groups,
 /// separated by commas.
@@ -281,7 +295,12 @@ impl InchiInfo {
                         is_meso || (num_undef_stereo > 1 && is_achiral_by_symmetry(inchi_layer)?);
                     by_iso.insert(
                         iso_layer.clone(),
-                        (num_stereo, num_undef_stereo, is_meso, stereo.to_owned()),
+                        Sp3Stereo {
+                            num_stereo,
+                            num_undef_stereo,
+                            is_meso,
+                            stereo: stereo.to_owned(),
+                        },
                     );
                 }
                 sp3_stereo.insert(fixed_layer.clone(), by_iso);

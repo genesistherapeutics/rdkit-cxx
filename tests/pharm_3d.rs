@@ -1192,14 +1192,22 @@ fn embed_one_matches_python() {
             },
         };
         let got = embed_one_with_params(mol, name, &owned, &pcophore, &params).unwrap();
-        let got_values = [got.0, got.2, got.3, got.4, got.5, got.6, got.7];
+        let got_values = [
+            got.e1_mean,
+            got.e2_mean,
+            got.e2_dev,
+            got.e3_mean,
+            got.e3_dev,
+            got.e4_mean,
+            got.e4_dev,
+        ];
         let expected_values = [
             stats[0], stats[2], stats[3], stats[4], stats[5], stats[6], stats[7],
         ];
         for (g, e) in got_values.iter().zip(expected_values) {
             assert!((g - e).abs() <= 5.0, "{name}: {got:?}");
         }
-        assert_eq!(got.8, n_failed, "{name}");
+        assert_eq!(got.n_failed, n_failed, "{name}");
     }
 }
 

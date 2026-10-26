@@ -733,12 +733,33 @@ fn mean_and_dev(vect: &[f64]) -> (f64, f64) {
     (mean, (squares / (n - 1) as f64).sqrt())
 }
 
-/// The statistics of a molecule's embeddings in [`embed_one`]: the mean
-/// and sample standard deviation of the energies E1 (of each embedding,
-/// with constraints), E2 (optimized, with constraints), E3 (of that
-/// geometry, without them), and E4 (optimized without them), and the number
-/// of embeddings that failed.
-pub type EmbedOneStats = (f64, f64, f64, f64, f64, f64, f64, f64, u32);
+/// The statistics of a molecule's embeddings in [`embed_one`]: Python's
+/// 9-tuple of the means and sample standard deviations of the energies E1
+/// (of each embedding, with constraints), E2 (optimized, with
+/// constraints), E3 (of that geometry, without them), and E4 (optimized
+/// without them), and the number of embeddings that failed.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct EmbedOneStats {
+    /// The mean of E1.
+    pub e1_mean: f64,
+    /// The sample standard deviation of E1.
+    pub e1_dev: f64,
+    /// The mean of E2.
+    pub e2_mean: f64,
+    /// The sample standard deviation of E2.
+    pub e2_dev: f64,
+    /// The mean of E3.
+    pub e3_mean: f64,
+    /// The sample standard deviation of E3.
+    pub e3_dev: f64,
+    /// The mean of E4.
+    pub e4_mean: f64,
+    /// The sample standard deviation of E4.
+    pub e4_dev: f64,
+    /// The number of embeddings that failed.
+    pub n_failed: u32,
+}
 
 /// Parameters for [`embed_one_with_params`], with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -819,7 +840,17 @@ pub fn embed_one_with_params(
             "{name}({n_failed}): {e1:.2}({e1d:.2}) -> {e2:.2}({e2d:.2}) : {e3:.2}({e3d:.2}) -> {e4:.2}({e4d:.2})"
         );
     }
-    Ok((e1, e1d, e2, e2d, e3, e3d, e4, e4d, n_failed))
+    Ok(EmbedOneStats {
+        e1_mean: e1,
+        e1_dev: e1d,
+        e2_mean: e2,
+        e2_dev: e2d,
+        e3_mean: e3,
+        e3_dev: e3d,
+        e4_mean: e4,
+        e4_dev: e4d,
+        n_failed,
+    })
 }
 
 /// The molecule's features of each family, as Python's `_getFeatDict` and
