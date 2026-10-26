@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.DataStructs.TopNContainer`, a pure-Python module: a sorted
+//! Ports `rdkit.DataStructs.TopNContainer`, a Python module: a sorted
 //! container of the largest values inserted, each with an extra item.
 
 use crate::{Error, Result};

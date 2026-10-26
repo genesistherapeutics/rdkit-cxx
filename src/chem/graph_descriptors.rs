@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.GraphDescriptors`, a pure-Python module: topological
+//! Ports `rdkit.Chem.GraphDescriptors`, a Python module: topological
 //! descriptors (connectivity and shape indices, information content,
 //! Balaban's J, and Bertz's complexity index).
 //!
@@ -13,7 +13,7 @@
 //! them. Python keeps the distance and adjacency matrices it computes on
 //! the molecule and reads them back unless forced; these never do, so each
 //! call computes them afresh, as Python does for a new molecule. Python's
-//! pure-Python reference implementations (`_pyChi0v` and the like) are not
+//! Python reference implementations (`_pyChi0v` and the like) are not
 //! ported.
 
 use std::collections::{BTreeMap, HashMap};

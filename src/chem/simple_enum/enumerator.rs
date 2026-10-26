@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.SimpleEnum.Enumerator`, a pure-Python module: reaction
+//! Ports `rdkit.Chem.SimpleEnum.Enumerator`, a Python module: reaction
 //! enumeration with reactant templates whose atoms are labeled with
 //! functional groups, as in rxn files' atom values.
 

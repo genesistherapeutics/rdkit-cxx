@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.TorsionFingerprints`, a pure-Python module: the
+//! Ports `rdkit.Chem.TorsionFingerprints`, a Python module: the
 //! torsion fingerprint deviation (TFD) between conformers (Schulz-Gasch et
 //! al., JCIM 52, 1499-1512 (2012)).
 //!

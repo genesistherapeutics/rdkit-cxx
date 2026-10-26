@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm2D`, a pure-Python package: 2D (topological)
+//! Ports `rdkit.Chem.Pharm2D`, a Python package: 2D (topological)
 //! pharmacophore fingerprints.
 //!
 //! `rdkit.Chem.Pharm2D.LazyGenerator` is unfinished in Python (importing it

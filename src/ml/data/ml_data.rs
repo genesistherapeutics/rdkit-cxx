@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Data.MLData`, a pure-Python module: data sets for
+//! Ports `rdkit.ML.Data.MLData`, a Python module: data sets for
 //! machine learning, rows of variables followed by results.
 //!
 //! Python's general data sets hold any objects; RDKit reads integers,

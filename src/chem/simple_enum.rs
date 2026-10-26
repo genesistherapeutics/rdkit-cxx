@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Mirrors `rdkit.Chem.SimpleEnum`, a package of pure-Python modules for
+//! Mirrors `rdkit.Chem.SimpleEnum`, a package of Python modules for
 //! enumerating reactions' products, ported here.
 
 pub mod enumerator;

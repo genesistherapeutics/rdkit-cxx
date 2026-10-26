@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.EState.Fingerprinter`, a pure-Python module: EState
+//! Ports `rdkit.Chem.EState.Fingerprinter`, a Python module: EState
 //! fingerprints (Hall and Kier, JCICS 35, 1039-1045 (1995)).
 
 use crate::Result;

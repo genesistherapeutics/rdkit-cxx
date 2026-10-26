@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Cluster.Butina`, a pure-Python module: Butina's
+//! Ports `rdkit.ML.Cluster.Butina`, a Python module: Butina's
 //! sphere-exclusion clustering (J. Chem. Inf. Comput. Sci. 39, 747-750,
 //! 1999).
 //!

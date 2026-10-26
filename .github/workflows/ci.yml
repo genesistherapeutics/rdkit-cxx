@@ -166,7 +166,7 @@ jobs:
           python-version: "3.12"
       - run: pip install pytest
       - run: python3 -m pytest inventory
-      - run: python3 inventory/check.py --write-paths tests/manifest_paths.rs
+      - run: python3 inventory/check.py --strict --write-paths tests/manifest_paths.rs
       - name: The generated path test is up to date
         run: git diff --exit-code tests/manifest_paths.rs
 

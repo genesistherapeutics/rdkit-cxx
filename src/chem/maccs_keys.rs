@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.MACCSkeys`, a pure-Python module: SMARTS for the
+//! Ports `rdkit.Chem.MACCSkeys`, a Python module: SMARTS for the
 //! public MACCS keys.
 //!
 //! Python's `GenMACCSKeys` and `FingerprintMol` are

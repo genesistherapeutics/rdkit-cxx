@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Randomize`, a pure-Python module: molecules with their
+//! Ports `rdkit.Chem.Randomize`, a Python module: molecules with their
 //! atoms in a random order.
 //!
 //! Python draws from the `random` module's global generator; the ports take

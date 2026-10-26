@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Recap`, a pure-Python module: the RECAP algorithm of
+//! Ports `rdkit.Chem.Recap`, a Python module: the RECAP algorithm of
 //! Lewell et al., _J. Chem. Inf. Comput. Sci._ 38, 511-522 (1998), which
 //! breaks molecules at bonds chemical reactions make, into a hierarchy of
 //! fragments.

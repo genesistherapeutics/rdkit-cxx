@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.BuildFragmentCatalog`, a pure-Python script for
+//! Ports `rdkit.Chem.BuildFragmentCatalog`, a Python script for
 //! CASE-type analysis: fragment catalogs built from molecules, the
 //! molecules scored by the fragments they have, and the fragments ranked by
 //! how much they tell about the molecules' activities.

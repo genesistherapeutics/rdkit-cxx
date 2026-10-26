@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.DataStructs.VectCollection`, a pure-Python module: a
+//! Ports `rdkit.DataStructs.VectCollection`, a Python module: a
 //! collection of bit vectors that acts as their union.
 
 use crate::data_structs::ExplicitBitVect;

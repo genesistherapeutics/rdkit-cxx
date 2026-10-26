@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FilterCatalog`, a pure-Python module that re-exports
+//! Ports `rdkit.Chem.FilterCatalog`, a Python module that re-exports
 //! `rdfiltercatalog`, as this one does, and defines `FilterMatcher`, a base
 //! class for matchers written in Python.
 //!

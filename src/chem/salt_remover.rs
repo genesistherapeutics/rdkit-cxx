@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.SaltRemover`, a pure-Python module: removes salt
+//! Ports `rdkit.Chem.SaltRemover`, a Python module: removes salt
 //! fragments, as definitions of salts match them, from molecules.
 //!
 //! Python reads its default salts from `Salts.txt` in RDKit's data

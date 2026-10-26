@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FeatMaps.FeatMaps`, a pure-Python module: feature maps
+//! Ports `rdkit.Chem.FeatMaps.FeatMaps`, a Python module: feature maps
 //! and their scoring.
 //!
 //! Python's mode classes hold integer constants; here they are enums, and

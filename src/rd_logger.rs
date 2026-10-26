@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.RDLogger`, a pure-Python module: a logger over RDKit's own
+//! Ports `rdkit.RDLogger`, a Python module: a logger over RDKit's own
 //! logs, which `rdkit_cxx::rd_base` binds.
 //!
 //! Python formats a message with its extra arguments (`msg % args`); Rust

@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Crippen`, a pure-Python module: Wildman and Crippen's
+//! Ports `rdkit.Chem.Crippen`, a Python module: Wildman and Crippen's
 //! atom-based logP and molar refractivity (S. A. Wildman and G. M. Crippen,
 //! JCICS 39, 868-873 (1999)).
 //!
 //! Python's functions call `rdMolDescriptors.CalcCrippenDescriptors`, as
-//! these do. Its private pattern reader and pure-Python reference
+//! these do. Its private pattern reader and Python reference
 //! implementations, and its `force` arguments, which only steer RDKit's
 //! descriptor caches (CONVENTIONS.md U8), are not ported.
 

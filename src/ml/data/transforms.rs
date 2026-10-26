@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Data.Transforms`, a pure-Python module: the data
+//! Ports `rdkit.ML.Data.Transforms`, a Python module: the data
 //! transformations offered to users, which RDKit never implemented.
 
 use crate::ml::data::ml_data::MLDataSet;

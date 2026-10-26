@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Descriptors3D`, a pure-Python module: descriptors of a
+//! Ports `rdkit.Chem.Descriptors3D`, a Python module: descriptors of a
 //! conformer's shape, from its principal moments of inertia and plane of
 //! best fit.
 //!

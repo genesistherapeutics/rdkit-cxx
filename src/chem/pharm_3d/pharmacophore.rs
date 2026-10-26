@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm3D.Pharmacophore`, a pure-Python module: 3D
+//! Ports `rdkit.Chem.Pharm3D.Pharmacophore`, a Python module: 3D
 //! pharmacophores, as features with distance bounds between them or with
 //! explicit positions and radii.
 //!

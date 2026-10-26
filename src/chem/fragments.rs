@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Fragments`, a pure-Python module: counts of functional
+//! Ports `rdkit.Chem.Fragments`, a Python module: counts of functional
 //! groups and ring systems, each the number of matches of a SMARTS pattern
 //! from RDKit's `Data/FragmentDescriptors.csv`.
 //!

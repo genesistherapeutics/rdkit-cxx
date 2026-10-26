@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FragmentCatalog`, a pure-Python module over
+//! Ports `rdkit.Chem.FragmentCatalog`, a Python module over
 //! `rdfragcatalog`, which it re-exports: information gains read back from
 //! files, the links between a catalog's fragments, and the molecules that
 //! have a fragment.

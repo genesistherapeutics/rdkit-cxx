@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Mirrors `rdkit.Chem.EState`, a pure-Python package: Kier and Hall's
+//! Mirrors `rdkit.Chem.EState`, a Python package: Kier and Hall's
 //! EState descriptors (L. B. Kier and L. H. Hall, _Molecular Structure
 //! Description: The Electrotopological State_, Academic Press (1999)). It
 //! re-exports `atom_types` and `e_state`, as Python's package does.

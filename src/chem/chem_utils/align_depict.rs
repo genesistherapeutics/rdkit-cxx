@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.ChemUtils.AlignDepict`, a pure-Python script: 2D
+//! Ports `rdkit.Chem.ChemUtils.AlignDepict`, a Python script: 2D
 //! depictions with a core's atoms where the core's depiction has them. Its
 //! command-line entry point is not ported.
 

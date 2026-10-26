@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.EState.AtomTypes`, a pure-Python module: SMARTS
+//! Ports `rdkit.Chem.EState.AtomTypes`, a Python module: SMARTS
 //! definitions of Hall and Kier's EState atom types (Hall and Kier, JCICS
 //! 35, 1039-1045 (1995), table 1).
 //!

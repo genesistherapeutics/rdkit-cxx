@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.RegistrationHash`, a pure-Python module: a hash of a
+//! Ports `rdkit.Chem.RegistrationHash`, a Python module: a hash of a
 //! molecule's chemistry, so that molecules that are chemically the same hash
 //! the same.
 //!

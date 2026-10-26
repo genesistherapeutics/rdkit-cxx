@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.BRICS`, a pure-Python module: the BRICS algorithm of
+//! Ports `rdkit.Chem.BRICS`, a Python module: the BRICS algorithm of
 //! Degen et al., _ChemMedChem_ 3, 1503-1507 (2008), which breaks molecules
 //! at retrosynthetically interesting bonds and builds new ones from the
 //! pieces.

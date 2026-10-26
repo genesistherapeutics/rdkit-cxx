@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FeatFinderCLI`, a pure-Python command-line program
+//! Ports `rdkit.Chem.FeatFinderCLI`, a Python command-line program
 //! that lists the pharmacophore features of the molecules in a SMILES
 //! file. Its reusable function is ported; the command line (`main`,
 //! `initParser`, `processArgs`, `existingFile`, `splitExpr`) is not.

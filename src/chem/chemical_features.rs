@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.ChemicalFeatures`, a pure-Python module that
+//! Ports `rdkit.Chem.ChemicalFeatures`, a Python module that
 //! re-exports `rdChemicalFeatures` and `rdMolChemicalFeatures`, as this one
 //! does, and adds `MolChemicalFeatureFactory.GetFeaturesForMol`.
 

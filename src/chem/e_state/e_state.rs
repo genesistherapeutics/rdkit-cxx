@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.EState.EState`, a pure-Python module: Kier and Hall's
+//! Ports `rdkit.Chem.EState.EState`, a Python module: Kier and Hall's
 //! electrotopological state (EState) indices (Hall, Mohney, and Kier, JCICS
 //! 31, 76-81 (1991)).
 //!

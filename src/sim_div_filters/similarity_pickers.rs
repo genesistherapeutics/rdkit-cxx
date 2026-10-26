@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.SimDivFilters.SimilarityPickers`, a pure-Python module:
+//! Ports `rdkit.SimDivFilters.SimilarityPickers`, a Python module:
 //! picking the fingerprints of a data set most similar to a set of probes.
 //!
 //! Python's pickers hand back the data set's fingerprints themselves; these

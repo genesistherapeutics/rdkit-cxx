@@ -3,12 +3,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.InfoTheory.entropy`, a pure-Python module: informational
+//! Ports `rdkit.ML.InfoTheory.entropy`, a Python module: informational
 //! entropy and gain, as Mitchell's "Machine Learning" defines them.
 //!
 //! Python's module also exports `InfoEntropy` and `InfoGain`, which are
 //! `rdInfoTheory`'s ([`info_entropy`](super::info_entropy),
-//! [`info_gain`](super::info_gain)); these are its pure-Python versions.
+//! [`info_gain`](super::info_gain)); these are its Python versions.
 
 use crate::ml::info_theory::rd_info_theory;
 use crate::{Error, Result};

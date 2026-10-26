@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The small pure-Python modules: MolStandardize's ReorderTautomers,
+// The small Python modules: MolStandardize's ReorderTautomers,
 // ChemicalFeatures, Graphs, and FilterCatalog. Values from Python's modules
 // in RDKit 2026.09.1.
 

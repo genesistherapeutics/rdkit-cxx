@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.inchi`, a pure-Python module over `rdinchi` that
+//! Ports `rdkit.Chem.inchi`, a Python module over `rdinchi` that
 //! `rdkit.Chem` re-exports, as `rdkit_cxx::chem` re-exports this one: InChI
 //! conversions that log InChI's warnings and errors to RDKit's log, as
 //! Python's `RDLogger` does, and can treat them as errors.

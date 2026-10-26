@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.DataStructs.BitUtils`, a pure-Python module: utilities for
+//! Ports `rdkit.DataStructs.BitUtils`, a Python module: utilities for
 //! bit vectors.
 
 use crate::Result;

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm3D.ExcludedVolume`, a pure-Python module: points
+//! Ports `rdkit.Chem.Pharm3D.ExcludedVolume`, a Python module: points
 //! a molecule's atoms must stay away from when it is embedded.
 
 use crate::geometry::rd_geometry::Point3D;

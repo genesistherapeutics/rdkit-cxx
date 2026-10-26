@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Cluster.Murtagh`, a pure-Python module: Murtagh's
+//! Ports `rdkit.ML.Cluster.Murtagh`, a Python module: Murtagh's
 //! hierarchical clustering ([`clustering`](super::clustering)) returning
 //! cluster trees.
 //!

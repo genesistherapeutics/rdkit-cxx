@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.utils.chemutils`, a pure-Python module: utilities with
+//! Ports `rdkit.utils.chemutils`, a Python module: utilities with
 //! chemical know-how.
 
 use crate::utils::{py_float, py_int};

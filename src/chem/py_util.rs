@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Python built-ins the ports of RDKit's pure-Python descriptor modules
+//! Python built-ins the ports of RDKit's Python descriptor modules
 //! reproduce exactly, so their results match Python's, NaN included.
 
 use crate::{Error, Result};
