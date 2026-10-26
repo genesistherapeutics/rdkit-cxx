@@ -127,13 +127,14 @@ fn main() {
     );
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
-    // conda appends to an environment's history whenever it changes it, and
-    // installs packages' files with the times they were built at, which can
-    // be older than the last build, so the history, not RDKit's files (see
-    // link), shows an update in place.
-    let history = prefix.join("conda-meta").join("history");
-    if history.exists() {
-        println!("cargo::rerun-if-changed={}", history.display());
+    // conda installs packages' files with the times they were built at,
+    // which can be older than the last build, so RDKit's files (see link) do
+    // not show an update in place. Its installers (conda, mamba, pixi) all
+    // write fresh records to conda-meta for every change to the environment,
+    // and Cargo watches a directory's contents.
+    let conda_meta = prefix.join("conda-meta");
+    if conda_meta.is_dir() {
+        println!("cargo::rerun-if-changed={}", conda_meta.display());
     }
     // Clippy checks the Rust and links nothing, so it needs no C++. Cargo
     // runs this script for clippy apart from its run for `cargo build`
