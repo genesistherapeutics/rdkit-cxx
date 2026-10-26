@@ -3,7 +3,7 @@
 ## 2026.9.0
 
 The first release. It supports RDKit 2026.09 from conda-forge on Linux
-(x86-64 and arm64) and macOS (arm64).
+(x86-64 and arm64) and macOS (arm64), and builds with Rust 1.88 or newer.
 
 ### Bindings
 
