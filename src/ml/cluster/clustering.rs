@@ -38,12 +38,13 @@ fn merges(clusters: ffi::MurtaghClusters) -> (Vec<i64>, Vec<i64>, Vec<f64>) {
     (clusters.ia, clusters.ib, clusters.crit)
 }
 
-/// Clusters points by their squared Euclidean distances. `data` has
-/// `n_pts` rows of `sz` coordinates each. Mirrors
-/// `Clustering.MurtaghCluster`.
+/// Clusters points by their squared Euclidean distances: the first `n_pts *
+/// sz` values of `data`, row by row, as `n_pts` points of `sz` coordinates,
+/// as Python's binding reads them. When the rows have `sz` values, those are
+/// the first `n_pts` rows. Mirrors `Clustering.MurtaghCluster`.
 ///
-/// `Error::Runtime` when `data` does not have `n_pts` rows of `sz` values,
-/// as Python raises; `Error::Value` for rows of different lengths, and as
+/// `Error::Value` for fewer values, which Python's binding reads past, for
+/// rows of different lengths, which NumPy cannot make an array of, and as
 /// the module describes.
 pub fn murtagh_cluster(
     data: &[Vec<f64>],
@@ -51,17 +52,31 @@ pub fn murtagh_cluster(
     sz: i32,
     option: i32,
 ) -> Result<(Vec<i64>, Vec<i64>, Vec<f64>)> {
-    // No rows have sz values each, as a NumPy array of shape (0, sz) has.
-    let ncols = data.first().map_or(sz as u64, |row| row.len() as u64);
-    if data.iter().any(|row| row.len() as u64 != ncols) {
+    let ncols = data.first().map_or(0, |row| row.len());
+    if data.iter().any(|row| row.len() != ncols) {
         return Err(Error::Value {
-            message: "the rows must all have sz values".to_owned(),
+            message: "the rows must all have the same length".to_owned(),
+        });
+    }
+    let (Ok(rows), Ok(cols)) = (u64::try_from(n_pts), u64::try_from(sz)) else {
+        return Err(Error::Value {
+            message: "nPts and sz must not be negative".to_owned(),
+        });
+    };
+    let values = data.concat();
+    let needed = rows * cols;
+    if (values.len() as u64) < needed {
+        return Err(Error::Value {
+            message: format!(
+                "data holds {} values, fewer than the nPts * sz = {needed} it reads",
+                values.len()
+            ),
         });
     }
     Ok(merges(ffi::murtagh_cluster(
-        &data.concat(),
-        data.len() as u64,
-        ncols,
+        &values[..needed as usize],
+        rows,
+        cols,
         n_pts,
         sz,
         option,

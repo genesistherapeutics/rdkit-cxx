@@ -15,15 +15,29 @@ use crate::{Error, Result};
 
 pub use crate::ffi::draw::ffi::DrawColour;
 
+/// A color component as Python's bindings convert a tuple's: through C's
+/// `float`.
+const fn as_float(x: f64) -> f64 {
+    x as f32 as f64
+}
+
 impl DrawColour {
-    /// An opaque color. Mirrors a 3-tuple `(r, g, b)`.
+    /// An opaque color. Mirrors a 3-tuple `(r, g, b)`, whose components
+    /// Python's bindings round to `f32`, as this does; a struct literal keeps
+    /// them as written.
     pub const fn new(r: f64, g: f64, b: f64) -> DrawColour {
-        DrawColour { r, g, b, a: 1.0 }
+        DrawColour::rgba(r, g, b, 1.0)
     }
 
-    /// A color with an alpha. Mirrors a 4-tuple `(r, g, b, a)`.
+    /// A color with an alpha. Mirrors a 4-tuple `(r, g, b, a)`, rounded as
+    /// for `new`.
     pub const fn rgba(r: f64, g: f64, b: f64, a: f64) -> DrawColour {
-        DrawColour { r, g, b, a }
+        DrawColour {
+            r: as_float(r),
+            g: as_float(g),
+            b: as_float(b),
+            a: as_float(a),
+        }
     }
 
     /// `Error::Value` unless every component is from 0 to 1, as Python's

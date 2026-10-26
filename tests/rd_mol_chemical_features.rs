@@ -289,6 +289,27 @@ fn parse_errors() {
         build_feature_factory_from_string("\u{b}\n"),
         Err(Error::Parse { .. })
     ));
+    // A definition that runs to the end of the input without EndFeature,
+    // on which RDKit's parser rereads its last line forever, including
+    // when a continuation line swallows the EndFeature.
+    for text in [
+        "DefineFeature HDonor1 [N,O;!H0]\n  Family HBondDonor3  Wei",
+        "DefineFeature D [N,O;!H0]\n Family D",
+        "DefineFeature D [N,O;!H0]\n Weights 1.0",
+        "DefineFeature D [N,O;!H0]\n Family D \\\nEndFeature",
+    ] {
+        match build_feature_factory_from_string(text) {
+            Err(Error::Parse { message }) => {
+                assert!(message.contains("without EndFeature"), "{message}")
+            }
+            other => panic!("{text:?}: {other:?}"),
+        }
+    }
+    // The same definitions with EndFeature, at the end without a newline.
+    let factory =
+        build_feature_factory_from_string("DefineFeature D [N,O;!H0]\n Family D\nEndFeature")
+            .unwrap();
+    assert_eq!(factory.get_num_feature_defs(), 1);
 }
 
 #[test]

@@ -19,6 +19,7 @@
 //! let bedroc = calc_bedroc(&scores, 0, 20.0).unwrap();
 //! ```
 
+use crate::py::{py_div, py_exp};
 use crate::{Error, Result};
 
 /// A ROC curve: the false- and true-positive rates after each sample.
@@ -110,17 +111,17 @@ fn rie_helper<S: AsRef<[f64]>>(scores: &[S], col: usize, alpha: f64) -> Result<(
         return Err(value_error("alpha must be greater than zero"));
     }
     let n = num_mol as f64;
-    let denom = 1.0 / n * ((1.0 - (-alpha).exp()) / ((alpha / n).exp() - 1.0));
+    let denom = 1.0 / n * py_div(1.0 - py_exp(-alpha)?, py_exp(alpha / n)? - 1.0)?;
     let mut num_actives = 0u64;
     let mut sum_exp = 0.0;
     for i in 0..num_mol {
         if is_active(scores, i, col)? {
             num_actives += 1;
-            sum_exp += (-(alpha * (i + 1) as f64) / n).exp();
+            sum_exp += py_exp(-(alpha * (i + 1) as f64) / n)?;
         }
     }
     let rie = if num_actives > 0 {
-        sum_exp / (num_actives as f64 * denom)
+        py_div(sum_exp, num_actives as f64 * denom)?
     } else {
         0.0
     };
@@ -131,8 +132,10 @@ fn rie_helper<S: AsRef<[f64]>>(scores: &[S], col: usize, alpha: f64) -> Result<(
 /// weight `alpha` (Sheridan et al., J. Chem. Inf. Comput. Sci. 41,
 /// 1395-1406, 2001). Mirrors `Scoring.CalcRIE`.
 ///
-/// `Error::Value` for no samples or an `alpha` that is not positive, as
-/// Python raises; `Error::Index` for a row without column `col`.
+/// `Error::Value` for no samples, an `alpha` that is not positive, or one
+/// so large (about 710 times the samples) or small (about 1e-16) that
+/// Python's `math.exp` overflows or it divides by zero, as Python raises;
+/// `Error::Index` for a row without column `col`.
 pub fn calc_rie<S: AsRef<[f64]>>(scores: &[S], col: usize, alpha: f64) -> Result<f64> {
     Ok(rie_helper(scores, col, alpha)?.0)
 }
@@ -141,17 +144,21 @@ pub fn calc_rie<S: AsRef<[f64]>>(scores: &[S], col: usize, alpha: f64) -> Result
 /// weight `alpha` (Truchon and Bayly, J. Chem. Inf. Model. 47, 488-508,
 /// 2007). Mirrors `Scoring.CalcBEDROC`.
 ///
-/// Errors as [`calc_rie`].
+/// Errors as [`calc_rie`], and also for an `alpha` above about 710, where
+/// Python's `math.exp(alpha)` overflows.
 pub fn calc_bedroc<S: AsRef<[f64]>>(scores: &[S], col: usize, alpha: f64) -> Result<f64> {
     let (rie, num_actives) = rie_helper(scores, col, alpha)?;
     if num_actives == 0 {
         return Ok(0.0);
     }
     let ratio = 1.0 * num_actives as f64 / scores.len() as f64;
-    let rie_max = (1.0 - (-alpha * ratio).exp()) / (ratio * (1.0 - (-alpha).exp()));
-    let rie_min = (1.0 - (alpha * ratio).exp()) / (ratio * (1.0 - alpha.exp()));
+    let rie_max = py_div(
+        1.0 - py_exp(-alpha * ratio)?,
+        ratio * (1.0 - py_exp(-alpha)?),
+    )?;
+    let rie_min = py_div(1.0 - py_exp(alpha * ratio)?, ratio * (1.0 - py_exp(alpha)?))?;
     Ok(if rie_max != rie_min {
-        (rie - rie_min) / (rie_max - rie_min)
+        py_div(rie - rie_min, rie_max - rie_min)?
     } else {
         // Every sample is active.
         1.0

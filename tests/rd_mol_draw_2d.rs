@@ -843,6 +843,39 @@ fn comic_mode_needs_bonds_with_length() {
     assert_value_error(d.draw_molecule(&m));
 }
 
+/// RDKit's hand-drawn lines never end for a line of no length, and a small
+/// canvas gives a reaction's plus signs and arrow no length.
+#[test]
+fn comic_mode_needs_reaction_lines_with_length() {
+    let draw = |smarts: &'static str, w: i32, h: i32| {
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let mut d = MolDraw2DSVG::new(w, h).unwrap();
+            let opts = MolDrawOptions {
+                comic_mode: true,
+                ..Default::default()
+            };
+            d.set_draw_options(&opts).unwrap();
+            let rxn = rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts(smarts).unwrap();
+            tx.send(d.draw_reaction(&rxn).is_ok()).unwrap();
+        });
+        rx.recv_timeout(std::time::Duration::from_secs(60))
+            .expect("the drawing hung")
+    };
+    // A plus of no length hangs only when its ends' random shifts match,
+    // one time in four, so 40x40 can finish in RDKit too.
+    let plus = "[C:1](=O)[OH].[N:2]>>[C:1](=O)[N:2]";
+    for (w, h) in [(40, 10), (40, 8), (10, 10), (3, 3), (40, 40)] {
+        assert!(!draw(plus, w, h), "{w}x{h}");
+    }
+    for (w, h) in [(10, 10), (3, 3)] {
+        assert!(!draw("[C:1]=O>>[C:1]O", w, h), "{w}x{h}");
+    }
+    for (w, h) in [(100, 100), (300, 300)] {
+        assert!(draw(plus, w, h), "{w}x{h}");
+    }
+}
+
 fn red() -> DrawColour {
     DrawColour::new(1.0, 0.0, 0.0)
 }

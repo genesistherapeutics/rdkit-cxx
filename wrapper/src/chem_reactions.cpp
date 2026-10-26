@@ -952,6 +952,70 @@ bool mrv_file_is_reaction(rust::Slice<const std::uint8_t> path) {
 
 namespace {
 
+bool is_xml_space(char c) {
+  return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+// The ChemDraw library reads a reaction step's atom maps
+// (ReactionStepAtomMap, ...Manual, ...Auto) as ints until the end of the
+// value, and never reaches it once a token fails to read as one: it appends
+// to the map until memory runs out. Every token must be an int, then, and
+// an entity, which would decode to text this cannot see, is refused too.
+void check_cdxml_atom_maps(const std::string &text) {
+  static const std::string kName = "ReactionStepAtomMap";
+  for (auto at = text.find(kName); at != std::string::npos;
+       at = text.find(kName, at + 1)) {
+    if (at == 0 || !is_xml_space(text[at - 1])) {
+      continue;
+    }
+    auto pos = at + kName.size();
+    for (const char *suffix : {"Manual", "Auto"}) {
+      if (text.compare(pos, std::strlen(suffix), suffix) == 0) {
+        pos += std::strlen(suffix);
+        break;
+      }
+    }
+    while (pos < text.size() && is_xml_space(text[pos])) {
+      ++pos;
+    }
+    if (pos >= text.size() || text[pos] != '=') {
+      continue;
+    }
+    ++pos;
+    while (pos < text.size() && is_xml_space(text[pos])) {
+      ++pos;
+    }
+    if (pos >= text.size() || (text[pos] != '"' && text[pos] != '\'')) {
+      continue;
+    }
+    auto end = text.find(text[pos], pos + 1);
+    if (end == std::string::npos) {
+      continue;
+    }
+    std::istringstream tokens(text.substr(pos + 1, end - pos - 1));
+    std::string token;
+    while (tokens >> token) {
+      auto digits =
+          token.find_first_not_of("+-") == 1 ? token.substr(1) : token;
+      bool ok = token.find('&') == std::string::npos && !digits.empty() &&
+                digits.find_first_not_of("0123456789") == std::string::npos;
+      if (ok) {
+        try {
+          std::size_t used = 0;
+          long long value = std::stoll(token, &used);
+          ok = used == token.size() && value >= INT_MIN && value <= INT_MAX;
+        } catch (const std::exception &) {
+          ok = false;
+        }
+      }
+      if (!ok) {
+        throw RDKit::FileParseException("a reaction step's atom map holds \"" +
+                                        token + "\", which is not an int");
+      }
+    }
+  }
+}
+
 std::unique_ptr<ReactionList> to_reaction_list(
     std::vector<std::unique_ptr<ChemicalReaction>> rxns) {
   auto res = std::make_unique<ReactionList>();
@@ -968,14 +1032,17 @@ std::unique_ptr<ReactionList> to_reaction_list(
 std::unique_ptr<ReactionList> reactions_from_cdxml_block(rust::Str cdxml,
                                                          bool sanitize,
                                                          bool remove_hs) {
+  std::string text(cdxml);
+  check_cdxml_atom_maps(text);
   return to_reaction_list(
-      RDKit::CDXMLToChemicalReactions(std::string(cdxml), sanitize, remove_hs));
+      RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }
 
 std::unique_ptr<ReactionList> reactions_from_cdxml_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs) {
   // RDKit returns no reactions for a file it cannot open.
   auto text = read_path(path);
+  check_cdxml_atom_maps(text);
   return to_reaction_list(
       RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }

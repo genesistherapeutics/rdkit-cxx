@@ -16,8 +16,9 @@ use crate::chem::{
 use crate::rd_random::Random;
 
 /// A copy of the molecule with its atoms in a random order, one that
-/// differs from theirs when it has two atoms or more. Mirrors
-/// `Randomize.RandomizeMol`.
+/// differs from theirs when it has two atoms or more. The empty molecule
+/// comes back as it is, where Python's binding refuses its empty atom
+/// order. Mirrors `Randomize.RandomizeMol`.
 pub fn randomize_mol(mol: &Mol, random: &mut Random) -> Result<Mol> {
     let atom_indices: Vec<u32> = (0..mol.get_num_atoms()).collect();
     let mut randomized = random.sample(&atom_indices, atom_indices.len());

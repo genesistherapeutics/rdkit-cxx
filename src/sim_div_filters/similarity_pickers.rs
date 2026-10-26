@@ -17,6 +17,7 @@ use crate::data_structs::top_n_container::TopNContainer;
 use crate::data_structs::{
     ExplicitBitVect, fingerprint_similarity_with_metric, tanimoto_similarity,
 };
+use crate::py::bisect_right_by;
 use crate::{Error, Result};
 
 fn index_error(index: i64, len: usize) -> Error {
@@ -211,7 +212,7 @@ impl<'a> SpreadPicker<'a> {
                 let score = fingerprint_similarity_with_metric(&p.probe_fps[i], fp, p.sim_metric)?;
                 // Python's `bisect.insort`, comparing (score, index) tuples.
                 let lt = |&(s, k): &(f64, usize)| if score != s { score < s } else { j < k };
-                let at = row.partition_point(|e| !lt(e));
+                let at = bisect_right_by(row, lt);
                 row.insert(at, (score, j));
                 if row.len() >= p.num_to_pick {
                     scores.truncate(p.num_to_pick);

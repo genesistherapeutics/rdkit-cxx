@@ -635,3 +635,40 @@ fn morgan_similarity_map_matches_python() {
         &probe(),
     );
 }
+
+/// Python's bindings take colors as tuples of C floats, so a color map's
+/// components are rounded to `f32`, which shows in the fill colors.
+#[test]
+fn color_maps_are_rounded_as_python_rounds_them() {
+    let c = DrawColour::new(0.1, 0.2, 0.3);
+    assert_eq!(
+        (c.r, c.g, c.b, c.a),
+        (
+            0.10000000149011612,
+            0.20000000298023224,
+            0.30000001192092896,
+            1.0
+        )
+    );
+    let mut d = MolDraw2DSVG::new(250, 250).unwrap();
+    let params = GetSimilarityMapFromWeightsParams {
+        color_map: Some([
+            DrawColour::new(0.1, 0.2, 0.9),
+            DrawColour::new(1.0, 1.0, 1.0),
+            DrawColour::new(0.9, 0.1, 0.1),
+        ]),
+        ..Default::default()
+    };
+    get_similarity_map_from_weights_with_params(
+        &mol_from_smiles("CC").unwrap(),
+        &[-1.0, 0.0],
+        &mut d,
+        &params,
+    )
+    .unwrap();
+    d.finish_drawing();
+    let svg = d.get_drawing_text().unwrap();
+    // Python's fill; unrounded components give #1932E5.
+    assert!(svg.contains("#1933E5"));
+    assert!(!svg.contains("#1932E5"));
+}

@@ -549,6 +549,29 @@ fn cdxml() {
         reactions_from_cdxml_file(common::temp_path("missing.cdxml")),
         Err(Error::Os { .. })
     ));
+    // The ChemDraw library appends to a step's atom map until memory runs
+    // out once a token fails to read as an int.
+    let auto = r#"ReactionStepAtomMapAuto="300 354 302"#;
+    assert!(text.contains(auto));
+    for token in ["x", "1.5", "2147483648", "4294967295", "5x", "&#52;"] {
+        let bad = text.replacen(
+            auto,
+            &format!(r#"ReactionStepAtomMapAuto="300 354 {token}"#),
+            1,
+        );
+        assert!(
+            matches!(reactions_from_cdxml_block(&bad), Err(Error::Parse { .. })),
+            "{token}"
+        );
+    }
+    for token in ["2147483647", "-1", "+7"] {
+        let fine = text.replacen(
+            auto,
+            &format!(r#"ReactionStepAtomMapAuto="300 354 {token}"#),
+            1,
+        );
+        assert!(reactions_from_cdxml_block(&fine).is_ok(), "{token}");
+    }
 }
 
 #[test]

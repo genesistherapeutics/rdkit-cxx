@@ -336,6 +336,27 @@ fn stereo_centers_with_too_few_neighbor_atoms_are_refused() {
 }
 
 #[test]
+fn hydrogen_counts_inchi_cannot_hold_are_refused_on_reading() {
+    // 200 deuteriums wrap to -56 in InChI's signed char, which RDKit reads
+    // as about 4.3 billion atoms to add.
+    for count in ["128", "200", "255", "1000", "4294967295"] {
+        let text = format!("InChI=1S/C3H6/c1-2-3-1/h1-3H2/i1D{count}");
+        assert!(is_value_error(inchi_to_mol(&text)), "{text}");
+    }
+    assert!(
+        inchi_to_mol("InChI=1S/C3H6/c1-2-3-1/h1-3H2/i1D2")
+            .unwrap()
+            .mol
+            .is_some()
+    );
+    // The formula's total count is not an atom's.
+    let alkane = mol_from_smiles(&"C".repeat(70)).unwrap();
+    let inchi = mol_to_inchi(&alkane).unwrap().inchi;
+    assert!(inchi.contains("C70H142"));
+    assert!(inchi_to_mol(&inchi).unwrap().mol.is_some());
+}
+
+#[test]
 fn isotopes_inchi_cannot_represent_are_refused() {
     assert_eq!(inchi("[112CH4]").inchi, "InChI=1S/CH4/h1H4/i1+100");
     assert_eq!(inchi("[138U]").inchi, "InChI=1S/U/i1-100");

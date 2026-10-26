@@ -239,6 +239,13 @@ fn quantize_matches_python() {
         find_var_mult_quant_bounds(&[1.0, 2.0], 1, &[0, 2], 2),
         Err(Error::Index { .. })
     ));
+    // Python gives ([1.0, nan], 0.5409...) here, from where its sort happens
+    // to leave the NaNs.
+    let nan = f64::NAN;
+    assert!(matches!(
+        find_var_mult_quant_bounds(&[1.0, nan, 0.0, 2.0, nan, 3.0], 2, &[0, 1, 0, 1, 1, 0], 2),
+        Err(Error::Value { .. })
+    ));
     assert!(feq(1.0, 1.0 + 1e-9));
     assert!(!feq(1.0, 1.0 + 1e-7));
     assert!(feq_with_tol(1.0, 1.05, 0.1));
