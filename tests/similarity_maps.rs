@@ -26,6 +26,28 @@ fn sha1(text: &str) -> String {
     h.digest().to_string()
 }
 
+/// Checks a similarity map against Python's. Its contours are floating-point
+/// output (exponentials and the contour lines through them), whose last
+/// digits differ across platforms, so the SVG is pinned (by SHA-1) only on
+/// Linux x86-64, where Python's was made; elsewhere, the map must draw each
+/// of the molecule's bonds over its contours.
+fn assert_map(svg: &str, python_sha1: &str, mol: &Mol) {
+    if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+        assert_eq!(sha1(svg), python_sha1);
+    }
+    assert!(svg.trim_end().ends_with("</svg>"));
+    let first_bond = svg
+        .find("class='bond-0 ")
+        .expect("the map draws the molecule");
+    assert!(
+        svg[..first_bond].contains("<path"),
+        "the contours come first"
+    );
+    for bond in 0..mol.get_num_bonds() {
+        assert!(svg.contains(&format!("class='bond-{bond} ")));
+    }
+}
+
 fn benzene() -> Mol {
     mol_from_smiles("c1ccccc1").unwrap()
 }
@@ -150,9 +172,10 @@ fn similarity_maps_match_python() {
     let max_weight = get_similarity_map_for_fingerprint(&refmol(), &probe(), rdk, &mut d).unwrap();
     d.finish_drawing();
     assert_eq!(max_weight, 0.18541345659989728);
-    assert_eq!(
-        sha1(&d.get_drawing_text().unwrap()),
-        "848e90f20af14f4d3afc8f1aa04632bdd2908d84"
+    assert_map(
+        &d.get_drawing_text().unwrap(),
+        "848e90f20af14f4d3afc8f1aa04632bdd2908d84",
+        &probe(),
     );
     assert!(!d.draw_options().clear_background);
 
@@ -162,9 +185,10 @@ fn similarity_maps_match_python() {
         get_similarity_map_for_fingerprint_generator(&refmol(), &probe(), &fpg, &mut d).unwrap();
     d.finish_drawing();
     assert_eq!(max_weight, 0.12255947497949138);
-    assert_eq!(
-        sha1(&d.get_drawing_text().unwrap()),
-        "09d0631bc598e8d48209261d0966d20c4bce3ff8"
+    assert_map(
+        &d.get_drawing_text().unwrap(),
+        "09d0631bc598e8d48209261d0966d20c4bce3ff8",
+        &probe(),
     );
 
     // Github #2904: a colour map of three colours.
@@ -202,9 +226,10 @@ fn similarity_maps_match_python() {
     .unwrap();
     d.finish_drawing();
     assert_eq!(max_weight, 0.08955961037179305);
-    assert_eq!(
-        sha1(&d.get_drawing_text().unwrap()),
-        "5c925d0355e36038b2efe56a7e80ef72407981bc"
+    assert_map(
+        &d.get_drawing_text().unwrap(),
+        "5c925d0355e36038b2efe56a7e80ef72407981bc",
+        &probe(),
     );
 }
 
@@ -225,9 +250,10 @@ fn similarity_map_from_weights_matches_python() {
     )
     .unwrap();
     d.finish_drawing();
-    assert_eq!(
-        sha1(&d.get_drawing_text().unwrap()),
-        "4b38cf3a5fb9cd6f5b5ef2f67e1666dadce9c8b5"
+    assert_map(
+        &d.get_drawing_text().unwrap(),
+        "4b38cf3a5fb9cd6f5b5ef2f67e1666dadce9c8b5",
+        &pyridine(),
     );
     let mut d = MolDraw2DSVG::new(300, 300).unwrap();
     let methane = mol_from_smiles("C").unwrap();
@@ -257,9 +283,10 @@ fn similarity_map_for_model_matches_python() {
     let max_weight = get_similarity_map_for_model(&pyridine(), rdk, predict, &mut d).unwrap();
     d.finish_drawing();
     assert_eq!(max_weight, 0.29);
-    assert_eq!(
-        sha1(&d.get_drawing_text().unwrap()),
-        "19e4fe241fc791873a000592fbcbf9c170879d83"
+    assert_map(
+        &d.get_drawing_text().unwrap(),
+        "19e4fe241fc791873a000592fbcbf9c170879d83",
+        &pyridine(),
     );
 }
 
@@ -602,8 +629,9 @@ fn morgan_similarity_map_matches_python() {
         get_similarity_map_for_fingerprint(&refmol(), &probe(), morgan, &mut d).unwrap();
     d.finish_drawing();
     assert_eq!(max_weight, 0.12255947497949138);
-    assert_eq!(
-        sha1(&d.get_drawing_text().unwrap()),
-        "3093893d6b352ae3a9e64085ed92acb384146395"
+    assert_map(
+        &d.get_drawing_text().unwrap(),
+        "3093893d6b352ae3a9e64085ed92acb384146395",
+        &probe(),
     );
 }
