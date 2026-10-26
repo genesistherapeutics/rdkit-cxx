@@ -70,15 +70,97 @@ fn obls() -> Vec<Vec<u32>> {
     .collect()
 }
 
-fn assert_gains(actual: &[Vec<f64>], expected: &[[f64; 4]]) {
+/// Gains as `get_top_n` gives them, compared with Python's: in Python's order
+/// of gains, but in any order among equal gains, which RDKit's ranker orders
+/// by its C++ library's heap (libc++ and libstdc++ differ, as Python's own
+/// test allows). When `top_n` cuts through the last tie, its bits need only
+/// be among `last_tie`'s.
+fn assert_gains(actual: &[Vec<f64>], expected: &[[f64; 4]], last_tie: Option<&[[f64; 4]]>) {
     assert_eq!(actual.len(), expected.len());
-    for (a, e) in actual.iter().zip(expected) {
-        assert_eq!(a.len(), 4);
-        assert_eq!(a[0], e[0]);
-        assert!((a[1] - e[1]).abs() < 1e-12, "{a:?} != {e:?}");
-        assert_eq!(&a[2..], &e[2..]);
+    let key = |v: &[f64]| -> Vec<u64> { v.iter().map(|x| x.to_bits()).collect() };
+    let mut start = 0;
+    while start < expected.len() {
+        let gain = expected[start][1];
+        let end = start
+            + expected[start..]
+                .iter()
+                .take_while(|e| e[1] == gain)
+                .count();
+        let mut want: Vec<Vec<u64>> = expected[start..end].iter().map(|e| key(e)).collect();
+        let mut got: Vec<Vec<u64>> = actual[start..end]
+            .iter()
+            .map(|a| {
+                assert!((a[1] - gain).abs() < 1e-12, "{a:?} != gain {gain}");
+                let mut a = a.clone();
+                a[1] = gain;
+                key(&a)
+            })
+            .collect();
+        want.sort();
+        got.sort();
+        match last_tie {
+            Some(tie) if end == expected.len() => {
+                let tie: Vec<Vec<u64>> = tie.iter().map(|e| key(e)).collect();
+                assert!(
+                    got.iter().all(|g| tie.contains(g)),
+                    "{got:?} not in {tie:?}"
+                );
+            }
+            _ => assert_eq!(got, want),
+        }
+        start = end;
     }
 }
+
+const TIE_0269: [[f64; 4]; 8] = [
+    [18.0, 0.02692742888928845, 0.0, 1.0],
+    [17.0, 0.02692742888928845, 0.0, 1.0],
+    [20.0, 0.02692742888928845, 0.0, 1.0],
+    [19.0, 0.02692742888928845, 0.0, 1.0],
+    [15.0, 0.02692742888928845, 0.0, 1.0],
+    [14.0, 0.02692742888928845, 0.0, 1.0],
+    [11.0, 0.02692742888928845, 0.0, 1.0],
+    [10.0, 0.02692742888928845, 0.0, 1.0],
+];
+
+/// Python's gains for `CalcGains(topN=10, biasList=(1,))`.
+const BIASED_TOP10: [[f64; 4]; 10] = [
+    [0.0, 0.4669171866886993, 0.0, 10.0],
+    [6.0, 0.16113666504619273, 0.0, 5.0],
+    [2.0, 0.16113666504619273, 0.0, 5.0],
+    [7.0, 0.0877536667807961, 0.0, 3.0],
+    [8.0, 0.0877536667807961, 0.0, 3.0],
+    [9.0, 0.0877536667807961, 0.0, 3.0],
+    [16.0, 0.056047626963330655, 0.0, 2.0],
+    [15.0, 0.02692742888928845, 0.0, 1.0],
+    [14.0, 0.02692742888928845, 0.0, 1.0],
+    [11.0, 0.02692742888928845, 0.0, 1.0],
+];
+
+/// Python's gains for `CalcGains()`, all 21 bits.
+const ALL_GAINS: [[f64; 4]; 21] = [
+    [0.0, 0.4669171866886993, 0.0, 10.0],
+    [5.0, 0.2057018851835084, 3.0, 2.0],
+    [6.0, 0.16113666504619273, 0.0, 5.0],
+    [2.0, 0.16113666504619273, 0.0, 5.0],
+    [4.0, 0.1431558784658321, 3.0, 3.0],
+    [12.0, 0.13447053550223065, 1.0, 0.0],
+    [13.0, 0.13447053550223065, 1.0, 0.0],
+    [7.0, 0.0877536667807961, 0.0, 3.0],
+    [8.0, 0.0877536667807961, 0.0, 3.0],
+    [9.0, 0.0877536667807961, 0.0, 3.0],
+    [1.0, 0.0877536667807961, 4.0, 9.0],
+    [3.0, 0.0737613082228673, 2.0, 2.0],
+    [16.0, 0.056047626963330655, 0.0, 2.0],
+    [18.0, 0.02692742888928845, 0.0, 1.0],
+    [17.0, 0.02692742888928845, 0.0, 1.0],
+    [20.0, 0.02692742888928845, 0.0, 1.0],
+    [19.0, 0.02692742888928845, 0.0, 1.0],
+    [15.0, 0.02692742888928845, 0.0, 1.0],
+    [14.0, 0.02692742888928845, 0.0, 1.0],
+    [11.0, 0.02692742888928845, 0.0, 1.0],
+    [10.0, 0.02692742888928845, 0.0, 1.0],
+];
 
 // test6Builder (with test1CatGen's bits)
 #[test]
@@ -215,21 +297,7 @@ fn mol_ranks() -> Result<()> {
             ..Default::default()
         },
     )?;
-    assert_gains(
-        &gains,
-        &[
-            [0.0, 0.4669171866886993, 0.0, 10.0],
-            [6.0, 0.16113666504619273, 0.0, 5.0],
-            [2.0, 0.16113666504619273, 0.0, 5.0],
-            [7.0, 0.0877536667807961, 0.0, 3.0],
-            [8.0, 0.0877536667807961, 0.0, 3.0],
-            [9.0, 0.0877536667807961, 0.0, 3.0],
-            [16.0, 0.056047626963330655, 0.0, 2.0],
-            [15.0, 0.02692742888928845, 0.0, 1.0],
-            [14.0, 0.02692742888928845, 0.0, 1.0],
-            [11.0, 0.02692742888928845, 0.0, 1.0],
-        ],
-    );
+    assert_gains(&gains, &BIASED_TOP10, Some(&TIE_0269));
     assert_eq!(cat.get_bit_description(0)?, "C<-O>C");
     assert_eq!(cat.get_bit_description(16)?, "C=CC<-O>");
     assert_eq!(fps.len(), 16);
@@ -244,21 +312,8 @@ fn mol_ranks() -> Result<()> {
     )?;
     assert!(no_fps.is_empty());
     assert_eq!(gains.len(), 21);
-    assert_gains(
-        &gains[..5],
-        &[
-            [0.0, 0.4669171866886993, 0.0, 10.0],
-            [5.0, 0.2057018851835084, 3.0, 2.0],
-            [6.0, 0.16113666504619273, 0.0, 5.0],
-            [2.0, 0.16113666504619273, 0.0, 5.0],
-            [4.0, 0.1431558784658321, 3.0, 3.0],
-        ],
-    );
+    assert_gains(&gains, &ALL_GAINS, None);
     assert_eq!(cat.get_bit_description(5)?, "C=CC");
-    let ids: Vec<f64> = gains.iter().map(|g| g[0]).collect();
-    #[rustfmt::skip]
-    assert_eq!(ids, [0.0, 5.0, 6.0, 2.0, 4.0, 12.0, 13.0, 7.0, 8.0, 9.0, 1.0, 3.0, 16.0, 18.0,
-                     17.0, 20.0, 19.0, 15.0, 14.0, 11.0, 10.0]);
 
     let from_fps = calc_gains_from_fps_with_params(
         &mols,
@@ -307,32 +362,15 @@ const GAINS_CSV: &str = "id,Description,Gain,Act-0,Act-1\n0,C<-O>C,0.466917,0,10
 
 #[test]
 fn gains_data() -> Result<()> {
-    let mols = mols();
-    let cat = catalog(&mols)?;
-    let (gains, fps) = calc_gains_with_params(
-        &mols,
-        &cat,
-        &CalcGainsParams {
-            top_n: 10,
-            activities: acts(),
-            bias_list: Some(vec![1]),
-            collect_fps: true,
-            ..Default::default()
-        },
-    )?;
+    // Python's gains, in Python's order, so the text is Python's whatever
+    // order this platform's ranker breaks ties in.
+    let cat = catalog(&mols())?;
+    let to_vecs = |g: &[[f64; 4]]| -> Vec<Vec<f64>> { g.iter().map(|e| e.to_vec()).collect() };
     let mut out = Vec::new();
-    output_gains_data(&mut out, &gains, Some(&cat))?;
+    output_gains_data(&mut out, &to_vecs(&BIASED_TOP10), Some(&cat))?;
     assert_eq!(String::from_utf8(out).unwrap(), GAINS_CSV);
 
-    let gains5 = calc_gains_from_fps_with_params(
-        &mols,
-        &fps,
-        &CalcGainsFromFpsParams {
-            top_n: 5,
-            activities: acts(),
-            ..Default::default()
-        },
-    )?;
+    let gains5 = to_vecs(&ALL_GAINS[..5]);
     let mut out = Vec::new();
     output_gains_data_with_n_acts(&mut out, &gains5, None, 2)?;
     let no_cat = String::from_utf8(out).unwrap();
