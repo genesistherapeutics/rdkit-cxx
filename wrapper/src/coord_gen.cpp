@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cmath>
 #include <map>
+#include <mutex>
 #include <string>
 
 #include <Geometry/point.h>
@@ -16,6 +17,7 @@
 #include <GraphMol/ROMol.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -108,6 +110,11 @@ void add_coords(RWMol &mol, const CoordGenParamsData &data,
   params.treatNonterminalBondsToMetalAsZeroOrder =
       data.treat_nonterminal_bonds_to_metal_as_zobs;
   auto lock = lock_depiction();
+  // CoordGen matches a template to the molecule (control_c_lock.h).
+  std::unique_lock<std::mutex> control_c;
+  if (has_template_mol) {
+    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+  }
   add_coords_with(mol, params);
 }
 

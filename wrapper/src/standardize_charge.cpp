@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/standardize_charge.h"
 
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -12,6 +13,7 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_charge.rs.h"
 #include "rdkit-cxx/mol_checks.h"
@@ -87,11 +89,14 @@ std::unique_ptr<Reionizer> reionizer_from_data(
 std::unique_ptr<RWMol> reionizer_reionize(const Reionizer &reionizer,
                                           const RWMol &mol) {
   check_reionizer_atoms(mol);
+  // The reionizer and uncharger match substructures (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return adopt_mol(mut(reionizer).reionize(mol));
 }
 
 void reionizer_reionize_in_place(const Reionizer &reionizer, RWMol &mol) {
   check_reionizer_atoms(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   mut(reionizer).reionizeInPlace(mol);
 }
 
@@ -105,11 +110,13 @@ std::unique_ptr<Uncharger> uncharger_new(bool canonical_order, bool force,
 std::unique_ptr<RWMol> uncharger_uncharge(const Uncharger &uncharger,
                                           const RWMol &mol) {
   check_formal_charge_sum(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return adopt_mol(mut(uncharger).uncharge(mol));
 }
 
 void uncharger_uncharge_in_place(const Uncharger &uncharger, RWMol &mol) {
   check_formal_charge_sum(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   mut(uncharger).unchargeInPlace(mol);
 }
 
