@@ -13,7 +13,7 @@
 //! and malformed mol blocks are read out of bounds (crashes in Python).
 //! Molecules reach the same code as the SMILES or mol blocks RDKit writes
 //! for them, and the fingerprints and the layout write past an atom's
-//! table of 20 neighbours, and go on, for an atom of more bonds, which a
+//! table of 20 neighbors, and go on, for an atom of more bonds, which a
 //! sanitized molecule can have. The structure checker reads a file it
 //! could not open through a null `FILE*`. This binding has not audited the
 //! toolkit for the input it trusts (CONVENTIONS.md U1); the manifest

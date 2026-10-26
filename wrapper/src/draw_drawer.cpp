@@ -625,10 +625,10 @@ class ReactionLayout {
         RDKit::ChemicalReactionToRxnMol(d_rxn));
     if (by_reactant) {
       const auto *cols = colours ? colours : &opts.highlightColourPalette;
-      // It takes each reactant's colour modulo their number.
+      // It takes each reactant's color modulo their number.
       if (cols->empty()) {
         throw ValueErrorException(
-            "highlightByReactant needs at least one colour");
+            "highlightByReactant needs at least one color");
       }
       for (std::size_t m = 0; m < d_rxn.getReactants().size(); ++m) {
         for (const auto atom : d_rxn.getReactants()[m]->atoms()) {
@@ -909,7 +909,7 @@ void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
 
 // DrawMoleculeWithHighlights's maps as RDKit takes them, checked: indices
 // (DrawMolMCHLasso sets bits of an atom's index without checking it),
-// colours, radii, and line width multipliers, which getHighlightBondWidth
+// colors, radii, and line width multipliers, which getHighlightBondWidth
 // multiplies the line width by and DrawMolMCHCircleAndLine converts to int.
 // A highlight of no radius makes
 // DrawMolMCHCircleAndLine::fixHighlightJoinProblems grow it, by multiples,
@@ -923,7 +923,7 @@ Drawer::MultiHighlights read_multi_highlights(
     std::vector<RDKit::DrawColour> res;
     for (const auto &c : list.colours) {
       res.push_back(colour_from_data(c));
-      check_colour(res.back(), "highlight colour");
+      check_colour(res.back(), "highlight color");
     }
     return res;
   };
@@ -941,7 +941,7 @@ Drawer::MultiHighlights read_multi_highlights(
     const double r = data.radii_values[i];
     if (!(r > 0 && r <= kMaxHighlightRadius)) {
       throw ValueErrorException(
-          "multi-colour highlight radii must be above 0 and at most 16");
+          "multi-color highlight radii must be above 0 and at most 16");
     }
     h.radii[static_cast<int>(data.radii_keys[i])] = r;
   }
@@ -955,12 +955,12 @@ Drawer::MultiHighlights read_multi_highlights(
   }
   if ((!h.atoms.empty() || !h.bonds.empty()) && !(opts.highlightRadius > 0)) {
     throw ValueErrorException(
-        "multi-colour highlights need a positive highlightRadius");
+        "multi-color highlights need a positive highlightRadius");
   }
   return h;
 }
 
-// DrawMolMCHCircleAndLine draws a highlighted bond's colours along the
+// DrawMolMCHCircleAndLine draws a highlighted bond's colors along the
 // bond's perpendicular, which a bond whose atoms are at one position makes
 // NaN, and fixHighlightJoinProblems then grows the atoms' highlights,
 // forever, to meet those lines.
@@ -979,7 +979,7 @@ void check_mch_bonds(const RWMol &mol, const Drawer::MultiHighlights &h,
     if (a.x == b.x && a.y == b.y) {
       throw ValueErrorException(
           "a highlighted bond's atoms are at one position, so RDKit's "
-          "multi-colour highlight of it never ends");
+          "multi-color highlight of it never ends");
     }
   }
 }
@@ -1055,8 +1055,8 @@ void drawer_set_offset(Drawer &d, int x, int y) {
 
 void drawer_set_colour(Drawer &d, const DrawColour &colour) {
   const auto c = colour_from_data(colour);
-  check_colour(c, "colour");
-  // MolDraw2DCairo::setColour sets its Cairo context's colour, which it has
+  check_colour(c, "color");
+  // MolDraw2DCairo::setColour sets its Cairo context's color, which it has
   // none of before a flexible canvas is sized (RDKit's PRECONDITION).
   if (!d.svg && d.drawer->width() < 0) {
     throw std::runtime_error("no draw context");
@@ -1715,7 +1715,7 @@ void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
   drawn_point(d, begin, raw_coords);
   drawn_point(d, end, raw_coords);
   // The head, as drawArrow computes it: the line ends short of the tip by
-  // the mitre, and the head's sides divide by the angle's sine and cosine.
+  // the miter, and the head's sides divide by the angle's sine and cosine.
   auto tip = end;
   RDGeom::Point2D p1, p2;
   detail::calcArrowHead(tip, p1, p2, begin, frac, d.drawer->getDrawLineWidth(),
@@ -2162,7 +2162,7 @@ namespace utils = RDKit::MolDraw2DUtils;
 
 // The largest grid value, and level: within it, the differences
 // contourAndDrawGrid takes stay finite (an infinite one makes the fill
-// colours NaN, which the SVG drawer converts to int).
+// colors NaN, which the SVG drawer converts to int).
 constexpr double kMaxContourValue = 1e300;
 
 // The most contour levels RDKit computes for itself (it makes nContours of
@@ -2207,7 +2207,7 @@ void check_contour_value(double v, const char *what) {
   }
 }
 
-// What contourAndDrawGrid trusts of its parameters: its colours (the fill
+// What contourAndDrawGrid trusts of its parameters: its colors (the fill
 // interpolates between colourMap's), and the contour width, which it sets
 // as the drawer's line width (and leaves there if nothing is contoured).
 void check_contour_params(const Drawer &d, const utils::ContourParams &ps) {
