@@ -90,16 +90,25 @@
 //!
 //! # Building and linking
 //!
-//! The build finds RDKit through `CONDA_PREFIX` (or `RDKIT_PREFIX`), in an
+//! Depend on the crate with a tilde requirement, `rdkit-cxx = "~2026.9"`,
+//! which stays within one RDKit series. Each crate version supports one
+//! RDKit release series, and within it the releases it has checked: the
+//! build finds RDKit through `CONDA_PREFIX` (or `RDKIT_PREFIX`), in an
 //! environment with conda-forge's `librdkit-dev`, `libboost-devel`,
-//! `cxx-compiler`, and `cmake`. RDKit's shared libraries stay in that
-//! environment, so a binary that depends on this crate finds them through
-//! an rpath its own build script adds:
+//! `cxx-compiler`, and `cmake`, and refuses any other release.
+//!
+//! RDKit's shared libraries stay in that environment, so a binary that
+//! depends on this crate finds them through an rpath its own build script
+//! adds; Cargo gives `DEP_RDKIT_CXX_LIBDIR` only to packages that depend on
+//! rdkit-cxx directly:
 //!
 //! ```ignore
 //! // build.rs
 //! fn main() {
-//!     println!("cargo::rustc-link-arg=-Wl,-rpath,{}", std::env::var("DEP_RDKIT_CXX_LIBDIR").unwrap());
+//!     // Absent where nothing links, as when docs.rs builds the documentation.
+//!     if let Ok(dir) = std::env::var("DEP_RDKIT_CXX_LIBDIR") {
+//!         println!("cargo::rustc-link-arg=-Wl,-rpath,{dir}");
+//!     }
 //! }
 //! ```
 //!
