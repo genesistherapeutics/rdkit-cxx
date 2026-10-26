@@ -553,8 +553,14 @@ rule changes the rule first.
   functions.
 - **N3.** Classes keep the Python class name: `Mol`, not `ROMol`.
 - **N4.** Enum values become UpperCamelCase variants (`BondType.SINGLE` →
-  `BondType::Single`). Flag values keep Python's spelling as associated
-  constants (`SanitizeFlags::SANITIZE_ALL`).
+  `BondType::Single`). An acronym is one word, with only its first letter
+  capitalized, in variants as in snake_case names (`FPType.MorganFP` →
+  `MorganFp`, `SmallWorldIndexBR` → `SmallWorldIndexBr`); `RDKit` is one
+  word too (`RDKitFP` → `RdkitFp`, `GetRDKitFPGenerator` →
+  `get_rdkit_fp_generator`), under `name_exception`. Variants of enums the
+  crate defines follow the same rule (`FileMolSupplier::Sd`). Flag values
+  keep Python's spelling as associated constants
+  (`SanitizeFlags::SANITIZE_ALL`).
 - **N5.** Exceptions to N2–N4 are recorded in the manifest with
   `name_exception`.
 - **N7.** Enum values nanobind also exports to the module

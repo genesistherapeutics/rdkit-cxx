@@ -7262,7 +7262,8 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::PatternFp"]
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.FingerprintType.RDKitFP"
-rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::RdKitFp"]
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::RdkitFp"]
+name_exception = "RDKit is one word: RdkitFp"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.FingerprintType.TopologicalTorsion"
@@ -8929,7 +8930,8 @@ rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::MorganFp"]
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.FPType.RDKitFP"
-rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdKitFp"]
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdkitFp"]
+name_exception = "RDKit is one word: RdkitFp"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.FPType.TopologicalTorsionFP"
@@ -9171,8 +9173,8 @@ rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.RDKitFP"
-rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdKitFp"]
-name_exception = "exported enum value (N7)"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdkitFp"]
+name_exception = "exported enum value (N7); RDKit is one word: RdkitFp"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions"

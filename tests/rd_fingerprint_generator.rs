@@ -275,7 +275,7 @@ fn bulk_fingerprints() {
     );
     assert!(get_count_fps(&[]).unwrap().is_empty());
     assert_eq!(
-        get_sparse_fps_with_fp_type(&mols, FPType::RdKitFp)
+        get_sparse_fps_with_fp_type(&mols, FPType::RdkitFp)
             .unwrap()
             .len(),
         3

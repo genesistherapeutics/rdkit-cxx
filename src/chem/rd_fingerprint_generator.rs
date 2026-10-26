@@ -32,7 +32,7 @@ rdkit_enum! {
     FPType: ffi::FPType {
         AtomPairFp = AtomPairFP,
         MorganFp = MorganFP,
-        RdKitFp = RDKitFP,
+        RdkitFp = RDKitFP,
         TopologicalTorsionFp = TopologicalTorsionFP,
     }
 }
@@ -256,7 +256,7 @@ pub enum FingerprintKindOptions {
     /// Mirrors `AtomPairFingerprintOptions`.
     AtomPair(AtomPairFingerprintOptions),
     /// Mirrors `RDKitFingerprintOptions`.
-    RDKit(RDKitFingerprintOptions),
+    Rdkit(RDKitFingerprintOptions),
     /// Mirrors `TopologicalTorsionFingerprintOptions`.
     TopologicalTorsion(TopologicalTorsionFingerprintOptions),
 }
@@ -298,7 +298,7 @@ impl FingerprintOptions {
                 max_distance: data.max_distance,
                 use_2d: data.use_2d,
             }),
-            FPType::RdKitFp => FingerprintKindOptions::RDKit(RDKitFingerprintOptions {
+            FPType::RdkitFp => FingerprintKindOptions::Rdkit(RDKitFingerprintOptions {
                 min_path: data.min_path,
                 max_path: data.max_path,
                 use_hs: data.use_hs,
@@ -356,7 +356,7 @@ impl FingerprintOptions {
                 data.max_distance = a.max_distance;
                 data.use_2d = a.use_2d;
             }
-            FingerprintKindOptions::RDKit(r) => {
+            FingerprintKindOptions::Rdkit(r) => {
                 data.kind = ffi::FPType::RDKitFP;
                 data.min_path = r.min_path;
                 data.max_path = r.max_path;
