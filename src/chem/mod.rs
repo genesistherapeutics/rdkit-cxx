@@ -9,17 +9,27 @@
 //! other submodules are reached by path, as in Python.
 
 pub mod atom_pairs;
+pub mod chem_utils;
+pub mod crippen;
+pub mod descriptors;
+pub mod descriptors_3d;
 pub mod draw;
+pub mod e_state;
 pub mod feat_finder_cli;
 pub mod feat_maps;
 pub mod features;
+pub mod fragments;
+pub mod graph_descriptors;
 mod init;
 pub mod lipinski;
 pub mod maccs_keys;
 pub mod mol_standardize;
+pub mod mol_surf;
 pub mod pharm_2d;
 pub mod pharm_3d;
 pub(crate) mod py_math;
+mod py_util;
+pub mod qed;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
@@ -67,8 +77,10 @@ pub mod rdinchi;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
+pub mod reduced_graphs;
 pub mod registration_hash;
 pub mod scaffolds;
+pub mod spacial_score;
 pub mod subshape;
 pub mod torsion_fingerprints;
 

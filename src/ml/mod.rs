@@ -7,6 +7,7 @@
 
 pub mod cluster;
 pub mod data;
+pub mod descriptors;
 pub mod files;
 pub mod info_theory;
 pub(crate) mod py_format;

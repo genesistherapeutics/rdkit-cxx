@@ -39,6 +39,9 @@ pub(crate) mod ffi {
         fn calc_labute_asa(mol: &RWMol, include_hs: bool) -> Result<f64>;
         fn calc_tpsa(mol: &RWMol, include_s_and_p: bool) -> Result<f64>;
         fn calc_exact_mol_wt(mol: &RWMol, only_heavy: bool) -> Result<f64>;
+        fn calc_amw(mol: &RWMol, only_heavy: bool) -> Result<f64>;
+        fn calc_labute_asa_contribs(mol: &RWMol, include_hs: bool) -> Result<Vec<f64>>;
+        fn calc_crippen_contribs(mol: &RWMol) -> Result<Vec<f64>>;
         fn calc_mol_formula(
             mol: &RWMol,
             separate_isotopes: bool,
