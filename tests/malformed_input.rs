@@ -185,11 +185,16 @@ fn real_value_vect_pickles() {
         RealValueVect::from_pkl(&pkl).unwrap().get_val(1).unwrap(),
         2.5
     );
-    assert!(is_value(RealValueVect::from_pkl(&with_i32(
-        pkl,
-        0,
-        i32::MIN
-    ))));
+    // RDKit allocates the length a pickle gives before reading the values.
+    for bad in [
+        with_i32(pkl.clone(), 0, i32::MIN),
+        with_u32(pkl.clone(), 4, u32::MAX),
+        with_u32(pkl.clone(), 4, 1 << 31),
+        with_u32(pkl.clone(), 4, 5),
+        pkl[..pkl.len() - 1].to_vec(),
+    ] {
+        assert!(is_value(RealValueVect::from_pkl(&bad)), "{bad:?}");
+    }
 }
 
 #[test]
@@ -370,6 +375,9 @@ fn uniform_real_value_grid3d_pickles() {
         with_f64(pkl.clone(), 32, f64::NAN),
         with_i32(pkl.clone(), 52, i32::MIN),
         with_u32(pkl.clone(), 56, 7),
+        // RDKit allocates the storage size before reading the storage.
+        with_u32(pkl.clone(), 48, u32::MAX),
+        pkl[..pkl.len() - 1].to_vec(),
     ] {
         assert!(is_value(UniformRealValueGrid3D::from_pkl(&bad)), "{bad:?}");
     }
