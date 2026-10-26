@@ -112,7 +112,9 @@ rule changes the rule first.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
-  molecule race. Parallel code gives each thread its own molecule.
+  molecule race. Parallel code gives each thread its own molecule. Owned
+  `Atom`s and `Bond`s, outside any molecule, own all their data and are
+  `Send` too.
 
 - **S2.** The crate needs an RDKit built with `RDK_BUILD_THREADSAFE_SSS`, as
   conda-forge's is: process-wide settings such as the default pickle
@@ -422,9 +424,10 @@ rule changes the rule first.
 - **D1.** Doc examples are `no_run` or `compile_fail`; behavior is tested
   under `tests/`. Each public item's doc comment names the Python object it
   mirrors, or says it is a Rust addition (an iterator, a view, a trait, or a
-  type that names what Python leaves untyped). Items whose names start
-  with `__` are `#[doc(hidden)]` hooks for the crate's own tests, not public
-  API: any release may change or remove them.
+  type that names what Python leaves untyped). Hooks that only the crate's
+  tests need (a C++ value to pin, an exception to raise) are `#[cfg(test)]`
+  and crate-private, with their tests in the crate's unit tests, so they are
+  never public API.
 
 ## Arguments and overloads
 
@@ -558,8 +561,14 @@ rule changes the rule first.
   functions.
 - **N3.** Classes keep the Python class name: `Mol`, not `ROMol`.
 - **N4.** Enum values become UpperCamelCase variants (`BondType.SINGLE` →
-  `BondType::Single`). Flag values keep Python's spelling as associated
-  constants (`SanitizeFlags::SANITIZE_ALL`).
+  `BondType::Single`). An acronym is one word, with only its first letter
+  capitalized, in variants as in snake_case names (`FPType.MorganFP` →
+  `MorganFp`, `SmallWorldIndexBR` → `SmallWorldIndexBr`); `RDKit` is one
+  word too (`RDKitFP` → `RdkitFp`, `GetRDKitFPGenerator` →
+  `get_rdkit_fp_generator`), under `name_exception`. Variants of enums the
+  crate defines follow the same rule (`FileMolSupplier::Sd`). Flag values
+  keep Python's spelling as associated constants
+  (`SanitizeFlags::SANITIZE_ALL`).
 - **N5.** Exceptions to N2–N4 are recorded in the manifest with
   `name_exception`.
 - **N7.** Enum values nanobind also exports to the module

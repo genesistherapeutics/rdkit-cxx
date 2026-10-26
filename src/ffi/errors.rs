@@ -7,6 +7,8 @@
 pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
+        // Only the crate's unit tests call this.
+        #[allow(dead_code)]
         fn raise_for_tests(kind: &str) -> Result<()>;
     }
 }

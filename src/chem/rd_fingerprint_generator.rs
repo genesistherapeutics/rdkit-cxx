@@ -32,7 +32,7 @@ rdkit_enum! {
     FPType: ffi::FPType {
         AtomPairFp = AtomPairFP,
         MorganFp = MorganFP,
-        RdKitFp = RDKitFP,
+        RdkitFp = RDKitFP,
         TopologicalTorsionFp = TopologicalTorsionFP,
     }
 }
@@ -256,7 +256,7 @@ pub enum FingerprintKindOptions {
     /// Mirrors `AtomPairFingerprintOptions`.
     AtomPair(AtomPairFingerprintOptions),
     /// Mirrors `RDKitFingerprintOptions`.
-    RDKit(RDKitFingerprintOptions),
+    Rdkit(RDKitFingerprintOptions),
     /// Mirrors `TopologicalTorsionFingerprintOptions`.
     TopologicalTorsion(TopologicalTorsionFingerprintOptions),
 }
@@ -279,6 +279,16 @@ pub struct FingerprintOptions {
     pub kind: FingerprintKindOptions,
 }
 
+/// The options of a Morgan generator with Python's defaults,
+/// `get_morgan_generator().get_options()`. Python has no constructor for
+/// `FingerprintOptions`, so the default picks the kind most code starts
+/// from; options for another kind come from that kind's generator.
+impl Default for FingerprintOptions {
+    fn default() -> FingerprintOptions {
+        get_morgan_generator().get_options()
+    }
+}
+
 impl FingerprintOptions {
     /// Sets the count bounds. Mirrors `FingerprintOptions.SetCountBounds`;
     /// pass the options to `FingerprintGenerator64::set_options`.
@@ -298,7 +308,7 @@ impl FingerprintOptions {
                 max_distance: data.max_distance,
                 use_2d: data.use_2d,
             }),
-            FPType::RdKitFp => FingerprintKindOptions::RDKit(RDKitFingerprintOptions {
+            FPType::RdkitFp => FingerprintKindOptions::Rdkit(RDKitFingerprintOptions {
                 min_path: data.min_path,
                 max_path: data.max_path,
                 use_hs: data.use_hs,
@@ -356,7 +366,7 @@ impl FingerprintOptions {
                 data.max_distance = a.max_distance;
                 data.use_2d = a.use_2d;
             }
-            FingerprintKindOptions::RDKit(r) => {
+            FingerprintKindOptions::Rdkit(r) => {
                 data.kind = ffi::FPType::RDKitFP;
                 data.min_path = r.min_path;
                 data.max_path = r.max_path;

@@ -1937,7 +1937,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rd_chem_reactions::FingerprintType>::AtomPairFp;
     let _ = <rdkit_cxx::chem::rd_chem_reactions::FingerprintType>::MorganFp;
     let _ = <rdkit_cxx::chem::rd_chem_reactions::FingerprintType>::PatternFp;
-    let _ = <rdkit_cxx::chem::rd_chem_reactions::FingerprintType>::RdKitFp;
+    let _ = <rdkit_cxx::chem::rd_chem_reactions::FingerprintType>::RdkitFp;
     let _ = <rdkit_cxx::chem::rd_chem_reactions::FingerprintType>::TopologicalTorsion;
     use rdkit_cxx::chem::rd_chem_reactions::get_chem_draw_rxn_adjust_params as _;
     use rdkit_cxx::chem::rd_chem_reactions::get_default_adjust_params as _;
@@ -2338,7 +2338,7 @@ fn manifest_paths_exist() {
     let _: Option<rdkit_cxx::chem::rd_fingerprint_generator::FPType> = None;
     let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::AtomPairFp;
     let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::MorganFp;
-    let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::RdKitFp;
+    let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::RdkitFp;
     let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::TopologicalTorsionFp;
     let _: Option<rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64> = None;
     let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FingerprintGenerator64>::get_count_fingerprint;
@@ -2404,7 +2404,7 @@ fn manifest_paths_exist() {
     let _ = |value: &rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions| { let _ = &value.include_redundant_environments; };
     let _ = |value: &rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions| { let _ = &value.only_nonzero_invariants; };
     let _ = |value: &rdkit_cxx::chem::rd_fingerprint_generator::MorganFingerprintOptions| { let _ = &value.radius; };
-    let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::RdKitFp;
+    let _ = <rdkit_cxx::chem::rd_fingerprint_generator::FPType>::RdkitFp;
     let _: Option<rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions> = None;
     let _ = |value: &rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions| { let _ = &value.branched_paths; };
     let _ = |value: &rdkit_cxx::chem::rd_fingerprint_generator::RDKitFingerprintOptions| { let _ = &value.max_path; };

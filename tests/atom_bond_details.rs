@@ -90,7 +90,6 @@ fn atom_setters() {
     let mut chiral = mol_from_smiles("F[C@H](Cl)Br").unwrap();
     assert!(chiral.get_atom_with_idx_mut(1).unwrap().invert_chirality());
     assert_eq!(mol_to_smiles(&chiral).unwrap(), "F[C@@H](Cl)Br");
-    assert_eq!(Atom::NOATOM, __noatom_for_tests());
     let mut owned = Atom::from_num(8);
     owned.set_num_radical_electrons(2);
     assert_eq!(owned.get_num_radical_electrons(), 2);

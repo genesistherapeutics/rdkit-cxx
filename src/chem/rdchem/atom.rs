@@ -329,8 +329,8 @@ impl Default for GetSmartsParams {
 }
 
 /// `Atom::NOATOM`, read from C++ for a test that pins the constant.
-#[doc(hidden)]
-pub fn __noatom_for_tests() -> u32 {
+#[cfg(test)]
+pub(crate) fn noatom_for_tests() -> u32 {
     expect_ok(ffi::atom_noatom())
 }
 
@@ -586,3 +586,13 @@ macro_rules! atom_bit_vect_props {
 atom_bit_vect_props!(Atom, setter);
 atom_bit_vect_props!(AtomRef<'m>);
 atom_bit_vect_props!(AtomMut<'m>, setter);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn noatom_matches_rdkit() {
+        assert_eq!(Atom::NOATOM, noatom_for_tests());
+    }
+}

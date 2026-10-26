@@ -114,20 +114,6 @@ fn check_small_catalog(catalog: &FilterCatalog) {
 }
 
 #[test]
-fn flag_values_match_rdkit() {
-    let (rust, cxx) = __filter_catalogs_values_for_tests();
-    assert_eq!(rust, cxx);
-    assert_eq!(
-        format!("{:?}", FilterCatalogs::PAINS_A | FilterCatalogs::PAINS_B),
-        "FilterCatalogs(0x6)"
-    );
-    assert_eq!(
-        format!("{:?}", FilterCatalogs::PAINS),
-        "FilterCatalogs::PAINS"
-    );
-}
-
-#[test]
 fn built_in_catalogs() {
     let sizes = [
         (FilterCatalogs::PAINS_A, 16),

@@ -780,7 +780,7 @@ fn fingerprints() {
         fp.get_nonzero_elements(),
         BTreeMap::from([(10, -1), (18, -1), (21, 2), (34, -1), (40, 1), (63, -1)])
     );
-    params.fp_type = FingerprintType::RdKitFp;
+    params.fp_type = FingerprintType::RdkitFp;
     let fp =
         create_structural_fingerprint_for_reaction_with_reaction_finger_print_params(&rxn, &params)
             .unwrap();
