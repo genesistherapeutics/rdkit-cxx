@@ -248,8 +248,8 @@ rule changes the rule first.
   alignment, the force-field builders, Crippen and the other descriptors and
   fingerprints that type atoms by SMARTS, depiction with templates,
   standardization, the catalogs, MCS, SubstructLibrary, R-group
-  decomposition, scaffold networks, chemical feature factories, and the
-  shape modules, besides the embedder,
+  decomposition, scaffold networks, chemical feature factories, the
+  shape modules, and InChI conversion, besides the embedder,
   DetermineBonds, and the CIP labeler. Such a call runs on the calling
   thread the work RDKit would split across its own threads, which the lock
   cannot order (the wrapper's own threads take it in turn), and releases the

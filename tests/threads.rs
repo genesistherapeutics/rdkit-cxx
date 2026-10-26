@@ -102,6 +102,7 @@ use rdkit_cxx::chem::rd_synthon_space_search::{ShapeBuildParams, SynthonSpace};
 use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
 use rdkit_cxx::chem::rdfiltercatalog::{FilterCatalog, FilterCatalogEntry, SmartsMatcher};
 use rdkit_cxx::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog};
+use rdkit_cxx::chem::rdinchi::{inchi_to_mol, mol_to_inchi};
 use rdkit_cxx::chem::scaffolds::rd_scaffold_network::{
     ScaffoldNetworkParams, create_scaffold_network,
 };
@@ -271,6 +272,8 @@ fn main() {
     phase(synthon_substructure_search(), substruct_matches());
     phase(synthon_rascal_search(), substruct_matches());
     phase(synthon_shapes(), substruct_matches());
+    phase(inchi_written(), substruct_matches());
+    phase(inchi_read(), substruct_matches());
 
     // The rest: the grid centroids' cache, the property registry, DCLV's
     // surface cache, the shape modules' globals, and Murtagh's statics.
@@ -1369,6 +1372,23 @@ fn embedded_stereoisomers() -> Call<Mol> {
             let isomers = StereoisomerEnumerator::new_with_params(&mol, &options).unwrap();
             assert_eq!(isomers.count(), 4);
         },
+    }
+}
+
+// MolToInchi's reverse cleanup matches a pattern on every call.
+fn inchi_written() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| assert!(mol_to_inchi(&mol).unwrap().inchi.starts_with("InChI=1S/")),
+    }
+}
+
+// InchiToMol's cleanup matches patterns around neutral five-valent
+// nitrogens, which InChI gives for nitro groups.
+fn inchi_read() -> Call<String> {
+    Call {
+        make: |_| "InChI=1S/CH3NO2/c1-2(3)4/h1H3".to_string(),
+        run: |inchi| assert!(inchi_to_mol(&inchi).unwrap().mol.is_some()),
     }
 }
 
