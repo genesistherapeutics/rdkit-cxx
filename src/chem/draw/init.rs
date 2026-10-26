@@ -825,9 +825,9 @@ pub struct ReactionToImageParams {
     /// The drawing options; `None` for the defaults.
     pub draw_options: Option<MolDrawOptions>,
     /// Highlights each reactant's mapped atoms, and the product atoms they
-    /// map to, in a colour of its own.
+    /// map to, in a color of its own.
     pub highlight_by_reactant: bool,
-    /// The reactants' colours, in turn; `None` for the options'
+    /// The reactants' colors, in turn; `None` for the options'
     /// `highlight_colour_palette`.
     pub highlight_colors_reactants: Option<Vec<DrawColour>>,
     /// The conformer of each reactant, product, and agent, by its position
@@ -1065,11 +1065,11 @@ pub struct FingerprintEnv {
     pub submol: Mol,
     /// The atoms to highlight. Mirrors `FingerprintEnv.highlightAtoms`.
     pub highlight_atoms: Vec<u32>,
-    /// The highlighted atoms' colours. Mirrors `FingerprintEnv.atomColors`.
+    /// The highlighted atoms' colors. Mirrors `FingerprintEnv.atomColors`.
     pub atom_colors: BTreeMap<u32, DrawColour>,
     /// The bonds to highlight. Mirrors `FingerprintEnv.highlightBonds`.
     pub highlight_bonds: Vec<u32>,
-    /// The highlighted bonds' colours. Mirrors `FingerprintEnv.bondColors`.
+    /// The highlighted bonds' colors. Mirrors `FingerprintEnv.bondColors`.
     pub bond_colors: BTreeMap<u32, DrawColour>,
     /// The highlighted atoms' radii. Mirrors `FingerprintEnv.highlightRadii`.
     pub highlight_radii: BTreeMap<u32, f64>,
@@ -1126,7 +1126,7 @@ fn env_submol(
     Ok((submol, amap, env_submol))
 }
 
-/// Colours the bonds outside the bit's path.
+/// Colors the bonds outside the bit's path.
 fn extra_bonds(submol: &Mol, env_submol: &[u32], color: DrawColour, env: &mut FingerprintEnv) {
     for bond in submol.get_bonds() {
         let bidx = bond.get_idx();
@@ -1347,20 +1347,20 @@ fn new_grid_cairo(
 }
 
 /// Parameters for `draw_morgan_env_with_params`, with Python's defaults
-/// (A2). A colour of `None` leaves those atoms unhighlighted.
+/// (A2). A color of `None` leaves those atoms unhighlighted.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawMorganEnvParams {
     /// The image's width and height, in pixels.
     pub mol_size: (i32, i32),
     /// The highlight radius of the environment's atoms.
     pub base_rad: f64,
-    /// The colour of its aromatic atoms.
+    /// The color of its aromatic atoms.
     pub aromatic_color: Option<DrawColour>,
-    /// The colour of its other atoms in rings.
+    /// The color of its other atoms in rings.
     pub ring_color: Option<DrawColour>,
-    /// The colour of its central atom.
+    /// The color of its central atom.
     pub center_color: Option<DrawColour>,
-    /// The colour of the bonds around it.
+    /// The color of the bonds around it.
     pub extra_color: DrawColour,
     /// The drawing options; `None` for the drawer's.
     pub draw_options: Option<MolDrawOptions>,
@@ -1433,13 +1433,13 @@ pub struct DrawMorganEnvsParams {
     pub sub_img_size: (i32, i32),
     /// The highlight radius of the environments' atoms.
     pub base_rad: f64,
-    /// The colour of their aromatic atoms.
+    /// The color of their aromatic atoms.
     pub aromatic_color: Option<DrawColour>,
-    /// The colour of their other atoms in rings.
+    /// The color of their other atoms in rings.
     pub ring_color: Option<DrawColour>,
-    /// The colour of their central atoms.
+    /// The color of their central atoms.
     pub center_color: Option<DrawColour>,
-    /// The colour of the bonds around them.
+    /// The color of the bonds around them.
     pub extra_color: DrawColour,
     /// Each environment's legend; `None` for none.
     pub legends: Option<Vec<String>>,
@@ -1651,18 +1651,18 @@ pub fn draw_morgan_bits_as_png_with_params(
 }
 
 /// Parameters for `draw_rdkit_env_with_params`, with Python's defaults
-/// (A2). A colour of `None` leaves those atoms unhighlighted.
+/// (A2). A color of `None` leaves those atoms unhighlighted.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawRDKitEnvParams {
     /// The image's width and height, in pixels.
     pub mol_size: (i32, i32),
     /// The highlight radius of the path's atoms.
     pub base_rad: f64,
-    /// The colour of its aromatic atoms.
+    /// The color of its aromatic atoms.
     pub aromatic_color: Option<DrawColour>,
-    /// The colour of the bonds around it.
+    /// The color of the bonds around it.
     pub extra_color: DrawColour,
-    /// The colour of its other atoms.
+    /// The color of its other atoms.
     pub non_aromatic_color: Option<DrawColour>,
     /// The drawing options; `None` for the drawer's.
     pub draw_options: Option<MolDrawOptions>,
@@ -1731,11 +1731,11 @@ pub struct DrawRDKitEnvsParams {
     pub sub_img_size: (i32, i32),
     /// The highlight radius of the paths' atoms.
     pub base_rad: f64,
-    /// The colour of their aromatic atoms.
+    /// The color of their aromatic atoms.
     pub aromatic_color: Option<DrawColour>,
-    /// The colour of the bonds around them.
+    /// The color of the bonds around them.
     pub extra_color: DrawColour,
-    /// The colour of their other atoms.
+    /// The color of their other atoms.
     pub non_aromatic_color: Option<DrawColour>,
     /// Each path's legend; `None` for none.
     pub legends: Option<Vec<String>>,

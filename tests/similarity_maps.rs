@@ -191,7 +191,7 @@ fn similarity_maps_match_python() {
         &probe(),
     );
 
-    // Github #2904: a colour map of three colours.
+    // Github #2904: a color map of three colors.
     let mut d = MolDraw2DSVG::new(400, 400).unwrap();
     let params = GetSimilarityMapForFingerprintGeneratorParams {
         map: GetSimilarityMapFromWeightsParams {

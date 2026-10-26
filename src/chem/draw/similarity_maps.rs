@@ -14,8 +14,8 @@
 //! needs bit vectors; other fingerprints take a metric of their own
 //! (`dice_similarity_sparse_int_vect`, say).
 //!
-//! Python's matplotlib colormaps are not ported: a map's colours are given
-//! as three colours. Python's atom-pair, topological-torsion, and Morgan
+//! Python's matplotlib colormaps are not ported: a map's colors are given
+//! as three colors. Python's atom-pair, topological-torsion, and Morgan
 //! fingerprint functions call `rdMolDescriptors`' deprecated fingerprint
 //! functions; these compute the same fingerprints with the generators that
 //! replace them, in the generators' vector types. Each of Python's
@@ -120,7 +120,7 @@ pub fn get_standardized_weights(weights: &[f64]) -> Result<(Vec<f64>, f64)> {
 /// `colors`, and `alpha`, which it ignores, are not ported.
 #[derive(Clone, Debug, PartialEq)]
 pub struct GetSimilarityMapFromWeightsParams {
-    /// The colours of the lowest, middle, and highest weights; `None` for
+    /// The colors of the lowest, middle, and highest weights; `None` for
     /// `ContourParams`' map.
     pub color_map: Option<[DrawColour; 3]>,
     /// The Gaussians' width; `None` for 0.3 times the first bond's length
