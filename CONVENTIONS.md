@@ -188,7 +188,9 @@ rule changes the rule first.
   decomposition's random number singleton and fingerprint-variance scoring
   static, under `rgroup_mutex()`, and the shape modules' pharmacophore
   patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
-  and `gaussian_shape_mutex()`). State RDKit makes once, on first use, is
+  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
+  hierarchical clustering, under `murtagh_mutex()`). State RDKit makes once,
+  on first use, is
   made under `std::call_once` before any other call (the MACCS patterns in
   `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
