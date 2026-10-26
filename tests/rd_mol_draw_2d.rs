@@ -161,7 +161,7 @@ fn setters() {
     opts.add_atom_indices = true;
     d.set_draw_options(&opts).unwrap();
     assert!(d.draw_options().add_atom_indices);
-    d.clear_drawing();
+    d.clear_drawing().unwrap();
 
     update_drawer_params_from_json(&mut d, r#"{"addBondIndices": true, "bondLineWidth": 4}"#)
         .unwrap();

@@ -65,6 +65,12 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::set_offset;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::width;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_options;
+    let _: Option<rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo> = None;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::finish_drawing;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::get_drawing_text;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::write_drawing_text::<&str>;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::new;
+    let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::new_with_params;
     let _: Option<rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DSVG> = None;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DSVG::add_molecule_metadata;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DSVG::add_molecule_metadata_with_conf_id;

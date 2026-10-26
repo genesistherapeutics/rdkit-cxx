@@ -48,11 +48,12 @@ using LegendPosition = RDKit::MolDrawOptions::LegendPosition;
 using MultiColourHighlightStyle = RDKit::MultiColourHighlightStyle;
 using DrawElement = RDKit::DrawElement;
 
-// The access a drawer's RDKit subclass gives to its text drawer (draw.cpp).
+// The access a drawer's RDKit subclass gives to its text drawer
+// (draw_drawer.cpp).
 class TextDrawerAccess;
 
 // A drawer Rust owns: an RDKit MolDraw2DSVG or MolDraw2DCairo, and what the
-// wrappers track of the state RDKit keeps private (draw.cpp).
+// wrappers track of the state RDKit keeps private (draw_drawer.cpp).
 struct Drawer {
   Drawer(std::unique_ptr<RDKit::MolDraw2D> drawer, TextDrawerAccess &text,
          bool freetype, bool svg);
@@ -64,6 +65,7 @@ struct Drawer {
   TextDrawerAccess *text;
   // Whether the text drawer uses FreeType (draw_checks.h).
   bool freetype;
+  // MolDraw2DSVG, or else MolDraw2DCairo.
   bool svg;
   // MolDraw2D's drawMols_.size(), activeMolIdx_, and whether it has a
   // globalDrawTrans_, which its drawing methods read without checking
@@ -149,6 +151,13 @@ void svg_add_molecule_metadata(Drawer &d, const RWMol &mol, int conf_id);
 void svg_tag_atoms(Drawer &d, const RWMol &mol, double radius,
                    const rust::Vec<rust::String> &event_keys,
                    const rust::Vec<rust::String> &event_values);
+std::unique_ptr<Drawer> mol_draw_2d_cairo_new(int width, int height,
+                                              int panel_width, int panel_height,
+                                              bool no_freetype);
+void cairo_finish_drawing(Drawer &d);
+rust::Vec<std::uint8_t> cairo_drawing_text(const Drawer &d);
+void cairo_write_drawing_text(const Drawer &d,
+                              rust::Slice<const std::uint8_t> path);
 
 // Module functions.
 std::unique_ptr<RWMol> prepare_mol_for_drawing(const RWMol &mol, bool kekulize,

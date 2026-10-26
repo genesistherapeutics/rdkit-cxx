@@ -22,7 +22,12 @@
 //! - Canvas and panel sizes from 1 to 32767 pixels, or -1 (flexible: the
 //!   drawing sets them), with width and height both flexible or both fixed,
 //!   and flexible panels on a flexible canvas. A fixed canvas or panel must
-//!   leave a pixel to draw in once padding is taken.
+//!   leave a pixel to draw in once padding is taken. A Cairo canvas (fixed, or
+//!   flexible as its first drawing sizes it) must be one Cairo can make: at
+//!   most 2^31 bytes, 4 a pixel. RDKit's otherwise draws on nothing, and its
+//!   PNG output then reads a signature that is not there.
+//! - Clearing a flexible canvas before anything is drawn on it, which RDKit
+//!   would set up at -1 by -1 pixels, for good.
 //! - Options within the bounds RDKit's layout needs (`set_draw_options`
 //!   checks them): padding up to 0.45, font sizes up to 512 pixels, scaling
 //!   factors from 0.1 to 1000, line widths up to 64, highlight radii up to
@@ -54,7 +59,8 @@
 //!
 //! # Threads
 //!
-//! Drawers are `Send` and not `Sync`. Drawing a molecule without conformers
+//! Drawers are `Send` and not `Sync`; a Cairo drawer's surface and context
+//! are its own, which Cairo lets any one thread use. Drawing a molecule without conformers
 //! computes its 2D coordinates first, holding the depiction lock (as
 //! `rd_depictor` does), and comic mode holds the lock on random numbers,
 //! since it draws its lines with `std::rand`. Comic mode also loops forever

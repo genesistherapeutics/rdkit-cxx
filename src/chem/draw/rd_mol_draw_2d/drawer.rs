@@ -8,6 +8,7 @@
 use std::collections::BTreeMap;
 use std::fmt;
 use std::ops::{Deref, DerefMut};
+use std::path::Path;
 
 use cxx::UniquePtr;
 
@@ -20,6 +21,7 @@ use crate::error::{expect_ok, to_string};
 use crate::ffi::draw::ffi;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::geometry::Point2D;
+use crate::util::path_bytes;
 
 /// A molecule drawer. Mirrors `rdMolDraw2D.MolDraw2D`, the base class of
 /// `MolDraw2DSVG` and `MolDraw2DCairo`, which dereference to it, so its
@@ -253,15 +255,19 @@ impl MolDraw2D {
     }
 
     /// Sets the colour of drawing and filling. Mirrors `MolDraw2D.SetColour`;
-    /// `Error::Value` unless every component is from 0 to 1.
+    /// `Error::Value` unless every component is from 0 to 1, and
+    /// `Error::Runtime` for a Cairo drawer on a flexible canvas before
+    /// anything is drawn on it, as in Python.
     pub fn set_colour(&mut self, tpl: DrawColour) -> Result<()> {
         Ok(ffi::drawer_set_colour(self.pin_mut(), &tpl)?)
     }
 
     /// Fills the drawing with the background colour. Mirrors
-    /// `MolDraw2D.ClearDrawing`.
-    pub fn clear_drawing(&mut self) {
-        expect_ok(ffi::drawer_clear_drawing(self.pin_mut()));
+    /// `MolDraw2D.ClearDrawing`; `Error::Value` on a flexible canvas before
+    /// anything is drawn on it, which RDKit would set up at -1 by -1
+    /// pixels, for good.
+    pub fn clear_drawing(&mut self) -> Result<()> {
+        Ok(ffi::drawer_clear_drawing(self.pin_mut())?)
     }
 
     /// A copy of the drawing options. Mirrors `MolDraw2D.drawOptions`, which
@@ -689,6 +695,106 @@ impl Deref for MolDraw2DSVG {
 }
 
 impl DerefMut for MolDraw2DSVG {
+    fn deref_mut(&mut self) -> &mut MolDraw2D {
+        &mut self.0
+    }
+}
+
+/// A PNG drawer, drawing with Cairo. Mirrors `rdMolDraw2D.MolDraw2DCairo`;
+/// dereferences to `MolDraw2D` for the drawing methods. RDKit built without
+/// Cairo has none: `new` then returns `Error::Runtime`.
+#[derive(Debug)]
+pub struct MolDraw2DCairo(MolDraw2D);
+
+/// Parameters for `MolDraw2DCairo::new_with_params`, with Python's defaults
+/// (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct MolDraw2DCairoParams {
+    /// The width of each panel of a grid of molecules; -1 for the canvas
+    /// width.
+    pub panel_width: i32,
+    /// The height of each panel; -1 for the canvas height.
+    pub panel_height: i32,
+    /// Draws text with Cairo's own fonts rather than FreeType's glyph
+    /// outlines. Its text must then be ASCII.
+    pub no_freetype: bool,
+}
+
+impl Default for MolDraw2DCairoParams {
+    fn default() -> MolDraw2DCairoParams {
+        MolDraw2DCairoParams {
+            panel_width: -1,
+            panel_height: -1,
+            no_freetype: false,
+        }
+    }
+}
+
+impl MolDraw2DCairo {
+    /// A drawer for a `width` by `height` canvas, in pixels; -1 for both
+    /// sizes the canvas to its first drawing. Mirrors
+    /// `MolDraw2DCairo(width, height)`; `Error::Value` for a size other
+    /// than -1 or 1 to 32767, only one of them -1, or a canvas of more than
+    /// 2^31 bytes (4 a pixel), which Cairo cannot make.
+    pub fn new(width: i32, height: i32) -> Result<MolDraw2DCairo> {
+        MolDraw2DCairo::new_with_params(width, height, &MolDraw2DCairoParams::default())
+    }
+
+    /// As `new`, with panels for grids or without FreeType. Mirrors
+    /// `MolDraw2DCairo(width, height, panelWidth, panelHeight, noFreetype)`;
+    /// `Error::Value` for a panel size other than -1 or 1 to 32767, or
+    /// fixed panels on a flexible canvas, and as `new`.
+    pub fn new_with_params(
+        width: i32,
+        height: i32,
+        params: &MolDraw2DCairoParams,
+    ) -> Result<MolDraw2DCairo> {
+        let inner = ffi::mol_draw_2d_cairo_new(
+            width,
+            height,
+            params.panel_width,
+            params.panel_height,
+            params.no_freetype,
+        )?;
+        Ok(MolDraw2DCairo(MolDraw2D::from_ffi(inner)))
+    }
+
+    /// Does nothing, as in RDKit: a Cairo drawing needs no finishing.
+    /// Mirrors `MolDraw2DCairo.FinishDrawing`.
+    pub fn finish_drawing(&mut self) {
+        expect_ok(ffi::cairo_finish_drawing(self.0.pin_mut()));
+    }
+
+    /// The drawing as PNG data, with RDKit's metadata for what was drawn
+    /// (when the `include_metadata` option is on). Mirrors
+    /// `MolDraw2DCairo.GetDrawingText`; `Error::Runtime` on a flexible
+    /// canvas before anything is drawn on it, as in Python, or when Cairo
+    /// could not make the canvas (no memory), where Python returns no PNG.
+    pub fn get_drawing_text(&self) -> Result<Vec<u8>> {
+        Ok(ffi::cairo_drawing_text(self.0.as_ffi())?)
+    }
+
+    /// Writes the PNG data of `get_drawing_text` to a file. Mirrors
+    /// `MolDraw2DCairo.WriteDrawingText`; `Error::Os` for a file that
+    /// cannot be written, where RDKit logs an error, and as
+    /// `get_drawing_text`.
+    pub fn write_drawing_text<P: AsRef<Path>>(&self, f_name: P) -> Result<()> {
+        Ok(ffi::cairo_write_drawing_text(
+            self.0.as_ffi(),
+            path_bytes(f_name.as_ref()),
+        )?)
+    }
+}
+
+impl Deref for MolDraw2DCairo {
+    type Target = MolDraw2D;
+
+    fn deref(&self) -> &MolDraw2D {
+        &self.0
+    }
+}
+
+impl DerefMut for MolDraw2DCairo {
     fn deref_mut(&mut self) -> &mut MolDraw2D {
         &mut self.0
     }

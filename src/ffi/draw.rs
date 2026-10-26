@@ -332,6 +332,16 @@ pub(crate) mod ffi {
             event_keys: &Vec<String>,
             event_values: &Vec<String>,
         ) -> Result<()>;
+        fn mol_draw_2d_cairo_new(
+            width: i32,
+            height: i32,
+            panel_width: i32,
+            panel_height: i32,
+            no_freetype: bool,
+        ) -> Result<UniquePtr<Drawer>>;
+        fn cairo_finish_drawing(d: Pin<&mut Drawer>) -> Result<()>;
+        fn cairo_drawing_text(d: &Drawer) -> Result<Vec<u8>>;
+        fn cairo_write_drawing_text(d: &Drawer, path: &[u8]) -> Result<()>;
 
         fn prepare_mol_for_drawing(
             mol: &RWMol,
@@ -361,8 +371,9 @@ pub(crate) mod ffi {
 
 // SAFETY: a Drawer owns its RDKit drawer, which holds copies of what it drew
 // (DrawMol copies each molecule and its highlights) and its own text drawer
-// and output, with no thread affinity: moving it to another thread moves all
-// it owns. It is not Sync: RDKit's const methods write to it
+// and output (an SVG stream, or a Cairo surface and context, which Cairo
+// lets any one thread at a time use), with no thread affinity: moving it to
+// another thread moves all it owns. It is not Sync: RDKit's const methods write to it
 // (MolDraw2DSVG::addMoleculeMetadata appends to its output), so the Rust
 // methods that call them take it mutably (CONVENTIONS.md S4).
 unsafe impl Send for ffi::Drawer {}

@@ -10,6 +10,7 @@
 #include <climits>
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <limits>
 #include <map>
 #include <memory>
@@ -26,7 +27,12 @@
 #include <GraphMol/MolDraw2D/MolDraw2DSVG.h>
 #include <GraphMol/MolDraw2D/MolDraw2DUtils.h>
 #include <GraphMol/MolOps.h>
+#include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+#include <GraphMol/FileParsers/PNGParser.h>
+#include <GraphMol/MolDraw2D/MolDraw2DCairo.h>
+#endif
 // The text drawer's and DrawMol's interfaces, which RDKit does not install;
 // wrapper/vendor holds RDKit's own copies, from the release the crate
 // supports.
@@ -45,6 +51,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
 
@@ -71,6 +78,54 @@ class SvgDrawer : public RDKit::MolDraw2DSVG, public TextDrawerAccess {
                             no_freetype) {}
   TextDrawer &text_drawer() override { return *text_drawer_; }
 };
+
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+// MolDraw2DCairo makes its canvas a Cairo image surface when the canvas is
+// sized (on construction, or at the first drawing on a flexible canvas).
+// When Cairo cannot make it (a size Cairo or pixman refuses, or no memory),
+// it gives a surface in an error state, which drawing leaves alone and from
+// which getDrawingText gets no PNG; addMetadataToPNG then checks the
+// missing signature (checkPNGHeader compares bytes it failed to read,
+// which are uninitialized). So png() gets the image with the metadata
+// (protected d_metadata) set aside, checks it, and adds the metadata as
+// addMetadataToPNG would.
+class CairoDrawer : public RDKit::MolDraw2DCairo, public TextDrawerAccess {
+ public:
+  CairoDrawer(int width, int height, int panel_width, int panel_height,
+              bool no_freetype)
+      : RDKit::MolDraw2DCairo(width, height, panel_width, panel_height,
+                              no_freetype) {}
+  TextDrawer &text_drawer() override { return *text_drawer_; }
+
+  std::string png() {
+    // A flexible canvas has no Cairo context until its first drawing sizes
+    // it (getDrawingText's PRECONDITION).
+    if (width() < 0) {
+      throw std::runtime_error("no draw context");
+    }
+    std::vector<std::pair<std::string, std::string>> metadata;
+    metadata.swap(d_metadata);
+    std::string res;
+    try {
+      res = getDrawingText();
+    } catch (...) {
+      metadata.swap(d_metadata);
+      throw;
+    }
+    metadata.swap(d_metadata);
+    static const char signature[] = "\x89PNG\r\n\x1a\n";
+    if (res.compare(0, 8, signature, 8) != 0) {
+      throw std::runtime_error(
+          "Cairo could not make the image: its surface failed (a canvas too "
+          "large, or no memory)");
+    }
+    if (!d_metadata.empty()) {
+      res = RDKit::addMetadataToPNGString(res, d_metadata);
+    }
+    return res;
+  }
+};
+#endif
 
 // MolDraw2DSVG and MolDraw2DCairo fall back to RDKit's own text metrics when
 // FreeType fails to start, so whether a drawer uses FreeType is read from its
@@ -357,9 +412,13 @@ void set_up_text_drawer(Drawer &d) {
   }
 }
 
+// A drawing's size in pixels: its DrawMol's, which sizes a flexible canvas
+// (MolDraw2D::fixVariableDimensions).
+using Size = std::pair<int, int>;
+
 // Lays out a molecule as MolDraw2D::drawMolecule and getMolSize will, at
-// the panel size.
-void check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
+// the panel size, giving its size.
+Size check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
                   const Highlights &h, const std::vector<int> *bonds,
                   int conf_id) {
   set_up_text_drawer(d);
@@ -373,11 +432,12 @@ void check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
                         bonds, &h.atom_colours, &h.bond_colours, nullptr,
                         &h.radii, d.drawer->supportsAnnotations(), conf_id);
   checked_layout(probe);
+  return {probe.width_, probe.height_};
 }
 
 // As check_layout, for drawMoleculeWithHighlights's DrawMolMCH, which RDKit
 // builds from the molecule as given (it does not symmetrize its rings).
-void check_mch_layout(Drawer &d, const RWMol &mol, const std::string &legend,
+Size check_mch_layout(Drawer &d, const RWMol &mol, const std::string &legend,
                       const Drawer::MultiHighlights &h, int conf_id) {
   set_up_text_drawer(d);
   auto &opts = d.drawer->drawOptions();
@@ -397,6 +457,32 @@ void check_mch_layout(Drawer &d, const RWMol &mol, const std::string &legend,
       break;
   }
   checked_layout(*probe);
+  return {probe->width_, probe->height_};
+}
+
+// The largest canvas, in bytes of its pixels (4 each), pixman makes Cairo's
+// image surfaces of: it refuses larger ones, and Cairo then gives a surface
+// in an error state (CairoDrawer), as it does for a side over 32767 pixels.
+constexpr std::int64_t kMaxCairoCanvasBytes = INT_MAX;
+
+void check_cairo_size(int width, int height) {
+  if (!(width <= kMaxCanvasSize && height <= kMaxCanvasSize &&
+        std::int64_t{width} * height * 4 <= kMaxCairoCanvasBytes)) {
+    std::ostringstream msg;
+    msg << "a Cairo canvas of " << width << " by " << height
+        << " pixels is too large: Cairo's are at most 32767 pixels a side "
+           "and 2^31 bytes (4 a pixel)";
+    throw ValueErrorException(msg.str());
+  }
+}
+
+// The first drawing on a flexible canvas sizes it, and MolDraw2DCairo then
+// makes its surface of that size (startDrawing), which must be one Cairo
+// can make.
+void check_canvas_fits(const Drawer &d, Size size) {
+  if (!d.svg && d.drawer->width() < 0) {
+    check_cairo_size(size.first, size.second);
+  }
 }
 
 // A size RDKit's layout computes in double and keeps in int: refused unless
@@ -547,6 +633,9 @@ class ReactionLayout {
     return d_reagents.size() + d_products.size() + d_agents.size();
   }
 
+  // The canvas's size once drawReaction has sized it.
+  Size canvas_size() const { return d_canvas; }
+
  private:
   // makeReactionComponents and makeReactionDrawMol.
   void components(const std::vector<RDKit::ROMOL_SPTR> &bits, int height,
@@ -632,12 +721,14 @@ class ReactionLayout {
   // drawReactionPart's scales.
   void offsets(const RDKit::MolDrawOptions &opts) {
     const auto &d = *d_drawer.drawer;
+    d_canvas = {d.width(), d.height()};
     if (d.height() == -1) {
       int height = -1;
       for (const auto *dm : all()) {
         height = std::max(height, dm->height_);
       }
       check_pixels(height + height * 2.0 * opts.padding);
+      d_canvas.second = static_cast<int>(height + height * 2.0 * opts.padding);
     }
     const std::int64_t arrow_mult = 2;
     std::int64_t plus_width = d_plus_width;
@@ -646,6 +737,9 @@ class ReactionLayout {
     if (width_to_use == -1) {
       width_to_use = reaction_width(d_reagents, d_products, d_agents,
                                     opts.padding, arrow_mult, plus_width);
+      if (d.width() == -1) {
+        d_canvas.first = static_cast<int>(width_to_use);
+      }
     }
     auto tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
                               arrow_mult, plus_width);
@@ -714,6 +808,7 @@ class ReactionLayout {
   const std::vector<int> *d_conf_ids;
   std::map<int, RDKit::DrawColour> d_colours;
   std::int64_t d_plus_width = 0;
+  Size d_canvas;
   std::vector<std::unique_ptr<detail::DrawMol>> d_reagents, d_products,
       d_agents;
 };
@@ -752,7 +847,8 @@ void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
     }
     bonds = &atom_bonds;
   }
-  check_layout(d, drawn.mol(), legend, h, bonds, data.conf_id);
+  check_canvas_fits(
+      d, check_layout(d, drawn.mol(), legend, h, bonds, data.conf_id));
   drawing_call(d, [&] {
     d.drawer->drawMolecule(
         drawn.mol(), legend, h.has_atoms ? &h.atoms : nullptr, bonds,
@@ -911,10 +1007,26 @@ void drawer_set_offset(Drawer &d, int x, int y) {
 void drawer_set_colour(Drawer &d, const DrawColour &colour) {
   const auto c = colour_from_data(colour);
   check_colour(c, "colour");
+  // MolDraw2DCairo::setColour sets its Cairo context's colour, which it has
+  // none of before a flexible canvas is sized (RDKit's PRECONDITION).
+  if (!d.svg && d.drawer->width() < 0) {
+    throw std::runtime_error("no draw context");
+  }
   d.drawer->setColour(c);
 }
 
-void drawer_clear_drawing(Drawer &d) { d.drawer->clearDrawing(); }
+void drawer_clear_drawing(Drawer &d) {
+  // MolDraw2D::clearDrawing sets the canvas up (initDrawing) if it is not
+  // yet, which a flexible canvas is not until its first drawing sizes it:
+  // RDKit would make it -1 by -1 pixels, and not again (an SVG header of
+  // that size, or a Cairo surface in an error state, which draws nothing).
+  if (d.drawer->width() < 0) {
+    throw ValueErrorException(
+        "a flexible canvas has no size to clear until something is drawn on "
+        "it");
+  }
+  d.drawer->clearDrawing();
+}
 
 MolDrawOptionsData drawer_draw_options(const Drawer &d) {
   return options_to_data(d.drawer->drawOptions());
@@ -984,7 +1096,8 @@ void drawer_draw_molecule_with_highlights(
   // DrawMolMCH passes confId where DrawMol takes includeAnnotations, so
   // RDKit draws the first conformer, with annotations unless confId is 0.
   check_drawing(d, drawn.mol(), -1, legend, data.conf_id != 0, symmetrize);
-  check_mch_layout(d, drawn.mol(), legend, h, data.conf_id);
+  check_canvas_fits(d,
+                    check_mch_layout(d, drawn.mol(), legend, h, data.conf_id));
   d.multi_highlights.push_back(std::move(h));
   const auto &kept = d.multi_highlights.back();
   drawing_call(d, [&] {
@@ -1229,6 +1342,7 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
   const ReactionLayout layout(d, rxn, highlight_by_reactant,
                               has_colours ? &cols : nullptr,
                               has_conf_ids ? &ids : nullptr);
+  check_canvas_fits(d, layout.canvas_size());
   const auto components = static_cast<int>(layout.num_components());
   drawing_call(d, [&] {
     d.drawer->drawReaction(rxn, highlight_by_reactant,
@@ -1296,6 +1410,87 @@ void svg_tag_atoms(Drawer &d, const RWMol &mol, double radius,
   }
   // getDrawCoords(int) and scale() check activeMolIdx_ and the atom index.
   static_cast<RDKit::MolDraw2DSVG &>(*d.drawer).tagAtoms(mol, radius, events);
+}
+
+std::unique_ptr<Drawer> mol_draw_2d_cairo_new(int width, int height,
+                                              int panel_width, int panel_height,
+                                              bool no_freetype) {
+  check_canvas_size(width, height, panel_width, panel_height);
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+  if (width > 0) {
+    check_cairo_size(width, height);
+  }
+  auto cairo = std::make_unique<CairoDrawer>(width, height, panel_width,
+                                             panel_height, no_freetype);
+  TextDrawerAccess &text = *cairo;
+  const bool freetype = uses_freetype(text.text_drawer());
+#ifdef RDK_BUILD_FREETYPE_SUPPORT
+  // When FreeType fails to start, MolDraw2DCairo falls back to Cairo's own
+  // text drawer, and its initDrawing, which sets a flexible canvas up at
+  // the first drawing, then takes that drawer for FreeType's (a null
+  // dynamic_cast it dereferences).
+  if (!no_freetype && !freetype && width < 0) {
+    throw std::runtime_error(
+        "FreeType could not start, and RDKit's Cairo drawer then cannot draw "
+        "on a flexible canvas (draw with noFreetype, or on a canvas of fixed "
+        "size)");
+  }
+#endif
+  return std::make_unique<Drawer>(std::move(cairo), text, freetype, false);
+#else
+  static_cast<void>(no_freetype);
+  throw std::runtime_error("RDKit was built without Cairo support");
+#endif
+}
+
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+namespace {
+CairoDrawer &cairo_drawer(const Drawer &d) {
+  return static_cast<CairoDrawer &>(*d.drawer);
+}
+}  // namespace
+#endif
+
+void cairo_finish_drawing(Drawer &d) {
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+  cairo_drawer(d).finishDrawing();
+#else
+  static_cast<void>(d);
+  throw std::runtime_error("RDKit was built without Cairo support");
+#endif
+}
+
+rust::Vec<std::uint8_t> cairo_drawing_text(const Drawer &d) {
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+  // The drawer's state is RDKit's, behind the pointer; png() sets its
+  // metadata aside and back, and the drawer is not Sync.
+  return to_bytes(cairo_drawer(d).png());
+#else
+  static_cast<void>(d);
+  throw std::runtime_error("RDKit was built without Cairo support");
+#endif
+}
+
+void cairo_write_drawing_text(const Drawer &d,
+                              rust::Slice<const std::uint8_t> path) {
+#ifdef RDK_BUILD_CAIRO_SUPPORT
+  // As MolDraw2DCairo::writeDrawingText, with the checked PNG, and an
+  // error (where RDKit logs one) for a file it cannot write.
+  const auto name = to_path(path);
+  const auto png = cairo_drawer(d).png();
+  std::ofstream out(name, std::ios_base::binary | std::ios_base::out);
+  if (out) {
+    out.write(png.data(), static_cast<std::streamsize>(png.size()));
+    out.close();
+  }
+  if (!out) {
+    throw RDKit::BadFileException("Failed to write PNG file " + name);
+  }
+#else
+  static_cast<void>(d);
+  static_cast<void>(path);
+  throw std::runtime_error("RDKit was built without Cairo support");
+#endif
 }
 
 std::unique_ptr<RWMol> prepare_mol_for_drawing(const RWMol &mol, bool kekulize,

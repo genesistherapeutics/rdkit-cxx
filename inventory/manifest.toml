@@ -245,6 +245,27 @@ python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2D.drawOptions"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2D::draw_options"]
 
 [[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2DCairo"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2DCairo.FinishDrawing"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::finish_drawing"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2DCairo.GetDrawingText"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::get_drawing_text"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2DCairo.WriteDrawingText"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::write_drawing_text"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2DCairo.__init__"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::new", "rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DCairo::new_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDraw2DSVG"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DSVG"]
 
