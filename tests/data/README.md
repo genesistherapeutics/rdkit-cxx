@@ -25,6 +25,8 @@ From RDKit's source tree, under RDKit's BSD license:
   with trailing whitespace trimmed
 - `RP-6306_atrop1.sdf`: `Code/GraphMol/FileParsers/test_data/atropisomers`,
   with trailing whitespace trimmed
+- `witch-salts.sdf`, `c6h6-cdk.smi`, `4DJU_lig.pdb`, `4FTR_lig.mol`, `NCI_5K_TPSA.csv`:
+  `rdkit/Chem/test_data`, with trailing whitespace trimmed
 
 Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
 

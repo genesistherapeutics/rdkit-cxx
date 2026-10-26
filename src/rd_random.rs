@@ -141,7 +141,14 @@ impl Random {
 
     /// `k` random bits, as Python's `getrandbits(k)` draws them: 32-bit
     /// words, least significant first, the last cut to the bits left.
-    fn getrandbits(&mut self, k: u32) -> u64 {
+    /// Mirrors `Random.getrandbits(k)` for `k` up to 64; see
+    /// [`Random::getrandbits_words`] for more.
+    ///
+    /// # Panics
+    ///
+    /// For `k` above 64.
+    pub fn getrandbits(&mut self, k: u32) -> u64 {
+        assert!(k <= 64, "getrandbits({k}) is wider than a u64");
         let mut r = 0u64;
         let mut left = k;
         let mut shift = 0;
@@ -157,9 +164,27 @@ impl Random {
         r
     }
 
+    /// An integer of `k` random bits, as 32-bit words, least significant
+    /// first: one word for `k` up to 32 (none for 0). Mirrors
+    /// `Random.getrandbits(k)` for any `k`.
+    pub fn getrandbits_words(&mut self, k: u32) -> Vec<u32> {
+        let mut left = k;
+        (0..k.div_ceil(32))
+            .map(|_| {
+                let mut word = self.genrand_u32();
+                if left < 32 {
+                    word >>= 32 - left;
+                }
+                left = left.saturating_sub(32);
+                word
+            })
+            .collect()
+    }
+
     /// A random integer below `n`, as Python's `random._randbelow(n)` draws
-    /// it (by rejection, from as many bits as `n` has). `n` is positive.
-    fn randbelow(&mut self, n: u64) -> u64 {
+    /// it (by rejection, from as many bits as `n` has), which `randrange`,
+    /// `choice`, `shuffle`, and `sample` use. `n` is positive.
+    pub fn randbelow(&mut self, n: u64) -> u64 {
         let k = 64 - n.leading_zeros();
         loop {
             let r = self.getrandbits(k);
@@ -167,6 +192,45 @@ impl Random {
                 return r;
             }
         }
+    }
+
+    /// `k` distinct items of `population`, in the order Python 3.12's
+    /// `Random.sample(population, k)` picks them: from a pool for small
+    /// populations, by rejecting repeats for large ones.
+    ///
+    /// # Panics
+    ///
+    /// For `k` larger than the population, where Python raises
+    /// `ValueError`.
+    pub fn sample<T: Clone>(&mut self, population: &[T], k: usize) -> Vec<T> {
+        let n = population.len();
+        assert!(k <= n, "Sample larger than population");
+        let mut setsize = 21usize;
+        if k > 5 {
+            // Python computes ceil(log(3k, 4)) in floating point.
+            let exp = ((k as f64 * 3.0).ln() / 4f64.ln()).ceil() as u32;
+            setsize += 4usize.pow(exp);
+        }
+        let mut result = Vec::with_capacity(k);
+        if n <= setsize {
+            let mut pool: Vec<T> = population.to_vec();
+            for i in 0..k {
+                let j = self.randbelow((n - i) as u64) as usize;
+                result.push(pool[j].clone());
+                pool[j] = pool[n - i - 1].clone();
+            }
+        } else {
+            let mut selected = std::collections::HashSet::new();
+            for _ in 0..k {
+                let mut j = self.randbelow(n as u64) as usize;
+                while selected.contains(&j) {
+                    j = self.randbelow(n as u64) as usize;
+                }
+                selected.insert(j);
+                result.push(population[j].clone());
+            }
+        }
+        result
     }
 
     /// Shuffles `x` in place, as [`shuffle`] does, drawing from this
@@ -177,6 +241,26 @@ impl Random {
             x.swap(i, j as usize);
         }
     }
+}
+
+/// Python's `hash` of a tuple of small nonnegative integers and of tuples of
+/// them, as 3.8 and later compute it (xxHash's mixing) on 64-bit platforms:
+/// what `EnumerateStereoisomers` seeds its default generator with.
+pub(crate) fn hash_tuple(items: &[u64]) -> i64 {
+    const P1: u64 = 11_400_714_785_074_694_791;
+    const P2: u64 = 14_029_467_366_897_019_727;
+    const P5: u64 = 2_870_177_450_012_600_261;
+    let mut acc = P5;
+    for &lane in items {
+        acc = acc.wrapping_add(lane.wrapping_mul(P2));
+        acc = acc.rotate_left(31);
+        acc = acc.wrapping_mul(P1);
+    }
+    acc = acc.wrapping_add((items.len() as u64) ^ (P5 ^ 3_527_539));
+    if acc == u64::MAX {
+        return 1_546_275_796;
+    }
+    acc as i64
 }
 
 fn entropy_seed() -> i64 {
@@ -244,7 +328,16 @@ pub fn shuffle_with_random<T>(x: &mut [T], mut random: impl FnMut() -> f64) -> R
 
 #[cfg(test)]
 mod tests {
-    use super::Random;
+    use super::{Random, hash_tuple};
+
+    #[test]
+    fn tuple_hash_matches_python() {
+        // hash(((1, 6), (2, 8))) in Python 3.12.
+        assert_eq!(
+            hash_tuple(&[hash_tuple(&[1, 6]) as u64, hash_tuple(&[2, 8]) as u64]),
+            7_099_509_676_313_867_053
+        );
+    }
 
     #[test]
     fn wide_draws_match_python() {
