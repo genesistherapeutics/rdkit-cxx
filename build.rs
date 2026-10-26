@@ -121,10 +121,7 @@ fn main() {
     let prefix = rdkit_prefix();
     // rdkit_cxx::rd_paths finds RDKit's data under the prefix, as Python's
     // RDPaths does under the one RDKit was installed to.
-    println!(
-        "cargo::rustc-env=RDKIT_CXX_RDKIT_PREFIX={}",
-        prefix.display()
-    );
+    println!("cargo::rustc-env=RDKIT_CXX_RDKIT_PREFIX={}", text(&prefix));
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
     // conda installs packages' files with the times they were built at,
@@ -134,7 +131,7 @@ fn main() {
     // and Cargo watches a directory's contents.
     let conda_meta = prefix.join("conda-meta");
     if conda_meta.is_dir() {
-        println!("cargo::rerun-if-changed={}", conda_meta.display());
+        println!("cargo::rerun-if-changed={}", text(&conda_meta));
     }
     // Clippy checks the Rust and links nothing, so it needs no C++. Cargo
     // runs this script for clippy apart from its run for `cargo build`
@@ -142,22 +139,22 @@ fn main() {
     // C++ here would compile all of it a second time. Downstream build
     // scripts still read the library directory.
     if under_clippy() {
-        println!("cargo::metadata=libdir={}", prefix.join("lib").display());
+        println!("cargo::metadata=libdir={}", text(&prefix.join("lib")));
         return;
     }
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let (generated_include, generated_sources) = generate_bridges(&out_dir.join("cxxgen"));
 
-    let sources: Vec<String> = generated_sources
+    let sources: Vec<&str> = generated_sources
         .iter()
-        .map(|path| path.display().to_string())
+        .map(|path| cmake_list_item(path))
         .collect();
     let dst = cmake::Config::new("wrapper")
-        .define("CMAKE_PREFIX_PATH", &prefix)
+        .define("CMAKE_PREFIX_PATH", cmake_list_item(&prefix))
         .define("RDKIT_CXX_SUPPORTED_SERIES", supported_series())
         .define("RDKIT_CXX_GENERATED_SOURCES", sources.join(";"))
-        .define("RDKIT_CXX_GENERATED_INCLUDE_DIR", &generated_include)
+        .define("RDKIT_CXX_GENERATED_INCLUDE_DIR", text(&generated_include))
         .profile("Release")
         .build_target("rdkitcxx")
         .build();
@@ -246,7 +243,7 @@ fn write_if_changed(path: &Path, contents: &[u8]) {
 /// Links the wrapper library, the RDKit libraries CMake resolved, and the C++
 /// standard library.
 fn link(build_dir: &Path) {
-    println!("cargo::rustc-link-search=native={}", build_dir.display());
+    println!("cargo::rustc-link-search=native={}", text(build_dir));
     println!("cargo::rustc-link-lib=static=rdkitcxx");
 
     let listing = build_dir.join("link-libraries.txt");
@@ -257,7 +254,7 @@ fn link(build_dir: &Path) {
         let path = Path::new(line);
         let dir = path.parent().unwrap();
         let file = path.file_name().unwrap().to_str().unwrap();
-        println!("cargo::rustc-link-search=native={}", dir.display());
+        println!("cargo::rustc-link-search=native={}", text(dir));
         println!("cargo::rustc-link-lib=dylib={}", library_name(file));
         lib_dir.get_or_insert_with(|| dir.to_path_buf());
     }
@@ -300,15 +297,33 @@ fn link(build_dir: &Path) {
         if printed.is_absolute()
             && let Some(dir) = printed.parent()
         {
-            println!("cargo::rustc-link-search=native={}", dir.display());
+            println!("cargo::rustc-link-search=native={}", text(dir));
         }
     }
     println!("cargo::rustc-link-lib=dylib={stdlib}");
 
     // The crate's own tests and examples find RDKit through an rpath. Other
     // crates add theirs from `DEP_RDKIT_CXX_LIBDIR` (see the README).
-    println!("cargo::rustc-link-arg=-Wl,-rpath,{}", lib_dir.display());
-    println!("cargo::metadata=libdir={}", lib_dir.display());
+    println!("cargo::rustc-link-arg=-Wl,-rpath,{}", text(&lib_dir));
+    println!("cargo::metadata=libdir={}", text(&lib_dir));
+}
+
+/// A path as text, for Cargo's directives and CMake's arguments, which
+/// take paths as text: `display` would hand them a path that is not UTF-8
+/// garbled.
+fn text(path: &Path) -> &str {
+    path.to_str()
+        .unwrap_or_else(|| panic!("rdkit-cxx needs UTF-8 paths, but {} is not", path.display()))
+}
+
+/// A path as an element of a CMake list, which `;` separates.
+fn cmake_list_item(path: &Path) -> &str {
+    let item = text(path);
+    assert!(
+        !item.contains(';'),
+        "CMake would split {item} at its ';'; build rdkit-cxx where its paths have none"
+    );
+    item
 }
 
 /// `libRDKitGraphMol.so.1.2026.09.1` → `RDKitGraphMol`.
