@@ -42,8 +42,8 @@ including the RDKit bugs it found, are in rdkit-logbook.
 ## Environment
 
 Each crate version supports one RDKit release series: 2026.9.x supports RDKit
-2026.09. Install RDKit's development packages from conda-forge and activate the
-environment before building:
+2026.09. It builds with Rust 1.88 or newer. Install RDKit's development
+packages from conda-forge and activate the environment before building:
 
 ```sh
 mamba env create -f environment.yml

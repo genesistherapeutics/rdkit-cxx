@@ -408,8 +408,10 @@ impl RGroupDecomposition {
             .map(|pairs| {
                 pairs
                     .indices
-                    .chunks_exact(2)
-                    .map(|pair| (pair[0], pair[1]))
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
+                    .map(|&[core, atom]| (core, atom))
                     .collect()
             })
             .collect();

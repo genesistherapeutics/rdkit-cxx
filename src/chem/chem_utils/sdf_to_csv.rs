@@ -80,10 +80,10 @@ pub fn convert_with_params(
     let mol = suppl.get(0)?;
     let mut prop_names = mol.get_prop_names()?;
     let key_col = params.key_col.as_deref().filter(|k| !k.is_empty());
-    if let Some(key) = key_col {
-        if let Some(i) = prop_names.iter().position(|p| p == key) {
-            prop_names.remove(i);
-        }
+    if let Some(key) = key_col
+        && let Some(i) = prop_names.iter().position(|p| p == key)
+    {
+        prop_names.remove(i);
     }
     let mut out_l = Vec::new();
     if let Some(key) = key_col {
