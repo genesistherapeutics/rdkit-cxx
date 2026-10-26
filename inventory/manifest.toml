@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.ChemUtils.DescriptorUtilities", "rdkit.Chem.Crippen", "rdkit.Chem.Descriptors", "rdkit.Chem.Descriptors3D", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EState.AtomTypes", "rdkit.Chem.EState.EState", "rdkit.Chem.EState.EState_VSA", "rdkit.Chem.EState.Fingerprinter", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Fragments", "rdkit.Chem.GraphDescriptors", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.MolSurf", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.QED", "rdkit.Chem.ReducedGraphs", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SpacialScore", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs", "rdkit.DataStructs.BitEnsemble", "rdkit.DataStructs.BitUtils", "rdkit.DataStructs.LazySignature", "rdkit.DataStructs.TopNContainer", "rdkit.DataStructs.VectCollection", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Butina", "rdkit.ML.Cluster.ClusterUtils", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Cluster.Clusters", "rdkit.ML.Cluster.Murtagh", "rdkit.ML.Cluster.Resemblance", "rdkit.ML.Cluster.Standardize", "rdkit.ML.Data.DataUtils", "rdkit.ML.Data.MLData", "rdkit.ML.Data.Quantize", "rdkit.ML.Data.SplitData", "rdkit.ML.Data.Stats", "rdkit.ML.Data.Transforms", "rdkit.ML.Descriptors.Descriptors", "rdkit.ML.Descriptors.MoleculeDescriptors", "rdkit.ML.InfoTheory.BitClusterer", "rdkit.ML.InfoTheory.BitRank", "rdkit.ML.InfoTheory.entropy", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.ML.SLT.Risk", "rdkit.ML.Scoring.Scoring", "rdkit.ML.files", "rdkit.Numerics.rdAlignment", "rdkit.RDLogger", "rdkit.RDPaths", "rdkit.RDRandom", "rdkit.SimDivFilters.SimilarityPickers", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase", "rdkit.utils.chemutils", "rdkit.utils.fileutils", "rdkit.utils.listutils"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.ChemUtils.DescriptorUtilities", "rdkit.Chem.Crippen", "rdkit.Chem.Descriptors", "rdkit.Chem.Descriptors3D", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EState.AtomTypes", "rdkit.Chem.EState.EState", "rdkit.Chem.EState.EState_VSA", "rdkit.Chem.EState.Fingerprinter", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Fragments", "rdkit.Chem.GraphDescriptors", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.MolSurf", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.Pharm3D.EmbedLib", "rdkit.Chem.Pharm3D.ExcludedVolume", "rdkit.Chem.Pharm3D.Pharmacophore", "rdkit.Chem.QED", "rdkit.Chem.ReducedGraphs", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SpacialScore", "rdkit.Chem.Subshape.BuilderUtils", "rdkit.Chem.Subshape.SubshapeAligner", "rdkit.Chem.Subshape.SubshapeBuilder", "rdkit.Chem.Subshape.SubshapeObjects", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs", "rdkit.DataStructs.BitEnsemble", "rdkit.DataStructs.BitUtils", "rdkit.DataStructs.LazySignature", "rdkit.DataStructs.TopNContainer", "rdkit.DataStructs.VectCollection", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Butina", "rdkit.ML.Cluster.ClusterUtils", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Cluster.Clusters", "rdkit.ML.Cluster.Murtagh", "rdkit.ML.Cluster.Resemblance", "rdkit.ML.Cluster.Standardize", "rdkit.ML.Data.DataUtils", "rdkit.ML.Data.MLData", "rdkit.ML.Data.Quantize", "rdkit.ML.Data.SplitData", "rdkit.ML.Data.Stats", "rdkit.ML.Data.Transforms", "rdkit.ML.Descriptors.Descriptors", "rdkit.ML.Descriptors.MoleculeDescriptors", "rdkit.ML.InfoTheory.BitClusterer", "rdkit.ML.InfoTheory.BitRank", "rdkit.ML.InfoTheory.entropy", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.ML.SLT.Risk", "rdkit.ML.Scoring.Scoring", "rdkit.ML.files", "rdkit.Numerics.rdAlignment", "rdkit.RDLogger", "rdkit.RDPaths", "rdkit.RDRandom", "rdkit.SimDivFilters.SimilarityPickers", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase", "rdkit.utils.chemutils", "rdkit.utils.fileutils", "rdkit.utils.listutils"]
 
 [modules.reasons]
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
@@ -15,7 +15,11 @@ complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.C
 "rdkit.Chem.Draw.InteractiveRenderer" = "renders molecules in Jupyter with RDKit's JavaScript library"
 "rdkit.Chem.Draw.MolDrawing" = "the legacy drawing code, which draws on sping canvases; rdMolDraw2D, which is bound, replaced it"
 "rdkit.Chem.Features.ShowFeats" = "draws molecules' features as arrows and spheres in PyMOL, over its XML-RPC server"
+"rdkit.Chem.Fingerprints.ClusterMols" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its clustering, use ml::cluster::murtagh::cluster_data_dists"
 "rdkit.Chem.Fingerprints.DbFpSupplier" = "supplies fingerprints from rdkit.Dbase query results"
+"rdkit.Chem.Fingerprints.FingerprintMols" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its fingerprints, use rdmolops::rdk_fingerprint_with_params or rd_fingerprint_generator"
+"rdkit.Chem.Fingerprints.MolSimilarity" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its similarity screens, use data_structs::fingerprint_similarity, with data_structs::top_n_container::TopNContainer for the best hits"
+"rdkit.Chem.Fingerprints.SimilarityScreener" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its screens, use data_structs::fingerprint_similarity, with data_structs::top_n_container::TopNContainer for the best hits"
 "rdkit.Chem.MCS" = "a deprecated wrapper over the legacy pure-Python MCS search (rdkit.Chem.fmcs); rdFMCS, which is bound, replaced it"
 "rdkit.Chem.MolDb" = "builds and reads molecule databases through rdkit.Dbase"
 "rdkit.Chem.PandasPatcher" = "patches pandas' HTML rendering for PandasTools"
@@ -4497,6 +4501,197 @@ python = "rdkit.Chem.Pharm2D.Utils.nPointDistDict"
 rust = ["rdkit_cxx::chem::pharm_2d::utils::n_point_dist_dict"]
 
 [[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.AddExcludedVolumes"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::add_excluded_volumes", "rdkit_cxx::chem::pharm_3d::embed_lib::add_excluded_volumes_with_smooth_it"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.Check2DBounds"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::check_2d_bounds"]
+name_exception = "2D is one word: check_2d_bounds"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.CoarseScreenPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::coarse_screen_pharmacophore"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.CombiEnum"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::combi_enum"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.ComputeChiralVolume"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::compute_chiral_volume", "rdkit_cxx::chem::pharm_3d::embed_lib::compute_chiral_volume_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.ConstrainedEnum"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::constrained_enum", "rdkit_cxx::chem::pharm_3d::embed_lib::constrained_enum_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.DownsampleBoundsMatrix"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::downsample_bounds_matrix", "rdkit_cxx::chem::pharm_3d::embed_lib::downsample_bounds_matrix_with_max_thresh"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.EmbedMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::embed_mol", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_mol_with_params", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_mol_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.EmbedOne"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::embed_one", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_one_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.EmbedPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::embed_pharmacophore", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_pharmacophore_with_params", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_pharmacophore_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.GetAllPharmacophoreMatches"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::get_all_pharmacophore_matches", "rdkit_cxx::chem::pharm_3d::embed_lib::get_all_pharmacophore_matches_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.GetAtomHeavyNeighbors"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::get_atom_heavy_neighbors"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.MatchFeatsToMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::match_feats_to_mol"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.MatchPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::match_pharmacophore", "rdkit_cxx::chem::pharm_3d::embed_lib::match_pharmacophore_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.MatchPharmacophoreToMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::match_pharmacophore_to_mol"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.OptimizeMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::optimize_mol", "rdkit_cxx::chem::pharm_3d::embed_lib::optimize_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.ReplaceGroup"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::replace_group", "rdkit_cxx::chem::pharm_3d::embed_lib::replace_group_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.UpdatePharmacophoreBounds"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::update_pharmacophore_bounds", "rdkit_cxx::chem::pharm_3d::embed_lib::update_pharmacophore_bounds_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.defaultFeatLength"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::default_feat_length"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.isNaN"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::is_nan"]
+name_exception = "NaN is one word: is_nan"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.ExcludedVolume.ExcludedVolume"
+rust = ["rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.ExcludedVolume.ExcludedVolume.__init__"
+rust = ["rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume::new", "rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__init__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::default", "rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__str__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::to_string"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getFeature"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_feature"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getFeatures"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_features"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getRadii"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_radii"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getRadius"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_radius"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.initFromFile"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::init_from_file"]
+rust_generics = ["<&[u8]>"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.initFromLines"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::init_from_lines"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.initFromString"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::init_from_string"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.setRadius"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::set_radius"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.__init__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::new", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::new_with_init_mats"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.__str__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::to_string"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getFeature"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_feature"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getFeatures"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_features"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getLowerBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_lower_bound"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getLowerBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_lower_bound_2d"]
+name_exception = "2D is one word: get_lower_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getUpperBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_upper_bound"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getUpperBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_upper_bound_2d"]
+name_exception = "2D is one word: get_upper_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setLowerBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound_with_check_bounds"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setLowerBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound_2d", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound_2d_with_check_bounds"]
+name_exception = "2D is one word: set_lower_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setUpperBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound_with_check_bounds"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setUpperBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound_2d", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound_2d_with_check_bounds"]
+name_exception = "2D is one word: set_upper_bound_2d"
+
+[[entry]]
 python = "rdkit.Chem.QED.ADSparameter"
 rust = ["rdkit_cxx::chem::qed::ADSparameter"]
 
@@ -4925,6 +5120,357 @@ rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_networ
 [[entry]]
 python = "rdkit.Chem.SpacialScore.SPS"
 rust = ["rdkit_cxx::chem::spacial_score::sps", "rdkit_cxx::chem::spacial_score::sps_with_normalize"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.AppendSkeletonPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::append_skeleton_points", "rdkit_cxx::chem::subshape::builder_utils::append_skeleton_points_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.AssignMolFeatsToPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::assign_mol_feats_to_points"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.CalculateDirectionsAtPoint"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::calculate_directions_at_point"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ClusterTerminalPts"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::cluster_terminal_pts"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ComputeGridIndices"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::compute_grid_indices"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ComputeShapeGridCentroid"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::compute_shape_grid_centroid"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ExpandTerminalPts"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::expand_terminal_pts", "rdkit_cxx::chem::subshape::builder_utils::expand_terminal_pts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindFarthestGridPoint"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_farthest_grid_point"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindGridPointBetweenPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_grid_point_between_points"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindTerminalPtsFromConformer"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_terminal_pts_from_conformer"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindTerminalPtsFromShape"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_terminal_pts_from_shape"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.GetMoreTerminalPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::get_more_terminal_points", "rdkit_cxx::chem::subshape::builder_utils::get_more_terminal_points_with_target_number"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.ClusterAlignments"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::cluster_alignments", "rdkit_cxx::chem::subshape::subshape_aligner::cluster_alignments_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.GetShapeShapeDistance"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::get_shape_shape_distance"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.GetSubshapeAlignments"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_subshape_alignments", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_subshape_alignments_with_params", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_subshape_alignments_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.GetTriangleMatches"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_triangle_matches"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.PruneMatchesUsingDirection"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_direction", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_direction_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.PruneMatchesUsingFeatures"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_features", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_features_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.PruneMatchesUsingShape"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_shape", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_shape_with_params", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_shape_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.__call__"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::call", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::call_with_params", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::call_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.coarseGridToleranceMult"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::coarse_grid_tolerance_mult"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.dirThresh"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::dir_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.distMetric"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::dist_metric"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.edgeTol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::edge_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.medGridToleranceMult"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::med_grid_tolerance_mult"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.numFeatThresh"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::num_feat_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.shapeDistTol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::shape_dist_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.triangleRMSTol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::triangle_rms_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.alignedConfId"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::aligned_conf_id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.dirMatch"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::dir_match"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.queryTri"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::query_tri"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.shapeDist"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::shape_dist"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.targetTri"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::target_tri"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.transform"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::transform"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.triangleSSD"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::triangle_ssd"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeDistanceMetric"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeDistanceMetric"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeDistanceMetric.PROTRUDE"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeDistanceMetric::Protrude"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeDistanceMetric.TANIMOTO"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeDistanceMetric::Tanimoto"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.TransformMol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::transform_mol", "rdkit_cxx::chem::subshape::subshape_aligner::transform_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.CombineSubshapes"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::combine_subshapes", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::combine_subshapes_with_operation"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.GenerateSubshapeShape"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_shape", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_shape_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.GenerateSubshapeSkeleton"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_skeleton", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_skeleton_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.SampleSubshape"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::sample_subshape"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.__call__"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::call", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::call_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.featFactory"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::feat_factory"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.fraction"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::fraction"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.gridDims"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::grid_dims"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.gridSpacing"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::grid_spacing"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.nbrCount"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::nbr_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.stepSize"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::step_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.terminalPtRadScale"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::terminal_pt_rad_scale"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.winRad"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::win_rad"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations.INTERSECT"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations::Intersect"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations.SUM"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations::Sum"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations.UNION"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations::Union"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.DisplaySubshape"
+reason = "draws a shape and its skeleton in PyMOL, over its XML-RPC server"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.DisplaySubshapeSkeleton"
+reason = "draws a shape's skeleton in PyMOL, over its XML-RPC server"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton.__init__"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton::default"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton.grid"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton::grid"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton.skelPts"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton::skel_pts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.__init__"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::default", "rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::from_location"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.featmapFeatures"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::featmap_features"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.fracVol"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::frac_vol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.location"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::location"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.molFeatures"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::mol_features"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.shapeDirs"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::shape_dirs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.shapeMoments"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::shape_moments"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.__init__"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::default"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.featMap"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::feat_map"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.keyFeat"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::key_feat"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.shapes"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::shapes"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.TorsionFingerprints.CalculateTFD"

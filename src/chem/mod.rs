@@ -26,6 +26,7 @@ pub mod maccs_keys;
 pub mod mol_standardize;
 pub mod mol_surf;
 pub mod pharm_2d;
+pub mod pharm_3d;
 pub(crate) mod py_math;
 mod py_util;
 pub mod qed;
@@ -80,6 +81,7 @@ pub mod reduced_graphs;
 pub mod registration_hash;
 pub mod scaffolds;
 pub mod spacial_score;
+pub mod subshape;
 pub mod torsion_fingerprints;
 
 pub use init::*;
