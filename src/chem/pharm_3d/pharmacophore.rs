@@ -272,11 +272,9 @@ pub struct ExplicitPharmacophore {
 impl ExplicitPharmacophore {
     /// A pharmacophore of these features and radii; lists of different
     /// lengths are `Error::Value`. Python makes an empty one if either list
-    /// is empty. Mirrors `ExplicitPharmacophore(feats, radii)`.
-    pub fn new_with_params(
-        feats: &[FreeChemicalFeature],
-        radii: &[f64],
-    ) -> Result<ExplicitPharmacophore> {
+    /// is empty. Mirrors `ExplicitPharmacophore(feats, radii)`; its
+    /// defaults, `None`, make the empty pharmacophore `default` makes.
+    pub fn new(feats: &[FreeChemicalFeature], radii: &[f64]) -> Result<ExplicitPharmacophore> {
         let mut res = ExplicitPharmacophore::default();
         if !feats.is_empty() && !radii.is_empty() {
             res.initialize_feats(feats.to_vec(), radii.to_vec())?;

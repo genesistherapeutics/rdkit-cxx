@@ -243,10 +243,10 @@ fn explicit_pharmacophore_matches_python() {
         Err(Error::Parse { .. })
     ));
     assert_eq!(p.get_radii(), [1.5]);
-    let p = ExplicitPharmacophore::new_with_params(&three_feats(), &[1.0, 2.0, 3.0]).unwrap();
+    let p = ExplicitPharmacophore::new(&three_feats(), &[1.0, 2.0, 3.0]).unwrap();
     assert_eq!(p.get_radii(), [1.0, 2.0, 3.0]);
     assert!(matches!(
-        ExplicitPharmacophore::new_with_params(&three_feats(), &[1.0]),
+        ExplicitPharmacophore::new(&three_feats(), &[1.0]),
         Err(Error::Value { .. })
     ));
 }

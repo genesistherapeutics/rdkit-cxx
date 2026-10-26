@@ -5491,7 +5491,7 @@ rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore"]
 
 [[entry]]
 python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__init__"
-rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::default", "rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::new_with_params"]
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::default", "rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::new"]
 
 [[entry]]
 python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__str__"

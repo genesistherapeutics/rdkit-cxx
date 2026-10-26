@@ -1481,7 +1481,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume>::new_with_params;
     let _: Option<rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore> = None;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::default;
-    let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::new_with_params;
+    let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::new;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::to_string;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::get_feature;
     let _ = <rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore>::get_features;

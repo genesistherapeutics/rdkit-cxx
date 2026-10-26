@@ -796,7 +796,7 @@ impl Iterator for BRICSBuild<'_> {
 /// `random`. Mirrors `BRICS.BRICSBuild(fragments)`, which draws from the
 /// `random` module's generator.
 pub fn brics_build<'a>(fragments: &'a [Mol], random: &'a mut Random) -> BRICSBuild<'a> {
-    brics_build_with_params(fragments, &BRICSBuildParams::default(), random)
+    brics_build_with_params(fragments, random, &BRICSBuildParams::default())
 }
 
 /// As [`brics_build`]; `random` is drawn from only with
@@ -804,8 +804,8 @@ pub fn brics_build<'a>(fragments: &'a [Mol], random: &'a mut Random) -> BRICSBui
 /// onlyCompleteMols, seeds, uniquify, scrambleReagents, maxDepth)`.
 pub fn brics_build_with_params<'a>(
     fragments: &'a [Mol],
-    params: &BRICSBuildParams,
     random: &'a mut Random,
+    params: &BRICSBuildParams,
 ) -> BRICSBuild<'a> {
     let mut build = BRICSBuild {
         fragments,
