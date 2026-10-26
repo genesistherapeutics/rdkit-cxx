@@ -90,7 +90,7 @@ impl FileMolSupplier {
 /// Parameters for `supplier_from_filename_with_params`, with Python's
 /// defaults (A2). Python passes its other keyword arguments to the
 /// supplier's constructor; here each kind of supplier has its own.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct SupplierFromFilenameParams {
     /// The delimiter of a SMILES file; empty for `,` in `.csv` files and a
     /// tab in `.txt` files. It replaces `smiles.delimiter`.
@@ -101,17 +101,6 @@ pub struct SupplierFromFilenameParams {
     pub smiles: SmilesMolSupplierParams,
     /// The parameters of a TDT supplier.
     pub tdt: TDTMolSupplierParams,
-}
-
-impl Default for SupplierFromFilenameParams {
-    fn default() -> SupplierFromFilenameParams {
-        SupplierFromFilenameParams {
-            delim: String::new(),
-            sd: SDMolSupplierParams::default(),
-            smiles: SmilesMolSupplierParams::default(),
-            tdt: TDTMolSupplierParams::default(),
-        }
-    }
 }
 
 /// A supplier for a file, picked by its extension, in any case: `.sdf`,

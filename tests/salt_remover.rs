@@ -193,12 +193,12 @@ fn chirality() -> Result<()> {
             .map(mol_to_smiles)
             .collect()
     };
-    assert_eq!(deleted(&remover, "OC(=O)C=CC(O)=O")?, [maleic.clone()]);
+    assert_eq!(deleted(&remover, "OC(=O)C=CC(O)=O")?, [maleic.as_str()]);
     assert!(deleted(&chiral, "OC(=O)C=CC(O)=O")?.is_empty());
-    assert_eq!(deleted(&remover, &maleic)?, [maleic.clone()]);
-    assert_eq!(deleted(&chiral, &maleic)?, [maleic.clone()]);
-    assert_eq!(deleted(&remover, &fumaric)?, [maleic.clone()]);
-    assert_eq!(deleted(&chiral, &fumaric)?, [fumaric.clone()]);
+    assert_eq!(deleted(&remover, &maleic)?, [maleic.as_str()]);
+    assert_eq!(deleted(&chiral, &maleic)?, [maleic.as_str()]);
+    assert_eq!(deleted(&remover, &fumaric)?, [maleic.as_str()]);
+    assert_eq!(deleted(&chiral, &fumaric)?, [fumaric.as_str()]);
     Ok(())
 }
 

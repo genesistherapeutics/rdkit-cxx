@@ -26,12 +26,12 @@ pub fn characteristic_polynomial(mol: &Mol, mat: &[Vec<f64>]) -> Result<Vec<f64>
     let mut an: Vec<Vec<f64>> = a.to_vec();
     let mut res = vec![0.0; n_atoms + 1];
     res[0] = 1.0;
-    for n in 1..=n_atoms {
+    for (n, coeff) in res.iter_mut().enumerate().skip(1) {
         let trace: f64 = (0..n_atoms).map(|i| an[i][i]).sum();
-        res[n] = 1.0 / n as f64 * trace;
+        *coeff = 1.0 / n as f64 * trace;
         let mut bn = an.clone();
         for (i, row) in bn.iter_mut().enumerate() {
-            row[i] -= res[n];
+            row[i] -= *coeff;
         }
         an = (0..n_atoms)
             .map(|i| {
