@@ -309,10 +309,16 @@ pub(crate) fn py_div(a: f64, b: f64) -> Result<f64> {
 /// `bins` that is not greater than `x`, found by Python's binary search, so
 /// unsorted bins and NaN give Python's answers.
 pub(crate) fn bisect_right(bins: &[f64], x: f64) -> usize {
-    let (mut lo, mut hi) = (0, bins.len());
+    bisect_right_by(bins, |b| x < *b)
+}
+
+/// `bisect_right` for any elements, with `is_below(e)` for Python's
+/// `x < e`.
+pub(crate) fn bisect_right_by<T>(a: &[T], is_below: impl Fn(&T) -> bool) -> usize {
+    let (mut lo, mut hi) = (0, a.len());
     while lo < hi {
         let mid = (lo + hi) / 2;
-        if x < bins[mid] {
+        if is_below(&a[mid]) {
             hi = mid;
         } else {
             lo = mid + 1;

@@ -163,6 +163,14 @@ fn top_n_container() {
     assert_eq!(cont.get_extras(), [None, None, Some('b')]);
     let mut empty: TopNContainer = TopNContainer::new(0);
     assert!(matches!(empty.insert(1.0), Err(Error::Index { .. })));
+    // Once a NaN is kept, the list is unsorted, and only Python's bisect
+    // probes give Python's order.
+    let mut cont = TopNContainer::new(-1);
+    for (i, v) in [0.0, 1.0, 2.0, 1.0, f64::NAN, 1.0].into_iter().enumerate() {
+        cont.insert_with_extra(v, i).unwrap();
+    }
+    let extras: Vec<usize> = cont.get_extras().iter().map(|e| e.unwrap()).collect();
+    assert_eq!(extras, [0, 1, 3, 2, 4, 5]);
 }
 
 #[test]
