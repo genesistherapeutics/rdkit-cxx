@@ -63,6 +63,19 @@ namespace {
 using RDKit::MOL_SPTR_VECT;
 using RDKit::ROMOL_SPTR;
 
+// The reaction's templates, as check_removals checks a molecule: the SMILES
+// writer writes a template of several components a component at a time,
+// which it makes by removing the other atoms from copies (getMolFrags), and
+// SANITIZE_MERGEHS removes the reactants' query hydrogens.
+void check_template_removals(const ChemicalReaction &rxn) {
+  for (const auto *templates :
+       {&rxn.getReactants(), &rxn.getAgents(), &rxn.getProducts()}) {
+    for (const auto &templ : *templates) {
+      check_removals(*templ);
+    }
+  }
+}
+
 std::string to_std(rust::Slice<const std::uint8_t> bytes) {
   return std::string(reinterpret_cast<const char *>(bytes.data()),
                      bytes.size());
@@ -333,6 +346,9 @@ rust::Vec<std::uint8_t> add_metadata(const ChemicalReaction &rxn,
                                      bool include_smiles, bool include_smarts,
                                      bool include_rxn) {
   check_png_for_metadata(png);
+  if (include_smiles) {
+    check_template_removals(rxn);
+  }
   // The rxn block is the V2000 writer's.
   std::unique_lock<std::mutex> lock;
   if (include_rxn) {
@@ -750,7 +766,10 @@ bool chemical_reaction_run_reactant_in_place(ChemicalReaction &rxn,
                                              bool remove_unmatched_atoms) {
   initialize_if_needed(rxn);
   // Python's binding static_casts its ROMol to RWMol, undefined for a Mol;
-  // a Rust molecule is an RWMol (W1). Its edits keep cached matrices (U6).
+  // a Rust molecule is an RWMol (W1). Its edits keep cached matrices (U6),
+  // and its removals trust what check_removals checks, checked before the
+  // first edit.
+  check_removals(reactant);
   MatrixCacheGuard guard(reactant);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   try {
@@ -842,6 +861,7 @@ std::unique_ptr<std::string> reaction_to_smarts(
 
 std::unique_ptr<std::string> reaction_to_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
+  check_template_removals(rxn);
   auto lock = random_lock(params);
   return own(RDKit::ChemicalReactionToRxnSmiles(rxn, write_params(params)));
 }
@@ -857,6 +877,7 @@ std::unique_ptr<std::string> reaction_to_cx_smarts(
 std::unique_ptr<std::string> reaction_to_cx_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
+  check_template_removals(rxn);
   auto lock = random_lock(params);
   return own(
       RDKit::ChemicalReactionToCXRxnSmiles(rxn, write_params(params), flags));
@@ -985,7 +1006,10 @@ void reaction_to_mrv_file(const ChemicalReaction &rxn,
   RDKit::ChemicalReactionToMrvFile(rxn, to_std(path), pretty_print);
 }
 
+// RxnMolToChemicalReaction splits the molecule into its fragments
+// (getMolFrags), removing atoms from copies of it.
 std::unique_ptr<ChemicalReaction> reaction_from_molecule(const RWMol &mol) {
+  check_removals(mol);
   return finish(
       std::unique_ptr<ChemicalReaction>(RDKit::RxnMolToChemicalReaction(mol)),
       "the molecule");
@@ -1127,7 +1151,9 @@ void update_products_stereochemistry(ChemicalReaction &rxn) {
 
 std::unique_ptr<RWMol> reduce_product_to_side_chains(const RWMol &product,
                                                      bool add_dummy_atoms) {
-  // RDKit copies the product before it edits.
+  // RDKit copies the product before it edits, and removes atoms from the
+  // copy (check_removals).
+  check_removals(product);
   ROMOL_SPTR borrowed(const_cast<RWMol *>(&product), [](RDKit::ROMol *) {});
   return to_rwmol(std::unique_ptr<RDKit::ROMol>(
       RDKit::reduceProductToSideChains(borrowed, add_dummy_atoms)));
@@ -1189,6 +1215,10 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
                            bool catch_errors) {
   namespace RxnOps = RDKit::RxnOps;
   auto params = adjust_query_params_from_data(data);
+  if (sanitize_ops & RxnOps::SANITIZE_MERGEHS) {
+    // Checked before the first step edits the reaction.
+    check_template_removals(rxn);
+  }
   unsigned int failed = RxnOps::SANITIZE_NONE;
   try {
     // RxnOps::sanitizeRxn's steps, with fixAtomMaps checked first.

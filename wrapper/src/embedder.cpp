@@ -177,7 +177,10 @@ std::unique_ptr<NativeParams> to_native(const EmbedParametersData &d) {
 
 // The embedder computes each piece's int distance matrix and minimizes it in
 // four dimensions (check_matrix_size, check_minimize_size). Returns the
-// number of pieces and the size of the largest.
+// number of pieces and the size of the largest. It embeds fragments as
+// copies of the molecule with the other atoms removed (getMolFrags), and
+// prunes by RMS on a copy without its hydrogens, both of which trust what
+// check_removals checks.
 std::pair<unsigned, unsigned> check_embed_pieces(
     const RDKit::ROMol &mol, const DG::EmbedParameters &params) {
   unsigned num_atoms = mol.getNumAtoms();
@@ -185,6 +188,7 @@ std::pair<unsigned, unsigned> check_embed_pieces(
     throw ValueErrorException("molecule has no atoms");
   }
   check_matrix_size(mol);
+  check_removals(mol);
   unsigned num_frags = 1;
   unsigned largest = num_atoms;
   if (params.embedFragmentsSeparately) {

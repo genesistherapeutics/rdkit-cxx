@@ -307,9 +307,12 @@ void check_connectivity(const RWMol &mol, bool use_hueckel, std::int32_t charge,
 
 }  // namespace
 
+// determineConnectivity first removes the molecule's bonds, which trusts
+// what check_removals checks, checked before the first edit.
 void determine_connectivity(RWMol &mol, bool use_hueckel, std::int32_t charge,
                             double cov_factor, bool use_vdw) {
   check_connectivity(mol, use_hueckel, charge, use_vdw);
+  check_removals(mol);
   MatrixCacheGuard guard(mol);
   OtherMonomerInfoSetAside set_aside(mol);
   RDKit::determineConnectivity(mol, use_hueckel, charge, cov_factor, use_vdw);
@@ -336,6 +339,7 @@ void determine_bonds(RWMol &mol, bool use_hueckel, std::int32_t charge,
     return;
   }
   check_connectivity(mol, use_hueckel, charge, use_vdw);
+  check_removals(mol);
   // The bond orders start from the charge the Hückel option set.
   check_charges(mol, charge);
   MatrixCacheGuard guard(mol);

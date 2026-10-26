@@ -408,8 +408,12 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
   return parsed(RDKit::SmilesToMol(text, params), "SMILES", text);
 }
 
+// MolToSmiles writes a molecule of several fragments a fragment at a time,
+// making some by removing the other atoms from a copy (getMolFrags), which
+// trusts what check_removals checks.
 std::unique_ptr<std::string> mol_to_smiles(const RWMol &mol,
                                            const SmilesWriteParamsData &data) {
+  check_removals(mol);
   auto lock = random_lock(data.do_random);
   return str(RDKit::MolToSmiles(mol, write_params(data)));
 }
@@ -480,6 +484,7 @@ std::unique_ptr<Bond> bond_from_smarts(rust::Str smarts) {
 std::unique_ptr<std::string> mol_to_cx_smiles(
     const RWMol &mol, const SmilesWriteParamsData &data, std::uint32_t flags,
     RestoreBondDirOption restore_bond_dirs) {
+  check_removals(mol);
   auto lock = random_lock(data.do_random);
   return str(
       RDKit::MolToCXSmiles(mol, write_params(data), flags, restore_bond_dirs));
@@ -522,6 +527,8 @@ std::unique_ptr<std::string> mol_fragment_to_smiles(
     bsymbols = strings(bond_symbols);
   }
   auto params = write_params(data);
+  // Without bonds, a root atom has RDKit split the molecule into fragments.
+  check_removals(mol);
   auto lock = random_lock(data.do_random);
   const auto *b = bonds ? &*bonds : nullptr;
   const auto *as = asymbols ? &*asymbols : nullptr;
@@ -553,6 +560,7 @@ std::unique_ptr<std::vector<std::string>> mol_to_random_smiles_vect(
     const RWMol &mol, std::uint32_t num_smiles, std::uint32_t random_seed,
     bool isomeric_smiles, bool kekule_smiles, bool all_bonds_explicit,
     bool all_hs_explicit) {
+  check_removals(mol);
   // RDKit seeds the global generator and draws from it for each SMILES.
   std::lock_guard<std::mutex> lock(random_mutex());
   return std::make_unique<std::vector<std::string>>(

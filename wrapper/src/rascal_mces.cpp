@@ -146,10 +146,14 @@ std::int64_t atoms_and_bonds(const RDKit::ROMol &mol) {
   return std::int64_t{mol.getNumAtoms()} + mol.getNumBonds();
 }
 
+// The results remove atoms and bonds from copies of the molecules
+// (makeCliqueFrags, extractRings, makeMolFrags), which trusts what
+// check_removals checks.
 void check_mols(const std::vector<const RDKit::ROMol *> &mols) {
   int large = 0;
   for (const auto *mol : mols) {
     check_matrix_size(*mol);
+    check_removals(*mol);
     if (atoms_and_bonds(*mol) > kMaxSquared) {
       ++large;
     }

@@ -310,6 +310,10 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
   // DepictUtils.cpp). The depictor reads nothing else of those groups, so it
   // gets a copy whose groups hold no bonds.
   const RDKit::ROMol &query = has_ref_patt ? ref_patt : reference;
+  if (params.allowRGroups) {
+    // It then removes the copy's terminal R groups (check_removals).
+    check_removals(query);
+  }
   std::unique_ptr<RDKit::RWMol> stripped;
   if (params.allowRGroups && has_stereo_group_bonds(query)) {
     stripped = std::make_unique<RDKit::RWMol>(query);

@@ -21,6 +21,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/writers.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -304,8 +305,10 @@ std::unique_ptr<SmilesWriter> smiles_writer_from_writer(
   return make_smiles_writer(rust_output(std::move(writer)), params);
 }
 
+// The SMILES and TDT writers write SMILES (mol_to_smiles).
 void smiles_writer_write(SmilesWriter &w, const RWMol &mol,
                          std::int32_t conf_id) {
+  check_removals(mol);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 
@@ -346,6 +349,7 @@ std::unique_ptr<TDTWriter> tdt_writer_from_writer(
 }
 
 void tdt_writer_write(TDTWriter &w, const RWMol &mol, std::int32_t conf_id) {
+  check_removals(mol);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 

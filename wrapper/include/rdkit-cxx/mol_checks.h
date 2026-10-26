@@ -111,6 +111,16 @@ void check_substance_group_parents(const RDKit::ROMol &mol);
 // check_substance_group_parents.
 void check_removals(const RDKit::ROMol &mol);
 
+// As check_removals, for an RDKit call that combines the molecules
+// (insertMol, combineMols) and then removes atoms or bonds: RDKit does not
+// renumber the substance groups' indices, so the combination's PARENT
+// chains can run through the groups of several molecules. Which group an
+// index finds depends on which molecules RDKit combines and in what order
+// (molzip leaves out fragments whose SMILES repeat), so this follows every
+// group with the PARENT's index, and refuses a cycle or a chain longer than
+// MAX_PARENT_CHAIN through any of them.
+void check_removals(const std::vector<const RDKit::ROMol *> &mols);
+
 // RWMol::replaceBond deletes the bond it replaces but, unlike replaceAtom,
 // leaves the molecule's stereo groups (an atropisomer's group holds its bond)
 // pointing at it, a pointer that copying, pickling, stereo perception, and

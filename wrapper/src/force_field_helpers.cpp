@@ -37,10 +37,14 @@ void check_builder_size(const RDKit::ROMol &mol) { check_matrix_size(mol); }
 // The builders match torsion patterns (addTorsions in UFF/Builder.cpp and
 // MMFF/Builder.cpp), so they run under control_c_mutex (control_c_lock.h);
 // minimizing, which may use several threads, matches nothing.
+// Ignoring interfragment interactions, UFF's builder splits the molecule
+// into its fragments (getMolFrags), removing atoms from copies, which trusts
+// what check_removals checks.
 template <class... Args>
-ForceFields::ForceField *build_uff(Args &&...args) {
+ForceFields::ForceField *build_uff(RDKit::ROMol &mol, Args &&...args) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
-  return RDKit::UFF::constructForceField(std::forward<Args>(args)...);
+  return RDKit::UFF::constructForceField(mol, std::forward<Args>(args)...);
 }
 
 template <class... Args>

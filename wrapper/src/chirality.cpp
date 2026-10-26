@@ -13,6 +13,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -207,7 +208,10 @@ void expand_attachment_points(RWMol &mol, bool add_as_queries,
   RDKit::MolOps::expandAttachmentPoints(mol, add_as_queries, add_coords);
 }
 
+// collapseAttachmentPoints removes the dummy atoms it collapses, which
+// trusts what check_removals checks, checked before the first edit.
 void collapse_attachment_points(RWMol &mol, bool marked_only) {
+  check_removals(mol);
   RDKit::MolOps::collapseAttachmentPoints(mol, marked_only);
 }
 

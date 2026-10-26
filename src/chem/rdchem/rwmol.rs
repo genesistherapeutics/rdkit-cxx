@@ -80,13 +80,18 @@ impl RWMol {
         )?)
     }
 
-    /// Mirrors `RWMol.RemoveAtom`.
+    /// Mirrors `RWMol.RemoveAtom`. `Error::Value`, with nothing removed, for
+    /// a molecule whose `_MolFileBondEndPts` bond properties RDKit would
+    /// misread (one that is empty, or in parentheses holds anything but
+    /// numbers below 2^32 between spaces) or whose substance groups' `PARENT`
+    /// chains form a cycle, which RDKit would follow forever; so do every
+    /// removal and the functions that remove atoms or bonds.
     pub fn remove_atom(&mut self, idx: u32) -> Result<()> {
         Ok(ffi::rwmol_remove_atom(self.mol.pin_mut(), idx)?)
     }
 
     /// Removes the bond between two atoms, if there is one. Mirrors
-    /// `RWMol.RemoveBond`.
+    /// `RWMol.RemoveBond`, with the errors of `remove_atom`.
     pub fn remove_bond(&mut self, idx1: u32, idx2: u32) -> Result<()> {
         Ok(ffi::rwmol_remove_bond(self.mol.pin_mut(), idx1, idx2)?)
     }
@@ -121,6 +126,8 @@ impl RWMol {
     }
 
     /// Mirrors `RWMol.ReplaceBond(index, newBond, preserveProps, keepSGroups)`.
+    /// Without `keep_s_groups`, it removes the substance groups that hold the
+    /// bond as `remove_bond` does, with its errors.
     pub fn replace_bond_with_params(
         &mut self,
         index: u32,
@@ -149,8 +156,12 @@ impl RWMol {
     }
 
     /// Applies the batch's removals. Mirrors `RWMol.CommitBatchEdit`.
-    pub fn commit_batch_edit(&mut self) {
-        expect_ok(ffi::rwmol_commit_batch_edit(self.mol.pin_mut()))
+    /// `Error::Value`, with the batch still open and nothing removed, for a
+    /// molecule whose `_MolFileBondEndPts` bond properties or substance
+    /// groups' `PARENT` chains RDKit's removals would misread (a malformed
+    /// value, or a cycle), as for `remove_atom` and `remove_bond`.
+    pub fn commit_batch_edit(&mut self) -> Result<()> {
+        Ok(ffi::rwmol_commit_batch_edit(self.mol.pin_mut())?)
     }
 
     /// Discards the batch's removals. Mirrors `RWMol.RollbackBatchEdit`.

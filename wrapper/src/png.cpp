@@ -155,6 +155,10 @@ rust::Vec<std::uint8_t> mol_to_png(const RWMol &mol, const std::string &png,
   params.smilesWriteParams = write_params(data.smiles_write_params);
   params.cxSmilesFlags = data.cx_smiles_flags;
   params.restoreBondDirs = data.restore_bond_dirs;
+  if (params.includeSmiles) {
+    // The SMILES writer removes atoms from copies (mol_to_smiles).
+    check_removals(mol);
+  }
   // The mol block computes 2D coordinates for a molecule without a
   // conformer, with compute2DCoords, which trusts the molecule
   // (depiction_checks.h), and randomized SMILES advance RDKit's global

@@ -176,6 +176,9 @@ std::unique_ptr<std::vector<std::string>> validation_validate(
   if (handle.sums_charges) {
     check_formal_charge_sum(mol);
   }
+  // FragmentValidation splits the molecule into its fragments
+  // (getMolFrags), removing atoms from copies (check_removals).
+  check_removals(mol);
   HoldControlC control_c;
   return strings(handle.ptr->validate(mol, report_all_failures));
 }
@@ -207,6 +210,9 @@ std::unique_ptr<std::vector<std::string>> validate_smiles(rust::Str smiles) {
                               input);
   }
   check_formal_charge_sum(*mol);
+  // CXSMILES can give the substance groups PARENT chains
+  // (validation_validate).
+  check_removals(*mol);
   MS::MolVSValidation validation;
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return strings(validation.validate(*mol, true));

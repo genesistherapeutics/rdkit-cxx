@@ -134,7 +134,12 @@ class Standardizer {
     }
   }
 
+  // Standardizing removes hydrogens and fragments, splits the molecule into
+  // its fragments (getMolFrags), and writes tautomers as SMILES, all of
+  // which remove atoms from the molecule or a copy (check_removals); in
+  // place, this is checked before the first edit.
   void check(const RWMol &mol) const {
+    check_removals(mol);
     if (sums_charges(d_op, d_skip)) {
       check_reionizer_atoms(mol);
     }
@@ -497,6 +502,8 @@ std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
                               input);
   }
   check_reionizer_atoms(*mol);
+  // CXSMILES can give the substance groups PARENT chains (Standardizer).
+  check_removals(*mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   MS::cleanupInPlace(*mol);
   return std::make_unique<std::string>(RDKit::MolToSmiles(*mol));

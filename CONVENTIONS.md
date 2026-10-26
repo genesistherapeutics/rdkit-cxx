@@ -393,7 +393,15 @@ rule changes the rule first.
   bond's `_MolFileBondEndPts` without checks and follows the substance
   groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
   wrapper whose RDKit call removes atoms or bonds from a molecule, or from
-  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
+  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first,
+  before any edit in place. Such calls include, besides the removals and
+  the functions named for them, everything that splits a molecule into its
+  fragments (`getMolFrags` with molecules, and so the SMILES writer for a
+  molecule of several fragments, and what writes SMILES: hashes, tautomer
+  enumeration, SMILES holders), the standardizer, and the embedder. A call
+  that combines molecules before it removes atoms (`molzip`,
+  `replaceSubstructs`) checks them together, since RDKit does not renumber
+  the groups' indices.
   The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
   and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
 

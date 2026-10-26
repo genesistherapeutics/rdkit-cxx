@@ -23,6 +23,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/gaussian_shape.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -140,6 +141,9 @@ void check_point(const RDGeom::Point3D &p) {
 // it a copy instead, which this returns.
 std::unique_ptr<RWMol> checked_mol(const RWMol &mol, int conf_id,
                                    const GS::ShapeInputOptions &opts) {
+  // ShapeInput removes atoms from copies (extractSubset, removeHs) and
+  // writes SMILES, which trusts what check_removals checks.
+  check_removals(mol);
   if (!mol.getNumConformers()) {
     throw ValueErrorException(
         "ShapeInput needs the molecule to have conformers");

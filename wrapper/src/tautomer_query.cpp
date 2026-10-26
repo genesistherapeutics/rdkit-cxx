@@ -320,6 +320,9 @@ std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
   MolStandardize::TautomerCatalogParams params(
       to_path(tautomer_transform_file));
   check_transforms(params);
+  // The enumerator writes the molecule and its tautomers as SMILES, which
+  // removes atoms from copies of a molecule of several fragments.
+  check_removals(mol);
   // The enumerator matches its transforms (control_c_lock.h).
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return from_mol(mol, params);

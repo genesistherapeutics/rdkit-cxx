@@ -11,6 +11,7 @@
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
 
@@ -53,15 +54,18 @@ std::unique_ptr<FragmentRemover> fragment_remover_from_data(
   return std::make_unique<FragmentRemover>(in, leave_last, skip_if_all_match);
 }
 
-// The remover matches its fragments (control_c_lock.h).
+// The remover matches its fragments (control_c_lock.h). Both remove atoms
+// (check_removals), in place after this check.
 std::unique_ptr<RWMol> fragment_remover_remove(const FragmentRemover &remover,
                                                const RWMol &mol) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return adopt_mol(mut(remover).remove(mol));
 }
 
 void fragment_remover_remove_in_place(const FragmentRemover &remover,
                                       RWMol &mol) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   mut(remover).removeInPlace(mol);
 }
@@ -69,6 +73,7 @@ void fragment_remover_remove_in_place(const FragmentRemover &remover,
 std::unique_ptr<RWMol> largest_fragment_chooser_choose(
     const RWMol &mol, bool prefer_organic, bool use_atom_count,
     bool count_heavy_atoms_only) {
+  check_removals(mol);
   return adopt_mol(
       chooser(prefer_organic, use_atom_count, count_heavy_atoms_only)
           .choose(mol));
@@ -77,6 +82,7 @@ std::unique_ptr<RWMol> largest_fragment_chooser_choose(
 void largest_fragment_chooser_choose_in_place(RWMol &mol, bool prefer_organic,
                                               bool use_atom_count,
                                               bool count_heavy_atoms_only) {
+  check_removals(mol);
   chooser(prefer_organic, use_atom_count, count_heavy_atoms_only)
       .chooseInPlace(mol);
 }

@@ -65,6 +65,10 @@ StereoEnumerationOptionsData stereo_enumeration_options_default() {
 std::unique_ptr<StereoisomerEnumerator> stereoisomer_enumerator_new(
     const RWMol &mol, const StereoEnumerationOptionsData &data, bool verbose) {
   auto options = from_data(data);
+  // next() writes each isomer, a copy of the molecule, as CXSMILES, which
+  // removes atoms from copies of a molecule of several fragments
+  // (check_removals); the enumerator keeps its own copy.
+  check_removals(mol);
   auto res = std::make_unique<StereoisomerEnumerator>();
   res->enumerator =
       std::make_unique<ES::StereoisomerEnumerator>(mol, options, verbose);
