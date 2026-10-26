@@ -48,8 +48,13 @@ Each crate version supports one RDKit release series (2026.9.x supports RDKit
 2026.09.1. The wrapper compiles against copies of a few headers RDKit does not
 install, whose layouts can change between patch releases, so the build refuses
 any other release ([`wrapper/vendor/`](wrapper/vendor/README.md)), and a
-program built against one stops when it loads with another, as after an
-update in place. It builds with Rust 1.88 or newer.
+program built against one stops when it loads with another, as after an update
+in place. It builds with Rust 1.88 or newer.
+
+RDKit's version scheme and the crate's differ: RDKit numbers each series by
+year and zero-padded month (2026.09), but crate versions are SemVer, which
+doesn't allow leading zeros, so they drop the zero (2026.9). The crate's patch
+number is its own, not RDKit's.
 
 Install RDKit's development packages from conda-forge and activate the
 environment before building:
@@ -79,11 +84,6 @@ rdkit-cxx = "~2026.9"
 
 Cargo's default caret requirement can cross series: `"2027.3"` would also
 accept 2027.9, which needs another RDKit.
-
-The version is RDKit's series without its leading zero (2026.9 for RDKit
-2026.09, 2027.3 for 2027.03), because Cargo's versions can't have one. The
-patch number is the crate's own, not RDKit's; "Environment" names the RDKit
-release each crate release supports.
 
 RDKit's shared libraries live in the conda environment, and conda does not set
 `LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
