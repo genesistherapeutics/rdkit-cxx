@@ -90,13 +90,13 @@ std::unique_ptr<RWMol> reionizer_reionize(const Reionizer &reionizer,
                                           const RWMol &mol) {
   check_reionizer_atoms(mol);
   // The reionizer and uncharger match substructures (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(mut(reionizer).reionize(mol));
 }
 
 void reionizer_reionize_in_place(const Reionizer &reionizer, RWMol &mol) {
   check_reionizer_atoms(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   mut(reionizer).reionizeInPlace(mol);
 }
 
@@ -110,13 +110,13 @@ std::unique_ptr<Uncharger> uncharger_new(bool canonical_order, bool force,
 std::unique_ptr<RWMol> uncharger_uncharge(const Uncharger &uncharger,
                                           const RWMol &mol) {
   check_formal_charge_sum(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(mut(uncharger).uncharge(mol));
 }
 
 void uncharger_uncharge_in_place(const Uncharger &uncharger, RWMol &mol) {
   check_formal_charge_sum(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   mut(uncharger).unchargeInPlace(mol);
 }
 

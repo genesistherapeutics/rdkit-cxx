@@ -157,7 +157,13 @@ impl FragCatalog {
     /// read out of bounds; Python's reads them. A truncated pickle is
     /// `Error::Runtime`, as is a catalog with no functional groups, whose
     /// pickles RDKit cannot read back.
-    pub fn from_pickle(pickle: &[u8]) -> Result<FragCatalog> {
+    ///
+    /// # Safety
+    ///
+    /// `pickle` must be bytes `serialize` (this crate's or RDKit's)
+    /// returned, unmodified: each entry holds a molecule pickle, which RDKit
+    /// reads as `Mol::from_pkl_string` does.
+    pub unsafe fn from_pickle(pickle: &[u8]) -> Result<FragCatalog> {
         Ok(FragCatalog {
             ptr: ffi::frag_catalog_from_pickle(pickle)?,
         })

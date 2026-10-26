@@ -17,6 +17,7 @@
 #include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/control_c_lock.h"
+#include "rdkit-cxx/coordinate_checks.h"
 #include "rdkit-cxx/descriptors.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/descriptors_3d.rs.h"
@@ -42,16 +43,24 @@ void check_has_atoms(const RWMol &mol) {
   }
 }
 
-// GETAWAY sorts the atoms' leverages with std::sort, which is undefined for
-// NaN, and non-finite or huge coordinates make NaN leverages. Within 1e9 they
-// stay finite.
-void check_coordinates(const RWMol &mol, std::int32_t conf_id) {
-  for (const auto &pos : mol.getConformer(conf_id).getPositions()) {
-    for (double v : {pos.x, pos.y, pos.z}) {
-      if (!(std::abs(v) <= 1e9)) {
-        throw ValueErrorException(
-            "GETAWAY needs finite coordinates within 1e9");
-      }
+// The descriptors that solve matrices built from the conformer's
+// coordinates (coordinate_checks.h).
+void check_coordinates(const RWMol &mol, std::int32_t conf_id,
+                       const std::string &what) {
+  if (has_conformers(mol)) {
+    check_finite_coordinates(mol.getConformer(conf_id), what);
+  }
+}
+
+// WHIM weights the coordinates' covariance matrix, which it solves, by a
+// custom atom property's values.
+void check_custom_weights(const RWMol &mol, const std::string &custom) {
+  for (const auto *atom : mol.atoms()) {
+    double v = 1.0;
+    atom->getPropIfPresent(custom, v);
+    if (!(std::abs(v) <= 1e9)) {
+      throw ValueErrorException("WHIM needs the values of " + custom +
+                                " to be finite and within 1e9");
     }
   }
 }
@@ -130,6 +139,7 @@ void check_usr_molecule(const RWMol &mol) {
 #define RDKIT_CXX_MOMENTS(name, function)                   \
   double name(const RWMol &mol, std::int32_t conf_id,       \
               bool use_atomic_masses) {                     \
+    check_coordinates(mol, conf_id, "the moments");         \
     DescriptorCacheGuard guard(mol);                        \
     return function(mol, conf_id, use_atomic_masses, true); \
   }
@@ -147,6 +157,7 @@ RDKIT_CXX_MOMENTS(calc_asphericity, Desc::asphericity)
 #undef RDKIT_CXX_MOMENTS
 
 double calc_spherocity_index(const RWMol &mol, std::int32_t conf_id) {
+  check_coordinates(mol, conf_id, "the spherocity index");
   DescriptorCacheGuard guard(mol);
   return Desc::spherocityIndex(mol, conf_id, true);
 }
@@ -155,6 +166,7 @@ double calc_spherocity_index(const RWMol &mol, std::int32_t conf_id) {
 // computePrincipalAxesAndMomentsFromGyrationMatrix, so it reads the cached
 // axes of whichever conformer came first (U8).
 double calc_pbf(const RWMol &mol, std::int32_t conf_id) {
+  check_coordinates(mol, conf_id, "PBF");
   DescriptorCacheGuard guard(mol);
   return Desc::PBF(mol, conf_id);
 }
@@ -188,6 +200,10 @@ rust::Vec<double> calc_morse(const RWMol &mol, std::int32_t conf_id,
 rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
                             double thresh, rust::Str custom_atom_property) {
   std::string custom(custom_atom_property);
+  check_coordinates(mol, conf_id, "WHIM");
+  if (!custom.empty()) {
+    check_custom_weights(mol, custom);
+  }
   return table_descriptor(mol, custom, true, false,
                           [&](std::vector<double> &res) {
                             Desc::WHIM(mol, res, conf_id, thresh, custom);
@@ -196,7 +212,9 @@ rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
 
 // GETAWAY converts the precision to unsigned int, which is undefined for a
 // negative, huge, or NaN value, and prints each leverage with that many
-// digits into a 32-byte buffer, which 25 or more overflow.
+// digits into a 32-byte buffer, which 25 or more overflow. It sorts the
+// atoms' leverages with std::sort, which is undefined for NaN, and divides
+// by the atoms' distances (coordinate_checks.h).
 rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
                                double precision,
                                rust::Str custom_atom_property) {
@@ -205,7 +223,9 @@ rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
   }
   std::string custom(custom_atom_property);
   if (has_conformers(mol)) {
-    check_coordinates(mol, conf_id);
+    const auto &conf = mol.getConformer(conf_id);
+    check_finite_coordinates(conf, "GETAWAY");
+    check_distinct_positions(conf, "GETAWAY");
   }
   return table_descriptor(
       mol, custom, true, true, [&](std::vector<double> &res) {
@@ -237,6 +257,10 @@ rust::Vec<double> calc_eem_charges(const RWMol &mol, std::int32_t conf_id) {
       throw ValueErrorException(
           "EEM sizes its matrix in int, which overflows above 46339 atoms");
     }
+    // EEM solves a matrix of the inverse distances (coordinate_checks.h).
+    const auto &conf = mol.getConformer(conf_id);
+    check_finite_coordinates(conf, "EEM");
+    check_distinct_positions(conf, "EEM");
     RDKit::MolOps::Kekulize(copy, true);
     for (const auto *atom : copy.atoms()) {
       if (static_cast<unsigned int>(atom->getAtomicNum()) >= eem_table_size) {
@@ -290,7 +314,7 @@ rust::Vec<double> get_usrcat(const RWMol &mol, bool has_atom_selections,
       12 * ((has_atom_selections ? atom_ids.size() : 4) + 1));
   // Without selections, USRCAT finds its features by substructure matches
   // (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   Desc::USRCAT(mol, descriptor, atom_ids, conf_id);
   return to_vec(descriptor);
 }

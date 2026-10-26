@@ -38,7 +38,7 @@ RDKit::FeatSPtrList features(const MolChemicalFeatureFactory &factory,
                              std::int32_t conf_id) {
   // Python passes includeOnly as a C string, which ends at a NUL.
   std::string only(include_only);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return factory.getFeaturesForMol(mol, only.c_str(), conf_id);
 }
 

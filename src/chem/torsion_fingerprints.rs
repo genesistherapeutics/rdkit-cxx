@@ -586,7 +586,7 @@ fn same_atom_order(mol1: &Mol, mol2: &Mol) -> Result<Mol> {
     mol3.remove_all_conformers();
     for conf2 in mol2.get_conformers() {
         let mut conf = Conformer::new(mol1.get_num_atoms());
-        conf.set_id(conf2.get_id());
+        conf.set_id(conf2.get_id())?;
         for i in 0..mol1.get_num_atoms() {
             let j = *m.get(i as usize).ok_or(Error::index(i, m.len()))?;
             conf.set_atom_position(i, conf2.get_atom_position(j)?)?;

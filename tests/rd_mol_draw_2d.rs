@@ -491,10 +491,10 @@ fn atom_regions() {
 
 #[test]
 fn ring_information_must_be_cycles() {
-    let mut d = svg();
+    // add_ring refuses a ring that is not a cycle, so no drawing meets one.
     let mut m = depicted("CC=CC");
-    m.get_ring_info_mut().add_ring(&[1, 2], &[0, 1]).unwrap();
-    assert_value_error(d.draw_molecule(&m));
+    assert_value_error(m.get_ring_info_mut().add_ring(&[1, 2], &[0, 1]));
+    svg().draw_molecule(&m).unwrap();
 }
 
 #[test]

@@ -6,6 +6,8 @@
 #include "rdkit-cxx/conformer.h"
 
 #include <iterator>
+#include <limits>
+#include <string>
 
 #include <RDGeneral/Exceptions.h>
 
@@ -20,6 +22,17 @@ Point3D to_point(const RDGeom::Point3D &p) { return Point3D{p.x, p.y, p.z}; }
 
 RDGeom::Point3D from_point(const Point3D &p) {
   return RDGeom::Point3D(p.x, p.y, p.z);
+}
+
+constexpr unsigned kMaxId = std::numeric_limits<int>::max();
+
+// getConformer takes an int, so a larger id could not be looked up, and
+// would read as a negative id, which means the default conformer.
+void check_id(unsigned id) {
+  if (id > kMaxId) {
+    throw ValueErrorException("conformer ids are at most " +
+                              std::to_string(kMaxId));
+  }
 }
 
 }  // namespace
@@ -94,7 +107,10 @@ void conformer_set_positions(Conformer &conf,
 
 void conformer_set_3d(Conformer &conf, bool v) { conf.set3D(v); }
 
-void conformer_set_id(Conformer &conf, unsigned id) { conf.setId(id); }
+void conformer_set_id(Conformer &conf, unsigned id) {
+  check_id(id);
+  conf.setId(id);
+}
 
 unsigned mol_get_num_conformers(const RWMol &mol) {
   return mol.getNumConformers();
@@ -104,8 +120,35 @@ const Conformer &mol_get_conformer(const RWMol &mol, int id) {
   return mol.getConformer(id);
 }
 
-Conformer &mol_get_conformer_mut(RWMol &mol, int id) {
-  return mol.getConformer(id);
+// The first conformer with exactly `id`: unlike getConformer, no id stands
+// for the default conformer.
+const Conformer &mol_find_conformer(const RWMol &mol, unsigned id) {
+  for (auto it = mol.beginConformers(); it != mol.endConformers(); ++it) {
+    if ((*it)->getId() == id) {
+      return **it;
+    }
+  }
+  throw ValueErrorException("no conformer has id " + std::to_string(id));
+}
+
+Conformer &mol_find_conformer_mut(RWMol &mol, unsigned id) {
+  return const_cast<Conformer &>(mol_find_conformer(mol, id));
+}
+
+// Lookups by id find the first conformer with it, so an id another
+// conformer has would make that one unreachable.
+void mol_set_conformer_id(RWMol &mol, unsigned current, unsigned id) {
+  check_id(id);
+  if (id == current) {
+    return;
+  }
+  for (auto it = mol.beginConformers(); it != mol.endConformers(); ++it) {
+    if ((*it)->getId() == id) {
+      throw ValueErrorException("another conformer has id " +
+                                std::to_string(id));
+    }
+  }
+  mol_find_conformer_mut(mol, current).setId(id);
 }
 
 const Conformer &mol_get_conformer_at(const RWMol &mol, unsigned position) {
@@ -116,7 +159,18 @@ const Conformer &mol_get_conformer_at(const RWMol &mol, unsigned position) {
 }
 
 // As Mol.AddConformer in Code/GraphMol/nbWrap/Mol.cpp, which copies.
+// addConformer assigns the largest id, as an int, plus one, which overflows
+// when that is INT_MAX.
 unsigned mol_add_conformer(RWMol &mol, const Conformer &conf, bool assign_id) {
+  if (assign_id) {
+    for (auto it = mol.beginConformers(); it != mol.endConformers(); ++it) {
+      if ((*it)->getId() == kMaxId) {
+        throw ValueErrorException("no conformer id is left to assign");
+      }
+    }
+  } else {
+    check_id(conf.getId());
+  }
   return mol.addConformer(new Conformer(conf), assign_id);
 }
 

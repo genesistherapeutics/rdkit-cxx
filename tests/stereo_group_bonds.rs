@@ -65,7 +65,8 @@ fn replace_bond_moves_groups_to_the_new_bond() {
         rw.get_bond_with_idx(1).unwrap().get_bond_type(),
         BondType::Double
     );
-    let copy = Mol::from_pkl_string(&rw.to_binary()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { Mol::from_pkl_string(&rw.to_binary()) }.unwrap();
     assert_eq!(group_bonds(&copy), [[1]]);
     assert!(mol_to_v3k_mol_block(&rw).unwrap().contains("MDLV30/STERAC"));
     assert_removal_updates_group(rw.into(), 1, 2);
@@ -78,7 +79,8 @@ fn adjusting_queries_keeps_groups() {
     assert!(adjusted.get_bond_with_idx(1).unwrap().has_query());
     assert_eq!(group_bonds(&adjusted), [[1]]);
     assert_eq!(group_bonds(&mol), [[1]]);
-    let copy = Mol::from_pkl_string(&adjusted.to_binary()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { Mol::from_pkl_string(&adjusted.to_binary()) }.unwrap();
     assert_eq!(group_bonds(&copy), [[1]]);
     assert_removal_updates_group(adjusted, 1, 2);
 
@@ -100,7 +102,8 @@ fn extended_queries_keep_groups() {
         ..Default::default()
     };
     let query = create_extended_query_mol_with_params(&mol, &params).unwrap();
-    let copy = ExtendedQueryMol::from_data(&query.to_binary().unwrap()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { ExtendedQueryMol::from_data(&query.to_binary().unwrap()) }.unwrap();
     assert!(!query.to_json().unwrap().is_empty());
     for q in [&query, &copy] {
         assert!(mol_has_substruct_match(&smiles("CC(O)=C"), q).unwrap());
@@ -113,7 +116,8 @@ fn extended_queries_keep_groups() {
         adjust_query_parameters: generic_bonds(),
     };
     let query = create_extended_query_mol_with_params(&mol, &adjusted).unwrap();
-    let copy = ExtendedQueryMol::from_data(&query.to_binary().unwrap()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { ExtendedQueryMol::from_data(&query.to_binary().unwrap()) }.unwrap();
     for q in [&query, &copy, &query.clone()] {
         assert!(mol_has_substruct_match(&smiles("C=C(C)O"), q).unwrap());
     }
@@ -127,7 +131,8 @@ fn tautomer_query_templates_keep_groups() {
     let template = query.get_template_molecule();
     assert!(template.get_bond_with_idx(1).unwrap().has_query());
     assert_eq!(group_bonds(&template), [[1]]);
-    let copy = TautomerQuery::from_pickle(&query.to_binary().unwrap()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { TautomerQuery::from_pickle(&query.to_binary().unwrap()) }.unwrap();
     assert_eq!(group_bonds(&copy.get_template_molecule()), [[1]]);
     assert_removal_updates_group(template, 1, 2);
 }
@@ -149,7 +154,8 @@ fn sanitizing_reactions_keeps_template_groups() {
     sanitize_rxn_with_params(&mut rxn, &params).unwrap();
     let reactant = rxn.get_reactant_template(0).unwrap();
     assert_eq!(group_bonds(&reactant), [[0]]);
-    let copy = ChemicalReaction::from_bin_str(&rxn.to_binary()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { ChemicalReaction::from_bin_str(&rxn.to_binary()) }.unwrap();
     assert_eq!(group_bonds(&copy.get_reactant_template(0).unwrap()), [[0]]);
 }
 

@@ -59,14 +59,16 @@ fn draws_png_with_metadata() {
     assert_eq!(png_size(&png), (300, 200));
     // Python's MolFromPNGString reads the molecule back: Oc1ccccc1.
     assert_eq!(
-        mol_to_smiles(&mol_from_png_string(&png).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        mol_to_smiles(&unsafe { mol_from_png_string(&png) }.unwrap()).unwrap(),
         "Oc1ccccc1"
     );
 
     // Each molecule drawn adds its own (MOL1, SMILES1, rdkitPKL1 for the
     // second).
     d.draw_molecule(&mol("CCN")).unwrap();
-    let smiles: Vec<String> = mols_from_png_string(&d.get_drawing_text().unwrap())
+    // SAFETY: a pickle RDKit wrote.
+    let smiles: Vec<String> = unsafe { mols_from_png_string(&d.get_drawing_text().unwrap()) }
         .unwrap()
         .into_iter()
         .map(|m| mol_to_smiles(&m.unwrap()).unwrap())
@@ -82,7 +84,8 @@ fn draws_png_with_metadata() {
     plain.draw_molecule(&mol("c1ccccc1O")).unwrap();
     let png = plain.get_drawing_text().unwrap();
     assert_eq!(png_size(&png), (300, 200));
-    assert!(mol_from_png_string(&png).is_err());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { mol_from_png_string(&png) }.is_err());
 
     // Nothing drawn yet: the background alone, with no metadata.
     let blank = MolDraw2DCairo::new(20, 10).unwrap();
@@ -228,7 +231,8 @@ fn reactions_and_grids() {
     let png = d.get_drawing_text().unwrap();
     assert_eq!(png_size(&png), (d.width(), d.height()));
     assert_eq!(
-        reaction_to_smarts(&reaction_from_png_string(&png).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        reaction_to_smarts(&unsafe { reaction_from_png_string(&png) }.unwrap()).unwrap(),
         "[C:1]=[O:2].[N:3]>>[C:1](-[N:3])-[O:2]"
     );
 
@@ -243,7 +247,8 @@ fn reactions_and_grids() {
     )
     .unwrap();
     d.draw_molecules(&[mol("c1ccccc1O"), mol("CCN")]).unwrap();
-    let smiles: Vec<String> = mols_from_png_string(&d.get_drawing_text().unwrap())
+    // SAFETY: a pickle RDKit wrote.
+    let smiles: Vec<String> = unsafe { mols_from_png_string(&d.get_drawing_text().unwrap()) }
         .unwrap()
         .into_iter()
         .map(|m| mol_to_smiles(&m.unwrap()).unwrap())

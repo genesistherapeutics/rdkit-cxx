@@ -5,6 +5,9 @@
 
 #include "rdkit-cxx/ring_info.h"
 
+#include <string>
+#include <vector>
+
 #include <GraphMol/RingInfo.h>
 #include <RDGeneral/Exceptions.h>
 
@@ -190,6 +193,35 @@ void ring_info_add_ring(RWMol &mol, rust::Slice<const std::uint32_t> atom_ids,
   for (auto idx : bond_ids) {
     check_index(idx, mol.getNumBonds());
     bonds.push_back(idx);
+  }
+  // RDKit records the ring as given, but its ring algorithms, and the pickle
+  // reader, which rebuilds each ring's bonds from its atoms, take it to be a
+  // cycle: an empty ring makes MurckoDecompose and MMFF read out of bounds,
+  // and unbonded neighbors make a pickle of the molecule unreadable. So the
+  // ring has 3 or more distinct atoms, and bond i joins atoms i and i + 1.
+  auto n = atoms.size();
+  if (n < 3) {
+    throw ValueErrorException("a ring has at least 3 atoms");
+  }
+  std::vector<bool> seen(mol.getNumAtoms(), false);
+  for (auto idx : atoms) {
+    if (seen[idx]) {
+      throw ValueErrorException("atom " + std::to_string(idx) +
+                                " appears twice in the ring");
+    }
+    seen[idx] = true;
+  }
+  for (std::size_t i = 0; i < n; ++i) {
+    unsigned begin = atoms[i];
+    unsigned end = atoms[(i + 1) % n];
+    const auto *bond = mol.getBondWithIdx(bonds[i]);
+    unsigned a = bond->getBeginAtomIdx();
+    unsigned b = bond->getEndAtomIdx();
+    if (!((a == begin && b == end) || (a == end && b == begin))) {
+      throw ValueErrorException(
+          "bond " + std::to_string(bonds[i]) + " does not join ring atoms " +
+          std::to_string(begin) + " and " + std::to_string(end));
+    }
   }
   auto *info = mol.getRingInfo();
   if (!info->isInitialized()) {

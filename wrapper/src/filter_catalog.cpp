@@ -282,7 +282,7 @@ std::unique_ptr<RWMol> copy_pattern(const RDKit::ROMol &pattern) {
   using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
   // The crate's matches hold control_c_mutex and then, in SubstructMatch,
   // the query locks; taking them in the same order cannot deadlock.
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::vector<std::unique_lock<std::mutex>> locks;
   std::unordered_set<const void *> seen;
   std::vector<const AtomQuery *> todo;

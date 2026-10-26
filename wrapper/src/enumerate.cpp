@@ -370,7 +370,7 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_params(
   // Python's library shares Python's molecules without keeping them alive;
   // this one owns copies. Construction drops the building blocks the
   // reaction does not match, and running it matches too (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::make_unique<EnumerateLibrary>(
       rxn, to_bbs(mols, group_sizes, true), params_from(data));
 }
@@ -386,7 +386,7 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_enumerator(
   // initialized reaction matches; check those first.
   ChemicalReaction initialized(rxn);
   initialized.initReactantMatchers(true);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   check_initialize(strategy,
                    RDKit::getSizesFromBBs(RDKit::removeNonmatchingReagents(
                        initialized, bbs, params)));
@@ -441,7 +441,7 @@ std::unique_ptr<ProductSets> enumerate_library_next(EnumerateLibrary &lib) {
     }
     reactants.push_back(bbs[i][indices[i]]);
   }
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_product_sets(lib.getReaction().runReactants(reactants));
 }
 

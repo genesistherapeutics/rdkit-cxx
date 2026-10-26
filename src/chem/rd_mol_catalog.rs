@@ -40,7 +40,13 @@ impl MolCatalog {
     /// `Error::Value` for a pickle whose lengths or indices RDKit would
     /// read out of bounds; Python's reads them. A truncated pickle is
     /// `Error::Runtime`.
-    pub fn from_pickle(pickle: &[u8]) -> Result<MolCatalog> {
+    ///
+    /// # Safety
+    ///
+    /// `pickle` must be bytes `serialize` (this crate's or RDKit's)
+    /// returned, unmodified: each entry holds a molecule pickle, which RDKit
+    /// reads as `Mol::from_pkl_string` does.
+    pub unsafe fn from_pickle(pickle: &[u8]) -> Result<MolCatalog> {
         Ok(MolCatalog {
             ptr: ffi::mol_catalog_from_pickle(pickle)?,
         })
@@ -153,7 +159,13 @@ impl MolCatalogEntry {
     /// `MolCatalogEntry(pickle)`. `Error::Value` for a description whose
     /// length RDKit would read out of bounds; Python's reads it. A
     /// truncated pickle is `Error::Runtime`.
-    pub fn from_pickle(pickle: &[u8]) -> Result<MolCatalogEntry> {
+    ///
+    /// # Safety
+    ///
+    /// `pickle` must be bytes `serialize` (this crate's or RDKit's)
+    /// returned, unmodified: it holds a molecule pickle, which RDKit reads
+    /// as `Mol::from_pkl_string` does.
+    pub unsafe fn from_pickle(pickle: &[u8]) -> Result<MolCatalogEntry> {
         Ok(MolCatalogEntry {
             ptr: ffi::mol_catalog_entry_from_pickle(pickle)?,
         })

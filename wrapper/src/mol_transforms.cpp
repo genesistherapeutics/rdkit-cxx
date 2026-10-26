@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/mol_transforms.h"
 
+#include <cmath>
 #include <cstring>
 #include <memory>
 #include <vector>
@@ -13,6 +14,7 @@
 #include <GraphMol/MolTransforms/MolTransforms.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/coordinate_checks.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/mol_transforms.rs.h"
@@ -65,6 +67,7 @@ rust::Vec<double> compute_canonical_transform(const Conformer &conf,
                                               const Point3D &center,
                                               bool normalize_covar,
                                               bool ignore_hs) {
+  check_finite_coordinates(conf, "the canonical transform");
   auto origin = to_center(has_center, center);
   std::unique_ptr<RDGeom::Transform3D> trans(
       MolTransforms::computeCanonicalTransform(conf, origin.get(),
@@ -86,6 +89,13 @@ bool compute_principal_axes_and_moments(const Conformer &conf,
   if (has_weights && weights_vec.size() != conf.getNumAtoms()) {
     throw ValueErrorException(
         "The Python container must have length equal to conf.GetNumAtoms()");
+  }
+  check_finite_coordinates(conf, "the principal axes");
+  for (double w : weights_vec) {
+    if (!(std::abs(w) <= 1e9)) {
+      throw ValueErrorException(
+          "the principal axes need finite weights within 1e9");
+    }
   }
   DescriptorCacheGuard guard(conf.getOwningMol());
   Eigen::Matrix3d eigen_axes;
@@ -125,12 +135,16 @@ void transform_conformer(Conformer &conf, rust::Slice<const double> trans) {
 void canonicalize_conformer(Conformer &conf, bool has_center,
                             const Point3D &center, bool normalize_covar,
                             bool ignore_hs) {
+  check_finite_coordinates(conf, "canonicalization");
   auto origin = to_center(has_center, center);
   MolTransforms::canonicalizeConformer(conf, origin.get(), normalize_covar,
                                        ignore_hs);
 }
 
 void canonicalize_mol(RWMol &mol, bool normalize_covar, bool ignore_hs) {
+  for (auto it = mol.beginConformers(); it != mol.endConformers(); ++it) {
+    check_finite_coordinates(**it, "canonicalization");
+  }
   MolTransforms::canonicalizeMol(mol, normalize_covar, ignore_hs);
 }
 

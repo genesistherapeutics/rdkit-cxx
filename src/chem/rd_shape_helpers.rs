@@ -20,7 +20,9 @@
 //! and the extents of the atoms' spheres to `int` without checks; a sphere
 //! too large for its grid, or a negative step size, is `Error::Value`, and
 //! `encode_shape` skips atoms that RDKit could not place, as it skips any
-//! outside the grid.
+//! outside the grid. The comparisons orient the shapes along the first
+//! conformer's principal axes, so coordinates beyond 1e9 or not finite are
+//! `Error::Value` there, as in `rd_mol_transforms`.
 
 use crate::Result;
 use crate::chem::Mol;

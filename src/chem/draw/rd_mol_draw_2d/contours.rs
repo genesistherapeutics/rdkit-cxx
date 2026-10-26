@@ -11,6 +11,7 @@ use super::options::DrawColour;
 use crate::Result;
 use crate::chem::Mol;
 use crate::chem::rdmolops::with_borrowed_mols_shared;
+use crate::error::expect_ok;
 use crate::ffi::draw::ffi;
 use crate::geometry::Point2D;
 
@@ -54,7 +55,7 @@ pub struct ContourParams {
 
 impl Default for ContourParams {
     fn default() -> ContourParams {
-        ContourParams::from_ffi(ffi::contour_params_default())
+        ContourParams::from_ffi(expect_ok(ffi::contour_params_default()))
     }
 }
 

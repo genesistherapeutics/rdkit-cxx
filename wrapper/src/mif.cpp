@@ -253,7 +253,7 @@ std::unique_ptr<HBond> h_bond_new(const RWMol &mol, std::int32_t conf_id,
                                   double cutoff) {
   check_h_bond_degrees(mol);
   // findSpecials matches a serine pattern (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::make_unique<HBond>(mol, conf_id, std::string(probe_atom_type),
                                  fixed, cutoff);
 }
@@ -268,7 +268,7 @@ std::unique_ptr<Hydrophilic> hydrophilic_new(const RWMol &mol,
                                              double cutoff) {
   check_h_bond_degrees(mol);
   // Two HBond constructors, which match patterns (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::make_unique<Hydrophilic>(mol, conf_id, fixed, cutoff);
 }
 

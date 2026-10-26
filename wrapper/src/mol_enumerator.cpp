@@ -274,7 +274,7 @@ MolEnumeratorParamsData mol_enumerator_params_default() {
 std::unique_ptr<MolList> mol_enumerator_enumerate(
     const RWMol &mol, std::uint32_t max_per_operation) {
   check_enumerate(mol, true, true, true);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_list(ME::enumerate(mol, max_per_operation));
 }
 
@@ -285,7 +285,7 @@ std::unique_ptr<MolList> mol_enumerator_enumerate_with_params(
   params.maxToEnumerate = data.max_to_enumerate;
   params.doRandom = data.do_random;
   params.randomSeed = data.random_seed;
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   if (data.has_operation) {
     params.dp_operation = op_from_type(data.operation);
     auto type = data.operation;
@@ -293,7 +293,7 @@ std::unique_ptr<MolList> mol_enumerator_enumerate_with_params(
                     type == EnumeratorType::RepeatUnit,
                     type == EnumeratorType::LinkNode);
     if (type == EnumeratorType::LinkNode) {
-      control_c = std::unique_lock<std::mutex>(control_c_mutex());
+      control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
     }
   }
   return to_list(ME::enumerate(mol, params));

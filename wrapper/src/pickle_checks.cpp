@@ -102,14 +102,22 @@ void check_discrete_value_vect_pickle(std::string_view pkl) {
   auto mask = read<std::uint32_t>(pkl, 12);
   auto length = read<std::uint32_t>(pkl, 16);
   auto num_ints = read<std::uint32_t>(pkl, 20);
-  if (!version || *version != -1 || !num_ints) {
-    // RDKit rejects these: a bad version, or a short read.
-    return;
-  }
   auto bad = [](const char *what) {
     throw ValueErrorException(std::string(what) +
                               " in DiscreteValueVect pickle");
   };
+  // RDKit checks none of its reads: it compares a version it may not have
+  // read, and divides by the bits per value before reading the rest.
+  if (!version) {
+    bad("a truncated header");
+  }
+  if (*version != -1) {
+    // RDKit rejects any other version.
+    return;
+  }
+  if (!type || !bits || !mask || !length || !num_ints) {
+    bad("a truncated header");
+  }
   if (*type > RDKit::DiscreteValueVect::SIXTEENBITVALUE ||
       *bits != (1u << *type) || *mask != (1ull << *bits) - 1) {
     bad("a bad value type");
@@ -128,6 +136,19 @@ void check_discrete_value_vect_pickle(std::string_view pkl) {
 
 void check_real_value_vect_pickle(std::string_view pkl) {
   check_version(pkl, "RealValueVect");
+  // Header: version, length; then the values. RDKit allocates the length it
+  // reads before reading them, so a short pickle could ask for 32 GB.
+  auto version = read<std::int32_t>(pkl, 0);
+  auto length = read<std::uint32_t>(pkl, 4);
+  if (!version || *version != -1 || !length) {
+    return;
+  }
+  if (*length > kMaxInt) {
+    throw ValueErrorException("a bad length in RealValueVect pickle");
+  }
+  if ((pkl.size() - 8) / sizeof(double) < *length) {
+    throw ValueErrorException("truncated data in RealValueVect pickle");
+  }
 }
 
 void check_uniform_grid3d_pickle(std::string_view pkl) {
@@ -173,10 +194,11 @@ void check_uniform_real_value_grid3d_pickle(std::string_view pkl) {
   if (!version || *version != -1 || !storage_size) {
     return;
   }
-  // RDKit zero-fills a short storage read, so only the storage's own
-  // version and length need checks.
-  auto storage =
-      pkl.substr(52, std::min<std::size_t>(*storage_size, pkl.size() - 52));
+  // RDKit allocates the storage size it reads before reading the storage.
+  if (pkl.size() - 52 < *storage_size) {
+    throw ValueErrorException("truncated UniformRealValueGrid3D pickle");
+  }
+  auto storage = pkl.substr(52, *storage_size);
   check_real_value_vect_pickle(storage);
   auto length = read<std::uint32_t>(storage, 4);
   if (!length) {

@@ -111,9 +111,9 @@ void add_coords(RWMol &mol, const CoordGenParamsData &data,
       data.treat_nonterminal_bonds_to_metal_as_zobs;
   auto lock = lock_depiction();
   // CoordGen matches a template to the molecule (control_c_lock.h).
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   if (has_template_mol) {
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
   }
   add_coords_with(mol, params);
 }

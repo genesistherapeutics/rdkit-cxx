@@ -27,7 +27,13 @@ pub struct MolBundle {
 impl MolBundle {
     /// The bundle a pickle holds, as `to_binary` writes it. Mirrors
     /// `MolBundle(pklString)`.
-    pub fn from_pkl_string(pkl_string: &[u8]) -> Result<MolBundle> {
+    ///
+    /// # Safety
+    ///
+    /// `pkl_string` must be a bundle pickle RDKit wrote (this crate's
+    /// `to_binary` or RDKit's), unmodified: it holds molecule pickles, which
+    /// RDKit reads as `Mol::from_pkl_string` does.
+    pub unsafe fn from_pkl_string(pkl_string: &[u8]) -> Result<MolBundle> {
         Ok(MolBundle {
             mols: mol_list_into_vec(ffi::mol_bundle_from_pkl_string(pkl_string)?),
         })

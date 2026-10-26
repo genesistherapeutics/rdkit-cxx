@@ -87,14 +87,16 @@ fn substructure_queries() {
 fn pickles() {
     assert!(mol_bundle_can_serialize());
     let bundle = bundle(&[smiles("CCO"), smiles("c1ccccc1O")]);
-    let read = MolBundle::from_pkl_string(&bundle.to_binary().unwrap()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { MolBundle::from_pkl_string(&bundle.to_binary().unwrap()) }.unwrap();
     assert_eq!(read.size(), 2);
     assert_eq!(
         mol_to_smiles(read.get_mol(1).unwrap()).unwrap(),
         "Oc1ccccc1"
     );
     assert!(matches!(
-        MolBundle::from_pkl_string(b"garbage"),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { MolBundle::from_pkl_string(b"garbage") },
         Err(Error::Runtime { .. })
     ));
 }

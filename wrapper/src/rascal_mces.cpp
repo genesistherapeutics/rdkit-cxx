@@ -171,7 +171,7 @@ ProxGraph build_proximity_graph(const std::vector<const RDKit::ROMol *> &mols,
     }
   }
   std::vector<ClusNode> molSims(toDo.size());
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   for (std::size_t k = 0; k < toDo.size(); ++k) {
     const auto [i, j] = toDo[k];
     molSims[k] =
@@ -235,7 +235,7 @@ double g_ij(const std::shared_ptr<RDKit::ROMol> &mol, double a, double b,
 std::vector<std::vector<unsigned int>> make_sub_clusters(
     const std::vector<ClusNode> &nbors,
     const Rascal::RascalClusterOptions &clusOpts) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::vector<std::vector<unsigned int>> subClusters;
 
   std::vector<const ClusNode *> tmpNbors;
@@ -598,7 +598,7 @@ std::unique_ptr<RascalResultList> find_mces(const RWMol &mol1,
   check_rascal_mols({&mol1, &mol2});
   auto list = std::make_unique<RascalResultList>();
   // The MCES matches substructures (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   list->results = Rascal::rascalMCES(mol1, mol2, options);
   return list;
 }

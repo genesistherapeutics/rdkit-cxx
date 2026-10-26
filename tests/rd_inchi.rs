@@ -6,8 +6,8 @@
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rdinchi::*;
 use rdkit_cxx::chem::{
-    Atom, BondStereo, ChiralType, Conformer, Mol, RWMol, SmilesParserParams, mol_from_smiles,
-    mol_from_smiles_with_params, mol_to_smiles,
+    Atom, BondStereo, ChiralType, Conformer, Mol, RWMol, SmilesParserParams, mol_from_smarts,
+    mol_from_smiles, mol_from_smiles_with_params, mol_to_smiles,
 };
 use rdkit_cxx::geometry::Point3D;
 
@@ -289,20 +289,50 @@ fn too_many_atoms_are_refused() {
 
 #[test]
 fn too_many_stereo_elements_are_refused() {
-    // num_stereo0D is a signed short too.
-    let mut mol: Mol = mol_from_smiles(&"C".repeat(20000)).unwrap();
-    for idx in 0..20000 {
+    // num_stereo0D is a signed short too. Each center has three neighbor
+    // atoms, which InChI needs.
+    let mut mol: Mol = mol_from_smiles(&"C(F)".repeat(16000)).unwrap();
+    for idx in (2..31998).step_by(2) {
         mol.get_atom_with_idx_mut(idx)
             .unwrap()
             .set_chiral_tag(ChiralType::ChiTetrahedralCw);
     }
-    for idx in 0..12768 {
+    for idx in 0..16770 {
         mol.get_bond_with_idx_mut(idx)
             .unwrap()
             .set_stereo(BondStereo::Stereoany);
     }
     assert!(is_value_error(mol_to_inchi(&mol)));
     assert!(is_value_error(mol_to_inchi_key(&mol)));
+}
+
+#[test]
+fn stereo_centers_with_too_few_neighbor_atoms_are_refused() {
+    // MolToInchi would pass InChI two neighbor indices it never set.
+    let smarts = mol_from_smarts("[C@H](F)Cl").unwrap();
+    let mut tagged = mol_from_smiles("C(F)Cl").unwrap();
+    tagged
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiTetrahedralCw);
+    for mol in [&smarts, &tagged] {
+        assert!(matches!(
+            mol_to_inchi(mol),
+            Err(Error::Value { message }) if message.contains("atom 0")
+        ));
+        assert!(is_value_error(mol_to_inchi_key(mol)));
+    }
+    // With a hydrogen an atom, the center has three.
+    let params = SmilesParserParams {
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut with_h = mol_from_smiles_with_params("C([H])(F)Cl", &params).unwrap();
+    with_h
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiTetrahedralCw);
+    assert!(mol_to_inchi(&with_h).is_ok());
 }
 
 #[test]

@@ -311,7 +311,7 @@ Fingerprints read_in_threads_fingerprint_here(const Input &in, S &suppl,
 template <class Gen>
 Fingerprints run(const std::string &path, const Gen &gen,
                  const FpGenerator *checked_gen,
-                 std::unique_lock<std::mutex> control_c,
+                 std::unique_lock<ControlCMutex> control_c,
                  const Options &options) {
   std::string format;
   std::string compression;
@@ -326,6 +326,10 @@ Fingerprints run(const std::string &path, const Gen &gen,
   }
   // RDKit negates the count in int (getNumThreadsToUse), which is undefined
   // for INT_MIN; num_threads_to_use computes in 64 bits.
+  if (options.numWriterThreads > static_cast<int>(kMaxSupplierThreads)) {
+    throw ValueErrorException("numThreads must be at most " +
+                              std::to_string(kMaxSupplierThreads));
+  }
   unsigned num_threads = num_threads_to_use(options.numWriterThreads);
   bool threaded = num_threads > 1 && format != "tdt";
   Fingerprinter<Gen> fp{gen, checked_gen};

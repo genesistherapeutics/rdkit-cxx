@@ -99,9 +99,14 @@ void set_bond_stereo_from_directions(RWMol &mol) {
 }
 
 rust::Vec<std::uint32_t> compute_atom_cip_ranks(RWMol &mol) {
+  rust::Vec<std::uint32_t> result;
+  // assignAtomCIPRanks sets the first ranked entry's rank without checking
+  // there is one, writing out of bounds for a molecule with no atoms.
+  if (mol.getNumAtoms() == 0) {
+    return result;
+  }
   RDKit::UINT_VECT ranks;
   RDKit::Chirality::assignAtomCIPRanks(mol, ranks);
-  rust::Vec<std::uint32_t> result;
   for (auto rank : ranks) {
     result.push_back(rank);
   }

@@ -534,7 +534,7 @@ impl O3A<'_> {
 }
 
 fn o3a_list<'m>(mut list: UniquePtr<ffi::O3AList>) -> Result<Vec<O3A<'m>>> {
-    let n = ffi::o3a_list_size(&list);
+    let n = ffi::o3a_list_size(&list)?;
     let mut result = Vec::with_capacity(n);
     for i in 0..n {
         result.push(O3A {

@@ -577,12 +577,16 @@ fn pickles() {
     rxn.initialize().unwrap();
     rxn.set_prop("a", "b");
     rxn.set_int_prop("n", 3);
-    let copy = ChemicalReaction::from_bin_str(&rxn.to_binary()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { ChemicalReaction::from_bin_str(&rxn.to_binary()) }.unwrap();
     assert_eq!(reaction_to_smarts(&copy).unwrap(), AMIDE);
     assert!(copy.is_initialized());
-    let with_props = ChemicalReaction::from_bin_str(
-        &rxn.to_binary_with_property_flags(PropertyPickleOptions::AllProps),
-    )
+    // SAFETY: a pickle RDKit wrote.
+    let with_props = unsafe {
+        ChemicalReaction::from_bin_str(
+            &rxn.to_binary_with_property_flags(PropertyPickleOptions::AllProps),
+        )
+    }
     .unwrap();
     assert_eq!(
         with_props.get_props_as_dict().unwrap(),
@@ -592,10 +596,12 @@ fn pickles() {
         ])
     );
     assert!(matches!(
-        ChemicalReaction::from_bin_str(b"junk"),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { ChemicalReaction::from_bin_str(b"junk") },
         Err(Error::Runtime { .. })
     ));
-    assert!(ChemicalReaction::from_bin_str(&rxn.to_binary()[..20]).is_err());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { ChemicalReaction::from_bin_str(&rxn.to_binary()[..20]) }.is_err());
 }
 
 #[test]
@@ -649,7 +655,8 @@ fn substruct_params() {
     params.use_chirality = true;
     rxn.set_substruct_params(&params);
     assert!(rxn.get_substruct_params().use_chirality);
-    let copy = ChemicalReaction::from_bin_str(&rxn.to_binary()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { ChemicalReaction::from_bin_str(&rxn.to_binary()) }.unwrap();
     assert!(copy.get_substruct_params().use_chirality);
 }
 
@@ -659,7 +666,8 @@ fn png_metadata() {
     let png = std::fs::read(data("reaction1.no_metadata.png")).unwrap();
     let with_rxn = reaction_metadata_to_png_string(&rxn, &png).unwrap();
     assert_eq!(
-        reaction_to_smarts(&reaction_from_png_string(&with_rxn).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        reaction_to_smarts(&unsafe { reaction_from_png_string(&with_rxn) }.unwrap()).unwrap(),
         AMIDE
     );
     let params = ReactionMetadataToPNGStringParams {
@@ -670,13 +678,15 @@ fn png_metadata() {
     };
     let smarts_only = reaction_metadata_to_png_string_with_params(&rxn, &png, &params).unwrap();
     assert_eq!(
-        reaction_to_smarts(&reaction_from_png_string(&smarts_only).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        reaction_to_smarts(&unsafe { reaction_from_png_string(&smarts_only) }.unwrap()).unwrap(),
         AMIDE
     );
     let path = common::temp_path("reaction.png");
     std::fs::write(&path, &with_rxn).unwrap();
     assert_eq!(
-        reaction_to_smarts(&reaction_from_png_file(&path).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        reaction_to_smarts(&unsafe { reaction_from_png_file(&path) }.unwrap()).unwrap(),
         AMIDE
     );
     std::fs::write(&path, &png).unwrap();
@@ -691,7 +701,8 @@ fn png_metadata() {
     assert!(reaction_metadata_to_png_file_with_params(&rxn, &path, &file_params).is_ok());
     std::fs::remove_file(&path).unwrap();
     assert!(matches!(
-        reaction_from_png_file(&path),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { reaction_from_png_file(&path) },
         Err(Error::Os { .. })
     ));
     assert!(matches!(
@@ -700,7 +711,8 @@ fn png_metadata() {
     ));
     // No reaction in the metadata.
     assert!(matches!(
-        reaction_from_png_string(&png),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { reaction_from_png_string(&png) },
         Err(Error::Parse { .. })
     ));
 }
@@ -721,7 +733,8 @@ fn png_checks() {
     // RDKit reads a short signature through bytes it never read.
     for short in [&b""[..], b"\x89PNG"] {
         assert!(matches!(
-            reaction_from_png_string(short),
+            // SAFETY: too short to be PNG data, which the wrapper refuses before RDKit reads it.
+            unsafe { reaction_from_png_string(short) },
             Err(Error::Parse { .. })
         ));
         assert!(matches!(
@@ -734,7 +747,8 @@ fn png_checks() {
     let mut empty_text = PNG_SIGNATURE.to_vec();
     empty_text.extend(png_chunk(b"tEXt", b"rxnSmiles\0"));
     empty_text.extend(png_chunk(b"IEND", b""));
-    let err = reaction_from_png_string(&empty_text).unwrap_err();
+    // SAFETY: a pickle RDKit wrote.
+    let err = unsafe { reaction_from_png_string(&empty_text) }.unwrap_err();
     assert!(
         matches!(&err, Error::Parse { message } if message.contains("empty text chunk")),
         "{err:?}"
@@ -752,7 +766,8 @@ fn png_checks() {
     // A chunk whose length runs past the end.
     let mut long = PNG_SIGNATURE.to_vec();
     long.extend(&png_chunk(b"tEXt", b"rxnSmiles\0C>>C")[..10]);
-    assert!(reaction_from_png_string(&long).is_err());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { reaction_from_png_string(&long) }.is_err());
 }
 
 #[test]
@@ -1212,9 +1227,11 @@ fn long_stereo_group_lines_are_refused() {
     std::fs::write(&path, &short).unwrap();
     reaction_from_rxn_file(&path).unwrap();
     // An rxn block in PNG metadata is read the same way.
-    reaction_from_png_string(&png_with_text("ReactionRxn", short.as_bytes())).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    unsafe { reaction_from_png_string(&png_with_text("ReactionRxn", short.as_bytes())) }.unwrap();
     assert!(matches!(
-        reaction_from_png_string(&png_with_text("ReactionRxn", long.as_bytes())),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { reaction_from_png_string(&png_with_text("ReactionRxn", long.as_bytes())) },
         Err(Error::Value { .. })
     ));
 }
@@ -1246,16 +1263,20 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
 #[test]
 fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
     let (_, pkl, at) = marked_reaction_pickle();
-    ChemicalReaction::from_bin_str(&pkl).unwrap();
-    reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    unsafe { ChemicalReaction::from_bin_str(&pkl) }.unwrap();
+    // SAFETY: as above.
+    unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)) }.unwrap();
     let mut changed = pkl.clone();
     changed[at] = 1;
     assert!(matches!(
-        ChemicalReaction::from_bin_str(&changed),
+        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
+        unsafe { ChemicalReaction::from_bin_str(&changed) },
         Err(Error::Value { .. })
     ));
     assert!(matches!(
-        reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)),
+        // SAFETY: as above.
+        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) },
         Err(Error::Value { .. })
     ));
 }

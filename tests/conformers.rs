@@ -31,7 +31,7 @@ fn missing_and_added_conformers() {
     assert!(!copy.has_owning_mol() && !copy.clone().has_owning_mol());
     assert_eq!(copy.get_positions(), got.get_positions());
     assert!(copy.is_3d() && copy.get_id() == 0);
-    copy.set_id(3);
+    copy.set_id(3).unwrap();
     copy.set_int_prop("n", 1);
     let again = copy.clone();
     assert_eq!(again.get_id(), 3);
@@ -88,7 +88,7 @@ fn positions_and_ids() {
         conf.set_positions(&points[..1]),
         Err(Error::Value { .. })
     ));
-    conf.set_id(4);
+    conf.set_id(4).unwrap();
     conf.set_3d(false);
     let copy = conf.clone();
     assert_eq!(
@@ -131,4 +131,57 @@ fn many_conformers() {
     );
     mol.remove_all_conformers();
     assert_eq!(mol.get_conformers().count(), 0);
+}
+
+/// A view finds its conformer by id, so it follows the id it sets, and
+/// refuses an id that another conformer has, which it could not reach.
+#[test]
+fn conformer_mut_follows_its_new_id() {
+    let mut mol = mol_from_smiles("CC").unwrap();
+    for x in [1.0, 2.0] {
+        let mut conf = Conformer::new(2);
+        conf.set_atom_position(0, Point3D::new(x, 0.0, 0.0))
+            .unwrap();
+        mol.add_conformer_with_assign_id(&conf, true).unwrap();
+    }
+    let mut view = mol.get_conformer_with_id_mut(0).unwrap();
+    view.set_id(5).unwrap();
+    assert_eq!(view.get_id(), 5);
+    assert_eq!(view.get_atom_position(0).unwrap().x, 1.0);
+    view.set_atom_position(0, Point3D::new(3.0, 0.0, 0.0))
+        .unwrap();
+    assert!(matches!(view.set_id(1), Err(Error::Value { .. })));
+    view.set_id(5).unwrap();
+    assert_eq!(view.get_id(), 5);
+    let xs: Vec<_> = mol
+        .get_conformers()
+        .map(|c| (c.get_id(), c.get_atom_position(0).unwrap().x))
+        .collect();
+    assert_eq!(xs, [(5, 3.0), (1, 2.0)]);
+}
+
+/// Lookups take an i32, where -1 is the default conformer, so larger ids are
+/// refused rather than made unreachable.
+#[test]
+fn conformer_ids_fit_in_i32() {
+    let max = i32::MAX as u32;
+    let mut conf = Conformer::new(2);
+    assert!(matches!(
+        conf.set_id(3_000_000_000),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(conf.set_id(max + 1), Err(Error::Value { .. })));
+    conf.set_id(max).unwrap();
+    let mut mol = mol_from_smiles("CC").unwrap();
+    assert_eq!(mol.add_conformer(&conf).unwrap(), max);
+    assert_eq!(mol.get_conformer_with_id(i32::MAX).unwrap().get_id(), max);
+    // RDKit would assign i32::MAX + 1, which overflows its int.
+    assert!(matches!(
+        mol.add_conformer_with_assign_id(&conf, true),
+        Err(Error::Value { .. })
+    ));
+    let mut view = mol.get_conformer_mut().unwrap();
+    assert!(matches!(view.set_id(max + 1), Err(Error::Value { .. })));
+    assert_eq!(view.get_id(), max);
+    assert_eq!(mol.get_num_conformers(), 1);
 }

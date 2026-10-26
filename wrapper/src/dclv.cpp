@@ -27,6 +27,10 @@ namespace {
 // which one object's call can leave pointing past another's atoms. Each call
 // that tests points holds this lock; each resets recordCache first.
 std::mutex &record_cache_mutex() {
+  // A leaf: held for one RDKit call that takes no other lock, so a closure
+  // running under control_c_mutex (U4) can take it without deadlock. A
+  // wrapper that takes another lock while holding it must first call
+  // check_not_in_control_c_callback(), as rgroup_mutex() does.
   static std::mutex mutex;
   return mutex;
 }

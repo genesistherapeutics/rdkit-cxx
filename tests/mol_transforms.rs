@@ -376,3 +376,38 @@ fn conformers_outside_molecules() {
         Err(Error::Runtime { .. })
     ));
 }
+
+/// The principal axes come from Eigen's eigensolver, which leaves its output
+/// uninitialized for NaN input.
+#[test]
+fn axes_need_finite_coordinates() {
+    let mut mol = ethanol();
+    mol.get_conformer_mut()
+        .unwrap()
+        .set_atom_position(
+            0,
+            Point3D {
+                x: f64::INFINITY,
+                y: 0.0,
+                z: 0.0,
+            },
+        )
+        .unwrap();
+    let conf = Conformer::from(mol.get_conformer().unwrap());
+    assert!(matches!(
+        compute_canonical_transform(&conf),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        compute_principal_axes_and_moments(&conf),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        canonicalize_conformer(&mut conf.clone()),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        canonicalize_mol(&mut mol),
+        Err(Error::Value { .. })
+    ));
+}

@@ -140,7 +140,8 @@ fn pickles_and_streams() {
     assert!(tautomer_query_can_serialize());
     let query = cyclohexanone();
     let pickle = query.to_binary().unwrap();
-    let copy = TautomerQuery::from_pickle(&pickle).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { TautomerQuery::from_pickle(&pickle) }.unwrap();
     assert_eq!(copy.get_modified_atoms(), [0, 2, 6]);
     assert_eq!(copy.get_tautomers().len(), 2);
     assert!(copy.is_substruct_of(&smiles("OC1=CCCC(CC)C1")).unwrap());
@@ -149,13 +150,16 @@ fn pickles_and_streams() {
     query.to_stream(&mut stream).unwrap();
     assert_eq!(stream, pickle);
     let mut read = TautomerQuery::default();
-    read.init_from_stream(&mut stream.as_slice()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    unsafe { read.init_from_stream(&mut stream.as_slice()) }.unwrap();
     assert_eq!(read.get_modified_bonds(), [0, 1, 6]);
 
     // A failed read leaves the query as it was.
-    assert!(read.init_from_stream(&mut &b"not a pickle"[..]).is_err());
+    // SAFETY: not a pickle; RDKit refuses it before reading a molecule.
+    assert!(unsafe { read.init_from_stream(&mut &b"not a pickle"[..]) }.is_err());
     assert_eq!(read.get_modified_bonds(), [0, 1, 6]);
-    assert!(TautomerQuery::from_pickle(b"").is_err());
+    // SAFETY: as above.
+    assert!(unsafe { TautomerQuery::from_pickle(b"") }.is_err());
 
     let clone = query.clone();
     drop(query);
@@ -175,13 +179,16 @@ fn pickle_indices_are_checked() {
     for bad in [&b" 3 0 0 2 99 3 0 0 1 6\n"[..], b" 3 0 0 2 6 3 0 0 1 60\n"] {
         let crafted = [head, bad].concat();
         assert!(matches!(
-            TautomerQuery::from_pickle(&crafted),
+            // SAFETY: a pickle RDKit wrote but for a modified atom or bond index, which the wrapper
+            // checks.
+            unsafe { TautomerQuery::from_pickle(&crafted) },
             Err(Error::Value { .. })
         ));
     }
     let fine = [head, &b" 1 0 0 1 0 0\n"[..]].concat();
     assert_eq!(
-        TautomerQuery::from_pickle(&fine)
+        // SAFETY: as above, with indices the wrapper accepts.
+        unsafe { TautomerQuery::from_pickle(&fine) }
             .unwrap()
             .get_modified_atoms(),
         [0]
@@ -210,7 +217,8 @@ fn empty_query() {
             .get_num_on_bits(),
         0
     );
-    let copy = TautomerQuery::from_pickle(&query.to_binary().unwrap()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let copy = unsafe { TautomerQuery::from_pickle(&query.to_binary().unwrap()) }.unwrap();
     assert!(copy.get_tautomers().is_empty());
 }
 

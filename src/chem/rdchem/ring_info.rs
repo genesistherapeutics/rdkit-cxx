@@ -262,6 +262,12 @@ impl<'m> RingInfoMut<'m> {
 
     /// Records a ring, given its atoms and bonds in order, initializing the
     /// ring information if needed. Mirrors `RingInfo.AddRing`.
+    ///
+    /// `Error::Value` unless the ring is a cycle: 3 or more distinct atoms,
+    /// with bond `i` joining atoms `i` and `i + 1`, and the last bond joining
+    /// the last atom to the first. RDKit's ring algorithms and its pickle
+    /// reader assume one, and read out of bounds otherwise. `Error::Index`
+    /// for an atom or bond index out of range.
     pub fn add_ring(&mut self, atom_ids: &[u32], bond_ids: &[u32]) -> Result<()> {
         Ok(ffi::ring_info_add_ring(
             self.mol.pin_mut(),

@@ -221,7 +221,13 @@ impl CachedMolHolder {
     /// Adds a molecule pickle as it is, unchecked until a search or
     /// `get_mol` parses it, and returns its index. Mirrors
     /// `CachedMolHolder.AddBinary`.
-    pub fn add_binary(&mut self, pickle: &[u8]) -> Result<u32> {
+    ///
+    /// # Safety
+    ///
+    /// `pickle` must be a molecule pickle RDKit wrote, unmodified, as for
+    /// `Mol::from_pkl_string`: the holder's `get_mol` and every search that
+    /// reads it, safe as they are, read it that way.
+    pub unsafe fn add_binary(&mut self, pickle: &[u8]) -> Result<u32> {
         Ok(ffi::mol_holder_add_binary(self.base.raw_mut(), pickle)?)
     }
 }

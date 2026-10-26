@@ -82,7 +82,13 @@ impl TautomerQuery {
     /// tautomers lack the template's atoms or whose modified atoms or bonds
     /// are out of range, which RDKit's matcher would read past; RDKit's
     /// errors for one it cannot read. Mirrors `TautomerQuery(pickle)`.
-    pub fn from_pickle(pickle: &[u8]) -> Result<TautomerQuery> {
+    ///
+    /// # Safety
+    ///
+    /// `pickle` must be a query pickle RDKit wrote (this crate's `to_binary`
+    /// or RDKit's), unmodified: it holds molecule pickles, which RDKit reads
+    /// as `Mol::from_pkl_string` does.
+    pub unsafe fn from_pickle(pickle: &[u8]) -> Result<TautomerQuery> {
         Ok(TautomerQuery::from_ffi(ffi::tautomer_query_from_pickle(
             pickle,
         )?))
@@ -244,10 +250,15 @@ impl TautomerQuery {
     /// as `from_pickle` reads. Python's reads only the pickle from a stream;
     /// this one reads to the end. On an error the query is unchanged.
     /// Mirrors `TautomerQuery.InitFromStream`.
-    pub fn init_from_stream<R: Read + ?Sized>(&mut self, fileobj: &mut R) -> Result<()> {
+    ///
+    /// # Safety
+    ///
+    /// The rest of `fileobj` must be a pickle as `from_pickle` requires.
+    pub unsafe fn init_from_stream<R: Read + ?Sized>(&mut self, fileobj: &mut R) -> Result<()> {
         let mut pickle = Vec::new();
         fileobj.read_to_end(&mut pickle).map_err(os_error)?;
-        *self = TautomerQuery::from_pickle(&pickle)?;
+        // SAFETY: the caller's contract is `from_pickle`'s.
+        *self = unsafe { TautomerQuery::from_pickle(&pickle) }?;
         Ok(())
     }
 }

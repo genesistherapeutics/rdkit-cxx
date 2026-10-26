@@ -804,9 +804,9 @@ std::unique_ptr<RWMol> scsr_from_text(const std::string &text, bool sanitize,
   unsigned int line = 0;
   // With Auto, RDKit finds the bases' hydrogen-bond sites by substructure
   // matches (control_c_lock.h).
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   if (scsr.scsrBaseHbondOptions == FP::SCSRBaseHbondOptions::Auto) {
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
   }
   return parsed(FP::MolFromSCSRDataStream(in, line, params, scsr), what);
 }

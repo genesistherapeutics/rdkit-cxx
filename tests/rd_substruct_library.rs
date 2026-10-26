@@ -361,9 +361,14 @@ fn holders() {
     assert!(format!("{:?}", lib.get_mol_holder()).contains("CachedSmilesMolHolder"));
 
     let mut cached = CachedMolHolder::default();
-    assert_eq!(cached.add_binary(&mols()[0].to_binary()).unwrap(), 0);
+    // SAFETY: a pickle RDKit wrote.
+    assert_eq!(
+        unsafe { cached.add_binary(&mols()[0].to_binary()) }.unwrap(),
+        0
+    );
     assert_eq!(mol_to_smiles(&cached.get_mol(0).unwrap()).unwrap(), "CCO");
-    assert_eq!(cached.add_binary(b"not a pickle").unwrap(), 1);
+    // SAFETY: a pickle RDKit wrote.
+    assert_eq!(unsafe { cached.add_binary(b"not a pickle") }.unwrap(), 1);
     assert!(cached.get_mol(1).is_err());
 
     let mut trusted = CachedTrustedSmilesMolHolder::default();

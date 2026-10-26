@@ -88,7 +88,7 @@ pub fn transform_mol_with_params(
                 mol.remove_conformer(cid);
             }
         }
-        mol.get_conformer_with_id_mut(conf_id)?.set_id(0);
+        mol.get_conformer_with_id_mut(conf_id)?.set_id(0)?;
     }
     Ok(())
 }

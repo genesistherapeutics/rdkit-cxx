@@ -276,7 +276,7 @@ pub fn transform_mol_with_params(
             Point3D::new(row(&tform[0]), row(&tform[1]), row(&tform[2])),
         )?;
     }
-    new_conf.set_id(new_conf_id);
+    new_conf.set_id(new_conf_id)?;
     mol.remove_conformer(new_conf_id);
     mol.add_conformer(&new_conf)?;
     Ok(())

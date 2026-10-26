@@ -19,6 +19,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/suppliers.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -54,6 +55,12 @@ class RustReadBuf : public std::streambuf {
       return traits_type::eof();
     }
     if (n == 0) {
+      return traits_type::eof();
+    }
+    // rust_reader_read refuses a count past the buffer; this keeps the
+    // stream inside it regardless.
+    if (n > kSize) {
+      d_error = "the reader returned more bytes than its buffer holds";
       return traits_type::eof();
     }
     setg(d_buffer.get(), d_buffer.get(), d_buffer.get() + n);
@@ -218,7 +225,11 @@ std::uint32_t sd_mol_supplier_length(SDMolSupplier &s) {
   return checked(s.input, [&] { return s.suppl->length(); });
 }
 
-bool sd_mol_supplier_at_end(SDMolSupplier &s) { return s.suppl->atEnd(); }
+// atEnd reads ahead, so a read that fails there is reported here, not taken
+// for the end of the input.
+bool sd_mol_supplier_at_end(SDMolSupplier &s) {
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
+}
 
 void sd_mol_supplier_reset(SDMolSupplier &s) { s.suppl->reset(); }
 
@@ -259,7 +270,7 @@ std::unique_ptr<RWMol> forward_sd_mol_supplier_next(ForwardSDMolSupplier &s) {
 }
 
 bool forward_sd_mol_supplier_at_end(ForwardSDMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 bool forward_sd_mol_supplier_get_eof_hit_on_read(
@@ -345,7 +356,7 @@ std::uint32_t smiles_mol_supplier_length(SmilesMolSupplier &s) {
 }
 
 bool smiles_mol_supplier_at_end(SmilesMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 void smiles_mol_supplier_reset(SmilesMolSupplier &s) { s.suppl->reset(); }
@@ -528,19 +539,15 @@ void tdt_mol_supplier_reset(TDTMolSupplier &s) {
 
 namespace {
 
-// The most writer threads a multithreaded supplier starts. RDKit starts
-// every one at the first next(), so a count the system cannot start fails
-// there (mt_next), and one this large would only cost memory.
-constexpr std::uint32_t kMaxWriterThreads = 1024;
-
 FP::MultithreadedMolSupplier::Parameters mt_params(
     const MultithreadedParamsData &data) {
   // RDKit converts the thread count to int and negates it
   // (getNumThreadsToUse in RDThreads.h), which overflows for 2^31; 0 asks
   // for one per core.
-  if (data.num_writer_threads > kMaxWriterThreads) {
+  // A count the system cannot start fails at the first next() (mt_next).
+  if (data.num_writer_threads > kMaxSupplierThreads) {
     throw ValueErrorException("numWriterThreads must be at most " +
-                              std::to_string(kMaxWriterThreads));
+                              std::to_string(kMaxSupplierThreads));
   }
   // RDKit's ConcurrentQueue keeps its capacity in unsigned int and blocks
   // forever when it is 0, so the supplier's threads would never finish.
@@ -613,7 +620,7 @@ std::unique_ptr<RWMol> mt_sd_mol_supplier_next(MultithreadedSDMolSupplier &s,
 }
 
 bool mt_sd_mol_supplier_at_end(MultithreadedSDMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 std::uint32_t mt_sd_mol_supplier_get_last_record_id(
@@ -669,7 +676,7 @@ std::unique_ptr<RWMol> mt_smiles_mol_supplier_next(
 }
 
 bool mt_smiles_mol_supplier_at_end(MultithreadedSmilesMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 std::uint32_t mt_smiles_mol_supplier_get_last_record_id(

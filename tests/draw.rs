@@ -243,7 +243,8 @@ fn draw_morgan_matches_python() {
     // Github #3796: the PNG carries no molecule metadata.
     let png = draw_morgan_bit_as_png(&m, 872, &bi).unwrap();
     assert_eq!(png_size(&png), (150, 150));
-    assert!(mol_from_png_string(&png).is_err());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { mol_from_png_string(&png) }.is_err());
     assert_eq!(
         png_size(&draw_morgan_bits_as_png(&[(&m, 872, &bi, 0)]).unwrap()),
         (450, 150)
@@ -290,7 +291,8 @@ fn draw_rdkit_matches_python() {
     );
     let png = draw_rdkit_bit_as_png(&m, 1553, &bi).unwrap();
     assert_eq!(png_size(&png), (150, 150));
-    assert!(mol_from_png_string(&png).is_err());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { mol_from_png_string(&png) }.is_err());
 }
 
 #[test]

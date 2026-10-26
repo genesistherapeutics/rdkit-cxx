@@ -39,7 +39,9 @@ void conformer_set_id(Conformer &conf, unsigned id);
 
 unsigned mol_get_num_conformers(const RWMol &mol);
 const Conformer &mol_get_conformer(const RWMol &mol, int id);
-Conformer &mol_get_conformer_mut(RWMol &mol, int id);
+const Conformer &mol_find_conformer(const RWMol &mol, unsigned id);
+Conformer &mol_find_conformer_mut(RWMol &mol, unsigned id);
+void mol_set_conformer_id(RWMol &mol, unsigned current, unsigned id);
 // The conformer at a position in the molecule's list, for iteration.
 const Conformer &mol_get_conformer_at(const RWMol &mol, unsigned position);
 unsigned mol_add_conformer(RWMol &mol, const Conformer &conf, bool assign_id);

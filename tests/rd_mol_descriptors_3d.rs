@@ -437,6 +437,63 @@ fn getaway_coordinates_are_checked() {
     assert_eq!(calc_getaway_with_params(&mol, &p).unwrap().len(), 273);
 }
 
+/// Eigen's SVD and eigensolvers leave their output uninitialized for NaN
+/// input, and RDKit reads it, so the descriptors that solve matrices of the
+/// coordinates need them finite, and those that divide by distances need
+/// the atoms apart.
+#[test]
+fn solved_descriptors_check_coordinates() {
+    let nan = Point3D {
+        x: f64::NAN,
+        y: 0.0,
+        z: 0.0,
+    };
+    let mut mol = apap();
+    mol.get_conformer_mut()
+        .unwrap()
+        .set_atom_position(0, nan)
+        .unwrap();
+    assert!(matches!(calc_whim(&mol), Err(Error::Value { .. })));
+    assert!(matches!(calc_pbf(&mol), Err(Error::Value { .. })));
+    assert!(matches!(calc_pmi1(&mol), Err(Error::Value { .. })));
+    assert!(matches!(
+        calc_spherocity_index(&mol),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(calc_eem_charges(&mol), Err(Error::Value { .. })));
+    // Two atoms at one position, as embedding [Na+].[Cl-] leaves them.
+    let mut mol = apap();
+    let p = mol.get_conformer().unwrap().get_atom_position(1).unwrap();
+    mol.get_conformer_mut()
+        .unwrap()
+        .set_atom_position(0, p)
+        .unwrap();
+    for result in [calc_getaway(&mol), calc_eem_charges(&mol)] {
+        assert!(
+            matches!(&result, Err(Error::Value { message }) if message.contains("atoms 0 and 1")),
+            "{result:?}"
+        );
+    }
+    assert_eq!(calc_whim(&mol).unwrap().len(), 114);
+    // WHIM weights the covariance matrix it solves by a custom property.
+    let mut mol = apap();
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_double_prop("w", f64::INFINITY);
+    let p = CalcWHIMParams {
+        custom_atom_property: "w".to_string(),
+        ..Default::default()
+    };
+    assert!(matches!(
+        calc_whim_with_params(&mol, &p),
+        Err(Error::Value { .. })
+    ));
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_double_prop("w", 2.0);
+    assert_eq!(calc_whim_with_params(&mol, &p).unwrap().len(), 17);
+}
+
 #[test]
 fn no_atoms() {
     // AUTOCORR3D, WHIM, and GETAWAY take &v[0] of empty vectors (GETAWAY

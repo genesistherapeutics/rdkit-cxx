@@ -191,7 +191,7 @@ fn conformers() {
         )
         .unwrap();
     }
-    conf.set_id(5);
+    conf.set_id(5).unwrap();
     mol.add_conformer(&conf).unwrap();
     let params = GetMolFeatureParams {
         conf_id: 5,

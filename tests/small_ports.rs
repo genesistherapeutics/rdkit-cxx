@@ -98,7 +98,7 @@ fn features_for_mol() -> Result<()> {
     for i in 0..m.get_num_atoms() {
         conf.set_atom_position(i, Point3D::new(f64::from(i), 2.0 * f64::from(i), 0.5))?;
     }
-    conf.set_id(7);
+    conf.set_id(7)?;
     m.add_conformer(&conf)?;
     let feats: Vec<(String, String, Vec<u32>)> = mcff_get_features_for_mol(&factory, &m)?
         .iter()

@@ -68,7 +68,15 @@ pub(crate) fn property_pickle_option_values_for_tests() -> (Vec<u32>, Vec<u32>) 
 
 impl Mol {
     /// A molecule from a pickle (`to_binary`). Mirrors `Mol(pklString)`.
-    pub fn from_pkl_string(pkl_string: &[u8]) -> Result<Mol> {
+    ///
+    /// # Safety
+    ///
+    /// `pkl_string` must be a molecule pickle RDKit wrote (this crate's
+    /// `to_binary` or RDKit's), unmodified. RDKit's pickle reader trusts the
+    /// counts, indices, enum values, and query trees it reads, and other
+    /// bytes may make it, or code that later reads the molecule, read out of
+    /// bounds (CONVENTIONS.md U2).
+    pub unsafe fn from_pkl_string(pkl_string: &[u8]) -> Result<Mol> {
         Ok(Mol::from_ffi(ffi::mol_from_pkl_string(
             pkl_string, false, 0,
         )?))
@@ -76,7 +84,11 @@ impl Mol {
 
     /// Reads only what `property_flags` selects. Mirrors
     /// `Mol(pklString, propertyFlags)`.
-    pub fn from_pkl_string_with_property_flags(
+    ///
+    /// # Safety
+    ///
+    /// As for `from_pkl_string`.
+    pub unsafe fn from_pkl_string_with_property_flags(
         pkl_string: &[u8],
         property_flags: PropertyPickleOptions,
     ) -> Result<Mol> {
@@ -105,16 +117,26 @@ impl Mol {
 
 impl RWMol {
     /// A molecule from a pickle. Mirrors `RWMol(pklString)`.
-    pub fn from_pkl_string(pkl_string: &[u8]) -> Result<RWMol> {
-        Ok(Mol::from_pkl_string(pkl_string)?.into())
+    ///
+    /// # Safety
+    ///
+    /// As for `Mol::from_pkl_string`.
+    pub unsafe fn from_pkl_string(pkl_string: &[u8]) -> Result<RWMol> {
+        // SAFETY: the caller's contract is `Mol::from_pkl_string`'s.
+        Ok(unsafe { Mol::from_pkl_string(pkl_string) }?.into())
     }
 
     /// Mirrors `RWMol(pklString, propertyFlags)`.
-    pub fn from_pkl_string_with_property_flags(
+    ///
+    /// # Safety
+    ///
+    /// As for `Mol::from_pkl_string`.
+    pub unsafe fn from_pkl_string_with_property_flags(
         pkl_string: &[u8],
         property_flags: PropertyPickleOptions,
     ) -> Result<RWMol> {
-        Ok(Mol::from_pkl_string_with_property_flags(pkl_string, property_flags)?.into())
+        // SAFETY: the caller's contract is `Mol::from_pkl_string`'s.
+        Ok(unsafe { Mol::from_pkl_string_with_property_flags(pkl_string, property_flags) }?.into())
     }
 }
 

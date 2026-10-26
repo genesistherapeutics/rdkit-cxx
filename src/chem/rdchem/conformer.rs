@@ -76,11 +76,6 @@ macro_rules! conformer_setters {
             pub fn set_3d(&mut self, v: bool) {
                 expect_ok(ffi::conformer_set_3d(self.raw_mut(), v))
             }
-
-            /// Mirrors `Conformer.SetId`.
-            pub fn set_id(&mut self, id: u32) {
-                expect_ok(ffi::conformer_set_id(self.raw_mut(), id))
-            }
         }
     };
 }
@@ -114,6 +109,12 @@ impl Conformer {
     /// `Conformer(numAtoms)`.
     pub fn new(num_atoms: u32) -> Conformer {
         Conformer::from_ffi(expect_ok(ffi::conformer_with_num_atoms(num_atoms)))
+    }
+
+    /// Mirrors `Conformer.SetId`. An id above `i32::MAX` is `Error::Value`:
+    /// `Mol::get_conformer_with_id` could not reach it.
+    pub fn set_id(&mut self, id: u32) -> Result<()> {
+        Ok(ffi::conformer_set_id(self.raw_mut(), id)?)
     }
 }
 
@@ -194,25 +195,34 @@ impl fmt::Debug for ConformerRef<'_> {
 }
 
 /// A conformer in a molecule, borrowed exclusively for editing. It holds the
-/// conformer's id and finds it on each call (W2).
+/// conformer's id and finds the first conformer with it on each call (W2).
 /// A Rust addition: Python's `Conformer`, borrowed to edit.
 pub struct ConformerMut<'m> {
     mol: &'m mut Mol,
-    id: i32,
+    id: u32,
 }
 
 impl<'m> ConformerMut<'m> {
     /// A conformer with `id` exists in `mol`.
-    pub(crate) fn new(mol: &'m mut Mol, id: i32) -> ConformerMut<'m> {
+    pub(crate) fn new(mol: &'m mut Mol, id: u32) -> ConformerMut<'m> {
         ConformerMut { mol, id }
     }
 
     fn raw(&self) -> &ffi::Conformer {
-        expect_ok_index(self.mol.get_conformer_with_id(self.id)).raw()
+        expect_ok_index(self.mol.find_conformer(self.id))
     }
 
     fn raw_mut(&mut self) -> Pin<&mut ffi::Conformer> {
-        expect_ok_index(self.mol.conformer_ffi_mut(self.id))
+        expect_ok_index(self.mol.find_conformer_mut(self.id))
+    }
+
+    /// Mirrors `Conformer.SetId`. An id above `i32::MAX` is `Error::Value`,
+    /// as for `Conformer::set_id`, and so is one another of the molecule's
+    /// conformers has: lookups by id find only the first.
+    pub fn set_id(&mut self, id: u32) -> Result<()> {
+        ffi::mol_set_conformer_id(self.mol.pin_mut(), self.id, id)?;
+        self.id = id;
+        Ok(())
     }
 
     fn props(&self) -> &RDProps {

@@ -172,15 +172,20 @@ impl Mol {
 
     /// Mirrors `Mol.GetConformer(id)`, for editing.
     pub fn get_conformer_with_id_mut(&mut self, id: i32) -> Result<ConformerMut<'_>> {
-        let id = self.get_conformer_with_id(id)?.get_id() as i32;
+        let id = self.get_conformer_with_id(id)?.get_id();
         Ok(ConformerMut::new(self, id))
     }
 
-    pub(crate) fn conformer_ffi_mut(
+    /// The first conformer with exactly `id`; no id means the default.
+    pub(crate) fn find_conformer(&self, id: u32) -> Result<&conformer_ffi::Conformer> {
+        Ok(conformer_ffi::mol_find_conformer(self.as_ffi(), id)?)
+    }
+
+    pub(crate) fn find_conformer_mut(
         &mut self,
-        id: i32,
+        id: u32,
     ) -> Result<std::pin::Pin<&mut conformer_ffi::Conformer>> {
-        Ok(conformer_ffi::mol_get_conformer_mut(self.pin_mut(), id)?)
+        Ok(conformer_ffi::mol_find_conformer_mut(self.pin_mut(), id)?)
     }
 
     fn get_conformer_at(&self, position: u32) -> Result<ConformerRef<'_>> {
@@ -196,13 +201,15 @@ impl Mol {
         }
     }
 
-    /// Adds a copy of `conf`, which must have one position per atom, and
-    /// returns its id. Mirrors `Mol.AddConformer`.
+    /// Adds a copy of `conf`, which must have one position per atom and an
+    /// id of at most `i32::MAX`, and returns its id. Mirrors
+    /// `Mol.AddConformer`.
     pub fn add_conformer(&mut self, conf: &Conformer) -> Result<u32> {
         self.add_conformer_with_assign_id(conf, false)
     }
 
-    /// Gives the copy a new id when `assign_id`. Mirrors
+    /// Gives the copy a new id when `assign_id`: one more than the largest,
+    /// or `Error::Value` when that is `i32::MAX`. Mirrors
     /// `Mol.AddConformer(conf, assignId)`.
     pub fn add_conformer_with_assign_id(
         &mut self,

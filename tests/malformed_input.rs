@@ -161,8 +161,20 @@ fn discrete_value_vect_pickles() {
     ] {
         assert!(is_value(DiscreteValueVect::from_pkl(&bad)), "{bad:?}");
     }
-    assert!(DiscreteValueVect::from_pkl(&pkl[..10]).is_err());
+    // RDKit reads a version it may not have, and divides by the bits per
+    // value before reading the rest, so every truncated header is refused.
+    for len in 0..24 {
+        assert!(
+            is_value(DiscreteValueVect::from_pkl(&pkl[..len])),
+            "{len} bytes"
+        );
+    }
+    assert!(is_value(DiscreteValueVect::from_pkl(&ZERO_BITS_PER_VALUE)));
 }
+
+/// A DiscreteValueVect pickle's version, a value type of 0, and 0 bits per
+/// value, which RDKit divides by.
+const ZERO_BITS_PER_VALUE: [u8; 12] = [0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0];
 
 #[test]
 fn real_value_vect_pickles() {
@@ -173,11 +185,16 @@ fn real_value_vect_pickles() {
         RealValueVect::from_pkl(&pkl).unwrap().get_val(1).unwrap(),
         2.5
     );
-    assert!(is_value(RealValueVect::from_pkl(&with_i32(
-        pkl,
-        0,
-        i32::MIN
-    ))));
+    // RDKit allocates the length a pickle gives before reading the values.
+    for bad in [
+        with_i32(pkl.clone(), 0, i32::MIN),
+        with_u32(pkl.clone(), 4, u32::MAX),
+        with_u32(pkl.clone(), 4, 1 << 31),
+        with_u32(pkl.clone(), 4, 5),
+        pkl[..pkl.len() - 1].to_vec(),
+    ] {
+        assert!(is_value(RealValueVect::from_pkl(&bad)), "{bad:?}");
+    }
 }
 
 #[test]
@@ -334,6 +351,11 @@ fn uniform_grid3d_pickles() {
         assert!(is_value(UniformGrid3D::from_pkl(&bad)), "{bad:?}");
     }
     assert!(UniformGrid3D::from_pkl(&pkl[..30]).is_err());
+    // The storage's header is checked as a DiscreteValueVect's is.
+    let mut zero_bits = pkl[..48].to_vec();
+    zero_bits.extend((ZERO_BITS_PER_VALUE.len() as u32).to_le_bytes());
+    zero_bits.extend(ZERO_BITS_PER_VALUE);
+    assert!(is_value(UniformGrid3D::from_pkl(&zero_bits)));
 }
 
 #[test]
@@ -353,6 +375,9 @@ fn uniform_real_value_grid3d_pickles() {
         with_f64(pkl.clone(), 32, f64::NAN),
         with_i32(pkl.clone(), 52, i32::MIN),
         with_u32(pkl.clone(), 56, 7),
+        // RDKit allocates the storage size before reading the storage.
+        with_u32(pkl.clone(), 48, u32::MAX),
+        pkl[..pkl.len() - 1].to_vec(),
     ] {
         assert!(is_value(UniformRealValueGrid3D::from_pkl(&bad)), "{bad:?}");
     }
@@ -516,4 +541,59 @@ fn fpb_screens() {
         .sum::<usize>();
     assert_eq!(nbrs.len(), everything);
     assert!(nbrs.windows(2).all(|w| w[0].0 >= w[1].0));
+}
+
+/// A `Read` that claims to have read more than its buffer holds, which a safe
+/// impl may do.
+struct OverstatingReader(bool);
+
+impl std::io::Read for OverstatingReader {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if self.0 {
+            return Ok(0);
+        }
+        self.0 = true;
+        let record = b"\n  RDKit\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0\nM  END\n> <p>\n";
+        buf[..record.len()].copy_from_slice(record);
+        Ok(buf.len() + (1 << 20))
+    }
+}
+
+#[test]
+fn overstating_reader() {
+    // RDKit would read past the stream's buffer; the read is an error.
+    let mut suppl =
+        rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::from_fileobj(OverstatingReader(false))
+            .unwrap();
+    let results: Vec<_> = suppl.mols().collect();
+    assert!(results.iter().any(|r| r.is_err()), "{results:?}");
+}
+
+/// A `Read` that gives one record, then fails.
+struct FailingReader(bool);
+
+impl std::io::Read for FailingReader {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if self.0 {
+            return Err(std::io::Error::other("the connection dropped"));
+        }
+        self.0 = true;
+        let record = b"\n  RDKit\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0\nM  END\n$$$$\n";
+        buf[..record.len()].copy_from_slice(record);
+        Ok(record.len())
+    }
+}
+
+#[test]
+fn failing_reader() {
+    // A read that fails is an error, not the end of the input.
+    let mut suppl =
+        rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::from_fileobj(FailingReader(false))
+            .unwrap();
+    let results: Vec<_> = suppl.mols().collect();
+    let err = results
+        .iter()
+        .find_map(|r| r.as_ref().err())
+        .unwrap_or_else(|| panic!("no error: {results:?}"));
+    assert!(err.to_string().contains("the connection dropped"), "{err}");
 }

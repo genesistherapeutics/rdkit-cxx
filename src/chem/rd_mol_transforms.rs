@@ -11,6 +11,11 @@
 //! `ConformerMut`. Those that look at atoms (hydrogens, bonds, rings) need
 //! one in a molecule, and fail with `Error::Runtime` for a conformer outside
 //! any. Transforms are 4 x 4 matrices, as rows.
+//!
+//! The principal axes, and the canonical transforms built on them, come from
+//! Eigen's eigensolver, which leaves its output uninitialized for input that
+//! is not finite, so they take coordinates and weights within 1e9; others are
+//! `Error::Value`.
 
 use crate::Result;
 use crate::chem::Mol;

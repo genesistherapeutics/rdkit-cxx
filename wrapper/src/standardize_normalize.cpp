@@ -84,13 +84,13 @@ std::unique_ptr<Normalizer> normalizer_from_params(
 std::unique_ptr<RWMol> normalizer_normalize(const Normalizer &normalizer,
                                             const RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(mut(normalizer).normalize(mol));
 }
 
 void normalizer_normalize_in_place(const Normalizer &normalizer, RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   mut(normalizer).normalizeInPlace(mol);
 }
 
@@ -143,20 +143,20 @@ void metal_disconnector_set_metal_non(MetalDisconnector &disconnector,
 std::unique_ptr<RWMol> metal_disconnector_disconnect(
     const MetalDisconnector &disconnector, const RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(mut(disconnector).disconnect(mol));
 }
 
 void metal_disconnector_disconnect_in_place(
     const MetalDisconnector &disconnector, RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   mut(disconnector).disconnectInPlace(mol);
 }
 
 std::unique_ptr<RWMol> disconnect_organometallics(const RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(
       MS::disconnectOrganometallics(static_cast<const RDKit::ROMol &>(mol)));
 }
@@ -164,21 +164,21 @@ std::unique_ptr<RWMol> disconnect_organometallics(const RWMol &mol) {
 std::unique_ptr<RWMol> disconnect_organometallics_with_options(
     const RWMol &mol, const MetalDisconnectorOptionsData &options) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(MS::disconnectOrganometallics(
       static_cast<const RDKit::ROMol &>(mol), to_options(options)));
 }
 
 void disconnect_organometallics_in_place(RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   MS::disconnectOrganometallicsInPlace(mol);
 }
 
 void disconnect_organometallics_in_place_with_options(
     RWMol &mol, const MetalDisconnectorOptionsData &options) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   MS::disconnectOrganometallicsInPlace(mol, to_options(options));
 }
 

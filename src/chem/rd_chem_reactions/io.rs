@@ -531,12 +531,21 @@ pub fn reaction_to_molecule(reaction: &ChemicalReaction) -> Result<Mol> {
 /// A reaction from PNG data's metadata: its first reaction pickle, SMILES,
 /// SMARTS, or rxn block. Data without one is `Error::Parse`. Mirrors
 /// `rdChemReactions.ReactionFromPNGString`.
-pub fn reaction_from_png_string(data: &[u8]) -> Result<ChemicalReaction> {
+///
+/// # Safety
+///
+/// A reaction pickle in `data`'s metadata, which RDKit reads first, must be
+/// one RDKit wrote, unmodified, as for `ChemicalReaction::from_bin_str`.
+pub unsafe fn reaction_from_png_string(data: &[u8]) -> Result<ChemicalReaction> {
     reaction(ffi::reaction_from_png_string(data))
 }
 
 /// Mirrors `rdChemReactions.ReactionFromPNGFile`.
-pub fn reaction_from_png_file(fname: impl AsRef<Path>) -> Result<ChemicalReaction> {
+///
+/// # Safety
+///
+/// As for `reaction_from_png_string`, of the file's data.
+pub unsafe fn reaction_from_png_file(fname: impl AsRef<Path>) -> Result<ChemicalReaction> {
     reaction(ffi::reaction_from_png_file(path_bytes(fname.as_ref())))
 }
 

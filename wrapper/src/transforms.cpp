@@ -191,7 +191,7 @@ std::mutex &brics_mutex() {
 std::unique_ptr<RWMol> delete_substructs(const RWMol &mol, const RWMol &query,
                                          bool only_frags, bool use_chirality) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_rwmol(
       RDKit::deleteSubstructs(mol, query, only_frags, use_chirality));
 }
@@ -204,7 +204,7 @@ std::unique_ptr<MolList> replace_substructs(
   // The copy gains the replacement's substance groups before RDKit removes
   // the match.
   check_removals({&mol, &replacement});
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   auto results =
       RDKit::replaceSubstructs(mol, query, replacement, replace_all,
                                replacement_connection_point, use_chirality);
@@ -221,7 +221,7 @@ std::unique_ptr<RWMol> replace_sidechains(const RWMol &mol,
                                           const RWMol &core_query,
                                           bool use_chirality) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::replaceSidechains(mol, core_query, use_chirality));
 }
 
@@ -246,7 +246,7 @@ std::unique_ptr<RWMol> replace_core(const RWMol &mol, const RWMol &core_query,
                                     bool require_dummy_match,
                                     bool use_chirality) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::replaceCore(mol, core_query, replace_dummies,
                                      label_by_index, require_dummy_match,
                                      use_chirality));
@@ -406,7 +406,7 @@ std::unique_ptr<MolList> fragment_on_some_bonds(
 std::unique_ptr<RWMol> fragment_on_brics_bonds(const RWMol &mol) {
   check_removals(mol);
   std::lock_guard<std::mutex> lock(brics_mutex());
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::MolFragmenter::fragmentOnBRICSBonds(mol));
 }
 

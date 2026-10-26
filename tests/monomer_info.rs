@@ -246,7 +246,8 @@ fn marked_pickle() -> (Vec<u8>, usize) {
 fn pickles_cannot_give_plain_info_the_pdb_type() {
     let (pkl, at) = marked_pickle();
     let typ = |pkl: &[u8]| {
-        Mol::from_pkl_string(pkl).map(|mol| {
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { Mol::from_pkl_string(pkl) }.map(|mol| {
             mol.get_atom_with_idx(0)
                 .unwrap()
                 .get_monomer_info()
@@ -262,25 +263,35 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
         let mut changed = pkl.clone();
         changed[at] = bad;
         assert!(is_value(typ(&changed)), "type {bad}");
-        assert!(is_value(Mol::from_pkl_string_with_property_flags(
-            &changed,
-            PropertyPickleOptions::AllProps
-        )));
-        assert!(is_value(RWMol::from_pkl_string(&changed)));
+        // SAFETY: a pickle RDKit wrote but for its monomer type byte, which the wrapper checks
+        // (U10).
+        assert!(is_value(unsafe {
+            Mol::from_pkl_string_with_property_flags(&changed, PropertyPickleOptions::AllProps)
+        }));
+        // SAFETY: as above.
+        assert!(is_value(unsafe { RWMol::from_pkl_string(&changed) }));
     }
 
     // MolBundle pickles hold molecule pickles, byte for byte.
     let mut bundle = MolBundle::default();
-    bundle.add_mol(&Mol::from_pkl_string(&pkl).unwrap());
+    // SAFETY: a pickle RDKit wrote.
+    bundle.add_mol(&unsafe { Mol::from_pkl_string(&pkl) }.unwrap());
     let bundle_pkl = bundle.to_binary().unwrap();
     let name = bundle_pkl
         .windows(9)
         .position(|w| w == b"\x04\0\0\0MARK\x02")
         .unwrap();
-    assert_eq!(MolBundle::from_pkl_string(&bundle_pkl).unwrap().size(), 1);
+    // SAFETY: a pickle RDKit wrote.
+    assert_eq!(
+        unsafe { MolBundle::from_pkl_string(&bundle_pkl) }
+            .unwrap()
+            .size(),
+        1
+    );
     let mut changed = bundle_pkl;
     changed[name + 8] = 1;
-    assert!(is_value(MolBundle::from_pkl_string(&changed)));
+    // SAFETY: a bundle pickle RDKit wrote but for a monomer type byte, which the wrapper checks.
+    assert!(is_value(unsafe { MolBundle::from_pkl_string(&changed) }));
 }
 
 // MolPickler pickles a recursive query's molecule as a molecule, monomer
@@ -288,7 +299,8 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
 #[test]
 fn recursive_query_molecules_are_checked() {
     let (pkl, _) = marked_pickle();
-    let marked = Mol::from_pkl_string(&pkl).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let marked = unsafe { Mol::from_pkl_string(&pkl) }.unwrap();
     let mut query = mol_from_smarts("[#6]").unwrap();
     add_recursive_query(&mut query, &marked, 0).unwrap();
     // Twice nested, under an AND with the atom's own query.
@@ -300,11 +312,14 @@ fn recursive_query_molecules_are_checked() {
         .position(|w| w == b"\x04\0\0\0MARK\x02")
         .unwrap()
         + 8;
-    assert!(Mol::from_pkl_string(&pkl).is_ok());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { Mol::from_pkl_string(&pkl) }.is_ok());
     pkl[at] = 1;
-    assert!(is_value(Mol::from_pkl_string(&pkl)));
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks.
+    assert!(is_value(unsafe { Mol::from_pkl_string(&pkl) }));
     pkl[at] = 9;
-    assert!(is_value(Mol::from_pkl_string(&pkl)));
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks.
+    assert!(is_value(unsafe { Mol::from_pkl_string(&pkl) }));
 }
 
 // RDKit pickles PDB residue info by its type, so a real one round-trips.
@@ -317,7 +332,8 @@ fn pickles_keep_pdb_residue_info() {
     mol.get_atom_with_idx_mut(0)
         .unwrap()
         .set_pdb_residue_info(&residue);
-    let back = Mol::from_pkl_string(&mol.to_binary()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let back = unsafe { Mol::from_pkl_string(&mol.to_binary()) }.unwrap();
     let info = back
         .get_atom_with_idx(0)
         .unwrap()

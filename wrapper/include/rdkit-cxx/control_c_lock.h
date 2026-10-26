@@ -46,11 +46,39 @@ inline void check_not_in_control_c_callback() {
   }
 }
 
+// Whether this thread holds control_c_mutex().
+inline thread_local bool control_c_held = false;
+
+// control_c_mutex()'s type: a std::mutex that records whether this thread
+// holds it, so ReleaseControlC can tell when the thread holds it through a
+// plain lock, which only that lock can release.
+class ControlCMutex {
+ public:
+  void lock() {
+    d_mutex.lock();
+    control_c_held = true;
+  }
+  bool try_lock() {
+    if (!d_mutex.try_lock()) {
+      return false;
+    }
+    control_c_held = true;
+    return true;
+  }
+  void unlock() {
+    control_c_held = false;
+    d_mutex.unlock();
+  }
+
+ private:
+  std::mutex d_mutex;
+};
+
 // Defined inline so every wrapper source shares one mutex. Every lock site
 // gets the mutex here, so each checks check_not_in_control_c_callback.
-inline std::mutex &control_c_mutex() {
+inline ControlCMutex &control_c_mutex() {
   check_not_in_control_c_callback();
-  static std::mutex mutex;
+  static ControlCMutex mutex;
   return mutex;
 }
 
@@ -59,7 +87,10 @@ inline std::mutex &control_c_mutex() {
 // that take a lock ordered before it. A ReleaseControlC around such code
 // releases the lock the thread's innermost HoldControlC holds, if it holds
 // it, and takes it back after. RDKit runs such code between matches, when
-// no ControlCHandler is alive.
+// no ControlCHandler is alive. When the thread holds the mutex through
+// another lock, which a ReleaseControlC cannot release, the code inside runs
+// as in_control_c_callback, so a wrapper it calls that would take the mutex
+// again fails instead.
 class HoldControlC {
  public:
   HoldControlC();
@@ -68,8 +99,8 @@ class HoldControlC {
   HoldControlC &operator=(const HoldControlC &) = delete;
 
  private:
-  std::unique_lock<std::mutex> d_lock;
-  std::unique_lock<std::mutex> *d_outer;
+  std::unique_lock<ControlCMutex> d_lock;
+  std::unique_lock<ControlCMutex> *d_outer;
 };
 
 class ReleaseControlC {
@@ -80,7 +111,9 @@ class ReleaseControlC {
   ReleaseControlC &operator=(const ReleaseControlC &) = delete;
 
  private:
-  std::unique_lock<std::mutex> *d_held;
+  std::unique_lock<ControlCMutex> *d_held;
+  // Whether this set in_control_c_callback.
+  bool d_marked = false;
 };
 
 // With the new stereo perception on, the fingerprint code runs the CIP
@@ -88,6 +121,6 @@ class ReleaseControlC {
 // FingerprintUtil.cpp, which the atom-pair code uses), so a call that may
 // run it holds control_c_mutex then. The legacy perception, RDKit's
 // default, never labels there; the lock returned then holds nothing.
-std::unique_lock<std::mutex> lock_control_c_for_cip();
+std::unique_lock<ControlCMutex> lock_control_c_for_cip();
 
 }  // namespace rdkit_cxx

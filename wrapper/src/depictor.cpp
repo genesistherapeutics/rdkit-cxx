@@ -245,7 +245,7 @@ unsigned compute_2d_coords(RWMol &mol, const Compute2DCoordsData &data) {
   check_bond_length(data.bond_length);
   auto lock = lock_depiction();
   // Ring-system templates are matched to the molecule (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   // Random bond flips (nSample and nFlipsPerSample) draw from RDKit's
   // generator.
   std::lock_guard<std::mutex> random_lock(random_mutex());
@@ -301,7 +301,7 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
   auto lock = lock_depiction();
   // It matches the reference, or its pattern, to the molecule
   // (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   check_constrained_inputs(mol, reference, data.conf_id, params);
   // With allowRGroups, RDKit adjusts a copy of the pattern, or of the
   // reference, with adjustQueryProperties, whose RWMol::replaceBond leaves
@@ -363,7 +363,7 @@ void generate_depiction_matching_3d_structure(
     bool has_ref_patt, bool accept_failure, bool force_rdkit) {
   auto lock = lock_depiction();
   // It matches the reference to the molecule (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::lock_guard<std::mutex> random_lock(random_mutex());
   // It mimics the reference's distances with RDKit's depictor, or with
   // acceptFailure falls back to compute2DCoords without forceRDKit.

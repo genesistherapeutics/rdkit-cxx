@@ -248,7 +248,7 @@ std::uint32_t fp_holder_len(const FpHolderHandle &holder) {
 // Pattern fingerprints match their patterns (control_c_lock.h).
 std::uint32_t fp_holder_add_mol(FpHolderHandle &holder, const RWMol &mol) {
   check_room(holder.ptr->size());
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return holder.ptr->addMol(mol);
 }
 
@@ -278,7 +278,7 @@ std::unique_ptr<BitVect> fp_holder_make_fingerprint(
     const FpHolderHandle &holder, const RWMol &mol) {
   std::unique_ptr<ExplicitBitVect> fp;
   {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     fp.reset(holder.ptr->makeFingerprint(mol));
   }
   return std::make_unique<BitVect>(std::move(*fp));
@@ -370,7 +370,7 @@ std::uint32_t substruct_library_add_mol(SubstructLibrary &view,
   if (view.getKeyHolder()) {
     check_room(view.getKeyHolder()->size());
   }
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return view.addMol(mol);
 }
 
@@ -489,7 +489,7 @@ std::vector<unsigned int> search(const SubstructLibrary &view,
                                  int max_results) {
   auto range = search_range(view, ranged, start_idx, end_idx);
   auto params = substruct_params_from_data(data);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return find(view, query, range, params, max_results);
 }
 
@@ -624,7 +624,7 @@ void add_patterns(const SubstructLibrary &view, FpHolderHandle &patterns) {
   const auto &mols = view.getMolecules();
   std::vector<std::unique_ptr<ExplicitBitVect>> fps;
   {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     for (unsigned int idx = 0; idx < mols.size(); ++idx) {
       auto mol = mols.getMol(idx);
       fps.emplace_back(

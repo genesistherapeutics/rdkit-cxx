@@ -27,6 +27,10 @@ namespace Desc = RDKit::Descriptors;
 // and getAvailableProperties read it (U4). Every wrapper that touches it
 // holds this lock; none calls a functor while holding it.
 std::mutex &registry_mutex() {
+  // A leaf: held for one RDKit call that takes no other lock, so a closure
+  // running under control_c_mutex (U4) can take it without deadlock. A
+  // wrapper that takes another lock while holding it must first call
+  // check_not_in_control_c_callback(), as rgroup_mutex() does.
   static std::mutex mutex;
   return mutex;
 }
@@ -106,9 +110,9 @@ std::unique_ptr<std::string> property_functor_get_version(
 double property_functor_call(const PropertyFunctorHandle &functor,
                              const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   if (!dynamic_cast<const RustPropertyFunctor *>(functor.ptr.get())) {
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
   }
   return (*functor.ptr)(mol);
 }
@@ -198,7 +202,7 @@ std::unique_ptr<PropertyRangeQuery> make_property_range_query(rust::Str name,
 bool property_range_query_match(const PropertyRangeQuery &query,
                                 const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return query.Match(mol);
 }
 

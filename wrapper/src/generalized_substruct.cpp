@@ -215,7 +215,7 @@ void check_extended_query_mol(const XQ &query) {
 std::vector<RDKit::MatchVectType> substruct_match(
     const RDKit::ROMol &mol, const XQ &query,
     const RDKit::SubstructMatchParameters &params) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::visit(
       overloaded{
           [&](const XQ::RWMol_T &q) {
@@ -371,7 +371,7 @@ std::unique_ptr<BitVect> extended_query_mol_pattern_fingerprint_query(
     const ExtendedQueryMol &query, std::uint32_t fingerprint_size) {
   check_fingerprint_size(fingerprint_size);
   // Pattern fingerprints match their patterns (control_c_lock.h).
-  std::unique_lock<std::mutex> control_c(control_c_mutex());
+  std::unique_lock<ControlCMutex> control_c(control_c_mutex());
   auto fp = query.patternFingerprintQuery(fingerprint_size);
   control_c.unlock();
   if (!fp) {
@@ -461,7 +461,7 @@ std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
     check_removals(mol);
   }
   // Tautomer enumeration matches its transforms (control_c_lock.h).
-  std::unique_lock<std::mutex> control_c(control_c_mutex());
+  std::unique_lock<ControlCMutex> control_c(control_c_mutex());
   auto query = std::make_unique<XQ>(create_extended_query(
       mol, do_enumeration, do_tautomers, adjust_query_properties,
       adjust_query_params_from_data(adjust_query_parameters)));
@@ -497,7 +497,7 @@ rust::Vec<IndexList> mol_get_substruct_matches_extended(
 std::unique_ptr<BitVect> pattern_fingerprint_target(
     const RWMol &target, std::uint32_t fingerprint_size) {
   check_fingerprint_size(fingerprint_size);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return wrap_bit_vect(RDKit::GeneralizedSubstruct::patternFingerprintTargetMol(
       target, fingerprint_size));
 }

@@ -166,20 +166,32 @@ rule changes the rule first.
   wrapper, checked, and handed to RDKit as those checked bytes, so RDKit
   never reads a file that changed after the check; PNG files are read and
   their chunks checked the same way. Parsers RDKit fuzzes
-  (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
-  for the limits U12 checks and a molecule pickle's enum values, which
-  MolPickler casts unchecked (bond types, directions, and stereo, atoms'
-  chiral tags and hybridizations, stereo groups' types) and which the Rust
-  enums cannot hold past RDKit's last value: `check_pickled_mol` refuses
-  them where U10 checks monomer types. So are reaction pickles, which are
-  molecule pickles framed by counts and tags RDKit checks. Catalog pickles
-  (`MolCatalog`, `FragCatalog`, and their entries) frame molecule pickles
-  with lengths and indices RDKit trusts, so `rdkit-cxx/catalog_checks.h`
-  reads each as RDKit will, with RDKit's readers for the molecules and
-  parameters, checking those and the molecules' monomer infos (U10), and
-  RDKit then reads the same bytes. Boost.Serialization archives of
-  polymorphic objects (`EnumerateLibrary`'s `Serialize` and `GetState`,
-  `FilterCatalog`'s pickles) are not checked: Boost trusts their class and
+  (`Code/Fuzz`: SMILES and mol blocks) are trusted, except for the limits
+  U12 checks. RDKit fuzzes molecule pickles too, but only their parsing:
+  MolPickler takes a query's class from its tag and its matching function
+  from its description independently, as the JSON reader below does, and
+  converts values it reads without range checks, so a pickle RDKit did not
+  write reaches undefined behavior while it is read or in code that reads
+  the molecule later. Every function that hands caller bytes to MolPickler
+  is therefore an `unsafe fn` whose contract is a pickle RDKit wrote,
+  unmodified: molecule, bundle, reaction, tautomer-query, and
+  extended-query pickles, extended-query JSON (which holds molecule
+  pickles in base64), catalog pickles, PNG metadata, and
+  `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
+  read later. The wrappers still check what they checked before, for
+  pickles that meet the contract but come from another RDKit: a molecule
+  pickle's enum values, which MolPickler casts unchecked (bond types,
+  directions, and stereo, atoms' chiral tags and hybridizations, stereo
+  groups' types) and which the Rust enums cannot hold past RDKit's last
+  value, `check_pickled_mol` refuses where U10 checks monomer types; and
+  catalog pickles (`MolCatalog`, `FragCatalog`, and their entries), which
+  frame molecule pickles with lengths and indices RDKit trusts,
+  `rdkit-cxx/catalog_checks.h` reads as RDKit will, with RDKit's readers
+  for the molecules and parameters, checking those and the molecules'
+  monomer infos (U10), before RDKit reads the same bytes.
+  Boost.Serialization archives of polymorphic objects (`EnumerateLibrary`'s
+  `Serialize` and `GetState`, `FilterCatalog`'s pickles) are not checked:
+  Boost trusts their class and
   object ids, so the functions that read them are `unsafe fn`s whose
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
@@ -265,7 +277,9 @@ rule changes the rule first.
   `ReleaseControlC`). A closure RDKit calls inside a match (FMCS's final
   match checks) runs with the lock held, so a wrapper it calls that takes
   this lock, or one ordered before it, fails instead
-  (`check_not_in_control_c_callback`). MolAlign's
+  (`check_not_in_control_c_callback`), as does one a `ReleaseControlC`
+  runs while the thread holds the lock through anything but `HoldControlC`,
+  which it cannot release. MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs

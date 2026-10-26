@@ -259,6 +259,19 @@ void check_inchi_input(const RWMol &mol) {
     }
     if (is_tetrahedral(*atom)) {
       ++num_stereo;
+      // MolToInchi keeps a tetrahedral center of three or four neighbors,
+      // counting hydrogens, but fills in only its neighbor atoms (and itself
+      // for a fourth), so with fewer than three InChI reads uninitialized
+      // neighbor indices.
+      unsigned total = atom->getTotalDegree();
+      if (total >= 3 && total <= 4 && atom->getDegree() < 3) {
+        throw ValueErrorException(
+            "atom " + std::to_string(idx) +
+            " is a tetrahedral stereo center with " +
+            std::to_string(atom->getDegree()) +
+            " neighbor atoms; InChI needs at least 3, counting only "
+            "hydrogens that are atoms");
+      }
     }
   }
   for (const RDKit::Bond *bond : copy.bonds()) {
@@ -298,7 +311,7 @@ InchiToMolData inchi_to_mol(rust::Str inchi, bool sanitize, bool remove_hs) {
   {
     // InchiToMol's cleanup matches patterns, and each match constructs a
     // ControlCHandler (control_c_lock.h, CONVENTIONS.md U4).
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     mol.reset(RDKit::InchiToMol(std::string(inchi), rv, sanitize, remove_hs));
   }
   return InchiToMolData{std::move(mol), rv.returnCode,
@@ -314,7 +327,7 @@ MolToInchiData mol_to_inchi(const RWMol &mol, rust::Str options) {
   std::string inchi;
   {
     // MolToInchi's reverse cleanup matches patterns (U4).
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     inchi = RDKit::MolToInchi(mol, rv, opts.empty() ? nullptr : opts.c_str());
   }
   return MolToInchiData{std::make_unique<std::string>(std::move(inchi)),
@@ -329,7 +342,7 @@ std::unique_ptr<std::string> mol_to_inchi_key(const RWMol &mol,
   std::string opts(options);
   check_options(opts);
   check_inchi_input(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::make_unique<std::string>(
       RDKit::MolToInchiKey(mol, opts.empty() ? nullptr : opts.c_str()));
 }

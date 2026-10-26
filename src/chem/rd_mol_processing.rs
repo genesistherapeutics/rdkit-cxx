@@ -32,7 +32,8 @@ use crate::util::path_bytes;
 pub struct SupplierOptions {
     /// The threads that parse and fingerprint the molecules of SD and SMILES
     /// files: 0 for one per core, and fewer counting back from it; one thread
-    /// reads in order on the calling thread.
+    /// reads in order on the calling thread. More than 1024 is
+    /// `Error::Value`: RDKit starts every one before it reads.
     pub num_threads: i32,
     /// Sanitizes each molecule.
     pub sanitize: bool,
