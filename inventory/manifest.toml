@@ -7,7 +7,148 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.Numerics.rdAlignment", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its structure checker (struchk.c and the code it calls) runs as InitializeCheckMol, which is not bound, configured it; this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.CheckMoleculeString"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its structure checker (struchk.c and the code it calls) runs as InitializeCheckMol, which is not bound, configured it; this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.CloseCheckMolFiles"
+reason = "serves only InitializeCheckMol and the structure checker, which are not bound: it closes the files struchk opened and clears its parameters"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.Generate2DCoords"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its layout (layout.c, about 5,400 lines) goes on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table; this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetAvalonCountFP"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its fingerprints go on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table, which a sanitized molecule can have (a dummy atom with 24 neighbours); nBits 0 divides by zero (SIGFPE in Python); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetAvalonFP"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its fingerprints go on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table, which a sanitized molecule can have (a dummy atom with 24 neighbours); nBits 0 divides by zero (SIGFPE in Python); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetAvalonFPAsWords"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and its fingerprints go on after SetupNeighbourhood fails for an atom of more than 20 bonds, having written past that atom's neighbour table, which a sanitized molecule can have (a dummy atom with 24 neighbours); nBits 0 divides by zero (SIGFPE in Python); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetCanonSmiles"
+reason = "not bound: the Avalon toolkit (External/AvalonTools, about 34,000 lines of C with unlocked global state) parses the SMILES and mol blocks it is given, and those RDKit writes for a molecule, without validating them: malformed SMILES such as ClC(Cl)=C1=CC=CC..1 corrupt its heap and malformed mol blocks are read out of bounds (crashes in Python), and canonicalizes what it parsed (canonizer.c); this binding has not audited the toolkit for the input it trusts (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.GetCheckMolLog"
+reason = "serves only the Avalon toolkit's functions, which are not bound: it returns the messages they log to a global list"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.InitializeCheckMol"
+reason = "not bound: the Avalon structure checker (struchk.c) reads each file its options name through a null FILE* when the file does not open (MessageExit returns under InitCheckMol; a segfault in Python for '-ta /nonexistent'), parses the files it does open with the toolkit's unaudited readers, and writes the files its options name (U1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.alias_conversion_failed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::alias_conversion_failed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.atom_check_failed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::atom_check_failed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.atom_clash"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::atom_clash"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.bad_molecule"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::bad_molecule"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.dubious_stereo_removed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::dubious_stereo_removed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.either_warning"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::either_warning"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.fragments_found"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::fragments_found"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.recharged"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::recharged"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.size_check_failed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::size_check_failed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.stereo_error"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_error"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.stereo_forced_bad"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_forced_bad"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.stereo_transformed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::stereo_transformed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.template_transformed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::template_transformed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkFlag.transformed"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkFlag::transformed"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult.bad_set"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult::bad_set"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult.success"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult::success"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.StruChkResult.transformed_set"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::StruChkResult::transformed_set"]
+name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.avalonSSSBits"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_sss_bits"]
+
+[[entry]]
+python = "rdkit.Avalon.pyAvalonTools.avalonSimilarityBits"
+rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_similarity_bits"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -12960,6 +13101,21 @@ python = "rdkit.Chem.rdqueries.XHAtomQueryAtom"
 rust = ["rdkit_cxx::chem::rdqueries::xh_atom_query_atom", "rdkit_cxx::chem::rdqueries::xh_atom_query_atom_with_negate"]
 
 [[entry]]
+python = "rdkit.DataManip.Metric.rdMetricMatrixCalc.GetEuclideanDistMat"
+rust = ["rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_euclidean_dist_mat"]
+overloads_note = "Python takes a NumPy array or a sequence of sequences; both are rows of f64 (T1)"
+
+[[entry]]
+python = "rdkit.DataManip.Metric.rdMetricMatrixCalc.GetTanimotoDistMat"
+rust = ["rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_tanimoto_dist_mat"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.DataManip.Metric.rdMetricMatrixCalc.GetTanimotoSimMat"
+rust = ["rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_tanimoto_sim_mat"]
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.AllBitSimilarity"
 rust = ["rdkit_cxx::data_structs::c_data_structs::all_bit_similarity"]
 overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
@@ -14907,8 +15063,262 @@ python = "rdkit.Geometry.rdGeometry.WriteGridToFile"
 rust = ["rdkit_cxx::geometry::rd_geometry::write_grid_to_file"]
 
 [[entry]]
+python = "rdkit.ML.Cluster.Clustering.MurtaghCluster"
+rust = ["rdkit_cxx::ml::cluster::clustering::murtagh_cluster"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clustering.MurtaghDistCluster"
+rust = ["rdkit_cxx::ml::cluster::clustering::murtagh_dist_cluster"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BIASCHISQUARE"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Biaschisquare"]
+name_exception = "an exported enum value maps to its variant, InfoType::Biaschisquare"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BIASENTROPY"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Biasentropy"]
+name_exception = "an exported enum value maps to its variant, InfoType::Biasentropy"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BitCorrMatGenerator"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::BitCorrMatGenerator"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BitCorrMatGenerator.CollectVotes"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::BitCorrMatGenerator::collect_votes"]
+rust_generics = "<rdkit_cxx::data_structs::ExplicitBitVect>"
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BitCorrMatGenerator.GetCorrMatrix"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::BitCorrMatGenerator::get_corr_matrix"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BitCorrMatGenerator.SetBitList"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::BitCorrMatGenerator::set_bit_list"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.BitCorrMatGenerator.__init__"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::BitCorrMatGenerator::default"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.CHISQUARE"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Chisquare"]
+name_exception = "an exported enum value maps to its variant, InfoType::Chisquare"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.ChiSquare"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::chi_square"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.ENTROPY"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Entropy"]
+name_exception = "an exported enum value maps to its variant, InfoType::Entropy"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.AccumulateVotes"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::accumulate_votes"]
+rust_generics = "<rdkit_cxx::data_structs::ExplicitBitVect>"
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.GetTopN"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::get_top_n"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.SetBiasList"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::set_bias_list"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.SetMaskBits"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::set_mask_bits"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.Tester"
+reason = "a debugging hook of Python's wrapper, not of RDKit's InfoBitRanker: it prints a SparseBitVect's on-bit count to standard output, which SparseBitVect::get_num_on_bits returns"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.WriteTopBitsToFile"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::write_top_bits_to_file"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoBitRanker.__init__"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::new", "rdkit_cxx::ml::info_theory::rd_info_theory::InfoBitRanker::new_with_info_type"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoEntropy"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::info_entropy"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoGain"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::info_gain"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoType"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoType.BIASCHISQUARE"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Biaschisquare"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoType.BIASENTROPY"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Biasentropy"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoType.CHISQUARE"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Chisquare"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoType.ENTROPY"
+rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Entropy"]
+
+[[entry]]
 python = "rdkit.Numerics.rdAlignment.GetAlignmentTransform"
 rust = ["rdkit_cxx::numerics::rd_alignment::get_alignment_transform", "rdkit_cxx::numerics::rd_alignment::get_alignment_transform_with_params"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.CENTROID"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Centroid"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Centroid"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.CLINK"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Clink"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Clink"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.CENTROID"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Centroid"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.CLINK"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Clink"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.GOWER"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Gower"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.MCQUITTY"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Mcquitty"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.SLINK"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Slink"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.UPGMA"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Upgma"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.WARD"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Ward"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.GOWER"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Gower"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Gower"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.HierarchicalClusterPicker"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::HierarchicalClusterPicker"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.HierarchicalClusterPicker.Cluster"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::HierarchicalClusterPicker::cluster"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.HierarchicalClusterPicker.Pick"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::HierarchicalClusterPicker::pick"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.HierarchicalClusterPicker.__init__"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::HierarchicalClusterPicker::new"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.LeaderPicker"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::LeaderPicker"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.LeaderPicker.LazyBitVectorPick"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::LeaderPicker::lazy_bit_vector_pick", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::LeaderPicker::lazy_bit_vector_pick_with_params"]
+overloads_note = "numThreads is not bound: the picks do not depend on it, and on RDKit's threads (LeaderPickerState's pthreads, created unchecked) an exception from the distance function calls std::terminate, so the picks are made on the calling thread; pickSize and firstPicks are LeaderPickParams, which both methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.LeaderPicker.LazyPick"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::LeaderPicker::lazy_pick", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::LeaderPicker::lazy_pick_with_params"]
+rust_generics = "<fn(u32, u32) -> f64>"
+overloads_note = "numThreads is not bound: the picks do not depend on it, and on RDKit's threads (LeaderPickerState's pthreads, created unchecked) an exception from the distance function calls std::terminate, so the picks are made on the calling thread; pickSize and firstPicks are LeaderPickParams, which both methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.LeaderPicker.__init__"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::LeaderPicker::default"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MCQUITTY"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Mcquitty"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Mcquitty"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker.LazyBitVectorPick"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_bit_vector_pick", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_bit_vector_pick_with_params"]
+overloads_note = "useCache, which Python ignores and warns is deprecated, is not bound; firstPicks and seed are MaxMinPickParams, which the MaxMinPicker methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker.LazyBitVectorPickWithThreshold"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_bit_vector_pick_with_threshold", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_bit_vector_pick_with_threshold_with_params"]
+overloads_note = "firstPicks and seed are MaxMinPickParams, which the MaxMinPicker methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker.LazyPick"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_pick", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_pick_with_params"]
+rust_generics = "<fn(u32, u32) -> f64>"
+overloads_note = "useCache, which Python ignores and warns is deprecated, is not bound; firstPicks and seed are MaxMinPickParams, which the MaxMinPicker methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker.LazyPickWithThreshold"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_pick_with_threshold", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::lazy_pick_with_threshold_with_params"]
+rust_generics = "<fn(u32, u32) -> f64>"
+overloads_note = "firstPicks and seed are MaxMinPickParams, which the MaxMinPicker methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker.Pick"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::pick", "rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::pick_with_params"]
+overloads_note = "firstPicks and seed are MaxMinPickParams, which the MaxMinPicker methods share"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.MaxMinPicker.__init__"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::MaxMinPicker::default"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.SLINK"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Slink"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Slink"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.UPGMA"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Upgma"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Upgma"
+
+[[entry]]
+python = "rdkit.SimDivFilters.rdSimDivPickers.WARD"
+rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Ward"]
+name_exception = "an exported enum value maps to its variant, ClusterMethod::Ward"
 
 [[entry]]
 python = "rdkit.rdBase.AttachFileToLog"
