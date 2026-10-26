@@ -570,7 +570,10 @@ rule changes the rule first.
   `[modules.reasons]` instead, which covers every name in it.
   `inventory/manifest_add.py` merges entries, completions, and module
   reasons into the manifest. `check.py --strict`, which CI runs, fails on a
-  module that is neither complete nor covered by a reason. A ported class generic over a
+  module that is neither complete nor covered by a reason. Deprecated code
+  is not ported: a module, class, or function RDKit deprecates (one that
+  warns on import or use, or is documented as deprecated) takes a reason
+  that names what replaces it (I2). A ported class generic over a
   Python value of any type (a container's payload, a callable) gives its
   type parameters defaults, so the manifest can name it and its methods:
   `tests/manifest_paths.rs` names associated items as `<Type>::item`, which
