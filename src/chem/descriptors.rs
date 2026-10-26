@@ -19,7 +19,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::Result;
 use crate::chem::e_state::e_state_vsa;
-use crate::chem::py_util::{py_max, py_min};
 use crate::chem::rd_fingerprint_generator::{
     GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
@@ -28,6 +27,7 @@ use crate::chem::{
     Mol, crippen, e_state, fragments, get_periodic_table, graph_descriptors, lipinski, mol_surf,
     qed, spacial_score,
 };
+use crate::py::{py_max, py_min};
 
 /// The average molecular weight. Mirrors `Descriptors.MolWt`, which calls
 /// `rdMolDescriptors._CalcMolWt`.

@@ -13,8 +13,8 @@ use std::fs::File;
 use std::io::{BufReader, Seek, SeekFrom};
 use std::path::Path;
 
+use crate::py::{py_float, py_int, py_split, py_strip};
 use crate::utils::fileutils::read_line;
-use crate::utils::{py_float, py_int, py_split, py_strip};
 use crate::{Error, Result};
 
 /// Parameters for [`ReFile::new_with_params`], with Python's defaults (A2).

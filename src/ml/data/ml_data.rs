@@ -11,6 +11,7 @@
 
 use std::fmt;
 
+use crate::py::float_repr;
 use crate::{Error, Result};
 
 /// A value in an [`MLDataSet`]: what RDKit's readers make of a field.
@@ -33,46 +34,6 @@ impl Value {
             Value::Float(x) => Some(*x),
             Value::Str(_) => None,
         }
-    }
-}
-
-/// Python's `repr` of a float: the shortest text that reads back as it,
-/// in positional notation for exponents from -4 to 15.
-pub(crate) fn float_repr(x: f64) -> String {
-    if x.is_nan() {
-        return "nan".to_owned();
-    }
-    if x.is_infinite() {
-        return if x > 0.0 { "inf" } else { "-inf" }.to_owned();
-    }
-    let sci = format!("{x:e}");
-    let (mantissa, exp) = sci.split_once('e').expect("{:e} has an exponent");
-    let exp: i32 = exp.parse().expect("{:e} has an integer exponent");
-    let (sign, mantissa) = match mantissa.strip_prefix('-') {
-        Some(m) => ("-", m),
-        None => ("", mantissa),
-    };
-    let digits: String = mantissa.chars().filter(|c| *c != '.').collect();
-    if (-4..16).contains(&exp) {
-        let n = digits.len() as i32;
-        let text = if exp < 0 {
-            format!("0.{}{digits}", "0".repeat((-exp - 1) as usize))
-        } else if exp + 1 >= n {
-            format!("{digits}{}.0", "0".repeat((exp + 1 - n) as usize))
-        } else {
-            let (a, b) = digits.split_at((exp + 1) as usize);
-            format!("{a}.{b}")
-        };
-        format!("{sign}{text}")
-    } else {
-        let (first, rest) = digits.split_at(1);
-        let mant = if rest.is_empty() {
-            first.to_owned()
-        } else {
-            format!("{first}.{rest}")
-        };
-        let esign = if exp < 0 { '-' } else { '+' };
-        format!("{sign}{mant}e{esign}{:02}", exp.abs())
     }
 }
 

@@ -15,9 +15,9 @@
 
 use std::path::{Path, PathBuf};
 
-use crate::chem::py_compat::{splitlines, str_repr};
 use crate::chem::rd_chem_reactions::ChemicalReaction;
 use crate::chem::{Mol, mol_from_smarts};
+use crate::py::{splitlines, str_repr};
 use crate::{Error, Result};
 
 /// RDKit's functional group hierarchy, as `BuildFuncGroupHierarchy` reads it

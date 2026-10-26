@@ -6,7 +6,7 @@
 //! Ports `rdkit.utils.chemutils`, a Python module: utilities with
 //! chemical know-how.
 
-use crate::utils::{py_float, py_int};
+use crate::py::{py_float, py_int};
 use crate::{Error, Result};
 
 /// The elements of a simple composition and their counts, in order:

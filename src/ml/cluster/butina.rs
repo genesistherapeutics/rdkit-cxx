@@ -19,7 +19,7 @@
 //! let clusters = cluster_data_flat(&dists, 4, 0.3).unwrap();
 //! ```
 
-use crate::chem::py_math::np_sum;
+use crate::py::np_sum;
 use crate::{Error, Result};
 
 fn value_error(message: String) -> Error {

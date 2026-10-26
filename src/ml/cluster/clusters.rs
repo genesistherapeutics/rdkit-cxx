@@ -31,7 +31,7 @@
 
 use std::cmp::Ordering;
 
-use crate::ml::py_format::format_f;
+use crate::py::format_f;
 use crate::{Error, Result};
 
 /// Python 2's `cmp`: -1, 0, or 1 as `t1` is less than, equal to, or greater

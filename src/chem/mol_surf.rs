@@ -15,11 +15,11 @@
 //! its bin as a defaulted second argument; here each function is its bin.
 
 use crate::Result;
-use crate::chem::py_math::py_sum;
-use crate::chem::py_util::bisect_right;
 use crate::chem::rd_mol_descriptors as descriptors;
 use crate::chem::rd_partial_charges::compute_gasteiger_charges;
 use crate::chem::{BondType, Mol};
+use crate::py::bisect_right;
+use crate::py::py_sum;
 
 /// How much each bond type shortens the sum of its atoms' radii in Python's
 /// reference Labute calculation. Mirrors `MolSurf.bondScaleFacts`.

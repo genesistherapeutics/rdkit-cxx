@@ -13,7 +13,7 @@ use std::collections::BTreeMap;
 use std::fmt;
 
 use crate::chem::feat_maps::feat_map_point::{FeatMapPoint, FeatureLike};
-use crate::chem::py_math::py_sum;
+use crate::py::py_sum;
 use crate::{Error, Result};
 
 /// How [`FeatMap::score_feats`] scores each feature. Mirrors

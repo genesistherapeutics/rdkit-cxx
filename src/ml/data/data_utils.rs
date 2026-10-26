@@ -22,10 +22,12 @@ use std::fs;
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 
-use crate::ml::data::ml_data::{MLDataSet, MLDataSetParams, MLQuantDataSet, Value, float_repr};
+use crate::ml::data::ml_data::{MLDataSet, MLDataSetParams, MLQuantDataSet, Value};
+use crate::py::float_repr;
+use crate::py::{py_float, py_int, py_strip};
 use crate::rd_random;
 use crate::utils::fileutils::{move_to_matching_line, read_line};
-use crate::utils::{py_float, py_int, py_strip, read_line_universal};
+use crate::utils::read_line_universal;
 use crate::{Error, Result};
 
 fn index_error(index: usize, len: usize) -> Error {

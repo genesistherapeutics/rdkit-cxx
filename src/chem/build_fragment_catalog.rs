@@ -16,10 +16,10 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::chem::Mol;
-use crate::chem::fragment_catalog::{py_float, py_int};
 use crate::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog, FragFPGenerator};
 use crate::data_structs::ExplicitBitVect;
 use crate::ml::info_theory::{InfoBitRanker, InfoType};
+use crate::py::{parse_float, parse_int};
 use crate::{Error, Result};
 
 /// The functional groups `build_catalog` removes by default: RDKit's
@@ -71,7 +71,7 @@ impl<'a> ActivityReader<'a> {
     /// The activity of the `i`-th molecule.
     fn get(&self, i: usize, mol: &Mol) -> Result<i64> {
         match &self.name {
-            Some(name) => py_int(&mol.get_prop(name)?),
+            Some(name) => parse_int(&mol.get_prop(name)?),
             None => self
                 .values
                 .get(i)
@@ -601,7 +601,7 @@ pub fn process_gains_data_with_params(
     for line in text.split_inclusive('\n').skip(1) {
         let split: Vec<&str> = line.trim().split(params.delim.as_str()).collect();
         let id = split.get(params.id_col).ok_or_else(missing)?;
-        let gain = py_float(split.get(params.gain_col).ok_or_else(missing)?)?;
+        let gain = parse_float(split.get(params.gain_col).ok_or_else(missing)?)?;
         res.push((id.to_string(), gain));
     }
     Ok(res)

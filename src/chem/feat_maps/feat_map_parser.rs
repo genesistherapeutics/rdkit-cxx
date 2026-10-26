@@ -34,17 +34,11 @@ use crate::chem::feat_maps::feat_maps::{
     FeatDirScoreMode, FeatMap, FeatMapParams, FeatMapScoreMode, FeatProfile,
 };
 use crate::geometry::rd_geometry::Point3D;
+use crate::py::parse_float;
 use crate::{Error, Result};
 
 fn parse_error(message: String) -> Error {
     Error::Parse { message }
-}
-
-/// Python's `float()` of a string, which allows surrounding whitespace.
-fn py_float(text: &str) -> Result<f64> {
-    text.trim().parse::<f64>().map_err(|_| Error::Value {
-        message: format!("could not convert string to float: '{text}'"),
-    })
 }
 
 /// The end of a run of ASCII letters at `i`, or `i`.
@@ -270,8 +264,8 @@ impl FeatMapParser {
             for (name, val) in find_name_values(&l) {
                 match name.to_lowercase().as_str() {
                     "family" => family = Some(val),
-                    "radius" => param.radius = py_float(&val)?,
-                    "width" => param.width = py_float(&val)?,
+                    "radius" => param.radius = parse_float(&val)?,
+                    "width" => param.width = parse_float(&val)?,
                     "profile" => {
                         param.feat_profile = match val.as_str() {
                             "Gaussian" => FeatProfile::Gaussian,
@@ -324,9 +318,9 @@ impl FeatMapParser {
             });
         }
         Ok(Point3D::new(
-            py_float(split_l[0])?,
-            py_float(split_l[1])?,
-            py_float(split_l[2])?,
+            parse_float(split_l[0])?,
+            parse_float(split_l[1])?,
+            parse_float(split_l[2])?,
         ))
     }
 
@@ -347,7 +341,7 @@ impl FeatMapParser {
                 })?;
                 match name.as_str() {
                     "family" => p.set_family(value.trim()),
-                    "weight" => p.weight = py_float(value)?,
+                    "weight" => p.weight = parse_float(value)?,
                     "pos" => p.set_pos(Self::parse_point(value)?),
                     "dir" => p.feat_dirs.push(Self::parse_point(value)?),
                     _ => {

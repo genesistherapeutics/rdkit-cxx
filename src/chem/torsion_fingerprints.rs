@@ -13,7 +13,6 @@
 //! The sums, means, and standard deviations are Python's and NumPy's, so
 //! the values match Python's to the last bit.
 
-use crate::chem::py_math::{np_std, py_sum};
 use crate::chem::rd_fingerprint_generator::{
     AdditionalOutput, GetFingerprintParams, GetMorganGeneratorParams,
     get_morgan_generator_with_params,
@@ -22,6 +21,7 @@ use crate::chem::rd_mol_descriptors::get_connectivity_invariants;
 use crate::chem::rdchem::{AtomRef, Conformer, Mol};
 use crate::chem::{get_distance_matrix, get_symm_sssr, mol_from_smarts, mol_to_smiles};
 use crate::geometry::rd_geometry::compute_signed_dihedral_angle;
+use crate::py::{np_std, py_sum};
 use crate::{Error, Result};
 
 /// One torsion of a torsion list: the atom quartets that describe a bond or

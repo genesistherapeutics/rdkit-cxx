@@ -11,7 +11,7 @@
 //! so the order is (0, 1), (0, 2), (1, 2), (0, 3), and so on.
 
 use crate::ml::cluster::clusters::Cluster;
-use crate::ml::py_format::format_f;
+use crate::py::format_f;
 use crate::{Error, Result};
 
 /// A metric: it takes points and returns their metric matrix. A Rust

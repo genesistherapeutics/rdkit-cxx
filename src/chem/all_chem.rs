@@ -34,9 +34,9 @@ pub use crate::chem::*;
 // Python, where each `import *` replaces the names before it.
 pub use crate::chem::rd_chem_reactions::SanitizeFlags;
 
-use crate::chem::py_compat::float_repr;
 use crate::force_field::rd_force_field::{ForceField, MinimizeParams};
 use crate::geometry::rd_geometry::{UniformGrid3D, UniformGrid3DParams};
+use crate::py::float_repr;
 use crate::{Error, Result};
 
 /// Parameters for `transform_mol_with_params`, with Python's defaults (A2).
