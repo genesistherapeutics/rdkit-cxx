@@ -112,7 +112,9 @@ rule changes the rule first.
 - **S1.** `Mol` and `RWMol` are `Send` and not `Sync`. RDKit writes computed
   properties through `const` molecules (`MolToSmiles` sets
   `_smilesAtomOutputOrder` in `SmilesWrite.cpp`), so two threads reading one
-  molecule race. Parallel code gives each thread its own molecule.
+  molecule race. Parallel code gives each thread its own molecule. Owned
+  `Atom`s and `Bond`s, outside any molecule, own all their data and are
+  `Send` too.
 
 - **S2.** The crate needs an RDKit built with `RDK_BUILD_THREADSAFE_SSS`, as
   conda-forge's is: process-wide settings such as the default pickle
