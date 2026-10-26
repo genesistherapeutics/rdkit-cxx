@@ -6,6 +6,7 @@
 //! Ports `rdkit.DataStructs.TopNContainer`, a Python module: a sorted
 //! container of the largest values inserted, each with an extra item.
 
+use crate::py::bisect_right;
 use crate::{Error, Result};
 
 /// Keeps the `size` largest values inserted, smallest first, each with an
@@ -40,11 +41,10 @@ impl<E> TopNContainer<E> {
         }
     }
 
-    /// Python's `bisect.bisect`: the index after every value at or below
-    /// `val`.
+    /// Python's `bisect.bisect`, whose probes give Python's index even once
+    /// a NaN leaves `best` unsorted.
     fn bisect(&self, val: f64) -> usize {
-        self.best
-            .partition_point(|b| val.partial_cmp(b) != Some(std::cmp::Ordering::Less))
+        bisect_right(&self.best, val)
     }
 
     /// Inserts `val`, with no extra item, if it is larger than the smallest

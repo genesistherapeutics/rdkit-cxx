@@ -282,14 +282,43 @@ pub(crate) fn np_std(a: &[f64]) -> f64 {
     ((0.0 + np_sum(&squares)) / n).sqrt()
 }
 
+/// Python's `math.exp`, which raises OverflowError where the result
+/// overflows: `Error::Value` then.
+pub(crate) fn py_exp(x: f64) -> Result<f64> {
+    let y = x.exp();
+    if y.is_infinite() && x.is_finite() {
+        return Err(Error::Value {
+            message: "math range error".to_owned(),
+        });
+    }
+    Ok(y)
+}
+
+/// Python's float division, which raises ZeroDivisionError for a zero
+/// divisor: `Error::Value` then.
+pub(crate) fn py_div(a: f64, b: f64) -> Result<f64> {
+    if b == 0.0 {
+        return Err(Error::Value {
+            message: "float division by zero".to_owned(),
+        });
+    }
+    Ok(a / b)
+}
+
 /// Python's `bisect.bisect_right`: the index after the last element of
 /// `bins` that is not greater than `x`, found by Python's binary search, so
 /// unsorted bins and NaN give Python's answers.
 pub(crate) fn bisect_right(bins: &[f64], x: f64) -> usize {
-    let (mut lo, mut hi) = (0, bins.len());
+    bisect_right_by(bins, |b| x < *b)
+}
+
+/// `bisect_right` for any elements, with `is_below(e)` for Python's
+/// `x < e`.
+pub(crate) fn bisect_right_by<T>(a: &[T], is_below: impl Fn(&T) -> bool) -> usize {
+    let (mut lo, mut hi) = (0, a.len());
     while lo < hi {
         let mid = (lo + hi) / 2;
-        if x < bins[mid] {
+        if is_below(&a[mid]) {
             hi = mid;
         } else {
             lo = mid + 1;

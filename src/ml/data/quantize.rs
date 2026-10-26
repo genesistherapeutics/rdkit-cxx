@@ -217,7 +217,9 @@ pub fn find_var_quant_bound(
 /// `Quantize.FindVarMultQuantBounds`.
 ///
 /// `Error::Value` for different numbers of values and results (Python's
-/// assertion); `Error::Index` for a result not below `n_possible_res`.
+/// assertion), and for a NaN value, which Python sorts among the others as
+/// its sort's comparisons happen to fall, giving bounds no ordering
+/// explains; `Error::Index` for a result not below `n_possible_res`.
 pub fn find_var_mult_quant_bounds(
     vals: &[f64],
     n_bounds: usize,
@@ -235,6 +237,11 @@ pub fn find_var_mult_quant_bounds(
     }
     if let Some(&bad) = results.iter().find(|&&r| r >= n_possible_res) {
         return Err(Error::index(bad, n_possible_res));
+    }
+    if vals.iter().any(|v| v.is_nan()) {
+        return Err(Error::Value {
+            message: "the values must not be NaN".to_owned(),
+        });
     }
     // Python sorts (value, result) pairs.
     let mut svs: Vec<(f64, usize)> = vals.iter().copied().zip(results.iter().copied()).collect();

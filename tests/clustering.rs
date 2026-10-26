@@ -146,15 +146,22 @@ fn distances_by_criterion() {
 
 #[test]
 fn python_errors() {
-    // Python's own checks raise RuntimeError.
-    assert!(matches!(
-        murtagh_cluster(&points(), 5, 2, 1),
-        Err(Error::Runtime { .. })
-    ));
-    assert!(matches!(
-        murtagh_cluster(&points(), 6, 3, 1),
-        Err(Error::Runtime { .. })
-    ));
+    // Python's binding reads the first nPts * sz values, row by row, and
+    // past the array's end when it holds fewer.
+    let pts = points();
+    assert_eq!(
+        murtagh_cluster(&pts, 5, 2, 1).unwrap(),
+        murtagh_cluster(&pts[..5], 5, 2, 1).unwrap()
+    );
+    for (n_pts, sz) in [(6, 3), (7, 2), (-1, 2), (2, -1)] {
+        assert!(
+            matches!(
+                murtagh_cluster(&pts, n_pts, sz, 1),
+                Err(Error::Value { .. })
+            ),
+            "{n_pts} {sz}"
+        );
+    }
     assert!(matches!(
         murtagh_dist_cluster(&[], 3, 1),
         Err(Error::Runtime { .. })

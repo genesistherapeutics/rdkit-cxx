@@ -149,8 +149,9 @@ impl fmt::Debug for RankBitsParams<'_> {
 
 /// The indices ranked by their values, largest first. NumPy's `argsort`,
 /// reversed: ties come in the reverse of their order, as a stable sort
-/// orders them (NumPy's default sort leaves ties' order unspecified past
-/// 16 values).
+/// orders them. NumPy's default sort leaves ties' order unspecified, and
+/// its vectorized sorts can order even a few differently (NumPy 2 on
+/// AVX-512 gives `argsort([2, 1, 0, 0, 0])` as `[3, 2, 4, 1, 0]`).
 fn rank(metrics: &[f64]) -> Vec<usize> {
     let mut order: Vec<usize> = (0..metrics.len()).collect();
     order.sort_by(|&a, &b| metrics[a].total_cmp(&metrics[b]));

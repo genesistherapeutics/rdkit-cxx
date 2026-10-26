@@ -108,12 +108,15 @@ fn contour_params_defaults_match_python() {
         (0.15, 1.0, 0.0, 1000.0, 1e6, 0.01)
     );
     assert_eq!(ps.contour_colour, DrawColour::rgba(0.5, 0.5, 0.5, 0.5));
+    // RDKit's defaults are doubles, which Python reads as they are; only
+    // the colors it is given as tuples are rounded to f32.
+    let exact = |r, g, b, a| DrawColour { r, g, b, a };
     assert_eq!(
         ps.colour_map,
         [
-            DrawColour::rgba(0.557, 0.004, 0.322, 0.5),
-            DrawColour::rgba(1.0, 1.0, 1.0, 0.5),
-            DrawColour::rgba(0.153, 0.392, 0.098, 0.5)
+            exact(0.557, 0.004, 0.322, 0.5),
+            exact(1.0, 1.0, 1.0, 0.5),
+            exact(0.153, 0.392, 0.098, 0.5)
         ]
     );
     let mut ps = ps;

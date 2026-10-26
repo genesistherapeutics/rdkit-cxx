@@ -7,10 +7,14 @@
 
 #include <iterator>
 #include <mutex>
+#include <sstream>
+#include <string>
 
 #include <GraphMol/MolChemicalFeatures/FeatureParser.h>
 #include <GraphMol/MolChemicalFeatures/MolChemicalFeatureDef.h>
 #include <RDGeneral/FileParseException.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -42,6 +46,88 @@ RDKit::FeatSPtrList features(const MolChemicalFeatureFactory &factory,
   return factory.getFeaturesForMol(mol, only.c_str(), conf_id);
 }
 
+// As getNextLine in FeatureParser.cpp, which no header declares: the next
+// line that is neither blank nor a comment, joined with the lines its
+// trailing backslashes continue to. At the end of the input it leaves
+// `line` as it was.
+void next_fdef_line(std::istream &in, std::string &line) {
+  if (in.eof() || in.fail()) {
+    return;
+  }
+  line = "";
+  bool continuation = false;
+  while (!in.eof() && !in.fail()) {
+    std::string tmp;
+    std::getline(in, tmp);
+    if (tmp.empty() || tmp[0] == '#') {
+      continue;
+    }
+    std::string stripped =
+        boost::trim_right_copy_if(tmp, boost::is_any_of(" \t\r\n"));
+    if (stripped.empty()) {
+      continue;
+    }
+    if (stripped.back() != '\\') {
+      if (continuation) {
+        boost::trim_if(tmp, boost::is_any_of(" \t\r\n"));
+      }
+      line += tmp;
+      return;
+    }
+    continuation = true;
+    boost::trim_if(tmp, boost::is_any_of(" \t\r\n"));
+    line += tmp.substr(0, tmp.size() - 1);
+  }
+}
+
+// The first token, upper-cased: as parseFeatureDef splits a definition's
+// lines, at spaces and tabs.
+std::string first_token(std::string line) {
+  boost::trim_if(line, boost::is_any_of(" \t\r\n"));
+  auto end = line.find_first_of(" \t");
+  return boost::to_upper_copy(line.substr(0, end));
+}
+
+// As parseFeatureData finds a line's keyword, with boost's default
+// tokenizer, which also splits at punctuation.
+std::string keyword(std::string line) {
+  boost::trim_if(line, boost::is_any_of(" \t\r\n"));
+  if (line.empty() || line[0] == '#') {
+    return "";
+  }
+  boost::tokenizer<> tok(line);
+  return tok.begin() == tok.end() ? "" : boost::to_upper_copy(*tok.begin());
+}
+
+// parseFeatureDef reads a definition's lines until EndFeature or an empty
+// line, and reads the next at the end of the input, where getNextLine
+// leaves the last one in place: a definition whose lines run to the end
+// without EndFeature, the last one a valid Family or Weights line, loops
+// forever. This walks the lines as parseFeatureData and parseFeatureDef
+// do, and refuses a definition that reaches the end.
+void check_feature_defs_end(const std::string &text) {
+  std::istringstream in(text);
+  std::string line;
+  next_fdef_line(in, line);
+  while (!in.eof() && !in.fail()) {
+    if (keyword(line) == "DEFINEFEATURE") {
+      std::string define = line;
+      while (true) {
+        if (in.eof() || in.fail()) {
+          throw RDKit::FileParseException(
+              "the feature definition \"" + define +
+              "\" reaches the end of the input without EndFeature");
+        }
+        next_fdef_line(in, line);
+        if (line.empty() || first_token(line) == "ENDFEATURE") {
+          break;
+        }
+      }
+    }
+    next_fdef_line(in, line);
+  }
+}
+
 }  // namespace
 
 // The parser checks every pattern as SMARTS before it makes a definition
@@ -49,9 +135,11 @@ RDKit::FeatSPtrList features(const MolChemicalFeatureFactory &factory,
 // would dereference.
 std::unique_ptr<MolChemicalFeatureFactory> build_feature_factory_from_string(
     rust::Str fdef) {
+  std::string text(fdef);
+  check_feature_defs_end(text);
   std::unique_ptr<MolChemicalFeatureFactory> factory;
   try {
-    factory.reset(RDKit::buildFeatureFactory(std::string(fdef)));
+    factory.reset(RDKit::buildFeatureFactory(text));
   } catch (const RDKit::FeatureFileParseException &e) {
     // Python's FeatureFileParseException is a ValueError subclass; it is a
     // parse error here (E4).

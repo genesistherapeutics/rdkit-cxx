@@ -185,3 +185,29 @@ fn short_rows_are_index_errors() {
     let scores = vec![vec![1.0], vec![]];
     assert!(matches!(calc_auc(&scores, 0), Err(Error::Index { .. })));
 }
+
+/// Python's `math.exp` raises OverflowError, and its division
+/// ZeroDivisionError, where these would return inf or NaN.
+#[test]
+fn rie_and_bedroc_raise_where_python_does() {
+    let one = vec![vec![2.0, 1.0]];
+    assert!(matches!(calc_rie(&one, 1, 710.0), Err(Error::Value { .. })));
+    assert!(matches!(
+        calc_bedroc(&one, 1, 710.0),
+        Err(Error::Value { .. })
+    ));
+    let many: Scores = (0..500).map(|i| vec![f64::from(i % 7 == 0)]).collect();
+    assert!(calc_rie(&many, 0, 1000.0).is_ok());
+    assert!(matches!(
+        calc_bedroc(&many, 0, 1000.0),
+        Err(Error::Value { .. })
+    ));
+    let (best, ..) = cases();
+    for result in [calc_rie(&best, 0, 1e-300), calc_bedroc(&best, 0, 1e-300)] {
+        assert!(
+            matches!(&result, Err(Error::Value { message }) if message == "float division by zero"),
+            "{result:?}"
+        );
+    }
+    assert!(calc_bedroc(&best, 0, 709.0).is_ok());
+}

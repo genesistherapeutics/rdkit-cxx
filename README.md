@@ -276,7 +276,9 @@ an `extern "Rust"` type that the C++ subclass calls.
 - **Its molecules:** most closures get their own copy of the molecule.
   FMCS's typers and checks get the molecules the caller passed in, borrowed
   as `&Mol`: the wrapper finds each one RDKit calls back with in the
-  caller's list.
+  caller's list. A molecule without ring information, as one from SMARTS
+  is, has RDKit's temporary ring information for the search, so ring
+  queries in the closure see that.
 - **Panics:** a panic is caught at the boundary with `catch_unwind` and
   becomes an exception in C++. Where RDKit lets exceptions through, it
   reaches the caller as an `Error`. Where RDKit would not survive one, as in

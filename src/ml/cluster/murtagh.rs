@@ -115,8 +115,8 @@ fn to_clusters(n_pts: usize, ia: &[i64], ib: &[i64], crit: &[f64]) -> Result<Vec
 
 /// Clusters the first `n_pts` rows of `data` (points of equal length) with
 /// `method` (one of [`wards`] to [`centroid`]), returning a single-item
-/// list holding the cluster tree. Mirrors `Murtagh.ClusterData(data, nPts,
-/// method)`.
+/// list holding the cluster tree; the rows after them are ignored, as in
+/// Python. Mirrors `Murtagh.ClusterData(data, nPts, method)`.
 ///
 /// Errors as [`murtagh_cluster`].
 pub fn cluster_data(data: &[Vec<f64>], n_pts: i32, method: i32) -> Result<Vec<Cluster>> {
