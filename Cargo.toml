@@ -7,7 +7,7 @@
 name = "rdkit-cxx"
 version = "2026.9.0"
 edition = "2024"
-rust-version = "1.85"
+rust-version = "1.88"
 description = "Rust bindings for RDKit's C++ API, with Rust ports for much of the functionality RDKit currently offers only in Python"
 license = "BSD-3-Clause"
 repository = "https://github.com/skearnes/rdkit-cxx"

@@ -320,7 +320,7 @@ impl Exploder<'_> {
             }
         }
         self.n_dumped += 1;
-        if self.n_dumped % 100 == 0 {
+        if self.n_dumped.is_multiple_of(100) {
             log_message(
                 "rdApp.info",
                 &format!("INFO: Done {} molecules\n", self.n_dumped),

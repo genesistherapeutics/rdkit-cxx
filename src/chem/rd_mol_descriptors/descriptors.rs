@@ -146,8 +146,10 @@ pub(crate) fn calc_labute_asa_contribs(mol: &Mol, include_hs: bool) -> Result<Ve
 /// `rdMolDescriptors._CalcCrippenContribs`.
 pub(crate) fn calc_crippen_contribs(mol: &Mol) -> Result<Vec<(f64, f64)>> {
     Ok(ffi::calc_crippen_contribs(mol.as_ffi())?
-        .chunks_exact(2)
-        .map(|pair| (pair[0], pair[1]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|&[logp, mr]| (logp, mr))
         .collect())
 }
 
