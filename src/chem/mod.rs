@@ -12,6 +12,7 @@ pub mod all_chem;
 pub mod brics;
 pub mod chemical_features;
 pub mod draw;
+pub mod enumerate_heterocycles;
 pub mod enumerate_stereoisomers;
 pub mod filter_catalog;
 pub mod fragment_matcher;
