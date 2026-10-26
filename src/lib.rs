@@ -18,7 +18,11 @@ pub mod geometry;
 pub mod ml;
 pub mod numerics;
 pub mod rd_base;
+pub mod rd_logger;
+pub mod rd_paths;
+pub mod rd_random;
 pub mod sim_div_filters;
 mod util;
+pub mod utils;
 
 pub use error::{Error, Result};
