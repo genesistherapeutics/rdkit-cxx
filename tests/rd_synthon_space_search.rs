@@ -830,6 +830,104 @@ fn text_file_checks() {
     std::fs::remove_file(path).unwrap();
 }
 
+/// Groups on atoms 1 and 2 whose PARENTs are `parents`, and one on atom 0,
+/// which removing atom 0 drops: RDKit then follows the others' chains.
+fn add_parents(mol: &mut Mol, parents: [u32; 2]) {
+    for (i, (atom, parent)) in [(1, Some(parents[0])), (2, Some(parents[1])), (0, None)]
+        .into_iter()
+        .enumerate()
+    {
+        let mut group = create_mol_substance_group(mol, "DAT");
+        group.add_atom_with_idx(atom).unwrap();
+        group.set_unsigned_prop("index", i as u32 + 1);
+        if let Some(parent) = parent {
+            group.set_unsigned_prop("PARENT", parent);
+        }
+    }
+}
+
+// The reads and searches remove atoms and bonds from the query's fragments,
+// the synthons, and their products: RDKit follows a cycle of substance
+// groups' PARENTs forever (Python's searches hang) and misreads a bond's
+// _MolFileBondEndPts.
+#[test]
+fn substance_group_parents() {
+    let mut space = amide_space();
+    let plain = result_names(&space.substructure_search(&benzamide_query()).unwrap());
+    let mut chain = benzamide_query();
+    add_parents(&mut chain, [2, 3]);
+    let found = space.substructure_search(&chain).unwrap();
+    assert_eq!(result_names(&found), plain);
+
+    let mut cycle = benzamide_query();
+    add_parents(&mut cycle, [2, 1]);
+    let mut end_points = benzamide_query();
+    end_points
+        .get_bond_with_idx_mut(0)
+        .unwrap()
+        .set_prop("_MolFileBondEndPts", "()");
+    for query in [&cycle, &end_points] {
+        let err = space.substructure_search(query).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{err:?}");
+        let extended = create_extended_query_mol(query).unwrap();
+        let err = space
+            .substructure_search_extended_query_mol(&extended)
+            .unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{err:?}");
+        let err = space.substructure_search_lines(query, 0, 10).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{err:?}");
+        let err = space
+            .substructure_search_incremental(query, |_| Ok(false))
+            .unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{err:?}");
+    }
+    let mut cycle = mol_from_smiles("c1ccccc1C(=O)NC").unwrap();
+    add_parents(&mut cycle, [2, 1]);
+    let fp_gen = morgan();
+    space.build_synthon_fingerprints(&fp_gen).unwrap();
+    let err = space.fingerprint_search(&cycle, &fp_gen).unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
+    let err = space
+        .rascal_search(&cycle, &RascalOptions::default())
+        .unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
+
+    // A synthon's own groups, as the reader removes atoms from it.
+    let refused = |lines: &[&str]| {
+        let path = write_text("synthon-parents.txt", &[&[HEADER], lines].concat());
+        let mut space = SynthonSpace::default();
+        let res = space.read_text_file(&path);
+        std::fs::remove_file(path).unwrap();
+        res
+    };
+    const CYCLE: &str = "|SgD:0:a:b::::,SgD:1:c:d::::,SgD:2:e:f::::,SgH:1:2,2:1|";
+    let line = format!("c1ccccc1C(=O)[1*] {CYCLE}\t1-1\t1\tamide-1");
+    let err = refused(&[&line, "[1*]N1CCCC1\t2-1\t2\tamide-1"]).unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
+    // A chain is fine.
+    let line = "c1ccccc1C(=O)[1*] |SgD:0:a:b::::,SgD:1:c:d::::,SgH:1:0|\t1-1\t1\tamide-1";
+    refused(&[line, "[1*]N1CCCC1\t2-1\t2\tamide-1"]).unwrap();
+    // A reaction's synthons' chains are checked together, as a product
+    // holds them all: the first synthon's group 2 names 3 as its PARENT, and
+    // the second's group 3 names 2. In a product the second synthon's group
+    // 2, which has no PARENT, hides the first's, so no product has a cycle
+    // (Python reads and searches the space): the check refuses more than it
+    // must. In two reactions they are fine.
+    let first = "c1ccccc1C(=O)[1*] |SgD:0:a:b::::,SgD:1:c:d::::,SgD:2:e:f::::,SgH:2:1|";
+    let second = "[1*]N1CCCC1 |SgD:1:a:b::::,SgD:2:c:d::::,SgD:3:e:f::::,SgH:1:2|";
+    let err = refused(&[
+        &format!("{first}\t1-1\t1\tamide-1"),
+        &format!("{second}\t2-1\t2\tamide-1"),
+    ])
+    .unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
+    refused(&[
+        &format!("{first}\t1-1\t1\tamide-1"),
+        &format!("{second}\t2-1\t2\tamide-2"),
+    ])
+    .unwrap();
+}
+
 #[test]
 fn formatted_integers() {
     assert_eq!(formatted_integer_string(1234567), "1 234 567");
@@ -993,6 +1091,17 @@ fn user_conformer_generator() {
         .build_synthon_shapes_with_py_params(&params)
         .unwrap_err();
     assert!(matches!(err, Error::Runtime { .. }), "{err:?}");
+
+    // A molecule RDKit removes bonds from.
+    params.set_user_conformer_generator(|smiles, num_confs| {
+        let mut mol = embedded(smiles, num_confs)?.unwrap();
+        add_parents(&mut mol, [2, 1]);
+        Ok(Some(mol))
+    });
+    let err = amide_space()
+        .build_synthon_shapes_with_py_params(&params)
+        .unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
 
     // Coordinates the shapes' Gaussians cannot take.
     params.set_user_conformer_generator(|smiles, num_confs| {

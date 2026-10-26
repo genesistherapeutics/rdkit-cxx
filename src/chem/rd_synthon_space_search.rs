@@ -36,6 +36,14 @@
 //! that match substructures, depict, or take the shape modules' locks: they
 //! return `Error::Runtime`. The RASCAL search's closure can.
 //!
+//! The reads, the searches, and shape building remove atoms and bonds from
+//! the synthons, the products they combine, the query's fragments, and the
+//! molecules a conformer generator returns, so what RDKit would misread then
+//! is refused with `Error::Value`: a bond's `_MolFileBondEndPts`, or
+//! substance groups whose `PARENT`s form a cycle (RDKit follows it forever).
+//! A reaction's synthons' chains are checked together, as a product carries
+//! them all.
+//!
 //! Shapes are built (`build_synthon_shapes`) for the database files, but
 //! the shape search and the progress bars are not bound (the manifest says
 //! why).

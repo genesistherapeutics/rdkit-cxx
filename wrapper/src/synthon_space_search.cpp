@@ -18,11 +18,15 @@
 #include <set>
 #include <sstream>
 #include <string_view>
-#include <unordered_set>
+#include <unordered_map>
 #include <utility>
+#include <variant>
 #include <vector>
 
+#include <GraphMol/MolBundle.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
+#include <GraphMol/SubstanceGroup.h>
+#include <GraphMol/TautomerQuery/TautomerQuery.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDLog.h>
@@ -167,6 +171,118 @@ void for_each_reaction(SSS::SynthonSpace &space, F &&f) {
   }
 }
 
+// RWMol's removals of atoms and bonds follow each substance group's PARENT
+// to the group with that "index" (check_substance_group_parents), and the
+// reader, the searches, and shape building remove atoms and bonds from
+// products that combineMols builds from a synthon of each of a reaction's
+// sets, keeping every group's properties, so a chain can run from one
+// synthon's groups to another's. Every chain of a reaction's products runs
+// along the links from each group of its synthons to each one with the index
+// its PARENT names, which must have no cycle and no chain longer than
+// MAX_PARENT_CHAIN. This can refuse a reaction none of whose products has
+// such a chain, as a product's group with an index hides an earlier one's.
+class ParentChains {
+ public:
+  void add(const RDKit::ROMol &mol) {
+    for (const auto &sg : RDKit::getSubstanceGroups(mol)) {
+      Group group;
+      unsigned value;
+      if (sg.getPropIfPresent("index", value)) {
+        group.index = value;
+      }
+      if (sg.getPropIfPresent("PARENT", value)) {
+        group.parent = value;
+      }
+      if (group.index || group.parent) {
+        d_groups.push_back(group);
+      }
+    }
+  }
+
+  void add(const ParentChains &other) {
+    d_groups.insert(d_groups.end(), other.d_groups.begin(),
+                    other.d_groups.end());
+  }
+
+  // The longest chain from each group, by a depth-first search of its own
+  // stack (the chains can be long).
+  void check(const std::string &reaction) const {
+    std::unordered_map<unsigned, std::vector<std::size_t>> by_index;
+    bool parents = false;
+    for (std::size_t i = 0; i < d_groups.size(); ++i) {
+      if (d_groups[i].index) {
+        by_index[*d_groups[i].index].push_back(i);
+      }
+      parents = parents || d_groups[i].parent;
+    }
+    if (!parents) {
+      return;
+    }
+    static const std::vector<std::size_t> none;
+    auto links = [&](std::size_t i) -> const std::vector<std::size_t> & {
+      if (!d_groups[i].parent) {
+        return none;
+      }
+      auto it = by_index.find(*d_groups[i].parent);
+      return it == by_index.end() ? none : it->second;
+    };
+    enum State : char { kNew, kOpen, kDone };
+    std::vector<State> state(d_groups.size(), kNew);
+    std::vector<std::uint64_t> longest(d_groups.size(), 0);
+    std::vector<std::pair<std::size_t, std::size_t>> stack;
+    for (std::size_t start = 0; start < d_groups.size(); ++start) {
+      if (state[start] != kNew) {
+        continue;
+      }
+      state[start] = kOpen;
+      stack.emplace_back(start, 0);
+      while (!stack.empty()) {
+        auto &[group, next] = stack.back();
+        const auto &to = links(group);
+        if (next < to.size()) {
+          auto link = to[next++];
+          if (state[link] == kOpen) {
+            throw ValueErrorException(
+                "reaction " + reaction +
+                " has synthons whose substance groups' PARENT chains can make "
+                "a cycle in a product, which RDKit follows forever when it "
+                "removes an atom or bond");
+          }
+          if (state[link] == kNew) {
+            state[link] = kOpen;
+            stack.emplace_back(link, 0);
+          } else {
+            longest[group] = std::max(longest[group], longest[link] + 1);
+          }
+          continue;
+        }
+        state[group] = kDone;
+        auto done = group;
+        stack.pop_back();
+        if (longest[done] > MAX_PARENT_CHAIN) {
+          throw ValueErrorException(
+              "reaction " + reaction +
+              " has synthons whose substance groups' PARENT chains can be "
+              "longer than " +
+              std::to_string(MAX_PARENT_CHAIN) +
+              " in a product, which RDKit follows recursively");
+        }
+        if (!stack.empty()) {
+          auto parent = stack.back().first;
+          longest[parent] = std::max(longest[parent], longest[done] + 1);
+        }
+      }
+    }
+  }
+
+ private:
+  struct Group {
+    std::optional<unsigned> index;
+    std::optional<unsigned> parent;
+  };
+  std::vector<Group> d_groups;
+};
+
 // What RDKit's code after a read trusts about the space it holds:
 // - summarise counts reactions by their number of synthon sets in an array
 //   of MAX_CONNECTOR_NUM + 1 (a write past it for more sets), and
@@ -176,13 +292,16 @@ void for_each_reaction(SSS::SynthonSpace &space, F &&f) {
 //   reaction's sets from the first, and read each set's first synthon
 //   (front() of an empty vector);
 // - every synthon has the molecules and pattern fingerprint the readers
-//   make, which the searches and the writer dereference.
+//   make, which the searches and the writer dereference;
+// - the searches and shape building remove atoms and bonds from the
+//   synthons' molecules and their products (check_removals, ParentChains).
 // A text file passes these by check_synthon_text; a database file, whatever
 // RDKit wrote, is checked too.
 void check_space(SSS::SynthonSpace &space) {
   for_each_reaction(
       space, [](const std::string &name, const SSS::SynthonSet &reaction) {
         const auto &sets = reaction.getSynthons();
+        ParentChains chains;
         if (sets.empty() || sets.size() > SSS::MAX_CONNECTOR_NUM) {
           throw ValueErrorException("reaction " + name + " has " +
                                     std::to_string(sets.size()) +
@@ -200,8 +319,14 @@ void check_space(SSS::SynthonSpace &space) {
               throw ValueErrorException("reaction " + name + " has synthon " +
                                         id + " without its molecules");
             }
+            for (const auto *mol :
+                 {synthon->getOrigMol().get(), synthon->getSearchMol().get()}) {
+              check_removals(*mol);
+              chains.add(*mol);
+            }
           }
         }
+        chains.check(name);
       });
 }
 
@@ -279,7 +404,9 @@ class SpaceMatrixCacheGuard {
 //   segfault in Python);
 // - it counts lines in int (U12);
 // - it splits lines with std::regex, whose matcher recurses once per
-//   character of a run of separators (U12's limit).
+//   character of a run of separators (U12's limit);
+// - it removes atoms and bonds from each synthon and from the sample
+//   products (check_removals, ParentChains).
 
 constexpr int kMaxSynthonNumber = 15;
 
@@ -369,23 +496,36 @@ void check_separator_runs(const std::string &line, std::uint64_t line_num) {
   }
 }
 
-// False when RDKit's Synthon constructor will throw for the SMILES.
-bool check_synthon_smiles(const std::string &smiles, std::uint64_t line_num) {
+// The synthon's substance groups, parsed as RDKit's Synthon constructor
+// parses it; none when the constructor will throw for the SMILES.
+std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
+                                                 std::uint64_t line_num) {
   RDKit::v2::SmilesParse::SmilesParserParams params;
   params.sanitize = false;
   auto mol = RDKit::v2::SmilesParse::MolFromSmiles(smiles, params);
   if (!mol) {
-    return false;
+    return std::nullopt;
   }
+  auto where =
+      "the synthon on line " + std::to_string(line_num) + " (" + smiles + ")";
+  bool heavy = false;
   for (const auto *atom : mol->atoms()) {
-    if (atom->getAtomicNum() != 0) {
-      return true;
-    }
+    heavy = heavy || atom->getAtomicNum() != 0;
   }
-  throw ValueErrorException(
-      "the synthon on line " + std::to_string(line_num) + " (" + smiles +
-      ") has no atom but dummies: RDKit indexes its fragment of a product "
-      "at -1");
+  if (!heavy) {
+    throw ValueErrorException(
+        where +
+        " has no atom but dummies: RDKit indexes its fragment of a product "
+        "at -1");
+  }
+  try {
+    check_removals(*mol);
+  } catch (const ValueErrorException &e) {
+    throw ValueErrorException(where + ": " + e.what());
+  }
+  ParentChains chains;
+  chains.add(*mol);
+  return chains;
 }
 
 // Lines as std::getline gives them to readStream: split at '\n', with the
@@ -397,7 +537,8 @@ void check_synthon_text(std::string_view text) {
   int format = -1;
   std::uint64_t num_lines = 0;
   std::map<std::string, std::set<int>> sets;
-  std::unordered_set<std::string> checked;
+  std::map<std::string, ParentChains> chains;
+  std::unordered_map<std::string, ParentChains> checked;
   std::size_t pos = 0;
   while (true) {
     auto end = text.find('\n', pos);
@@ -455,16 +596,24 @@ void check_synthon_text(std::string_view text) {
         }
         auto smiles = fields[0];
         fix_connectors(smiles);
-        if (checked.insert(smiles).second &&
-            !check_synthon_smiles(smiles, num_lines)) {
-          return;  // RDKit refuses the SMILES.
+        auto it = checked.find(smiles);
+        if (it == checked.end()) {
+          auto groups = check_synthon_smiles(smiles, num_lines);
+          if (!groups) {
+            return;  // RDKit refuses the SMILES.
+          }
+          it = checked.emplace(smiles, std::move(*groups)).first;
         }
+        chains[fields[3]].add(it->second);
       }
     }
     if (end == std::string_view::npos) {
-      return;
+      break;
     }
     pos = end + 1;
+  }
+  for (const auto &[reaction, reaction_chains] : chains) {
+    reaction_chains.check(reaction);
   }
 }
 
@@ -691,10 +840,12 @@ class PossibleHitsOutput {
 // The lines of params.possibleHitsFile from startLine to finishLine, which
 // checkPossibleHits (SynthonSpaceSearcher.cpp) reads, by name, and builds:
 // it parses each line's SMILES and zips the molecule it dereferences, null
-// for SMILES that do not parse (a segfault in Python). This reads the lines
-// as readPossHitsLines does, checks each line's SMILES with the same parse,
-// and writes the lines RDKit would keep, in order, to a file of its own,
-// which RDKit then reads from its first line to its last: RDKit reads only
+// for SMILES that do not parse (a segfault in Python); split at spaces, the
+// SMILES have no CXSMILES extensions, so no substance groups or properties
+// for its removals (check_removals). This reads the lines as
+// readPossHitsLines does, checks each line's SMILES with the same parse, and
+// writes the lines RDKit would keep, in order, to a file of its own, which
+// RDKit then reads from its first line to its last: RDKit reads only
 // lines that were checked, even when the original file changes. A search
 // that computes its hits' n * n matrices in int (atom-pair fingerprints,
 // RASCAL) passes max_atoms, 46340 (U3), which each line's molecule, whose
@@ -775,15 +926,15 @@ class CheckedPossibleHits {
         continue;
       }
       auto mol = RDKit::v2::SmilesParse::MolFromSmiles(bits[0]);
+      auto where =
+          "line " + std::to_string(i) + " of the possible hits file " + name;
       if (!mol) {
-        throw ValueErrorException("line " + std::to_string(i) +
-                                  " of the possible hits file " + name +
+        throw ValueErrorException(where +
                                   " has SMILES RDKit cannot parse: " + bits[0]);
       }
       if (mol->getNumAtoms() > max_atoms) {
         throw ValueErrorException(
-            "line " + std::to_string(i) + " of the possible hits file " + name +
-            " has more than " + std::to_string(max_atoms) +
+            where + " has more than " + std::to_string(max_atoms) +
             " atoms, whose n * n matrices RDKit computes in int");
       }
       line += '\n';
@@ -819,6 +970,46 @@ SSS::SearchResults search_lines(const SSS::SynthonSpaceSearchParams &params,
   auto checked = params;
   checked.possibleHitsFile = lines.path();
   return search(checked, 0, lines.finish_line());
+}
+
+// ---------------------------------------------------------------------------
+// The queries, which the searches split into fragments, removing bonds and
+// atoms (check_removals). An extended query's search splits each of its
+// molecules, or each tautomer of its tautomer queries (extendedSearch in
+// SynthonSpace.cpp).
+
+void check_query(const RDKit::ROMol &query) { check_removals(query); }
+
+void check_query(const ExtendedQueryMol &query) {
+  using XQ = ExtendedQueryMol;
+  auto check_tautomers = [](const RDKit::TautomerQuery &tautomers) {
+    check_removals(tautomers.getTemplateMolecule());
+    for (const auto &tautomer : tautomers.getTautomers()) {
+      check_removals(*tautomer);
+    }
+  };
+  if (const auto *mol = std::get_if<XQ::RWMol_T>(&query.xqmol)) {
+    if (*mol) {
+      check_removals(**mol);
+    }
+  } else if (const auto *bundle = std::get_if<XQ::MolBundle_T>(&query.xqmol)) {
+    if (*bundle) {
+      for (const auto &mol : (*bundle)->getMols()) {
+        check_removals(*mol);
+      }
+    }
+  } else if (const auto *tq = std::get_if<XQ::TautomerQuery_T>(&query.xqmol)) {
+    if (*tq) {
+      check_tautomers(**tq);
+    }
+  } else if (const auto *tqs =
+                 std::get_if<XQ::TautomerBundle_T>(&query.xqmol)) {
+    if (*tqs) {
+      for (const auto &tq : **tqs) {
+        check_tautomers(*tq);
+      }
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -913,12 +1104,13 @@ void check_fingerprint_threshold(const SSS::SynthonSpaceSearchParams &params,
 }
 
 // What the fingerprint searches fingerprint: the query (whose matrix caches
-// the generator fills, U6), its fragments, which have its atoms and at most
-// 8 dummies, and the synthons and products, which atom pairs need small
-// enough for their distance matrices.
+// the generator fills, U6), its fragments (check_query), which have its
+// atoms and at most 8 dummies, and the synthons and products, which atom
+// pairs need small enough for their distance matrices.
 void check_fingerprint_search(SSS::SynthonSpace *space, const RWMol &query,
                               const FpGenerator &gen,
                               const SSS::SynthonSpaceSearchParams &params) {
+  check_query(query);
   check_fingerprint_mol(gen, query);
   if (fingerprint_reads_distance_matrix(gen)) {
     if (query.getNumAtoms() > 46340 - 8) {
@@ -937,11 +1129,12 @@ void check_fingerprint_search(SSS::SynthonSpace *space, const RWMol &query,
 // convert the fragment threshold, the options' similarityThreshold -
 // fragSimilarityAdjuster, times a fragment's atoms and bonds, and 1 + those
 // over it, to unsigned int, with no case for a threshold of 0 or less, and
-// RASCAL then runs with that threshold. Fragments have the query's atoms and
-// bonds and at most 8 dummies with their bonds.
+// RASCAL then runs with that threshold. Fragments (check_query) have the
+// query's atoms and bonds and at most 8 dummies with their bonds.
 void check_rascal_search(SSS::SynthonSpace *space, const RWMol &query,
                          const RDKit::RascalMCES::RascalOptions &options,
                          const SSS::SynthonSpaceSearchParams &params) {
+  check_query(query);
   double n =
       static_cast<double>(query.getNumAtoms()) + query.getNumBonds() + 16.0;
   if (n > static_cast<double>(kRascalMaxSquared)) {
@@ -1115,8 +1308,9 @@ class ShapeLocks {
 // dereferencing a null one (a segfault in Python), and builds shapes from
 // its conformers: None becomes an empty molecule, which matches nothing, so
 // RDKit drops the isomer as it does when its own embedding fails, and
-// conformers are checked as ShapeInput needs them. The closure's error is
-// the rust::Error it throws, which RDKit, on this thread, lets through.
+// conformers are checked as ShapeInput needs them. RDKit then removes bonds
+// from the molecule (check_removals). The closure's error is the rust::Error
+// it throws, which RDKit, on this thread, lets through.
 SSS::UserConfGenerator rust_conformer_generator(ConformerCallback &callback,
                                                 ShapeLocks &locks) {
   return [&callback, &locks](
@@ -1131,6 +1325,7 @@ SSS::UserConfGenerator rust_conformer_generator(ConformerCallback &callback,
       return std::make_unique<RWMol>();
     }
     check_shape_coordinates(*mol);
+    check_removals(*mol);
     return mol;
   };
 }
@@ -1280,6 +1475,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search(
     const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
+  check_query(query);
   PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
@@ -1296,6 +1492,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended(
     const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
+  check_query(query);
   PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
@@ -1313,6 +1510,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_lines(
     std::uint64_t finish_line) {
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
+  check_query(query);
   auto results = search_lines(
       params, start_line, finish_line, kAnyAtoms,
       [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
@@ -1330,6 +1528,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended_lines(
     std::uint64_t finish_line) {
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
+  check_query(query);
   auto results = search_lines(
       params, start_line, finish_line, kAnyAtoms,
       [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
@@ -1346,6 +1545,7 @@ void synthon_space_substructure_search_incremental(
     const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
+  check_query(query);
   PossibleHitsOutput output(params.possibleHitsFile);
   {
     std::lock_guard<std::mutex> control_c(control_c_mutex());

@@ -366,6 +366,8 @@ rule changes the rule first.
   groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
   wrapper whose RDKit call removes atoms or bonds from a molecule, or from
   a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
+  Where RDKit combines molecules before it removes from them (a synthon
+  space's products), their chains are checked together.
   The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
   and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
 
