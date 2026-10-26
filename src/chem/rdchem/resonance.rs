@@ -77,6 +77,9 @@ pub struct GetSubstructMatchesParams {
     pub use_chirality: bool,
     pub use_query_query_matches: bool,
     pub max_matches: u32,
+    /// Accepted for parity: the match runs on the calling thread, since
+    /// RDKit's threads would each swap the process's SIGINT handler
+    /// (CONVENTIONS.md U4).
     pub num_threads: i32,
 }
 

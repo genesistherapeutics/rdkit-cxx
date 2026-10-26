@@ -184,9 +184,15 @@ rule changes the rule first.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
-  registry in `Property.cpp`, and `DCLV.cpp`'s `recordCache`). State RDKit
-  makes once, on first use, is made under `std::call_once` before any other
-  call (the MACCS patterns in `MACCS.cpp`). 2D depiction's settings and
+  registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
+  decomposition's random number singleton and fingerprint-variance scoring
+  static, under `rgroup_mutex()`, and the shape modules' pharmacophore
+  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
+  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
+  hierarchical clustering, under `murtagh_mutex()`). State RDKit makes once,
+  on first use, is
+  made under `std::call_once` before any other call (the MACCS patterns in
+  `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
@@ -209,12 +215,30 @@ rule changes the rule first.
   `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
-  by every wrapper whose RDKit call constructs one. MolAlign's
+  by every wrapper whose RDKit call constructs one. Every substructure match
+  does (`Substruct/vf2.hpp`), so that is the match methods and every wrapper
+  whose RDKit call matches patterns: the transforms that match, reactions,
+  alignment, the force-field builders, Crippen and the other descriptors and
+  fingerprints that type atoms by SMARTS, depiction with templates,
+  standardization, the catalogs, MCS, SubstructLibrary, R-group
+  decomposition, scaffold networks, chemical feature factories, and the
+  shape modules, besides the embedder,
+  DetermineBonds, and the CIP labeler. Such a call runs on the calling
+  thread the work RDKit would split across its own threads, which the lock
+  cannot order (the wrapper's own threads take it in turn), and releases the
+  lock while a Rust closure it calls between matches runs (a property
+  functor, tautomer callback or score, validation method, filter matcher, or
+  FMCS typer or callback; new wrappers use `HoldControlC` and
+  `ReleaseControlC`). A closure RDKit calls inside a match (FMCS's final
+  match checks) runs with the lock held, so a wrapper it calls that takes
+  this lock, or one ordered before it, fails instead
+  (`check_not_in_control_c_callback`). MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
-  several of these locks takes them in this order: `lock_depiction()`,
-  `control_c_mutex()`, `symmetrize_mutex()`, then `random_mutex()`.
+  several of these locks takes them in this order, after any of the locks
+  above for one module's state: `lock_depiction()`, `control_c_mutex()`,
+  `symmetrize_mutex()`, then `random_mutex()`.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with

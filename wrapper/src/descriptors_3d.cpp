@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -15,6 +16,7 @@
 #include <GraphMol/MolOps.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/descriptors.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/descriptors_3d.rs.h"
@@ -286,6 +288,9 @@ rust::Vec<double> get_usrcat(const RWMol &mol, bool has_atom_selections,
   }
   std::vector<double> descriptor(
       12 * ((has_atom_selections ? atom_ids.size() : 4) + 1));
+  // Without selections, USRCAT finds its features by substructure matches
+  // (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   Desc::USRCAT(mol, descriptor, atom_ids, conf_id);
   return to_vec(descriptor);
 }

@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/mmpa.h"
 
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -13,6 +14,7 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
 
@@ -59,6 +61,8 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
     throw ValueErrorException("the pattern must match a bond: two atoms");
   }
   Results results;
+  // fragmentMol matches the pattern (control_c_lock.h).
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   if (!RDKit::MMPA::fragmentMol(mol, results, min_cuts, max_cuts, max_cut_bonds,
                                 smarts)) {
     results.clear();

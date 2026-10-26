@@ -5,9 +5,12 @@
 
 #include "rdkit-cxx/substruct.h"
 
+#include <mutex>
+
 #include <GraphMol/MolBundle.h>
 #include <GraphMol/Substruct/SubstructMatch.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
 
@@ -73,11 +76,13 @@ rust::Vec<std::uint32_t> convert_match(const RDKit::MatchVectType &match) {
 
 // As helpHasSubstructMatch, helpGetSubstructMatch, and
 // helpGetSubstructMatches, for a molecule or bundle and a molecule or bundle.
+// Every match constructs a ControlCHandler (control_c_lock.h).
 template <class Target, class Query>
 bool has_match(const Target &target, const Query &query,
                const SubstructMatchParametersData &data) {
   auto params = params_from(data);
   params.maxMatches = 1;
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return !RDKit::SubstructMatch(target, query, params).empty();
 }
 
@@ -86,6 +91,7 @@ rust::Vec<std::uint32_t> get_match(const Target &target, const Query &query,
                                    const SubstructMatchParametersData &data) {
   auto params = params_from(data);
   params.maxMatches = 1;
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   auto matches = RDKit::SubstructMatch(target, query, params);
   return matches.empty() ? rust::Vec<std::uint32_t>()
                          : convert_match(matches[0]);
@@ -95,6 +101,7 @@ template <class Target, class Query>
 rust::Vec<IndexList> get_matches(const Target &target, const Query &query,
                                  const SubstructMatchParametersData &data) {
   rust::Vec<IndexList> result;
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   for (const auto &match :
        RDKit::SubstructMatch(target, query, params_from(data))) {
     result.push_back(IndexList{convert_match(match)});
@@ -241,6 +248,7 @@ rust::Vec<std::uint32_t> resonance_mol_supplier_get_substruct_match(
   params.useChirality = use_chirality;
   params.useQueryQueryMatches = use_query_query_matches;
   params.maxMatches = 1;
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   auto matches = RDKit::SubstructMatch(suppl, query, params);
   return matches.empty() ? rust::Vec<std::uint32_t>()
                          : convert_match(matches[0]);
@@ -255,8 +263,12 @@ rust::Vec<IndexList> resonance_mol_supplier_get_substruct_matches(
   params.useChirality = use_chirality;
   params.useQueryQueryMatches = use_query_query_matches;
   params.maxMatches = max_matches;
-  params.numThreads = num_threads;
+  // RDKit's threads would each construct a ControlCHandler, which the lock
+  // cannot order, so the match runs on this thread.
+  (void)num_threads;
+  params.numThreads = 1;
   rust::Vec<IndexList> result;
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   for (const auto &match : RDKit::SubstructMatch(suppl, query, params)) {
     result.push_back(IndexList{convert_match(match)});
   }
