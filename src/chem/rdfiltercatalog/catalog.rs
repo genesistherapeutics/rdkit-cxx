@@ -215,8 +215,8 @@ filter_catalogs! {
 
 crate::flags::flag_ops!(FilterCatalogs);
 
-#[doc(hidden)]
-pub fn __filter_catalogs_values_for_tests() -> (Vec<u32>, Vec<u32>) {
+#[cfg(test)]
+pub(crate) fn filter_catalogs_values_for_tests() -> (Vec<u32>, Vec<u32>) {
     let rust = FilterCatalogs::NAMES
         .iter()
         .map(|(_, catalogs)| catalogs.bits())
@@ -500,4 +500,23 @@ pub fn get_flattened_functional_group_hierarchy_with_normalized(
         normalized,
     )))
     .expect("RDKit's functional group names are UTF-8")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn flag_values_match_rdkit() {
+        let (rust, cxx) = filter_catalogs_values_for_tests();
+        assert_eq!(rust, cxx);
+        assert_eq!(
+            format!("{:?}", FilterCatalogs::PAINS_A | FilterCatalogs::PAINS_B),
+            "FilterCatalogs(0x6)"
+        );
+        assert_eq!(
+            format!("{:?}", FilterCatalogs::PAINS),
+            "FilterCatalogs::PAINS"
+        );
+    }
 }

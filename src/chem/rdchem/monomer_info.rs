@@ -442,9 +442,25 @@ monomer_setters!(AtomPDBResidueInfo);
 
 /// `AtomMonomerType` values as C++ sees them, for a round-trip test. PDB
 /// residue info takes every type.
-#[doc(hidden)]
-pub fn __monomer_type_round_trip_for_tests(typ: AtomMonomerType) -> AtomMonomerType {
+#[cfg(test)]
+pub(crate) fn monomer_type_round_trip_for_tests(typ: AtomMonomerType) -> AtomMonomerType {
     let mut info = AtomPDBResidueInfo::default();
     info.set_monomer_type(typ);
     info.get_monomer_type()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn monomer_types_round_trip() {
+        for typ in [
+            AtomMonomerType::Unknown,
+            AtomMonomerType::Pdbresidue,
+            AtomMonomerType::Other,
+        ] {
+            assert_eq!(monomer_type_round_trip_for_tests(typ), typ);
+        }
+    }
 }

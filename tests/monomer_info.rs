@@ -7,17 +7,6 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::*;
 
 #[test]
-fn monomer_types_round_trip() {
-    for typ in [
-        AtomMonomerType::Unknown,
-        AtomMonomerType::Pdbresidue,
-        AtomMonomerType::Other,
-    ] {
-        assert_eq!(__monomer_type_round_trip_for_tests(typ), typ);
-    }
-}
-
-#[test]
 fn monomer_info() {
     assert_eq!(
         AtomMonomerInfo::default().get_monomer_type(),

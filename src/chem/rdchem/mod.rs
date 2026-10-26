@@ -25,7 +25,7 @@ mod stereo;
 mod substance_group;
 mod substruct;
 
-pub use atom::{__noatom_for_tests, Atom, AtomMut, AtomRef, GetSmartsParams};
+pub use atom::{Atom, AtomMut, AtomRef, GetSmartsParams};
 pub use atom_labels::{
     AsAtom, AsAtomMut, get_atom_alias, get_atom_r_label, get_atom_value, get_num_pi_electrons,
     get_supplemental_smiles_label, set_atom_alias, set_atom_r_label, set_atom_value,
@@ -41,13 +41,12 @@ pub use enums::{
 pub use mol::{Atoms, Bonds, Conformers, Mol};
 pub use mol_bundle::{FixedMolSizeMolBundle, MolBundle, mol_bundle_can_serialize};
 pub use monomer_info::{
-    __monomer_type_round_trip_for_tests, AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType,
-    AtomPDBResidueInfo, AtomPDBResidueInfoParams,
+    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, AtomPDBResidueInfo,
+    AtomPDBResidueInfoParams,
 };
 pub use periodic_table::{PeriodicTable, get_periodic_table};
 pub use pickle::{
-    __property_pickle_option_values_for_tests, PropertyPickleOptions,
-    get_default_pickle_properties, set_default_pickle_properties,
+    PropertyPickleOptions, get_default_pickle_properties, set_default_pickle_properties,
 };
 pub use props::{GetPropNamesParams, GetPropsAsDictParams, PropValue};
 pub use query::{CompositeQueryType, ExpandQueryParams};

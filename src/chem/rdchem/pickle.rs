@@ -57,8 +57,8 @@ pub fn set_default_pickle_properties(arg1: PropertyPickleOptions) {
     expect_ok(ffi::set_default_pickle_properties(arg1.bits()))
 }
 
-#[doc(hidden)]
-pub fn __property_pickle_option_values_for_tests() -> (Vec<u32>, Vec<u32>) {
+#[cfg(test)]
+pub(crate) fn property_pickle_option_values_for_tests() -> (Vec<u32>, Vec<u32>) {
     let rust = PropertyPickleOptions::NAMES
         .iter()
         .map(|(_, options)| options.bits())
@@ -115,5 +115,26 @@ impl RWMol {
         property_flags: PropertyPickleOptions,
     ) -> Result<RWMol> {
         Ok(Mol::from_pkl_string_with_property_flags(pkl_string, property_flags)?.into())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn option_values_match_rdkit() {
+        let (rust, cxx) = property_pickle_option_values_for_tests();
+        assert_eq!(rust, cxx);
+        assert_eq!(
+            PropertyPickleOptions::QueryAtomData,
+            PropertyPickleOptions::AtomProps
+        );
+        let combined = PropertyPickleOptions::MolProps | PropertyPickleOptions::AtomProps;
+        assert_eq!(combined.bits(), 0x3);
+        assert_eq!(
+            format!("{:?}", PropertyPickleOptions::AllProps),
+            "PropertyPickleOptions::AllProps"
+        );
     }
 }
