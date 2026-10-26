@@ -31,17 +31,6 @@ namespace {
 
 namespace GS = RDKit::GaussianShape;
 
-// ShapeInput.cpp fills getPh4Patterns' static list of feature patterns on
-// first use, without a lock. Every construction of a shape, the only path
-// to it, holds this mutex (CONVENTIONS.md U4), before control_c_mutex(),
-// which the patterns' matches need; so a closure that holds that one must
-// not wait for it.
-std::mutex &gaussian_shape_mutex() {
-  check_not_in_control_c_callback();
-  static std::mutex mutex;
-  return mutex;
-}
-
 GS::ShapeInputOptions to_options(const GaussianShapeInputOptionsData &data) {
   std::size_t features = 0;
   for (auto count : data.custom_feature_counts) {
@@ -342,6 +331,20 @@ rust::Vec<double> score_with_volumes(const GaussianShapeInput &ref,
 }
 
 }  // namespace
+
+std::mutex &gaussian_shape_mutex() {
+  check_not_in_control_c_callback();
+  static std::mutex mutex;
+  return mutex;
+}
+
+void check_shape_coordinates(const RDKit::ROMol &mol) {
+  for (auto it = mol.beginConformers(); it != mol.endConformers(); ++it) {
+    for (const auto &pos : (*it)->getPositions()) {
+      check_point(pos);
+    }
+  }
+}
 
 GaussianShapeInputOptionsData gaussian_shape_input_options_default() {
   GS::ShapeInputOptions opts;

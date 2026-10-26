@@ -128,6 +128,10 @@ set(RDKIT_CXX_SOURCES
   src/mol_enumerator.cpp
   src/mol_processing.cpp
   src/mol_interchange.cpp
+  src/draw.cpp
+  src/draw_checks.cpp
+  src/draw_drawer.cpp
+  src/synthon_space_search.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -191,6 +195,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   EnumerateStereoisomers
   MolEnumerator
   MolInterchange
+  SynthonSpaceSearch
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
@@ -217,7 +222,13 @@ target_include_directories(rdkitcxx PRIVATE
   # install that has it finds its own first, next to the including header.
   # It installs none of ML/InfoTheory's headers (RDKit::InfoTheory's), so
   # vendor/ML/InfoTheory holds them, from the same release; an install
-  # that has them finds its own first, earlier on the path.
+  # that has them finds its own first, earlier on the path. Nor does it
+  # install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
+  # SynthonSpace.h and Synthon.h include; vendor/GraphMol holds it, from the
+  # same release.
+  # vendor/GraphMol/MolDraw2D holds the drawing code's internal headers
+  # (DrawText.h, DrawMol.h, and those they include, and MolDraw2DDetails.h),
+  # from the same release, which no package installs (draw_drawer.cpp).
   vendor
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
@@ -230,6 +241,46 @@ endforeach()
 if(TARGET Boost::iostreams)
   target_link_libraries(rdkitcxx PUBLIC Boost::iostreams)
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:Boost::iostreams>\n")
+endif()
+
+# RDKit::MolDraw2D cannot be linked like the targets above: conda-forge's
+# package names Cairo::Cairo in its link interface without defining it, and
+# FreeType's include directory, which librdkit-dev does not install, in its
+# include directories, so CMake refuses it. The wrappers take what they need
+# by hand: the library; its compile definitions, which say whether it was
+# built with Cairo and FreeType (RDConfig.h, which defines them empty, leaves
+# out FreeType), so every wrapper source sees the macros the library was
+# built with; and Cairo, whose functions MolDraw2DCairo.h calls inline.
+get_target_property(rdkit_cxx_moldraw2d_definitions RDKit::MolDraw2D
+  INTERFACE_COMPILE_DEFINITIONS)
+if(rdkit_cxx_moldraw2d_definitions)
+  foreach(definition IN LISTS rdkit_cxx_moldraw2d_definitions)
+    string(REGEX REPLACE "^-D" "" definition "${definition}")
+    # RDConfig.h defines these empty; matching it avoids a redefinition.
+    if(NOT definition MATCHES "=")
+      string(APPEND definition "=")
+    endif()
+    target_compile_definitions(rdkitcxx PRIVATE "${definition}")
+  endforeach()
+endif()
+string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::MolDraw2D>\n")
+if(rdkit_cxx_moldraw2d_definitions MATCHES "RDK_BUILD_CAIRO_SUPPORT")
+  get_target_property(rdkit_cxx_moldraw2d_location RDKit::MolDraw2D
+    IMPORTED_LOCATION_RELEASE)
+  if(NOT rdkit_cxx_moldraw2d_location)
+    get_target_property(rdkit_cxx_moldraw2d_location RDKit::MolDraw2D
+      IMPORTED_LOCATION)
+  endif()
+  get_filename_component(rdkit_cxx_rdkit_lib_dir
+    "${rdkit_cxx_moldraw2d_location}" DIRECTORY)
+  get_filename_component(rdkit_cxx_rdkit_prefix
+    "${rdkit_cxx_rdkit_lib_dir}" DIRECTORY)
+  find_path(RDKIT_CXX_CAIRO_INCLUDE_DIR cairo.h
+    HINTS "${rdkit_cxx_rdkit_prefix}/include" PATH_SUFFIXES cairo REQUIRED)
+  find_library(RDKIT_CXX_CAIRO_LIBRARY cairo
+    HINTS "${rdkit_cxx_rdkit_lib_dir}" REQUIRED)
+  target_include_directories(rdkitcxx PRIVATE "${RDKIT_CXX_CAIRO_INCLUDE_DIR}")
+  string(APPEND link_libraries "${RDKIT_CXX_CAIRO_LIBRARY}\n")
 endif()
 
 # MolBundle's pickles instantiate Boost.Serialization archives in the

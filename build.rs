@@ -105,6 +105,8 @@ const BRIDGES: &[&str] = &[
     "mol_enumerator",
     "mol_processing",
     "mol_interchange",
+    "draw",
+    "synthon_space_search",
 ];
 
 fn main() {

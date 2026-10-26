@@ -39,6 +39,24 @@ struct RascalClusterOptionsData;
 struct IndexPair;
 struct IndexList;
 
+// The options a RascalOptionsData holds, checked for what RDKit trusts about
+// them (rascal_mces.cpp says what); throws ValueErrorException or
+// SmilesParseException.
+RDKit::RascalMCES::RascalOptions rascal_options_from(
+    const RascalOptionsData &data);
+
+// tier1Sim and tier2Sim (RascalMCES.cpp) square, in int, a count of matched
+// atoms and bonds, which the atoms plus bonds of the smaller molecule bound;
+// RascalResult reads each molecule's distance matrix at indices it computes
+// in int (applyMaxFragSep, calcMaxDeltaAtomAtomDistScore).
+inline constexpr std::int64_t kRascalMaxSquared = 46340;
+
+// Checks molecules whose MCESs RDKit will compute, pairwise: each one's
+// matrices (check_matrix_size) and what its results' removals trust
+// (check_removals), and at most one with more than kRascalMaxSquared atoms
+// and bonds. Throws ValueErrorException.
+void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols);
+
 RascalOptionsData rascal_options_default();
 RascalClusterOptionsData rascal_cluster_options_default();
 

@@ -452,8 +452,11 @@ std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
   }
   // Enumerating removes atoms from copies (position variation, repeat
   // units), and tautomer enumeration writes SMILES, which removes atoms from
-  // copies of a molecule of several fragments (check_removals).
-  check_removals(mol);
+  // copies of a molecule of several fragments (check_removals); adjusting
+  // removes nothing.
+  if (do_enumeration || do_tautomers) {
+    check_removals(mol);
+  }
   // Tautomer enumeration matches its transforms (control_c_lock.h).
   std::unique_lock<std::mutex> control_c(control_c_mutex());
   auto query = std::make_unique<XQ>(create_extended_query(

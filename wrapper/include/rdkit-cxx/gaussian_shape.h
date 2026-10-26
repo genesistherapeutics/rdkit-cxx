@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 
 #include <GraphMol/GaussianShape/GaussianShape.h>
 #include <GraphMol/GaussianShape/ShapeInput.h>
@@ -26,6 +27,18 @@ using GaussianShapeInput = RDKit::GaussianShape::ShapeInput;
 // Scoped enums, whose underlying type is int, so cxx checks their values.
 using StartMode = RDKit::GaussianShape::StartMode;
 using OptimMode = RDKit::GaussianShape::OptimMode;
+
+// ShapeInput.cpp fills getPh4Patterns' static list of feature patterns on
+// first use, without a lock. Every construction of a shape, the only path
+// to it, holds this mutex (CONVENTIONS.md U4), before control_c_mutex(),
+// which the patterns' matches need; so a closure that holds that one must
+// not wait for it.
+std::mutex &gaussian_shape_mutex();
+
+// The shapes' Gaussians multiply, add, and divide their atoms' coordinates:
+// throws ValueErrorException unless every conformer's are finite and within
+// 1e8 (gaussian_shape.cpp says why).
+void check_shape_coordinates(const RDKit::ROMol &mol);
 
 // Shared structs, defined by the bridge (src/ffi/gaussian_shape.rs).
 struct GaussianShapeInputOptionsData;

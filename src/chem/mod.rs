@@ -7,6 +7,7 @@
 //! `rdmolops` (and `rdCIPLabeler` and `rdMolInterchange`); its other
 //! submodules are reached by path, as in Python.
 
+pub mod draw;
 pub mod mol_standardize;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
@@ -46,6 +47,7 @@ pub mod rd_shape_align;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
 pub mod rd_substruct_library;
+pub mod rd_synthon_space_search;
 pub mod rd_tautomer_query;
 pub mod rdchem;
 pub mod rdfiltercatalog;
