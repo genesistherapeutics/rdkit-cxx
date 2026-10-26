@@ -75,6 +75,31 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: cargo package -p rdkit-cxx --locked
 
+  # Valgrind's DRD sees RDKit's accesses to its globals even in conda's
+  # uninstrumented build, so this fails when a wrapper tests/threads.rs runs
+  # lacks a lock U4 needs.
+  races:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          create-args: valgrind
+          init-shell: bash
+          cache-environment: false
+          cache-downloads: false
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Threads do not race on RDKit's global state
+        env:
+          CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind --tool=drd --suppressions=tests/drd.supp --log-file=target/drd.log
+        run: |
+          cargo test --test threads
+          python3 tests/check_drd_log.py target/drd.log
+
   inventory:
     runs-on: ubuntu-24.04
     steps:
