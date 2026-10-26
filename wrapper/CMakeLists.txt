@@ -22,7 +22,10 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(cmake/RDKitCxxVersion.cmake)
 
 find_package(rdkit CONFIG REQUIRED)
-rdkit_cxx_check_version("${rdkit_VERSION}" "${RDKIT_CXX_SUPPORTED_SERIES}")
+# vendor/<release> holds the headers below that RDKit does not install, so
+# only a release with a directory there is supported.
+rdkit_cxx_check_release("${rdkit_VERSION}" "${RDKIT_CXX_SUPPORTED_SERIES}"
+  ${CMAKE_CURRENT_SOURCE_DIR}/vendor)
 
 # One wrapper source per area (CONVENTIONS.md B4).
 set(RDKIT_CXX_SOURCES
@@ -207,6 +210,10 @@ if(TARGET RDKit::EHTLib)
 endif()
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
+# The release the wrapper compiles against, which errors.cpp compares with the
+# one loaded. Only that file needs it, so the others' flags stay the same.
+set_source_files_properties(src/errors.cpp PROPERTIES
+  COMPILE_DEFINITIONS RDKIT_CXX_RDKIT_VERSION="${rdkit_VERSION}")
 # GraphMol/CoordGen.h includes coordgen's headers, which RDKit's packages
 # do not install; third_party/coordgen holds the version RDKit builds in.
 target_include_directories(rdkitcxx PRIVATE
@@ -218,20 +225,19 @@ target_include_directories(rdkitcxx PRIVATE
   # names they include that RDKit installs elsewhere
   # (compat/GraphMol/GaussianShape).
   compat
-  # conda-forge's librdkit-dev 2026.09 installs DistGeomHelpers/
-  # BoundsMatrixBuilder.h without the BoundsMatrixBuilderDetails.h it
-  # includes; vendor/ holds RDKit's own copy, from Release_2026_09_1. An
-  # install that has it finds its own first, next to the including header.
-  # It installs none of ML/InfoTheory's headers (RDKit::InfoTheory's), so
-  # vendor/ML/InfoTheory holds them, from the same release; an install
-  # that has them finds its own first, earlier on the path. Nor does it
-  # install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
-  # SynthonSpace.h and Synthon.h include; vendor/GraphMol holds it, from the
-  # same release.
-  # vendor/GraphMol/MolDraw2D holds the drawing code's internal headers
-  # (DrawText.h, DrawMol.h, and those they include, and MolDraw2DDetails.h),
-  # from the same release, which no package installs (draw_drawer.cpp).
-  vendor
+  # RDKit's own copies, from the release found (vendor/<release>), of
+  # headers its packages do not install. conda-forge's librdkit-dev 2026.09
+  # installs DistGeomHelpers/BoundsMatrixBuilder.h without the
+  # BoundsMatrixBuilderDetails.h it includes; an install that has it finds
+  # its own first, next to the including header. It installs none of
+  # ML/InfoTheory's headers (RDKit::InfoTheory's); an install that has them
+  # finds its own first, earlier on the path. Nor does it install
+  # GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
+  # SynthonSpace.h and Synthon.h include. GraphMol/MolDraw2D holds the
+  # drawing code's internal headers (DrawText.h, DrawMol.h, and those they
+  # include, and MolDraw2DDetails.h), which no package installs
+  # (draw_drawer.cpp).
+  vendor/${rdkit_VERSION}
 )
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
@@ -295,3 +301,11 @@ endif()
 # The build script links these, since Cargo, not CMake, links the crate.
 file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/link-libraries.txt
   CONTENT "${link_libraries}")
+# What build.rs reruns for when it changes: the install's version file, which
+# an update or reinstall of RDKit replaces, and the libraries it links.
+file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/rdkit-files.txt
+  CONTENT "${rdkit_DIR}/rdkit-config-version.cmake\n${link_libraries}")
+# The compiler CMake compiled the wrapper with, whose C++ standard library
+# build.rs links.
+file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/cxx-compiler.txt
+  CONTENT "${CMAKE_CXX_COMPILER}\n")

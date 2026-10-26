@@ -12,7 +12,7 @@ description = "Rust bindings for RDKit's C++ API, with Rust ports for much of th
 license = "BSD-3-Clause"
 repository = "https://github.com/skearnes/rdkit-cxx"
 keywords = ["bindings", "cheminformatics", "chemistry", "rdkit"]
-categories = ["api-bindings", "science"]
+categories = ["api-bindings", "science::computational-chemistry"]
 include = [
     "/CHANGELOG.md",
     "/CONVENTIONS.md",
@@ -20,6 +20,7 @@ include = [
     "/README.md",
     "/build.rs",
     "/environment.yml",
+    "/examples",
     "/src",
     "/tests",
     "/wrapper",
