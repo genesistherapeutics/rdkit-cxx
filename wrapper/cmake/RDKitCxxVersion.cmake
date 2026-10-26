@@ -4,8 +4,8 @@
 # license that can be found in the LICENSE file.
 
 # Sets <out> to the RDKit releases of series <series> that <vendor_dir> holds
-# headers for: its subdirectories named for a release, such as 2026.09.1 of
-# 2026.09. Each holds copies, from that release, of the headers the wrapper
+# headers for: its subdirectories named for a release, such as 2026.03.6 of
+# 2026.03. Each holds copies, from that release, of the headers the wrapper
 # needs and RDKit does not install (wrapper/vendor/README.md).
 function(rdkit_cxx_supported_releases vendor_dir series out)
   file(GLOB entries RELATIVE "${vendor_dir}" "${vendor_dir}/${series}.*")

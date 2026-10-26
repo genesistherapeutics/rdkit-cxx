@@ -6,7 +6,7 @@
 // Ports testGet3DMolDescriptors of RDKit's rdkit/Chem/UnitTestDescriptors.py,
 // with its reference file tests/data/descriptors_multiconf.sdf
 // (rdkit/Chem/test_data), and pins values from Python's
-// rdkit.Chem.Descriptors3D in RDKit 2026.09.1.
+// rdkit.Chem.Descriptors3D in RDKit 2026.03.6.
 
 use std::collections::BTreeMap;
 

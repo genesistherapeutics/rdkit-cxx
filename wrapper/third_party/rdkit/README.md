@@ -1,7 +1,7 @@
 # RDKit data files
 
 Data files from RDKit's sources (<https://github.com/rdkit/rdkit>, tag
-`Release_2026_09_1`), unmodified, at their paths in that tree, under RDKit's
+`Release_2026_03_6`), unmodified, at their paths in that tree, under RDKit's
 BSD 3-Clause license (`LICENSE`).
 
 The ports of RDKit's Python-only functionality read these where Python reads

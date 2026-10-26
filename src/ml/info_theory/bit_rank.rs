@@ -6,7 +6,7 @@
 //! Ports `rdkit.ML.InfoTheory.BitRank`, a Python module: ranking bits
 //! by their information gain about activities.
 //!
-//! In RDKit 2026.09.1 with NumPy 2, Python's functions raise `TypeError`
+//! In RDKit 2026.03.6 with NumPy 2, Python's functions raise `TypeError`
 //! (they make arrays of the abstract `numpy.integer` type); these compute
 //! what they mean to, with integer counts, and the gains with
 //! `rdInfoTheory.InfoGain` ([`info_gain`]) as Python's do.

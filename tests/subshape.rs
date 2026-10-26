@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Subshape in RDKit 2026.09.1 (built with
+// Values from Python's rdkit.Chem.Subshape in RDKit 2026.03.6 (built with
 // Eigen3, as conda-forge's is), and the tests of UnitTestSubshape.py. The
 // alignments' counts are UnitTestSubshape.py's; the shapes' points, moments,
 // and distances come from embedding and eigenvectors, so they are compared

@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports rdkit/Chem/UnitTestSaltRemover.py and the module's doctests; values
-// from Python's SaltRemover in RDKit 2026.09.1.
+// from Python's SaltRemover in RDKit 2026.03.6.
 
 use rdkit_cxx::chem::salt_remover::*;
 use rdkit_cxx::chem::{

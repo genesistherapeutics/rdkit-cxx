@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-// RDKit 2026.09 installs GaussianShape's headers (GaussianShape.h,
+// RDKit 2026.03 installs GaussianShape's headers (GaussianShape.h,
 // ShapeInput.h, ShapeOverlayOptions.h) at the top of include/rdkit, since
 // its CMakeLists.txt gives rdkit_headers no DEST, but they include each other
 // as GraphMol/GaussianShape/<name>. This forwards that name to the installed

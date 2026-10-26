@@ -6,7 +6,7 @@
 // Ports rdkit/SimDivFilters/UnitTestSimilarityPickers.py and the doctests
 // of SimilarityPickers, with the molecules of RDKit's test database
 // (simple_mols1) and values from Python's
-// rdkit.SimDivFilters.SimilarityPickers in RDKit 2026.09.1.
+// rdkit.SimDivFilters.SimilarityPickers in RDKit 2026.03.6.
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::mol_from_smiles;

@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // The ChemUtils scripts' functions; values from Python's modules in RDKit
-// 2026.09.1, run on the same input.
+// 2026.03.6, run on the same input.
 
 use rdkit_cxx::chem::chem_utils::align_depict::*;
 use rdkit_cxx::chem::chem_utils::sdf_to_csv::*;

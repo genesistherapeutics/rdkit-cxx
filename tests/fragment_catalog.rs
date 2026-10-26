@@ -5,7 +5,7 @@
 
 // Ports the BuildFragmentCatalog tests of rdkit/Chem/UnitTestCatalog.py and
 // tests rdkit.Chem.FragmentCatalog; values from Python's BuildFragmentCatalog
-// and FragmentCatalog in RDKit 2026.09.1 (ProcessGainsFile's from a copy that
+// and FragmentCatalog in RDKit 2026.03.6 (ProcessGainsFile's from a copy that
 // reads lines as its Python 2 xreadlines meant to).
 
 use std::collections::BTreeSet;

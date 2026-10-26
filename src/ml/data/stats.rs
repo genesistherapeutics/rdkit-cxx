@@ -46,7 +46,7 @@ fn check_rectangular(mat: &[Vec<f64>]) -> Result<usize> {
 /// the column's sample standard deviation. Mirrors
 /// `Stats.StandardizeMatrix`, which also changes the matrix it is given.
 ///
-/// In RDKit 2026.09.1 with NumPy 2, Python's raises `TypeError` for any
+/// In RDKit 2026.03.6 with NumPy 2, Python's raises `TypeError` for any
 /// two-dimensional matrix (it takes `math.sqrt` of the deviations' array)
 /// and standardizes only one-dimensional vectors; this standardizes each
 /// column as Python does such a vector. A column with no deviation divides

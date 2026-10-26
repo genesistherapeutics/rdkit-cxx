@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/Chem/UnitTestRegistrationHash.py, with exact layers
-// and hashes from Python's RegistrationHash in RDKit 2026.09.1.
+// and hashes from Python's RegistrationHash in RDKit 2026.03.6.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;

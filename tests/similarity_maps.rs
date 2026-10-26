@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // The ported rdkit.Chem.Draw.SimilarityMaps against Python's in RDKit
-// 2026.09.1, whose SVGs it reproduces byte for byte (by SHA-1), after
+// 2026.03.6, whose SVGs it reproduces byte for byte (by SHA-1), after
 // UnitTestSimilarityMaps.py. Python's tests of the atom-pair, torsion, and
 // Morgan fingerprint functions, which are not ported, are ported with the
 // RDKit fingerprint and a Morgan generator.

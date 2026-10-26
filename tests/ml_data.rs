@@ -6,7 +6,7 @@
 // Ports rdkit/ML/Data/UnitTestQuantize.py, UnitTestStats.py,
 // UnitTestMLData.py, UnitTestFilter.py, and UnitTestDoctests.py (with the
 // doctests of DataUtils and SplitData), with values from Python's
-// rdkit.ML.Data modules in RDKit 2026.09.1.
+// rdkit.ML.Data modules in RDKit 2026.03.6.
 
 mod common;
 

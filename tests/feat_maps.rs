@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.FeatMaps in RDKit 2026.09.1, and the tests
+// Values from Python's rdkit.Chem.FeatMaps in RDKit 2026.03.6, and the tests
 // of UnitTestFeatMap.py, UnitTestFeatMapParser.py, UnitTestFeatMapPoint.py
 // (its doctests), and UnitTestFeatMapUtils.py. Python sets `featDirs` on
 // free features as attributes; here those features are feature-map points.

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.TorsionFingerprints in RDKit 2026.09.1, and
+// Values from Python's rdkit.Chem.TorsionFingerprints in RDKit 2026.03.6, and
 // the tests of UnitTestMol3D.py. The ligands are that test's PDB files with
 // their bond orders assigned from its template (AllChem's
 // AssignBondOrdersFromTemplate), written as mol files; Python gives the same

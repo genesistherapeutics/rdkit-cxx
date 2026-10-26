@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/ML/Descriptors/UnitTestMolDescriptors.py, and pins
-// values from Python's MolecularDescriptorCalculator in RDKit 2026.09.1.
+// values from Python's MolecularDescriptorCalculator in RDKit 2026.03.6.
 // Also tests the ports of rdkit.Chem.ReducedGraphs and
 // rdkit.Chem.ChemUtils.DescriptorUtilities.
 

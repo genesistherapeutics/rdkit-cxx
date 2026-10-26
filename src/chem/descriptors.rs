@@ -389,7 +389,7 @@ pub(crate) type DescriptorEntry = (&'static str, &'static str, &'static str, Des
 /// Python's `descList`, with the 192 `AUTOCORR2D_*` descriptors after it,
 /// which Python defines in the module but lists only after
 /// `setupAUTOCorrDescriptors()`. The summaries are those of conda-forge's
-/// RDKit 2026.09.1, whose Boost.Python wrappers give the functions Lipinski
+/// RDKit 2026.03.6, whose Boost.Python wrappers give the functions Lipinski
 /// takes from `rdMolDescriptors` their signatures as docstrings.
 pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
     (
@@ -1049,7 +1049,7 @@ pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
     (
         "fr_Ar_COO",
         "N/A",
-        "Number of aromatic carboxylic acids",
+        "Number of Aromatic carboxylic acide",
         |m| Ok(f64::from(fragments::fr_ar_coo(m)?)),
     ),
     ("fr_Ar_N", "N/A", "Number of aromatic nitrogens", |m| {

@@ -13,7 +13,7 @@
 //! the matches highlighted (`Draw.DrawMolWithMatches`, with the query, so
 //! the matched bonds are highlighted too). The recipe then sets the atoms
 //! to highlight by hand, but Jupyter keeps the query, which those atoms do
-//! not fit, and in RDKit 2026.09 drawing them fails (Python raises
+//! not fit, and in RDKit 2026.03 drawing them fails (Python raises
 //! `AttributeError`; here the drawing is `Error::Value`). Drawn without the
 //! query, as the recipe intends, the atoms are highlighted.
 

@@ -22,7 +22,7 @@ pub type Metric = fn(&[Vec<f64>]) -> Result<Vec<f64>>;
 /// The Euclidean distances between the points, as a metric matrix. Mirrors
 /// `Resemblance.EuclideanDistance`.
 ///
-/// Python's raises `TypeError` in RDKit 2026.09.1 (it sizes its array with
+/// Python's raises `TypeError` in RDKit 2026.03.6 (it sizes its array with
 /// a float); this computes what it means to, summing the squared
 /// differences of each pair as Python's `sum` does.
 ///
@@ -52,7 +52,7 @@ pub fn euclidean_distance(in_data: &[Vec<f64>]) -> Result<Vec<f64>> {
 /// The metric matrix of the clusters' positions. Mirrors
 /// `Resemblance.CalcMetricMatrix`.
 ///
-/// Python's raises `TypeError` in RDKit 2026.09.1 (it hands the metric a
+/// Python's raises `TypeError` in RDKit 2026.03.6 (it hands the metric a
 /// `map` object, which has no length); this hands it the positions.
 pub fn calc_metric_matrix(
     in_data: &[Cluster],

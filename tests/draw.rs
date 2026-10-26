@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The ported rdkit.Chem.Draw functions against Python's in RDKit 2026.09.1,
+// The ported rdkit.Chem.Draw functions against Python's in RDKit 2026.03.6,
 // whose SVGs they reproduce byte for byte (by SHA-1). PNGs come from Cairo
 // and zlib, whose bytes vary by build, so only their sizes are checked.
 

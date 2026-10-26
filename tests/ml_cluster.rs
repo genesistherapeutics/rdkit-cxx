@@ -5,7 +5,7 @@
 
 // Ports rdkit/ML/Cluster/UnitTestButina.py, UnitTestCluster.py, and
 // murtagh_test.py, with values from Python's rdkit.ML.Cluster modules in
-// RDKit 2026.09.1.
+// RDKit 2026.03.6.
 
 // Python's test data, 3.14, is not pi.
 #![allow(clippy::approx_constant)]

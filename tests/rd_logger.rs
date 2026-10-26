@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Checks the port of rdkit.RDLogger against Python's in RDKit 2026.09.1.
+// Checks the port of rdkit.RDLogger against Python's in RDKit 2026.03.6.
 // RDKit's logs are process-wide, so this file holds one test.
 
 use rdkit_cxx::Error;

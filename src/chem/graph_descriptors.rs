@@ -21,7 +21,7 @@ use std::hash::Hash;
 
 use crate::chem::rd_mol_descriptors as descriptors;
 use crate::chem::{
-    GetDistanceMatrixParams, Mol, get_adjacency_matrix, get_distance_matrix_with_params,
+    BondType, GetDistanceMatrixParams, Mol, get_adjacency_matrix, get_distance_matrix_with_params,
 };
 use crate::ml::info_theory::rd_info_theory::info_entropy;
 use crate::py::{np_sum, py_sum};
@@ -412,8 +412,10 @@ fn assign_symmetry_classes(bd_mat: &[Vec<f64>], num_atoms: usize, cutoff: i32) -
 
 /// Bertz's complexity index (S. H. Bertz, J. Am. Chem. Soc. 103,
 /// 3599-3601 (1981)), from the connections between bonds and the
-/// distribution of elements, with aromatic bonds of order 1.5. 0 for fewer
-/// than two atoms. Mirrors `GraphDescriptors.BertzCT`.
+/// distribution of elements, with aromatic bonds of order 1.5 and the others
+/// of their `BondType`'s number, as RDKit 2026.03's Python takes them (so a
+/// dative bond is of order 17). 0 for fewer than two atoms. Mirrors
+/// `GraphDescriptors.BertzCT`.
 pub fn bertz_ct(mol: &Mol) -> Result<f64> {
     bertz_ct_with_params(mol, &BertzCTParams::default())
 }
@@ -457,10 +459,12 @@ pub fn bertz_ct_with_params(mol: &Mol, params: &BertzCTParams) -> Result<f64> {
         if atom1 > atom2 {
             (atom1, atom2) = (atom2, atom1);
         }
-        let order = if bond.get_is_aromatic() {
+        // Python's float(bond.GetBondType()), the enum's number, which is the
+        // bond order only from single to hextuple bonds.
+        let order = if bond.get_is_aromatic() || bond.get_bond_type() == BondType::Aromatic {
             1.5
         } else {
-            bond.get_bond_type_as_double()?
+            f64::from(bond.get_bond_type().to_ffi().repr)
         };
         bond_dict.insert((atom1, atom2), order);
         if !neighbor_list[atom1].contains(&atom2) {

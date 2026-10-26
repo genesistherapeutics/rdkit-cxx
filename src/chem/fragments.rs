@@ -17,7 +17,7 @@
 use crate::Result;
 use crate::chem::{Mol, SubstructMatchParameters, mol_from_smarts};
 
-/// `Data/FragmentDescriptors.csv` from RDKit 2026.09.1: a code, a
+/// `Data/FragmentDescriptors.csv` from RDKit 2026.03.6: a code, a
 /// description, a SMARTS pattern, and notes per tab-separated line.
 const FRAGMENT_DESCRIPTORS: &str =
     include_str!("../../wrapper/third_party/rdkit/Data/FragmentDescriptors.csv");
@@ -83,7 +83,7 @@ fragments! {
     fr_oxime, fr_oxime_with_count_unique, "fr_oxime", "fr_oxime", "Number of oxime groups";
     fr_ester, fr_ester_with_count_unique, "fr_ester", "fr_ester", "Number of esters";
     fr_al_coo, fr_al_coo_with_count_unique, "fr_Al_COO", "fr_Al_COO", "Number of aliphatic carboxylic acids";
-    fr_ar_coo, fr_ar_coo_with_count_unique, "fr_Ar_COO", "fr_Ar_COO", "Number of aromatic carboxylic acids";
+    fr_ar_coo, fr_ar_coo_with_count_unique, "fr_Ar_COO", "fr_Ar_COO", "Number of Aromatic carboxylic acide";
     fr_coo, fr_coo_with_count_unique, "fr_COO", "fr_COO", "Number of carboxylic acids";
     fr_coo2, fr_coo2_with_count_unique, "fr_COO2", "fr_COO2", "Number of carboxylic acids";
     fr_ketone, fr_ketone_with_count_unique, "fr_ketone", "fr_ketone", "Number of ketones";

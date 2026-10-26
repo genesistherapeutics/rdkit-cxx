@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Lipinski in RDKit 2026.09.1.
+// Values from Python's rdkit.Chem.Lipinski in RDKit 2026.03.6.
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::lipinski::*;

@@ -73,7 +73,7 @@ Some recipes differ from the cookbook's text on purpose:
   `commit_batch_edit`.
 - Highlight a Substructure in a Molecule: after a substructure search,
   Jupyter keeps the query, and when the recipe then sets the atoms to
-  highlight by hand, drawing them fails in RDKit 2026.09, since they do not
+  highlight by hand, drawing them fails in RDKit 2026.03, since they do not
   fit the query. The example shows the failure, then draws the atoms without
   the query, as the recipe intends.
 - On a Plot: the recipe puts the molecule on a matplotlib plot, which has no

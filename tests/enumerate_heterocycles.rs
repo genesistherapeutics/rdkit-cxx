@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports rdkit/Chem/UnitTestEnumerateHeterocycles.py's example tests and the
-// module's doctests; values from Python's module in RDKit 2026.09.1.
+// module's doctests; values from Python's module in RDKit 2026.03.6.
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::enumerate_heterocycles::*;

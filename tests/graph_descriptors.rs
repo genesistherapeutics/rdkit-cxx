@@ -5,7 +5,7 @@
 
 // Ports RDKit's rdkit/Chem/UnitTestGraphDescriptors_2.py, whose values come
 // from the papers it cites and from tests/data/PP_descrs_regress.csv, and
-// pins values from Python's rdkit.Chem.GraphDescriptors in RDKit 2026.09.1.
+// pins values from Python's rdkit.Chem.GraphDescriptors in RDKit 2026.03.6.
 
 use rdkit_cxx::chem::graph_descriptors::*;
 use rdkit_cxx::chem::{
@@ -79,6 +79,9 @@ fn bertz_ct_values() {
         1e-4,
         "Github #8421",
     );
+    // RDKit 2026.03's Python takes a bond's order as its BondType's number:
+    // 17 for a dative bond.
+    feq(super_bertz("C[NH2]->[Cu]"), 1192.1337526548132, 1e-9, "dative");
 }
 
 fn super_bertz(smi: &str) -> f64 {
