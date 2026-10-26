@@ -3,19 +3,21 @@
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
 
-"""Writes the inventory of RDKit's nanobind Python modules.
+"""Writes the inventory of RDKit's compiled Python modules.
 
 The inventory lists every class, function, method, static method, property,
-module attribute, and enum value the compiled modules expose, with nanobind's
-signature for each overload. check.py measures the manifest against it.
+module attribute, and enum value the compiled modules expose, with the
+binding's signature for each overload: Boost.Python's, as conda-forge
+builds RDKit, or nanobind's. check.py measures the manifest against it.
 
 With --python it writes the inventory of RDKit's Python (.py) modules instead:
 the functions, classes, methods, properties, enum values, and module
 attributes each defines, leaving out tests and what it imports. Modules that
 do not import (they need IPython, Qt, or Windows) are read from their source.
 
-It needs an RDKit build with RDK_BUILD_NANOBIND_WRAPPERS (conda-forge's rdkit
-uses Boost.Python); see the README.
+It needs an RDKit build with Python wrappers: conda-forge's rdkit, whose
+Boost.Python modules are the crate's reference, or a build with
+RDK_BUILD_NANOBIND_WRAPPERS; see the README.
 """
 
 import argparse
@@ -33,15 +35,40 @@ import re
 import sys
 import warnings
 
-CALLABLE_TYPES = {"nb_func", "nb_method"}
+NB_CALLABLE_TYPES = {"nb_func", "nb_method"}
+
+# A Boost.Python overload's Python signature, the line before its "C++
+# signature" line in the docstring.
+BOOST_SIGNATURE = re.compile(r"^\s*(\w+)\((.*)\)\s*->\s*(.*?)\s*:\s*$")
+
+
+def is_boost_callable(obj) -> bool:
+    return type(obj).__name__ == "function" and type(obj).__module__ == "Boost.Python"
 
 
 def is_nb_callable(obj) -> bool:
-    return type(obj).__name__ in CALLABLE_TYPES
+    """A compiled function or method, of either binding."""
+    return type(obj).__name__ in NB_CALLABLE_TYPES or is_boost_callable(obj)
+
+
+def boost_signatures(obj) -> list[str]:
+    lines = (getattr(obj, "__doc__", None) or "").splitlines()
+    sigs = []
+    for i, line in enumerate(lines):
+        if "C++ signature" in line:
+            sig = next((lines[j].strip() for j in range(i - 1, -1, -1) if BOOST_SIGNATURE.match(lines[j])), "?")
+            sigs.append(sig)
+    return sigs
 
 
 def signatures(obj) -> list[str]:
+    if is_boost_callable(obj):
+        return boost_signatures(obj)
     return [overload[0] for overload in getattr(obj, "__nb_signature__", ())]
+
+
+def is_boost_enum(cls) -> bool:
+    return any(base.__name__ == "enum" and base.__module__ == "Boost.Python" for base in cls.__mro__)
 
 
 def extension_modules(root: pathlib.Path) -> list[str]:
@@ -57,10 +84,18 @@ def extension_modules(root: pathlib.Path) -> list[str]:
     return sorted(names)
 
 
+def is_boost_reduce(name: str, obj) -> bool:
+    """Boost.Python's generic __reduce__, one undocumented function every
+    class holds, which pickles through the class's __getinitargs__ and
+    __getstate__ (listed when it has them) or raises that pickling is not
+    enabled."""
+    return name == "__reduce__" and is_boost_callable(obj) and obj.__doc__ is None
+
+
 def is_public(name: str, obj) -> bool:
-    """Public names, plus the protocol methods nanobind defines."""
+    """Public names, plus the protocol methods the binding defines."""
     if name.startswith("__") and name.endswith("__"):
-        return is_nb_callable(obj)
+        return is_nb_callable(obj) and not is_boost_reduce(name, obj)
     return not name.startswith("_")
 
 
@@ -71,18 +106,30 @@ def class_entries(cls, qualified: str) -> list[dict]:
         for name in cls.__members__:
             entries.append({"python": f"{qualified}.{name}", "kind": kind, "overloads": []})
         return entries
+    if is_boost_enum(cls):
+        for name in cls.names:
+            entries.append({"python": f"{qualified}.{name}", "kind": "enum_value", "overloads": []})
+        return entries
     for name, obj in vars(cls).items():
         if not is_public(name, obj):
             continue
         python = f"{qualified}.{name}"
         if isinstance(obj, staticmethod):
             entries.append({"python": python, "kind": "static_method", "overloads": signatures(obj.__func__)})
-        elif isinstance(obj, property) or type(obj).__name__ == "nb_static_property":
+        elif isinstance(obj, property) or type(obj).__name__ in {"nb_static_property", "property"}:
             entries.append({"python": python, "kind": "property", "overloads": []})
         elif is_nb_callable(obj):
             entries.append({"python": python, "kind": "method", "overloads": signatures(obj)})
-        elif inspect.isclass(obj) and obj.__module__ == cls.__module__:
-            entries.extend(class_entries(obj, python))
+        elif inspect.isfunction(obj):
+            # A method RDKit's Python adds to the class (Mol.GetAtoms under
+            # Boost.Python).
+            entries.append({"python": python, "kind": "method", "overloads": python_signature(name, obj)})
+        elif inspect.isclass(obj):
+            if obj.__module__ == cls.__module__:
+                entries.extend(class_entries(obj, python))
+        elif not callable(obj):
+            # A plain class attribute (AtomPairsParameters' ints).
+            entries.append({"python": python, "kind": "property", "overloads": []})
     return entries
 
 
@@ -99,8 +146,8 @@ def module_entries(module) -> list[dict]:
         elif is_nb_callable(obj):
             if getattr(obj, "__module__", module.__name__) == module.__name__:
                 entries.append({"python": python, "kind": "module_function", "overloads": signatures(obj)})
-        elif isinstance(obj, enum.Enum):
-            # Enum values exported to the module (nanobind's export_values).
+        elif isinstance(obj, enum.Enum) or is_boost_enum(type(obj)):
+            # Enum values exported to the module (export_values).
             if type(obj).__module__ == module.__name__:
                 entries.append({"python": python, "kind": "module_attribute", "overloads": []})
         elif not callable(obj):

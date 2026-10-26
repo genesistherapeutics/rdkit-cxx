@@ -680,15 +680,15 @@ rust = ["rdkit_cxx::chem::descriptors::num_valence_electrons"]
 
 [[entry]]
 python = "rdkit.Chem.Descriptors.PropertyFunctor"
-reason = "a Python base class for property functions, which subclasses define __call__ on; Rust makes them from closures with rd_mol_descriptors::PythonPropertyFunctor::new, which is bound"
+reason = "a Python base class for property functions, which subclasses define __call__ on; Rust makes them from closures with rd_mol_descriptors::PropertyFunctor::new, which is bound"
 
 [[entry]]
 python = "rdkit.Chem.Descriptors.PropertyFunctor.__call__"
-reason = "the method PropertyFunctor's subclasses override; Rust passes the closure to rd_mol_descriptors::PythonPropertyFunctor::new"
+reason = "the method PropertyFunctor's subclasses override; Rust passes the closure to rd_mol_descriptors::PropertyFunctor::new"
 
 [[entry]]
 python = "rdkit.Chem.Descriptors.PropertyFunctor.__init__"
-reason = "initializes the PythonPropertyFunctor a subclass derives from; Rust makes one with rd_mol_descriptors::PythonPropertyFunctor::new"
+reason = "initializes the PythonPropertyFunctor a subclass derives from; Rust makes one with rd_mol_descriptors::PropertyFunctor::new"
 
 [[entry]]
 python = "rdkit.Chem.Descriptors.descList"
@@ -1166,11 +1166,15 @@ python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__getitem__"
 reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
-python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__len__"
+python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__init__"
 reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
-python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__repr__"
+python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__iter__"
+reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.IntStringMap.__len__"
 reason = "nanobind's view of MolDrawOptions.atomLabels; Rust's field is a BTreeMap<u32, String>"
 
 [[entry]]
@@ -1961,6 +1965,26 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_drawer_params_from_json"]
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.UpdateMolDrawOptionsFromJSON"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_mol_draw_options_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.map_indexing_suite_IntStringMap_entry"
+reason = "Boost.Python's key-value entry of a IntStringMap, which iterating one yields; Rust's MolDrawOptions.atom_labels is a BTreeMap<u32, String>"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.map_indexing_suite_IntStringMap_entry.__init__"
+reason = "Boost.Python's key-value entry of a IntStringMap, which iterating one yields; Rust's MolDrawOptions.atom_labels is a BTreeMap<u32, String>"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.map_indexing_suite_IntStringMap_entry.__repr__"
+reason = "Boost.Python's key-value entry of a IntStringMap, which iterating one yields; Rust's MolDrawOptions.atom_labels is a BTreeMap<u32, String>"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.map_indexing_suite_IntStringMap_entry.data"
+reason = "Boost.Python's key-value entry of a IntStringMap, which iterating one yields; Rust's MolDrawOptions.atom_labels is a BTreeMap<u32, String>"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.map_indexing_suite_IntStringMap_entry.key"
+reason = "Boost.Python's key-value entry of a IntStringMap, which iterating one yields; Rust's MolDrawOptions.atom_labels is a BTreeMap<u32, String>"
 
 [[entry]]
 python = "rdkit.Chem.Draw.shouldKekulize"
@@ -4055,6 +4079,46 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidatio
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__contains__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__delitem__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__getitem__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__init__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__iter__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__len__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.__setitem__"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.append"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.MOL_SPTR_VECT.extend"
+reason = "Boost.Python's binding of std::vector<ROMOL_SPTR>, a C++ container; Rust uses Vec<Mol>"
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.MetalDisconnector"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MetalDisconnector"]
 
@@ -4194,10 +4258,6 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__bool__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__contains__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
@@ -4206,15 +4266,7 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__delitem__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__eq__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__getitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__init__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
@@ -4226,14 +4278,6 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__len__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__ne__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__repr__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.__setitem__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
@@ -4242,27 +4286,7 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.append"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.clear"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.count"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.extend"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.insert"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.pop"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.PipelineLog.remove"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<PipelineLogEntry>"
 
 [[entry]]
@@ -4635,8 +4659,28 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap"]
 
 [[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__contains__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::contains_key"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__delitem__"
+reason = "Rust's SmilesTautomerMap, which a TautomerEnumeratorResult hands out, is read-only"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__getitem__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::get"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__iter__"
+rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::items"]
+
+[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__len__"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::SmilesTautomerMap::len"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.__setitem__"
+reason = "Rust's SmilesTautomerMap, which a TautomerEnumeratorResult hands out, is read-only"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SmilesTautomerMap.items"
@@ -4702,19 +4746,11 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__bool__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__contains__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__eq__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
@@ -4734,14 +4770,6 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__len__
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__ne__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__repr__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.__setitem__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
@@ -4750,27 +4778,7 @@ python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.append"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.clear"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.count"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.extend"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.insert"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.pop"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
-
-[[entry]]
-python = "rdkit.Chem.MolStandardize.rdMolStandardize.SubstructTermVector.remove"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<SubstructTerm>"
 
 [[entry]]
@@ -4882,6 +4890,7 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumerato
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback.__call__"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::TautomerEnumeratorCallback::call"]
+overloads_note = "Boost.Python lists the virtual function's default implementation, which RDKit's wrapper leaves to raise, as a second overload with the same parameters"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.TautomerEnumeratorCallback.__init__"
@@ -5001,6 +5010,26 @@ overloads_note = "Python subclasses the class to override validate (and copy); R
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.ValidationMethod.validate"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::RDKitValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NoAtomValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FragmentValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::NeutralValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::IsotopeValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::MolVSValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::AllowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedAtomsValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::DisallowedRadicalValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Is2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate_with_report_all_failures", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate", "rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate_with_report_all_failures"]
 overloads_note = "every validation has the two forms, as the Python subclasses inherit validate"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.map_indexing_suite_SmilesTautomerMap_entry"
+reason = "Boost.Python's key-value entry of a SmilesTautomerMap, which iterating one yields; Rust's SmilesTautomerMap::items gives (SMILES, tautomer) pairs"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.map_indexing_suite_SmilesTautomerMap_entry.__init__"
+reason = "Boost.Python's key-value entry of a SmilesTautomerMap, which iterating one yields; Rust's SmilesTautomerMap::items gives (SMILES, tautomer) pairs"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.map_indexing_suite_SmilesTautomerMap_entry.__repr__"
+reason = "Boost.Python's key-value entry of a SmilesTautomerMap, which iterating one yields; Rust's SmilesTautomerMap::items gives (SMILES, tautomer) pairs"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.map_indexing_suite_SmilesTautomerMap_entry.data"
+reason = "Boost.Python's key-value entry of a SmilesTautomerMap, which iterating one yields; Rust's SmilesTautomerMap::items gives (SMILES, tautomer) pairs"
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.rdMolStandardize.map_indexing_suite_SmilesTautomerMap_entry.key"
+reason = "Boost.Python's key-value entry of a SmilesTautomerMap, which iterating one yields; Rust's SmilesTautomerMap::items gives (SMILES, tautomer) pairs"
 
 [[entry]]
 python = "rdkit.Chem.MolSurf.LabuteASA"
@@ -6158,8 +6187,52 @@ rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::NetworkEdge::type_"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__contains__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__delitem__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__getitem__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__init__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__iter__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__len__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.__setitem__"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.append"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.NetworkEdge_VECT.extend"
+reason = "Boost.Python's binding of std::vector<NetworkEdge>, a C++ container; Rust uses Vec<NetworkEdge>"
+
+[[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork"
 rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__getstate__"
@@ -6169,10 +6242,6 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__init__"
 rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::default", "rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetwork::from_pkl"]
 overloads_note = "the bytes and str pickle overloads share from_pkl"
-
-[[entry]]
-python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetwork.__setstate__"
@@ -6205,6 +6274,10 @@ rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams"
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.__init__"
 rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::default", "rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams::new"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.ScaffoldNetworkParams.collectMolCounts"
@@ -6814,11 +6887,6 @@ python = "rdkit.Chem.rdCIPLabeler.AssignCIPLabels"
 rust = ["rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels", "rdkit_cxx::chem::rd_cip_labeler::assign_cip_labels_with_params"]
 
 [[entry]]
-python = "rdkit.Chem.rdCIPLabeler.MaxIterationsExceeded"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Runtime"
-
-[[entry]]
 python = "rdkit.Chem.rdChemDraw.CDXFormat"
 rust = ["rdkit_cxx::chem::rd_chem_draw::CDXFormat"]
 
@@ -7057,6 +7125,10 @@ python = "rdkit.Chem.rdChemReactions.ChemicalReaction.Validate"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::validate", "rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::validate_with_silent"]
 
 [[entry]]
+python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_bin_str cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__getstate__"
 reason = "Python's pickling protocol: to_binary and from_bin_str cover it"
 
@@ -7066,22 +7138,8 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::ChemicalReaction::default", "rdkit_
 overloads_note = "the bytes and str pickle overloads share from_bin_str; the copy is Clone"
 
 [[entry]]
-python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__new__"
-reason = "nanobind's construction hook; __init__ maps the constructors"
-
-[[entry]]
 python = "rdkit.Chem.rdChemReactions.ChemicalReaction.__setstate__"
 reason = "Python's pickling protocol: to_binary and from_bin_str cover it"
-
-[[entry]]
-python = "rdkit.Chem.rdChemReactions.ChemicalReactionException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Value"
-
-[[entry]]
-python = "rdkit.Chem.rdChemReactions.ChemicalReactionParserException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Parse"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.Compute2DCoordsForReaction"
@@ -7159,6 +7217,10 @@ python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.__next__"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::next"]
 
 [[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.__nonzero__"
+reason = "Python 2's truth protocol, which Python 3 never calls; __bool__ is EnumerateLibrary::has_next"
+
+[[entry]]
 python = "rdkit.Chem.rdChemReactions.EnumerateLibraryBase.next"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerateLibrary::next"]
 
@@ -7219,14 +7281,21 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::has_next"]
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.__copy__"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::clone"]
+overloads_note = "Boost.Python lists the virtual function's default implementation, which RDKit's wrapper leaves to raise, as a second overload with the same parameters"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.__next__"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::next"]
+overloads_note = "Boost.Python lists the virtual function's default implementation, which RDKit's wrapper leaves to raise, as a second overload with the same parameters"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.__nonzero__"
+reason = "Python 2's truth protocol, which Python 3 never calls; __bool__ is EnumerationStrategyBase::has_next"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.EnumerationStrategyBase.next"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::EnumerationStrategyBase::next"]
+overloads_note = "Boost.Python lists the virtual function's default implementation, which RDKit's wrapper leaves to raise, as a second overload with the same parameters"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.EvenSamplePairsStrategy"
@@ -7559,6 +7628,46 @@ python = "rdkit.Chem.rdChemReactions.UpdateProductsStereochemistry"
 rust = ["rdkit_cxx::chem::rd_chem_reactions::update_products_stereochemistry"]
 
 [[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__contains__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__delitem__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__getitem__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__init__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__iter__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__len__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.__setitem__"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.append"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
+python = "rdkit.Chem.rdChemReactions.VectMolVect.extend"
+reason = "Boost.Python's binding of std::vector<MOL_SPTR_VECT>, a C++ container; Rust uses Vec<Vec<Mol>>"
+
+[[entry]]
 python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature"
 rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature"]
 
@@ -7593,6 +7702,10 @@ rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_pos"]
 [[entry]]
 python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.SetType"
 rust = ["rdkit_cxx::chem::rd_chemical_features::FreeChemicalFeature::set_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__getinitargs__"
+reason = "Python's pickling protocol: to_pickle and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdChemicalFeatures.FreeChemicalFeature.__getstate__"
@@ -7753,11 +7866,6 @@ rust = ["rdkit_cxx::chem::rd_depictor::ConstrainedDepictionParams::use_ring_temp
 rust_kind = "field"
 
 [[entry]]
-python = "rdkit.Chem.rdDepictor.DepictException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Value"
-
-[[entry]]
 python = "rdkit.Chem.rdDepictor.GenerateDepictionMatching2DStructure"
 rust = ["rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure_with_params", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure_atom_map", "rdkit_cxx::chem::rd_depictor::generate_depiction_matching_2d_structure_atom_map_with_params"]
 name_exception = "digits stay with their letters: generate_depiction_matching_2d_structure"
@@ -7854,6 +7962,46 @@ rust = ["rdkit_cxx::chem::rd_deprotect::DeprotectData::reaction_smarts"]
 overloads_note = "read-only in Python, so a getter"
 
 [[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__contains__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__delitem__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__getitem__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__init__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__iter__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__len__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.__setitem__"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.append"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
+python = "rdkit.Chem.rdDeprotect.DeprotectDataVect.extend"
+reason = "Boost.Python's binding of std::vector<DeprotectData>, a C++ container; Rust uses Vec<DeprotectData>"
+
+[[entry]]
 python = "rdkit.Chem.rdDeprotect.DeprotectInPlace"
 rust = ["rdkit_cxx::chem::rd_deprotect::deprotect_in_place", "rdkit_cxx::chem::rd_deprotect::deprotect_in_place_with_deprotections"]
 
@@ -7872,11 +8020,6 @@ rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_bonds", "rdkit_cxx::chem
 [[entry]]
 python = "rdkit.Chem.rdDetermineBonds.DetermineConnectivity"
 rust = ["rdkit_cxx::chem::rd_determine_bonds::determine_connectivity", "rdkit_cxx::chem::rd_determine_bonds::determine_connectivity_with_params"]
-
-[[entry]]
-python = "rdkit.Chem.rdDetermineBonds.MaxFindBondOrdersItersExceeded"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Runtime"
 
 [[entry]]
 python = "rdkit.Chem.rdDetermineBonds.hueckelEnabled"
@@ -8392,6 +8535,10 @@ rust = ["rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoEnumerationOptions"]
 [[entry]]
 python = "rdkit.Chem.rdEnumerateStereoisomers.StereoEnumerationOptions.__init__"
 rust = ["rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoEnumerationOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdEnumerateStereoisomers.StereoEnumerationOptions.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdEnumerateStereoisomers.StereoEnumerationOptions.maxIsomers"
@@ -9912,16 +10059,6 @@ python = "rdkit.Chem.rdMIF.Hydrophilic.__init__"
 rust = ["rdkit_cxx::chem::rd_mif::Hydrophilic::new", "rdkit_cxx::chem::rd_mif::Hydrophilic::new_with_params"]
 
 [[entry]]
-python = "rdkit.Chem.rdMIF.MIFIndexError"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): RDKit's IndexErrorException, from a grid index out of range, is Error::Runtime"
-
-[[entry]]
-python = "rdkit.Chem.rdMIF.MIFValueError"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Value"
-
-[[entry]]
 python = "rdkit.Chem.rdMIF.MMFFVdWaals"
 rust = ["rdkit_cxx::chem::rd_mif::MMFFVdWaals"]
 
@@ -9973,6 +10110,10 @@ rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams"]
 [[entry]]
 python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.__init__"
 rust = ["rdkit_cxx::chem::rd_mol_align::BestAlignmentParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdMolAlign.BestAlignmentParams.ignoreHs"
@@ -10128,6 +10269,10 @@ python = "rdkit.Chem.rdMolCatalog.MolCatalog.Serialize"
 rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalog::serialize"]
 
 [[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalog.__getinitargs__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdMolCatalog.MolCatalog.__getstate__"
 reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
@@ -10172,6 +10317,10 @@ python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetOrder"
 rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_order"]
 
 [[entry]]
+python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getinitargs__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getstate__"
 reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
@@ -10190,11 +10339,6 @@ rust = ["rdkit_cxx::chem::rd_mol_chemical_features::build_feature_factory"]
 [[entry]]
 python = "rdkit.Chem.rdMolChemicalFeatures.BuildFeatureFactoryFromString"
 rust = ["rdkit_cxx::chem::rd_mol_chemical_features::build_feature_factory_from_string"]
-
-[[entry]]
-python = "rdkit.Chem.rdMolChemicalFeatures.FeatureFileParseException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Parse"
 
 [[entry]]
 python = "rdkit.Chem.rdMolChemicalFeatures.GetAtomMatch"
@@ -10273,6 +10417,10 @@ rust = ["rdkit_cxx::chem::rd_mol_chemical_features::MolChemicalFeatureFactory::g
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::AtomPairsParameters"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.__init__"
+reason = "the class only holds constants, which Rust's AtomPairsParameters has as associated functions"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.AtomPairsParameters.__setattr__"
@@ -10839,6 +10987,22 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::Properties::default", "rdkit_cxx::
 overloads_note = "Properties() is Default; Properties(propNames) is new (A5)"
 
 [[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PropertyFunctor"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyFunctor"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PropertyFunctor.GetName"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyFunctor::get_name"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PropertyFunctor.GetVersion"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyFunctor::get_version"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolDescriptors.PropertyFunctor.__call__"
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyFunctor::call"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolDescriptors.PropertyRangeQuery"
 rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyRangeQuery"]
 
@@ -10848,25 +11012,17 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyRangeQuery::match_"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor"]
-
-[[entry]]
-python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.GetName"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::get_name"]
-
-[[entry]]
-python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.GetVersion"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::get_version"]
+reason = "a PropertyFunctor whose __call__ a Python subclass overrides; Rust makes one from a closure with PropertyFunctor::new"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.__call__"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::call"]
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyFunctor::call"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.PythonPropertyFunctor.__init__"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::PythonPropertyFunctor::new"]
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::PropertyFunctor::new"]
 rust_generics = "<fn(&rdkit_cxx::chem::Mol) -> f64>"
-overloads_note = "Python subclasses the class to override __call__; Rust cannot, so new also takes the closure __call__ runs, which must be Send + Sync because the registry is global, and whose panics are caught at the bridge"
+overloads_note = "Python passes the subclass's self as the callback; Rust passes the closure __call__ runs, which must be Send + Sync because the registry is global, and whose panics are caught at the bridge"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.SMR_VSA_"
@@ -10915,6 +11071,10 @@ rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::default", "rdk
 overloads_note = "MolEnumeratorParams() is Default, and (typ) new; the operation is also the public field operation, which Python cannot read"
 
 [[entry]]
+python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
 python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.doRandom"
 rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::do_random"]
 rust_kind = "field"
@@ -10933,41 +11093,6 @@ rust_kind = "field"
 python = "rdkit.Chem.rdMolEnumerator.MolEnumeratorParams.sanitize"
 rust = ["rdkit_cxx::chem::rd_mol_enumerator::MolEnumeratorParams::sanitize"]
 rust_kind = "field"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.AnonymousGraph"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::AnonymousGraph"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.ArthorSubstructureOrder"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ArthorSubstructureOrder"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.AtomBondCounts"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::AtomBondCounts"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.CanonicalSmiles"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::CanonicalSmiles"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.DegreeVector"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::DegreeVector"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.ElementGraph"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ElementGraph"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.ExtendedMurcko"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::ExtendedMurcko"]
-name_exception = "exported enum value (N7)"
 
 [[entry]]
 python = "rdkit.Chem.rdMolHash.HashFunction"
@@ -11050,68 +11175,8 @@ python = "rdkit.Chem.rdMolHash.HashFunction.SmallWorldIndexBRL"
 rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBrl"]
 
 [[entry]]
-python = "rdkit.Chem.rdMolHash.HetAtomProtomer"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomProtomer"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.HetAtomProtomerv2"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomProtomerv2"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.HetAtomTautomer"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomTautomer"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.HetAtomTautomerv2"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::HetAtomTautomerv2"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.Mesomer"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::Mesomer"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.MolFormula"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::MolFormula"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
 python = "rdkit.Chem.rdMolHash.MolHash"
 rust = ["rdkit_cxx::chem::rd_mol_hash::mol_hash", "rdkit_cxx::chem::rd_mol_hash::mol_hash_with_params"]
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.MurckoScaffold"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::MurckoScaffold"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.NetCharge"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::NetCharge"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.RedoxPair"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::RedoxPair"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.Regioisomer"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::Regioisomer"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.SmallWorldIndexBR"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBr"]
-name_exception = "exported enum value (N7)"
-
-[[entry]]
-python = "rdkit.Chem.rdMolHash.SmallWorldIndexBRL"
-rust = ["rdkit_cxx::chem::rd_mol_hash::HashFunction::SmallWorldIndexBrl"]
-name_exception = "exported enum value (N7)"
 
 [[entry]]
 python = "rdkit.Chem.rdMolInterchange.JSONParseParameters"
@@ -11120,6 +11185,10 @@ rust = ["rdkit_cxx::chem::rd_mol_interchange::JSONParseParameters"]
 [[entry]]
 python = "rdkit.Chem.rdMolInterchange.JSONParseParameters.__init__"
 rust = ["rdkit_cxx::chem::rd_mol_interchange::JSONParseParameters::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolInterchange.JSONParseParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdMolInterchange.JSONParseParameters.parseConformers"
@@ -11160,6 +11229,10 @@ python = "rdkit.Chem.rdMolInterchange.JSONWriteParameters.__init__"
 rust = ["rdkit_cxx::chem::rd_mol_interchange::JSONWriteParameters::default"]
 
 [[entry]]
+python = "rdkit.Chem.rdMolInterchange.JSONWriteParameters.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
 python = "rdkit.Chem.rdMolInterchange.JSONWriteParameters.useRDKitExtensions"
 rust = ["rdkit_cxx::chem::rd_mol_interchange::JSONWriteParameters::use_rdkit_extensions"]
 rust_kind = "field"
@@ -11185,6 +11258,10 @@ rust = ["rdkit_cxx::chem::rd_mol_processing::SupplierOptions"]
 [[entry]]
 python = "rdkit.Chem.rdMolProcessing.SupplierOptions.__init__"
 rust = ["rdkit_cxx::chem::rd_mol_processing::SupplierOptions::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdMolProcessing.SupplierOptions.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
 
 [[entry]]
 python = "rdkit.Chem.rdMolProcessing.SupplierOptions.confId2D"
@@ -11314,6 +11391,100 @@ rust = ["rdkit_cxx::chem::rd_mol_transforms::transform_conformer"]
 [[entry]]
 python = "rdkit.Chem.rdPartialCharges.ComputeGasteigerCharges"
 rust = ["rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges", "rdkit_cxx::chem::rd_partial_charges::compute_gasteiger_charges_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.AtomIndexLabels"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::AtomIndexLabels"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::AtomIndexLabels"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.AtomMap"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabelling::AtomMap"]
+name_exception = "an exported flag value maps to its constant, RGroupLabelling::AtomMap"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.AtomMapLabels"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::AtomMapLabels"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::AtomMapLabels"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.AutoDetect"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::AutoDetect"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::AutoDetect"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.DummyAtomLabels"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::DummyAtomLabels"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::DummyAtomLabels"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.Exhaustive"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupMatching::Exhaustive"]
+name_exception = "an exported flag value maps to its constant, RGroupMatching::Exhaustive"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.FingerprintVariance"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupScore::FingerprintVariance"]
+name_exception = "an exported flag value maps to its constant, RGroupScore::FingerprintVariance"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.GA"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupMatching::GA"]
+name_exception = "an exported flag value maps to its constant, RGroupMatching::GA"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.Greedy"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupMatching::Greedy"]
+name_exception = "an exported flag value maps to its constant, RGroupMatching::Greedy"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.GreedyChunks"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupMatching::GreedyChunks"]
+name_exception = "an exported flag value maps to its constant, RGroupMatching::GreedyChunks"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.Isotope"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabelling::Isotope"]
+name_exception = "an exported flag value maps to its constant, RGroupLabelling::Isotope"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.IsotopeLabels"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::IsotopeLabels"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::IsotopeLabels"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.MCS"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupCoreAlignment::MCS"]
+name_exception = "an exported flag value maps to its constant, RGroupCoreAlignment::MCS"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.MDLRGroup"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabelling::MDLRGroup"]
+name_exception = "an exported flag value maps to its constant, RGroupLabelling::MDLRGroup"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.MDLRGroupLabels"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::MDLRGroupLabels"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::MDLRGroupLabels"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.Match"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupScore::Match"]
+name_exception = "an exported flag value maps to its constant, RGroupScore::Match"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.NoAlignment"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupCoreAlignment::NoAlignment"]
+name_exception = "an exported flag value maps to its constant, RGroupCoreAlignment::NoAlignment"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.NoSymmetrization"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupMatching::NoSymmetrization"]
+name_exception = "an exported flag value maps to its constant, RGroupMatching::NoSymmetrization"
+
+[[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.None"
+reason = "deprecated: RDKit's alias of NoAlignment, which its source marks for removal"
 
 [[entry]]
 python = "rdkit.Chem.rdRGroupDecomposition.RGroupCoreAlignment"
@@ -11594,6 +11765,11 @@ python = "rdkit.Chem.rdRGroupDecomposition.RGroupScore.Match"
 rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupScore::Match"]
 
 [[entry]]
+python = "rdkit.Chem.rdRGroupDecomposition.RelabelDuplicateLabels"
+rust = ["rdkit_cxx::chem::rd_r_group_decomposition::RGroupLabels::RelabelDuplicateLabels"]
+name_exception = "an exported flag value maps to its constant, RGroupLabels::RelabelDuplicateLabels"
+
+[[entry]]
 python = "rdkit.Chem.rdRGroupDecomposition.RelabelMappedDummies"
 rust = ["rdkit_cxx::chem::rd_r_group_decomposition::relabel_mapped_dummies", "rdkit_cxx::chem::rd_r_group_decomposition::relabel_mapped_dummies_with_params"]
 
@@ -11830,11 +12006,6 @@ python = "rdkit.Chem.rdSLNParse.MolFromSLN"
 rust = ["rdkit_cxx::chem::rd_sln_parse::mol_from_sln", "rdkit_cxx::chem::rd_sln_parse::mol_from_sln_with_params"]
 
 [[entry]]
-python = "rdkit.Chem.rdSLNParse.SLNParseException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Parse"
-
-[[entry]]
 python = "rdkit.Chem.rdShapeAlign.AlignMol"
 rust = ["rdkit_cxx::chem::rd_shape_align::align_mol", "rdkit_cxx::chem::rd_shape_align::align_mol_with_params", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_opts", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_opts_with_params", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_input", "rdkit_cxx::chem::rd_shape_align::align_mol_shape_input_with_params"]
 overloads_note = "the (ref, probe, refShapeOpts, probeShapeOpts, ...) overload is align_mol_shape_opts, and the (refShape, probe, ...) one align_mol_shape_input (A5)"
@@ -11842,6 +12013,46 @@ overloads_note = "the (ref, probe, refShapeOpts, probeShapeOpts, ...) overload i
 [[entry]]
 python = "rdkit.Chem.rdShapeAlign.AlignShapes"
 rust = ["rdkit_cxx::chem::rd_shape_align::align_shapes", "rdkit_cxx::chem::rd_shape_align::align_shapes_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__contains__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__delitem__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__getitem__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__init__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__iter__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__len__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.__setitem__"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.append"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
+
+[[entry]]
+python = "rdkit.Chem.rdShapeAlign.FloatVector.extend"
+reason = "Boost.Python's binding of std::vector<float>, a C++ container; Rust uses Vec<f32>"
 
 [[entry]]
 python = "rdkit.Chem.rdShapeAlign.PrepareConformer"
@@ -12112,6 +12323,7 @@ rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolderBase::get_mol"]
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.MolHolderBase.__len__"
 rust = ["rdkit_cxx::chem::rd_substruct_library::MolHolderBase::len"]
+overloads_note = "Boost.Python lists the virtual function's default implementation, which RDKit's wrapper leaves to raise, as a second overload with the same parameters"
 
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.PatternHolder"
@@ -12183,6 +12395,10 @@ rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::to_stream"]
 rust_generics = "<Vec<u8>>"
 
 [[entry]]
+python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__getinitargs__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__getstate__"
 reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
@@ -12194,10 +12410,6 @@ overloads_note = "the (molecules), (molecules, fingerprints_or_keys), and (molec
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__len__"
 rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::len"]
-
-[[entry]]
-python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__setstate__"
@@ -12624,11 +12836,6 @@ python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.GetTemplateMolecule"
 rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::get_template_molecule"]
 
 [[entry]]
-python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.InitFromStream"
-rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::init_from_stream"]
-rust_generics = "<&[u8]>"
-
-[[entry]]
 python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.IsSubstructOf"
 rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::is_substruct_of", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::is_substruct_of_with_params"]
 overloads_note = "the params form covers the keyword form"
@@ -12642,9 +12849,8 @@ python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.ToBinary"
 rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::to_binary"]
 
 [[entry]]
-python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.ToStream"
-rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::to_stream"]
-rust_generics = "<Vec<u8>>"
+python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__getstate__"
@@ -12655,10 +12861,6 @@ python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__init__"
 rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::default", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::from_pickle", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new_with_tautomer_transform_file"]
 rust_generics = ["", "", "", "<&str>"]
 overloads_note = "the bytes and str pickle overloads share from_pickle; new is TautomerQuery(mol), with new_with_tautomer_transform_file for its optional file"
-
-[[entry]]
-python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__setstate__"
@@ -13204,26 +13406,6 @@ rust = ["rdkit_cxx::Error"]
 name_exception = "exceptions are Error variants (E4): Error::AtomValence"
 
 [[entry]]
-python = "rdkit.Chem.rdchem.Atom_Octahedral"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomOctahedral"]
-name_exception = "an exported enum value maps to its variant, StereoType::AtomOctahedral"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Atom_SquarePlanar"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomSquarePlanar"]
-name_exception = "an exported enum value maps to its variant, StereoType::AtomSquarePlanar"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Atom_Tetrahedral"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomTetrahedral"]
-name_exception = "an exported enum value maps to its variant, StereoType::AtomTetrahedral"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Atom_TrigonalBipyramidal"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::AtomTrigonalBipyramidal"]
-name_exception = "an exported enum value maps to its variant, StereoType::AtomTrigonalBipyramidal"
-
-[[entry]]
 python = "rdkit.Chem.rdchem.Bond"
 rust = ["rdkit_cxx::chem::rdchem::Bond", "rdkit_cxx::chem::rdchem::BondRef", "rdkit_cxx::chem::rdchem::BondMut"]
 
@@ -13574,31 +13756,6 @@ python = "rdkit.Chem.rdchem.BondType.ZERO"
 rust = ["rdkit_cxx::chem::rdchem::BondType::Zero"]
 
 [[entry]]
-python = "rdkit.Chem.rdchem.Bond_Atropisomer"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::BondAtropisomer"]
-name_exception = "an exported enum value maps to its variant, StereoType::BondAtropisomer"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Bond_Cis"
-rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::BondCis"]
-name_exception = "an exported enum value maps to its variant, StereoDescriptor::BondCis"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Bond_Cumulene_Even"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::BondCumuleneEven"]
-name_exception = "an exported enum value maps to its variant, StereoType::BondCumuleneEven"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Bond_Double"
-rust = ["rdkit_cxx::chem::rdchem::StereoType::BondDouble"]
-name_exception = "an exported enum value maps to its variant, StereoType::BondDouble"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Bond_Trans"
-rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::BondTrans"]
-name_exception = "an exported enum value maps to its variant, StereoDescriptor::BondTrans"
-
-[[entry]]
 python = "rdkit.Chem.rdchem.CHI_ALLENE"
 rust = ["rdkit_cxx::chem::rdchem::ChiralType::ChiAllene"]
 name_exception = "an exported enum value maps to its variant, ChiralType::ChiAllene"
@@ -13842,11 +13999,6 @@ rust = ["rdkit_cxx::chem::rdchem::Conformer::set_unsigned_prop", "rdkit_cxx::che
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.__init__"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::default", "rdkit_cxx::chem::rdchem::Conformer::new", "rdkit_cxx::chem::rdchem::Conformer::clone"]
-
-[[entry]]
-python = "rdkit.Chem.rdchem.ConformerException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Value"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.CoordsAsDouble"
@@ -14218,6 +14370,10 @@ python = "rdkit.Chem.rdchem.Mol.__deepcopy__"
 rust = ["rdkit_cxx::chem::rdchem::Mol::clone"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.Mol.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.Mol.__getstate__"
 reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
 
@@ -14225,10 +14381,6 @@ reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
 python = "rdkit.Chem.rdchem.Mol.__init__"
 rust = ["rdkit_cxx::chem::rdchem::Mol::default", "rdkit_cxx::chem::rdchem::Mol::clone", "rdkit_cxx::chem::rdchem::Mol::from_pkl_string", "rdkit_cxx::chem::rdchem::Mol::from_pkl_string_with_property_flags"]
 overloads_note = "the bytes and str pickle overloads share from_pkl_string; the (mol, quickCopy, confId) copy is Clone without the options"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Mol.__new__"
-reason = "nanobind's construction hook; __init__ maps the constructors"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.__setstate__"
@@ -14268,6 +14420,10 @@ rust = ["rdkit_cxx::chem::rdchem::MolBundle::size"]
 [[entry]]
 python = "rdkit.Chem.rdchem.MolBundle.ToBinary"
 rust = ["rdkit_cxx::chem::rdchem::MolBundle::to_binary"]
+
+[[entry]]
+python = "rdkit.Chem.rdchem.MolBundle.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.MolBundle.__getitem__"
@@ -14312,21 +14468,6 @@ name_exception = "an exported enum value maps to its constant, PropertyPickleOpt
 python = "rdkit.Chem.rdchem.NoProps"
 rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::NoProps"]
 name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::NoProps"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.NoValue"
-rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::NoValue"]
-name_exception = "an exported enum value maps to its variant, StereoDescriptor::NoValue"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.OTHER"
-rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Other"]
-name_exception = "an exported enum value maps to its variant, AtomMonomerType::Other"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.PDBRESIDUE"
-rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Pdbresidue"]
-name_exception = "an exported enum value maps to its variant, AtomMonomerType::Pdbresidue"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.PeriodicTable"
@@ -14458,6 +14599,11 @@ python = "rdkit.Chem.rdchem.QueryAtom.SetQuery"
 rust = ["rdkit_cxx::chem::rdchem::Atom::set_query", "rdkit_cxx::chem::rdchem::AtomMut::set_query"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.QueryAtomData"
+rust = ["rdkit_cxx::chem::rdchem::PropertyPickleOptions::QueryAtomData"]
+name_exception = "an exported enum value maps to its constant, PropertyPickleOptions::QueryAtomData"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.QueryBond"
 reason = "Rust does not split bonds by query: every bond type has the query methods, rdqueries returns query bonds as Bond, and expand_query and set_query check for a query bond"
 
@@ -14538,6 +14684,10 @@ python = "rdkit.Chem.rdchem.RWMol.__exit__"
 reason = "context manager over a batch edit: begin_batch_edit, then commit_batch_edit or rollback_batch_edit"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.RWMol.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__getstate__"
 reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
 
@@ -14545,10 +14695,6 @@ reason = "Python's pickling protocol: to_binary and from_pkl_string cover it"
 python = "rdkit.Chem.rdchem.RWMol.__init__"
 rust = ["rdkit_cxx::chem::rdchem::RWMol::default", "rdkit_cxx::chem::rdchem::RWMol::clone", "rdkit_cxx::chem::rdchem::RWMol::from_pkl_string", "rdkit_cxx::chem::rdchem::RWMol::from_pkl_string_with_property_flags"]
 overloads_note = "the bytes and str pickle overloads share from_pkl_string; the (mol, quickCopy, confId) copy is Clone without the options; RWMol(mol) is also From<Mol>, which moves"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.RWMol.__new__"
-reason = "nanobind's construction hook; __init__ maps the constructors"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.RWMol.__setstate__"
@@ -14831,11 +14977,6 @@ python = "rdkit.Chem.rdchem.SetSupplementalSmilesLabel"
 rust = ["rdkit_cxx::chem::rdchem::set_supplemental_smiles_label"]
 
 [[entry]]
-python = "rdkit.Chem.rdchem.Specified"
-rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Specified"]
-name_exception = "an exported enum value maps to its variant, StereoSpecified::Specified"
-
-[[entry]]
 python = "rdkit.Chem.rdchem.StereoDescriptor"
 rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor"]
 
@@ -14904,13 +15045,52 @@ python = "rdkit.Chem.rdchem.StereoGroupType.STEREO_OR"
 rust = ["rdkit_cxx::chem::rdchem::StereoGroupType::StereoOr"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__contains__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__delitem__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__getitem__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__init__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__iter__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__len__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.__setitem__"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.append"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.StereoGroup_vect.extend"
+reason = "Boost.Python's binding of std::vector<StereoGroup>, a C++ container; Rust uses Vec<StereoGroup>"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.StereoInfo"
 rust = ["rdkit_cxx::chem::rdchem::StereoInfo"]
 
 [[entry]]
-python = "rdkit.Chem.rdchem.StereoInfo.NOATOM"
-rust = ["rdkit_cxx::chem::rdchem::StereoInfo::NOATOM"]
-name_exception = "a constant keeps Python's spelling"
+python = "rdkit.Chem.rdchem.StereoInfo.__init__"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.StereoInfo.centeredOn"
@@ -15201,6 +15381,46 @@ rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupCState::vector"]
 rust_kind = "field"
 
 [[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__contains__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__delitem__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__getitem__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__init__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__iter__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__len__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.__setitem__"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.append"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
+python = "rdkit.Chem.rdchem.SubstanceGroup_VECT.extend"
+reason = "Boost.Python's binding of std::vector<SubstanceGroup>, a C++ container; Rust uses Vec<SubstanceGroup>"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters"]
 
@@ -15267,6 +15487,7 @@ python = "rdkit.Chem.rdchem.SubstructMatchParameters.setExtraAtomCheckFunc"
 rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::extra_atom_check"]
 rust_kind = "field"
 name_exception = "a field holding an AtomCoordsMatcher, where Python's setter takes any callable"
+overloads_note = "the field holds the AtomCoordsMatcher overload's argument; the other overload takes any Python callable, which Rust does not take"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstructMatchParameters.setExtraBondCheckFunc"
@@ -15307,16 +15528,6 @@ rust = ["rdkit_cxx::chem::rdchem::SubstructMatchParameters::use_query_query_matc
 rust_kind = "field"
 
 [[entry]]
-python = "rdkit.Chem.rdchem.Tet_CCW"
-rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCcw"]
-name_exception = "an exported enum value maps to its variant, StereoDescriptor::TetCcw"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Tet_CW"
-rust = ["rdkit_cxx::chem::rdchem::StereoDescriptor::TetCw"]
-name_exception = "an exported enum value maps to its variant, StereoDescriptor::TetCw"
-
-[[entry]]
 python = "rdkit.Chem.rdchem.UNCONSTRAINED_ANIONS"
 rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_ANIONS"]
 name_exception = "an exported enum value maps to its constant (F1)"
@@ -15325,21 +15536,6 @@ name_exception = "an exported enum value maps to its constant (F1)"
 python = "rdkit.Chem.rdchem.UNCONSTRAINED_CATIONS"
 rust = ["rdkit_cxx::chem::rdchem::ResonanceFlags::UNCONSTRAINED_CATIONS"]
 name_exception = "an exported enum value maps to its constant (F1)"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.UNKNOWN"
-rust = ["rdkit_cxx::chem::rdchem::AtomMonomerType::Unknown"]
-name_exception = "an exported enum value maps to its variant, AtomMonomerType::Unknown"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Unknown"
-rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Unknown"]
-name_exception = "an exported enum value maps to its variant, StereoSpecified::Unknown"
-
-[[entry]]
-python = "rdkit.Chem.rdchem.Unspecified"
-rust = ["rdkit_cxx::chem::rdchem::StereoSpecified::Unspecified"]
-name_exception = "an exported enum value maps to its variant, StereoSpecified::Unspecified"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.ValenceType"
@@ -15419,6 +15615,10 @@ python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.Serialize"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::serialize"]
 
 [[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__getinitargs__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__getstate__"
 reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
@@ -15426,10 +15626,6 @@ reason = "Python's pickling protocol: serialize and from_pickle cover it"
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__init__"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::from_pickle", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::new", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::from_catalogs"]
 overloads_note = "the bytes and str pickle overloads share from_pickle, an unsafe fn (U2); FilterCatalog(params) is new and FilterCatalog(catalogs) from_catalogs (A5)"
-
-[[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.__setstate__"
@@ -15486,6 +15682,86 @@ rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::set_prop"]
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntry.__init__"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::default", "rdkit_cxx::chem::rdfiltercatalog::FilterCatalogEntry::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__contains__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__delitem__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__getitem__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__init__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__iter__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__len__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.__setitem__"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.append"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogEntryList.extend"
+reason = "Boost.Python's binding of std::vector<boost::shared_ptr<const FilterCatalogEntry>>, a C++ container; Rust uses Vec<FilterCatalogEntry>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__contains__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__delitem__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__getitem__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__init__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__iter__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__len__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.__setitem__"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.append"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.FilterCatalogListOfEntryList.extend"
+reason = "Boost.Python's binding of a vector of FilterCatalogEntryLists, a C++ container; Rust uses Vec<Vec<FilterCatalogEntry>>"
 
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalogParams"
@@ -15621,33 +15897,28 @@ rust_kind = "field"
 overloads_note = "read-only in Python; a public field of a plain struct here"
 
 [[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher"
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcherBase"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher"]
+name_exception = "Rust's FilterMatcher holds any matcher, as FilterMatcherBase does; rdkit.Chem.FilterCatalog names its subclass FilterMatcher"
 
 [[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.GetMatches"
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcherBase.GetMatches"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::get_matches"]
 
 [[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.GetName"
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcherBase.GetName"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::get_name"]
 
 [[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.HasMatch"
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcherBase.HasMatch"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::has_match"]
 
 [[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.IsValid"
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcherBase.IsValid"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::is_valid"]
 
 [[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.__init__"
-rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::new"]
-rust_generics = "<Box<dyn rdkit_cxx::chem::rdfiltercatalog::CustomFilterMatcher>>"
-overloads_note = "Python subclasses the class to override IsValid, HasMatch, and GetMatches; Rust cannot, so new also takes a CustomFilterMatcher with those methods, which must be Send + Sync because catalogs share matchers between threads, and whose panics are caught at the bridge"
-
-[[entry]]
-python = "rdkit.Chem.rdfiltercatalog.FilterMatcher.__str__"
+python = "rdkit.Chem.rdfiltercatalog.FilterMatcherBase.__str__"
 reason = "Python's string protocol: FilterMatcher implements Display with get_name"
 
 [[entry]]
@@ -15660,7 +15931,74 @@ rust = ["rdkit_cxx::chem::rdfiltercatalog::get_functional_group_hierarchy"]
 
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.IntPair"
-rust = ["rdkit_cxx::chem::rdfiltercatalog::int_pair"]
+reason = "Boost.Python's binding of std::pair<int, int>, a (query, target) atom pair; Rust uses (u32, u32)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.IntPair.__getitem__"
+reason = "Boost.Python's binding of std::pair<int, int>, a (query, target) atom pair; Rust uses (u32, u32)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.IntPair.__init__"
+reason = "Boost.Python's binding of std::pair<int, int>, a (query, target) atom pair; Rust uses (u32, u32)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.IntPair.query"
+reason = "Boost.Python's binding of std::pair<int, int>, a (query, target) atom pair; Rust uses (u32, u32)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.IntPair.target"
+reason = "Boost.Python's binding of std::pair<int, int>, a (query, target) atom pair; Rust uses (u32, u32)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__contains__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__delitem__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__getitem__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__init__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__iter__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__len__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.__setitem__"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.append"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.MolList.extend"
+reason = "Boost.Python's binding of std::vector<ROMol *>, a C++ container; Rust uses slices of Mol"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.PythonFilterMatcher"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher"]
+name_exception = "a FilterMatcher made with FilterMatcher::new, from a CustomFilterMatcher"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.PythonFilterMatcher.__init__"
+rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterMatcher::new"]
+rust_generics = "<Box<dyn rdkit_cxx::chem::rdfiltercatalog::CustomFilterMatcher>>"
+overloads_note = "Python passes an object with IsValid, HasMatch, and GetMatches methods; Rust passes a CustomFilterMatcher with those methods, which must be Send + Sync because catalogs share matchers between threads, and whose panics are caught at the bridge"
 
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.RunFilterCatalog"
@@ -15703,6 +16041,46 @@ rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::set_pattern", "rdkit_c
 python = "rdkit.Chem.rdfiltercatalog.SmartsMatcher.__init__"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::new", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_rhs", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_mol", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_mol_with_params", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_smarts", "rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher::from_smarts_with_params"]
 overloads_note = "SmartsMatcher(name) is new and SmartsMatcher(rhs) from_rhs; the (name, mol) and (name, smarts) overloads are from_mol and from_smarts, with their counts in SmartsMatcherParams (A2, A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__contains__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__delitem__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__getitem__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__init__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__iter__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__len__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.__setitem__"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.append"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
+
+[[entry]]
+python = "rdkit.Chem.rdfiltercatalog.VectFilterMatch.extend"
+reason = "Boost.Python's binding of std::vector<FilterMatch>, a C++ container; Rust uses Vec<FilterMatch>"
 
 [[entry]]
 python = "rdkit.Chem.rdfragcatalog.FragCatGenerator"
@@ -15814,6 +16192,10 @@ python = "rdkit.Chem.rdfragcatalog.FragCatalog.Serialize"
 rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::serialize"]
 
 [[entry]]
+python = "rdkit.Chem.rdfragcatalog.FragCatalog.__getinitargs__"
+reason = "Python's pickling protocol: serialize and from_pickle cover it"
+
+[[entry]]
 python = "rdkit.Chem.rdfragcatalog.FragCatalog.__getstate__"
 reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
@@ -15821,10 +16203,6 @@ reason = "Python's pickling protocol: serialize and from_pickle cover it"
 python = "rdkit.Chem.rdfragcatalog.FragCatalog.__init__"
 rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::default", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::new", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::from_pickle"]
 overloads_note = "the bytes and str pickle overloads share from_pickle"
-
-[[entry]]
-python = "rdkit.Chem.rdfragcatalog.FragCatalog.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.Chem.rdfragcatalog.FragCatalog.__setstate__"
@@ -15881,11 +16259,6 @@ rust = ["rdkit_cxx::chem::rdmolfiles::atom_from_smarts"]
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.AtomFromSmiles"
 rust = ["rdkit_cxx::chem::rdmolfiles::atom_from_smiles"]
-
-[[entry]]
-python = "rdkit.Chem.rdmolfiles.BadFileException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Os"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.BondFromSmarts"
@@ -16072,11 +16445,6 @@ python = "rdkit.Chem.rdmolfiles.CreateBondStringPropertyList"
 rust = ["rdkit_cxx::chem::rdmolfiles::create_bond_string_property_list", "rdkit_cxx::chem::rdmolfiles::create_bond_string_property_list_with_params"]
 
 [[entry]]
-python = "rdkit.Chem.rdmolfiles.FileParseException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Parse"
-
-[[entry]]
 python = "rdkit.Chem.rdmolfiles.ForwardSDMolSupplier"
 rust = ["rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier"]
 
@@ -16194,6 +16562,7 @@ reason = "Python's context-manager protocol: __exit__ closes the writer, as clos
 python = "rdkit.Chem.rdmolfiles.MaeWriter.__init__"
 rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::new", "rdkit_cxx::chem::rdmolfiles::MaeWriter::from_fileobj"]
 rust_generics = ["<&str>", "<Vec<u8>>"]
+overloads_note = "the streambuf overload takes Boost.Python's adapter for a file object, which from_fileobj covers"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MaeWriter.close"
@@ -16471,6 +16840,10 @@ rust = ["rdkit_cxx::chem::rdmolfiles::mol_to_xyz_file", "rdkit_cxx::chem::rdmolf
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolWriterParams"
 rust = ["rdkit_cxx::chem::rdmolfiles::MolWriterParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolfiles.MolWriterParams.__init__"
+rust = ["rdkit_cxx::chem::rdmolfiles::MolWriterParams::default"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolWriterParams.__setattr__"
@@ -17501,6 +17874,10 @@ python = "rdkit.Chem.rdmolops.BondWedgingParameters"
 rust = ["rdkit_cxx::chem::rdmolops::BondWedgingParameters"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.BondWedgingParameters.__init__"
+rust = ["rdkit_cxx::chem::rdmolops::BondWedgingParameters::default"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.BondWedgingParameters.wedgeTwoBondsIfPossible"
 rust = ["rdkit_cxx::chem::rdmolops::BondWedgingParameters::wedge_two_bonds_if_possible"]
 rust_kind = "field"
@@ -17510,19 +17887,11 @@ python = "rdkit.Chem.rdmolops.BoolVector"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.__bool__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__contains__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.__eq__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
@@ -17542,14 +17911,6 @@ python = "rdkit.Chem.rdmolops.BoolVector.__len__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.__ne__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.__repr__"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.__setitem__"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
@@ -17558,27 +17919,7 @@ python = "rdkit.Chem.rdmolops.BoolVector.append"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.clear"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.count"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.BoolVector.extend"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.insert"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.pop"
-reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.BoolVector.remove"
 reason = "nanobind's binding of a C++ container; Rust uses Vec<bool>"
 
 [[entry]]
@@ -18336,59 +18677,11 @@ python = "rdkit.Chem.rdmolops.UIntUIntMap"
 reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.ItemView"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.ItemView.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.ItemView.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView.__contains__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.KeyView.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.ValueView"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.ValueView.__iter__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.ValueView.__len__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.__bool__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__contains__"
 reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__delitem__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.__eq__"
 reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
@@ -18408,35 +18701,7 @@ python = "rdkit.Chem.rdmolops.UIntUIntMap.__len__"
 reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.__ne__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.__repr__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.UIntUIntMap.__setitem__"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.clear"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.items"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.keys"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.update"
-reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.UIntUIntMap.values"
 reason = "nanobind's binding of a C++ container; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
@@ -18450,6 +18715,26 @@ rust = ["rdkit_cxx::chem::rdmolops::wedge_bond"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.WedgeMolBonds"
 rust = ["rdkit_cxx::chem::rdmolops::wedge_mol_bonds", "rdkit_cxx::chem::rdmolops::wedge_mol_bonds_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.map_indexing_suite_UIntUIntMap_entry"
+reason = "Boost.Python's key-value entry of a UIntUIntMap, which iterating one yields; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.map_indexing_suite_UIntUIntMap_entry.__init__"
+reason = "Boost.Python's key-value entry of a UIntUIntMap, which iterating one yields; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.map_indexing_suite_UIntUIntMap_entry.__repr__"
+reason = "Boost.Python's key-value entry of a UIntUIntMap, which iterating one yields; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.map_indexing_suite_UIntUIntMap_entry.data"
+reason = "Boost.Python's key-value entry of a UIntUIntMap, which iterating one yields; Rust uses BTreeMap<u32, u32>"
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.map_indexing_suite_UIntUIntMap_entry.key"
+reason = "Boost.Python's key-value entry of a UIntUIntMap, which iterating one yields; Rust uses BTreeMap<u32, u32>"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.molzip"
@@ -18567,6 +18852,7 @@ rust = ["rdkit_cxx::chem::rdqueries::has_prop_query_atom", "rdkit_cxx::chem::rdq
 [[entry]]
 python = "rdkit.Chem.rdqueries.HasPropQueryBond"
 rust = ["rdkit_cxx::chem::rdqueries::has_prop_query_bond", "rdkit_cxx::chem::rdqueries::has_prop_query_bond_with_negate"]
+overloads_note = "RDKit's wrapper registers the same function three times; the three overloads are one"
 
 [[entry]]
 python = "rdkit.Chem.rdqueries.HasStringPropWithValueQueryAtom"
@@ -19171,6 +19457,10 @@ python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__and__"
 reason = "Python's operator protocol: `&a & &b` (BitAnd)"
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__getitem__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::get_val"]
 
@@ -19194,10 +19484,6 @@ reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__len__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::len"]
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__or__"
@@ -19265,6 +19551,12 @@ python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToBinary"
 rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::to_binary"]
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToBitString"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bit_vect_to_text"]
+name_exception = "RDKit's Python assigns BitVectToText to the class as ToBitString"
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToList"
 rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::to_list"]
 
@@ -19287,6 +19579,10 @@ reason = "Python's operator protocol: `&a & &b` (BitAnd)"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__eq__"
 reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__getitem__"
@@ -19317,10 +19613,6 @@ rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::get_num_bits"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__ne__"
 reason = "Python's operator protocol: `a != b` (PartialEq)"
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__or__"
@@ -19451,6 +19743,10 @@ python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__eq__"
 reason = "Python's operator protocol: `a == b` (PartialEq)"
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__getitem__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::get_val"]
 
@@ -19461,6 +19757,10 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__iadd__"
 reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= n` (DivAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__imul__"
@@ -19476,16 +19776,8 @@ python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__isub__"
 reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 
 [[entry]]
-python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__itruediv__"
-reason = "Python's operator protocol: `a /= n` (DivAssign)"
-
-[[entry]]
 python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__ne__"
 reason = "Python's operator protocol: `a != b` (PartialEq)"
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__or__"
@@ -19557,6 +19849,10 @@ python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__eq__"
 reason = "Python's operator protocol: `a == b` (PartialEq)"
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__getitem__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::get_val"]
 
@@ -19567,6 +19863,10 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__iadd__"
 reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= n` (DivAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__imul__"
@@ -19582,16 +19882,8 @@ python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__isub__"
 reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 
 [[entry]]
-python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__itruediv__"
-reason = "Python's operator protocol: `a /= n` (DivAssign)"
-
-[[entry]]
 python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__ne__"
 reason = "Python's operator protocol: `a != b` (PartialEq)"
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__or__"
@@ -19714,6 +20006,10 @@ python = "rdkit.DataStructs.cDataStructs.RealValueVect.__and__"
 reason = "Python's operator protocol: `&a & &b` (BitAnd)"
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.RealValueVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.RealValueVect.__getitem__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::get_val"]
 
@@ -19737,10 +20033,6 @@ reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.RealValueVect.__len__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::len"]
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.RealValueVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.RealValueVect.__or__"
@@ -19847,6 +20139,12 @@ python = "rdkit.DataStructs.cDataStructs.SparseBitVect.ToBinary"
 rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::to_binary"]
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.ToBitString"
+rust = ["rdkit_cxx::data_structs::c_data_structs::bit_vect_to_text"]
+name_exception = "RDKit's Python assigns BitVectToText to the class as ToBitString"
+overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.SparseBitVect.ToList"
 rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::to_list"]
 
@@ -19865,6 +20163,10 @@ reason = "Python's operator protocol: `&a & &b` (BitAnd)"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__eq__"
 reason = "Python's operator protocol: `a == b` (PartialEq)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__getitem__"
@@ -19891,10 +20193,6 @@ rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::get_num_bits"]
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__ne__"
 reason = "Python's operator protocol: `a != b` (PartialEq)"
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__or__"
@@ -19976,6 +20274,10 @@ python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__eq__"
 reason = "Python's operator protocol: `a == b` (PartialEq)"
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__getitem__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::get_val"]
 
@@ -19986,6 +20288,10 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__iadd__"
 reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= n` (DivAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__imul__"
@@ -20001,16 +20307,8 @@ python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__isub__"
 reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 
 [[entry]]
-python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__itruediv__"
-reason = "Python's operator protocol: `a /= n` (DivAssign)"
-
-[[entry]]
 python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__ne__"
 reason = "Python's operator protocol: `a != b` (PartialEq)"
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__or__"
@@ -20069,6 +20367,10 @@ python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__eq__"
 reason = "Python's operator protocol: `a == b` (PartialEq)"
 
 [[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__getitem__"
 rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::get_val"]
 
@@ -20079,6 +20381,10 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__iadd__"
 reason = "Python's operator protocol: `a += &b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= n` (DivAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__imul__"
@@ -20094,16 +20400,8 @@ python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__isub__"
 reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 
 [[entry]]
-python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__itruediv__"
-reason = "Python's operator protocol: `a /= n` (DivAssign)"
-
-[[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__ne__"
 reason = "Python's operator protocol: `a != b` (PartialEq)"
-
-[[entry]]
-python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__new__"
-reason = "nanobind's __new__ repeats __init__'s overloads (A5)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__or__"
@@ -20353,48 +20651,6 @@ python = "rdkit.ForceField.rdForceField.MMFFMolProperties.SetMMFFVerbosity"
 rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_verbosity", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::set_mmff_verbosity_with_verbosity"]
 
 [[entry]]
-python = "rdkit.ForceField.rdForceField.MMFFMolProperties.__init__"
-rust = ["rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::new", "rdkit_cxx::force_field::rd_force_field::MMFFMolProperties::new_with_params"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.MMFFVerbosity"
-rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_HIGH"
-rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityHigh"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_LOW"
-rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityLow"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.MMFFVerbosity.MMFF_VERBOSITY_NONE"
-rust = ["rdkit_cxx::force_field::rd_force_field::MMFFVerbosity::MmffVerbosityNone"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.Snapshot"
-rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.Snapshot.GetEnergy"
-rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_energy"]
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.Snapshot.GetPoint2D"
-rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_point_2d"]
-name_exception = "digits stay with their letters: get_point_2d"
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.Snapshot.GetPoint3D"
-rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::get_point_3d"]
-name_exception = "digits stay with their letters: get_point_3d"
-
-[[entry]]
-python = "rdkit.ForceField.rdForceField.Snapshot.SetEnergy"
-rust = ["rdkit_cxx::force_field::rd_force_field::Snapshot::set_energy"]
-
-[[entry]]
 python = "rdkit.Geometry.rdGeometry.ComputeDihedralAngle"
 rust = ["rdkit_cxx::geometry::rd_geometry::compute_dihedral_angle"]
 
@@ -20447,6 +20703,10 @@ python = "rdkit.Geometry.rdGeometry.Point2D.__add__"
 reason = "Python's operator protocol: `a + b` (Add)"
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__getinitargs__"
+reason = "Python's pickling protocol: the x and y fields cover it"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.Point2D.__getitem__"
 reason = "Python's sequence protocol: the x and y fields cover it"
 
@@ -20457,6 +20717,10 @@ reason = "Python's pickling protocol: the x and y fields cover it"
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point2D.__iadd__"
 reason = "Python's operator protocol: `a += b` (AddAssign)"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.Point2D.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= x` (DivAssign<f64>)"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point2D.__imul__"
@@ -20470,10 +20734,6 @@ overloads_note = "the Point3D overload is `Point2D::from(Point3D)`, which drops 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point2D.__isub__"
 reason = "Python's operator protocol: `a -= b` (SubAssign)"
-
-[[entry]]
-python = "rdkit.Geometry.rdGeometry.Point2D.__itruediv__"
-reason = "Python's operator protocol: `a /= x` (DivAssign<f64>)"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point2D.__len__"
@@ -20550,6 +20810,10 @@ python = "rdkit.Geometry.rdGeometry.Point3D.__add__"
 reason = "Python's operator protocol: `a + b` (Add)"
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__getinitargs__"
+reason = "Python's pickling protocol: the x, y, and z fields cover it"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D.__getitem__"
 reason = "Python's sequence protocol: the x, y, and z fields cover it"
 
@@ -20562,6 +20826,10 @@ python = "rdkit.Geometry.rdGeometry.Point3D.__iadd__"
 reason = "Python's operator protocol: `a += b` (AddAssign)"
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.Point3D.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= x` (DivAssign<f64>)"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D.__imul__"
 reason = "Python's operator protocol: `a *= x` (MulAssign<f64>)"
 
@@ -20572,10 +20840,6 @@ rust = ["rdkit_cxx::geometry::rd_geometry::Point3D::default", "rdkit_cxx::geomet
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D.__isub__"
 reason = "Python's operator protocol: `a -= b` (SubAssign)"
-
-[[entry]]
-python = "rdkit.Geometry.rdGeometry.Point3D.__itruediv__"
-reason = "Python's operator protocol: `a /= x` (DivAssign<f64>)"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.Point3D.__len__"
@@ -20625,6 +20889,10 @@ python = "rdkit.Geometry.rdGeometry.PointND.DirectionVector"
 rust = ["rdkit_cxx::geometry::rd_geometry::PointND::direction_vector"]
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.Distance"
+reason = "Boost.Python binds Point3D's distance function here, which takes only Point3Ds, so every call on a PointND raises ArgumentError"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.PointND.DotProduct"
 rust = ["rdkit_cxx::geometry::rd_geometry::PointND::dot_product"]
 
@@ -20645,6 +20913,10 @@ python = "rdkit.Geometry.rdGeometry.PointND.__add__"
 reason = "Python's operator protocol: `&a + &b` (Add)"
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__getinitargs__"
+reason = "Python's pickling protocol: coords and from_coords cover it"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.PointND.__getitem__"
 rust = ["rdkit_cxx::geometry::rd_geometry::PointND::get"]
 
@@ -20657,6 +20929,10 @@ python = "rdkit.Geometry.rdGeometry.PointND.__iadd__"
 reason = "Python's operator protocol: `a += &b` (AddAssign)"
 
 [[entry]]
+python = "rdkit.Geometry.rdGeometry.PointND.__idiv__"
+reason = "Python 2's in-place division, which Python 3 never calls (it divides with __truediv__); Rust has `a /= x` (DivAssign<f64>)"
+
+[[entry]]
 python = "rdkit.Geometry.rdGeometry.PointND.__imul__"
 reason = "Python's operator protocol: `a *= x` (MulAssign<f64>)"
 
@@ -20667,10 +20943,6 @@ rust = ["rdkit_cxx::geometry::rd_geometry::PointND::new"]
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.PointND.__isub__"
 reason = "Python's operator protocol: `a -= &b` (SubAssign)"
-
-[[entry]]
-python = "rdkit.Geometry.rdGeometry.PointND.__itruediv__"
-reason = "Python's operator protocol: `a /= x` (DivAssign<f64>)"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.PointND.__len__"
@@ -20710,103 +20982,112 @@ rust = ["rdkit_cxx::geometry::rd_geometry::tversky_index"]
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.UniformGrid3D"
-rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D"]
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::new", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::new_with_params"]
+name_exception = "the constructor function of UniformGrid3D_ (Boost.Python's name for the class), so its constructors"
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.CompareParams"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D"]
+name_exception = "Boost.Python names the class UniformGrid3D_, keeping UniformGrid3D for its constructor function"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.CompareParams"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::compare_params"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridIndex"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetGridIndex"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_index"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridIndices"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetGridIndices"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_indices"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridPointIndex"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetGridPointIndex"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_point_index"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetGridPointLoc"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetGridPointLoc"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_grid_point_loc"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetNumX"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetNumX"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_num_x"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetNumY"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetNumY"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_num_y"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetNumZ"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetNumZ"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_num_z"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetOccupancyVect"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetOccupancyVect"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_occupancy_vect"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetOffset"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetOffset"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_offset"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetSize"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetSize"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_size"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetSpacing"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetSpacing"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_spacing"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetVal"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetVal"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_val"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.GetValPoint"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.GetValPoint"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::get_val_point"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.SetSphereOccupancy"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.SetSphereOccupancy"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_sphere_occupancy", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_sphere_occupancy_with_params"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.SetVal"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.SetVal"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_val"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.SetValPoint"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.SetValPoint"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::set_val_point"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__getstate__"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__getinitargs__"
 reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__iadd__"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__getstate__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__iadd__"
 reason = "Python's operator protocol: `a += &b` (AddAssign)"
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__iand__"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__iand__"
 reason = "Python's operator protocol: `a &= &b` (BitAndAssign)"
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__init__"
-rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::new", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::new_with_params", "rdkit_cxx::geometry::rd_geometry::UniformGrid3D::from_pkl"]
-overloads_note = "both pickle overloads (str and bytes) are from_pkl"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__init__"
+rust = ["rdkit_cxx::geometry::rd_geometry::UniformGrid3D::from_pkl"]
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__ior__"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__ior__"
 reason = "Python's operator protocol: `a |= &b` (BitOrAssign)"
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__isub__"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__isub__"
 reason = "Python's operator protocol: `a -= &b` (SubAssign)"
 
 [[entry]]
-python = "rdkit.Geometry.rdGeometry.UniformGrid3D.__setstate__"
+python = "rdkit.Geometry.rdGeometry.UniformGrid3D_.__setstate__"
 reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
@@ -20884,6 +21165,10 @@ rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::set_val"]
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.SetValPoint"
 rust = ["rdkit_cxx::geometry::rd_geometry::UniformRealValueGrid3D::set_val_point"]
+
+[[entry]]
+python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__getinitargs__"
+reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
 python = "rdkit.Geometry.rdGeometry.UniformRealValueGrid3D.__getstate__"
@@ -21972,11 +22257,6 @@ python = "rdkit.rdBase.EnableLog"
 rust = ["rdkit_cxx::rd_base::enable_log"]
 
 [[entry]]
-python = "rdkit.rdBase.IndexErrorException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Index"
-
-[[entry]]
 python = "rdkit.rdBase.LogDebugMsg"
 rust = ["rdkit_cxx::rd_base::log_debug_msg"]
 
@@ -22013,13 +22293,116 @@ python = "rdkit.rdBase.LogWarningMsg"
 rust = ["rdkit_cxx::rd_base::log_warning_msg"]
 
 [[entry]]
+python = "rdkit.rdBase.MatchTypeVect"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.__contains__"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.__delitem__"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.__getitem__"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.__init__"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.__len__"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.__setitem__"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.append"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
+python = "rdkit.rdBase.MatchTypeVect.extend"
+reason = "Boost.Python's binding of std::vector<std::pair<int, int>>, a C++ container; Rust uses Vec<(u32, u32)>"
+
+[[entry]]
 python = "rdkit.rdBase.SeedRandomNumberGenerator"
 rust = ["rdkit_cxx::rd_base::seed_random_number_generator"]
 
 [[entry]]
-python = "rdkit.rdBase.ValueErrorException"
-rust = ["rdkit_cxx::Error"]
-name_exception = "exceptions are Error variants (E4): Error::Value"
+python = "rdkit.rdBase.UnsignedLong_Vect"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.__contains__"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.__delitem__"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.__getitem__"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.__init__"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.__len__"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.__setitem__"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.append"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.UnsignedLong_Vect.extend"
+reason = "Boost.Python's binding of std::vector<size_t>, a C++ container; Rust uses Vec<u64>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.__contains__"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.__delitem__"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.__getitem__"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.__init__"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.__len__"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.__setitem__"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.append"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
+
+[[entry]]
+python = "rdkit.rdBase.VectorOfStringVectors.extend"
+reason = "Boost.Python's binding of std::vector<std::vector<std::string>>, a C++ container; Rust uses Vec<Vec<String>>"
 
 [[entry]]
 python = "rdkit.rdBase.WrapLogs"
@@ -22030,12 +22413,32 @@ python = "rdkit.rdBase.boostVersion"
 rust = ["rdkit_cxx::rd_base::boost_version"]
 
 [[entry]]
+python = "rdkit.rdBase.ostream"
+reason = "Boost.Python's adapter that lets RDKit's C++ streams read and write Python file objects; Rust's readers and writers take paths, strings, and byte buffers"
+
+[[entry]]
+python = "rdkit.rdBase.ostream.__init__"
+reason = "Boost.Python's adapter that lets RDKit's C++ streams read and write Python file objects; Rust's readers and writers take paths, strings, and byte buffers"
+
+[[entry]]
 python = "rdkit.rdBase.rdkitBuild"
 rust = ["rdkit_cxx::rd_base::rdkit_build"]
 
 [[entry]]
 python = "rdkit.rdBase.rdkitVersion"
 rust = ["rdkit_cxx::rd_base::rdkit_version"]
+
+[[entry]]
+python = "rdkit.rdBase.std_ostream"
+reason = "Boost.Python's adapter that lets RDKit's C++ streams read and write Python file objects; Rust's readers and writers take paths, strings, and byte buffers"
+
+[[entry]]
+python = "rdkit.rdBase.streambuf"
+reason = "Boost.Python's adapter that lets RDKit's C++ streams read and write Python file objects; Rust's readers and writers take paths, strings, and byte buffers"
+
+[[entry]]
+python = "rdkit.rdBase.streambuf.__init__"
+reason = "Boost.Python's adapter that lets RDKit's C++ streams read and write Python file objects; Rust's readers and writers take paths, strings, and byte buffers"
 
 [[entry]]
 python = "rdkit.utils.chemutils.ConfigToNumElectrons"

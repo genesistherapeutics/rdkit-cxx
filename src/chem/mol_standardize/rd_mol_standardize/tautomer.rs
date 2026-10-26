@@ -232,6 +232,21 @@ impl SmilesTautomerMap {
             .collect()
     }
 
+    /// The tautomer with this SMILES. Mirrors `SmilesTautomerMap[smiles]`,
+    /// which raises `KeyError` where this returns `None`.
+    pub fn get(&self, smiles: &str) -> Option<&Tautomer> {
+        self.entries
+            .iter()
+            .find(|(key, _)| key == smiles)
+            .map(|(_, tautomer)| tautomer)
+    }
+
+    /// Whether there is a tautomer with this SMILES. Mirrors
+    /// `smiles in SmilesTautomerMap`.
+    pub fn contains_key(&self, smiles: &str) -> bool {
+        self.get(smiles).is_some()
+    }
+
     /// The number of tautomers. Mirrors `SmilesTautomerMap.__len__`.
     pub fn len(&self) -> usize {
         self.entries.len()
