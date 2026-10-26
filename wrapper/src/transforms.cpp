@@ -52,7 +52,7 @@ std::unique_ptr<RWMol> to_rwmol(std::unique_ptr<RDKit::ROMol> mol) {
 
 std::vector<RDKit::MatchVectType> to_matches(
     rust::Slice<const IndexList> matches) {
-  // As seqOfSeqsToMatchVectTypeVect in Code/GraphMol/nbWrap/MolOps.cpp.
+  // As seqOfSeqsToMatchVectTypeVect in Code/GraphMol/Wrap/MolOps.cpp.
   if (matches.empty()) {
     throw ValueErrorException("matches must not be empty");
   }
@@ -84,9 +84,11 @@ std::vector<std::pair<unsigned, unsigned>> to_label_pairs(
 }
 
 // As fragmentOnBondsHelper and fragmentOnSomeBondsHelper in
-// Code/GraphMol/nbWrap/MolOps.cpp, which check the bond indices before
-// fragmentOnBonds calls getBondWithIdx, and the option sizes, which RDKit
-// only checks with PRECONDITION.
+// Code/GraphMol/Wrap/MolOps.cpp, which check the bond indices before
+// fragmentOnBonds calls getBondWithIdx, and the bondTypes size, which RDKit
+// only checks with PRECONDITION. Python treats an empty bondTypes list as None
+// and leaves dummyLabels' size unchecked; here an empty list is an empty list,
+// whose size is checked, and dummyLabels must cover the bonds too.
 std::vector<unsigned> check_fragment_args(
     const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
     bool has_dummy_labels, rust::Slice<const IndexPair> dummy_labels,
@@ -196,7 +198,7 @@ std::unique_ptr<RWMol> delete_substructs(const RWMol &mol, const RWMol &query,
       RDKit::deleteSubstructs(mol, query, only_frags, use_chirality));
 }
 
-// As replaceSubstructures in Code/GraphMol/nbWrap/MolOps.cpp.
+// As replaceSubstructures in Code/GraphMol/Wrap/MolOps.cpp.
 std::unique_ptr<MolList> replace_substructs(
     const RWMol &mol, const RWMol &query, const RWMol &replacement,
     bool replace_all, std::uint32_t replacement_connection_point,
@@ -225,7 +227,7 @@ std::unique_ptr<RWMol> replace_sidechains(const RWMol &mol,
   return to_rwmol(RDKit::replaceSidechains(mol, core_query, use_chirality));
 }
 
-// As replaceCoreHelper in Code/GraphMol/nbWrap/MolOps.cpp, with the match as
+// As replaceCoreHelper in Code/GraphMol/Wrap/MolOps.cpp, with the match as
 // (core atom, molecule atom) pairs; replaceCore checks both ranges. An index
 // past INT_MAX becomes negative here and fails that check.
 std::unique_ptr<RWMol> replace_core_with_matches(
@@ -266,7 +268,7 @@ std::unique_ptr<RWMol> combine_mols(const RWMol &mol1, const RWMol &mol2,
       mol1, mol2, RDGeom::Point3D(offset.x, offset.y, offset.z)));
 }
 
-// As getMostSubstitutedCoreMatchHelper in Code/GraphMol/nbWrap/MolOps.cpp.
+// As getMostSubstitutedCoreMatchHelper in Code/GraphMol/Wrap/MolOps.cpp.
 // RDKit returns a reference into the matches, which live until the copy.
 rust::Vec<std::uint32_t> get_most_substituted_core_match(
     const RWMol &mol, const RWMol &core, rust::Slice<const IndexList> matches) {
@@ -294,7 +296,7 @@ rust::Vec<IndexList> sort_matches_by_degree_of_core_substitution(
   return result;
 }
 
-// As addRecursiveQuery in Code/GraphMol/nbWrap/MolOps.cpp.
+// As addRecursiveQuery in Code/GraphMol/Wrap/MolOps.cpp.
 void add_recursive_query(RWMol &mol, const RWMol &query, std::uint32_t atom_idx,
                          bool preserve_existing_query) {
   if (atom_idx >= mol.getNumAtoms()) {
@@ -372,7 +374,8 @@ std::unique_ptr<RWMol> fragment_on_bonds(
   return to_rwmol(result);
 }
 
-// As fragmentOnSomeBondsHelper in Code/GraphMol/nbWrap/MolOps.cpp.
+// As fragmentOnSomeBondsHelper in Code/GraphMol/Wrap/MolOps.cpp, with the
+// arguments checked as check_fragment_args says.
 std::unique_ptr<MolList> fragment_on_some_bonds(
     const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
     std::uint32_t num_to_break, bool add_dummies, bool has_dummy_labels,
@@ -474,7 +477,7 @@ std::unique_ptr<RWMol> molzip_single(const RWMol &a,
   return to_rwmol(RDKit::molzip(a, params));
 }
 
-// As molzipHelper in Code/GraphMol/nbWrap/MolOps.cpp. With
+// As molzipHelper in Code/GraphMol/Wrap/MolOps.cpp. With
 // generateCoordinates, RDKit gives each input molecule a conformer, which is
 // why Rust lends them mutably.
 std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
@@ -505,7 +508,7 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
   return to_rwmol(RDKit::molzip(mols.mols(), params));
 }
 
-// As rgroupRowZipHelper in Code/GraphMol/nbWrap/MolOps.cpp; RDKit requires a
+// As rgroupRowZipHelper in Code/GraphMol/Wrap/MolOps.cpp; RDKit requires a
 // "Core" entry.
 std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
                                   const MolzipParamsData &data) {

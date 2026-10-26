@@ -36,6 +36,14 @@ rdkit_enum! {
     }
 }
 
+/// The property, `_MolHashExcludeFromTautomerism`, that keeps the atoms and
+/// bonds that have it (with any value) out of the tautomeric systems of the
+/// `HetAtomTautomerv2` and `HetAtomProtomerv2` hashes. Mirrors
+/// `rdMolHash.excludeFromTautomerismProp`.
+pub fn exclude_from_tautomerism_prop() -> &'static str {
+    "_MolHashExcludeFromTautomerism"
+}
+
 /// Parameters for `mol_hash_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MolHashParams {

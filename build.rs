@@ -108,6 +108,7 @@ const BRIDGES: &[&str] = &[
     "draw",
     "synthon_space_search",
     "inchi",
+    "trajectory",
 ];
 
 fn main() {

@@ -430,7 +430,7 @@ fn composite_matchers() {
         .unwrap();
     assert_eq!(list.get_name().unwrap(), "(Not any of N S)");
 
-    let m = FilterMatch::new(&c, &[int_pair(0, 1), (2, 3)]);
+    let m = FilterMatch::new(&c, &[(0, 1), (2, 3)]);
     assert_eq!(m.filter_match.get_name().unwrap(), "C");
     assert_eq!(m.atom_pairs, [(0, 1), (2, 3)]);
 }

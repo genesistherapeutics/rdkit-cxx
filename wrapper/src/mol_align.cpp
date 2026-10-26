@@ -64,8 +64,8 @@ MatchVectType to_match(const IndexPair *pairs, std::size_t n, const ROMol &prb,
   return match;
 }
 
-// As makeDoubleVector in Code/GraphMol/MolAlign/nbWrap/rdMolAlign.cpp: no
-// values are no weights.
+// As translateDoubleSeq in Code/RDBoost/Wrap.cpp, which
+// Code/GraphMol/MolAlign/Wrap/rdMolAlign.cpp uses: no values are no weights.
 std::unique_ptr<RDNumeric::DoubleVector> to_vector(
     rust::Slice<const double> values) {
   if (values.empty()) {

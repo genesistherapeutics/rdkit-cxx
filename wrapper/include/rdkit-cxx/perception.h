@@ -55,6 +55,8 @@ std::unique_ptr<RWMol> dative_bonds_to_haptic(const RWMol &mol);
 bool needs_hs(const RWMol &mol);
 std::int32_t count_atom_elec(const Atom &atom);
 bool atom_has_conjugated_bond(const Atom &atom);
+std::uint32_t get_attachment_point_label_number(const Atom &atom);
+bool is_marked_attachment_point(const Atom &atom);
 std::int32_t get_formal_charge(const RWMol &mol);
 rust::Vec<std::uint32_t> get_shortest_path(const RWMol &mol, std::uint32_t aid1,
                                            std::uint32_t aid2);

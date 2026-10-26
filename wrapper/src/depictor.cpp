@@ -173,7 +173,7 @@ bool is_coord_gen_support_available() {
 #endif
 }
 
-// As setPreferCoordGen and getPreferCoordGen in nbWrap/rdDepictor.cpp, which
+// As setPreferCoordGen and getPreferCoordGen in Wrap/rdDepictor.cpp, which
 // ignore the setting without CoordGen support.
 void set_prefer_coord_gen(bool val) { replace_prefer_coord_gen(val); }
 
@@ -227,7 +227,7 @@ ConstrainedDepictionParamsData constrained_depiction_params_default() {
   };
 }
 
-// As compute2DCoordsHelper in nbWrap/rdDepictor.cpp.
+// As Compute2DCoords in Wrap/rdDepictor.cpp.
 unsigned compute_2d_coords(RWMol &mol, const Compute2DCoordsData &data) {
   RDGeom::INT_POINT2D_MAP coord_map;
   const auto n =
@@ -266,7 +266,7 @@ unsigned compute_2d_coords(RWMol &mol, const Compute2DCoordsData &data) {
   return RDDepict::compute2DCoords(mol, params);
 }
 
-// As compute2DCoordsMimicDistmatHelper in nbWrap/rdDepictor.cpp, whose
+// As Compute2DCoordsMimicDistmat in Wrap/rdDepictor.cpp, whose
 // n * (n - 1) / 2 is unsigned and wraps for large molecules; RDKit indexes
 // the matrix that way too, so the check comes first.
 unsigned compute_2d_coords_mimic_distmat(

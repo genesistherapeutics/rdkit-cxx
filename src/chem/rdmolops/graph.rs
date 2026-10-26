@@ -516,6 +516,8 @@ pub fn split_mol_by_pdb_chain_id_with_params(
 /// A copy with its atoms reordered: atom `i` of the copy is atom
 /// `new_order[i]` of the molecule. Mirrors `rdmolops.RenumberAtoms`.
 /// `Error::Value` unless `new_order` is a permutation of the atom indices.
+/// A molecule with no atoms is copied as it is; Python refuses its empty
+/// order.
 pub fn renumber_atoms(mol: &Mol, new_order: &[u32]) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::renumber_atoms(mol.as_ffi(), new_order)?))
 }

@@ -22,33 +22,33 @@ fn names(names: UniquePtr<CxxVector<CxxString>>) -> Vec<String> {
 }
 
 /// A named descriptor in RDKit's property registry: one of RDKit's, or one
-/// made from a Rust closure. Mirrors `rdMolDescriptors.PythonPropertyFunctor`,
-/// the class Python subclasses to define one.
-pub struct PythonPropertyFunctor {
+/// made from a Rust closure. Mirrors `rdMolDescriptors.PropertyFunctor`,
+/// which `Properties.GetProperty` returns, and its subclass
+/// `PythonPropertyFunctor`, which Python subclasses to define one.
+pub struct PropertyFunctor {
     /// Never null.
     ptr: UniquePtr<ffi::PropertyFunctorHandle>,
 }
 
-impl std::fmt::Debug for PythonPropertyFunctor {
+impl std::fmt::Debug for PropertyFunctor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PythonPropertyFunctor")
-            .finish_non_exhaustive()
+        f.debug_struct("PropertyFunctor").finish_non_exhaustive()
     }
 }
 
-impl PythonPropertyFunctor {
-    /// A property computed by `call`. Python subclasses the class and
-    /// overrides `__call__`; here the closure is the third argument. RDKit's
-    /// registry is global, so any thread may call it: it is `Send + Sync`.
-    /// It gets a copy of the molecule. A panic in it is caught, and the call
-    /// that made it returns `Error::Runtime`. Mirrors
-    /// `PythonPropertyFunctor(name, version)`.
-    pub fn new<F>(name: &str, version: &str, call: F) -> PythonPropertyFunctor
+impl PropertyFunctor {
+    /// A property computed by `call`. Python subclasses
+    /// `PythonPropertyFunctor` and overrides `__call__`; here the closure is
+    /// the third argument. RDKit's registry is global, so any thread may call
+    /// it: it is `Send + Sync`. It gets a copy of the molecule. A panic in it
+    /// is caught, and the call that made it returns `Error::Runtime`. Mirrors
+    /// `PythonPropertyFunctor(self, name, version)`.
+    pub fn new<F>(name: &str, version: &str, call: F) -> PropertyFunctor
     where
         F: Fn(&Mol) -> f64 + Send + Sync + 'static,
     {
         let callback = Box::new(PropertyCallback(Box::new(call)));
-        PythonPropertyFunctor {
+        PropertyFunctor {
             ptr: expect_ok(ffi::property_functor_new(name, version, callback)),
         }
     }
@@ -159,8 +159,8 @@ impl Properties {
 
     /// The registered property named `prop_name`; `Error::Key` for none.
     /// Mirrors `Properties.GetProperty`.
-    pub fn get_property(prop_name: &str) -> Result<PythonPropertyFunctor> {
-        Ok(PythonPropertyFunctor {
+    pub fn get_property(prop_name: &str) -> Result<PropertyFunctor> {
+        Ok(PropertyFunctor {
             ptr: ffi::properties_get_property(prop_name)?,
         })
     }
@@ -168,7 +168,7 @@ impl Properties {
     /// Registers a property, in place of any of the same name, and returns
     /// its index in the registry. `Properties` made before keep the ones
     /// they had. Mirrors `Properties.RegisterProperty`.
-    pub fn register_property(property_functor: &PythonPropertyFunctor) -> i32 {
+    pub fn register_property(property_functor: &PropertyFunctor) -> i32 {
         expect_ok(ffi::properties_register_property(property_functor.raw()))
     }
 }

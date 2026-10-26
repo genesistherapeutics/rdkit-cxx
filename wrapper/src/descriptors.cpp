@@ -414,7 +414,7 @@ rust::Vec<std::uint32_t> get_feature_invariants(const RWMol &mol) {
   return to_vec(invars);
 }
 
-// As atomPairTypes in Code/GraphMol/Descriptors/nbWrap/rdMolDescriptors.cpp:
+// As atomPairTypes in Code/GraphMol/Descriptors/Wrap/rdMolDescriptors.cpp:
 // the whole table, whose last entry is unused.
 AtomPairsConstants atom_pairs_constants() {
   namespace AP = RDKit::AtomPairs;

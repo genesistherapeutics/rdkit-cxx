@@ -14,7 +14,7 @@ use std::fmt;
 /// The result of a fallible RDKit call. A Rust addition.
 pub type Result<T> = std::result::Result<T, Error>;
 
-/// An error RDKit raised, by the Python exception nanobind would raise.
+/// An error RDKit raised, by the exception Python raises for it.
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum Error {

@@ -11,14 +11,22 @@ when it loads with another.
 
 ### Bindings
 
-- Binds RDKit's C++ API with the coverage of its nanobind Python wrappers:
-  3,478 of the 3,910 names they expose. Each of the other 432 has a reason
-  in `inventory/manifest.toml`: Python protocol methods and nanobind's
-  container types, 52 names left unbound because RDKit's code cannot be made
-  safe from outside, and deprecated names.
+- Binds RDKit's C++ API with the coverage of its Python wrappers, as
+  conda-forge builds them with Boost.Python: 3,467 of the 4,039 names they
+  expose. Each of the other 572 has a reason in `inventory/manifest.toml`:
+  Python protocol methods and Boost.Python's container types, 52 names left
+  unbound because RDKit's code cannot be made safe from outside, and
+  deprecated names.
 - Module paths follow Python's in Rust spelling:
   `rdkit.Chem.rdmolfiles.MolFromSmiles` is
   `rdkit_cxx::chem::rdmolfiles::mol_from_smiles`.
+- `rdkit.Chem.rdtrajectory`, which only the Boost.Python wrappers build:
+  `Trajectory` and `Snapshot` are Rust values (`ForceField`'s
+  `minimize_trajectory` returns these snapshots), and
+  `read_amber_trajectory` and `read_gromos_trajectory` bind RDKit's readers.
+  Snapshots with fewer coordinates than their trajectory's points, which
+  Python reads past, are refused, as are point counts that hang RDKit's
+  AMBER reader or overflow its array sizes.
 - Safe Rust cannot reach undefined behavior in the wrappers. Inputs RDKit
   trusts are checked before RDKit sees them, and process-wide state RDKit
   writes without a lock is locked. Readers of molecule pickles, of the
@@ -27,10 +35,30 @@ when it loads with another.
   contract is bytes RDKit wrote. One gap remains in RDKit itself; see the
   README's "Known limitations".
 
+### Where the bindings differ from Python
+
+- The reference is conda-forge's build, with Boost.Python wrappers. RDKit's
+  nanobind wrappers, which no package ships yet, differ from it in places;
+  the crate follows Boost.Python's.
+- Boost.Python takes an empty list as `None` for some arguments (`AddHs`'
+  `onlyOnAtoms`, `MolFragmentToSmiles`' and `MolFragmentToSmarts`'
+  `bondsToUse`, `FragmentOnBonds`' `bondTypes`, the fingerprint
+  generators' `countBounds`, `AssignCIPLabels`' atoms and bonds,
+  `AlignPoints`' weights). The crate keeps `None` and an empty list apart:
+  an empty list of atoms or bonds is none of them.
+- `CanonicalRankAtomsInFragment`'s Python binding passes
+  `includeChiralPresence` where RDKit takes `includeAtomMaps`, so Python
+  ranks by atom maps only with `includeChiralPresence` and never by chiral
+  presence. The crate passes each option where RDKit takes it.
+- `rdGaussianShape.ShapeInput` takes the C++ constructor's defaults; Python's
+  binding requires all four arguments.
+- `PointND.Distance`, which Python binds to `Point3D`'s function so that it
+  always raises, is not bound.
+
 ### Ports of Python-only functionality
 
 Much of what RDKit offers only in Python is ported to Rust on top of the
-bindings and computes what Python computes: 1,017 of the 2,605 names RDKit's
+bindings and computes what Python computes: 1,016 of the 2,607 names RDKit's
 Python modules define. The ported modules' Python tests are ported with them,
 with expected values from RDKit 2026.09.1.
 

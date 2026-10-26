@@ -208,7 +208,9 @@ pub fn condense_mol_abbreviations(mol: &Mol, abbrevs: &[AbbreviationDefinition])
 }
 
 /// Mirrors `rdAbbreviations.CondenseMolAbbreviations(mol, abbrevs,
-/// maxCoverage, sanitize)`; see `CondenseMolAbbreviationsParams`.
+/// maxCoverage, sanitize)`; see `CondenseMolAbbreviationsParams`. With no
+/// abbreviations, Python returns its copy without the ring perception
+/// `sanitize` runs.
 pub fn condense_mol_abbreviations_with_params(
     mol: &Mol,
     abbrevs: &[AbbreviationDefinition],

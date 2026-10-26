@@ -867,6 +867,7 @@ pub struct GetMorganGeneratorParams {
     /// instead.
     pub include_ring_membership: bool,
     /// The count bounds for count simulation; `None` for 1, 2, 4, 8.
+    /// Python treats an empty list as `None`.
     pub count_bounds: Option<Vec<u32>>,
     /// The number of bits in folded fingerprints.
     pub fp_size: u32,
@@ -948,6 +949,7 @@ pub struct GetAtomPairGeneratorParams {
     /// Simulates counts in bit fingerprints.
     pub count_simulation: bool,
     /// The count bounds for count simulation; `None` for 1, 2, 4, 8.
+    /// Python treats an empty list as `None`.
     pub count_bounds: Option<Vec<u32>>,
     /// The number of bits in folded fingerprints.
     pub fp_size: u32,
@@ -1017,6 +1019,7 @@ pub struct GetRDKitFPGeneratorParams {
     /// Simulates counts in bit fingerprints.
     pub count_simulation: bool,
     /// The count bounds for count simulation; `None` for 1, 2, 4, 8.
+    /// Python treats an empty list as `None`.
     pub count_bounds: Option<Vec<u32>>,
     /// The number of bits in folded fingerprints.
     pub fp_size: u32,
@@ -1087,6 +1090,7 @@ pub struct GetTopologicalTorsionGeneratorParams {
     /// Simulates counts in bit fingerprints.
     pub count_simulation: bool,
     /// The count bounds for count simulation; `None` for 1, 2, 4, 8.
+    /// Python treats an empty list as `None`.
     pub count_bounds: Option<Vec<u32>>,
     /// The number of bits in folded fingerprints.
     pub fp_size: u32,

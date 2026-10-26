@@ -231,7 +231,8 @@ impl DiscreteValueVect {
     }
 }
 
-/// An empty vector of one-bit values. Mirrors `DiscreteValueVect()`.
+/// An empty vector of one-bit values, a Rust addition (Python's
+/// constructors take a value type and length).
 impl Default for DiscreteValueVect {
     fn default() -> DiscreteValueVect {
         DiscreteValueVect::new(DiscreteValueType::Onebitvalue, 0)
@@ -251,7 +252,7 @@ impl RealValueVect {
     }
 }
 
-/// An empty vector. Mirrors `RealValueVect()`.
+/// An empty vector, a Rust addition (Python's constructors take a length).
 impl Default for RealValueVect {
     fn default() -> RealValueVect {
         RealValueVect::new(0)

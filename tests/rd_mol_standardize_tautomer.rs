@@ -142,6 +142,11 @@ fn enumeration() {
             );
         }
         assert_eq!(map.values().len(), case.tautomers.len());
+        let first = map.get(case.tautomers[0]).unwrap();
+        assert_eq!(smiles(&first.tautomer()), case.tautomers[0]);
+        assert!(map.contains_key(case.tautomers[0]));
+        assert!(map.get("not a tautomer").is_none());
+        assert!(!map.contains_key("not a tautomer"));
 
         assert_eq!(
             smiles(&enumerator.canonicalize(&mol(case.input)).unwrap()),

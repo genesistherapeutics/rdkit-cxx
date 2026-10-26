@@ -153,6 +153,42 @@ fn queries() {
 }
 
 #[test]
+fn attachment_points() {
+    // Python's values.
+    assert_eq!(attachment_point_label_prefix(), "_AP");
+    let mut mol = smiles("*CC");
+    for (label, number) in [
+        ("_AP3", 3),
+        ("_AP+3", 0),
+        ("_APx", 0),
+        ("_AP", 0),
+        ("_AP0", 0),
+        ("_AP4294967296", 0),
+    ] {
+        mol.get_atom_with_idx_mut(0)
+            .unwrap()
+            .set_prop("atomLabel", label);
+        let atom = mol.get_atom_with_idx(0).unwrap();
+        assert_eq!(get_attachment_point_label_number(&atom).unwrap(), number);
+        assert_eq!(is_marked_attachment_point(&atom).unwrap(), number != 0);
+    }
+    let carbon = mol.get_atom_with_idx(1).unwrap();
+    assert_eq!(get_attachment_point_label_number(&carbon).unwrap(), 0);
+    let mut chain = smiles("C*C");
+    chain
+        .get_atom_with_idx_mut(1)
+        .unwrap()
+        .set_prop("atomLabel", "_AP1");
+    let dummy = chain.get_atom_with_idx(1).unwrap();
+    assert_eq!(get_attachment_point_label_number(&dummy).unwrap(), 0);
+    assert!(!is_marked_attachment_point(&dummy).unwrap());
+    // An atom in no molecule has degree 0.
+    let free = Atom::new("*").unwrap();
+    assert!(!is_marked_attachment_point(&free).unwrap());
+    assert_eq!(get_attachment_point_label_number(&free).unwrap(), 0);
+}
+
+#[test]
 fn haptic_bonds() {
     // Ferrocene with each ring drawn as a dummy atom and a dative bond.
     let haptic = mol_from_mol_block(FERROCENE_HAPTIC).unwrap();

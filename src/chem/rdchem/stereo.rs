@@ -165,8 +165,22 @@ pub struct StereoInfo {
     pub controlling_atoms: Vec<u32>,
 }
 
+/// An unspecified element centered on nothing. Mirrors `StereoInfo()`.
+impl Default for StereoInfo {
+    fn default() -> StereoInfo {
+        StereoInfo {
+            type_: StereoType::Unspecified,
+            specified: StereoSpecified::Unspecified,
+            centered_on: StereoInfo::NOATOM,
+            descriptor: StereoDescriptor::NoValue,
+            permutation: 0,
+            controlling_atoms: Vec::new(),
+        }
+    }
+}
+
 impl StereoInfo {
-    /// The marker for unset indices. Mirrors `StereoInfo.NOATOM`.
+    /// The marker for unset indices, `Atom::NOATOM`.
     pub const NOATOM: u32 = Atom::NOATOM;
 
     pub(crate) fn from_ffi(data: ffi::StereoInfoData) -> StereoInfo {

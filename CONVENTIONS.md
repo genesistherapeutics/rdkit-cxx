@@ -3,6 +3,9 @@
 Every rule here binds all later wrapper code. A change that cannot follow a
 rule changes the rule first.
 
+"Python" in these rules is RDKit's Python interface as conda-forge ships it:
+its Boost.Python modules and its `.py` modules.
+
 ## Files
 
 - **L1.** Every source file starts with the BSD header in
@@ -37,7 +40,7 @@ rule changes the rule first.
 
 ## Errors
 
-- **E1.** A public function returns `Result` when the nanobind call can raise
+- **E1.** A public function returns `Result` when the Python call can raise
   for some input reachable through the safe Rust API: an index, a key,
   unparsable text, a failed sanitization, a missing property cache or ring
   info, a missing conformer, invalid UTF-8. Otherwise it returns the value,
@@ -468,15 +471,15 @@ rule changes the rule first.
   arguments (lists the call fills in) are not bound as arguments; the return
   value carries that information, from the function itself or, when that
   would change its return type, from a `_with_outputs` form (A9).
-- **A5.** Overloads that differ by an argument's type: the first in
-  nanobind's order keeps the name, and the others append `_<type>` in
-  snake_case. Constructors: a zero-argument `__init__` is `Default`; a copy
-  `__init__` is `Clone`; the first other `__init__` is `new` (with
-  `new_with_params` for its optional parameters, per A2); the rest are
-  `from_<first parameter>`, or a `From` impl when the parameter is another
-  bound class (`RWMol(mol)` → `From<Mol>`), which the manifest records in
-  `overloads_note`. nanobind's `__new__` (from `nb::new_`) repeats
-  `__init__`'s overloads and gets a `reason`. Overloads that differ in
+- **A5.** Overloads that differ by an argument's type: the first that Python
+  tries keeps the name, and the others append `_<type>` in snake_case
+  (Boost.Python tries overloads last registered first, the reverse of the
+  order its docstrings and the inventory list them). Constructors: a
+  zero-argument `__init__` is `Default`; a copy `__init__` is `Clone`; the
+  first other `__init__` is `new` (with `new_with_params` for its optional
+  parameters, per A2); the rest are `from_<first parameter>`, or a `From` impl
+  when the parameter is another bound class (`RWMol(mol)` → `From<Mol>`),
+  which the manifest records in `overloads_note`. Overloads that differ in
   which parameters they take, not only in a type, get a suffix naming what
   sets them apart, recorded in the manifest's `overloads_note`:
   `ReplaceCore(mol, coreQuery)`, which matches the core itself, is
@@ -585,17 +588,16 @@ rule changes the rule first.
   (`SanitizeFlags::SANITIZE_ALL`).
 - **N5.** Exceptions to N2–N4 are recorded in the manifest with
   `name_exception`.
-- **N7.** Enum values nanobind also exports to the module
+- **N7.** Enum values Python also exports to the module
   (`rdchem.CHI_OTHER`) map to their variants (`ChiralType::ChiOther`) under
   `name_exception`; there are no module-level copies in Rust.
 - **N8.** A name that is a Rust keyword takes a trailing underscore:
   `Atom.Match` → `match_`, `StereoInfo.type` → `type_`.
 - **F1.** Python flag enums become a `u32` newtype with associated constants,
   bit operators, `bits()`, and `from_bits_retain`; `flag_ops!` writes all but
-  the constants. nanobind binds RDKit's
-  flag enums (`SanitizeFlags`) as arithmetic `IntEnum`s, not `enum.Flag`, so
-  the inventory lists their values as enum values; they keep Python's
-  spelling under `name_exception`.
+  the constants. Boost.Python binds RDKit's
+  flag enums (`SanitizeFlags`) as plain enums, so the inventory lists their
+  values as enum values; they keep Python's spelling under `name_exception`.
 
 ## Parity
 

@@ -67,7 +67,7 @@ class BitVectRefs {
 };
 
 // As getTanimotoDistMat and getTanimotoSimMat in
-// Code/DataManip/MetricMatrixCalc/nbWrap/rdMetricMatrixCalc.cpp.
+// Code/DataManip/MetricMatrixCalc/Wrap/rdMetricMatrixCalc.cpp.
 template <bool distance>
 rust::Vec<double> tanimoto_mat(const BitVectList &list) {
   auto n = static_cast<std::uint32_t>(list.items.size());
@@ -125,7 +125,7 @@ void check_foldable(const BitVectList &list) {
 }
 
 // As getEuclideanDistMat's sequence path in
-// Code/DataManip/MetricMatrixCalc/nbWrap/rdMetricMatrixCalc.cpp; its NumPy
+// Code/DataManip/MetricMatrixCalc/Wrap/rdMetricMatrixCalc.cpp; its NumPy
 // path converts each value to double the same way.
 rust::Vec<double> get_euclidean_dist_mat(rust::Slice<const double> values,
                                          std::uint32_t nrows,

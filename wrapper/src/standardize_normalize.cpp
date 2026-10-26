@@ -62,7 +62,7 @@ std::unique_ptr<Normalizer> normalizer_new(
                                       max_restarts);
 }
 
-// As normalizerFromDataAndParams in nbWrap/Normalize.cpp.
+// As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
   std::istringstream in{std::string(param_data)};

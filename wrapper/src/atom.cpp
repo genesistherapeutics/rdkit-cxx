@@ -141,7 +141,7 @@ unsigned atom_get_total_valence(const Atom &atom) {
   return atom.getTotalValence();
 }
 
-// As AtomIsInRing in Code/GraphMol/nbWrap/Atom.cpp, which finds the SSSR on
+// As AtomIsInRing in Code/GraphMol/Wrap/Atom.cpp, which finds the SSSR on
 // demand.
 bool atom_is_in_ring(const Atom &atom) {
   auto &mol = atom.getOwningMol();
@@ -151,7 +151,7 @@ bool atom_is_in_ring(const Atom &atom) {
   return mol.getRingInfo()->numAtomRings(atom.getIdx()) != 0;
 }
 
-// As AtomIsInRingSize in Code/GraphMol/nbWrap/Atom.cpp.
+// As AtomIsInRingSize in Code/GraphMol/Wrap/Atom.cpp.
 bool atom_is_in_ring_size(const Atom &atom, int size) {
   auto &mol = atom.getOwningMol();
   if (!mol.getRingInfo()->isSssrOrBetter()) {

@@ -25,7 +25,7 @@ namespace rdkit_cxx {
 std::unique_ptr<std::string> atom_describe_query(const Atom &atom);
 std::unique_ptr<std::string> atom_get_query_type(const Atom &atom);
 bool atom_match(const Atom &atom, const Atom &other);
-// As expandQuery and setQuery in Code/GraphMol/nbWrap/Atom.cpp. `how` is a
+// As expandQuery and setQuery in Code/GraphMol/Wrap/Atom.cpp. `how` is a
 // Queries::CompositeQueryType.
 void atom_expand_query(Atom &atom, const Atom &other, int how,
                        bool maintain_order);
@@ -33,12 +33,12 @@ void atom_set_query(Atom &atom, const Atom &other);
 
 std::unique_ptr<std::string> bond_describe_query(const Bond &bond);
 bool bond_match(const Bond &bond, const Bond &other);
-// As expandQuery and setQuery in Code/GraphMol/nbWrap/Bond.cpp.
+// As expandQuery and setQuery in Code/GraphMol/Wrap/Bond.cpp.
 void bond_expand_query(Bond &bond, const Bond &other, int how,
                        bool maintain_order);
 void bond_set_query(Bond &bond, const Bond &other);
 
-// As GetAtomsMatchingQuery in Code/GraphMol/nbWrap/Mol.cpp, which finds the
+// As MolGetQueryAtoms in Code/GraphMol/Wrap/Mol.cpp, which finds the
 // matches of recursive queries first; sorted by index.
 rust::Vec<std::uint32_t> mol_get_atoms_matching_query(const RWMol &mol,
                                                       const Atom &query);

@@ -128,7 +128,7 @@ rust::Vec<std::uint8_t> bit_vect_to_binary_text(const BitVect &bv);
 void bit_vect_init_from_daylight_string(BitVect &bv, rust::Str s);
 std::unique_ptr<BitVect> convert_to_explicit(const BitVect &sbv);
 // As createFromBitString, createFromFPSText, and createFromBinaryText in
-// Code/DataStructs/nbWrap/wrap_Utils.cpp.
+// Code/DataStructs/Wrap/wrap_Utils.cpp.
 std::unique_ptr<BitVect> create_from_bit_string(rust::Str bits);
 std::unique_ptr<BitVect> create_from_fps_text(rust::Str fps);
 std::unique_ptr<BitVect> create_from_binary_text(

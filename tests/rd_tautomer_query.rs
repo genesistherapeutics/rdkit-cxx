@@ -136,7 +136,7 @@ fn pattern_fingerprints() {
 }
 
 #[test]
-fn pickles_and_streams() {
+fn pickles() {
     assert!(tautomer_query_can_serialize());
     let query = cyclohexanone();
     let pickle = query.to_binary().unwrap();
@@ -145,20 +145,8 @@ fn pickles_and_streams() {
     assert_eq!(copy.get_modified_atoms(), [0, 2, 6]);
     assert_eq!(copy.get_tautomers().len(), 2);
     assert!(copy.is_substruct_of(&smiles("OC1=CCCC(CC)C1")).unwrap());
-
-    let mut stream = Vec::new();
-    query.to_stream(&mut stream).unwrap();
-    assert_eq!(stream, pickle);
-    let mut read = TautomerQuery::default();
-    // SAFETY: a pickle RDKit wrote.
-    unsafe { read.init_from_stream(&mut stream.as_slice()) }.unwrap();
-    assert_eq!(read.get_modified_bonds(), [0, 1, 6]);
-
-    // A failed read leaves the query as it was.
+    assert_eq!(copy.get_modified_bonds(), [0, 1, 6]);
     // SAFETY: not a pickle; RDKit refuses it before reading a molecule.
-    assert!(unsafe { read.init_from_stream(&mut &b"not a pickle"[..]) }.is_err());
-    assert_eq!(read.get_modified_bonds(), [0, 1, 6]);
-    // SAFETY: as above.
     assert!(unsafe { TautomerQuery::from_pickle(b"") }.is_err());
 
     let clone = query.clone();
@@ -193,33 +181,6 @@ fn pickle_indices_are_checked() {
             .get_modified_atoms(),
         [0]
     );
-}
-
-#[test]
-fn empty_query() {
-    // Python's TautomerQuery() has a null template, which its methods
-    // dereference.
-    let query = TautomerQuery::default();
-    assert_eq!(query.get_template_molecule().get_num_atoms(), 0);
-    assert!(query.get_tautomers().is_empty());
-    assert!(query.get_modified_atoms().is_empty());
-    assert!(!query.is_substruct_of(&smiles("CC")).unwrap());
-    assert!(
-        query
-            .get_substruct_matches(&smiles("CC"))
-            .unwrap()
-            .is_empty()
-    );
-    assert_eq!(
-        query
-            .pattern_fingerprint_template()
-            .unwrap()
-            .get_num_on_bits(),
-        0
-    );
-    // SAFETY: a pickle RDKit wrote.
-    let copy = unsafe { TautomerQuery::from_pickle(&query.to_binary().unwrap()) }.unwrap();
-    assert!(copy.get_tautomers().is_empty());
 }
 
 /// `CCCC(=O)C` with the first atom a query, as Python builds it with

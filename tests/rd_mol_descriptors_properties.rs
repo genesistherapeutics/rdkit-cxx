@@ -187,7 +187,7 @@ fn range_queries() {
 fn rust_property_functors() {
     let calls = Arc::new(AtomicUsize::new(0));
     let counted = Arc::clone(&calls);
-    let heavy = PythonPropertyFunctor::new("rustHeavyAtoms", "1.0.0", move |mol| {
+    let heavy = PropertyFunctor::new("rustHeavyAtoms", "1.0.0", move |mol| {
         counted.fetch_add(1, Ordering::SeqCst);
         f64::from(mol.get_num_heavy_atoms())
     });
@@ -217,7 +217,7 @@ fn rust_property_functors() {
     assert!(matches!(query.match_(&apap()), Err(Error::Runtime { .. })));
 
     // A replacement keeps the index; earlier Properties keep the old one.
-    let replacement = PythonPropertyFunctor::new("rustHeavyAtoms", "2.0.0", |_| -1.0);
+    let replacement = PropertyFunctor::new("rustHeavyAtoms", "2.0.0", |_| -1.0);
     assert_eq!(Properties::register_property(&replacement), idx);
     assert_eq!(properties.compute_properties(&apap()).unwrap()[0], 11.0);
     let updated = Properties::new(&["rustHeavyAtoms"]).unwrap();
@@ -228,7 +228,7 @@ fn rust_property_functors() {
 fn rust_property_functors_can_match_substructures() {
     // Computing properties holds control_c_mutex, released while a Rust
     // functor runs, so its closure can call wrappers that take it.
-    let hydroxyls = PythonPropertyFunctor::new("rustHydroxyls", "1.0.0", |mol| {
+    let hydroxyls = PropertyFunctor::new("rustHydroxyls", "1.0.0", |mol| {
         let query = mol_from_smarts("[OX2H]").unwrap();
         mol.get_substruct_matches(&query).unwrap().len() as f64
     });
@@ -242,7 +242,7 @@ fn rust_property_functors_can_match_substructures() {
 
 #[test]
 fn panics_are_caught() {
-    let panicking = PythonPropertyFunctor::new("rustPanics", "1.0.0", |_| panic!("no value"));
+    let panicking = PropertyFunctor::new("rustPanics", "1.0.0", |_| panic!("no value"));
     match panicking.call(&apap()) {
         Err(Error::Runtime { message }) => assert!(message.contains("no value"), "{message}"),
         other => panic!("{other:?}"),
@@ -258,8 +258,7 @@ fn panics_are_caught() {
 #[test]
 fn closures_get_a_copy() {
     // The closure sees the molecule's atoms but not the original object.
-    let functor =
-        PythonPropertyFunctor::new("rustAtoms", "1.0.0", |mol| f64::from(mol.get_num_atoms()));
+    let functor = PropertyFunctor::new("rustAtoms", "1.0.0", |mol| f64::from(mol.get_num_atoms()));
     let mut mol = apap();
     mol.set_prop("x", "y");
     assert_eq!(functor.call(&mol).unwrap(), 11.0);
@@ -272,7 +271,7 @@ fn registry_in_threads() {
         .map(|i| {
             std::thread::spawn(move || {
                 let name = format!("rustThread{i}");
-                let functor = PythonPropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
+                let functor = PropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
                 for _ in 0..20 {
                     Properties::register_property(&functor);
                     let properties = Properties::new(&[name.as_str()]).unwrap();

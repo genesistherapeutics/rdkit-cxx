@@ -35,10 +35,24 @@ def test_core_entries(by_name, inventory):
 
 
 def test_sanitize_flags_are_an_int_enum(by_name):
-    # nanobind binds SanitizeFlags with is_arithmetic, an IntEnum rather than
-    # an enum.Flag, so its values are enum values (CONVENTIONS.md F1).
+    # Boost.Python binds SanitizeFlags as a plain enum, so its values are enum
+    # values (CONVENTIONS.md F1).
     assert by_name["rdkit.Chem.rdmolops.SanitizeFlags.SANITIZE_ALL"]["kind"] == "enum_value"
     assert by_name["rdkit.Chem.rdmolops.SANITIZE_ALL"]["kind"] == "module_attribute"
+
+
+def test_boost_python_entries(by_name):
+    # Methods and class attributes RDKit's Python adds to compiled classes.
+    assert by_name["rdkit.Chem.rdchem.Mol.GetAtoms"]["kind"] == "method"
+    assert by_name["rdkit.DataStructs.cDataStructs.ExplicitBitVect.ToBitString"]["kind"] == "method"
+    assert by_name["rdkit.Chem.rdMolDescriptors.AtomPairsParameters.codeSize"]["kind"] == "property"
+    # Boost.Python's generic __reduce__ is left out; pickling hooks are not.
+    assert "rdkit.Chem.rdchem.Atom.__reduce__" not in by_name
+    assert by_name["rdkit.Chem.rdchem.Mol.__getinitargs__"]["kind"] == "method"
+    # Overloads come from the docstring, with their defaults.
+    assert by_name["rdkit.Geometry.rdGeometry.UniformGrid3D"]["overloads"][0].startswith(
+        "UniformGrid3D( (float)dimX, (float)dimY, (float)dimZ [, (float)spacing=0.5"
+    )
 
 
 def test_entries_are_sorted_and_unique(inventory):

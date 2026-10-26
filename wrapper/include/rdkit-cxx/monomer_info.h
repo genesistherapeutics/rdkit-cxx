@@ -87,7 +87,7 @@ void pdb_residue_info_set_segment_number(AtomPDBResidueInfo &info,
                                          unsigned val);
 
 // Copies of the atom's info, or null; the PDB form throws ValueError for
-// other monomer types, as AtomGetPDBResidueInfo in nbWrap/Atom.cpp does, and
+// other monomer types, as AtomGetPDBResidueInfo in Wrap/Atom.cpp does, and
 // checks the info's class with dynamic_cast where Python casts.
 std::unique_ptr<AtomMonomerInfo> atom_get_monomer_info(const Atom &atom);
 std::unique_ptr<AtomPDBResidueInfo> atom_get_pdb_residue_info(const Atom &atom);

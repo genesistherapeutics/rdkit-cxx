@@ -399,7 +399,7 @@ MolFromSCSRParamsData mol_from_scsr_params_default() {
                                params.scsrBaseHbondOptions};
 }
 
-// As MolFromSmilesHelper in Code/GraphMol/nbWrap/rdmolfiles.cpp.
+// As MolFromSmilesHelper in Code/GraphMol/Wrap/rdmolfiles.cpp.
 std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
                                        const SmilesParserParamsData &data) {
   std::string text(smiles);
@@ -418,7 +418,7 @@ std::unique_ptr<std::string> mol_to_smiles(const RWMol &mol,
   return str(RDKit::MolToSmiles(mol, write_params(data)));
 }
 
-// As MolFromSmartsHelper in Code/GraphMol/nbWrap/rdmolfiles.cpp.
+// As MolFromSmartsHelper in Code/GraphMol/Wrap/rdmolfiles.cpp.
 std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
                                        const SmartsParserParamsData &data) {
   check_debug_parse(data.debug_parse);
@@ -495,8 +495,11 @@ std::unique_ptr<std::string> mol_to_cx_smarts(const RWMol &mol,
   return str(RDKit::MolToCXSmarts(mol, isomeric_smiles));
 }
 
-// As MolFragmentToSmilesHelper1 in Code/GraphMol/nbWrap/rdmolfiles.cpp, with
+// As MolFragmentToSmilesHelper1 in Code/GraphMol/Wrap/rdmolfiles.cpp, with
 // the indices checked: RDKit sets them in bitsets without a range check.
+// Python (pythonObjectToVect in Code/RDBoost/Wrap.h) treats empty bondsToUse,
+// atomSymbols, and bondSymbols lists as None; here an empty bondsToUse is an
+// empty set, and empty symbol lists must still match the atoms or bonds.
 std::unique_ptr<std::string> mol_fragment_to_smiles(
     const RWMol &mol, const SmilesWriteParamsData &data,
     rust::Slice<const std::uint32_t> atoms_to_use, bool has_bonds,
@@ -537,8 +540,9 @@ std::unique_ptr<std::string> mol_fragment_to_smiles(
                 : RDKit::MolFragmentToSmiles(mol, params, atoms, b, as, bs));
 }
 
-// As molFragmentToSmarts in Code/GraphMol/nbWrap/rdmolfiles.cpp, with the
-// indices checked.
+// As molFragmentToSmarts in Code/GraphMol/Wrap/rdmolfiles.cpp, with the
+// indices checked. Python (pythonObjectToVect in Code/RDBoost/Wrap.h) treats
+// an empty bondsToUse list as None, using every bond; here it uses none.
 std::unique_ptr<std::string> mol_fragment_to_smarts(
     const RWMol &mol, rust::Slice<const std::uint32_t> atoms_to_use,
     bool has_bonds, rust::Slice<const std::uint32_t> bonds_to_use,
@@ -569,7 +573,7 @@ std::unique_ptr<std::vector<std::string>> mol_to_random_smiles_vect(
                                    all_bonds_explicit, all_hs_explicit));
 }
 
-// As CanonicalRankAtoms in Code/GraphMol/nbWrap/rdmolfiles.cpp.
+// As CanonicalRankAtoms in Code/GraphMol/Wrap/rdmolfiles.cpp.
 rust::Vec<std::uint32_t> canonical_rank_atoms(const RWMol &mol, bool break_ties,
                                               bool include_chirality,
                                               bool include_isotopes,
@@ -585,8 +589,12 @@ rust::Vec<std::uint32_t> canonical_rank_atoms(const RWMol &mol, bool break_ties,
   return to_vec(ranks);
 }
 
-// As CanonicalRankAtomsInFragment in Code/GraphMol/nbWrap/rdmolfiles.cpp,
-// which sets the indices in bitsets; they are checked here.
+// As CanonicalRankAtomsInFragment in Code/GraphMol/Wrap/rdmolfiles.cpp,
+// which sets the indices in bitsets; they are checked here. Boost.Python
+// passes includeChiralPresence where Canon::rankFragmentAtoms takes
+// includeAtomMaps and drops includeAtomMaps (rdmolfiles.cpp:509-512,
+// new_canon.h:917); here each goes where RDKit's signature puts it. Python
+// also treats an empty atomSymbols list as None.
 rust::Vec<std::int32_t> canonical_rank_atoms_in_fragment(
     const RWMol &mol, rust::Slice<const std::uint32_t> atoms_to_use,
     bool has_bonds, rust::Slice<const std::uint32_t> bonds_to_use,
@@ -813,7 +821,7 @@ std::unique_ptr<RWMol> scsr_from_text(const std::string &text, bool sanitize,
 
 }  // namespace
 
-// As MolFromSCSRBlock in Code/GraphMol/nbWrap/rdmolfiles.cpp.
+// As MolFromSCSRBlock in Code/GraphMol/Wrap/rdmolfiles.cpp.
 std::unique_ptr<RWMol> mol_from_scsr_block(rust::Str mol_block, bool sanitize,
                                            bool remove_hs,
                                            const MolFromSCSRParamsData &data) {
@@ -846,7 +854,7 @@ std::unique_ptr<RWMol> tpl_from_text(const std::string &text, bool sanitize,
 
 }  // namespace
 
-// As MolFromTPLBlock in Code/GraphMol/nbWrap/rdmolfiles.cpp.
+// As MolFromTPLBlock in Code/GraphMol/Wrap/rdmolfiles.cpp.
 std::unique_ptr<RWMol> mol_from_tpl_block(rust::Str tpl_block, bool sanitize,
                                           bool skip_first_conf) {
   return tpl_from_text(std::string(tpl_block), sanitize, skip_first_conf,
@@ -954,7 +962,7 @@ void mol_to_mrv_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                       pretty_print);
 }
 
-// As MolFromXYZBlock in Code/GraphMol/nbWrap/rdmolfiles.cpp, which reads an
+// As MolFromXYZBlock in Code/GraphMol/Wrap/rdmolfiles.cpp, which reads an
 // empty block as an empty molecule.
 std::unique_ptr<RWMol> mol_from_xyz_block(rust::Str xyz_block) {
   std::istringstream in{std::string(xyz_block)};
@@ -1047,7 +1055,7 @@ void mol_to_cml_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
   RDKit::MolToCMLFile(mol, to_path(path), conf_id, kekulize);
 }
 
-// As MolFromSVG in Code/GraphMol/nbWrap/rdmolfiles.cpp.
+// As MolFromSVG in Code/GraphMol/Wrap/rdmolfiles.cpp.
 std::unique_ptr<RWMol> mol_from_rdkit_svg(rust::Str svg, bool sanitize,
                                           bool remove_hs) {
   std::string text(svg);
@@ -1158,7 +1166,7 @@ void check_cdx_coordinates(const RDKit::ROMol &mol) {
 
 }  // namespace
 
-// As MolToCDXMLBlockHelper in Code/GraphMol/nbWrap/rdmolfiles.cpp. The copy
+// As MolToCDXMLBlockHelper in Code/GraphMol/Wrap/rdmolfiles.cpp. The copy
 // is kekulized and given coordinates as MolToChemDrawBlock does, then checked
 // and written; RDKit's own copy of it then needs neither.
 rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,

@@ -88,7 +88,7 @@ constexpr std::uint32_t kMaxClasses = 32768;
 
 }  // namespace
 
-// As infoEntropy in Code/ML/InfoTheory/nbWrap/rdInfoTheory.cpp. InfoEntropy
+// As infoEntropy in Code/ML/InfoTheory/Wrap/rdInfoTheory.cpp. InfoEntropy
 // loops over the values in int.
 double info_entropy(rust::Slice<const double> res_arr) {
   CHECK_INVARIANT(res_arr.size() > 0, "");
@@ -151,7 +151,7 @@ std::uint32_t info_bit_ranker_get_num_classes(const InfoBitRanker &ranker) {
   return ranker.ranker.getNumClasses();
 }
 
-// As AccumulateVotes in Code/ML/InfoTheory/nbWrap/InfoBitRanker.cpp; RDKit
+// As AccumulateVotes in Code/ML/InfoTheory/Wrap/InfoBitRanker.cpp; RDKit
 // checks the label and the vector's size.
 void info_bit_ranker_accumulate_votes(InfoBitRanker &ranker,
                                       const BitVect &bit_vect,
@@ -257,7 +257,7 @@ void bit_corr_mat_generator_set_bit_list(
   generator.setBitIdList(list);
 }
 
-// As CollectVotes in Code/ML/InfoTheory/nbWrap/BitCorrMatGenerator.cpp.
+// As CollectVotes in Code/ML/InfoTheory/Wrap/BitCorrMatGenerator.cpp.
 // RDKit reads each listed bit of the vector, and a bit past its end throws
 // IndexErrorException; the bits are checked first (E3).
 void bit_corr_mat_generator_collect_votes(BitCorrMatGenerator &generator,

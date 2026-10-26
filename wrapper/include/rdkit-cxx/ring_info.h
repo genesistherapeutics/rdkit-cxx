@@ -53,7 +53,7 @@ unsigned ring_info_num_ring_families(const RWMol &mol);
 unsigned ring_info_num_relevant_cycles(const RWMol &mol);
 rust::Vec<IndexList> ring_info_atom_ring_families(const RWMol &mol);
 rust::Vec<IndexList> ring_info_bond_ring_families(const RWMol &mol);
-// As addRing in Code/GraphMol/nbWrap/RingInfo.cpp.
+// As addRing in Code/GraphMol/Wrap/RingInfo.cpp.
 void ring_info_add_ring(RWMol &mol, rust::Slice<const std::uint32_t> atom_ids,
                         rust::Slice<const std::uint32_t> bond_ids);
 

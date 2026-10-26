@@ -50,7 +50,9 @@ rust::Vec<AbbreviationDefinitionData> parse_abbreviations(
     rust::Str text, bool remove_extra_dummies,
     bool allow_connection_to_dummies);
 
-// As the lambdas in nbWrap/rdAbbreviations.cpp, each of which edits a copy.
+// As the helpers in Wrap/rdAbbreviations.cpp, each of which edits a copy.
+// Python skips the call for an empty abbreviation list, so it does not
+// symmetrize the SSSR; here an empty list is applied like any other.
 std::unique_ptr<RWMol> condense_mol_abbreviations(
     const RWMol &mol, const AbbreviationList &abbrevs, double max_coverage,
     bool sanitize);
