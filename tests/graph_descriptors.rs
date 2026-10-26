@@ -81,7 +81,12 @@ fn bertz_ct_values() {
     );
     // RDKit 2026.03's Python takes a bond's order as its BondType's number:
     // 17 for a dative bond.
-    feq(super_bertz("C[NH2]->[Cu]"), 1192.1337526548132, 1e-9, "dative");
+    feq(
+        super_bertz("C[NH2]->[Cu]"),
+        1192.1337526548132,
+        1e-9,
+        "dative",
+    );
 }
 
 fn super_bertz(smi: &str) -> f64 {

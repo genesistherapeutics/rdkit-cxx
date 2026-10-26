@@ -68,7 +68,10 @@ fn iteration_limit() {
     // RDKit resolves easy centers in a first pass the limit does not bound,
     // so it takes RDKit's own example of a hard one.
     let mut hard = mol_from_mol_file_with_params(
-        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/cip_max_iterations.mol"),
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/data/cip_max_iterations.mol"
+        ),
         &MolFromMolFileParams {
             sanitize: false,
             ..Default::default()
