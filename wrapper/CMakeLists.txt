@@ -128,6 +128,7 @@ set(RDKIT_CXX_SOURCES
   src/mol_enumerator.cpp
   src/mol_processing.cpp
   src/mol_interchange.cpp
+  src/inchi.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -191,6 +192,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   EnumerateStereoisomers
   MolEnumerator
   MolInterchange
+  RDInchiLib
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

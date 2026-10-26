@@ -105,6 +105,7 @@ const BRIDGES: &[&str] = &[
     "mol_enumerator",
     "mol_processing",
     "mol_interchange",
+    "inchi",
 ];
 
 fn main() {

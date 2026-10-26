@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
@@ -10322,6 +10322,30 @@ rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::get_fp_for_mol"]
 [[entry]]
 python = "rdkit.Chem.rdfragcatalog.FragFPGenerator.__init__"
 rust = ["rdkit_cxx::chem::rdfragcatalog::FragFPGenerator::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdinchi.GetInchiVersion"
+rust = ["rdkit_cxx::chem::rdinchi::get_inchi_version"]
+
+[[entry]]
+python = "rdkit.Chem.rdinchi.InchiToInchiKey"
+rust = ["rdkit_cxx::chem::rdinchi::inchi_to_inchi_key"]
+
+[[entry]]
+python = "rdkit.Chem.rdinchi.InchiToMol"
+rust = ["rdkit_cxx::chem::rdinchi::inchi_to_mol", "rdkit_cxx::chem::rdinchi::inchi_to_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdinchi.MolBlockToInchi"
+reason = "not bound: it parses the mol block with the InChI library's own C mol-file reader (MakeINCHIFromMolfileText), not RDKit's, and that reader trusts what it reads: it segfaulted on 31 of 5,800 mutated V3000 blocks in Python (26 reproduced alone); parse the block with mol_from_mol_block, RDKit's checked reader (U12), and call mol_to_inchi instead"
+
+[[entry]]
+python = "rdkit.Chem.rdinchi.MolToInchi"
+rust = ["rdkit_cxx::chem::rdinchi::mol_to_inchi", "rdkit_cxx::chem::rdinchi::mol_to_inchi_with_options"]
+
+[[entry]]
+python = "rdkit.Chem.rdinchi.MolToInchiKey"
+rust = ["rdkit_cxx::chem::rdinchi::mol_to_inchi_key", "rdkit_cxx::chem::rdinchi::mol_to_inchi_key_with_options"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.AddMetadataToPNGFile"
