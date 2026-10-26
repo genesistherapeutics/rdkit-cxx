@@ -46,7 +46,7 @@ repos:
       # (CONVENTIONS.md I1); this also fails on manifest problems.
       - id: manifest-paths
         name: inventory/check.py --write-paths
-        entry: python3 inventory/check.py --write-paths tests/manifest_paths.rs
+        entry: python3 inventory/check.py --strict --write-paths tests/manifest_paths.rs
         language: system
         files: ^inventory/(check\.py|manifest\.toml|(inventory|python)-.*\.json)$
         pass_filenames: false

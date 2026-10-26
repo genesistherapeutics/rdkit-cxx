@@ -19,14 +19,16 @@ conda-forge and links RDKit's shared libraries. RDKit's pure-Python modules
 are ported to Rust on top of the bindings: `rdkit.Chem.RegistrationHash` is
 `rdkit_cxx::chem::registration_hash`.
 
-Status: under development. The core slice (molecules, atoms, bonds,
-conformers, ring info, properties, SMILES, SMARTS, and molfile I/O,
-sanitization, and substructure matching) is bound, and its patterns are
-recorded in [CONVENTIONS.md](CONVENTIONS.md). [`examples/`](examples) ports
-the [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s recipes
-(`cargo run --example cookbook_hybridization`). Nothing is released before
-parity with the nanobind wrappers. The design is in
-[rdkit-logbook](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-24-rdkit-rust-bindings/README.md).
+Coverage: every name RDKit 2026.09's Python interface offers, in its
+nanobind modules and its pure-Python modules, has a Rust counterpart or a
+recorded reason it has none ([Parity](#parity)). The patterns every wrapper
+follows are in [CONVENTIONS.md](CONVENTIONS.md), and the limits that remain
+are under [Known limitations](#known-limitations). [`examples/`](examples)
+ports the [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s
+recipes (`cargo run --example cookbook_hybridization`). The
+[design](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-24-rdkit-rust-bindings/README.md)
+and a [report on the work](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-26-rdkit-rust-bindings-report/README.md),
+including the RDKit bugs it found, are in rdkit-logbook.
 
 ## Environment
 
@@ -225,6 +227,38 @@ an `extern "Rust"` type that the C++ subclass calls.
   A closure RDKit calls inside a match runs with the lock held, and a wrapper
   it calls that needs the lock fails instead of deadlocking.
 
+## Known limitations
+
+Safe Rust can still reach undefined behavior in RDKit in two ways. Neither
+corrupts memory on the supported platforms, and both need fixes in RDKit:
+
+- **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
+  every log statement reads. RDKit writes it inside some calls
+  (`MolOps::hasQueryHs`, drawing's `prepareMolForDrawing`, deprotection,
+  R-group decomposition, link-node enumeration, the embedder's torsion
+  preferences), and `BlockLogs`, `enable_log`, and `disable_log` write it
+  too, so two threads using RDKit at once race on it. The wrappers order
+  RDKit's own writers with one another (under `control_c_mutex()`), but not
+  with logging on other threads: that would mean locking every call.
+- **A cast in molecule pickles.** `MolPickler` converts a float it reads to
+  an `int` without a range check when it computes an atom's isotope, which
+  is undefined for a value that does not fit. Pickles RDKit wrote never
+  hold one; a crafted pickle can.
+
+Other limits:
+
+- Substructure matching runs one call at a time across the process, since
+  every match swaps RDKit's `SIGINT` handler through static variables
+  (`control_c_mutex()`), so matching does not scale across threads.
+- Some inputs abort the process by overflowing the stack, which cannot
+  corrupt memory: an SLN string with a `{` followed by about 100,000
+  characters (RDKit's regular expression), and SMILES of very deep
+  molecules on small thread stacks.
+- Checks refuse some input Python accepts where RDKit would read it
+  unsafely, such as substance-group parent chains that span molecules, or
+  InChI options outside structure perception.
+- Windows is not supported yet.
+
 ## Parity
 
 [`inventory/`](inventory) measures coverage of the nanobind modules and of
@@ -236,11 +270,12 @@ for Python-ecosystem glue and legacy code, for its whole module. CI runs:
 
 ```sh
 python3 -m pytest inventory
-python3 inventory/check.py --write-paths tests/manifest_paths.rs
+python3 inventory/check.py --strict --write-paths tests/manifest_paths.rs
 ```
 
-`check.py` fails on misnamed or malformed entries and on unmapped names in
-modules marked complete, and writes a Rust test that names every mapped path,
+`check.py` fails on misnamed or malformed entries, on unmapped names in
+modules marked complete, and, with `--strict`, on any module neither complete
+nor covered by a reason. It writes a Rust test that names every mapped path,
 so `cargo test` fails if one does not exist.
 
 conda-forge's `rdkit` is built with Boost.Python, so the inventory comes from

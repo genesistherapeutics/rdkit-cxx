@@ -24,7 +24,6 @@ include = [
     "/wrapper",
 ]
 links = "rdkit_cxx"
-publish = false
 
 [workspace]
 members = [".", "downstream"]
