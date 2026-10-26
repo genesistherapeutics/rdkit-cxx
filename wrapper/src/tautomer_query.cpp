@@ -209,14 +209,14 @@ rust::Vec<std::uint32_t> to_indices(const std::vector<size_t> &indices) {
 // indices.
 void check_tautomer_query(const TautomerQuery &query) {
   const auto &templ = query.getTemplateMolecule();
-  check_monomer_types(templ);
+  check_pickled_mol(templ);
   const auto num_atoms = templ.getNumAtoms();
   const auto tautomers = query.getTautomers();
   for (const auto &tautomer : tautomers) {
     if (!tautomer) {
       throw ValueErrorException("a TautomerQuery has a null tautomer");
     }
-    check_monomer_types(*tautomer);
+    check_pickled_mol(*tautomer);
     if (tautomer->getNumAtoms() != num_atoms) {
       throw ValueErrorException(
           "a tautomer and its query's template have different numbers of "

@@ -214,7 +214,7 @@ std::unique_ptr<RWMol> mol_holder_get_mol(const MolHolderHandle &holder,
     throw RDKit::SmilesParse::SmilesParseException(
         "the molecule's SMILES does not parse");
   }
-  check_monomer_types(*mol);
+  check_pickled_mol(*mol);
   return copy_out(*mol);
 }
 
@@ -680,7 +680,7 @@ std::unique_ptr<SubstructLibrary> substruct_library_from_pickle(
       if (!mol) {
         throw ValueErrorException("the library holds a null molecule");
       }
-      check_monomer_types(*mol);
+      check_pickled_mol(*mol);
     }
   }
   for (auto idx : lib->getSearchOrder()) {

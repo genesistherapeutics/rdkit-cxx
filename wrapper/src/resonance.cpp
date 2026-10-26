@@ -9,6 +9,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/threads.h"
 
 namespace rdkit_cxx {
 
@@ -57,9 +58,12 @@ int resonance_mol_supplier_get_atom_conj_grp_idx(
   return suppl.getAtomConjGrpIdx(ai);
 }
 
+// setNumThreads counts the threads with getNumThreadsToUse, which negates a
+// negative count in int, undefined for INT_MIN; it gets the positive count
+// num_threads_to_use computes, at most the hardware's or num_threads.
 void resonance_mol_supplier_set_num_threads(ResonanceMolSupplier &suppl,
                                             int num_threads) {
-  suppl.setNumThreads(num_threads);
+  suppl.setNumThreads(static_cast<int>(num_threads_to_use(num_threads)));
 }
 
 bool resonance_mol_supplier_was_canceled(const ResonanceMolSupplier &suppl) {

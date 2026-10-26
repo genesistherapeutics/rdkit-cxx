@@ -120,12 +120,13 @@ void check_label(std::int64_t label) {
 // MCS alignment runs findMCS on the cores with RDKit's default bond
 // comparison, MCSBondCompareOrder, which indexes a table by both bonds'
 // types up to ZERO; a molecule pickle can carry any type up to 127, which
-// would be read past the table. doEnumeration enumerates the cores with
-// MolEnumerator, whose link nodes check_link_nodes checks (Python segfaults
-// on a link node over a double bond). doTautomers matches with RDKit's
-// TautomerQuery::substructOf, which reads a recursive query's matches past
-// their end (tautomer_checks.h; Python fails a precondition on a bond
-// between atoms it read there); RDKit makes its tautomer query of the core
+// would be read past the table (unpickling refuses one, check_pickled_mol;
+// this checks again in case another path sets one). doEnumeration enumerates
+// the cores with MolEnumerator, whose link nodes check_link_nodes checks
+// (Python segfaults on a link node over a double bond). doTautomers matches
+// with RDKit's TautomerQuery::substructOf, which reads a recursive query's
+// matches past their end (tautomer_checks.h; Python fails a precondition on a
+// bond between atoms it read there); RDKit makes its tautomer query of the core
 // less its terminal R groups, whose modified atoms are not known here, so
 // any recursive query is refused.
 //

@@ -394,3 +394,18 @@ fn queries_move_between_threads() {
     assert!(handle.join().unwrap());
     assert!(mol_has_substruct_match(&smiles("COOOC"), &query).unwrap());
 }
+
+// RDKit writes a tautomer bundle's size in 16 bits, so a bundle of more
+// queries, which JSON can hold, would read back as only some of them.
+#[test]
+fn large_tautomer_bundles_are_not_pickled() {
+    let entry = r#"{"tautomers": [{"smiles": "C"}], "template": {"smiles": "C"}, "modifiedAtoms": [], "modifiedBonds": []}"#;
+    let entries = vec![entry; 65536].join(", ");
+    let json = format!(r#"{{"xqm_type": "4", "tautomerQueries": [{entries}]}}"#);
+    let query = ExtendedQueryMol::new_with_is_json(&json, true).unwrap();
+    assert!(matches!(query.to_binary(), Err(Error::Value { .. })));
+    assert!(query.to_json().is_ok());
+    let small = format!(r#"{{"xqm_type": "4", "tautomerQueries": [{entry}]}}"#);
+    let small = ExtendedQueryMol::new_with_is_json(&small, true).unwrap();
+    ExtendedQueryMol::from_data(&small.to_binary().unwrap()).unwrap();
+}

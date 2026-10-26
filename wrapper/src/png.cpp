@@ -83,7 +83,7 @@ void check_png(const std::string &png) {
 std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
   auto mol = std::make_unique<RWMol>();
   RDKit::MolPickler::molFromPickle(pkl, mol.get());
-  check_monomer_types(*mol);
+  check_pickled_mol(*mol);
   return mol;
 }
 

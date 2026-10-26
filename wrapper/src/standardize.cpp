@@ -20,12 +20,12 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
-#include <RDGeneral/RDThreads.h>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -219,11 +219,12 @@ class Standardizer {
 // Runs work(i) for each i below n on up to num_threads threads, as RDKit's
 // getNumThreadsToUse counts them, each i on one thread. If one throws, the
 // rest of that thread's share is skipped, and the first exception (by
-// thread) is rethrown once every thread has finished.
+// thread) is rethrown once every thread has finished. getNumThreadsToUse
+// itself negates a negative count in int, undefined for INT_MIN, so the
+// count is num_threads_to_use's.
 template <class Work>
 void run_threads(std::size_t n, int num_threads, const Work &work) {
-  std::size_t count =
-      std::min<std::size_t>(n, RDKit::getNumThreadsToUse(num_threads));
+  std::size_t count = std::min<std::size_t>(n, num_threads_to_use(num_threads));
   if (count <= 1) {
     for (std::size_t i = 0; i < n; ++i) {
       work(i);

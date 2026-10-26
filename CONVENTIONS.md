@@ -165,8 +165,12 @@ rule changes the rule first.
   never reads a file that changed after the check; PNG files are read and
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES, mol blocks, molecule pickles) are trusted, except
-  for the limits U12 checks, and so are reaction pickles, which are molecule
-  pickles framed by counts and tags RDKit checks. Catalog pickles
+  for the limits U12 checks and a molecule pickle's enum values, which
+  MolPickler casts unchecked (bond types, directions, and stereo, atoms'
+  chiral tags and hybridizations, stereo groups' types) and which the Rust
+  enums cannot hold past RDKit's last value: `check_pickled_mol` refuses
+  them where U10 checks monomer types. So are reaction pickles, which are
+  molecule pickles framed by counts and tags RDKit checks. Catalog pickles
   (`MolCatalog`, `FragCatalog`, and their entries) frame molecule pickles
   with lengths and indices RDKit trusts, so `rdkit-cxx/catalog_checks.h`
   reads each as RDKit will, with RDKit's readers for the molecules and
@@ -327,7 +331,7 @@ rule changes the rule first.
   reaction pickles, `EnumerateLibrary` archives, and catalog pickles and
   archives that hold them) whose atoms have such an info, or a type
   `AtomMonomerType` lacks, are refused right after RDKit reads them
-  (`check_monomer_types` in `rdkit-cxx/mol_checks.h`, which also checks the
+  (`check_pickled_mol` in `rdkit-cxx/mol_checks.h`, which also checks the
   molecules of recursive queries, as MolPickler pickles them whole, and
   walks the queries with its own stack). RDKit code may then trust the
   type; wrapper code that casts uses `dynamic_cast` all the same. RDKit code

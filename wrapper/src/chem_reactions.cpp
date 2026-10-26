@@ -624,7 +624,7 @@ void check_reaction_monomer_types(const ChemicalReaction &rxn) {
   for (std::uint8_t kind = 0; kind < 3; ++kind) {
     for (const auto &mol : templates(rxn, kind)) {
       if (mol) {
-        check_monomer_types(*mol);
+        check_pickled_mol(*mol);
       }
     }
   }

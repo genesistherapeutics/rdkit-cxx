@@ -5,7 +5,9 @@
 
 #include "rdkit-cxx/generalized_substruct.h"
 
+#include <cstdint>
 #include <cstring>
+#include <limits>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -167,7 +169,7 @@ void check_extended_query_mol(const XQ &query) {
             if (!mol) {
               throw ValueErrorException("an ExtendedQueryMol has no molecule");
             }
-            check_monomer_types(*mol);
+            check_pickled_mol(*mol);
           },
           [](const XQ::MolBundle_T &bundle) {
             if (!bundle || bundle->empty()) {
@@ -179,7 +181,7 @@ void check_extended_query_mol(const XQ &query) {
                 throw ValueErrorException(
                     "an ExtendedQueryMol's bundle has a null molecule");
               }
-              check_monomer_types(*mol);
+              check_pickled_mol(*mol);
             }
           },
           [](const XQ::TautomerQuery_T &query) {
@@ -345,8 +347,17 @@ std::unique_ptr<ExtendedQueryMol> extended_query_mol_clone(
       query.xqmol);
 }
 
+// ExtendedQueryMol::toBinary (TextIO.cpp) writes a tautomer bundle's size in
+// 16 bits and then every query, so a larger bundle (JSON can hold one, and
+// so can an enumeration) would read back as its first size mod 2^16 queries.
 rust::Vec<std::uint8_t> extended_query_mol_to_binary(
     const ExtendedQueryMol &query) {
+  if (const auto *bundle = std::get_if<XQ::TautomerBundle_T>(&query.xqmol);
+      bundle && *bundle &&
+      (*bundle)->size() > std::numeric_limits<std::uint16_t>::max()) {
+    throw ValueErrorException(
+        "RDKit's binary form holds at most 65535 tautomer queries");
+  }
   return to_bytes(query.toBinary());
 }
 

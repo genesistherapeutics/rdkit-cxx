@@ -127,13 +127,46 @@ void check_monomer_info(const RDKit::Atom &atom, const std::string &which) {
   }
 }
 
+// MolPickler casts each byte it reads for an enum without checking it
+// (static_cast in _addAtomFromPickle, _addBondFromPickle, _depickleStereo),
+// and the Rust enums, which mirror RDKit's, have no variant for a value
+// past the last one: their conversion panics. RDKit's enums count from 0.
+void check_enum(int value, int last, const std::string &what) {
+  if (value < 0 || value > last) {
+    throw ValueErrorException(what + " has unknown value " +
+                              std::to_string(value));
+  }
+}
+
+void check_enum_values(const RDKit::ROMol &mol, const std::string &which) {
+  for (const auto *atom : mol.atoms()) {
+    const auto at = which + "atom " + std::to_string(atom->getIdx());
+    check_enum(atom->getChiralTag(), RDKit::Atom::CHI_OCTAHEDRAL,
+               at + "'s ChiralType");
+    check_enum(atom->getHybridization(), RDKit::Atom::OTHER,
+               at + "'s HybridizationType");
+  }
+  for (const auto *bond : mol.bonds()) {
+    const auto at = which + "bond " + std::to_string(bond->getIdx());
+    check_enum(bond->getBondType(), RDKit::Bond::ZERO, at + "'s BondType");
+    check_enum(bond->getBondDir(), RDKit::Bond::UNKNOWN, at + "'s BondDir");
+    check_enum(bond->getStereo(), RDKit::Bond::STEREOATROPCCW,
+               at + "'s BondStereo");
+  }
+  for (const auto &group : mol.getStereoGroups()) {
+    check_enum(static_cast<int>(group.getGroupType()),
+               static_cast<int>(RDKit::StereoGroupType::STEREO_AND),
+               which + "stereo group's StereoGroupType");
+  }
+}
+
 }  // namespace
 
 // MolPickler pickles a recursive query's molecule as a whole molecule, and
 // reads it back the same way, so those molecules are checked too. Their
 // queries can nest without bound, so the walk keeps its own stack, and it
 // visits each query and molecule once.
-void check_monomer_types(const RDKit::ROMol &mol) {
+void check_pickled_mol(const RDKit::ROMol &mol) {
   using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
   std::vector<const RDKit::ROMol *> mols{&mol};
   std::vector<const AtomQuery *> queries;
@@ -141,6 +174,9 @@ void check_monomer_types(const RDKit::ROMol &mol) {
   while (!mols.empty()) {
     const auto *current = mols.back();
     mols.pop_back();
+    const std::string where =
+        current == &mol ? "" : "a recursive query's molecule's ";
+    check_enum_values(*current, where);
     const std::string which =
         current == &mol ? "atom " : "atom of a recursive query's molecule, ";
     for (const auto *atom : current->atoms()) {

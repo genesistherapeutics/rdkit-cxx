@@ -78,13 +78,21 @@ class DescriptorCacheGuard {
   const RDKit::ROMol &d_mol;
 };
 
-// RDKit takes a monomer info's type for its class and casts an info of type
-// PDBRESIDUE to AtomPDBResidueInfo, so only one of those may have it
-// (CONVENTIONS.md U10). A pickle can give an atom a plain info of that type,
-// or a type AtomMonomerType lacks; throws ValueErrorException for either,
-// in the molecule or in the molecules of its recursive queries, which RDKit
-// pickles as molecules.
-void check_monomer_types(const RDKit::ROMol &mol);
+// What a molecule pickle, which MolPickler reads without these checks, can
+// give a molecule that RDKit or Rust trusts:
+// - RDKit takes a monomer info's type for its class and casts an info of
+//   type PDBRESIDUE to AtomPDBResidueInfo, so only one of those may have it
+//   (CONVENTIONS.md U10). A pickle can give an atom a plain info of that
+//   type, or a type AtomMonomerType lacks.
+// - MolPickler casts the bytes it reads for atoms' chiral tags and
+//   hybridizations, bonds' types, directions, and stereo, and stereo
+//   groups' types to the enums unchecked, and the Rust enums have no
+//   variant for a value RDKit's lacks (U2).
+// Throws ValueErrorException for any of these, in the molecule or in the
+// molecules of its recursive queries, which RDKit pickles as molecules.
+// Every wrapper that reads a molecule pickle, alone or inside another
+// format, calls it on the molecules it read.
+void check_pickled_mol(const RDKit::ROMol &mol);
 
 // RWMol::removeAtom and batchRemoveAtoms (so commitBatchEdit too) rewrite
 // every bond's _MolFileBondEndPts, a property any caller can set: they read

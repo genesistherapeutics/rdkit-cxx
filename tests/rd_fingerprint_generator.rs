@@ -237,7 +237,9 @@ fn other_generators() {
 fn bulk_fingerprints() {
     let mols = vec![smiles("CCO"), smiles("c1ccccc1"), smiles("CN")];
     let generator = morgan();
-    for threads in [1, 2, 0] {
+    // RDKit's thread count negates a negative count in int, undefined for
+    // i32::MIN; more threads than molecules have nothing to do.
+    for threads in [1, 2, 0, i32::MIN, i32::MAX] {
         let fps = generator
             .get_fingerprints_with_num_threads(&mols, threads)
             .unwrap();
