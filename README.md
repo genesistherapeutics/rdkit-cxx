@@ -24,10 +24,10 @@ fingerprints, `Draw`, Butina clustering, and more) is ported to Rust on top of
 those bindings, and computes what Python computes: `rdkit.Chem.QED` is
 `rdkit_cxx::chem::qed`.
 
-Coverage: every name in RDKit 2026.09's Python interface, in its compiled
+Coverage: every name in RDKit 2026.03's Python interface, in its compiled
 modules and its Python modules, has a Rust counterpart or a recorded reason it
-has none ([Parity](#parity)). Of the 4,039 names the compiled modules expose,
-3,467 are bound. Of the 2,607 its Python modules define, 1,016 are ported; the
+has none ([Parity](#parity)). Of the 4,011 names the compiled modules expose,
+3,442 are bound. Of the 2,606 its Python modules define, 1,016 are ported; the
 rest are Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM), legacy
 code whose replacement is bound (the sping canvases, the Python MCS search),
 command-line plumbing, Python protocol hooks, or deprecated.
@@ -43,24 +43,25 @@ including the RDKit bugs it found, are in rdkit-logbook.
 
 ## Environment
 
-Each crate version supports one RDKit release series (2026.9.x supports RDKit
-2026.09), and within it the releases it has checked: 2026.9.0 supports RDKit
-2026.09.1. The wrapper compiles against copies of a few headers RDKit does not
-install, whose layouts can change between patch releases, so the build refuses
-any other release ([`wrapper/vendor/`](wrapper/vendor/README.md)), and a
-program built against one stops when it loads with another, as after an update
-in place. It builds with Rust 1.88 or newer.
+Each crate version supports one RDKit release series (2026.3.x supports RDKit
+2026.03), and within it the releases it has checked: 2026.3.0 supports RDKit
+2026.03.6, the series' last. The wrapper compiles against copies of a few
+headers RDKit does not install, whose layouts can change between patch
+releases, so the build refuses any other release
+([`wrapper/vendor/`](wrapper/vendor/README.md)), and a program built against
+one stops when it loads with another, as after an update in place. It builds
+with Rust 1.88 or newer.
 
 RDKit's version scheme and the crate's differ: RDKit numbers each series by
-year and zero-padded month (2026.09), but crate versions are SemVer, which
-doesn't allow leading zeros, so they drop the zero (2026.9). The crate's patch
+year and zero-padded month (2026.03), but crate versions are SemVer, which
+doesn't allow leading zeros, so they drop the zero (2026.3). The crate's patch
 number is its own, not RDKit's.
 
 Install RDKit's development packages from conda-forge and activate the
 environment before building:
 
 ```sh
-mamba create -n rdkit-cxx -c conda-forge "librdkit-dev 2026.09.1" libboost-devel cxx-compiler "cmake>=3.22"
+mamba create -n rdkit-cxx -c conda-forge "librdkit-dev 2026.03.6" libboost-devel cxx-compiler "cmake>=3.22"
 conda activate rdkit-cxx
 ```
 
@@ -79,11 +80,11 @@ series:
 
 ```toml
 [dependencies]
-rdkit-cxx = "~2026.9"
+rdkit-cxx = "~2026.3"
 ```
 
-Cargo's default caret requirement can cross series: `"2027.3"` would also
-accept 2027.9, which needs another RDKit.
+Cargo's default caret requirement can cross series: `"2026.3"` would also
+accept 2026.9, which needs another RDKit.
 
 RDKit's shared libraries live in the conda environment, and conda does not set
 `LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
@@ -322,8 +323,8 @@ Other limits:
 
 [`inventory/`](inventory) measures coverage of RDKit's compiled Python modules
 and of its Python (`.py`) modules, as conda-forge builds them.
-`inventory-2026.09.json` lists every class, function, method, property, and
-enum value the compiled modules expose, and `python-2026.09.json` what each
+`inventory-2026.03.json` lists every class, function, method, property, and
+enum value the compiled modules expose, and `python-2026.03.json` what each
 Python module defines; `manifest.toml`
 maps each to Rust paths or to the reason it has none, given for the name or,
 for Python-ecosystem glue and legacy code, for its whole module. CI runs:
@@ -345,10 +346,10 @@ places, and the crate follows Boost.Python's.) The inventories are
 regenerated once per RDKit release:
 
 ```sh
-micromamba create -y -n rdkit-py -c conda-forge rdkit=2026.09.1 python=3.12
+micromamba create -y -n rdkit-py -c conda-forge rdkit=2026.03.6 python=3.12
 site=$(micromamba run -n rdkit-py python -c 'import rdkit, pathlib; print(pathlib.Path(rdkit.__file__).parents[1])')
-micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --output inventory/inventory-2026.09.json
-micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --python --output inventory/python-2026.09.json
+micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --output inventory/inventory-2026.03.json
+micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --python --output inventory/python-2026.03.json
 ```
 
 ## Development
@@ -362,47 +363,29 @@ pip install pre-commit
 pre-commit install
 ```
 
-The workflows pin each action to a commit. Dependabot proposes updates to the
-actions, the Cargo dependencies, and the pre-commit hooks every week, a week
-after each release. A new RDKit series opens an issue instead, since moving to
-one takes more than its pin ([Releases](#releases)).
+The workflows pin each action to a commit. Dependabot and the RDKit series
+workflow run on `main`, which follows the newest RDKit series.
 
 ## Releases
 
+This is the crate's line for RDKit 2026.03, whose last release is 2026.03.6.
+`main` follows the newest series; each earlier series is released from a
+branch of its own, `rdkit-2026.03` for this one, which can be deleted once its
+release is tagged, and made again from the tag (`v2026.3.0`) for a later patch.
+
 Releases are cut by hand: run the
 [Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
-on `main` from the Actions tab. Merging to `main` publishes nothing.
+on `rdkit-2026.03` from the Actions tab, once CI has passed on the branch's
+commit. Pushing to the branch publishes nothing.
 
 The workflow releases the version in `Cargo.toml` if no tag has it yet (the
-first release of an RDKit series), and otherwise bumps the patch level with
+first release of the series), and otherwise bumps the patch level with
 [bump-my-version](https://github.com/callowayproject/bump-my-version). It
 checks that CI passed on the release commit, tests it, builds the packaged
 crate, publishes it to crates.io through trusted publishing, pushes the version
-bump and a `v<version>` tag to `main`, and creates a GitHub release with
-generated notes. Add the release's notable changes to
-[CHANGELOG.md](CHANGELOG.md) before running it. A release that fails partway
-finishes when its failed jobs are re-run: each step skips what an earlier
-attempt finished, including the upload.
-
-The patch level moves only through the workflow. A new RDKit series sets the
-major and minor levels by hand, in the pull request that updates
-`environment.yml`:
-
-```sh
-bump-my-version bump --new-version 2027.3.0
-```
-
-The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
-conda-forge daily and opens an issue, assigned to the repository owner, with
-the steps, when it has a `librdkit-dev` release newer than the one
-`environment.yml` pins. A new patch release of the series needs a patch
-release of the crate too: the build accepts it only once `wrapper/vendor/`
-holds its headers ([`wrapper/vendor/`](wrapper/vendor/README.md)).
-
-## License
-
-BSD-3-Clause, as RDKit. The package also carries files from other projects,
-each with its license: RDKit's headers (`wrapper/vendor/`), data files
-(`wrapper/third_party/rdkit/Data/`), and test data (`tests/data/`), under
-RDKit's BSD license (`wrapper/third_party/rdkit/LICENSE`), and coordgenlibs's
-files (`wrapper/third_party/coordgen/`), under its BSD license.
+bump (if any) to the branch and a `v<version>` tag, and creates a GitHub
+release from the version's section of [CHANGELOG.md](CHANGELOG.md), which it
+does not mark as the latest. Add the release's notable changes to the changelog
+before running it. A release that fails partway finishes when its failed jobs
+are re-run: each step skips what an earlier attempt finished, including the
+upload.

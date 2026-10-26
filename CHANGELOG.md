@@ -1,20 +1,47 @@
 # Changelog
 
-## 2026.9.0
+## 2026.3.0
 
-The first release. It supports RDKit 2026.09.1 from conda-forge on Linux
-(x86-64 and arm64) and macOS (arm64), and builds with Rust 1.88 or newer. The
-build refuses other RDKit releases: the wrapper compiles against copies of
-headers RDKit does not install, whose layouts can change between patch
-releases (`wrapper/vendor/`). A program built against one release stops
-when it loads with another.
+The first release for RDKit 2026.03: the bindings and ports of 2026.9.0, for
+RDKit 2026.03.6 (see Compared with 2026.9.0, below). It
+supports RDKit 2026.03.6 from conda-forge on Linux (x86-64 and arm64) and
+macOS (arm64), and builds with Rust 1.88 or newer. The build refuses other
+RDKit releases: the wrapper compiles against copies of headers RDKit does not
+install, whose layouts can change between patch releases (`wrapper/vendor/`).
+A program built against one release stops when it loads with another.
+
+### Compared with 2026.9.0
+
+- What RDKit 2026.03 lacks is not bound: the embedder's initial-embedding
+  modes, embedding force field, `onlyInitialEmbedding`, `ETKDGv4`, and
+  Gaussian torsion terms; `GetSymmSSSR`'s `algorithm` and `recalcSSSR`, the
+  legacy ring-finding setting, and the attachment-point label helpers;
+  `Compute2DCoords`' `usePathAngleExpansion`; `GetSurfacePoints`'
+  `allPoints`; `GetAllConformerBestRMSToRef`; and
+  `MolCatalogEntry.Serialize` (an entry still pickles through `serialize`).
+- Results are RDKit 2026.03.6's: its 2D depictions (and the drawings and mol
+  blocks made from them), conformers, bounds matrices, and ring atom orders
+  differ from 2026.09's. Parsing does not find ring families.
+- RDKit 2026.03 behaviors the bindings keep, as Python has them: the
+  `Properties` registry computes `chi2v` and `chi2n` as `chi3v` and `chi3n`
+  (RDKit #9643), and `DoubleCubicLatticeVolume.get_surface_points` returns
+  the points the surface-area methods tested, once per call.
+- The ports follow RDKit 2026.03.6's Python: `BertzCT` takes a non-aromatic
+  bond's order as its `BondType`'s number (17 for a dative bond), and
+  `fr_Ar_COO`'s description is 2026.03's.
+- Two checks RDKit 2026.03 needs: every wrapper source reads `RDConfig.h`
+  first, since `RingInfo.h` declares its ring-family members only under a
+  macro it does not include, and `RingInfo.num_relevant_cycles` is
+  `Error::Runtime` before the ring families are found, where RDKit 2026.03
+  converts RingDecomposerLib's failure value out of range, and `Error::Value`
+  for more relevant cycles than `u32` holds.
 
 ### Bindings
 
 - Binds RDKit's C++ API with the coverage of its Python wrappers, as
-  conda-forge builds them with Boost.Python: 3,467 of the 4,039 names they
-  expose. Each of the other 572 has a reason in `inventory/manifest.toml`:
-  Python protocol methods and Boost.Python's container types, 52 names left
+  conda-forge builds them with Boost.Python: 3,442 of the 4,011 names they
+  expose. Each of the other 569 has a reason in `inventory/manifest.toml`:
+  Python protocol methods and Boost.Python's container types, 50 names left
   unbound because RDKit's code cannot be made safe from outside, and
   deprecated names.
 - Module paths follow Python's in Rust spelling:
@@ -58,9 +85,9 @@ when it loads with another.
 ### Ports of Python-only functionality
 
 Much of what RDKit offers only in Python is ported to Rust on top of the
-bindings and computes what Python computes: 1,016 of the 2,607 names RDKit's
+bindings and computes what Python computes: 1,016 of the 2,606 names RDKit's
 Python modules define. The ported modules' Python tests are ported with them,
-with expected values from RDKit 2026.09.1.
+with expected values from RDKit 2026.03.6.
 
 - **Descriptors:** `Descriptors` (`desc_list` in Python's order,
   `calc_mol_descriptors`), `Descriptors3D`, `Crippen`, `MolSurf`,
@@ -104,7 +131,7 @@ plumbing, and Python protocol hooks.
   ported, and results are `f64`.
 - Functions returning PIL images return PNG bytes, Python callables are Rust
   closures, and generators are iterators or lists.
-- Some Python functions are broken in RDKit 2026.09.1; the ports implement
+- Some Python functions are broken in RDKit 2026.03.6; the ports implement
   what they intend:
   - Under NumPy 2 or Python 3.12: `ML.InfoTheory` `BitRank`,
     `ML.Data.Stats.StandardizeMatrix` on 2-D input,
