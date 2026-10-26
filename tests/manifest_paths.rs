@@ -2958,6 +2958,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rd_mol_hash::HashFunction>::SmallWorldIndexBrl;
     use rdkit_cxx::chem::rd_mol_hash::mol_hash as _;
     use rdkit_cxx::chem::rd_mol_hash::mol_hash_with_params as _;
+    use rdkit_cxx::chem::rd_mol_hash::exclude_from_tautomerism_prop as _;
     let _: Option<rdkit_cxx::chem::rd_mol_interchange::JSONParseParameters> = None;
     let _ = <rdkit_cxx::chem::rd_mol_interchange::JSONParseParameters>::default;
     let _ = |value: &rdkit_cxx::chem::rd_mol_interchange::JSONParseParameters| { let _ = &value.parse_conformers; };
@@ -4936,6 +4937,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rdmolops::AromaticityModel>::AromaticityMmff94;
     let _ = <rdkit_cxx::chem::rdmolops::AromaticityModel>::AromaticityRdkit;
     let _ = <rdkit_cxx::chem::rdmolops::AromaticityModel>::AromaticitySimple;
+    use rdkit_cxx::chem::rdmolops::attachment_point_label_prefix as _;
     use rdkit_cxx::chem::rdmolops::add_hs as _;
     use rdkit_cxx::chem::rdmolops::add_hs_with_params as _;
     let _: Option<rdkit_cxx::chem::rdmolops::AddHsParameters> = None;
@@ -5070,6 +5072,7 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rdmolops::get_adjacency_matrix_use_bo as _;
     use rdkit_cxx::chem::rdmolops::get_adjacency_matrix_use_bo_with_empty_val as _;
     use rdkit_cxx::chem::rdmolops::get_allow_nontetrahedral_chirality as _;
+    use rdkit_cxx::chem::rdmolops::get_attachment_point_label_number as _;
     use rdkit_cxx::chem::rdmolops::get_distance_matrix as _;
     use rdkit_cxx::chem::rdmolops::get_distance_matrix_with_params as _;
     use rdkit_cxx::chem::rdmolops::get_formal_charge as _;
@@ -5086,6 +5089,7 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rdmolops::get_use_legacy_stereo_perception as _;
     use rdkit_cxx::chem::rdmolops::haptic_bonds_to_dative as _;
     use rdkit_cxx::chem::rdmolops::has_query_hs as _;
+    use rdkit_cxx::chem::rdmolops::is_marked_attachment_point as _;
     use rdkit_cxx::chem::rdmolops::kekulize as _;
     use rdkit_cxx::chem::rdmolops::kekulize_with_params as _;
     use rdkit_cxx::chem::rdmolops::kekulize_if_possible as _;

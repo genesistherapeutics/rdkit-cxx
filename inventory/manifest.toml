@@ -11179,6 +11179,10 @@ python = "rdkit.Chem.rdMolHash.MolHash"
 rust = ["rdkit_cxx::chem::rd_mol_hash::mol_hash", "rdkit_cxx::chem::rd_mol_hash::mol_hash_with_params"]
 
 [[entry]]
+python = "rdkit.Chem.rdMolHash.excludeFromTautomerismProp"
+rust = ["rdkit_cxx::chem::rd_mol_hash::exclude_from_tautomerism_prop"]
+
+[[entry]]
 python = "rdkit.Chem.rdMolInterchange.JSONParseParameters"
 rust = ["rdkit_cxx::chem::rd_mol_interchange::JSONParseParameters"]
 
@@ -17615,6 +17619,10 @@ rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticitySimple"]
 name_exception = "exported enum value (N7)"
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.ATTACHMENT_POINT_LABEL_PREFIX"
+rust = ["rdkit_cxx::chem::rdmolops::attachment_point_label_prefix"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.AddHs"
 rust = ["rdkit_cxx::chem::rdmolops::add_hs", "rdkit_cxx::chem::rdmolops::add_hs_with_params"]
 
@@ -18063,6 +18071,10 @@ python = "rdkit.Chem.rdmolops.GetAllowNontetrahedralChirality"
 rust = ["rdkit_cxx::chem::rdmolops::get_allow_nontetrahedral_chirality"]
 
 [[entry]]
+python = "rdkit.Chem.rdmolops.GetAttachmentPointLabelNumber"
+rust = ["rdkit_cxx::chem::rdmolops::get_attachment_point_label_number"]
+
+[[entry]]
 python = "rdkit.Chem.rdmolops.GetDistanceMatrix"
 rust = ["rdkit_cxx::chem::rdmolops::get_distance_matrix", "rdkit_cxx::chem::rdmolops::get_distance_matrix_with_params"]
 overloads_note = "force and prefix steer RDKit's matrix cache, which the crate never keeps (U6)"
@@ -18106,6 +18118,10 @@ rust = ["rdkit_cxx::chem::rdmolops::haptic_bonds_to_dative"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.HasQueryHs"
 rust = ["rdkit_cxx::chem::rdmolops::has_query_hs"]
+
+[[entry]]
+python = "rdkit.Chem.rdmolops.IsMarkedAttachmentPoint"
+rust = ["rdkit_cxx::chem::rdmolops::is_marked_attachment_point"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.Kekulize"
