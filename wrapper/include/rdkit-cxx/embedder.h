@@ -53,6 +53,12 @@ rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
     bool use_small_ring_torsions, bool use_macrocycle_torsions,
     bool use_basic_knowledge, std::uint32_t et_version, bool verbose);
 
+// The checks embed_multiple_confs makes of the molecule (U1, U3), for RDKit
+// code that embeds it itself with these parameters, which have no
+// coordinate map, CPCI, or bounds matrix. Throws ValueErrorException.
+void check_embed_mol(const RDKit::ROMol &mol,
+                     const RDKit::DGeomHelpers::EmbedParameters &params);
+
 // RDKit's computeInitialCoords (DistGeom/DistGeomUtils.cpp) casts
 // sum(d_ij^2) / n, over the distances it picks between the bounds, to int,
 // which is undefined above INT_MAX. Throws ValueErrorException unless

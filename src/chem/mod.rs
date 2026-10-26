@@ -9,6 +9,7 @@
 
 pub mod draw;
 pub mod mol_standardize;
+pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
 pub mod rd_chemical_features;
@@ -19,6 +20,7 @@ pub mod rd_depictor;
 pub mod rd_deprotect;
 pub mod rd_determine_bonds;
 pub mod rd_dist_geom;
+pub mod rd_enumerate_stereoisomers;
 pub mod rd_fingerprint_generator;
 pub mod rd_fmcs;
 pub mod rd_force_field_helpers;
@@ -32,6 +34,7 @@ pub mod rd_mol_align;
 pub mod rd_mol_catalog;
 pub mod rd_mol_chemical_features;
 pub mod rd_mol_descriptors;
+pub mod rd_mol_enumerator;
 pub mod rd_mol_hash;
 pub mod rd_mol_transforms;
 pub mod rd_partial_charges;

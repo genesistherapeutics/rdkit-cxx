@@ -115,7 +115,9 @@ std::vector<std::string> strings(const rust::Vec<rust::String> &values) {
   return result;
 }
 
-// The randomized writers advance RDKit's global generator.
+// The randomized writers draw the root atom (SmilesWrite.cpp) and the
+// traversal order (Canon.cpp) from RDKit's global random number generator,
+// which has no lock, so two threads writing random SMILES race on it (U4).
 std::unique_lock<std::mutex> random_lock(bool random) {
   return random ? std::unique_lock<std::mutex>(random_mutex())
                 : std::unique_lock<std::mutex>();
@@ -428,6 +430,8 @@ std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
   return parsed(RDKit::SmartsToMol(text, params), "SMARTS", text);
 }
 
+// MolToSmarts ignores doRandom (SmartsWrite.cpp passes false to Canon), so it
+// needs no random_mutex.
 std::unique_ptr<std::string> mol_to_smarts(const RWMol &mol,
                                            const SmilesWriteParamsData &data) {
   return str(RDKit::MolToSmarts(mol, write_params(data)));

@@ -359,22 +359,6 @@ fn grid_operator_params() {
 }
 
 #[test]
-fn grid_threads() {
-    // The centroid functions share a cache in RDKit, which the wrapper locks.
-    let grid = sphere_grid(Point3D::default());
-    std::thread::scope(|s| {
-        for radius in [1.0, 1.5, 2.0, 2.5] {
-            let grid = &grid;
-            s.spawn(move || {
-                for _ in 0..20 {
-                    find_grid_terminal_points(grid, radius, 0.5).unwrap();
-                }
-            });
-        }
-    });
-}
-
-#[test]
 fn write_grid() {
     let grid = sphere_grid(Point3D::default());
     let dir = std::env::temp_dir().join(format!("rdkit-cxx-grid-{}", std::process::id()));

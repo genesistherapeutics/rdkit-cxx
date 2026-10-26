@@ -5,6 +5,7 @@
 
 //! Private cxx bridges, one per wrapper header (CONVENTIONS.md B3).
 
+pub(crate) mod abbreviations;
 pub(crate) mod adjust_query;
 pub(crate) mod alignment;
 pub(crate) mod atom;
@@ -28,6 +29,7 @@ pub(crate) mod distance_geometry;
 pub(crate) mod draw;
 pub(crate) mod embedder;
 pub(crate) mod enumerate;
+pub(crate) mod enumerate_stereoisomers;
 pub(crate) mod errors;
 pub(crate) mod filter_catalog;
 pub(crate) mod fingerprint_generator;
@@ -53,6 +55,7 @@ pub(crate) mod mol_align;
 pub(crate) mod mol_bundle;
 pub(crate) mod mol_catalog;
 pub(crate) mod mol_chemical_features;
+pub(crate) mod mol_enumerator;
 pub(crate) mod mol_hash;
 pub(crate) mod mol_transforms;
 pub(crate) mod molfiles;

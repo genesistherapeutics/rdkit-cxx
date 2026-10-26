@@ -205,14 +205,14 @@ rule changes the rule first.
   `depiction_checks.h`). RDKit's random number generator
   (`RDGeneral/utils.cpp`) is shared by every module, so it has one lock,
   `random_mutex()` in `rdkit-cxx/global_state.h`, held for the whole call by
-  every wrapper whose RDKit call can seed it or draw from it: the SMILES and
-  CXSMILES writers (for molecules and reactions) with `doRandom`,
-  `MolToRandomSmilesVect`, PNG metadata with random SMILES, the depictor's
-  sampling (`nFlipsPerSample` and random bond flips, in
-  `Compute2DCoordsForReaction` too; the writers' default depiction never
-  draws), the embedder
-  without a seed, DistGeom's `EmbedBoundsMatrix`, and MolAlign's
-  `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
+  every wrapper whose RDKit call can seed it or draw from it
+  (`grep -rn 'getRandomGenerator\|getRandomVal\|getDoubleRandomSource' Code`
+  in RDKit's sources): the SMILES and CXSMILES writers (for molecules and
+  reactions) with `doRandom`, `MolToRandomSmilesVect`, PNG metadata with
+  random SMILES, the depictor's sampling (`nFlipsPerSample` and random bond
+  flips, in `Compute2DCoordsForReaction` too; the writers' default depiction
+  never draws), the embedder without a seed, DistGeom's `EmbedBoundsMatrix`,
+  and MolAlign's `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
   by every wrapper whose RDKit call constructs one. Every substructure match
@@ -238,7 +238,12 @@ rule changes the rule first.
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs
   several of these locks takes them in this order, after any of the locks
   above for one module's state: `lock_depiction()`, `control_c_mutex()`,
-  `symmetrize_mutex()`, then `random_mutex()`.
+  `symmetrize_mutex()`, then `random_mutex()`. `tests/threads.rs`, which CI
+  runs under Valgrind's DRD (the `races` job), failing on any race in RDKit's
+  global state or in RDKit or wrapper code (`tests/check_drd_log.py`), calls,
+  from every module that writes the state one of these locks guards,
+  wrappers that write it (drawing from the generator and constructing a
+  `ControlCHandler` both write), and at least one that only reads it.
 - **U5.** RDKit settings kept in environment variables
   (`SetUseLegacyRingFinding`, `SetAllowNontetrahedralChirality`,
   `SetUseLegacyStereoPerception`) are set with `setenv`, which races with
@@ -348,6 +353,15 @@ rule changes the rule first.
   getters are not bound: `has_prop` covers them. A class whose Python
   `GetPropsAsDict` has other defaults (`SubstanceGroup`) passes them to
   `prop_getters!`; `GetPropsAsDictParams::default()` stays `Mol`'s.
+- **P2.** Properties RDKit reads back as data, which any caller can set,
+  are input under U1. When RDKit removes atoms or bonds (`RWMol`'s removals
+  and batch edits, and the RDKit calls built on them) it parses every
+  bond's `_MolFileBondEndPts` without checks and follows the substance
+  groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
+  wrapper whose RDKit call removes atoms or bonds from a molecule, or from
+  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
+  The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
+  and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
 
 ## Documentation
 
