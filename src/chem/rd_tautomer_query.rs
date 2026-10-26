@@ -234,9 +234,9 @@ impl TautomerQuery {
     }
 
     /// Writes the pickle (`to_binary`) to `fileobj`, a Python file object's
-    /// counterpart (`&mut` a writer works too); `Error::Os` if writing fails.
-    /// Mirrors `TautomerQuery.ToStream`.
-    pub fn to_stream<W: Write>(&self, mut fileobj: W) -> Result<()> {
+    /// counterpart; `Error::Os` if writing fails. Mirrors
+    /// `TautomerQuery.ToStream`.
+    pub fn to_stream<W: Write + ?Sized>(&self, fileobj: &mut W) -> Result<()> {
         fileobj.write_all(&self.to_binary()?).map_err(os_error)
     }
 
@@ -244,7 +244,7 @@ impl TautomerQuery {
     /// as `from_pickle` reads. Python's reads only the pickle from a stream;
     /// this one reads to the end. On an error the query is unchanged.
     /// Mirrors `TautomerQuery.InitFromStream`.
-    pub fn init_from_stream<R: Read>(&mut self, mut fileobj: R) -> Result<()> {
+    pub fn init_from_stream<R: Read + ?Sized>(&mut self, fileobj: &mut R) -> Result<()> {
         let mut pickle = Vec::new();
         fileobj.read_to_end(&mut pickle).map_err(os_error)?;
         *self = TautomerQuery::from_pickle(&pickle)?;

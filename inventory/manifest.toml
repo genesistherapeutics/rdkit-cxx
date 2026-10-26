@@ -12165,6 +12165,7 @@ overloads_note = "the parameters overloads are the _with_params forms, whose Has
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.InitFromStream"
 rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::init_from_stream"]
+rust_generics = "<&[u8]>"
 
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.Serialize"
@@ -12177,6 +12178,7 @@ rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::set_search_ord
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.ToStream"
 rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::to_stream"]
+rust_generics = "<Vec<u8>>"
 
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__getstate__"

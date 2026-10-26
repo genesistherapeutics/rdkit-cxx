@@ -338,7 +338,7 @@ impl ExplicitPharmacophore {
     /// Reads the pharmacophore from a file's lines; `Error::Os` if it
     /// cannot be read and `Error::Value` if it is not UTF-8. Mirrors
     /// `ExplicitPharmacophore.initFromFile`.
-    pub fn init_from_file<R: Read>(&mut self, mut in_f: R) -> Result<()> {
+    pub fn init_from_file<R: Read + ?Sized>(&mut self, in_f: &mut R) -> Result<()> {
         let mut text = String::new();
         in_f.read_to_string(&mut text)
             .map_err(|err| match err.kind() {

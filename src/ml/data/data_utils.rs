@@ -59,8 +59,8 @@ fn list_repr(values: &[f64]) -> String {
 ///
 /// `Error::Index` for fewer bounds than names; `Error::Os` when writing
 /// fails.
-pub fn write_data<W: Write>(
-    out_file: &mut W,
+pub fn write_data(
+    out_file: &mut impl Write,
     var_names: &[String],
     q_bounds: &[Vec<f64>],
     examples: &[Vec<Value>],

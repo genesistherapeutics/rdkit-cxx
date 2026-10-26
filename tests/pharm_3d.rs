@@ -232,7 +232,7 @@ fn explicit_pharmacophore_matches_python() {
     p.set_radius(0, 2.0).unwrap();
     assert_eq!(p.get_radius(0).unwrap(), 2.0);
     assert!(matches!(p.get_radius(2), Err(Error::Index { .. })));
-    p.init_from_file("Aromatic 1 1 1 1.5\n".as_bytes()).unwrap();
+    p.init_from_file(&mut "Aromatic 1 1 1 1.5\n".as_bytes()).unwrap();
     assert_eq!(p.get_radii(), [1.5]);
     assert!(matches!(
         p.init_from_lines(&["Aromatic 1 1 1"]),

@@ -130,7 +130,7 @@ pub struct FeatMapParser {
 impl FeatMapParser {
     /// A parser of a file's lines; `Error::Os` if it cannot be read and
     /// `Error::Value` if it is not UTF-8. Mirrors `FeatMapParser(file)`.
-    pub fn from_file<R: Read>(mut file: R) -> Result<FeatMapParser> {
+    pub fn from_file<R: Read + ?Sized>(file: &mut R) -> Result<FeatMapParser> {
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes).map_err(|err| Error::Os {
             message: err.to_string(),
