@@ -33,6 +33,7 @@ pub mod maccs_keys;
 pub mod mol_key;
 pub mod mol_standardize;
 pub mod pharm_2d;
+pub mod pharm_3d;
 mod py_compat;
 pub(crate) mod py_math;
 pub mod randomize;
@@ -89,6 +90,7 @@ pub mod salt_remover;
 pub mod satis;
 pub mod scaffolds;
 pub mod simple_enum;
+pub mod subshape;
 pub mod template_align;
 pub mod torsion_fingerprints;
 
