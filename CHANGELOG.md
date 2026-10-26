@@ -20,10 +20,12 @@ when it loads with another.
   `rdkit.Chem.rdmolfiles.MolFromSmiles` is
   `rdkit_cxx::chem::rdmolfiles::mol_from_smiles`.
 - Safe Rust cannot reach undefined behavior in the wrappers. Inputs RDKit
-  trusts are checked before RDKit sees them, process-wide state RDKit writes
-  without a lock is locked, and readers of Boost.Serialization archives are
-  `unsafe fn`s. Two gaps remain in RDKit itself; see the README's
-  "Known limitations".
+  trusts are checked before RDKit sees them, and process-wide state RDKit
+  writes without a lock is locked. Readers of molecule pickles, of the
+  formats that carry them (reaction, bundle, catalog, and query pickles, and
+  PNG metadata), and of Boost.Serialization archives are `unsafe fn`s whose
+  contract is bytes RDKit wrote. One gap remains in RDKit itself; see the
+  README's "Known limitations".
 
 ### Ports of Python-only functionality
 

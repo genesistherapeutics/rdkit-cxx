@@ -50,8 +50,13 @@ impl ExtendedQueryMol {
 
     /// A query from a binary pickle (`to_binary`) held in a string, as
     /// `from_data` reads bytes. Mirrors `ExtendedQueryMol(text)`.
-    pub fn new(text: &str) -> Result<ExtendedQueryMol> {
-        ExtendedQueryMol::from_data(text.as_bytes())
+    ///
+    /// # Safety
+    ///
+    /// As for `from_data`.
+    pub unsafe fn new(text: &str) -> Result<ExtendedQueryMol> {
+        // SAFETY: the caller's contract is `from_data`'s.
+        unsafe { ExtendedQueryMol::from_data(text.as_bytes()) }
     }
 
     /// A query from JSON (`to_json`) when `is_json`, else from a binary
@@ -59,13 +64,20 @@ impl ExtendedQueryMol {
     /// base64 RDKit's decoder would write past its buffer for, `Error::Value`;
     /// malformed JSON is RDKit's `Error::Value`. Mirrors
     /// `ExtendedQueryMol(text, isJSON)`.
-    pub fn new_with_is_json(text: &str, is_json: bool) -> Result<ExtendedQueryMol> {
+    ///
+    /// # Safety
+    ///
+    /// `text` must be JSON (`to_json`) or a pickle (`to_binary`) RDKit
+    /// wrote, unmodified. The JSON holds each molecule as a base64 molecule
+    /// pickle, which RDKit reads as `Mol::from_pkl_string` does.
+    pub unsafe fn new_with_is_json(text: &str, is_json: bool) -> Result<ExtendedQueryMol> {
         if is_json {
             Ok(ExtendedQueryMol::from_ffi(
                 ffi::extended_query_mol_from_json(text)?,
             ))
         } else {
-            ExtendedQueryMol::new(text)
+            // SAFETY: the caller's contract is `new`'s.
+            unsafe { ExtendedQueryMol::new(text) }
         }
     }
 
@@ -74,7 +86,13 @@ impl ExtendedQueryMol {
     /// read past, or a molecule with a monomer type its class lacks
     /// (CONVENTIONS.md U10); RDKit's errors for one it cannot read. Mirrors
     /// `ExtendedQueryMol(data)`.
-    pub fn from_data(data: &[u8]) -> Result<ExtendedQueryMol> {
+    ///
+    /// # Safety
+    ///
+    /// `data` must be a pickle RDKit wrote (this crate's `to_binary` or
+    /// RDKit's), unmodified: it holds molecule pickles, which RDKit reads as
+    /// `Mol::from_pkl_string` does.
+    pub unsafe fn from_data(data: &[u8]) -> Result<ExtendedQueryMol> {
         Ok(ExtendedQueryMol::from_ffi(
             ffi::extended_query_mol_from_binary(data)?,
         ))
@@ -83,15 +101,25 @@ impl ExtendedQueryMol {
     /// Replaces the query with one from a binary pickle, as `from_data`
     /// reads; on an error it is unchanged. Python's takes the pickle as a
     /// string. Mirrors `ExtendedQueryMol.InitFromBinary`.
-    pub fn init_from_binary(&mut self, pkl: &[u8]) -> Result<()> {
-        *self = ExtendedQueryMol::from_data(pkl)?;
+    ///
+    /// # Safety
+    ///
+    /// As for `from_data`.
+    pub unsafe fn init_from_binary(&mut self, pkl: &[u8]) -> Result<()> {
+        // SAFETY: the caller's contract is `from_data`'s.
+        *self = unsafe { ExtendedQueryMol::from_data(pkl) }?;
         Ok(())
     }
 
     /// Replaces the query with one from JSON, as `new_with_is_json` reads;
     /// on an error it is unchanged. Mirrors `ExtendedQueryMol.InitFromJSON`.
-    pub fn init_from_json(&mut self, text: &str) -> Result<()> {
-        *self = ExtendedQueryMol::new_with_is_json(text, true)?;
+    ///
+    /// # Safety
+    ///
+    /// As for `new_with_is_json`.
+    pub unsafe fn init_from_json(&mut self, text: &str) -> Result<()> {
+        // SAFETY: the caller's contract is `new_with_is_json`'s.
+        *self = unsafe { ExtendedQueryMol::new_with_is_json(text, true) }?;
         Ok(())
     }
 

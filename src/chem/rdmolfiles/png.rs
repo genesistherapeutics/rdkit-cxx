@@ -78,13 +78,26 @@ impl PNGMetadataParams {
 /// The molecule recorded in a PNG: from the first pickle, SMILES, or mol
 /// block in its metadata. Mirrors `rdmolfiles.MolFromPNGString`, which returns
 /// `None` where this returns an error.
-pub fn mol_from_png_string(png: &[u8]) -> Result<Mol> {
-    mol_from_png_string_with_params(png, &SmilesParserParams::default())
+///
+/// # Safety
+///
+/// A molecule pickle in `png`'s metadata, which RDKit reads first, must be
+/// one RDKit wrote, unmodified, as for `Mol::from_pkl_string`.
+pub unsafe fn mol_from_png_string(png: &[u8]) -> Result<Mol> {
+    // SAFETY: the caller's contract is `mol_from_png_string_with_params`'s.
+    unsafe { mol_from_png_string_with_params(png, &SmilesParserParams::default()) }
 }
 
 /// `params` parse a recorded SMILES, and their `sanitize` and `remove_hs` a
 /// mol block. Mirrors `rdmolfiles.MolFromPNGString(png, params)`.
-pub fn mol_from_png_string_with_params(png: &[u8], params: &SmilesParserParams) -> Result<Mol> {
+///
+/// # Safety
+///
+/// As for `mol_from_png_string`.
+pub unsafe fn mol_from_png_string_with_params(
+    png: &[u8],
+    params: &SmilesParserParams,
+) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::mol_from_png_string(
         png,
         &params.to_ffi(),
@@ -93,12 +106,21 @@ pub fn mol_from_png_string_with_params(png: &[u8], params: &SmilesParserParams) 
 
 /// As `mol_from_png_string`, for a PNG file; one that cannot be opened is
 /// `Error::Os`. Mirrors `rdmolfiles.MolFromPNGFile`.
-pub fn mol_from_png_file(filename: impl AsRef<Path>) -> Result<Mol> {
-    mol_from_png_file_with_params(filename, &SmilesParserParams::default())
+///
+/// # Safety
+///
+/// As for `mol_from_png_string`, of the file's data.
+pub unsafe fn mol_from_png_file(filename: impl AsRef<Path>) -> Result<Mol> {
+    // SAFETY: the caller's contract is `mol_from_png_file_with_params`'s.
+    unsafe { mol_from_png_file_with_params(filename, &SmilesParserParams::default()) }
 }
 
 /// Mirrors `rdmolfiles.MolFromPNGFile(filename, params)`.
-pub fn mol_from_png_file_with_params(
+///
+/// # Safety
+///
+/// As for `mol_from_png_string`, of the file's data.
+pub unsafe fn mol_from_png_file_with_params(
     filename: impl AsRef<Path>,
     params: &SmilesParserParams,
 ) -> Result<Mol> {
@@ -166,12 +188,23 @@ fn into_options(mut list: UniquePtr<molops::MolList>) -> Vec<Option<Mol>> {
 /// A molecule for each pickle in a PNG's metadata, in file order; `None`
 /// where Python's tuple holds `None` (a SMILES RDKit cannot parse). Mirrors
 /// `rdmolfiles.MolsFromPNGString`.
-pub fn mols_from_png_string(png: &[u8]) -> Result<Vec<Option<Mol>>> {
-    mols_from_png_string_with_params(png, &MolsFromPNGStringParams::default())
+///
+/// # Safety
+///
+/// Each pickle in `png`'s metadata must be one RDKit wrote, unmodified, as
+/// for `Mol::from_pkl_string`.
+pub unsafe fn mols_from_png_string(png: &[u8]) -> Result<Vec<Option<Mol>>> {
+    // SAFETY: the caller's contract is `mols_from_png_string_with_params`'s.
+    unsafe { mols_from_png_string_with_params(png, &MolsFromPNGStringParams::default()) }
 }
 
 /// Mirrors `rdmolfiles.MolsFromPNGString(png, tag, params)`.
-pub fn mols_from_png_string_with_params(
+///
+/// # Safety
+///
+/// When `params.tag` selects pickles, each must be one RDKit wrote,
+/// unmodified, as for `Mol::from_pkl_string`.
+pub unsafe fn mols_from_png_string_with_params(
     png: &[u8],
     params: &MolsFromPNGStringParams,
 ) -> Result<Vec<Option<Mol>>> {
@@ -184,12 +217,21 @@ pub fn mols_from_png_string_with_params(
 
 /// As `mols_from_png_string`, for a PNG file. Python returns an empty tuple
 /// where this returns an error. Mirrors `rdmolfiles.MolsFromPNGFile`.
-pub fn mols_from_png_file(filename: impl AsRef<Path>) -> Result<Vec<Option<Mol>>> {
-    mols_from_png_file_with_params(filename, &MolsFromPNGFileParams::default())
+///
+/// # Safety
+///
+/// As for `mols_from_png_string`, of the file's data.
+pub unsafe fn mols_from_png_file(filename: impl AsRef<Path>) -> Result<Vec<Option<Mol>>> {
+    // SAFETY: the caller's contract is `mols_from_png_file_with_params`'s.
+    unsafe { mols_from_png_file_with_params(filename, &MolsFromPNGFileParams::default()) }
 }
 
 /// Mirrors `rdmolfiles.MolsFromPNGFile(filename, tag, params)`.
-pub fn mols_from_png_file_with_params(
+///
+/// # Safety
+///
+/// As for `mols_from_png_string_with_params`, of the file's data.
+pub unsafe fn mols_from_png_file_with_params(
     filename: impl AsRef<Path>,
     params: &MolsFromPNGFileParams,
 ) -> Result<Vec<Option<Mol>>> {

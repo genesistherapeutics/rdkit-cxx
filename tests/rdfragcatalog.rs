@@ -176,7 +176,8 @@ fn catalogs() {
     check_catalog(&catalog);
     assert_eq!(catalog.serialize().unwrap(), hex(CATALOG_PICKLE));
     for pickle in [hex(CATALOG_PICKLE), catalog.serialize().unwrap()] {
-        let back = FragCatalog::from_pickle(&pickle).unwrap();
+        // SAFETY: a pickle RDKit wrote.
+        let back = unsafe { FragCatalog::from_pickle(&pickle) }.unwrap();
         check_catalog(&back);
         assert_eq!(back.get_catalog_params().unwrap().get_num_func_groups(), 3);
     }
@@ -287,7 +288,11 @@ fn description_lengths_are_checked() {
     for length in [-1i32, 1 << 30, i32::MAX] {
         let mut bad = good.clone();
         bad[at..at + 4].copy_from_slice(&length.to_le_bytes());
-        assert!(is_value(FragCatalog::from_pickle(&bad)), "{length}");
+        // SAFETY: a pickle RDKit wrote but for a description length, which the wrapper checks.
+        assert!(
+            is_value(unsafe { FragCatalog::from_pickle(&bad) }),
+            "{length}"
+        );
     }
 }
 
@@ -300,7 +305,8 @@ fn edges_are_checked() {
     for id in [5i32, -1] {
         let mut bad = good.clone();
         bad[at..at + 4].copy_from_slice(&id.to_le_bytes());
-        assert!(is_value(FragCatalog::from_pickle(&bad)), "{id}");
+        // SAFETY: a pickle RDKit wrote but for an edge, which the wrapper checks.
+        assert!(is_value(unsafe { FragCatalog::from_pickle(&bad) }), "{id}");
     }
 }
 
@@ -308,7 +314,11 @@ fn edges_are_checked() {
 fn truncated_pickles() {
     let pickle = hex(CATALOG_PICKLE);
     for n in [0, 20, 40, 120, 300, pickle.len() - 1] {
-        assert!(FragCatalog::from_pickle(&pickle[..n]).is_err(), "{n}");
+        // SAFETY: a prefix of a pickle RDKit wrote, which the wrapper reads to the end first.
+        assert!(
+            unsafe { FragCatalog::from_pickle(&pickle[..n]) }.is_err(),
+            "{n}"
+        );
     }
     // RDKit cannot read back a catalog with no functional groups.
     let mut catalog =
@@ -317,7 +327,8 @@ fn truncated_pickles() {
         .add_frags_from_mol(&mol("CCO"), &mut catalog)
         .unwrap();
     assert!(matches!(
-        FragCatalog::from_pickle(&catalog.serialize().unwrap()),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) },
         Err(Error::Runtime { .. })
     ));
 }
@@ -330,7 +341,8 @@ fn bits_are_checked() {
     let good = hex(CATALOG_PICKLE);
     let mut pickle = good.clone();
     pickle[16..20].copy_from_slice(&7u32.to_le_bytes());
-    let catalog = FragCatalog::from_pickle(&pickle).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let catalog = unsafe { FragCatalog::from_pickle(&pickle) }.unwrap();
     assert_eq!(catalog.get_bit_description(4).unwrap(), "C<-O>CC");
     assert!(is_value(catalog.get_bit_description(5)));
     assert!(is_value(catalog.get_bit_order(6)));
@@ -344,7 +356,8 @@ fn bits_are_checked() {
     assert_eq!(&good[at..at + 4], 4i32.to_le_bytes());
     let mut pickle = good.clone();
     pickle[at..at + 4].copy_from_slice(&5i32.to_le_bytes());
-    let catalog = FragCatalog::from_pickle(&pickle).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let catalog = unsafe { FragCatalog::from_pickle(&pickle) }.unwrap();
     assert!(is_value(
         FragFPGenerator.get_fp_for_mol(&mol("CCCC"), &catalog)
     ));
@@ -352,7 +365,8 @@ fn bits_are_checked() {
     // More bits than a fingerprint can index (U3).
     let mut pickle = good.clone();
     pickle[16..20].copy_from_slice(&(1u32 << 31).to_le_bytes());
-    let catalog = FragCatalog::from_pickle(&pickle).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let catalog = unsafe { FragCatalog::from_pickle(&pickle) }.unwrap();
     assert!(is_value(
         FragFPGenerator.get_fp_for_mol(&mol("CCCC"), &catalog)
     ));
@@ -387,7 +401,11 @@ fn molecules_are_checked() {
         + 24;
     let end = description_at(&good, "C<-O>C") - 4;
     let splice = |molecule: &[u8]| [&good[..start], molecule, &good[end..]].concat();
-    assert!(FragCatalog::from_pickle(&splice(&marked)).is_ok());
+    // SAFETY: a pickle RDKit wrote with another molecule pickle RDKit wrote spliced in.
+    assert!(unsafe { FragCatalog::from_pickle(&splice(&marked)) }.is_ok());
     marked[at + 8] = 1;
-    assert!(is_value(FragCatalog::from_pickle(&splice(&marked))));
+    // SAFETY: as above, but for a monomer type byte, which the wrapper checks (U10).
+    assert!(is_value(unsafe {
+        FragCatalog::from_pickle(&splice(&marked))
+    }));
 }

@@ -776,7 +776,8 @@ fn unknown_bond_types_are_refused() {
         "680000000302020600680000000302020b0001081e4200000000170400000000",
         "00000016"
     ));
-    match Mol::from_pkl_string(&pkl) {
+    // SAFETY: a pickle RDKit wrote.
+    match unsafe { Mol::from_pkl_string(&pkl) } {
         Err(Error::Value { message }) => assert!(message.contains("BondType"), "{message}"),
         other => panic!("{other:?}"),
     }

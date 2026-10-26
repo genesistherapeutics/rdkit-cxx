@@ -12,27 +12,34 @@ fn pickles_round_trip() {
     let mut mol = mol_from_smiles("c1ccccc1O").unwrap();
     mol.set_prop("note", "kept");
     let pickle = mol.to_binary();
-    let back = Mol::from_pkl_string(&pickle).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let back = unsafe { Mol::from_pkl_string(&pickle) }.unwrap();
     assert_eq!(mol_to_smiles(&back).unwrap(), "Oc1ccccc1");
     assert!(!back.has_prop("note"));
 
     let all = mol.to_binary_with_property_flags(PropertyPickleOptions::AllProps);
     assert_eq!(
-        Mol::from_pkl_string(&all)
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { Mol::from_pkl_string(&all) }
             .unwrap()
             .get_prop("note")
             .unwrap(),
         "kept"
     );
     let no_props =
-        Mol::from_pkl_string_with_property_flags(&all, PropertyPickleOptions::NoProps).unwrap();
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { Mol::from_pkl_string_with_property_flags(&all, PropertyPickleOptions::NoProps) }.unwrap();
     assert!(!no_props.has_prop("note"));
-    let rw = RWMol::from_pkl_string(&all).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let rw = unsafe { RWMol::from_pkl_string(&all) }.unwrap();
     assert_eq!(rw.get_num_atoms(), 7);
     assert_eq!(
-        RWMol::from_pkl_string_with_property_flags(&all, PropertyPickleOptions::AllProps)
-            .unwrap()
-            .get_num_atoms(),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe {
+            RWMol::from_pkl_string_with_property_flags(&all, PropertyPickleOptions::AllProps)
+        }
+        .unwrap()
+        .get_num_atoms(),
         7
     );
 
@@ -43,7 +50,8 @@ fn pickles_round_trip() {
         PropertyPickleOptions::MolProps
     );
     assert_eq!(
-        Mol::from_pkl_string(&mol.to_binary())
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { Mol::from_pkl_string(&mol.to_binary()) }
             .unwrap()
             .get_prop("note")
             .unwrap(),
@@ -52,7 +60,8 @@ fn pickles_round_trip() {
     set_default_pickle_properties(original);
 
     assert!(matches!(
-        Mol::from_pkl_string(b"not a pickle"),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { Mol::from_pkl_string(b"not a pickle") },
         Err(Error::Runtime { .. })
     ));
 }
@@ -154,10 +163,12 @@ fn pickles_with_unknown_enum_values_are_refused() {
         let (at, _, _) = differing_byte(&pickles[0], &pickles[1]);
         let mut pickle = pickles[1].clone();
         // The edited value itself reads back.
-        Mol::from_pkl_string(&pickle).unwrap();
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { Mol::from_pkl_string(&pickle) }.unwrap();
         // RDKit refuses a negative byte, but not one past its enum.
         pickle[at] = 100;
-        match Mol::from_pkl_string(&pickle) {
+        // SAFETY: a pickle RDKit wrote but for an enum byte, which check_pickled_mol checks.
+        match unsafe { Mol::from_pkl_string(&pickle) } {
             Err(Error::Value { message }) => assert!(message.contains(what), "{message}"),
             other => panic!("{what}: {other:?}"),
         }
@@ -176,7 +187,8 @@ fn pickles_with_unknown_enum_values_are_refused() {
     let (at, _, _) = differing_byte(&pickles[0], &pickles[1]);
     let mut pickle = pickles[1].clone();
     pickle[at] = 7;
-    match Mol::from_pkl_string(&pickle) {
+    // SAFETY: a pickle RDKit wrote but for an enum byte, which check_pickled_mol checks.
+    match unsafe { Mol::from_pkl_string(&pickle) } {
         Err(Error::Value { message }) => assert!(message.contains("StereoGroupType"), "{message}"),
         other => panic!("StereoGroupType: {other:?}"),
     }

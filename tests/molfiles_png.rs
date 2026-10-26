@@ -74,12 +74,14 @@ fn molecules() {
         ["rdkitPKL rdkit 2026.09.1", "SMILES rdkit 2026.09.1"]
     );
     assert_eq!(
-        mol_to_smiles(&mol_from_png_string(&png).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        mol_to_smiles(&unsafe { mol_from_png_string(&png) }.unwrap()).unwrap(),
         "CO"
     );
     let two = mol_metadata_to_png_string(&smiles("CCN"), &png).unwrap();
     assert_eq!(
-        to_smiles(mols_from_png_string(&two).unwrap()),
+        // SAFETY: a pickle RDKit wrote.
+        to_smiles(unsafe { mols_from_png_string(&two) }.unwrap()),
         ["CO", "CCN"]
     );
     let tagged = MolsFromPNGStringParams {
@@ -87,7 +89,8 @@ fn molecules() {
         ..Default::default()
     };
     assert_eq!(
-        to_smiles(mols_from_png_string_with_params(&two, &tagged).unwrap()),
+        // SAFETY: a pickle RDKit wrote.
+        to_smiles(unsafe { mols_from_png_string_with_params(&two, &tagged) }.unwrap()),
         ["CO", "CCN"]
     );
     let mol_block = PNGMetadataParams {
@@ -101,24 +104,32 @@ fn molecules() {
         ["SMILES rdkit 2026.09.1", "MOL rdkit 2026.09.1"]
     );
     assert_eq!(
-        mol_to_smiles(&mol_from_png_string(&png).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        mol_to_smiles(&unsafe { mol_from_png_string(&png) }.unwrap()).unwrap(),
         "CO"
     );
 
     let path = common::temp_path("two.png");
     std::fs::write(&path, &two).unwrap();
     assert_eq!(
-        mol_to_smiles(&mol_from_png_file(&path).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        mol_to_smiles(&unsafe { mol_from_png_file(&path) }.unwrap()).unwrap(),
         "CO"
     );
-    assert_eq!(to_smiles(mols_from_png_file(&path).unwrap()), ["CO", "CCN"]);
+    // SAFETY: a pickle RDKit wrote.
+    assert_eq!(
+        to_smiles(unsafe { mols_from_png_file(&path) }.unwrap()),
+        ["CO", "CCN"]
+    );
     let three = mol_metadata_to_png_file(&smiles("O"), &path).unwrap();
     assert_eq!(
-        to_smiles(mols_from_png_string(&three).unwrap()),
+        // SAFETY: a pickle RDKit wrote.
+        to_smiles(unsafe { mols_from_png_string(&three) }.unwrap()),
         ["CO", "CCN", "O"]
     );
     assert!(matches!(
-        mol_from_png_file("does-not-exist.png"),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { mol_from_png_file("does-not-exist.png") },
         Err(Error::Os { .. })
     ));
 }
@@ -137,10 +148,12 @@ fn metadata() {
     );
     // No molecule: Python returns None and an empty tuple.
     assert!(matches!(
-        mol_from_png_string(&png),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { mol_from_png_string(&png) },
         Err(Error::Parse { .. })
     ));
-    assert!(mols_from_png_string(&png).unwrap().is_empty());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { mols_from_png_string(&png) }.unwrap().is_empty());
     let path = common::temp_path("metadata.png");
     std::fs::write(&path, &png).unwrap();
     assert_eq!(metadata_from_png_file(&path).unwrap().len(), 2);
@@ -165,9 +178,15 @@ fn malformed_pngs_are_refused() {
             metadata_from_png_string(png),
             Err(Error::Parse { .. })
         ));
-        assert!(matches!(mol_from_png_string(png), Err(Error::Parse { .. })));
+        // SAFETY: malformed PNG data, whose chunks the wrapper refuses before RDKit reads any
+        // metadata.
         assert!(matches!(
-            mols_from_png_string(png),
+            unsafe { mol_from_png_string(png) },
+            Err(Error::Parse { .. })
+        ));
+        assert!(matches!(
+            // SAFETY: as above.
+            unsafe { mols_from_png_string(png) },
             Err(Error::Parse { .. })
         ));
         assert!(matches!(
@@ -200,12 +219,14 @@ fn recorded_text_is_checked() {
     );
     let png = add_metadata_to_png_string(&BTreeMap::from([("MOL".into(), long)]), PNG).unwrap();
     assert!(matches!(
-        mol_from_png_string(&png),
+        // SAFETY: metadata with a mol block and no pickle.
+        unsafe { mol_from_png_string(&png) },
         Err(Error::Value { .. })
     ));
     let png = add_metadata_to_png_string(&BTreeMap::from([("MOL".into(), block)]), PNG).unwrap();
     assert_eq!(
-        mol_to_smiles(&mol_from_png_string(&png).unwrap()).unwrap(),
+        // SAFETY: a pickle RDKit wrote.
+        mol_to_smiles(&unsafe { mol_from_png_string(&png) }.unwrap()).unwrap(),
         "C[C@H](F)Cl"
     );
     let debug = SmilesParserParams {
@@ -213,7 +234,8 @@ fn recorded_text_is_checked() {
         ..Default::default()
     };
     assert!(matches!(
-        mol_from_png_string_with_params(&png, &debug),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { mol_from_png_string_with_params(&png, &debug) },
         Err(Error::Value { .. })
     ));
 }
@@ -264,7 +286,8 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
         with_chunk(PNG, b"tEXt", &data)
     };
     let png = chunk(&pkl);
-    let read = mol_from_png_string(&png).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { mol_from_png_string(&png) }.unwrap();
     let info = read
         .get_atom_with_idx(0)
         .unwrap()
@@ -274,11 +297,13 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
     pkl[at] = 1;
     let png = chunk(&pkl);
     assert!(matches!(
-        mol_from_png_string(&png),
+        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
+        unsafe { mol_from_png_string(&png) },
         Err(Error::Value { .. })
     ));
     assert!(matches!(
-        mols_from_png_string(&png),
+        // SAFETY: as above.
+        unsafe { mols_from_png_string(&png) },
         Err(Error::Value { .. })
     ));
 }

@@ -217,8 +217,11 @@ file's line count.
 
 - **Binary formats:** RDKit's own binary formats (bit-vector, grid, and
   catalog pickles, FPB files, PNG chunks) are checked before RDKit reads
-  them (U2). Boost.Serialization archives can't be checked, so the functions
-  that read them are `unsafe fn`s whose contract is "bytes RDKit wrote".
+  them (U2). Molecule pickles, and everything that carries them (reaction,
+  bundle, catalog, and query pickles, and PNG metadata), can't be checked:
+  RDKit's pickle reader trusts the query trees and values it reads. Neither
+  can Boost.Serialization archives. So the functions that read them are
+  `unsafe fn`s whose contract is "bytes RDKit wrote".
 - **Cached data:** RDKit caches distance matrices and descriptor results in
   a molecule's properties and reads stale ones past their end. Wrappers that
   compute them clear them before and after the call, so no molecule Rust
@@ -282,8 +285,8 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in two ways. Neither
-corrupts memory on the supported platforms, and both need fixes in RDKit:
+Safe Rust can still reach undefined behavior in RDKit in one way. It does
+not corrupt memory on the supported platforms, and it needs a fix in RDKit:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
@@ -293,10 +296,6 @@ corrupts memory on the supported platforms, and both need fixes in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **A cast in molecule pickles.** `MolPickler` converts a float it reads to
-  an `int` without a range check when it computes an atom's isotope, which
-  is undefined for a value that does not fit. Pickles RDKit wrote never
-  hold one; a crafted pickle can.
 
 Other limits:
 

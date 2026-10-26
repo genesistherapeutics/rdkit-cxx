@@ -253,5 +253,11 @@ fn added_rings_are_cycles() {
     assert_eq!(ring.get_ring_info().num_rings().unwrap(), 3);
     // A molecule with an added ring pickles and reads back.
     let pkl = ring.to_binary();
-    assert_eq!(Mol::from_pkl_string(&pkl).unwrap().get_num_atoms(), 4);
+    // SAFETY: a pickle RDKit wrote.
+    assert_eq!(
+        unsafe { Mol::from_pkl_string(&pkl) }
+            .unwrap()
+            .get_num_atoms(),
+        4
+    );
 }

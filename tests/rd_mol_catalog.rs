@@ -74,12 +74,15 @@ fn catalogs() {
     let catalog = catalog();
     check_catalog(&catalog);
     assert_eq!(catalog.serialize().unwrap(), hex(CATALOG_PICKLE));
-    check_catalog(&MolCatalog::from_pickle(&hex(CATALOG_PICKLE)).unwrap());
-    check_catalog(&MolCatalog::from_pickle(&catalog.serialize().unwrap()).unwrap());
+    // SAFETY: a pickle RDKit wrote.
+    check_catalog(&unsafe { MolCatalog::from_pickle(&hex(CATALOG_PICKLE)) }.unwrap());
+    // SAFETY: as above.
+    check_catalog(&unsafe { MolCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap());
 
     let empty = create_mol_catalog();
     assert_eq!((empty.get_num_entries(), empty.get_fp_length()), (0, 0));
-    let empty = MolCatalog::from_pickle(&empty.serialize().unwrap()).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let empty = unsafe { MolCatalog::from_pickle(&empty.serialize().unwrap()) }.unwrap();
     assert_eq!(empty.get_num_entries(), 0);
 }
 
@@ -114,7 +117,8 @@ fn entries() {
     let pickle = entry.serialize().unwrap();
     assert_eq!(pickle, hex(ENTRY_PICKLE));
     for pickle in [pickle, hex(ENTRY_PICKLE)] {
-        let back = MolCatalogEntry::from_pickle(&pickle).unwrap();
+        // SAFETY: a pickle RDKit wrote.
+        let back = unsafe { MolCatalogEntry::from_pickle(&pickle) }.unwrap();
         assert_eq!(back.get_description().unwrap(), "ethanol");
         assert_eq!(back.get_order(), 3);
         assert_eq!(mol_to_smiles(&back.get_mol().unwrap()).unwrap(), "CCO");
@@ -152,12 +156,17 @@ fn description_lengths_are_checked() {
     for length in [-1i32, -100_000, 8, 1 << 30, i32::MAX] {
         let mut bad = good.clone();
         bad[at..at + 4].copy_from_slice(&length.to_le_bytes());
-        assert!(is_value(MolCatalogEntry::from_pickle(&bad)), "{length}");
+        // SAFETY: a pickle RDKit wrote but for a description length, which the wrapper checks.
+        assert!(
+            is_value(unsafe { MolCatalogEntry::from_pickle(&bad) }),
+            "{length}"
+        );
     }
     // Shorter lengths stop early, as in Python, which ignores the rest.
     let mut short = good.clone();
     short[at..at + 4].copy_from_slice(&3i32.to_le_bytes());
-    let entry = MolCatalogEntry::from_pickle(&short).unwrap();
+    // SAFETY: as above, with a length the wrapper accepts.
+    let entry = unsafe { MolCatalogEntry::from_pickle(&short) }.unwrap();
     assert_eq!(entry.get_description().unwrap(), "eth");
 
     // The catalog's entries are checked the same way: the last entry's
@@ -167,7 +176,8 @@ fn description_lengths_are_checked() {
     assert_eq!(&catalog[at..at + 4], 7i32.to_le_bytes());
     let mut bad = catalog.clone();
     bad[at..at + 4].copy_from_slice(&(-1i32).to_le_bytes());
-    assert!(is_value(MolCatalog::from_pickle(&bad)));
+    // SAFETY: a pickle RDKit wrote but for a description length, which the wrapper checks.
+    assert!(is_value(unsafe { MolCatalog::from_pickle(&bad) }));
 }
 
 #[test]
@@ -179,7 +189,8 @@ fn edges_are_checked() {
     for id in [3i32, -1, i32::MAX] {
         let mut bad = good.clone();
         bad[at..at + 4].copy_from_slice(&id.to_le_bytes());
-        assert!(is_value(MolCatalog::from_pickle(&bad)), "{id}");
+        // SAFETY: a pickle RDKit wrote but for an edge, which the wrapper checks.
+        assert!(is_value(unsafe { MolCatalog::from_pickle(&bad) }), "{id}");
     }
 }
 
@@ -188,10 +199,18 @@ fn truncated_pickles() {
     let catalog = hex(CATALOG_PICKLE);
     let entry = hex(ENTRY_PICKLE);
     for n in [0, 10, 30, 100, catalog.len() - 1] {
-        assert!(MolCatalog::from_pickle(&catalog[..n]).is_err(), "{n}");
+        // SAFETY: a prefix of a pickle RDKit wrote, which the wrapper reads to the end first.
+        assert!(
+            unsafe { MolCatalog::from_pickle(&catalog[..n]) }.is_err(),
+            "{n}"
+        );
     }
     for n in [0, 10, 50, entry.len() - 8] {
-        assert!(MolCatalogEntry::from_pickle(&entry[..n]).is_err(), "{n}");
+        // SAFETY: as above.
+        assert!(
+            unsafe { MolCatalogEntry::from_pickle(&entry[..n]) }.is_err(),
+            "{n}"
+        );
     }
 }
 
@@ -201,7 +220,8 @@ fn truncated_pickles() {
 fn bits_without_entries() {
     let mut pickle = hex(CATALOG_PICKLE);
     pickle[16..20].copy_from_slice(&5u32.to_le_bytes());
-    let catalog = MolCatalog::from_pickle(&pickle).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let catalog = unsafe { MolCatalog::from_pickle(&pickle) }.unwrap();
     assert_eq!(catalog.get_fp_length(), 5);
     assert_eq!(catalog.get_bit_description(2).unwrap(), "benzene");
     assert!(is_value(catalog.get_bit_description(3)));
@@ -228,7 +248,8 @@ fn pdb_typed_entry_pickle() -> Vec<u8> {
         .windows(9)
         .position(|w| w == b"\x04\0\0\0MARK\x02")
         .unwrap();
-    assert!(MolCatalogEntry::from_pickle(&pickle).is_ok());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { MolCatalogEntry::from_pickle(&pickle) }.is_ok());
     pickle[at + 8] = 1;
     pickle
 }
@@ -236,11 +257,13 @@ fn pdb_typed_entry_pickle() -> Vec<u8> {
 #[test]
 fn molecules_are_checked() {
     let pickle = pdb_typed_entry_pickle();
-    assert!(is_value(MolCatalogEntry::from_pickle(&pickle)));
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
+    assert!(is_value(unsafe { MolCatalogEntry::from_pickle(&pickle) }));
     // A catalog of one such entry, with no edges.
     let mut catalog = create_mol_catalog().serialize().unwrap();
     catalog[20..24].copy_from_slice(&1u32.to_le_bytes());
     catalog.extend(&pickle);
     catalog.extend(0u32.to_le_bytes());
-    assert!(is_value(MolCatalog::from_pickle(&catalog)));
+    // SAFETY: a pickle RDKit wrote.
+    assert!(is_value(unsafe { MolCatalog::from_pickle(&catalog) }));
 }

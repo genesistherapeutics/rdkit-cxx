@@ -315,7 +315,8 @@ fn core_bond_types() {
     assert_eq!((pickle[55], pickle[62]), (11, 2));
     pickle[62] = 30;
     assert!(matches!(
-        Mol::from_pkl_string(&pickle),
+        // SAFETY: a pickle RDKit wrote but for a bond type byte, which check_pickled_mol checks.
+        unsafe { Mol::from_pkl_string(&pickle) },
         Err(Error::Value { .. })
     ));
 }

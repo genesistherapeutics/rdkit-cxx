@@ -213,8 +213,10 @@ fn pickles_and_json() {
         let pickle = query.to_binary().unwrap();
         let json = query.to_json().unwrap();
         let copies = [
-            ExtendedQueryMol::from_data(&pickle).unwrap(),
-            ExtendedQueryMol::new_with_is_json(&json, true).unwrap(),
+            // SAFETY: a pickle RDKit wrote.
+            unsafe { ExtendedQueryMol::from_data(&pickle) }.unwrap(),
+            // SAFETY: as above.
+            unsafe { ExtendedQueryMol::new_with_is_json(&json, true) }.unwrap(),
             query.clone(),
         ];
         for copy in &copies {
@@ -222,10 +224,12 @@ fn pickles_and_json() {
             assert_eq!(mol_has_substruct_match(&target, copy).unwrap(), expected);
         }
         let mut replaced = create_extended_query_mol(&smiles("CC")).unwrap();
-        replaced.init_from_binary(&pickle).unwrap();
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { replaced.init_from_binary(&pickle) }.unwrap();
         assert_eq!(xqm_type(&replaced), xqm_type(&query));
         let mut replaced = create_extended_query_mol(&smiles("CC")).unwrap();
-        replaced.init_from_json(&json).unwrap();
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { replaced.init_from_json(&json) }.unwrap();
         assert_eq!(xqm_type(&replaced), xqm_type(&query));
     }
 
@@ -233,25 +237,31 @@ fn pickles_and_json() {
     assert_eq!(xqm_type(&plain), "1");
     // A failed read leaves the query as it was.
     let mut query = plain.clone();
-    assert!(query.init_from_binary(b"junk").is_err());
-    assert!(query.init_from_json("{").is_err());
+    // SAFETY: not a pickle; RDKit refuses it before reading a molecule.
+    assert!(unsafe { query.init_from_binary(b"junk") }.is_err());
+    // SAFETY: not JSON; RDKit refuses it before reading a molecule.
+    assert!(unsafe { query.init_from_json("{") }.is_err());
     assert_eq!(xqm_type(&query), "1");
     assert!(matches!(
-        ExtendedQueryMol::new_with_is_json("{\"xqm_type\": \"9\"}", true),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { ExtendedQueryMol::new_with_is_json("{\"xqm_type\": \"9\"}", true) },
         Err(Error::Runtime { .. })
     ));
     assert!(matches!(
-        ExtendedQueryMol::new_with_is_json("not json", true),
+        // SAFETY: a pickle RDKit wrote.
+        unsafe { ExtendedQueryMol::new_with_is_json("not json", true) },
         Err(Error::Value { .. })
     ));
     // The string form of the binary constructor reads its bytes.
-    assert!(ExtendedQueryMol::new("not a pickle").is_err());
+    // SAFETY: a pickle RDKit wrote.
+    assert!(unsafe { ExtendedQueryMol::new("not a pickle") }.is_err());
 }
 
 #[test]
 fn json_is_checked() {
     let json = |mol: &str| format!("{{\"xqm_type\": \"1\", \"mol\": {{{mol}}}}}");
-    let read = |text: &str| ExtendedQueryMol::new_with_is_json(text, true);
+    // SAFETY: a pickle RDKit wrote.
+    let read = |text: &str| unsafe { ExtendedQueryMol::new_with_is_json(text, true) };
     // RDKit holds, then dereferences, the null molecule SmilesToMol and
     // SmartsToMol return for text that does not parse.
     assert!(matches!(
@@ -402,12 +412,15 @@ fn large_tautomer_bundles_are_not_pickled() {
     let entry = r#"{"tautomers": [{"smiles": "C"}], "template": {"smiles": "C"}, "modifiedAtoms": [], "modifiedBonds": []}"#;
     let entries = vec![entry; 65536].join(", ");
     let json = format!(r#"{{"xqm_type": "4", "tautomerQueries": [{entries}]}}"#);
-    let query = ExtendedQueryMol::new_with_is_json(&json, true).unwrap();
+    // SAFETY: JSON with SMILES and no molecule pickles.
+    let query = unsafe { ExtendedQueryMol::new_with_is_json(&json, true) }.unwrap();
     assert!(matches!(query.to_binary(), Err(Error::Value { .. })));
     assert!(query.to_json().is_ok());
     let small = format!(r#"{{"xqm_type": "4", "tautomerQueries": [{entry}]}}"#);
-    let small = ExtendedQueryMol::new_with_is_json(&small, true).unwrap();
-    ExtendedQueryMol::from_data(&small.to_binary().unwrap()).unwrap();
+    // SAFETY: as above.
+    let small = unsafe { ExtendedQueryMol::new_with_is_json(&small, true) }.unwrap();
+    // SAFETY: as above.
+    unsafe { ExtendedQueryMol::from_data(&small.to_binary().unwrap()) }.unwrap();
 }
 
 // Enumerating takes RDKit's enumerator a recursion level per variation
