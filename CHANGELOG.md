@@ -90,3 +90,16 @@ plumbing, and Python protocol hooks.
   give NaN for it there.
 - Where Python's results depend on the platform, as `InfoBitRanker`'s order
   of tied gains does, the tests accept any of them.
+- `ML.Cluster.Clusters.Cluster` caches its points when it first gains
+  children and never updates the cache, so after `AddChild`, `AddChildren`,
+  or `RemoveChild` on a tree built by hand, Python's `GetPoints` can return
+  stale points; the port recomputes them. Trees Murtagh's clustering builds
+  agree.
+- `GraphDescriptors.Ipc` and `AvgIpc` (and `Graphs.CharacteristicPolynomial`)
+  lose precision above about 80 heavy atoms, in Python and Rust alike, and
+  there the two differ by up to about 1%, since NumPy's BLAS sums in another
+  order.
+- `Quantize.FindVarMultQuantBounds` refuses NaN values, whose places in
+  Python's sort decide its result.
+- `Randomize.RandomizeMol` returns the empty molecule as it is, where
+  Python's binding refuses its empty atom order.
