@@ -27,6 +27,7 @@ pub(crate) mod determine_bonds;
 pub(crate) mod distance_geometry;
 pub(crate) mod embedder;
 pub(crate) mod enumerate;
+pub(crate) mod enumerate_stereoisomers;
 pub(crate) mod errors;
 pub(crate) mod filter_catalog;
 pub(crate) mod fingerprint_generator;

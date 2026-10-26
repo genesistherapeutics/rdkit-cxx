@@ -97,6 +97,7 @@ const BRIDGES: &[&str] = &[
     "shape_align",
     "gaussian_shape",
     "abbreviations",
+    "enumerate_stereoisomers",
 ];
 
 fn main() {

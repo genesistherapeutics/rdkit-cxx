@@ -119,6 +119,7 @@ set(RDKIT_CXX_SOURCES
   src/shape_align.cpp
   src/gaussian_shape.cpp
   src/abbreviations.cpp
+  src/enumerate_stereoisomers.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -176,6 +177,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   PubChemShape
   GaussianShape
   Abbreviations
+  EnumerateStereoisomers
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
