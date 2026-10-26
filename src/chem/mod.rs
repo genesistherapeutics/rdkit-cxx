@@ -19,6 +19,7 @@ pub mod fraggle;
 pub mod fragment_matcher;
 pub mod functional_groups;
 pub mod graphs;
+pub mod inchi;
 mod init;
 pub mod lipinski;
 pub mod mol_standardize;
@@ -79,6 +80,13 @@ pub mod scaffolds;
 pub mod simple_enum;
 pub mod template_align;
 
+pub use inchi::{
+    InchiLogLevel, MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key,
+    mol_from_inchi, mol_from_inchi_and_aux_info, mol_from_inchi_and_aux_info_with_params,
+    mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
+    mol_to_inchi_and_aux_info_with_params, mol_to_inchi_key, mol_to_inchi_key_with_options,
+    mol_to_inchi_with_params,
+};
 pub use init::*;
 pub use rd_cip_labeler::*;
 pub use rd_mol_interchange::*;

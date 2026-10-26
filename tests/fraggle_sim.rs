@@ -258,7 +258,10 @@ fn similarities() -> Result<()> {
     // keyed without the threshold, so after the calls above it would reuse
     // their 0.8 fingerprints.
     assert!((sim - 0.9871794871794872).abs() < 1e-12, "{sim}");
-    assert_eq!(best.as_deref(), Some("*c1cc(OC)c2ccccc2c1OC.*C(=O)c1cncc(C)c1"));
+    assert_eq!(
+        best.as_deref(),
+        Some("*c1cc(OC)c2ccccc2c1OC.*C(=O)c1cncc(C)c1")
+    );
     let m = mol_from_smiles("COc1cc(CN2CCC(NC(=O)c3ccccc3)CC2)c(OC)c2ccccc12")?;
     assert_eq!(
         mol_to_smiles(&atom_contrib("*C1CCN(Cc2cc(OC)c3ccccc3c2OC)CC1", &m)?)?,
