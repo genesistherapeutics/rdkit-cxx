@@ -1238,7 +1238,7 @@ pub fn match_pharmacophore_with_params<'f, 'a>(
 
 /// Parameters for [`get_all_pharmacophore_matches_with_params`], with
 /// Python's defaults (A2).
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct GetAllPharmacophoreMatchesParams<'m> {
     /// Drops the bounds' rows far from the pharmacophore before smoothing.
     pub use_downsampling: bool,
@@ -1249,6 +1249,17 @@ pub struct GetAllPharmacophoreMatchesParams<'m> {
     pub use_2d_limits: bool,
     /// The molecule, for `use_2d_limits`.
     pub mol: Option<&'m Mol>,
+}
+
+impl std::fmt::Debug for GetAllPharmacophoreMatchesParams<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GetAllPharmacophoreMatchesParams")
+            .field("use_downsampling", &self.use_downsampling)
+            .field("progress_callback", &self.progress_callback.map(|_| ".."))
+            .field("use_2d_limits", &self.use_2d_limits)
+            .field("mol", &self.mol)
+            .finish()
+    }
 }
 
 /// Every assignment of matches to the pharmacophore's features with

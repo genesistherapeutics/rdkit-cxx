@@ -659,6 +659,12 @@ pub struct BRICSBuild<'a> {
     stack: Vec<Frame>,
 }
 
+impl std::fmt::Debug for BRICSBuild<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BRICSBuild").finish_non_exhaustive()
+    }
+}
+
 impl BRICSBuild<'_> {
     fn frame(&mut self, seeds: Vec<Mol>, max_depth: u32) -> Frame {
         let mut seeds = seeds;

@@ -491,6 +491,12 @@ pub struct O3A<'m> {
     _mols: PhantomData<(&'m mut Mol, &'m Mol)>,
 }
 
+impl std::fmt::Debug for O3A<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("O3A").finish_non_exhaustive()
+    }
+}
+
 impl O3A<'_> {
     /// Aligns the probe's conformer to the reference's by the matched
     /// atoms, and returns the RMSD. Mirrors `O3A.Align`.
@@ -625,7 +631,7 @@ fn crippen_o3a(
 }
 
 /// Parameters for `get_o3a_with_params`, with Python's defaults (A2).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GetO3AParams<'a> {
     /// The probe's MMFF properties; `None` computes them, from a copy.
     pub prb_mmff_mol_properties: Option<&'a MMFFMolProperties>,
@@ -783,7 +789,7 @@ pub fn get_crippen_o3a_with_params<'m>(
 
 /// Parameters for `get_o3a_for_probe_confs_with_params`, with Python's
 /// defaults (A2).
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GetO3AForProbeConfsParams<'a> {
     /// The threads to use; 0 or less counts back from the hardware's.
     pub num_threads: i32,

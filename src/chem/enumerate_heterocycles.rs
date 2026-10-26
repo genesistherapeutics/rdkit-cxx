@@ -333,6 +333,12 @@ pub struct Heterocycles {
     done: bool,
 }
 
+impl std::fmt::Debug for Heterocycles {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Heterocycles").finish_non_exhaustive()
+    }
+}
+
 impl Heterocycles {
     fn next_mol(&mut self) -> Result<Option<Mol>> {
         loop {

@@ -360,6 +360,13 @@ pub struct EnumerateLibraryFromReaction<'a> {
     pending: std::collections::VecDeque<ProductReactants>,
 }
 
+impl std::fmt::Debug for EnumerateLibraryFromReaction<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("EnumerateLibraryFromReaction")
+            .finish_non_exhaustive()
+    }
+}
+
 impl EnumerateLibraryFromReaction<'_> {
     fn advance(&mut self) -> Option<Vec<usize>> {
         let current = self.next.take()?;
@@ -493,6 +500,17 @@ pub struct ConstrainedEmbedParams<'a> {
     /// their `coord_map` and `random_seed` are replaced. The default is
     /// `EmbedMolecule`'s keyword defaults.
     pub embed_params: EmbedParameters,
+}
+
+impl std::fmt::Debug for ConstrainedEmbedParams<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstrainedEmbedParams")
+            .field("use_tethers", &self.use_tethers)
+            .field("core_conf_id", &self.core_conf_id)
+            .field("randomseed", &self.randomseed)
+            .field("embed_params", &self.embed_params)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Default for ConstrainedEmbedParams<'_> {

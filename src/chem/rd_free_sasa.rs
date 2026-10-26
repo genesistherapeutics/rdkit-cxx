@@ -186,6 +186,16 @@ pub struct CalcSASAParams<'a> {
     pub opts: SASAOpts,
 }
 
+impl std::fmt::Debug for CalcSASAParams<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CalcSASAParams")
+            .field("conf_idx", &self.conf_idx)
+            .field("query", &self.query.map(|_| ".."))
+            .field("opts", &self.opts)
+            .finish()
+    }
+}
+
 impl Default for CalcSASAParams<'_> {
     fn default() -> Self {
         CalcSASAParams {

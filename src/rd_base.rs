@@ -97,6 +97,12 @@ pub struct BlockLogs {
     _guard: UniquePtr<ffi::BlockLogs>,
 }
 
+impl std::fmt::Debug for BlockLogs {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("BlockLogs").finish_non_exhaustive()
+    }
+}
+
 impl Default for BlockLogs {
     fn default() -> BlockLogs {
         BlockLogs {
@@ -109,6 +115,12 @@ impl Default for BlockLogs {
 /// `rdBase.CaptureErrorLog`, a context manager in Python.
 pub struct CaptureErrorLog {
     capture: UniquePtr<ffi::CaptureErrorLog>,
+}
+
+impl std::fmt::Debug for CaptureErrorLog {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("CaptureErrorLog").finish_non_exhaustive()
+    }
 }
 
 impl Default for CaptureErrorLog {

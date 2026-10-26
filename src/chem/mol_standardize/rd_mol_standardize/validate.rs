@@ -37,6 +37,12 @@ pub struct ValidationMethod {
     ptr: UniquePtr<ffi::ValidationMethodHandle>,
 }
 
+impl std::fmt::Debug for ValidationMethod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ValidationMethod").finish_non_exhaustive()
+    }
+}
+
 impl Clone for ValidationMethod {
     fn clone(&self) -> ValidationMethod {
         ValidationMethod::from_ffi(expect_ok(ffi::validation_clone(self.raw())))
@@ -357,6 +363,12 @@ pub struct MolVSValidation {
     method: ValidationMethod,
 }
 
+impl std::fmt::Debug for MolVSValidation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MolVSValidation").finish_non_exhaustive()
+    }
+}
+
 /// `NoAtomValidation`, `FragmentValidation`, `NeutralValidation`, and
 /// `IsotopeValidation`. Mirrors `MolVSValidation()`.
 impl Default for MolVSValidation {
@@ -399,6 +411,13 @@ pub struct AllowedAtomsValidation {
     method: ValidationMethod,
 }
 
+impl std::fmt::Debug for AllowedAtomsValidation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("AllowedAtomsValidation")
+            .finish_non_exhaustive()
+    }
+}
+
 impl AllowedAtomsValidation {
     /// The allowed atoms, copied. `Error::Value` for none, as in Python.
     /// Mirrors `AllowedAtomsValidation(atoms)`.
@@ -416,6 +435,13 @@ method_validation!(AllowedAtomsValidation);
 #[derive(Clone)]
 pub struct DisallowedAtomsValidation {
     method: ValidationMethod,
+}
+
+impl std::fmt::Debug for DisallowedAtomsValidation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DisallowedAtomsValidation")
+            .finish_non_exhaustive()
+    }
 }
 
 impl DisallowedAtomsValidation {

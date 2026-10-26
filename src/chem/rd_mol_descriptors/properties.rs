@@ -29,6 +29,13 @@ pub struct PythonPropertyFunctor {
     ptr: UniquePtr<ffi::PropertyFunctorHandle>,
 }
 
+impl std::fmt::Debug for PythonPropertyFunctor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PythonPropertyFunctor")
+            .finish_non_exhaustive()
+    }
+}
+
 impl PythonPropertyFunctor {
     /// A property computed by `call`. Python subclasses the class and
     /// overrides `__call__`; here the closure is the third argument. RDKit's
@@ -75,6 +82,12 @@ impl PythonPropertyFunctor {
 pub struct Properties {
     /// Never null.
     ptr: UniquePtr<ffi::Properties>,
+}
+
+impl std::fmt::Debug for Properties {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Properties").finish_non_exhaustive()
+    }
 }
 
 /// Every registered property. Mirrors `Properties()`.
@@ -165,6 +178,12 @@ impl Properties {
 pub struct PropertyRangeQuery {
     /// Never null.
     ptr: UniquePtr<ffi::PropertyRangeQuery>,
+}
+
+impl std::fmt::Debug for PropertyRangeQuery {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PropertyRangeQuery").finish_non_exhaustive()
+    }
 }
 
 impl PropertyRangeQuery {
