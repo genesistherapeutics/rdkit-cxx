@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.AtomPairs.Pairs`, a pure-Python module: atom-pair
+//! Ports `rdkit.Chem.AtomPairs.Pairs`, a Python module: atom-pair
 //! fingerprints (Carhart, Smith, and Venkataraghavan, JCICS 25, 64-73
 //! (1985)).
 //!

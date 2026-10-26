@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Subshape.BuilderUtils`, a pure-Python module: finding
+//! Ports `rdkit.Chem.Subshape.BuilderUtils`, a Python module: finding
 //! the terminal and skeleton points of a shape.
 //!
 //! Python solves each point's moments with `numpy.linalg.eigh`; this uses

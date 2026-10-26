@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.EnumerateHeterocycles`, a pure-Python module: the
+//! Ports `rdkit.Chem.EnumerateHeterocycles`, a Python module: the
 //! aromatic rings a molecule's could become by swapping their atoms between
 //! carbon, nitrogen, oxygen, and sulfur, one atom at a time.
 //!

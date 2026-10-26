@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Cluster.Resemblance`, a pure-Python module: resemblance
+//! Ports `rdkit.ML.Cluster.Resemblance`, a Python module: resemblance
 //! (metric) matrices.
 //!
 //! A metric matrix of `n` objects is stored as its upper triangle, column

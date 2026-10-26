@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.MolKey.InchiInfo`, a pure-Python module: the layers of
+//! Ports `rdkit.Chem.MolKey.InchiInfo`, a Python module: the layers of
 //! an InChI, and their sp3 stereo and mobile hydrogens.
 //!
 //! Python parses InChIs with regular expressions, which its module

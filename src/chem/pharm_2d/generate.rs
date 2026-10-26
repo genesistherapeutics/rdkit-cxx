@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm2D.Generate`, a pure-Python module: 2D
+//! Ports `rdkit.Chem.Pharm2D.Generate`, a Python module: 2D
 //! pharmacophore fingerprints.
 //!
 //! An N-point pharmacophore is N features and the topological distances

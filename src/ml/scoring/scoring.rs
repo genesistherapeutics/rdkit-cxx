@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Scoring.Scoring`, a pure-Python module: rank statistics
+//! Ports `rdkit.ML.Scoring.Scoring`, a Python module: rank statistics
 //! for virtual screening (ROC curves and their area, BEDROC, RIE, and
 //! enrichment factors).
 //!

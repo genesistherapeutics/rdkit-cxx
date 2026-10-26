@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.AtomPairs.Utils`, a pure-Python module: what an atom
+//! Ports `rdkit.Chem.AtomPairs.Utils`, a Python module: what an atom
 //! code means, and similarities between sorted lists of bit ids.
 //!
 //! Python's `GetAtomCode` is `rdMolDescriptors.GetAtomPairAtomCode`,

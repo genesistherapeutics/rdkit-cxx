@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.EState.EState_VSA`, a pure-Python module: hybrid
+//! Ports `rdkit.Chem.EState.EState_VSA`, a Python module: hybrid
 //! EState-VSA descriptors, which bin EState indices by the atoms' Labute
 //! surface areas (`VSA_EState`) or the surface areas by EState index
 //! (`EState_VSA`), as the MOE VSA descriptors of `MolSurf` do.

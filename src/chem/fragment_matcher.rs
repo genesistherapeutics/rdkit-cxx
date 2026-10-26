@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FragmentMatcher`, a pure-Python module: a matcher for a
+//! Ports `rdkit.Chem.FragmentMatcher`, a Python module: a matcher for a
 //! fragment, given as SMARTS, that a molecule must not also contain any of a
 //! list of excluded fragments.
 

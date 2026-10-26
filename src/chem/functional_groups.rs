@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FunctionalGroups`, a pure-Python module: a hierarchy of
+//! Ports `rdkit.Chem.FunctionalGroups`, a Python module: a hierarchy of
 //! functional groups, read from a file of labels, SMARTS, and names, and
 //! fingerprints that count a molecule's groups.
 //!

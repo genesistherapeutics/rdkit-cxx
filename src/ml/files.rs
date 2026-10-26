@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.files`, a pure-Python module: reading data files with
+//! Ports `rdkit.ML.files`, a Python module: reading data files with
 //! comments.
 //!
 //! Python's comment and line-trailer arguments are regular expressions;

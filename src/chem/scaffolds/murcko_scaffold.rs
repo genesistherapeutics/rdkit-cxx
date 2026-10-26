@@ -3,14 +3,14 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Scaffolds.MurckoScaffold`, a pure-Python module: Murcko
+//! Ports `rdkit.Chem.Scaffolds.MurckoScaffold`, a Python module: Murcko
 //! scaffolds, the ring systems of a molecule and the linkers between them.
 //!
 //! Python builds its patterns and reactions once, on import; each function
 //! here that returns one makes a new one, since neither a `Mol` nor a
 //! `ChemicalReaction` can be shared between threads (CONVENTIONS.md S1, S4).
 //! The scaffold itself comes from RDKit's `MurckoDecompose`, as in Python;
-//! the patterns are those of Python's private pure-Python fallback, which
+//! the patterns are those of Python's private fallback, written in Python, which
 //! Python never calls.
 
 use crate::Result;

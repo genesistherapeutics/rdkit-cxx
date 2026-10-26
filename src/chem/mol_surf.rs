@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.MolSurf`, a pure-Python module: Labute's approximate
+//! Ports `rdkit.Chem.MolSurf`, a Python module: Labute's approximate
 //! surface area, the topological polar surface area, and the MOE-like VSA
 //! descriptors, which bin each atom's share of the surface area by its
 //! Crippen logP or MR contribution or its Gasteiger charge.

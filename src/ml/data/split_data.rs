@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Data.SplitData`, a pure-Python module: splitting data
+//! Ports `rdkit.ML.Data.SplitData`, a Python module: splitting data
 //! sets in two at random.
 //!
 //! The random choices draw from the generator `rdkit_cxx::rd_random`

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Descriptors`, a pure-Python module: molecular weights,
+//! Ports `rdkit.Chem.Descriptors`, a Python module: molecular weights,
 //! electron counts, partial-charge extremes, fingerprint densities, and the
 //! list of every 2D descriptor RDKit's Python offers (`descList`), from
 //! `Lipinski`, `Crippen`, `MolSurf`, `GraphDescriptors`, `EState`,

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm2D.Gobbi_Pharm2D`, a pure-Python module: the 2D
+//! Ports `rdkit.Chem.Pharm2D.Gobbi_Pharm2D`, a Python module: the 2D
 //! pharmacophores of Gobbi and Poppinger, Biotech. Bioeng. 61, 47-54
 //! (1998).
 

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.SLT.Risk`, a pure-Python module: bounds on the risk of
+//! Ports `rdkit.ML.SLT.Risk`, a Python module: bounds on the risk of
 //! a classifier from statistical learning theory.
 //!
 //! Each bound takes the VC dimension, the number of data points, the

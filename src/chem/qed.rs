@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.QED`, a pure-Python module: the quantitative estimate
+//! Ports `rdkit.Chem.QED`, a Python module: the quantitative estimate
 //! of drug-likeness (Bickerton, Paolini, Besnard, Muresan, and Hopkins,
 //! Nature Chemistry 4, 90-98 (2012)), as RDKit's Biscu-it implementation
 //! computes it from eight properties.

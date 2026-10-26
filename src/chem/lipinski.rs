@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Lipinski`, a pure-Python module: Lipinski's
+//! Ports `rdkit.Chem.Lipinski`, a Python module: Lipinski's
 //! parameters and the SMARTS patterns behind them.
 //!
 //! Python builds the patterns once, on import; each pattern function here

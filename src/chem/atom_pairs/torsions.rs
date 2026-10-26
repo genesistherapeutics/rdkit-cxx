@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.AtomPairs.Torsions`, a pure-Python module:
+//! Ports `rdkit.Chem.AtomPairs.Torsions`, a Python module:
 //! topological-torsion fingerprints (Nilakantan, Bauman, Dixon, and
 //! Venkataraghavan, JCICS 27, 82-85 (1987)).
 //!

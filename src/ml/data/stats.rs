@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Data.Stats`, a pure-Python module: statistics on data
+//! Ports `rdkit.ML.Data.Stats`, a Python module: statistics on data
 //! matrices (rows of points).
 //!
 //! Sums follow Python's (its built-in `sum`, row by row), so the means,

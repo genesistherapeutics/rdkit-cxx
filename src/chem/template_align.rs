@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.TemplateAlign`, a pure-Python module: 2D depictions
+//! Ports `rdkit.Chem.TemplateAlign`, a Python module: 2D depictions
 //! that place a molecule's atoms where a template's matching atoms are.
 
 use std::collections::BTreeMap;

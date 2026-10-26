@@ -21,7 +21,7 @@ complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.All
 "rdkit.Chem.Fingerprints.FingerprintMols" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its fingerprints, use rdmolops::rdk_fingerprint_with_params or rd_fingerprint_generator"
 "rdkit.Chem.Fingerprints.MolSimilarity" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its similarity screens, use data_structs::fingerprint_similarity, with data_structs::top_n_container::TopNContainer for the best hits"
 "rdkit.Chem.Fingerprints.SimilarityScreener" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its screens, use data_structs::fingerprint_similarity, with data_structs::top_n_container::TopNContainer for the best hits"
-"rdkit.Chem.MCS" = "a deprecated wrapper over the legacy pure-Python MCS search (rdkit.Chem.fmcs); rdFMCS, which is bound, replaced it"
+"rdkit.Chem.MCS" = "a deprecated wrapper over the legacy MCS search written in Python (rdkit.Chem.fmcs); rdFMCS, which is bound, replaced it"
 "rdkit.Chem.MolDb" = "builds and reads molecule databases through rdkit.Dbase"
 "rdkit.Chem.PandasPatcher" = "patches pandas' HTML rendering for PandasTools"
 "rdkit.Chem.PandasTools" = "adds molecules and their drawings to pandas DataFrames"
@@ -30,7 +30,7 @@ complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.All
 "rdkit.Chem.PyMol" = "drives a PyMOL server over XML-RPC"
 "rdkit.Chem.Subshape.demoCombined" = "a demonstration script that reads files from RDKit's source tree"
 "rdkit.Chem.Suppliers.DbMolSupplier" = "supplies molecules from rdkit.Dbase query results"
-"rdkit.Chem.fmcs" = "the legacy pure-Python MCS search, which rdFMCS (bound) replaced"
+"rdkit.Chem.fmcs" = "the legacy MCS search written in Python, which rdFMCS (bound) replaced"
 "rdkit.DataStructs.HierarchyVis" = "draws on sping canvases, and does not import (it imports sping as a top-level package)"
 "rdkit.Dbase" = "database helpers over Python's DB-API connections; Rust programs use their own database crates"
 "rdkit.ML.Cluster.ClusterVis" = "draws cluster trees on sping canvases"
@@ -619,7 +619,7 @@ overloads_note = "force, which only steers RDKit's descriptor caches, is not bou
 
 [[entry]]
 python = "rdkit.Chem.Crippen.defaultPatternFileName"
-reason = "the path of Crippen.txt in RDKit's Python data directory, which only Python's private pure-Python reference implementation reads; the C++ code Rust calls has the parameters built in"
+reason = "the path of Crippen.txt in RDKit's Python data directory, which only Python's private reference implementation, written in Python, reads; the C++ code Rust calls has the parameters built in"
 
 [[entry]]
 python = "rdkit.Chem.Descriptors.CalcMolDescriptors"

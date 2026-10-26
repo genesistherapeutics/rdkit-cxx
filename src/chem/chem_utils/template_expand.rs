@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.ChemUtils.TemplateExpand`, a pure-Python script: a
+//! Ports `rdkit.Chem.ChemUtils.TemplateExpand`, a Python script: a
 //! virtual library from a template, whose attachment points are dummies
 //! labeled 1, 2, ..., and sidechains for each, written as an SD file. Its
 //! command-line entry point is not ported.

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.MolKey.MolKey`, a pure-Python module: molecule keys,
+//! Ports `rdkit.Chem.MolKey.MolKey`, a Python module: molecule keys,
 //! hashes of an InChI and a stereo category, for molecules that the Avalon
 //! structure checker has checked.
 //!

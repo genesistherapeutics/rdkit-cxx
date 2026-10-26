@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.ChemUtils.DescriptorUtilities`, a pure-Python module:
+//! Ports `rdkit.Chem.ChemUtils.DescriptorUtilities`, a Python module:
 //! a wrapper that makes a descriptor function returning a vector seem one
 //! function per entry.
 //!

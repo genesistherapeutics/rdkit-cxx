@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.SpacialScore`, a pure-Python module: the spacial score
+//! Ports `rdkit.Chem.SpacialScore`, a Python module: the spacial score
 //! (SPS), a measure of a molecule's spatial complexity from its atoms'
 //! hybridization, stereo, ring membership, and heavy neighbors
 //! (Krzyzanowski, Pahl, Grigalunas, and Waldmann, J. Med. Chem. (2023),

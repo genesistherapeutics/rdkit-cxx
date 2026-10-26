@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! What the ports of RDKit's pure-Python modules need from Python itself to
+//! What the ports of RDKit's Python-only functionality need from Python to
 //! compute what Python computes (CONVENTIONS.md R2).
 
 /// `repr(x)` (and `str(x)`) of a Python `float`: the shortest digits that

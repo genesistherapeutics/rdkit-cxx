@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.DataStructs.BitEnsemble`, a pure-Python module: a
+//! Ports `rdkit.DataStructs.BitEnsemble`, a Python module: a
 //! collection of bits to score bit vectors against.
 
 use crate::Result;

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.EnumerateStereoisomers`, a pure-Python module: the
+//! Ports `rdkit.Chem.EnumerateStereoisomers`, a Python module: the
 //! stereoisomers of a molecule, from flipping its unassigned stereocenters,
 //! double bonds, and stereo groups.
 //!

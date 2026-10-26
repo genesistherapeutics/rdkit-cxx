@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm3D.EmbedLib`, a pure-Python module: matching 3D
+//! Ports `rdkit.Chem.Pharm3D.EmbedLib`, a Python module: matching 3D
 //! pharmacophores to molecules and embedding molecules to satisfy them.
 //!
 //! Bounds matrices are rows, as `get_molecule_bounds_matrix` returns them:

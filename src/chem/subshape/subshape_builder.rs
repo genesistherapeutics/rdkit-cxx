@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Subshape.SubshapeBuilder`, a pure-Python module:
+//! Ports `rdkit.Chem.Subshape.SubshapeBuilder`, a Python module:
 //! building a molecule's shape and skeleton.
 
 use crate::chem::Mol;

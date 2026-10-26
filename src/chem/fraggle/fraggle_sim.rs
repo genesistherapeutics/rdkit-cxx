@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Fraggle.FraggleSim`, a pure-Python module: Fraggle
+//! Ports `rdkit.Chem.Fraggle.FraggleSim`, a Python module: Fraggle
 //! similarity, which compares molecules by the fragments of the query left
 //! by cutting its acyclic and exocyclic ring bonds.
 //!

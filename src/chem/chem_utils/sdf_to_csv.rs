@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.ChemUtils.SDFToCSV`, a pure-Python script: SD files as
+//! Ports `rdkit.Chem.ChemUtils.SDFToCSV`, a Python script: SD files as
 //! CSV, a SMILES column and one column per property. Its command-line entry
 //! point is not ported.
 

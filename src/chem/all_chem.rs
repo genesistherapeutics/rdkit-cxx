@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.AllChem`, a pure-Python module that gathers RDKit's
+//! Ports `rdkit.Chem.AllChem`, a Python module that gathers RDKit's
 //! chemistry modules in one namespace, as this one re-exports them, and
 //! adds helpers built on them: transforming, comparing, and constraining
 //! conformers, grid shapes and volumes, library enumeration, and bond

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.SATIS`, a pure-Python module: SATIS atom types
+//! Ports `rdkit.Chem.SATIS`, a Python module: SATIS atom types
 //! (_J. Chem. Inf. Comput. Sci._ 39, 751-757, 1999).
 //!
 //! Python parses its patterns once, on import; each function here parses a

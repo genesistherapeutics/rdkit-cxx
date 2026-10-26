@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Subshape`, a pure-Python package: shape skeletons of
+//! Ports `rdkit.Chem.Subshape`, a Python package: shape skeletons of
 //! molecules and alignments between them.
 //!
 //! `rdkit.Chem.Subshape.demoCombined` is a demonstration script that reads

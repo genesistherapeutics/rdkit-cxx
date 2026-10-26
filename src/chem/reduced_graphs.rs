@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.ReducedGraphs`, a pure-Python module that re-exports
+//! Ports `rdkit.Chem.ReducedGraphs`, a Python module that re-exports
 //! `rdkit.Chem.rdReducedGraphs`, as this does, and adds a similarity for
 //! the ErG fingerprints it makes.
 

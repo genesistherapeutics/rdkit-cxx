@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Graphs`, a pure-Python module of functions on
+//! Ports `rdkit.Chem.Graphs`, a Python module of functions on
 //! molecular graphs.
 
 use crate::chem::Mol;

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Data.DataUtils`, a pure-Python module: reading, writing,
+//! Ports `rdkit.ML.Data.DataUtils`, a Python module: reading, writing,
 //! and sampling data sets.
 //!
 //! A `.qdat` file holds quantized data: any lines, a line with `Variable
