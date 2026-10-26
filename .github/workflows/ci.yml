@@ -21,6 +21,14 @@ jobs:
       matrix:
         os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15]
     runs-on: ${{ matrix.os }}
+    # ccache (below) compiles the C++ wrapper. It hashes the compiler by its
+    # contents, since the environment's compiler is reinstalled every run,
+    # and paths relative to the checkout.
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_COMPILERCHECK: content
     defaults:
       run:
         shell: bash -el {0}
@@ -37,6 +45,13 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
+      # The C++ wrapper's objects are cached by ccache, which reuses an
+      # object only for the same compiler binary, flags, and preprocessed
+      # source, so a cached object is the one the compiler would produce.
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ matrix.os }}
+          max-size: 1G
       - run: cargo fmt --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo test --workspace
@@ -66,6 +81,14 @@ jobs:
   # Release workflow does before it publishes.
   package:
     runs-on: ubuntu-24.04
+    # ccache (below) compiles the C++ wrapper. It hashes the compiler by its
+    # contents, since the environment's compiler is reinstalled every run,
+    # and paths relative to the checkout.
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_COMPILERCHECK: content
     defaults:
       run:
         shell: bash -el {0}
@@ -78,6 +101,10 @@ jobs:
           cache-environment: false
           cache-downloads: false
       - uses: dtolnay/rust-toolchain@stable
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+          max-size: 1G
       - run: cargo package -p rdkit-cxx --locked
 
   # Valgrind's DRD sees RDKit's accesses to its globals even in conda's
@@ -85,6 +112,14 @@ jobs:
   # lacks a lock U4 needs.
   races:
     runs-on: ubuntu-24.04
+    # ccache (below) compiles the C++ wrapper. It hashes the compiler by its
+    # contents, since the environment's compiler is reinstalled every run,
+    # and paths relative to the checkout.
+    env:
+      CMAKE_C_COMPILER_LAUNCHER: ccache
+      CMAKE_CXX_COMPILER_LAUNCHER: ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_COMPILERCHECK: content
     defaults:
       run:
         shell: bash -el {0}
@@ -98,6 +133,10 @@ jobs:
           cache-environment: false
           cache-downloads: false
       - uses: dtolnay/rust-toolchain@stable
+      - uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}
+          max-size: 1G
       - name: Threads do not race on RDKit's global state
         env:
           CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_RUNNER: valgrind --tool=drd --suppressions=tests/drd.supp --log-file=target/drd.log
