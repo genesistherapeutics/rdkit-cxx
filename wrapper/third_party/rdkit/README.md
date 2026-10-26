@@ -10,6 +10,8 @@ time. The crate embeds them with `include_str!`:
 
 - `Data/BaseFeatures.fdef`: the feature definitions of
   `rdkit.Chem.Pharm2D.DefaultSigFactory` (`src/chem/pharm_2d/init.rs`).
+- `Data/FragmentDescriptors.csv`: `rdkit.Chem.Fragments`' patterns
+  (`src/chem/fragments.rs`).
 - `Data/FunctionalGroups.txt`: the default functional groups of
   `rdkit.Chem.BuildFragmentCatalog.BuildCatalog`
   (`src/chem/build_fragment_catalog.rs`).
