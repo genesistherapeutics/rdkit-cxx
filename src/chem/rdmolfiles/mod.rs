@@ -3,7 +3,30 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Mirrors `rdkit.Chem.rdmolfiles`.
+//! Mirrors `rdkit.Chem.rdmolfiles`: reading and writing SMILES, SMARTS,
+//! CXSMILES, mol and SD blocks, PDB, XYZ, Mol2, Marvin, PNG metadata, and
+//! the other formats RDKit's Python module reads and writes, and the
+//! suppliers and writers for files of many molecules.
+//!
+//! Readers that return `None` in Python return [`Error::Parse`](crate::Error::Parse).
+//! Suppliers iterate with `mols()`, which yields a `Result` per record, and
+//! read from a path or from any `Read` value, as Python's read from a file
+//! object.
+//!
+//! ```no_run
+//! use rdkit_cxx::chem::rdmolfiles::{SDMolSupplier, SDWriter};
+//! use rdkit_cxx::chem::mol_to_smiles;
+//!
+//! let mut supplier = SDMolSupplier::new("input.sdf")?;
+//! let mut writer = SDWriter::new("output.sdf")?;
+//! for mol in supplier.mols() {
+//!     let mol = mol?;
+//!     println!("{}", mol_to_smiles(&mol)?);
+//!     writer.write(&mol)?;
+//! }
+//! writer.close()?;
+//! # Ok::<(), rdkit_cxx::Error>(())
+//! ```
 
 mod formats;
 mod mol_blocks;
