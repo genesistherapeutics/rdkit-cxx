@@ -1103,6 +1103,18 @@ bool has_chem_draw_cdx_support() {
 
 namespace {
 
+// The ChemDraw library under RDKit's CDXML writer fills its attribute-name
+// maps on first use behind a check made outside its lock
+// (InitAttributeMapsIfNeeded in chemdraw/CDXObject.cpp), so a thread can read
+// a map another thread is still filling, and it keeps the names of unknown
+// tags in a static map it writes without a lock. Every call into it holds
+// this mutex (CONVENTIONS.md U4), after any lock_depiction().
+std::mutex &chemdraw_mutex() {
+  check_not_in_control_c_callback();
+  static std::mutex mutex;
+  return mutex;
+}
+
 // RDKit's ChemDraw writer (MolToChemDrawBlock in External/ChemDraw/writer.cpp)
 // converts each coordinate of conformer 0 to 32-bit fixed point with a C
 // cast (CDXCoordinatefromPoints in CDXIO.h), which is undefined for a value
@@ -1151,6 +1163,7 @@ rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
     RDDepict::compute2DCoords(copy);
   }
   check_cdx_coordinates(copy);
+  std::lock_guard<std::mutex> chemdraw(chemdraw_mutex());
   return to_bytes(RDKit::v2::CDXMLParser::MolToCDXMLBlock(copy, format));
 }
 
