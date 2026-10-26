@@ -8,7 +8,11 @@ The ports of RDKit's pure-Python modules read these where Python reads
 `RDConfig.RDDataDir`, so a Rust program needs no RDKit data directory at run
 time. The crate embeds them with `include_str!`:
 
+- `Data/BaseFeatures.fdef`: the feature definitions of
+  `rdkit.Chem.Pharm2D.DefaultSigFactory` (`src/chem/pharm_2d/init.rs`).
 - `Data/FragmentDescriptors.csv`: `rdkit.Chem.Fragments`' patterns
   (`src/chem/fragments.rs`).
+- `Data/SmartsLib/patty_rules.txt`: `rdkit.Chem.AtomPairs.Sheridan`'s atom
+  types (`src/chem/atom_pairs/sheridan.rs`).
 
 The pre-commit hooks skip this directory.
