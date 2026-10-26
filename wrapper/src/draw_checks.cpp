@@ -868,7 +868,7 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
     if (region.size() > 1) {
       for (int idx : region) {
         if (idx < 0 || static_cast<unsigned>(idx) >= mol.getNumAtoms()) {
-          throw IndexError(static_cast<unsigned>(idx), mol.getNumAtoms());
+          throw IndexError(idx, mol.getNumAtoms());
         }
       }
     }

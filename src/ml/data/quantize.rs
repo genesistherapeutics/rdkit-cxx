@@ -206,7 +206,7 @@ pub fn find_var_quant_bound(
     n_possible_res: usize,
 ) -> Result<(f64, f64)> {
     let (bounds, gain) = find_var_mult_quant_bounds(vals, 1, results, n_possible_res)?;
-    let bound = *bounds.first().ok_or(Error::Index { index: 0, len: 0 })?;
+    let bound = *bounds.first().ok_or(Error::index(0, 0))?;
     Ok((bound, gain))
 }
 
@@ -234,10 +234,7 @@ pub fn find_var_mult_quant_bounds(
         return Ok((Vec::new(), -1e8));
     }
     if let Some(&bad) = results.iter().find(|&&r| r >= n_possible_res) {
-        return Err(Error::Index {
-            index: u32::try_from(bad).unwrap_or(u32::MAX),
-            len: u32::try_from(n_possible_res).unwrap_or(u32::MAX),
-        });
+        return Err(Error::index(bad, n_possible_res));
     }
     // Python sorts (value, result) pairs.
     let mut svs: Vec<(f64, usize)> = vals.iter().copied().zip(results.iter().copied()).collect();

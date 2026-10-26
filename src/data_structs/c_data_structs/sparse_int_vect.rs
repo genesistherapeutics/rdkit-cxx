@@ -28,11 +28,9 @@ pub(crate) mod sealed {
 pub trait SparseIntVectType: sealed::SparseIntVectLike {}
 
 /// An index as the bridge carries it; negative indices are out of range.
-fn index<T: TryInto<u64>>(idx: T, len: u64) -> Result<u64> {
-    idx.try_into().map_err(|_| Error::Index {
-        index: u32::MAX,
-        len: u32::try_from(len).unwrap_or(u32::MAX),
-    })
+fn index<T: TryInto<u64> + TryInto<i64> + Copy>(idx: T, len: u64) -> Result<u64> {
+    idx.try_into()
+        .map_err(|_| Error::index(idx, usize::try_from(len).unwrap_or(usize::MAX)))
 }
 
 /// Defines a sparse integer vector type with index type `$idx`, the

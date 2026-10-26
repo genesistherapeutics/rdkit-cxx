@@ -44,10 +44,7 @@ fn value_error(message: &str) -> Error {
 }
 
 fn index_error(index: usize, len: usize) -> Error {
-    Error::Index {
-        index: index as u32,
-        len: len as u32,
-    }
+    Error::index(index, len)
 }
 
 /// `bm[i][j]`, or `Error::Index` outside the matrix.
@@ -996,10 +993,7 @@ fn atom_match_of(feats: &[&MolChemicalFeature<'_>]) -> Result<Vec<Vec<u32>>> {
         for &idx in &ids {
             // RDKit's flags cover atoms below its maxAts of 1024.
             if idx >= 1024 {
-                return Err(Error::Index {
-                    index: idx,
-                    len: 1024,
-                });
+                return Err(Error::index(idx, 1024));
             }
             if !seen.insert(idx) {
                 return Ok(Vec::new());

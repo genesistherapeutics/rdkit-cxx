@@ -541,7 +541,7 @@ impl SubstructLibrary {
     pub fn set_search_order(&mut self, seq: &[u32]) -> Result<()> {
         let len = self.len();
         if let Some(&index) = seq.iter().find(|&&idx| idx >= len) {
-            return Err(Error::Index { index, len });
+            return Err(Error::index(index, len as usize));
         }
         self.search_order = seq.to_vec();
         Ok(())

@@ -370,10 +370,7 @@ fn tri(t: (usize, usize, usize)) -> [usize; 3] {
 }
 
 fn point(pts: &[SkeletonPoint], i: usize) -> Result<&SkeletonPoint> {
-    pts.get(i).ok_or(Error::Index {
-        index: i as u32,
-        len: pts.len() as u32,
-    })
+    pts.get(i).ok_or(Error::index(i, pts.len()))
 }
 
 impl SubshapeAligner {

@@ -103,11 +103,8 @@ pub fn satis_types_with_neighbors_to_include(
             other_nums.drain(..other_nums.len() - n);
         }
         for (j, other_num) in other_nums.iter().enumerate() {
-            let len = code.len() as u32;
-            *code.get_mut(j + 1).ok_or(Error::Index {
-                index: j as u32 + 1,
-                len,
-            })? = (*other_num).min(99);
+            let len = code.len();
+            *code.get_mut(j + 1).ok_or(Error::index(j + 1, len))? = (*other_num).min(99);
         }
         if other_nums.len() < n && (code[0] == 6 || code[0] == 8) {
             let atom_idx = atom.get_idx();

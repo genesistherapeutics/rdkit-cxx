@@ -80,7 +80,7 @@ pub fn config_to_num_electrons_with_params(
     let mut n_el = 0;
     for shell in &arr[1..] {
         let l: Vec<&str> = shell.split('^').collect();
-        let count = l.get(1).ok_or(Error::Index { index: 1, len: 1 })?;
+        let count = l.get(1).ok_or(Error::index(1, 1))?;
         let mut incr = py_int(count).ok_or_else(|| Error::Value {
             message: format!("invalid literal for int() with base 10: '{count}'"),
         })?;

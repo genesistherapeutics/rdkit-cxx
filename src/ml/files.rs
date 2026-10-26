@@ -215,10 +215,7 @@ pub fn read_data_file_with_params(
     for line in &data_lines {
         let mut split_line = py_split(line);
         if params.dep_var_col >= split_line.len() {
-            return Err(Error::Index {
-                index: u32::try_from(params.dep_var_col).unwrap_or(u32::MAX),
-                len: u32::try_from(split_line.len()).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(params.dep_var_col, split_line.len()));
         }
         dep_var_vect.push(conv(split_line.remove(params.dep_var_col))?);
         if split_line.len() != n_ind_vars {

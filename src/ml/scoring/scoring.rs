@@ -44,10 +44,7 @@ fn is_active<S: AsRef<[f64]>>(scores: &[S], i: usize, col: usize) -> Result<bool
     let row = scores[i].as_ref();
     match row.get(col) {
         Some(&value) => Ok(value != 0.0),
-        None => Err(Error::Index {
-            index: u32::try_from(col).unwrap_or(u32::MAX),
-            len: u32::try_from(row.len()).unwrap_or(u32::MAX),
-        }),
+        None => Err(Error::index(col, row.len())),
     }
 }
 

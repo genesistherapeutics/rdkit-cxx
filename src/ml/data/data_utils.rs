@@ -29,10 +29,7 @@ use crate::utils::{py_float, py_int, py_strip, read_line_universal};
 use crate::{Error, Result};
 
 fn index_error(index: usize, len: usize) -> Error {
-    Error::Index {
-        index: u32::try_from(index).unwrap_or(u32::MAX),
-        len: u32::try_from(len).unwrap_or(u32::MAX),
-    }
+    Error::index(index, len)
 }
 
 fn os_error(e: std::io::Error) -> Error {

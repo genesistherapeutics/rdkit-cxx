@@ -226,10 +226,7 @@ pub fn get_mols_matching_bit<'m>(
 ) -> Result<Vec<&'m Mol>> {
     let mut res = Vec::new();
     for (i, mol) in mols.iter().enumerate() {
-        let fp = fps.get(i).ok_or(Error::Index {
-            index: u32::try_from(i).unwrap_or(u32::MAX),
-            len: u32::try_from(fps.len()).unwrap_or(u32::MAX),
-        })?;
+        let fp = fps.get(i).ok_or(Error::index(i, fps.len()))?;
         if fp.get_bit(bit)? {
             res.push(mol);
         }

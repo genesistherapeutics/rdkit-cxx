@@ -453,12 +453,9 @@ pub struct Snapshot {
 impl Snapshot {
     fn point(&self, point_num: u32) -> Result<&[f64]> {
         let size = self.dimension as usize;
-        let len = (self.positions.len() / size.max(1)) as u32;
-        if point_num >= len {
-            return Err(Error::Index {
-                index: point_num,
-                len,
-            });
+        let len = self.positions.len() / size.max(1);
+        if point_num as usize >= len {
+            return Err(Error::index(point_num, len));
         }
         let start = point_num as usize * size;
         Ok(&self.positions[start..start + size])

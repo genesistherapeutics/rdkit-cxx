@@ -261,10 +261,7 @@ impl Cluster {
     /// `Error::Index` for an index past the children.
     pub fn remove_child(&mut self, which: usize) -> Result<Cluster> {
         if which >= self.children.len() {
-            return Err(Error::Index {
-                index: u32::try_from(which).unwrap_or(u32::MAX),
-                len: u32::try_from(self.children.len()).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(which, self.children.len()));
         }
         let child = self.children.remove(which);
         self.update_length();

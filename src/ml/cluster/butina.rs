@@ -63,10 +63,7 @@ pub fn compute_distance_matrix<T>(
     mut dist_func: impl FnMut(&T, &T) -> Result<f64>,
 ) -> Result<Vec<Vec<f64>>> {
     if n_pts > data.len() {
-        return Err(Error::Index {
-            index: u32::try_from(data.len()).unwrap_or(u32::MAX),
-            len: u32::try_from(data.len()).unwrap_or(u32::MAX),
-        });
+        return Err(Error::index(data.len(), data.len()));
     }
     let mut matrix = vec![vec![0.0; n_pts]; n_pts];
     for i in 0..n_pts {

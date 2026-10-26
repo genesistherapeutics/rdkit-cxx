@@ -478,10 +478,10 @@ fn draw_with_matches(
         if let Some(qry) = &params.qry {
             for bnd in qry.get_bonds() {
                 let atom = |idx: u32| {
-                    alist.get(idx as usize).copied().ok_or(Error::Index {
-                        index: idx,
-                        len: alist.len() as u32,
-                    })
+                    alist
+                        .get(idx as usize)
+                        .copied()
+                        .ok_or(Error::index(idx, alist.len()))
                 };
                 let b = mol
                     .get_bond_between_atoms(
@@ -1559,10 +1559,9 @@ fn bit_example<T>(
     let examples = bit_info.get(&bit_id).ok_or_else(|| Error::Key {
         key: bit_id.to_string(),
     })?;
-    examples.get(which_example).ok_or(Error::Index {
-        index: u32::try_from(which_example).unwrap_or(u32::MAX),
-        len: u32::try_from(examples.len()).unwrap_or(u32::MAX),
-    })
+    examples
+        .get(which_example)
+        .ok_or(Error::index(which_example, examples.len()))
 }
 
 /// Parameters for `draw_morgan_bit_with_params`, with Python's defaults

@@ -104,10 +104,7 @@ pub fn find_min_val_in_list_with_min_idx(
     min_idx: usize,
 ) -> Result<(usize, usize, f64)> {
     check_length(mat, n_objs)?;
-    let value = *mat.get(min_idx).ok_or(Error::Index {
-        index: u32::try_from(min_idx).unwrap_or(u32::MAX),
-        len: u32::try_from(mat.len()).unwrap_or(u32::MAX),
-    })?;
+    let value = *mat.get(min_idx).ok_or(Error::index(min_idx, mat.len()))?;
     let mut n_so_far = 0;
     let mut col = 0;
     while n_so_far <= min_idx {

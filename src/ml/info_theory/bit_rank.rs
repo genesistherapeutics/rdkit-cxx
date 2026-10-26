@@ -20,10 +20,7 @@ use crate::ml::info_theory::rd_info_theory::info_gain;
 use crate::{Error, Result};
 
 fn index_error(index: usize, len: usize) -> Error {
-    Error::Index {
-        index: u32::try_from(index).unwrap_or(u32::MAX),
-        len: u32::try_from(len).unwrap_or(u32::MAX),
-    }
+    Error::index(index, len)
 }
 
 fn check_lengths(n_vects: usize, n_acts: usize) -> Result<()> {

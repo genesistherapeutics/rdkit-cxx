@@ -143,9 +143,7 @@ impl Default for MLDataSetParams {
 }
 
 fn first_row_len<T>(data: &[Vec<T>]) -> Result<usize> {
-    data.first()
-        .map(Vec::len)
-        .ok_or(Error::Index { index: 0, len: 0 })
+    data.first().map(Vec::len).ok_or(Error::index(0, 0))
 }
 
 /// The getters both data sets share.
@@ -262,20 +260,14 @@ impl MLDataSet {
         let mut cols: Vec<usize> = (0..n_vars).collect();
         for (i, bounds) in self.q_bounds.iter().enumerate() {
             if !bounds.is_empty() {
-                let slot = n_possible.get_mut(i).ok_or(Error::Index {
-                    index: u32::try_from(i).unwrap_or(u32::MAX),
-                    len: u32::try_from(n_vars).unwrap_or(u32::MAX),
-                })?;
+                let slot = n_possible.get_mut(i).ok_or(Error::index(i, n_vars))?;
                 *slot = bounds.len() as i64;
                 cols.retain(|&c| c != i);
             }
         }
         for pt in &self.data {
             for col in cols.clone() {
-                let d = pt.get(col).ok_or(Error::Index {
-                    index: u32::try_from(col).unwrap_or(u32::MAX),
-                    len: u32::try_from(pt.len()).unwrap_or(u32::MAX),
-                })?;
+                let d = pt.get(col).ok_or(Error::index(col, pt.len()))?;
                 match integral(d)? {
                     Some(Some(fl)) => n_possible[col] = n_possible[col].max(fl),
                     _ => {
@@ -298,10 +290,7 @@ impl MLDataSet {
             .pt_names
             .get(idx)
             .zip(self.data.get(idx))
-            .ok_or(Error::Index {
-                index: u32::try_from(idx).unwrap_or(u32::MAX),
-                len: u32::try_from(self.data.len()).unwrap_or(u32::MAX),
-            })?;
+            .ok_or(Error::index(idx, self.data.len()))?;
         let mut res = vec![Value::Str(name.clone())];
         res.extend(row.iter().cloned());
         Ok(res)
@@ -319,10 +308,7 @@ impl MLDataSet {
             });
         }
         if idx >= self.data.len() || idx >= self.pt_names.len() {
-            return Err(Error::Index {
-                index: u32::try_from(idx).unwrap_or(u32::MAX),
-                len: u32::try_from(self.data.len()).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(idx, self.data.len()));
         }
         let mut val = val.into_iter();
         let Some(Value::Str(name)) = val.next() else {
@@ -495,10 +481,7 @@ impl MLQuantDataSet {
                     .get(i)
                     .zip(self.data.get(i))
                     .map(|(n, r)| (n.clone(), r.clone()))
-                    .ok_or(Error::Index {
-                        index: u32::try_from(i).unwrap_or(u32::MAX),
-                        len: u32::try_from(self.data.len()).unwrap_or(u32::MAX),
-                    })
+                    .ok_or(Error::index(i, self.data.len()))
             })
             .collect()
     }

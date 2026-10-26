@@ -38,10 +38,7 @@ pub(crate) fn py_fixed(x: f64, width: usize, precision: usize, space_sign: bool)
 }
 
 fn index_error(i: usize, len: usize) -> Error {
-    Error::Index {
-        index: i as u32,
-        len: len as u32,
-    }
+    Error::index(i, len)
 }
 
 /// A pharmacophore: features with lower and upper bounds on the distances

@@ -187,10 +187,7 @@ impl FeatMap {
     }
 
     fn index_error(&self, i: usize) -> Error {
-        Error::Index {
-            index: i as u32,
-            len: self.feats.len() as u32,
-        }
+        Error::index(i, self.feats.len())
     }
 
     /// The point at `i`; `Error::Index` past the end. Mirrors

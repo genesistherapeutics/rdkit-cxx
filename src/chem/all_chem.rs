@@ -431,7 +431,7 @@ pub fn enumerate_library_from_reaction<'a>(
         });
     }
     if n == 0 {
-        return Err(Error::Index { index: 0, len: 0 });
+        return Err(Error::index(0, 0));
     }
     let next = sidechain_sets
         .iter()
@@ -588,10 +588,9 @@ pub fn constrained_embed_with_params(
             for i in 0..core.get_num_atoms() {
                 let p = conf.get_atom_position(i)?;
                 let p_idx = ff.add_extra_point_with_fixed(p.x, p.y, p.z, true) - 1;
-                let target = *match_.get(i as usize).ok_or(Error::Index {
-                    index: i,
-                    len: match_.len() as u32,
-                })?;
+                let target = *match_
+                    .get(i as usize)
+                    .ok_or(Error::index(i, match_.len()))?;
                 ff.add_distance_constraint(p_idx, target, 0.0, 0.0, 100.0)?;
             }
             ff.initialize()?;
@@ -665,10 +664,10 @@ pub fn assign_bond_orders_from_template(refmol: &Mol, mol: &Mol) -> Result<Mol> 
         );
     }
     let at = |i: u32| -> Result<u32> {
-        matching.get(i as usize).copied().ok_or(Error::Index {
-            index: i,
-            len: matching.len() as u32,
-        })
+        matching
+            .get(i as usize)
+            .copied()
+            .ok_or(Error::index(i, matching.len()))
     };
     for b in refmol.get_bonds() {
         let (atom1, atom2) = (at(b.get_begin_atom_idx())?, at(b.get_end_atom_idx())?);

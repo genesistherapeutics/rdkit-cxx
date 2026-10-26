@@ -229,10 +229,7 @@ fn build_inverse_permutation(atom_order: &[i64], size: usize) -> Result<Option<V
             orig_idx
         };
         if pos < 0 {
-            return Err(Error::Index {
-                index: orig_idx.unsigned_abs() as u32,
-                len: size as u32,
-            });
+            return Err(Error::index(orig_idx, size));
         }
         new_order[pos as usize] = inchi_idx as u32;
     }

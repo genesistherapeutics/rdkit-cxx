@@ -89,6 +89,14 @@ fn top_n_overall_picker() {
             }
         }
         assert!(matches!(picker.get(n as i64), Err(Error::Index { .. })));
+        let past_start = -(n as i64) - 1;
+        assert_eq!(
+            picker.get(past_start),
+            Err(Error::Index {
+                index: past_start,
+                len: n
+            })
+        );
     }
     picker.make_picks_with_force(true).unwrap();
 }

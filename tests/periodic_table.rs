@@ -40,7 +40,7 @@ fn bad_inputs() {
         table.get_atomic_weight(500).unwrap_err(),
         Error::Index {
             index: 500,
-            len: max + 1
+            len: max as usize + 1
         }
     );
     assert!(matches!(

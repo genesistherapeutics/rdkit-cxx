@@ -90,10 +90,7 @@ impl TautomerEnumeratorResult {
             i64::from(pos)
         };
         if index < 0 || index >= len as i64 {
-            return Err(Error::Index {
-                index: pos as u32,
-                len: len as u32,
-            });
+            return Err(Error::index(pos, len));
         }
         Ok(Mol::from_ffi(ffi::tautomer_result_tautomer(
             self.raw(),
