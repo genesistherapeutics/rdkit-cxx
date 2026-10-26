@@ -175,7 +175,9 @@ impl fmt::Debug for FPBReader {
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct MultiFPBReaderNeighborsParams {
+    /// The least similarity of a neighbor.
     pub threshold: f64,
+    /// The threads to search with; 0 for the hardware's.
     pub num_threads: u32,
 }
 

@@ -116,9 +116,11 @@ pub unsafe fn bond_from_smarts(smarts: &str) -> Result<Bond> {
 /// keyword overload takes `params`' fields.
 #[derive(Clone, Debug, PartialEq)]
 pub struct MolToCXSmilesParams {
+    /// The SMILES writer's parameters.
     pub params: SmilesWriteParams,
     /// The extensions to write.
     pub flags: CXSmilesFields,
+    /// Whether bond directions are restored from the input before writing.
     pub restore_bond_dirs: RestoreBondDirOption,
 }
 
@@ -164,6 +166,7 @@ pub fn mol_to_cx_smarts_with_isomeric_smiles(mol: &Mol, isomeric_smiles: bool) -
 /// atomSymbols, bondSymbols)`, whose keyword overload takes `params`' fields.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MolFragmentToSmilesParams {
+    /// The SMILES writer's parameters.
     pub params: SmilesWriteParams,
     /// The bonds to include; `None` for every bond between the atoms.
     pub bonds_to_use: Option<Vec<u32>>,
@@ -232,6 +235,7 @@ pub fn mol_fragment_to_cx_smiles_with_params(
 pub struct MolFragmentToSmartsParams {
     /// The bonds to include; `None` for every bond between the atoms.
     pub bonds_to_use: Option<Vec<u32>>,
+    /// Includes stereochemistry and isotopes.
     pub isomeric_smarts: bool,
 }
 
@@ -297,9 +301,13 @@ pub fn mol_fragment_to_cx_smarts_with_params(
 pub struct MolToRandomSmilesVectParams {
     /// Seeds RDKit's global generator when positive.
     pub random_seed: u32,
+    /// Includes stereochemistry and isotopes.
     pub isomeric_smiles: bool,
+    /// Writes Kekulé forms.
     pub kekule_smiles: bool,
+    /// Writes every bond, single and aromatic ones included.
     pub all_bonds_explicit: bool,
+    /// Writes every hydrogen count in brackets.
     pub all_hs_explicit: bool,
 }
 
@@ -358,9 +366,13 @@ pub fn mol_to_random_smiles_vect_with_params(
 pub struct CanonicalRankAtomsParams {
     /// Breaks ties; otherwise equal ranks mark symmetry classes.
     pub break_ties: bool,
+    /// Ranks by chirality too.
     pub include_chirality: bool,
+    /// Ranks by isotope too.
     pub include_isotopes: bool,
+    /// Ranks by atom map number too.
     pub include_atom_maps: bool,
+    /// Ranks by whether an atom has a chiral tag too.
     pub include_chiral_presence: bool,
 }
 
@@ -406,10 +418,15 @@ pub struct CanonicalRankAtomsInFragmentParams {
     pub bonds_to_use: Option<Vec<u32>>,
     /// A symbol for each atom of the molecule.
     pub atom_symbols: Option<Vec<String>>,
+    /// Breaks ties; otherwise equal ranks mark symmetry classes.
     pub break_ties: bool,
+    /// Ranks by chirality too.
     pub include_chirality: bool,
+    /// Ranks by isotope too.
     pub include_isotopes: bool,
+    /// Ranks by atom map number too.
     pub include_atom_maps: bool,
+    /// Ranks by whether an atom has a chiral tag too.
     pub include_chiral_presence: bool,
 }
 

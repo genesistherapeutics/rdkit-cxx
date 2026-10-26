@@ -175,6 +175,7 @@ impl ShapeInput {
 pub struct PrepareConformerParams {
     /// The conformer; -1 for the first.
     pub conf_id: i32,
+    /// How the shape is built.
     pub opts: ShapeInputOptions,
 }
 

@@ -129,6 +129,8 @@
 //! [`chem::rd_fingerprint_generator`], [`chem::rd_dist_geom`],
 //! [`chem::rd_chem_reactions`], and [`chem::mol_standardize`].
 
+#![warn(missing_docs)]
+
 pub mod avalon;
 pub mod chem;
 pub mod data_manip;

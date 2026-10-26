@@ -47,6 +47,7 @@ crate::flags::flag_ops!(ResonanceFlags);
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ResonanceMolSupplierParams {
+    /// How structures are enumerated.
     pub flags: ResonanceFlags,
     /// The most structures to enumerate; RDKit caps it at 1,000,000.
     pub max_structs: u32,
@@ -65,7 +66,9 @@ impl Default for ResonanceMolSupplierParams {
 /// with Python's defaults (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct GetSubstructMatchParams {
+    /// Matches chirality.
     pub use_chirality: bool,
+    /// Matches query atoms and bonds against query features.
     pub use_query_query_matches: bool,
 }
 
@@ -73,9 +76,13 @@ pub struct GetSubstructMatchParams {
 /// with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct GetSubstructMatchesParams {
+    /// Returns each set of atoms once.
     pub uniquify: bool,
+    /// Matches chirality.
     pub use_chirality: bool,
+    /// Matches query atoms and bonds against query features.
     pub use_query_query_matches: bool,
+    /// The most matches to return.
     pub max_matches: u32,
     /// Accepted for parity: the match runs on the calling thread, since
     /// RDKit's threads would each swap the process's SIGINT handler

@@ -365,6 +365,7 @@ pub struct ConvertTextToDBFileParams<'a> {
 pub struct SubstructureSearchParams {
     /// How the query is matched to the synthons and the hits.
     pub substruct_match_params: SubstructMatchParameters,
+    /// The search's other parameters.
     pub params: SynthonSpaceSearchParams,
 }
 

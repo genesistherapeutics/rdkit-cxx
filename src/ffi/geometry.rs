@@ -8,15 +8,20 @@ pub(crate) mod ffi {
     /// A point in 2D. Mirrors `rdGeometry.Point2D`.
     #[derive(Clone, Copy, Debug, Default, PartialEq)]
     struct Point2D {
+        /// The x coordinate.
         pub x: f64,
+        /// The y coordinate.
         pub y: f64,
     }
 
     /// A point in 3D. Mirrors `rdGeometry.Point3D`.
     #[derive(Clone, Copy, Debug, Default, PartialEq)]
     struct Point3D {
+        /// The x coordinate.
         pub x: f64,
+        /// The y coordinate.
         pub y: f64,
+        /// The z coordinate.
         pub z: f64,
     }
 

@@ -580,11 +580,19 @@ pub fn get_molecule_bounds_matrix_embed_parameters_with_params(
 #[non_exhaustive]
 pub enum TorsionTerms {
     /// A cosine series, versions 1 and 2: Python's `V` and `signs`.
-    Cosine { v: Vec<f64>, signs: Vec<i32> },
+    Cosine {
+        /// The force constants, Python's `V`.
+        v: Vec<f64>,
+        /// The signs of the terms.
+        signs: Vec<i32>,
+    },
     /// Gaussians, version 4: Python's `positions`, `widths`, and `heights`.
     Gaussian {
+        /// The Gaussians' centers, in radians.
         positions: Vec<f64>,
+        /// The Gaussians' widths.
         widths: Vec<f64>,
+        /// The Gaussians' heights.
         heights: Vec<f64>,
     },
 }

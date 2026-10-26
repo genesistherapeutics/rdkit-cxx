@@ -125,7 +125,9 @@ pub struct AtomCoordsMatcher {
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct AtomCoordsMatcherParams {
+    /// The reference's conformer; -1 for the default.
     pub ref_conf_id: i32,
+    /// The query's conformer; -1 for the default.
     pub query_conf_id: i32,
     /// The distance tolerance, which the matcher squares.
     pub tol: f64,
