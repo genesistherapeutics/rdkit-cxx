@@ -7,6 +7,9 @@
 // murtagh_test.py, with values from Python's rdkit.ML.Cluster modules in
 // RDKit 2026.09.1.
 
+// Python's test data, 3.14, is not pi.
+#![allow(clippy::approx_constant)]
+
 use rdkit_cxx::Error;
 use rdkit_cxx::ml::cluster::butina::{self, ClusterDataParams};
 use rdkit_cxx::ml::cluster::cluster_utils::*;
