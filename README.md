@@ -80,6 +80,11 @@ rdkit-cxx = "~2026.9"
 Cargo's default caret requirement can cross series: `"2027.3"` would also
 accept 2027.9, which needs another RDKit.
 
+The version is RDKit's series without its leading zero (2026.9 for RDKit
+2026.09, 2027.3 for 2027.03), because Cargo's versions can't have one. The
+patch number is the crate's own, not RDKit's; "Environment" names the RDKit
+release each crate release supports.
+
 RDKit's shared libraries live in the conda environment, and conda does not set
 `LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
 rpath, which its own build script adds:
