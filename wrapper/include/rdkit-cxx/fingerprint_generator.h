@@ -46,6 +46,15 @@ struct TopologicalTorsionGeneratorData;
 struct FingerprintArgsData;
 struct AdditionalOutputData;
 
+// What fingerprinting `mol` with the generator's defaults (all atoms, the
+// default conformer) trusts, checked as the generator's own calls check it
+// (check_call in fingerprint_generator.cpp); throws ValueErrorException or
+// IndexError.
+void check_fingerprint_mol(const FpGenerator &gen, const RDKit::ROMol &mol);
+// Whether the generator reads each molecule's n * n distance matrix (atom
+// pairs), which RDKit computes in int (check_matrix_size).
+bool fingerprint_reads_distance_matrix(const FpGenerator &gen);
+
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,
     std::unique_ptr<BondInvGen> bond_inv_gen);

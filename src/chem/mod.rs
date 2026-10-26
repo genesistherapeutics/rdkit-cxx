@@ -41,6 +41,7 @@ pub mod rd_shape_align;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
 pub mod rd_substruct_library;
+pub mod rd_synthon_space_search;
 pub mod rd_tautomer_query;
 pub mod rdchem;
 pub mod rdfiltercatalog;

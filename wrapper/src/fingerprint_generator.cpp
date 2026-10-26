@@ -381,6 +381,14 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
 
 }  // namespace
 
+void check_fingerprint_mol(const FpGenerator &gen, const RDKit::ROMol &mol) {
+  check_call(gen, mol, nullptr, nullptr, nullptr, nullptr, -1, false);
+}
+
+bool fingerprint_reads_distance_matrix(const FpGenerator &gen) {
+  return dynamic_cast<const AtomPairArguments *>(gen.getOptions()) != nullptr;
+}
+
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,
     std::unique_ptr<BondInvGen> bond_inv_gen) {

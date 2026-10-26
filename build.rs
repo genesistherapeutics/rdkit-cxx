@@ -100,6 +100,7 @@ const BRIDGES: &[&str] = &[
     "cluster",
     "sim_div_pickers",
     "info_theory",
+    "synthon_space_search",
 ];
 
 fn main() {

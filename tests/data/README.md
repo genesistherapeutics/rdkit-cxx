@@ -8,3 +8,6 @@ From RDKit's source tree, under RDKit's BSD license:
 - `reaction1.no_metadata.png`: `Code/GraphMol/ChemReactions/testData`
 - `rxn1.cdxml`: `Code/GraphMol/test_data/CDXML`
 - `AlexRxn.mrv`: `Code/GraphMol/MarvinParse/test_data`
+- `amide_space.txt`, `amide_space_error.txt`, `triazole_space.txt`,
+  `extended_query.csv`, `doebner_miller_space.txt`:
+  `Code/GraphMol/SynthonSpaceSearch/data`

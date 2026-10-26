@@ -100,7 +100,7 @@ impl Default for RascalOptions {
 }
 
 impl RascalOptions {
-    fn to_ffi(&self) -> ffi::RascalOptionsData {
+    pub(crate) fn to_ffi(&self) -> ffi::RascalOptionsData {
         ffi::RascalOptionsData {
             similarity_threshold: self.similarity_threshold,
             complete_aromatic_rings: self.complete_aromatic_rings,
