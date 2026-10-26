@@ -1,9 +1,9 @@
 # rdkit-cxx
 
 Rust bindings for [RDKit](https://github.com/rdkit/rdkit)'s C++ API, with Rust
-ports of the functionality RDKit currently offers only in Python. Together they
-cover RDKit's Python interface: the API mirrors RDKit's nanobind wrappers and
-its Python modules in Rust spelling, so Python code ports line by line:
+ports of much of the functionality RDKit currently offers only in Python. The
+API mirrors RDKit's nanobind wrappers and its Python modules in Rust spelling,
+so Python code ports line by line:
 
 ```rust,no_run
 use rdkit_cxx::chem::{mol_from_smarts, mol_from_smiles, mol_to_smiles};
@@ -16,19 +16,25 @@ println!("{} {:?}", mol_to_smiles(&mol)?, mol.get_substruct_matches(&hydroxyl)?)
 
 The crate binds RDKit's C++ and reimplements none of it. It compiles a C++
 wrapper layer (with [cxx](https://cxx.rs) and CMake) against RDKit from
-conda-forge and links RDKit's shared libraries. What RDKit implements in
-Python (descriptors such as QED, BRICS and Recap, pharmacophore fingerprints,
-`Draw`, Butina clustering, and the rest) is ported to Rust on top of those
-bindings, and computes what Python computes: `rdkit.Chem.QED` is
+conda-forge and links RDKit's shared libraries. Much of what RDKit implements
+only in Python (descriptors such as QED, BRICS and Recap, pharmacophore
+fingerprints, `Draw`, Butina clustering, and more) is ported to Rust on top of
+those bindings, and computes what Python computes: `rdkit.Chem.QED` is
 `rdkit_cxx::chem::qed`.
 
-Coverage: every name RDKit 2026.09's Python interface offers, in its
-nanobind modules and its Python modules, has a Rust counterpart or a
-recorded reason it has none ([Parity](#parity)). The patterns every wrapper
-follows are in [CONVENTIONS.md](CONVENTIONS.md), and the limits that remain
-are under [Known limitations](#known-limitations). [`examples/`](examples)
-ports the [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s
-recipes (`cargo run --example cookbook_hybridization`). The
+Coverage: every name in RDKit 2026.09's Python interface, in its nanobind
+modules and its Python modules, has a Rust counterpart or a recorded reason it
+has none ([Parity](#parity)). Of the 3,910 names the nanobind modules expose,
+3,478 are bound. Of the 2,605 its Python modules define, 1,017 are ported; the
+rest are Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM), legacy
+code whose replacement is bound (the sping canvases, the Python MCS search),
+command-line plumbing, Python protocol hooks, or deprecated.
+
+The patterns every wrapper follows are in [CONVENTIONS.md](CONVENTIONS.md), and
+the limits that remain are under [Known limitations](#known-limitations).
+[`examples/`](examples) ports the
+[RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s recipes
+(`cargo run --example cookbook_hybridization`). The
 [design](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-24-rdkit-rust-bindings/README.md)
 and a [report on the work](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-26-rdkit-rust-bindings-report/README.md),
 including the RDKit bugs it found, are in rdkit-logbook.

@@ -3,8 +3,9 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Rust bindings for RDKit's C++ API, with Rust ports of the functionality
-//! RDKit currently offers only in Python. Module paths follow Python's:
+//! Rust bindings for RDKit's C++ API, with Rust ports of much of the
+//! functionality RDKit currently offers only in Python. Module paths follow
+//! Python's:
 //! `rdkit.Chem.rdmolfiles` is [`chem::rdmolfiles`] and `rdkit.Chem.QED` is
 //! [`chem::qed`].
 
