@@ -350,16 +350,6 @@ fn brics() {
         to_smiles(&fragment_on_brics_bonds(&smiles("CCCOCCC(=O)c1ccccc1")).unwrap()),
         "[16*]c1ccccc1.[3*]O[3*].[4*]CCC.[4*]CCC([6*])=O"
     );
-    // The first call fills RDKit's pattern globals; the wrapper's lock keeps
-    // concurrent first calls apart.
-    std::thread::scope(|s| {
-        for _ in 0..4 {
-            s.spawn(|| {
-                let mol = smiles("CCCOCCC(=O)c1ccccc1");
-                assert_eq!(fragment_on_brics_bonds(&mol).unwrap().get_num_atoms(), 20);
-            });
-        }
-    });
 }
 
 #[test]

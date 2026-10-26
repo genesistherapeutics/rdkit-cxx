@@ -145,6 +145,10 @@ major and minor levels by hand, in the pull request that updates
 bump-my-version bump --new-version 2027.3.0
 ```
 
+The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
+conda-forge daily and opens an issue, assigned to the repository owner, when
+it has `librdkit-dev` from a series newer than `environment.yml` pins.
+
 ## License
 
 BSD-3-Clause, as RDKit.
