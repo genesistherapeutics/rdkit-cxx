@@ -46,6 +46,12 @@ class BorrowedMols {
     d_names.push_back(std::move(name));
     d_mols.emplace_back(&mol, [](RDKit::ROMol *) {});
   }
+  // A missing molecule, which only drawer_draw_molecules reads (as an empty
+  // panel).
+  void push_none() {
+    d_names.emplace_back();
+    d_mols.emplace_back();
+  }
   const std::vector<std::string> &names() const { return d_names; }
   std::vector<boost::shared_ptr<RDKit::ROMol>> &mols() { return d_mols; }
 
