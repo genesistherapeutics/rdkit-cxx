@@ -90,6 +90,7 @@ pub mod rdinchi;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
+pub mod rdtrajectory;
 pub mod recap;
 pub mod reduced_graphs;
 pub mod registration_hash;

@@ -3,8 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Mirrors `rdkit.ForceField.rdForceField`: force fields, MMFF molecule
-//! properties, and minimization snapshots.
+//! Mirrors `rdkit.ForceField.rdForceField`: force fields and MMFF molecule
+//! properties.
 //!
 //! A [`ForceField`] moves the atoms of the conformer it was built for, so it
 //! borrows that molecule mutably for as long as it lives; read the molecule
@@ -16,12 +16,13 @@ use std::pin::Pin;
 
 use cxx::UniquePtr;
 
+use crate::Result;
 use crate::chem::Mol;
 use crate::chem::rdchem::enums::rdkit_enum;
+use crate::chem::rdtrajectory::Snapshot;
 use crate::error::{expect_ok, to_string};
 use crate::ffi::force_field::ffi;
-use crate::geometry::{Point2D, Point3D};
-use crate::{Error, Result};
+use crate::geometry::Point3D;
 
 rdkit_enum! {
     /// How much an MMFF setup prints. Mirrors `rdForceField.MMFFVerbosity`.
@@ -171,6 +172,10 @@ impl<'m> ForceField<'m> {
 
     /// As `minimize`, also returning a snapshot every `snapshot_freq`
     /// iterations. Mirrors `ForceField.MinimizeTrajectory`.
+    ///
+    /// The snapshots read their points as a trajectory of the force field's
+    /// dimension (at most 3) and point count would. Python's belong to no
+    /// trajectory, so their point getters always raise.
     pub fn minimize_trajectory(&mut self, snapshot_freq: u32) -> Result<(i32, Vec<Snapshot>)> {
         self.minimize_trajectory_with_params(snapshot_freq, &MinimizeTrajectoryParams::default())
     }
@@ -198,10 +203,13 @@ impl<'m> ForceField<'m> {
         let snapshots = energies
             .into_iter()
             .enumerate()
-            .map(|(i, energy)| Snapshot {
-                dimension,
-                positions: positions[i * size..(i + 1) * size].to_vec(),
-                energy,
+            .map(|(i, energy)| {
+                Snapshot::with_layout(
+                    positions[i * size..(i + 1) * size].to_vec(),
+                    energy,
+                    dimension,
+                    self.num_points(),
+                )
             })
             .collect();
         Ok((res, snapshots))
@@ -435,65 +443,6 @@ impl fmt::Debug for ForceField<'_> {
             .field("dimension", &self.dimension())
             .field("num_points", &self.num_points())
             .finish()
-    }
-}
-
-/// The coordinates and energy at one step of a minimization. Mirrors
-/// `rdForceField.Snapshot`, as `ForceField::minimize_trajectory` returns it.
-///
-/// Python's snapshots belong to no trajectory, so their point getters always
-/// raise; these read the coordinates the minimizer recorded.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Snapshot {
-    dimension: u32,
-    positions: Vec<f64>,
-    energy: f64,
-}
-
-impl Snapshot {
-    fn point(&self, point_num: u32) -> Result<&[f64]> {
-        let size = self.dimension as usize;
-        let len = self.positions.len() / size.max(1);
-        if point_num as usize >= len {
-            return Err(Error::index(point_num, len));
-        }
-        let start = point_num as usize * size;
-        Ok(&self.positions[start..start + size])
-    }
-
-    /// The coordinates of point `point_num`; RDKit requires a
-    /// two-dimensional trajectory, so a force field's snapshot is
-    /// `Error::Runtime`. Mirrors `Snapshot.GetPoint2D`.
-    pub fn get_point_2d(&self, point_num: u32) -> Result<Point2D> {
-        let point = self.point(point_num)?;
-        if self.dimension != 2 {
-            return Err(Error::Runtime {
-                message: "d_dimension must be == 2".to_owned(),
-            });
-        }
-        Ok(Point2D::new(point[0], point[1]))
-    }
-
-    /// The coordinates of point `point_num`. Mirrors `Snapshot.GetPoint3D`.
-    pub fn get_point_3d(&self, point_num: u32) -> Result<Point3D> {
-        let point = self.point(point_num)?;
-        if self.dimension < 2 {
-            return Err(Error::Runtime {
-                message: "d_dimension must be >= 2".to_owned(),
-            });
-        }
-        let z = if self.dimension == 3 { point[2] } else { 0.0 };
-        Ok(Point3D::new(point[0], point[1], z))
-    }
-
-    /// Mirrors `Snapshot.GetEnergy`.
-    pub fn get_energy(&self) -> f64 {
-        self.energy
-    }
-
-    /// Mirrors `Snapshot.SetEnergy`.
-    pub fn set_energy(&mut self, energy: f64) {
-        self.energy = energy;
     }
 }
 

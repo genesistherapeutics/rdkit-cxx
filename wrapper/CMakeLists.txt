@@ -136,6 +136,7 @@ set(RDKIT_CXX_SOURCES
   src/draw_drawer.cpp
   src/synthon_space_search.cpp
   src/inchi.cpp
+  src/trajectory.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
