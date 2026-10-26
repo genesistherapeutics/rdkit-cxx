@@ -39,8 +39,7 @@ use crate::chem::rd_fingerprint_generator::{
     get_morgan_generator_with_params, get_topological_torsion_generator_with_params,
 };
 use crate::chem::{
-    RDKFingerprintParams, find_atom_environment_of_radius_n, path_to_submol_with_outputs,
-    rdk_fingerprint_with_outputs,
+    RDKFingerprintParams, find_atom_environment_of_radius_n, rdk_fingerprint_with_outputs,
 };
 use crate::data_structs::{
     BitVect, ExplicitBitVect, UIntSparseIntVect, ULongSparseIntVect, dice_similarity,
@@ -962,27 +961,62 @@ impl GetMorganFingerprintParams {
     }
 }
 
-/// Python's bitmap: the bits each atom is in an environment of, once for
-/// each environment.
-fn morgan_bitmap(mol: &Mol, info: &BTreeMap<u64, Vec<(u32, u32)>>) -> Result<Vec<Vec<u64>>> {
-    let mut bitmap = vec![Vec::new(); mol.get_num_atoms() as usize];
+/// The entry of Python's bitmap for `atom_id`: the bits of the environments
+/// it is in, once for each environment, in the bitmap's order. Python builds
+/// every atom's entry, through `PathToSubmol`, whose atom map holds the
+/// environment's bonds' atoms; this finds those atoms only for the
+/// environments that can reach `atom_id`, within their radius of it.
+fn morgan_atom_bits(
+    mol: &Mol,
+    info: &BTreeMap<u64, Vec<(u32, u32)>>,
+    atom_id: u32,
+) -> Result<Vec<u64>> {
+    let n = mol.get_num_atoms() as usize;
+    let mut neighbors = vec![Vec::new(); n];
+    for bond in mol.get_bonds() {
+        let (a, b) = (bond.get_begin_atom_idx(), bond.get_end_atom_idx());
+        neighbors[a as usize].push(b);
+        neighbors[b as usize].push(a);
+    }
+    // Bonds from atom_id, breadth first.
+    let mut distance = vec![u32::MAX; n];
+    distance[atom_id as usize] = 0;
+    let mut queue = std::collections::VecDeque::from([atom_id]);
+    while let Some(at) = queue.pop_front() {
+        for &next in &neighbors[at as usize] {
+            if distance[next as usize] == u32::MAX {
+                distance[next as usize] = distance[at as usize] + 1;
+                queue.push_back(next);
+            }
+        }
+    }
+    let mut bits = Vec::new();
     for (&bit, envs) in info {
         for &(at1, rad) in envs {
             if rad == 0 {
-                bitmap[at1 as usize].push(bit);
-            } else {
+                if at1 == atom_id {
+                    bits.push(bit);
+                }
+            } else if distance[at1 as usize] <= rad {
                 let env = find_atom_environment_of_radius_n(mol, rad, at1)?;
-                let (_, outputs) = path_to_submol_with_outputs(mol, &env, false)?;
-                for &at2 in outputs.atom_map.keys() {
-                    bitmap[at2 as usize].push(bit);
+                let touches = env.iter().try_fold(false, |found, &idx| {
+                    let bond = mol.get_bond_with_idx(idx)?;
+                    Ok::<bool, Error>(
+                        found
+                            || bond.get_begin_atom_idx() == atom_id
+                            || bond.get_end_atom_idx() == atom_id,
+                    )
+                })?;
+                if touches {
+                    bits.push(bit);
                 }
             }
         }
     }
-    Ok(bitmap)
+    Ok(bits)
 }
 
-/// The fingerprint, and Python's bitmap when an atom is left out.
+/// The fingerprint, and Python's bitmap entry when an atom is left out.
 fn morgan_with_bitmap<T>(
     mol: &Mol,
     atom_id: Option<u32>,
@@ -999,8 +1033,7 @@ fn morgan_with_bitmap<T>(
         return Ok((fp, None));
     };
     let info = outputs.get_bit_info_map().cloned().unwrap_or_default();
-    let mut bitmap = morgan_bitmap(mol, &info)?;
-    Ok((fp, Some(std::mem::take(&mut bitmap[atom_id as usize]))))
+    Ok((fp, Some(morgan_atom_bits(mol, &info, atom_id)?)))
 }
 
 /// The Morgan fingerprint as bits. Mirrors
