@@ -161,8 +161,20 @@ fn discrete_value_vect_pickles() {
     ] {
         assert!(is_value(DiscreteValueVect::from_pkl(&bad)), "{bad:?}");
     }
-    assert!(DiscreteValueVect::from_pkl(&pkl[..10]).is_err());
+    // RDKit reads a version it may not have, and divides by the bits per
+    // value before reading the rest, so every truncated header is refused.
+    for len in 0..24 {
+        assert!(
+            is_value(DiscreteValueVect::from_pkl(&pkl[..len])),
+            "{len} bytes"
+        );
+    }
+    assert!(is_value(DiscreteValueVect::from_pkl(&ZERO_BITS_PER_VALUE)));
 }
+
+/// A DiscreteValueVect pickle's version, a value type of 0, and 0 bits per
+/// value, which RDKit divides by.
+const ZERO_BITS_PER_VALUE: [u8; 12] = [0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0];
 
 #[test]
 fn real_value_vect_pickles() {
@@ -334,6 +346,11 @@ fn uniform_grid3d_pickles() {
         assert!(is_value(UniformGrid3D::from_pkl(&bad)), "{bad:?}");
     }
     assert!(UniformGrid3D::from_pkl(&pkl[..30]).is_err());
+    // The storage's header is checked as a DiscreteValueVect's is.
+    let mut zero_bits = pkl[..48].to_vec();
+    zero_bits.extend((ZERO_BITS_PER_VALUE.len() as u32).to_le_bytes());
+    zero_bits.extend(ZERO_BITS_PER_VALUE);
+    assert!(is_value(UniformGrid3D::from_pkl(&zero_bits)));
 }
 
 #[test]

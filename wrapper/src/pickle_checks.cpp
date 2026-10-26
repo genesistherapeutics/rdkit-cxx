@@ -102,14 +102,22 @@ void check_discrete_value_vect_pickle(std::string_view pkl) {
   auto mask = read<std::uint32_t>(pkl, 12);
   auto length = read<std::uint32_t>(pkl, 16);
   auto num_ints = read<std::uint32_t>(pkl, 20);
-  if (!version || *version != -1 || !num_ints) {
-    // RDKit rejects these: a bad version, or a short read.
-    return;
-  }
   auto bad = [](const char *what) {
     throw ValueErrorException(std::string(what) +
                               " in DiscreteValueVect pickle");
   };
+  // RDKit checks none of its reads: it compares a version it may not have
+  // read, and divides by the bits per value before reading the rest.
+  if (!version) {
+    bad("a truncated header");
+  }
+  if (*version != -1) {
+    // RDKit rejects any other version.
+    return;
+  }
+  if (!type || !bits || !mask || !length || !num_ints) {
+    bad("a truncated header");
+  }
   if (*type > RDKit::DiscreteValueVect::SIXTEENBITVALUE ||
       *bits != (1u << *type) || *mask != (1ull << *bits) - 1) {
     bad("a bad value type");
