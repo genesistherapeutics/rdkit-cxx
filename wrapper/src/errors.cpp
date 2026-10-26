@@ -5,7 +5,10 @@
 
 #include "rdkit-cxx/errors.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <stdexcept>
+#include <string_view>
 #include <vector>
 
 #include <GraphMol/ChemReactions/Reaction.h>
@@ -20,10 +23,32 @@
 #include <RDGeneral/FileParseException.h>
 #include <RDGeneral/Invariant.h>
 #include <RDGeneral/RDLog.h>
+#include <RDGeneral/versions.h>
 
 namespace rdkit_cxx {
 
 namespace {
+
+// The wrapper is compiled against one RDKit release's headers, including
+// copies of internal ones whose layouts can change between releases
+// (wrapper/vendor), so it must run with that release's libraries. A binary
+// moved to another environment, or built before its environment was updated
+// in place, can load another; stop before any RDKit call rather than run
+// with mismatched layouts. Every bridge links this file (E5), so this runs
+// when the library loads, before the initializer below.
+[[maybe_unused]] const bool rdkit_release_checked = [] {
+  if (std::string_view(RDKit::rdkitVersion) != RDKIT_CXX_RDKIT_VERSION) {
+    std::fprintf(stderr,
+                 "rdkit-cxx: built against RDKit %s, but RDKit %s is "
+                 "loaded. Rebuild it against the RDKit this program runs "
+                 "with (cargo clean -p rdkit-cxx), or run it with RDKit "
+                 "%s.\n",
+                 RDKIT_CXX_RDKIT_VERSION, RDKit::rdkitVersion,
+                 RDKIT_CXX_RDKIT_VERSION);
+    std::abort();
+  }
+  return true;
+}();
 
 // Python's rdBase initializes RDKit's logs on import; this does the same when
 // the library loads. Every bridge links this file (E5), so it always runs.

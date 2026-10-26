@@ -60,8 +60,8 @@ jobs:
           key: ${{ github.job }}-${{ matrix.os }}
           max-size: 1G
       - run: cargo fmt --check
-      - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo test --workspace
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
       - name: The cookbook examples run
         run: |
           for example in examples/*.rs; do
