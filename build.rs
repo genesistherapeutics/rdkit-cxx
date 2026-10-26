@@ -119,6 +119,11 @@ fn main() {
         return;
     }
     let prefix = rdkit_prefix();
+    // Draw.SetComicMode finds RDKit's fonts as RDConfig does, here.
+    println!(
+        "cargo::rustc-env=RDKIT_CXX_RDKIT_PREFIX={}",
+        prefix.display()
+    );
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
 

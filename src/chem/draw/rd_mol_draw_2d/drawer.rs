@@ -16,7 +16,6 @@ use super::options::{DrawColour, MolDrawOptions};
 use crate::Result;
 use crate::chem::Mol;
 use crate::chem::rd_chem_reactions::ChemicalReaction;
-use crate::chem::rdmolops::with_borrowed_mols_shared;
 use crate::error::{expect_ok, to_string};
 use crate::ffi::draw::ffi;
 use crate::ffi::geometry::ffi::IndexList;
@@ -419,6 +418,17 @@ impl MolDraw2D {
         mols: &[Mol],
         params: &DrawMoleculesParams,
     ) -> Result<()> {
+        let mols: Vec<Option<&Mol>> = mols.iter().map(Some).collect();
+        self.draw_optional_molecules_with_params(&mols, params)
+    }
+
+    /// As `draw_molecules_with_params`, where a missing molecule (Python's
+    /// `None`) leaves its panel empty.
+    pub(crate) fn draw_optional_molecules_with_params(
+        &mut self,
+        mols: &[Option<&Mol>],
+        params: &DrawMoleculesParams,
+    ) -> Result<()> {
         fn given<T>(list: &Option<Vec<T>>) -> Option<&Vec<T>> {
             list.as_ref().filter(|v| !v.is_empty())
         }
@@ -470,10 +480,23 @@ impl MolDraw2D {
             has_legends: given(&params.legends).is_some(),
             legends: given(&params.legends).cloned().unwrap_or_default(),
         };
-        let inner = self.pin_mut();
-        with_borrowed_mols_shared(mols.iter().map(|m| ("", m)), |list| {
-            Ok(ffi::drawer_draw_molecules(inner, list, &data)?)
-        })
+        let mut list = expect_ok(crate::ffi::molops::ffi::borrowed_mols_new());
+        for mol in mols {
+            match mol {
+                Some(mol) => expect_ok(crate::ffi::molops::ffi::borrowed_mols_push_shared(
+                    list.pin_mut(),
+                    "",
+                    mol.as_ffi(),
+                )),
+                None => expect_ok(ffi::borrowed_mols_push_none(list.pin_mut())),
+            }
+        }
+        // The list drops at the end, before the borrows of the molecules end.
+        Ok(ffi::drawer_draw_molecules(
+            self.pin_mut(),
+            list.pin_mut(),
+            &data,
+        )?)
     }
 
     /// Draws a reaction: its reactants, an arrow with its agents, and its

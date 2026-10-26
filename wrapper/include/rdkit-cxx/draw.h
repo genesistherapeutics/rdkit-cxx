@@ -146,6 +146,7 @@ void drawer_draw_molecule_with_highlights(
     Drawer &d, const RWMol &mol, const DrawMoleculeWithHighlightsData &data);
 void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
                            const DrawMoleculesData &data);
+void borrowed_mols_push_none(BorrowedMols &list);
 void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
                           bool highlight_by_reactant,
                           const rust::Vec<DrawColour> &colours,
