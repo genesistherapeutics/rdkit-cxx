@@ -123,6 +123,9 @@ set(RDKIT_CXX_SOURCES
   src/cluster.cpp
   src/sim_div_pickers.cpp
   src/info_theory.cpp
+  src/abbreviations.cpp
+  src/enumerate_stereoisomers.cpp
+  src/mol_enumerator.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -182,6 +185,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   hc
   SimDivPickers
   InfoTheory
+  Abbreviations
+  EnumerateStereoisomers
+  MolEnumerator
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
