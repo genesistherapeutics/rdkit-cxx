@@ -178,7 +178,11 @@ rule changes the rule first.
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
-  monomer infos). RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
+  monomer infos). Synthon-space database files
+  (`SynthonSpace::read_db_file`), records of molecule and bit-vector
+  pickles and Boost archives of shapes at offsets RDKit trusts, are read by
+  an `unsafe fn` too, whose wrapper checks the header and offsets first.
+  RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
   no fuzzer covers, trusts the indices, counts, and query trees it reads,
   so `json_to_mols` parses the document first, with the same boost::json
   parser, checks what RDKit would read unchecked (`DocumentChecker` in
@@ -192,7 +196,9 @@ rule changes the rule first.
   RDKit's own bond matcher and SMARTS writer cast. Text a wrapper checks
   before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
-  memory, so RDKit parses the bytes that were checked.
+  memory, so RDKit parses the bytes that were checked; where RDKit reads a
+  file only by name (a synthon search's possible hits), it reads a private
+  copy of the checked lines.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -387,6 +393,8 @@ rule changes the rule first.
   groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
   wrapper whose RDKit call removes atoms or bonds from a molecule, or from
   a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
+  Where RDKit combines molecules before it removes from them (a synthon
+  space's products), their chains are checked together.
   The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
   and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
 

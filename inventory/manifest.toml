@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
@@ -8063,6 +8063,375 @@ rust = ["rdkit_cxx::chem::rd_substruct_library::TautomerPatternHolder"]
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.TautomerPatternHolder.__init__"
 rust = ["rdkit_cxx::chem::rd_substruct_library::TautomerPatternHolder::default", "rdkit_cxx::chem::rd_substruct_library::TautomerPatternHolder::new"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ConvertTextToDBFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::convert_text_to_db_file", "rdkit_cxx::chem::rd_synthon_space_search::convert_text_to_db_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.FormattedIntegerString"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::formatted_integer_string"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.__init__"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.interimFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::interim_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.interimWrites"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::interim_writes"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.maxEmbedAttempts"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::max_embed_attempts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.maxSynthonAtoms"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::max_synthon_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.numConfs"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::num_confs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.numThreads"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.randomSeed"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::random_seed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.rmsThreshold"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::rms_threshold"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.setUserConformerGenerator"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::set_user_conformer_generator"]
+rust_generics = "<fn(&str, u32) -> rdkit_cxx::Result<Option<rdkit_cxx::chem::Mol>>>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.shapeSimThreshold"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::shape_sim_threshold"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.stereoEnumOpts"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::stereo_enum_opts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.timeOut"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::ShapeBuildParams::time_out"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.ShapeBuildParams.useProgressBar"
+reason = "not bound: RDKit's ProgressBar (SynthonSpaceSearch/ProgressBar.h) projects the job's finish as the elapsed time over the fraction done and converts it to integer nanoseconds with duration_cast, which overflows (undefined) for a projection past 2^63 ns, 292 years, as a large job with slow first steps gives; the bar is 0 here"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SubstructureResult"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SubstructureResult"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SubstructureResult.GetBestHit"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SubstructureResult::get_best_hit"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SubstructureResult.GetCancelled"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SubstructureResult::get_cancelled"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SubstructureResult.GetHitMolecules"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SubstructureResult::get_hit_molecules"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SubstructureResult.GetMaxNumResults"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SubstructureResult::get_max_num_results"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SubstructureResult.GetTimedOut"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SubstructureResult::get_timed_out"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.BuildSynthonFingerprints"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::build_synthon_fingerprints"]
+overloads_note = "progressBarWidth is not bound: RDKit's ProgressBar converts its projected finish to integer nanoseconds unchecked, which overflows (undefined) past 292 years (see SynthonSpaceSearchParams.useProgressBar)"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.BuildSynthonShapes"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::build_synthon_shapes", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::build_synthon_shapes_with_py_params"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.FingerprintSearch"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::fingerprint_search", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::fingerprint_search_with_params", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::fingerprint_search_lines"]
+overloads_note = "the overload with startLine and finishLine, which searches the possible hits file, is fingerprint_search_lines (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.FingerprintSearchIncremental"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::fingerprint_search_incremental", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::fingerprint_search_incremental_with_params"]
+rust_generics = "<fn(Vec<rdkit_cxx::chem::Mol>) -> rdkit_cxx::Result<bool>>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.GetNumProducts"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::get_num_products"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.GetNumReactions"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::get_num_reactions"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.GetNumSynthons"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::get_num_synthons"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.GetNumSynthonsWithShapes"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::get_num_synthons_with_shapes"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.GetSynthonFingerprintType"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::get_synthon_fingerprint_type"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.RascalSearch"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::rascal_search", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::rascal_search_with_params", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::rascal_search_lines"]
+overloads_note = "the overload with startLine and finishLine, which searches the possible hits file, is rascal_search_lines (A5)"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.RascalSearchIncremental"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::rascal_search_incremental", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::rascal_search_incremental_with_params"]
+rust_generics = "<fn(Vec<rdkit_cxx::chem::Mol>) -> rdkit_cxx::Result<bool>>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.ReadDBFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::read_db_file"]
+rust_generics = "<&str>"
+overloads_note = "numThreads is not bound: the file is read on the calling thread, since RDKit's reader threads call std::terminate on an exception, and the space read does not depend on it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.ReadTextFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::read_text_file"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.ReportSynthonUsage"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::report_synthon_usage"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.ShapeSearch"
+reason = "not bound: the shape search aligns each query fragment's dummy-atom bond with each synthon shape's by a rotation whose sine it computes as sqrt(1 - cos^2) of the two directions (alignDummies in SynthonSpaceShapeSearcher.cpp), NaN when rounding puts the cosine of nearly parallel directions past 1, which a query's coordinates can arrange; the NaN shape reaches GaussianShape::AlignShape, which returns its best score uninitialized when no score is a number above -1, and the search compares that score (U1)"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.SubstructureSearch"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_with_params", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_extended_query_mol", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_extended_query_mol_with_params", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_lines", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_lines_with_params", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_extended_query_mol_lines", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_extended_query_mol_lines_with_params"]
+overloads_note = "the ExtendedQueryMol overloads append _extended_query_mol (A5), and those with startLine and finishLine, which search the possible hits file, _lines; each takes substructMatchParams and params in SubstructureSearchParams (A2)"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.SubstructureSearchIncremental"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_incremental", "rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::substructure_search_incremental_with_params"]
+rust_generics = "<fn(Vec<rdkit_cxx::chem::Mol>) -> rdkit_cxx::Result<bool>>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.Summarise"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::summarise"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.WriteDBFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::write_db_file"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.WriteEnumeratedFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::write_enumerated_file"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpace.__init__"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.__init__"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.approxSimilarityAdjuster"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::approx_similarity_adjuster"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.bestHit"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.buildHits"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::build_hits"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.confRMSThreshold"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.enumerateUnspecifiedStereo"
+reason = "serves only ShapeSearch, which is not bound; RDKit 2026.09 reads it nowhere"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.excludedVolume"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.fragSimilarityAdjuster"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::frag_similarity_adjuster"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.hitStart"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::hit_start"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxExcludedVolume"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxHitChiralAtoms"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::max_hit_chiral_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxHitHeavyAtoms"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::max_hit_heavy_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxHitMolWt"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::max_hit_mol_wt"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxHits"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::max_hits"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxMeanExcludedVolume"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxNumFrags"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::max_num_frags"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.maxPossibleHitsToWrite"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::max_possible_hits_to_write"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.minHitChiralAtoms"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::min_hit_chiral_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.minHitHeavyAtoms"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::min_hit_heavy_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.minHitMolWt"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::min_hit_mol_wt"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.numConformers"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.numThreads"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::num_threads"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.possibleHitsFile"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::possible_hits_file"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.randomSample"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::random_sample"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.randomSeed"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::random_seed"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.setUserConformerGenerator"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.shapeOverlayOptions"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.similarityCutoff"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::similarity_cutoff"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.stereoEnumOpts"
+reason = "serves only ShapeSearch, which is not bound; RDKit's other searches do not read it"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.timeOut"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::time_out"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.toTryChunkSize"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::to_try_chunk_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.useProgressBar"
+reason = "not bound: RDKit's ProgressBar (SynthonSpaceSearch/ProgressBar.h) projects the job's finish as the elapsed time over the fraction done and converts it to integer nanoseconds with duration_cast, which overflows (undefined) for a projection past 2^63 ns, 292 years, as a large job with slow first steps gives; the bar is 0 here"
+
+[[entry]]
+python = "rdkit.Chem.rdSynthonSpaceSearch.SynthonSpaceSearchParams.writePossibleHitsAndStop"
+rust = ["rdkit_cxx::chem::rd_synthon_space_search::SynthonSpaceSearchParams::write_possible_hits_and_stop"]
+rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdTautomerQuery.PatternFingerprintTautomerTarget"
