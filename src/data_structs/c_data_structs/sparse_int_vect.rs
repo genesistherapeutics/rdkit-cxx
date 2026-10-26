@@ -185,6 +185,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// The smaller value at each index. Mirrors `&`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in length, where Python raises `ValueError`.
         impl std::ops::BitAnd for &$name {
             type Output = $name;
 
@@ -194,6 +198,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// The larger value at each index. Mirrors `|`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in length, where Python raises `ValueError`.
         impl std::ops::BitOr for &$name {
             type Output = $name;
 
@@ -203,6 +211,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Mirrors `+`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in length, or a value would overflow an `i32`.
         impl std::ops::Add for &$name {
             type Output = $name;
 
@@ -212,6 +224,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Mirrors `-`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in length, or a value would overflow an `i32`.
         impl std::ops::Sub for &$name {
             type Output = $name;
 
@@ -221,6 +237,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Mirrors `+=`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in length, or a value would overflow an `i32`.
         impl std::ops::AddAssign<&$name> for $name {
             fn add_assign(&mut self, rhs: &$name) {
                 op(ffi::sparse_int_vect_assign_op(self.raw_mut(), rhs.raw(), b'+'))
@@ -228,6 +248,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Mirrors `-=`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in length, or a value would overflow an `i32`.
         impl std::ops::SubAssign<&$name> for $name {
             fn sub_assign(&mut self, rhs: &$name) {
                 op(ffi::sparse_int_vect_assign_op(self.raw_mut(), rhs.raw(), b'-'))
@@ -235,6 +259,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Adds to each nonzero value, as RDKit does. Mirrors `+= int`.
+        ///
+        /// # Panics
+        ///
+        /// If a value would overflow an `i32`.
         impl std::ops::AddAssign<i32> for $name {
             fn add_assign(&mut self, rhs: i32) {
                 op(ffi::sparse_int_vect_scalar_op(self.raw_mut(), b'+', rhs))
@@ -242,6 +270,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Subtracts from each nonzero value. Mirrors `-= int`.
+        ///
+        /// # Panics
+        ///
+        /// If a value would overflow an `i32`.
         impl std::ops::SubAssign<i32> for $name {
             fn sub_assign(&mut self, rhs: i32) {
                 op(ffi::sparse_int_vect_scalar_op(self.raw_mut(), b'-', rhs))
@@ -249,6 +281,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Mirrors `*= int`.
+        ///
+        /// # Panics
+        ///
+        /// If a value would overflow an `i32`.
         impl std::ops::MulAssign<i32> for $name {
             fn mul_assign(&mut self, rhs: i32) {
                 op(ffi::sparse_int_vect_scalar_op(self.raw_mut(), b'*', rhs))
@@ -256,6 +292,10 @@ macro_rules! sparse_int_vect_type {
         }
 
         /// Integer division. Mirrors `/= int`.
+        ///
+        /// # Panics
+        ///
+        /// If `rhs` is 0, where Python raises, or a value would overflow an `i32` (`i32::MIN / -1`).
         impl std::ops::DivAssign<i32> for $name {
             fn div_assign(&mut self, rhs: i32) {
                 op(ffi::sparse_int_vect_scalar_op(self.raw_mut(), b'/', rhs))

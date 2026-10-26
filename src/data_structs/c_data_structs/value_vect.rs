@@ -109,6 +109,10 @@ macro_rules! value_vect_type {
         }
 
         /// The smaller value at each index. Mirrors `&`.
+        ///
+        /// # Panics
+        ///
+        /// If RDKit refuses the vectors, as it does vectors of different lengths, where Python raises.
         impl std::ops::BitAnd for &$name {
             type Output = $name;
 
@@ -118,6 +122,10 @@ macro_rules! value_vect_type {
         }
 
         /// The larger value at each index. Mirrors `|`.
+        ///
+        /// # Panics
+        ///
+        /// If RDKit refuses the vectors, as it does vectors of different lengths, where Python raises.
         impl std::ops::BitOr for &$name {
             type Output = $name;
 
@@ -127,6 +135,10 @@ macro_rules! value_vect_type {
         }
 
         /// Mirrors `+`.
+        ///
+        /// # Panics
+        ///
+        /// If RDKit refuses the vectors, as it does vectors of different lengths, where Python raises.
         impl std::ops::Add for &$name {
             type Output = $name;
 
@@ -136,6 +148,10 @@ macro_rules! value_vect_type {
         }
 
         /// Mirrors `-`.
+        ///
+        /// # Panics
+        ///
+        /// If RDKit refuses the vectors, as it does vectors of different lengths, where Python raises.
         impl std::ops::Sub for &$name {
             type Output = $name;
 
@@ -145,6 +161,10 @@ macro_rules! value_vect_type {
         }
 
         /// Mirrors `+=`.
+        ///
+        /// # Panics
+        ///
+        /// If RDKit refuses the vectors, as it does vectors of different lengths, where Python raises.
         impl std::ops::AddAssign<&$name> for $name {
             fn add_assign(&mut self, rhs: &$name) {
                 op(ffi::$assign_op(self.raw_mut(), rhs.raw(), b'+'))
@@ -152,6 +172,10 @@ macro_rules! value_vect_type {
         }
 
         /// Mirrors `-=`.
+        ///
+        /// # Panics
+        ///
+        /// If RDKit refuses the vectors, as it does vectors of different lengths, where Python raises.
         impl std::ops::SubAssign<&$name> for $name {
             fn sub_assign(&mut self, rhs: &$name) {
                 op(ffi::$assign_op(self.raw_mut(), rhs.raw(), b'-'))

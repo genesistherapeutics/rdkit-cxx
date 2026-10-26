@@ -186,6 +186,10 @@ macro_rules! bit_vect_type {
         }
 
         /// The bitwise AND of two vectors of one size. Mirrors `&`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in size, where Python raises `ValueError`.
         impl std::ops::BitAnd for &$name {
             type Output = $name;
 
@@ -195,6 +199,10 @@ macro_rules! bit_vect_type {
         }
 
         /// The bitwise OR of two vectors of one size. Mirrors `|`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in size, where Python raises `ValueError`.
         impl std::ops::BitOr for &$name {
             type Output = $name;
 
@@ -204,6 +212,10 @@ macro_rules! bit_vect_type {
         }
 
         /// The bitwise XOR of two vectors of one size. Mirrors `^`.
+        ///
+        /// # Panics
+        ///
+        /// If the vectors differ in size, where Python raises `ValueError`.
         impl std::ops::BitXor for &$name {
             type Output = $name;
 
@@ -267,7 +279,11 @@ impl Default for ExplicitBitVect {
     }
 }
 
-/// The concatenation, which panics past `i32::MAX` bits. Mirrors `+`.
+/// The concatenation. Mirrors `+`.
+///
+/// # Panics
+///
+/// If the result would have more than `i32::MAX` bits (CONVENTIONS.md U3).
 impl std::ops::Add for &ExplicitBitVect {
     type Output = ExplicitBitVect;
 
@@ -276,7 +292,11 @@ impl std::ops::Add for &ExplicitBitVect {
     }
 }
 
-/// Appends `rhs`, which panics past `i32::MAX` bits. Mirrors `+=`.
+/// Appends `rhs`. Mirrors `+=`.
+///
+/// # Panics
+///
+/// If the result would have more than `i32::MAX` bits (CONVENTIONS.md U3).
 impl std::ops::AddAssign<&ExplicitBitVect> for ExplicitBitVect {
     fn add_assign(&mut self, rhs: &ExplicitBitVect) {
         op(ffi::bit_vect_append(self.raw_mut(), rhs.raw()))
