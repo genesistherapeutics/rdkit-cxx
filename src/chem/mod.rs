@@ -18,6 +18,7 @@ pub mod lipinski;
 pub mod maccs_keys;
 pub mod mol_standardize;
 pub mod pharm_2d;
+pub mod pharm_3d;
 pub(crate) mod py_math;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
@@ -68,6 +69,7 @@ pub mod rdmolops;
 pub mod rdqueries;
 pub mod registration_hash;
 pub mod scaffolds;
+pub mod subshape;
 pub mod torsion_fingerprints;
 
 pub use init::*;

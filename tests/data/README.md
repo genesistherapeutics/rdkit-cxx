@@ -16,6 +16,13 @@ From RDKit's source tree, under RDKit's BSD license:
 - `Pharm2D_BaseFeatures.fdef`, `Pharm2D_orderBug.sdf`: `BaseFeatures.fdef` and
   `orderBug.sdf` in `rdkit/Chem/Pharm2D/test_data`, with a final newline added
   and trailing whitespace trimmed
+- `Pharm3D_BaseFeatures.fdef`, `Pharm3D_Issue268.fdef`,
+  `Pharm3D_Issue268_Mol1.mol`, `Pharm3D_Issue268_Mol2.mol`, `Pharm3D_mol-r.mol`,
+  `Pharm3D_mol-s.mol`, `Pharm3D_mol-r-3.mol`, `Pharm3D_mol-s-3.mol`: the files
+  of the same names in `rdkit/Chem/Pharm3D/test_data`, with trailing whitespace
+  and blank lines trimmed
+- `Subshape_5ht3ligs.sdf`: `5ht3ligs.sdf` in `rdkit/Chem/Subshape/test_data`,
+  with trailing whitespace trimmed
 - `RP-6306_atrop1.sdf`: `Code/GraphMol/FileParsers/test_data/atropisomers`,
   with trailing whitespace trimmed
 
@@ -28,3 +35,6 @@ Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
 - `feat_dirs.mol`: an ETKDG conformer (seed 42) of
   `O=C(N)c1ccc(cc1)N(C)CCOC(=O)CS(=O)(=O)N1CCOCC1` with hydrogens, from
   `AllChem.EmbedMolecule`, written by `Chem.MolToMolFile`
+- `cdk2-syn-clip100.smi`: the molecules (with their hydrogens) and names
+  pickled in `rdkit/Chem/Pharm3D/test_data/cdk2-syn-clip100.pkl.gz`, written by
+  `Chem.MolToSmiles`; each SMILES reads back to the same SMILES and atom count
