@@ -8,10 +8,12 @@ so Python code ports line by line:
 ```rust,no_run
 use rdkit_cxx::chem::{mol_from_smarts, mol_from_smiles, mol_to_smiles};
 
-let mol = mol_from_smiles("Oc1ccccc1O")?;
-let hydroxyl = mol_from_smarts("[OX2H]")?;
-println!("{} {:?}", mol_to_smiles(&mol)?, mol.get_substruct_matches(&hydroxyl)?);
-# Ok::<(), rdkit_cxx::Error>(())
+fn main() -> Result<(), rdkit_cxx::Error> {
+    let mol = mol_from_smiles("Oc1ccccc1O")?;
+    let hydroxyl = mol_from_smarts("[OX2H]")?;
+    println!("{} {:?}", mol_to_smiles(&mol)?, mol.get_substruct_matches(&hydroxyl)?);
+    Ok(())
+}
 ```
 
 The crate binds RDKit's C++ and reimplements none of it. It compiles a C++
@@ -41,37 +43,69 @@ including the RDKit bugs it found, are in rdkit-logbook.
 
 ## Environment
 
-Each crate version supports one RDKit release series: 2026.9.x supports RDKit
-2026.09. It builds with Rust 1.88 or newer. Install RDKit's development
-packages from conda-forge and activate the environment before building:
+Each crate version supports one RDKit release series (2026.9.x supports RDKit
+2026.09), and within it the releases it has checked: 2026.9.0 supports RDKit
+2026.09.1. The wrapper compiles against copies of a few headers RDKit does not
+install, whose layouts can change between patch releases, so the build refuses
+any other release ([`wrapper/vendor/`](wrapper/vendor/README.md)), and a
+program built against one stops when it loads with another, as after an
+update in place. It builds with Rust 1.88 or newer.
+
+Install RDKit's development packages from conda-forge and activate the
+environment before building:
 
 ```sh
-mamba env create -f environment.yml
+mamba create -n rdkit-cxx -c conda-forge "librdkit-dev 2026.09.1" libboost-devel cxx-compiler "cmake>=3.22"
 conda activate rdkit-cxx
-cargo test
 ```
 
-The build finds RDKit through `CONDA_PREFIX`. To build against another RDKit
-install, such as a development build, set `RDKIT_PREFIX` to its prefix.
+In a checkout of this repository, `mamba env create -f environment.yml` makes
+the same environment, with Python and pytest for `inventory/`, and
+`cargo test` runs the tests.
+
+The build finds RDKit through `CONDA_PREFIX`. To build against another install
+of a supported release, such as one built from RDKit's release tag, set
+`RDKIT_PREFIX` to its prefix.
 
 ## Using the crate
 
+Depend on the crate with a tilde requirement, which stays within one RDKit
+series:
+
+```toml
+[dependencies]
+rdkit-cxx = "~2026.9"
+```
+
+Cargo's default caret requirement can cross series: `"2027.3"` would also
+accept 2027.9, which needs another RDKit.
+
 RDKit's shared libraries live in the conda environment, and conda does not set
 `LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
-rpath, which its own build script adds with one line:
+rpath, which its own build script adds:
 
 ```rust,ignore
 // build.rs
 fn main() {
-    println!("cargo::rustc-link-arg=-Wl,-rpath,{}", std::env::var("DEP_RDKIT_CXX_LIBDIR").unwrap());
+    // Absent where nothing links, as when docs.rs builds the documentation.
+    if let Ok(dir) = std::env::var("DEP_RDKIT_CXX_LIBDIR") {
+        println!("cargo::rustc-link-arg=-Wl,-rpath,{dir}");
+    }
 }
 ```
 
 This crate cannot add the rpath for you: a dependency's build script reaches
-only its own package's binaries and tests. (conda-forge's Linux compilers add
-an rpath to `$CONDA_PREFIX/lib` on their own, so without the line a binary may
-run inside the environment and fail when linked any other way.) See
+only its own package's binaries and tests. Cargo gives `DEP_RDKIT_CXX_LIBDIR`
+only to packages that depend on rdkit-cxx directly, so a package whose
+binaries or tests use it through another library also lists rdkit-cxx in its
+own `[dependencies]`. (conda-forge's Linux compilers add an rpath to
+`$CONDA_PREFIX/lib` on their own, so without the line a binary may run inside
+the environment and fail when linked any other way.) See
 [`downstream/`](downstream) for a complete example.
+
+The crate pins cxx exactly (`cxx = "=1.0.205"`), because the C++ its build
+generates must match the cxx runtime, so a project that also uses cxx needs
+the same version.
 
 ### From Python to Rust
 
@@ -332,12 +366,13 @@ on `main` from the Actions tab. Merging to `main` publishes nothing.
 The workflow releases the version in `Cargo.toml` if no tag has it yet (the
 first release of an RDKit series), and otherwise bumps the patch level with
 [bump-my-version](https://github.com/callowayproject/bump-my-version). It
-tests the release commit, builds the packaged crate, publishes it to crates.io
-through trusted publishing, pushes the version bump and a `v<version>` tag to
-`main`, and creates a GitHub release with generated notes;
-[CHANGELOG.md](CHANGELOG.md) records the notable changes. A release that
-fails partway finishes when its failed jobs are re-run: each step skips what
-an earlier attempt finished, including the upload.
+checks that CI passed on the release commit, tests it, builds the packaged
+crate, publishes it to crates.io through trusted publishing, pushes the version
+bump and a `v<version>` tag to `main`, and creates a GitHub release with
+generated notes. Add the release's notable changes to
+[CHANGELOG.md](CHANGELOG.md) before running it. A release that fails partway
+finishes when its failed jobs are re-run: each step skips what an earlier
+attempt finished, including the upload.
 
 The patch level moves only through the workflow. A new RDKit series sets the
 major and minor levels by hand, in the pull request that updates
@@ -348,9 +383,16 @@ bump-my-version bump --new-version 2027.3.0
 ```
 
 The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
-conda-forge daily and opens an issue, assigned to the repository owner, when
-it has `librdkit-dev` from a series newer than `environment.yml` pins.
+conda-forge daily and opens an issue, assigned to the repository owner, with
+the steps, when it has a `librdkit-dev` release newer than the one
+`environment.yml` pins. A new patch release of the series needs a patch
+release of the crate too: the build accepts it only once `wrapper/vendor/`
+holds its headers ([`wrapper/vendor/`](wrapper/vendor/README.md)).
 
 ## License
 
-BSD-3-Clause, as RDKit.
+BSD-3-Clause, as RDKit. The package also carries files from other projects,
+each with its license: RDKit's headers (`wrapper/vendor/`), data files
+(`wrapper/third_party/rdkit/Data/`), and test data (`tests/data/`), under
+RDKit's BSD license (`wrapper/third_party/rdkit/LICENSE`), and coordgenlibs's
+files (`wrapper/third_party/coordgen/`), under its BSD license.
