@@ -409,3 +409,19 @@ fn large_tautomer_bundles_are_not_pickled() {
     let small = ExtendedQueryMol::new_with_is_json(&small, true).unwrap();
     ExtendedQueryMol::from_data(&small.to_binary().unwrap()).unwrap();
 }
+
+// Enumerating takes RDKit's enumerator a recursion level per variation
+// point, as rdMolEnumerator's own checks say (CONVENTIONS.md U12).
+#[test]
+fn enumeration_refuses_too_many_variation_points() {
+    let mut mol = smiles(&"C".repeat(4002));
+    for idx in 0..4001 {
+        let mut bond = mol.get_bond_with_idx_mut(idx).unwrap();
+        bond.set_prop("_MolFileBondEndPts", "(1 1)");
+        bond.set_prop("_MolFileBondAttach", "ANY");
+    }
+    match create_extended_query_mol(&mol).unwrap_err() {
+        Error::Value { message } => assert!(message.contains("recursion deeper"), "{message}"),
+        err => panic!("{err:?}"),
+    }
+}

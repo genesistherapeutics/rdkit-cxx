@@ -6,6 +6,9 @@
 #include "rdkit-cxx/suppliers.h"
 
 #include <climits>
+#include <stdexcept>
+#include <string>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 
@@ -525,12 +528,19 @@ void tdt_mol_supplier_reset(TDTMolSupplier &s) {
 
 namespace {
 
+// The most writer threads a multithreaded supplier starts. RDKit starts
+// every one at the first next(), so a count the system cannot start fails
+// there (mt_next), and one this large would only cost memory.
+constexpr std::uint32_t kMaxWriterThreads = 1024;
+
 FP::MultithreadedMolSupplier::Parameters mt_params(
     const MultithreadedParamsData &data) {
   // RDKit converts the thread count to int and negates it
-  // (getNumThreadsToUse in RDThreads.h), which overflows for 2^31.
-  if (data.num_writer_threads > INT_MAX) {
-    throw ValueErrorException("numWriterThreads must be at most INT_MAX");
+  // (getNumThreadsToUse in RDThreads.h), which overflows for 2^31; 0 asks
+  // for one per core.
+  if (data.num_writer_threads > kMaxWriterThreads) {
+    throw ValueErrorException("numWriterThreads must be at most " +
+                              std::to_string(kMaxWriterThreads));
   }
   // RDKit's ConcurrentQueue keeps its capacity in unsigned int and blocks
   // forever when it is 0, so the supplier's threads would never finish.
@@ -549,10 +559,27 @@ FP::MultithreadedMolSupplier::Parameters mt_params(
 
 // next() returns null both at the end and for a record it could not read;
 // only a read record changes the last record id.
+//
+// The first next() starts the reader thread and every writer thread
+// (MultithreadedMolSupplier::startThreads). When the system refuses one,
+// std::thread throws std::system_error, leaving the threads already started
+// running; the output queue is marked done only when every writer the
+// parameters name has finished, so a later next() would wait forever. The
+// supplier is refused from then on, and its destructor joins the threads
+// that did start.
 template <class W>
 std::unique_ptr<RWMol> mt_next(W &w, std::uint32_t &record) {
+  if (w.broken) {
+    throw std::runtime_error("the supplier's threads could not all be started");
+  }
   auto before = w.suppl->getLastRecordId();
-  auto mol = checked(w.input, [&] { return w.suppl->next(); });
+  std::unique_ptr<RWMol> mol;
+  try {
+    mol = checked(w.input, [&] { return w.suppl->next(); });
+  } catch (const std::system_error &) {
+    w.broken = true;
+    throw;
+  }
   auto after = w.suppl->getLastRecordId();
   record = (mol || after != before) ? after : 0;
   return mol;
