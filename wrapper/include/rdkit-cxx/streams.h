@@ -16,10 +16,21 @@
 //   across "-" continuations) with std::regex (parseEnhancedStereo in
 //   MolFileParser.cpp), whose matcher recurses once per character: about
 //   300 bytes of stack each, so a long line overflows the stack.
+// - RDKit keeps a V3000 bond's ENDPTS value as read, and RWMol's atom
+//   removals (removeHs, which the readers run when they sanitize and remove
+//   hydrogens) rewrite it on every bond: they read its first character
+//   without checking that it has one and, for a value in parentheses, the
+//   first space-separated number without checking that there is one, and
+//   convert each number's std::stod to unsigned int, which is undefined for
+//   one that does not fit. A value after "ENDPTS=" (in any case) must not be
+//   empty, and one that starts with "(" must be numbers below 2^32 between
+//   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
+//   RDKit reads an END BOND line after it, so input that ends (or is cut
+//   off) before a value is checked is never parsed as a molecule.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
-// breaks either limit, recording why. Bytes are scanned ahead of what RDKit
+// breaks a limit, recording why. Bytes are scanned ahead of what RDKit
 // asks for, so the stream fails only once RDKit asks for a refused byte, and
 // stays failed. Callers check failed() after each call into RDKit and throw.
 
@@ -55,6 +66,7 @@ class InputScanner {
  private:
   void end_line();
   void confirm(char c);
+  void end_points(char c);
   bool fail(std::string why);
 
   std::string d_error;
@@ -69,6 +81,14 @@ class InputScanner {
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
   std::string d_prefix;
+  // In the logical line: how much of "ENDPTS=" has matched, and then the
+  // value after it, with the number being read and how many were read.
+  enum class EndPoints : std::uint8_t { kKey, kStart, kNumbers, kClosed };
+  EndPoints d_end_points = EndPoints::kKey;
+  std::size_t d_key_matched = 0;
+  bool d_in_number = false;
+  std::uint64_t d_number = 0;
+  std::uint64_t d_numbers = 0;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.

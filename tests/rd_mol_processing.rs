@@ -405,3 +405,45 @@ fn long_stereo_group_lines_are_refused() {
         }
     }
 }
+
+/// A V3000 record for `*CC` with an explicit hydrogen, whose `*` bond has the
+/// ENDPTS value `end_points`.
+fn end_points_record(end_points: &str) -> String {
+    format!(
+        "\n     RDKit          3D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 4 3 0 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 C 1.5 0 0 0\nM  V30 3 H 2 1 0 0\n\
+         M  V30 4 * 0 1 0 0\nM  V30 END ATOM\nM  V30 BEGIN BOND\n\
+         M  V30 1 1 1 2\nM  V30 2 1 2 3\nM  V30 3 1 4 1 ENDPTS={end_points} ATTACH=ANY\n\
+         M  V30 END BOND\nM  V30 END CTAB\nM  END\n$$$$\n"
+    )
+}
+
+#[test]
+fn bad_bond_end_points_are_refused() {
+    // Removing the hydrogen rewrites each ENDPTS value, which RWMol converts
+    // to unsigned int unchecked (U12), on RDKit's threads too. Python's bits.
+    let good = format!(
+        "{}{}",
+        end_points_record("(1 2)"),
+        end_points_record("(2 2 3)")
+    );
+    let bits = Some(vec![80, 226, 247, 294, 1057, 1665]);
+    let path = write("end-points.sdf", good.as_bytes());
+    for num_threads in [1, 2] {
+        let fps = read(&path, num_threads).unwrap();
+        assert_eq!(on_bits(&fps), [bits.clone(), bits.clone()]);
+    }
+    let bad = format!(
+        "{}{}",
+        end_points_record("(1 2)"),
+        end_points_record("(1 1e20)")
+    );
+    let plain = write("bad-end-points.sdf", bad.as_bytes());
+    let gzipped = write("bad-end-points.sdf.gz", &gzip(bad.as_bytes()));
+    for path in [&plain, &gzipped] {
+        for num_threads in [1, 2] {
+            assert!(matches!(read(path, num_threads), Err(Error::Value { .. })));
+        }
+    }
+}

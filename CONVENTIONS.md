@@ -347,7 +347,10 @@ rule changes the rule first.
   counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
   matches V3000 enhanced-stereo lines with `std::regex`, which recurses once
   per character (about 300 bytes of stack each), so such lines are refused
-  past 4000 characters. A checked stream stops delivering bytes before the
+  past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
+  run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
+  value that is empty, or in parentheses holds anything but numbers below
+  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record
