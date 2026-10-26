@@ -254,14 +254,34 @@ fn link(build_dir: &Path) {
     }
     let lib_dir = lib_dir.expect("CMake listed no RDKit libraries");
 
+    // RDKit's files are outside the package, so Cargo does not watch them.
+    // An update or reinstall in the same prefix replaces them, and the
+    // wrapper must then be rebuilt, and its release check rerun, against the
+    // new headers. Only existing paths: Cargo reruns every build for a path
+    // that does not exist.
+    let watched = build_dir.join("rdkit-files.txt");
+    let watched = fs::read_to_string(&watched)
+        .unwrap_or_else(|err| panic!("reading {}: {err}", watched.display()));
+    for line in watched.lines().filter(|line| !line.is_empty()) {
+        if Path::new(line).exists() {
+            println!("cargo::rerun-if-changed={line}");
+        }
+    }
+
     let (stdlib, stdlib_file) = if env::var("CARGO_CFG_TARGET_OS").unwrap() == "macos" {
         ("c++", "libc++.dylib")
     } else {
         ("stdc++", "libstdc++.so")
     };
     // Link the standard library the wrappers compiled against, not the
-    // system's.
-    let cxx = env::var("CXX").unwrap_or_else(|_| "c++".to_string());
+    // system's: ask the compiler CMake used, which a cross build or an
+    // environment without `CXX` may not name in `CXX`.
+    let cxx = fs::read_to_string(build_dir.join("cxx-compiler.txt"))
+        .ok()
+        .map(|text| text.trim().to_string())
+        .filter(|cxx| !cxx.is_empty())
+        .or_else(|| env::var("CXX").ok())
+        .unwrap_or_else(|| "c++".to_string());
     if let Ok(output) = Command::new(&cxx)
         .arg(format!("-print-file-name={stdlib_file}"))
         .output()

@@ -5,11 +5,12 @@
 
 name: RDKit series
 
-# Opens an issue, as Dependabot would a pull request, when conda-forge has
-# librdkit-dev from an RDKit series newer than the one environment.yml pins.
-# Moving to a new series is done by hand (README.md, Releases), so a pull
-# request bumping the pin alone would fail. Patch releases in the pinned series
-# need nothing: CI installs the latest one on every run.
+# Opens an issue, as Dependabot would a pull request, when conda-forge has a
+# librdkit-dev release newer than the one environment.yml pins: from a newer
+# RDKit series, or a patch release of the pinned one. The build accepts only
+# the releases wrapper/vendor holds headers for (wrapper/vendor/README.md),
+# and moving to a new one is done by hand (README.md, Releases), so a pull
+# request bumping the pin alone would fail.
 on:
   schedule:
     - cron: "23 14 * * *"
@@ -36,11 +37,12 @@ jobs:
           GH_REPO: ${{ github.repository }}
           ASSIGNEE: ${{ github.repository_owner }}
         run: |
-          series="$(sed -n 's/^ *- librdkit-dev \([0-9]\{4\}\.[0-9]\{2\}\)\.\*$/\1/p' environment.yml)"
-          if [ -z "${series}" ]; then
-            echo "environment.yml pins no librdkit-dev series, such as 2026.09.*" >&2
+          pinned="$(sed -n 's/^ *- librdkit-dev \([0-9]\{4\}\.[0-9]\{2\}\.[0-9]\{1,\}\)$/\1/p' environment.yml)"
+          if [ -z "${pinned}" ]; then
+            echo "environment.yml pins no librdkit-dev release, such as 2026.09.1" >&2
             exit 1
           fi
+          series="${pinned%.*}"
           # Final releases only: a pre-release (2027.03.1b1) waits for its
           # release.
           latest="$(curl -sSf --retry 3 https://api.anaconda.org/package/conda-forge/librdkit-dev \
@@ -50,28 +52,43 @@ jobs:
             echo "conda-forge lists no librdkit-dev release" >&2
             exit 1
           fi
-          # Series are YYYY.MM, so they compare as strings.
-          new_series="${latest%.*}"
-          if [[ ! "${new_series}" > "${series}" ]]; then
-            echo "conda-forge's latest librdkit-dev, ${latest}, is no newer than RDKit ${series}"
+          if [ "$(printf '%s\n%s\n' "${pinned}" "${latest}" | sort -V | tail -n 1)" = "${pinned}" ]; then
+            echo "conda-forge's latest librdkit-dev, ${latest}, is no newer than RDKit ${pinned}"
             exit 0
           fi
           # A closed issue counts too, as a closed Dependabot pull request
           # ignores its version.
-          title="RDKit ${new_series} is on conda-forge"
+          new_series="${latest%.*}"
+          if [ "${new_series}" = "${series}" ]; then
+            title="RDKit ${latest} is on conda-forge"
+          else
+            title="RDKit ${new_series} is on conda-forge"
+          fi
           titles="$(gh issue list --state all --limit 1000 --json title --jq '.[].title')"
           if grep -Fxq "${title}" <<< "${titles}"; then
-            echo "an issue already tracks RDKit ${new_series}"
+            echo "an issue already tracks ${title%% is on*}"
             exit 0
           fi
           tag="Release_${latest//./_}"
-          year="${series%.*}"
-          month="$((10#${series#*.}))"
-          gh issue create --title "${title}" --assignee "${ASSIGNEE}" --body-file - <<EOF
-          conda-forge has \`librdkit-dev\` ${latest} ([release notes](https://github.com/rdkit/rdkit/releases/tag/${tag})), and this crate supports RDKit ${series}. A crate version for the new series (README.md, Parity and Releases):
+          notes="([release notes](https://github.com/rdkit/rdkit/releases/tag/${tag}))"
+          if [ "${new_series}" = "${series}" ]; then
+            gh issue create --title "${title}" --assignee "${ASSIGNEE}" --body-file - <<EOF
+          conda-forge has \`librdkit-dev\` ${latest} ${notes}, and this crate supports RDKit ${pinned}. The build refuses releases that \`wrapper/vendor\` holds no headers for (\`wrapper/vendor/README.md\`). A patch release for it (README.md, Releases):
 
-          - [ ] Pin \`librdkit-dev ${new_series}.*\` in \`environment.yml\`.
+          - [ ] Copy the vendored headers from \`${tag}\` into \`wrapper/vendor/${latest}/\`, and update the wrappers for any class that changed: \`git diff --no-index wrapper/vendor/${pinned} wrapper/vendor/${latest}\`.
+          - [ ] Check the release's new values in the enums the bindings mirror (\`rdkit_enum!\`), which the crate panics on.
+          - [ ] Pin \`librdkit-dev ${latest}\` in \`environment.yml\`, and add the release to \`wrapper/vendor/README.md\`.
+          EOF
+          else
+            year="${series%.*}"
+            month="$((10#${series#*.}))"
+            gh issue create --title "${title}" --assignee "${ASSIGNEE}" --body-file - <<EOF
+          conda-forge has \`librdkit-dev\` ${latest} ${notes}, and this crate supports RDKit ${pinned}. A crate version for the new series (README.md, Parity and Releases):
+
+          - [ ] Pin \`librdkit-dev ${latest}\` in \`environment.yml\`.
           - [ ] \`bump-my-version bump --new-version ${new_series%.*}.$((10#${new_series#*.})).0\`
           - [ ] Regenerate the inventory from \`${tag}\` as \`inventory/inventory-${new_series}.json\`.
+          - [ ] Copy the vendored headers from \`${tag}\` into \`wrapper/vendor/${latest}/\` (\`wrapper/vendor/README.md\`), and remove the RDKit ${series} directories.
           - [ ] Update what names RDKit ${series}: \`git grep -nE '${year}[._]0?${month}'\`
           EOF
+          fi

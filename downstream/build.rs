@@ -4,8 +4,8 @@
 // license that can be found in the LICENSE file.
 
 fn main() {
-    println!(
-        "cargo::rustc-link-arg=-Wl,-rpath,{}",
-        std::env::var("DEP_RDKIT_CXX_LIBDIR").unwrap()
-    );
+    // Absent where nothing links, as when docs.rs builds the documentation.
+    if let Ok(dir) = std::env::var("DEP_RDKIT_CXX_LIBDIR") {
+        println!("cargo::rustc-link-arg=-Wl,-rpath,{dir}");
+    }
 }

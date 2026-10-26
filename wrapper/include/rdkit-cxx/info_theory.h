@@ -7,7 +7,7 @@
 
 // rdInfoTheory: entropy, information gain, and chi-squared statistics of
 // count matrices, a ranker of bits by them, and a bit correlation matrix
-// (Code/ML/InfoTheory, whose headers are in wrapper/vendor).
+// (Code/ML/InfoTheory, whose headers are in wrapper/vendor/<release>).
 
 #pragma once
 
