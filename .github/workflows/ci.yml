@@ -195,3 +195,18 @@ jobs:
           rustup toolchain install stable --profile minimal --no-self-update
           rustup default stable
       - run: env -u CONDA_PREFIX -u RDKIT_PREFIX DOCS_RS=1 cargo doc --no-deps -p rdkit-cxx
+
+  # The Rust compiles with the rust-version Cargo.toml declares. cxx sets its
+  # own minimum, so a cxx update can raise it. Checking skips the C++, as the
+  # docs job does: it compiles the same with any Rust.
+  msrv:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install Rust
+        run: |
+          msrv="$(cargo metadata --no-deps --format-version 1 \
+            | jq -r '.packages[] | select(.name == "rdkit-cxx") | .rust_version')"
+          rustup toolchain install "${msrv}" --profile minimal --no-self-update
+          rustup default "${msrv}"
+      - run: env -u CONDA_PREFIX -u RDKIT_PREFIX DOCS_RS=1 cargo check -p rdkit-cxx --all-targets --locked
