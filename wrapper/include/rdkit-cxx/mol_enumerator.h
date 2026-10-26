@@ -25,6 +25,15 @@ namespace rdkit_cxx {
 struct MolEnumeratorParamsData;
 enum class EnumeratorType : std::uint8_t;
 
+// Throws ValueErrorException for what MolEnumerator::enumerate would trust
+// in an enumeration with these operations: more variation points than its
+// recursion can take, link nodes its reactions read past an empty vector on,
+// and the removals check_removals checks (mol_enumerator.cpp says why).
+// Every wrapper whose RDKit call enumerates calls it first, with the
+// operations RDKit runs; MolEnumerator::enumerate(mol) runs all three.
+void check_enumerate(const RDKit::ROMol &mol, bool position_variation,
+                     bool repeat_unit, bool link_node);
+
 // A default-constructed MolEnumeratorParams, which has no operation.
 MolEnumeratorParamsData mol_enumerator_params_default();
 // As MolEnumerator::enumerate, with the bundle's molecules copied out.

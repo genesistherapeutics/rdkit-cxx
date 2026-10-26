@@ -6,14 +6,18 @@
 //! Ports `rdkit.RDPaths`, which RDKit's build writes: the directories RDKit
 //! installs its data in.
 //!
-//! As Python's are, they are fixed when the crate is built, under the
-//! install prefix of the RDKit it builds against (`RDKIT_PREFIX`, else
-//! `CONDA_PREFIX`), in its `share/RDKit` directory. Python's `RDConfig`
-//! uses `$RDBASE` instead when it is set; these do not.
+//! As Python's `RDConfig`, through which RDKit's Python code reads them,
+//! each is under `$RDBASE` when that is set. Otherwise it is under the
+//! `share/RDKit` directory of the RDKit the crate was built against
+//! (`RDKIT_PREFIX`, else `CONDA_PREFIX`, at build time), where conda
+//! installs RDKit's data and where Python's `RDPaths` points.
 
 use std::path::PathBuf;
 
 fn share() -> PathBuf {
+    if let Some(base) = std::env::var_os("RDBASE") {
+        return PathBuf::from(base);
+    }
     // Builds for the documentation alone (`DOCS_RS`) do not record it.
     let Some(prefix) = option_env!("RDKIT_CXX_RDKIT_PREFIX") else {
         panic!("the build script records RDKit's install prefix");
@@ -21,26 +25,26 @@ fn share() -> PathBuf {
     PathBuf::from(prefix).join("share").join("RDKit")
 }
 
-/// RDKit's data directory, `<prefix>/share/RDKit/Data`. Mirrors
-/// `RDPaths.RDDataDir`.
+/// RDKit's data directory, `$RDBASE/Data` or
+/// `<prefix>/share/RDKit/Data`. Mirrors `RDPaths.RDDataDir`.
 pub fn rd_data_dir() -> PathBuf {
     share().join("Data")
 }
 
-/// RDKit's documentation directory, `<prefix>/share/RDKit/Docs`. Mirrors
-/// `RDPaths.RDDocsDir`.
+/// RDKit's documentation directory, `$RDBASE/Docs` or
+/// `<prefix>/share/RDKit/Docs`. Mirrors `RDPaths.RDDocsDir`.
 pub fn rd_docs_dir() -> PathBuf {
     share().join("Docs")
 }
 
-/// RDKit's projects directory, `<prefix>/share/RDKit/Projects`. Mirrors
-/// `RDPaths.RDProjDir`.
+/// RDKit's projects directory, `$RDBASE/Projects` or
+/// `<prefix>/share/RDKit/Projects`. Mirrors `RDPaths.RDProjDir`.
 pub fn rd_proj_dir() -> PathBuf {
     share().join("Projects")
 }
 
-/// RDKit's directory of contributed code, `<prefix>/share/RDKit/Contrib`.
-/// Mirrors `RDPaths.RDContribDir`.
+/// RDKit's directory of contributed code, `$RDBASE/Contrib` or
+/// `<prefix>/share/RDKit/Contrib`. Mirrors `RDPaths.RDContribDir`.
 pub fn rd_contrib_dir() -> PathBuf {
     share().join("Contrib")
 }

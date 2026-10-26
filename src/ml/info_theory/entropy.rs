@@ -58,7 +58,7 @@ pub fn py_info_gain(var_mat: &[Vec<f64>]) -> Result<f64> {
     }
     let mut term2 = 0.0;
     for row in var_mat {
-        let variable_res = crate::ml::numpy::sum(row);
+        let variable_res = crate::chem::py_math::np_sum(row);
         term2 += variable_res * rd_info_theory::info_entropy(row)?;
     }
     let t_sum = seq_sum(overall_res.iter().copied());

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! `MolDrawOptions`, colours, and the enums the options use.
+//! `MolDrawOptions`, colors, and the enums the options use.
 
 use std::collections::BTreeMap;
 
@@ -16,18 +16,18 @@ use crate::{Error, Result};
 pub use crate::ffi::draw::ffi::DrawColour;
 
 impl DrawColour {
-    /// An opaque colour. Mirrors a 3-tuple `(r, g, b)`.
+    /// An opaque color. Mirrors a 3-tuple `(r, g, b)`.
     pub const fn new(r: f64, g: f64, b: f64) -> DrawColour {
         DrawColour { r, g, b, a: 1.0 }
     }
 
-    /// A colour with an alpha. Mirrors a 4-tuple `(r, g, b, a)`.
+    /// A color with an alpha. Mirrors a 4-tuple `(r, g, b, a)`.
     pub const fn rgba(r: f64, g: f64, b: f64, a: f64) -> DrawColour {
         DrawColour { r, g, b, a }
     }
 
     /// `Error::Value` unless every component is from 0 to 1, as Python's
-    /// colour setters require.
+    /// color setters require.
     pub(crate) fn check(&self) -> Result<()> {
         Ok(ffi::check_draw_colour(self)?)
     }
@@ -57,7 +57,7 @@ rdkit_enum! {
 }
 
 rdkit_enum! {
-    /// How `draw_molecule_with_highlights` draws several colours on one
+    /// How `draw_molecule_with_highlights` draws several colors on one
     /// atom or bond. Mirrors `rdMolDraw2D.MultiColourHighlightStyle`.
     MultiColourHighlightStyle: ffi::MultiColourHighlightStyle {
         CircleAndLine = CIRCLEANDLINE,
@@ -118,7 +118,7 @@ pub struct MolDrawOptions {
     /// Additional padding around atom labels, as a fraction of the font
     /// size.
     pub additional_atom_label_padding: f64,
-    /// The colour of annotations.
+    /// The color of annotations.
     pub annotation_colour: DrawColour,
     /// The size of annotation fonts relative to atom labels.
     pub annotation_font_scale: f64,
@@ -129,21 +129,21 @@ pub struct MolDrawOptions {
     pub atom_label_deuterium_tritium: bool,
     /// Replacement labels for atoms, by index.
     pub atom_labels: BTreeMap<u32, String>,
-    /// The colour of atom indices and notes.
+    /// The color of atom indices and notes.
     pub atom_note_colour: DrawColour,
     /// Groups of atoms to outline.
     pub atom_regions: Vec<Vec<u32>>,
-    /// The background colour.
+    /// The background color.
     pub background_colour: DrawColour,
     /// The relative size of fonts; nonpositive uses RDKit's 0.6.
     pub base_font_size: f64,
     /// The line width for bonds, in pixels.
     pub bond_line_width: f64,
-    /// The colour of bond indices and notes.
+    /// The color of bond indices and notes.
     pub bond_note_colour: DrawColour,
     /// Puts brackets around atom lists in query atoms.
     pub brackets_around_atom_lists: bool,
-    /// Moves each molecule's centre to the origin before drawing.
+    /// Moves each molecule's center to the origin before drawing.
     pub centre_molecules_before_drawing: bool,
     /// Draws circles under highlighted atoms.
     pub circle_atoms: bool,
@@ -181,7 +181,7 @@ pub struct MolDrawOptions {
     pub font_file: String,
     /// What the default bond line width is multiplied by for highlights.
     pub highlight_bond_width_multiplier: i32,
-    /// The default highlight colour.
+    /// The default highlight color.
     pub highlight_colour: DrawColour,
     /// The default radius of highlight circles, in molecule coordinates.
     pub highlight_radius: f64,
@@ -195,7 +195,7 @@ pub struct MolDrawOptions {
     pub include_radicals: bool,
     /// Adds isotope labels to atoms that are not dummies.
     pub isotope_labels: bool,
-    /// The colour of legends.
+    /// The color of legends.
     pub legend_colour: DrawColour,
     /// The legend's font size, in pixels.
     pub legend_font_size: i32,
@@ -209,7 +209,7 @@ pub struct MolDrawOptions {
     pub max_font_size: i32,
     /// The smallest font size, in pixels; -1 for no limit.
     pub min_font_size: i32,
-    /// How several highlight colours on one atom or bond are drawn.
+    /// How several highlight colors on one atom or bond are drawn.
     pub multi_colour_highlight_style: MultiColourHighlightStyle,
     /// The offset of the extra lines of a multiple bond, as a fraction of
     /// the mean bond length.
@@ -221,12 +221,12 @@ pub struct MolDrawOptions {
     /// Prepares molecules (kekulizing, wedging, adding chiral hydrogens)
     /// before drawing them.
     pub prepare_mols_before_drawing: bool,
-    /// The colour of query bonds.
+    /// The color of query bonds.
     pub query_colour: DrawColour,
     /// The fraction of empty space around each component of a reaction
     /// (`componentPadding` in C++).
     pub reagent_padding: f64,
-    /// Rotates molecules about their centres by this many degrees.
+    /// Rotates molecules about their centers by this many degrees.
     pub rotate: f64,
     /// Scales bond widths with the drawing.
     pub scale_bond_width: bool,
@@ -237,16 +237,16 @@ pub struct MolDrawOptions {
     pub scaling_factor: f64,
     /// Shows every CIP code, including those of OR and AND stereo groups.
     pub show_all_cip_codes: bool,
-    /// Shows one molecule-level label when every stereocentre is in one
+    /// Shows one molecule-level label when every stereocenter is in one
     /// stereo group.
     pub simplified_stereo_group_label: bool,
-    /// Draws every bond in the symbol colour.
+    /// Draws every bond in the symbol color.
     pub single_colour_bonds: bool,
-    /// Draws wedged and dashed bonds in the symbol colour.
+    /// Draws wedged and dashed bonds in the symbol color.
     pub single_colour_wedge_bonds: bool,
     /// Splits bonds into a segment per atom.
     pub split_bonds: bool,
-    /// Draws highlighted heteroatoms in their usual colours.
+    /// Draws highlighted heteroatoms in their usual colors.
     pub standard_colours_for_highlighted_atoms: bool,
     /// The label of ABS stereo groups.
     pub stereo_group_abs_label: String,
@@ -254,10 +254,10 @@ pub struct MolDrawOptions {
     pub stereo_group_and_label: String,
     /// The label of OR stereo groups.
     pub stereo_group_or_label: String,
-    /// The colour of symbols and arrows in reactions.
+    /// The color of symbols and arrows in reactions.
     pub symbol_colour: DrawColour,
     /// Draws double bonds with unspecified stereo crossed and possible
-    /// stereocentres with unspecified stereo with wavy bonds.
+    /// stereocenters with unspecified stereo with wavy bonds.
     pub unspecified_stereo_is_unknown: bool,
     /// Draws any-atom, any-heteroatom, and any-halogen queries as A, Q,
     /// and X.
@@ -266,11 +266,11 @@ pub struct MolDrawOptions {
     pub use_mol_block_wedging: bool,
     /// The radius of atoms in variable attachment points.
     pub variable_atom_radius: f64,
-    /// The colour of variable attachment points.
+    /// The color of variable attachment points.
     pub variable_attachment_colour: DrawColour,
     /// What the bond width is multiplied by for variable attachment points.
     pub variable_bond_width_multiplier: i32,
-    /// The colours of atoms and bonds by atomic number, -1 for the default
+    /// The colors of atoms and bonds by atomic number, -1 for the default
     /// (`atomColourPalette` in C++; Python reads and writes it with
     /// `getAtomPalette` and `setAtomPalette`).
     pub atom_colour_palette: BTreeMap<i32, DrawColour>,
@@ -575,7 +575,7 @@ impl MolDrawOptions {
 /// values of the wrong type, are ignored, as in RDKit.
 ///
 /// `Error::Runtime` for text that is not JSON, and `Error::Value` for a
-/// colour with fewer than three components (RDKit reads past the end of
+/// color with fewer than three components (RDKit reads past the end of
 /// it), atom labels whose keys are negative or not integers, or text that
 /// is not UTF-8. The options are unchanged on error.
 pub fn update_mol_draw_options_from_json(opts: &mut MolDrawOptions, json: &str) -> Result<()> {
@@ -589,7 +589,7 @@ pub fn update_mol_draw_options_from_json(opts: &mut MolDrawOptions, json: &str) 
 /// `mean_bond_length`). Mirrors `rdMolDraw2D.SetACS1996Mode`.
 ///
 /// It sets thin bonds, a scaling factor of 14.4 pixels per mean bond
-/// length, monochrome colours, a fixed font size of 10, and, unless a font
+/// length, monochrome colors, a fixed font size of 10, and, unless a font
 /// file is set, `$RDBASE/Data/Fonts/FreeSans.ttf` when that exists, else
 /// `BuiltinRobotoRegular`. `Error::Value` for a mean bond length that is
 /// not positive, or a font path that is not UTF-8.
@@ -599,7 +599,7 @@ pub fn set_acs1996_mode(draw_options: &mut MolDrawOptions, mean_bond_length: f64
     Ok(())
 }
 
-/// Sets dark-mode colours. Mirrors `rdMolDraw2D.SetDarkMode(MolDrawOptions)`.
+/// Sets dark-mode colors. Mirrors `rdMolDraw2D.SetDarkMode(MolDrawOptions)`.
 pub fn set_dark_mode(d2d: &mut MolDrawOptions) {
     d2d.preset(4);
 }

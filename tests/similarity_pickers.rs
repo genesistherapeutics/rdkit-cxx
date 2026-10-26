@@ -83,7 +83,7 @@ fn top_n_overall_picker() {
         for i in 0..n {
             let (idx, score) = picker.get(i as i64).unwrap();
             match idx {
-                Some(idx) => assert_eq!((id(idx), score), expected[i]),
+                Some(idx) => assert_eq!((id(idx), score), *expected.get(i).unwrap()),
                 // Python's empty slots, past the data set.
                 None => assert_eq!(score, -1e99),
             }

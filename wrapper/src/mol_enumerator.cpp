@@ -211,6 +211,8 @@ void check_link_nodes(const RDKit::ROMol &mol,
   }
 }
 
+}  // namespace
+
 // The checks of an enumeration with these operations: their variation
 // points, and the atoms they remove (check_removals).
 void check_enumerate(const RDKit::ROMol &mol, bool position_variation,
@@ -237,6 +239,8 @@ void check_enumerate(const RDKit::ROMol &mol, bool position_variation,
     check_link_nodes(mol, dummies);
   }
 }
+
+namespace {
 
 std::unique_ptr<MolList> to_list(const RDKit::MolBundle &bundle) {
   auto list = std::make_unique<MolList>();

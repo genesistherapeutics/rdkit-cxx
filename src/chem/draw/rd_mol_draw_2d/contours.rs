@@ -23,7 +23,7 @@ pub struct ContourParams {
     pub set_scale: bool,
     /// Draws negative contours dashed.
     pub dash_negative: bool,
-    /// Fills the grid's boxes with colours from `colour_map`.
+    /// Fills the grid's boxes with colors from `colour_map`.
     pub fill_grid: bool,
     /// The spacing of the grid `contour_and_draw_gaussians` computes, in
     /// the molecule's frame.
@@ -32,9 +32,9 @@ pub struct ContourParams {
     pub contour_width: f64,
     /// Extra space around the gaussians' grid, in the molecule's frame.
     pub extra_grid_padding: f64,
-    /// The contours' colour.
+    /// The contours' color.
     pub contour_colour: DrawColour,
-    /// The fill's colours: two, from the lowest value to the highest, or
+    /// The fill's colors: two, from the lowest value to the highest, or
     /// three, for negative values, zero, and positive values.
     pub colour_map: Vec<DrawColour>,
     /// Draws the contours as continuous lines rather than segments.
@@ -190,11 +190,11 @@ pub fn contour_and_draw_grid(
 ///
 /// As in Python, `Error::Value` for no coordinates, data of another size,
 /// or more contours than levels, and `Error::Runtime` (RDKit's checks) for
-/// fewer than two colours in `colour_map`, fewer than two coordinates
+/// fewer than two colors in `colour_map`, fewer than two coordinates
 /// along either axis to contour, or nothing drawn to place the grid by
 /// without `set_scale`. Also `Error::Value` for values or levels that are
-/// not finite or beyond 1e300 (an infinite one makes RDKit's fill colours
-/// NaN), colours outside 0 to 1, a contour width outside the line width
+/// not finite or beyond 1e300 (an infinite one makes RDKit's fill colors
+/// NaN), colors outside 0 to 1, a contour width outside the line width
 /// bounds (RDKit sets it as the drawer's), more than 100000 contours,
 /// coordinates beyond the free-drawing bounds, and as `MolDraw2D::set_scale`
 /// when `params.set_scale` is set.

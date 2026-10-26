@@ -244,8 +244,8 @@ fn quantize_matches_python() {
     assert!(feq_with_tol(1.0, 1.05, 0.1));
 }
 
-fn qdat() -> std::path::PathBuf {
-    let path = temp_path("test.qdat");
+fn qdat(name: &str) -> std::path::PathBuf {
+    let path = temp_path(&format!("{name}.qdat"));
     std::fs::write(
         &path,
         "# Testing data\n# ----------\n# Variable Table\n# foo1 []\n# foo2 []\n# foo3 []\n# foo4 \
@@ -256,9 +256,10 @@ fn qdat() -> std::path::PathBuf {
     path
 }
 
-/// RDKit's `test.dat`, whose lines end in spaces.
-fn dat() -> std::path::PathBuf {
-    let path = temp_path("test.dat");
+/// RDKit's `test.dat`, whose lines end in spaces, in a file of the test's
+/// own.
+fn dat(name: &str) -> std::path::PathBuf {
+    let path = temp_path(&format!("{name}.dat"));
     std::fs::write(
         &path,
         "# Testing data\n# ----------\n# Variable Table\n# foo1 []\n# foo2 []\n# foo3 []\n# foo4 \
@@ -281,7 +282,7 @@ use Value::{Float as F, Int as I, Str as S};
 
 #[test]
 fn quant_data_set() {
-    let d = build_quant_data_set(qdat()).unwrap();
+    let d = build_quant_data_set(qdat("quant_data_set")).unwrap();
     assert_eq!(d.get_n_pts(), 5);
     assert_eq!(d.get_n_vars(), 4);
     assert_eq!(d.get_n_results(), 1);
@@ -332,7 +333,7 @@ fn quant_data_set() {
 
 #[test]
 fn general_data_set() {
-    let mut d = build_data_set(dat()).unwrap();
+    let mut d = build_data_set(dat("general_data_set")).unwrap();
     assert_eq!(d.get_n_pts(), 5);
     assert_eq!(d.get_n_vars(), 4);
     assert_eq!(d.get_n_results(), 1);
@@ -387,7 +388,7 @@ fn general_data_set() {
 
 #[test]
 fn write_data_matches_python() {
-    let d = build_data_set(dat()).unwrap();
+    let d = build_data_set(dat("write_data_matches_python")).unwrap();
     let mut out = Vec::new();
     write_data(
         &mut out,
@@ -413,11 +414,11 @@ fn write_data_matches_python() {
 #[test]
 fn randomize_activities_matches_python() {
     let _guard = seeded();
-    let mut d = build_data_set(dat()).unwrap();
+    let mut d = build_data_set(dat("randomize_activities_matches_python")).unwrap();
     randomize_activities_with_shuffle(&mut d, true).unwrap();
     let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
     assert_eq!(last, [F(2.1), F(1.1), F(3.1), F(4.1), F(5.1)]);
-    let mut d = build_data_set(dat()).unwrap();
+    let mut d = build_data_set(dat("randomize_activities_matches_python")).unwrap();
     init_random_numbers((23, 42));
     randomize_activities(&mut d).unwrap();
     let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
@@ -509,7 +510,10 @@ fn filter_data_matches_python() {
     let _guard = seeded();
     let d = d1();
     let rows = |idx: &[usize]| -> Vec<Vec<f64>> { idx.iter().map(|&i| d[i].clone()).collect() };
-    let cases: [(f64, &[usize], &[usize], &[usize], &[usize]); 5] = [
+    // The fraction, then the kept and rejected indices, without and with a
+    // subset of the rows.
+    type Case<'a> = (f64, &'a [usize], &'a [usize], &'a [usize], &'a [usize]);
+    let cases: [Case; 5] = [
         (0.5, &[2, 3, 0, 1], &[4, 5], &[3, 4, 5, 1], &[]),
         (0.7, &[3, 0, 1], &[2, 4, 5], &[3, 5, 1], &[4]),
         (0.75, &[3, 0, 1], &[2, 4, 5], &[3, 5, 1], &[4]),

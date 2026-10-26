@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 //! Mirrors `rdkit.Chem.rdAbbreviations`: abbreviations (and linkers) found in
-//! molecules, condensed to labelled dummy atoms or labelled with `SUP`
+//! molecules, condensed to labeled dummy atoms or labeled with `SUP`
 //! substance groups.
 //!
 //! ```no_run
@@ -194,7 +194,7 @@ impl Default for CondenseMolAbbreviationsParams {
 }
 
 /// A copy of the molecule with the abbreviations it matches, tried in order,
-/// condensed to dummy atoms labelled with them (`atomLabel`,
+/// condensed to dummy atoms labeled with them (`atomLabel`,
 /// `_displayLabel`, and `_displayLabelW`). The result is not sanitized.
 /// Mirrors `rdAbbreviations.CondenseMolAbbreviations`.
 ///
@@ -220,7 +220,7 @@ pub fn condense_mol_abbreviations_with_params(
     Ok(Mol::from_ffi(ptr))
 }
 
-/// A copy of the molecule with a `SUP` substance group, labelled with its
+/// A copy of the molecule with a `SUP` substance group, labeled with its
 /// abbreviation (`LABEL`), for each abbreviation it matches, tried in order;
 /// abbreviations covering 40% of the atoms or more are skipped. Mirrors
 /// `rdAbbreviations.LabelMolAbbreviations`.
@@ -243,7 +243,7 @@ pub fn label_mol_abbreviations_with_max_coverage(
 }
 
 /// A copy of the molecule with each `SUP` substance group condensed to a
-/// dummy atom labelled with the group's `LABEL` (`"abbrev"` without one). The
+/// dummy atom labeled with the group's `LABEL` (`"abbrev"` without one). The
 /// result is not sanitized. Mirrors
 /// `rdAbbreviations.CondenseAbbreviationSubstanceGroups`.
 ///

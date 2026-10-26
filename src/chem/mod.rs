@@ -8,10 +8,13 @@
 //! Python functions of its own (`FindMolChiralCenters`), ported here; its
 //! other submodules are reached by path, as in Python.
 
+pub mod atom_pairs;
 pub mod draw;
 mod init;
 pub mod lipinski;
+pub mod maccs_keys;
 pub mod mol_standardize;
+pub(crate) mod py_math;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
@@ -61,6 +64,7 @@ pub mod rdmolops;
 pub mod rdqueries;
 pub mod registration_hash;
 pub mod scaffolds;
+pub mod torsion_fingerprints;
 
 pub use init::*;
 pub use rd_cip_labeler::*;

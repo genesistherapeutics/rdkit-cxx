@@ -19,7 +19,7 @@
 //! let clusters = cluster_data_flat(&dists, 4, 0.3).unwrap();
 //! ```
 
-use crate::ml::numpy;
+use crate::chem::py_math::np_sum;
 use crate::{Error, Result};
 
 fn value_error(message: String) -> Error {
@@ -47,7 +47,7 @@ pub fn euclidean_dist(pi: &[f64], pj: &[f64]) -> Result<f64> {
             d.powi(2)
         })
         .collect();
-    Ok(numpy::sum(&squares).sqrt())
+    Ok(np_sum(&squares).sqrt())
 }
 
 /// The `n_pts` by `n_pts` matrix of distances between the first `n_pts`

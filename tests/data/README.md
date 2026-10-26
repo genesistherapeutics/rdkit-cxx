@@ -15,3 +15,10 @@ From RDKit's source tree, under RDKit's BSD license:
   `Code/GraphMol/SynthonSpaceSearch/data`
 - `RP-6306_atrop1.sdf`: `Code/GraphMol/FileParsers/test_data/atropisomers`,
   with trailing whitespace trimmed
+
+Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
+
+- `1DWD_ligand.mol`, `1PPC_ligand.mol`, `1DWD_ligand_reordered.mol`: the PDB
+  files of the same names in `rdkit/Chem/test_data`, with bond orders assigned
+  from `UnitTestMol3D.py`'s template by `AllChem.AssignBondOrdersFromTemplate`,
+  written by `Chem.MolToMolFile`

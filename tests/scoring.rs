@@ -11,8 +11,10 @@ use rdkit_cxx::ml::scoring::scoring::*;
 
 const ACC: f64 = 1e-4;
 
+type Scores = Vec<Vec<f64>>;
+
 /// 400 molecules, 20 actives, best first: Python's setUp.
-fn cases() -> (Vec<Vec<f64>>, Vec<Vec<f64>>, Vec<Vec<f64>>, Vec<Vec<f64>>) {
+fn cases() -> (Scores, Scores, Scores, Scores) {
     let act = vec![vec![1.0]; 20];
     let dcy = vec![vec![0.0]; 380];
     let best = [act.clone(), dcy.clone()].concat();

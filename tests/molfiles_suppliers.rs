@@ -444,9 +444,14 @@ fn multithreaded_sd_supplier() {
 fn multithreaded_parameters_are_checked() {
     let path = write("params.sdf", &three_sd());
     for params in [
-        // RDKit negates the thread count as an int.
+        // RDKit negates the thread count as an int, and starts every
+        // thread at the first read.
         MultithreadedSDMolSupplierParams {
             num_writer_threads: 1 << 31,
+            ..Default::default()
+        },
+        MultithreadedSDMolSupplierParams {
+            num_writer_threads: 1025,
             ..Default::default()
         },
         // A queue of size 0 never lets RDKit's threads finish.

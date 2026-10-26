@@ -237,6 +237,8 @@ def test_paths_source():
     assert "let _ = <rdkit_cxx::chem::Mol>::default;" in source
     assert "let _ = <rdkit_cxx::chem::Mol>::from_reader::<std::fs::File>;" in source
     assert "__repr__" not in source
+    # A qualified path applies a generic type's default parameters.
+    assert "<rdkit_cxx::chem::Mol>::get_num_atoms" in source
 
 
 def test_a_module_reason_covers_its_names():

@@ -109,7 +109,7 @@ fn decompose() {
         ]
     );
 
-    // A labelled core, matched anywhere or only at its labels.
+    // A labeled core, matched anywhere or only at its labels.
     let labelled = mols(&["[*:1]c1ccc([*:2])cc1"]);
     let expected = [
         row(&[
@@ -457,5 +457,25 @@ fn threads() {
             assert_eq!(rows, expected_rows());
             assert_eq!(unmatched, [3]);
         }
+    }
+}
+
+// Enumerating the cores takes RDKit's enumerator a recursion level per
+// variation point, as rdMolEnumerator's own checks say.
+#[test]
+fn enumeration_refuses_too_many_variation_points() {
+    let mut core = mol_from_smiles(&"C".repeat(4002)).unwrap();
+    for idx in 0..4001 {
+        let mut bond = core.get_bond_with_idx_mut(idx).unwrap();
+        bond.set_prop("_MolFileBondEndPts", "(1 1)");
+        bond.set_prop("_MolFileBondAttach", "ANY");
+    }
+    let params = RGroupDecompositionParameters {
+        do_enumeration: true,
+        ..Default::default()
+    };
+    match RGroupDecomposition::new_with_params(&[core], &params).unwrap_err() {
+        Error::Value { message } => assert!(message.contains("recursion deeper"), "{message}"),
+        err => panic!("{err:?}"),
     }
 }
