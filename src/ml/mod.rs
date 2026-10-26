@@ -6,4 +6,9 @@
 //! Mirrors `rdkit.ML`.
 
 pub mod cluster;
+pub mod data;
+pub mod files;
 pub mod info_theory;
+pub(crate) mod numpy;
+pub mod scoring;
+pub mod slt;

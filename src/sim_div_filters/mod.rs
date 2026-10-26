@@ -6,5 +6,6 @@
 //! Mirrors `rdkit.SimDivFilters`, which re-exports `rdSimDivPickers`.
 
 pub mod rd_sim_div_pickers;
+pub mod similarity_pickers;
 
 pub use rd_sim_div_pickers::*;
