@@ -5,7 +5,10 @@
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rdinchi::*;
-use rdkit_cxx::chem::*;
+use rdkit_cxx::chem::{
+    Atom, BondStereo, ChiralType, Conformer, Mol, RWMol, SmilesParserParams, mol_from_smiles,
+    mol_from_smiles_with_params, mol_to_smiles,
+};
 use rdkit_cxx::geometry::Point3D;
 
 // Expected values come from Python's rdinchi.

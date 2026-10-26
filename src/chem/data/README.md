@@ -8,3 +8,5 @@ embeds them, so the ports need no RDKit data directory at run time.
 - `Salts.txt`: `SaltRemover`'s default salts.
 - `Functional_Group_Hierarchy.txt`: `FunctionalGroups`' default hierarchy,
   which `SimpleEnum.Enumerator` also reads.
+- `FunctionalGroups.txt`: `BuildFragmentCatalog.BuildCatalog`'s default
+  functional groups.

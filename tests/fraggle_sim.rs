@@ -200,13 +200,10 @@ fn selections() -> Result<()> {
 
 #[test]
 fn ring_cuts() -> Result<()> {
-    assert_eq!(is_valid_ring_cut(&mut mol_from_smiles("*CCC*")?)?, false);
-    assert_eq!(is_valid_ring_cut(&mut mol_from_smiles("*C1CC1*")?)?, true);
-    assert_eq!(
-        is_valid_ring_cut(&mut mol_from_smiles("*c1ccccc1*")?)?,
-        true
-    );
-    assert_eq!(is_valid_ring_cut(&mut unsanitized("*cccc*"))?, false);
+    assert!(!is_valid_ring_cut(&mut mol_from_smiles("*CCC*")?)?);
+    assert!(is_valid_ring_cut(&mut mol_from_smiles("*C1CC1*")?)?);
+    assert!(is_valid_ring_cut(&mut mol_from_smiles("*c1ccccc1*")?)?);
+    assert!(!is_valid_ring_cut(&mut unsanitized("*cccc*"))?);
     let mol = mol_from_smiles("COc1cc(CN2CCC(NC(=O)c3cncc(C)c3)CC2)c(OC)c2ccccc12")?;
     assert_eq!(
         delete_bonds(&mol, &[(1, 2), (10, 11)], "acyclic", 31)?.as_deref(),

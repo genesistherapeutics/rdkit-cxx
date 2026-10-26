@@ -11,8 +11,7 @@ use rdkit_cxx::chem::chem_utils::sdf_to_csv::*;
 use rdkit_cxx::chem::chem_utils::template_expand::*;
 use rdkit_cxx::chem::rd_depictor::compute_2d_coords;
 use rdkit_cxx::chem::{
-    Mol, SDMolSupplier, mol_from_mol_block, mol_from_smarts, mol_from_smiles, mol_to_mol_block,
-    mol_to_smiles,
+    Mol, SDMolSupplier, mol_from_mol_block, mol_from_smarts, mol_from_smiles, mol_to_smiles,
 };
 use rdkit_cxx::{Error, Result};
 

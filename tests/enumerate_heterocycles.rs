@@ -57,12 +57,14 @@ fn something_matches_every_negative_example() -> Result<()> {
     Ok(())
 }
 
+/// The input, how deep, how many, the first few in Python's order, and the
+/// last few sorted.
+type Case<'a> = (&'a str, Option<u32>, usize, &'a [&'a str], [&'a str; 3]);
+
 #[test]
 fn enumerations() -> Result<()> {
     assert_eq!(get_heterocycle_reactions().len(), 41);
-    // The input, how deep, how many, the first few in Python's order, and
-    // the last few sorted.
-    let cases: &[(&str, Option<u32>, usize, &[&str], [&str; 3])] = &[
+    let cases: &[Case] = &[
         (
             "c1ccccc1",
             None,

@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.BRICS", "rdkit.Chem.ChemUtils.AlignDepict", "rdkit.Chem.ChemUtils.SDFToCSV", "rdkit.Chem.ChemUtils.TemplateExpand", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EnumerateHeterocycles", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FilterCatalog", "rdkit.Chem.Fraggle.FraggleSim", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MolKey.InchiInfo", "rdkit.Chem.MolKey.MolKey", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.inchi", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.BRICS", "rdkit.Chem.BuildFragmentCatalog", "rdkit.Chem.ChemUtils.AlignDepict", "rdkit.Chem.ChemUtils.SDFToCSV", "rdkit.Chem.ChemUtils.TemplateExpand", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EnumerateHeterocycles", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FilterCatalog", "rdkit.Chem.Fraggle.FraggleSim", "rdkit.Chem.FragmentCatalog", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MolKey.InchiInfo", "rdkit.Chem.MolKey.MolKey", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.inchi", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [modules.reasons]
 "rdkit.Chem.ChemUtils.BulkTester" = "a broken legacy script: TestMolecule calls Randomize.CheckCanonicalization, which RDKit removed, so it fails every molecule that sanitizes, and TestSupplier calls the supplier's Python 2 next method"
@@ -263,6 +263,167 @@ rust = ["rdkit_cxx::chem::brics::reverse_reactions"]
 [[entry]]
 python = "rdkit.Chem.BRICS.smartsGps"
 rust = ["rdkit_cxx::chem::brics::smarts_gps"]
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.BuildCatalog"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::build_catalog", "rdkit_cxx::chem::build_fragment_catalog::build_catalog_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.CalcGains"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::calc_gains", "rdkit_cxx::chem::build_fragment_catalog::calc_gains_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.CalcGainsFromFps"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::calc_gains_from_fps", "rdkit_cxx::chem::build_fragment_catalog::calc_gains_from_fps_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.OutputGainsData"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::output_gains_data", "rdkit_cxx::chem::build_fragment_catalog::output_gains_data_with_n_acts"]
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ParseArgs"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ProcessGainsData"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::process_gains_data", "rdkit_cxx::chem::build_fragment_catalog::process_gains_data_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails"
+reason = "the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.actCol"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.biasList"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.catalogName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.dbName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.delim"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.detailsName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doBuild"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doDetails"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doGains"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doScore"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doSigs"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.fpName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.gainsName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.hasTitle"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.inFileName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.maxPath"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.minPath"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.nActs"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.nBits"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.nameCol"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.numMols"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.onBitsName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.scoresName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.smiCol"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.tableName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.topN"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ScoreFromLists"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::score_from_lists", "rdkit_cxx::chem::build_fragment_catalog::score_from_lists_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ScoreMolecules"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::score_molecules", "rdkit_cxx::chem::build_fragment_catalog::score_molecules_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported; nor maxPts, which Python ignores"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ShowDetails"
+reason = "broken in Python: it calls FragCatalog.GetFragDescription, which does not exist, so it raises AttributeError for any gains"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.SupplierFromDetails"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.Usage"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.message"
+reason = "writes a string to a stream (sys.stdout by default); Rust writes with write!"
 
 [[entry]]
 python = "rdkit.Chem.CanonSmiles"
@@ -1496,6 +1657,49 @@ rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::rdkit_fp_params"]
 [[entry]]
 python = "rdkit.Chem.Fraggle.FraggleSim.select_fragments"
 rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::select_fragments"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.description"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::description"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.gain"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::gain"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.id"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.nPerClass"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::n_per_class"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BuildAdjacencyList"
+rust = ["rdkit_cxx::chem::fragment_catalog::build_adjacency_list", "rdkit_cxx::chem::fragment_catalog::build_adjacency_list_with_limit_inclusion"]
+overloads_note = "orderLevels is not ported: Python's raises NameError (argsort is never imported); fragments without bits are left out, where Python links 2**32 - 1"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.GetMolsMatchingBit"
+rust = ["rdkit_cxx::chem::fragment_catalog::get_mols_matching_bit"]
+overloads_note = "bit is the id; for a BitGainsInfo, pass its id"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.ProcessGainsFile"
+rust = ["rdkit_cxx::chem::fragment_catalog::process_gains_file", "rdkit_cxx::chem::fragment_catalog::process_gains_file_with_params"]
+overloads_note = "Python's fails on Python 3 (it calls the file's Python 2 xreadlines); the port reads the file as that meant to"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.message"
+reason = "writes a string to a stream (sys.stdout by default); Rust writes with write!"
 
 [[entry]]
 python = "rdkit.Chem.FragmentMatcher.FragmentMatcher"
