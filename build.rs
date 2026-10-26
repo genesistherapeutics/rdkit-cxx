@@ -267,10 +267,10 @@ fn link(build_dir: &Path) {
         .output()
     {
         let printed = PathBuf::from(String::from_utf8_lossy(&output.stdout).trim());
-        if printed.is_absolute() {
-            if let Some(dir) = printed.parent() {
-                println!("cargo::rustc-link-search=native={}", dir.display());
-            }
+        if printed.is_absolute()
+            && let Some(dir) = printed.parent()
+        {
+            println!("cargo::rustc-link-search=native={}", dir.display());
         }
     }
     println!("cargo::rustc-link-lib=dylib={stdlib}");
