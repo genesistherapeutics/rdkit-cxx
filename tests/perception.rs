@@ -229,3 +229,29 @@ M  V30 END BOND
 M  V30 END CTAB
 M  END
 ";
+
+#[test]
+fn added_rings_are_cycles() {
+    // RDKit's ring algorithms and pickle reader take a ring to be a cycle.
+    let mut m = smiles("CCCC");
+    let value = |r: rdkit_cxx::Result<()>| matches!(r, Err(Error::Value { .. }));
+    let mut info = m.get_ring_info_mut();
+    assert!(value(info.add_ring(&[], &[])));
+    assert!(value(info.add_ring(&[0, 3], &[0, 1])));
+    assert!(value(info.add_ring(&[0, 1, 1], &[0, 1, 2])));
+    // Bond 1 joins atoms 1 and 2, not 1 and 3.
+    assert!(value(info.add_ring(&[0, 1, 3], &[0, 1, 2])));
+    assert!(matches!(
+        info.add_ring(&[0, 1, 9], &[0, 1, 2]),
+        Err(Error::Index { .. })
+    ));
+    // A real cycle, in either direction around the ring.
+    let mut ring = smiles("C1CCC1");
+    let mut info = ring.get_ring_info_mut();
+    info.add_ring(&[0, 1, 2, 3], &[0, 1, 2, 3]).unwrap();
+    info.add_ring(&[3, 2, 1, 0], &[2, 1, 0, 3]).unwrap();
+    assert_eq!(ring.get_ring_info().num_rings().unwrap(), 3);
+    // A molecule with an added ring pickles and reads back.
+    let pkl = ring.to_binary();
+    assert_eq!(Mol::from_pkl_string(&pkl).unwrap().get_num_atoms(), 4);
+}
