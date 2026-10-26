@@ -1,21 +1,40 @@
 # Examples
 
 The [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s recipes,
-ported line by line. Each prints what the recipe prints and asserts the
-cookbook's output, so a run checks it:
+ported line by line, all 40 of them. Each prints what the recipe prints and
+asserts the cookbook's output, so a run checks it:
 
 ```sh
 cargo run --example cookbook_hybridization
 ```
 
-The drawing recipes are left out, since the crate does not bind
-`rdMolDraw2D`; recipes that draw their results along the way print SMILES
-instead. Where a recipe calls a pure-Python RDKit function, the example
-calls its port in the crate: `rdkit_cxx::chem::find_mol_chiral_centers` and
-`rdkit_cxx::chem::lipinski`.
+The drawing recipes write their images to `target/cookbook/`. Where a recipe
+shows a molecule in Jupyter, the example draws it as Jupyter does
+(`IPythonConsole`'s `molSize` and `drawOptions`), as an SVG, and checks what
+the drawing holds: the indices, notes, CIP labels, highlights, and colours
+the recipe adds. Where the recipe draws with `MolDraw2DCairo`, the example
+writes the PNG and checks its size.
+
+Where a recipe calls RDKit's pure-Python code, the example calls its port in
+the crate: `rdkit_cxx::chem::find_mol_chiral_centers`,
+`rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`,
+`mol_to_svg`, `mols_to_grid_image`, and `draw_mol_with_matches`.
 
 | Recipe | ID | Example |
 | --- | --- | --- |
+| Include an Atom Index | RDKitCB_0 | [`cookbook_atom_index`](cookbook_atom_index.rs) |
+| Include a Bond Index | RDKitCB_40 | [`cookbook_bond_index`](cookbook_bond_index.rs) |
+| Include a Calculation | RDKitCB_23 | [`cookbook_calculation`](cookbook_calculation.rs) |
+| Include Stereo Annotations | RDKitCB_32 | [`cookbook_stereo_annotations`](cookbook_stereo_annotations.rs) |
+| Black and White Molecules | RDKitCB_1 | [`cookbook_black_and_white`](cookbook_black_and_white.rs) |
+| Highlight a Substructure in a Molecule | RDKitCB_2 | [`cookbook_highlight_substructure`](cookbook_highlight_substructure.rs) |
+| Highlight Molecule Differences | RDKitCB_36 | [`cookbook_highlight_differences`](cookbook_highlight_differences.rs) |
+| Highlight Entire Molecule | RDKitCB_38 | [`cookbook_highlight_molecule`](cookbook_highlight_molecule.rs) |
+| Highlight Molecule with Multiple Colors | RDKitCB_39 | [`cookbook_highlight_multiple_colors`](cookbook_highlight_multiple_colors.rs) |
+| Without Implicit Hydrogens | RDKitCB_17 | [`cookbook_without_implicit_hs`](cookbook_without_implicit_hs.rs) |
+| With Abbreviations | RDKitCB_34 | [`cookbook_abbreviations`](cookbook_abbreviations.rs) |
+| Using CoordGen Library | RDKitCB_37 | [`cookbook_coordgen`](cookbook_coordgen.rs) |
+| On a Plot | RDKitCB_35 | [`cookbook_on_a_plot`](cookbook_on_a_plot.rs) |
 | Hybridization Type and Count | RDKitCB_26 | [`cookbook_hybridization`](cookbook_hybridization.rs) |
 | Count Ring Systems | RDKitCB_3 | [`cookbook_ring_systems`](cookbook_ring_systems.rs) |
 | Identify Aromatic Rings | RDKitCB_8 | [`cookbook_aromatic_rings`](cookbook_aromatic_rings.rs) |
@@ -44,7 +63,7 @@ calls its port in the crate: `rdkit_cxx::chem::find_mol_chiral_centers` and
 | Reorder Atoms | RDKitCB_28 | [`cookbook_reorder_atoms`](cookbook_reorder_atoms.rs) |
 | Conformer Generation with ETKDG | RDKitCB_25 | [`cookbook_etkdg`](cookbook_etkdg.rs) |
 
-Two recipes differ from the cookbook's text on purpose:
+Some recipes differ from the cookbook's text on purpose:
 
 - Neutralizing Molecules: the cookbook's `Uncharger` comparison prints its
   inputs, because `uncharge` returns a new molecule rather than changing its
@@ -52,3 +71,10 @@ Two recipes differ from the cookbook's text on purpose:
 - Create Fragments: Python's `with Chem.RWMol(mol)` batches the bond
   removals, so the example brackets them with `begin_batch_edit` and
   `commit_batch_edit`.
+- Highlight a Substructure in a Molecule: after a substructure search,
+  Jupyter keeps the query, and when the recipe then sets the atoms to
+  highlight by hand, drawing them fails in RDKit 2026.09, since they do not
+  fit the query. The example shows the failure, then draws the atoms without
+  the query, as the recipe intends.
+- On a Plot: the recipe puts the molecule on a matplotlib plot, which has no
+  counterpart here; the example draws the image.
