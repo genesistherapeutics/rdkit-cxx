@@ -419,10 +419,11 @@ pub fn pattern_fingerprint_with_outputs(
     ))
 }
 
-/// The bits every molecule in the bundle sets in its pattern fingerprint.
-/// Mirrors `rdmolops.PatternFingerprint(MolBundle)` (A5); its parameters
-/// ignore `atom_counts`, which Python's overload lacks.
-pub fn pattern_fingerprint_mol_bundle(bundle: &MolBundle) -> Result<ExplicitBitVect> {
+/// The bits every molecule in the bundle sets in its pattern fingerprint,
+/// or `None` for an empty bundle. Mirrors
+/// `rdmolops.PatternFingerprint(MolBundle)` (A5); its parameters ignore
+/// `atom_counts`, which Python's overload lacks.
+pub fn pattern_fingerprint_mol_bundle(bundle: &MolBundle) -> Result<Option<ExplicitBitVect>> {
     pattern_fingerprint_mol_bundle_with_params(bundle, &PatternFingerprintParams::default())
 }
 
@@ -431,10 +432,10 @@ pub fn pattern_fingerprint_mol_bundle(bundle: &MolBundle) -> Result<ExplicitBitV
 pub fn pattern_fingerprint_mol_bundle_with_params(
     bundle: &MolBundle,
     params: &PatternFingerprintParams,
-) -> Result<ExplicitBitVect> {
+) -> Result<Option<ExplicitBitVect>> {
     let set_only_bits = only_bits(&params.set_only_bits);
     let fp = bundle.with_ffi(|b| {
         ffi::pattern_fingerprint_mol_bundle(b, &params.to_ffi(), set_only_bits.raw())
     })?;
-    Ok(ExplicitBitVect::from_ffi(fp))
+    Ok((!fp.is_null()).then(|| ExplicitBitVect::from_ffi(fp)))
 }

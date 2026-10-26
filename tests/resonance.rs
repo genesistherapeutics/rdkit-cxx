@@ -51,6 +51,11 @@ fn flags_and_groups() {
     suppl.set_num_threads(2);
     suppl.enumerate();
     assert_eq!(suppl.len(), 4);
+    // RDKit negates a negative count in int, undefined for i32::MIN.
+    let mut counted = ResonanceMolSupplier::new(&mol).unwrap();
+    counted.set_num_threads(i32::MIN);
+    counted.enumerate();
+    assert_eq!(counted.len(), 4);
     assert_eq!(suppl.get_atom_conj_grp_idx(0).unwrap(), 0);
     assert_eq!(suppl.get_bond_conj_grp_idx(0).unwrap(), 0);
     assert_eq!(

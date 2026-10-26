@@ -72,6 +72,20 @@ void check_metal_smarts(const std::string &smarts, const char *what) {
   check_metal_query(*query);
 }
 
+// As Operations::parse, and then check_removals on the molecule it reads:
+// a mol block sets its substance groups' PARENT chains, and the validation
+// and standardization steps remove atoms and bonds from it and its copies
+// (metal disconnection, fragment removal, getMolFrags).
+RDKit::RWMOL_SPTR checked_parse(const std::string &molblock,
+                                MS::PipelineResult &result,
+                                const MS::PipelineOptions &options) {
+  auto mol = MS::Operations::parse(molblock, result, options);
+  if (mol) {
+    check_removals(*mol);
+  }
+  return mol;
+}
+
 // As Operations::standardize, which static_casts the ROMol that
 // Normalizer::normalize makes to an RWMol, a type it is not; this copies it
 // into an RWMol instead. The rest is RDKit's, step for step.
@@ -237,6 +251,7 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
     throw std::logic_error("RDKit's Pipeline has no standardize step");
   }
   pipeline->setStandardizationSteps(steps);
+  pipeline->setParse(&checked_parse);
   pipeline->setMakeParent(&checked_make_parent);
   pipeline->setSerialize(&locked_serialize);
   return pipeline;

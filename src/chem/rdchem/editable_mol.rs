@@ -101,8 +101,9 @@ impl EditableMol {
         self.mol.begin_batch_edit()
     }
 
-    /// Mirrors `EditableMol.CommitBatchEdit`.
-    pub fn commit_batch_edit(&mut self) {
+    /// Mirrors `EditableMol.CommitBatchEdit`, with the errors of
+    /// `RWMol::commit_batch_edit`.
+    pub fn commit_batch_edit(&mut self) -> Result<()> {
         self.mol.commit_batch_edit()
     }
 

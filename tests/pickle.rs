@@ -107,3 +107,93 @@ fn atom_labels() {
         Err(Error::Runtime { .. })
     ));
 }
+
+// The one byte at which two pickles differ, with their values there.
+fn differing_byte(a: &[u8], b: &[u8]) -> (usize, u8, u8) {
+    assert_eq!(a.len(), b.len());
+    let diffs: Vec<usize> = (0..a.len()).filter(|&i| a[i] != b[i]).collect();
+    assert_eq!(diffs.len(), 1, "{diffs:?}");
+    (diffs[0], a[diffs[0]], b[diffs[0]])
+}
+
+// MolPickler casts the bytes it reads for enums without checking them, and
+// the Rust enums have no variant for a value RDKit's lack, so unpickling
+// refuses one. A pickle leaves out a default value, so each byte is found
+// by pickling two other values.
+#[test]
+fn pickles_with_unknown_enum_values_are_refused() {
+    let flags = PropertyPickleOptions::NoProps;
+    type Edit = fn(&mut Mol, bool);
+    let edits: [(&str, Edit); 4] = [
+        ("BondType", |m, other| {
+            m.get_bond_with_idx_mut(0).unwrap().set_bond_type(if other {
+                BondType::Triple
+            } else {
+                BondType::Double
+            })
+        }),
+        ("BondDir", |m, other| {
+            m.get_bond_with_idx_mut(0).unwrap().set_bond_dir(if other {
+                BondDir::Unknown
+            } else {
+                BondDir::Beginwedge
+            })
+        }),
+        ("ChiralType", |m, other| {
+            m.get_atom_with_idx_mut(0)
+                .unwrap()
+                .set_chiral_tag(if other {
+                    ChiralType::ChiOther
+                } else {
+                    ChiralType::ChiTetrahedralCw
+                })
+        }),
+        ("HybridizationType", |m, other| {
+            m.get_atom_with_idx_mut(1)
+                .unwrap()
+                .set_hybridization(if other {
+                    HybridizationType::Sp2d
+                } else {
+                    HybridizationType::Sp
+                })
+        }),
+    ];
+    for (what, edit) in edits {
+        let pickles: Vec<Vec<u8>> = [false, true]
+            .into_iter()
+            .map(|other| {
+                let mut mol = mol_from_smiles("CC").unwrap();
+                edit(&mut mol, other);
+                mol.to_binary_with_property_flags(flags)
+            })
+            .collect();
+        let (at, _, _) = differing_byte(&pickles[0], &pickles[1]);
+        let mut pickle = pickles[1].clone();
+        // The edited value itself reads back.
+        Mol::from_pkl_string(&pickle).unwrap();
+        // RDKit refuses a negative byte, but not one past its enum.
+        pickle[at] = 100;
+        match Mol::from_pkl_string(&pickle) {
+            Err(Error::Value { message }) => assert!(message.contains(what), "{message}"),
+            other => panic!("{what}: {other:?}"),
+        }
+    }
+
+    // A stereo group's type, the same way.
+    let pickles: Vec<Vec<u8>> = [StereoGroupType::StereoOr, StereoGroupType::StereoAnd]
+        .into_iter()
+        .map(|kind| {
+            let mut rw = RWMol::from(mol_from_smiles("C[C@H](F)Cl").unwrap());
+            let group = create_stereo_group(kind, &rw, &[1]).unwrap();
+            rw.set_stereo_groups(&[group]).unwrap();
+            rw.to_binary_with_property_flags(flags)
+        })
+        .collect();
+    let (at, _, _) = differing_byte(&pickles[0], &pickles[1]);
+    let mut pickle = pickles[1].clone();
+    pickle[at] = 7;
+    match Mol::from_pkl_string(&pickle) {
+        Err(Error::Value { message }) => assert!(message.contains("StereoGroupType"), "{message}"),
+        other => panic!("StereoGroupType: {other:?}"),
+    }
+}

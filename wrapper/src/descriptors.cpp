@@ -302,8 +302,10 @@ rust::Vec<double> calc_autocorr_2d(const RWMol &mol,
 }
 
 // BCUT2D(mol) reads Crippen contributions through their cache, on a copy
-// that keeps the molecule's computed properties (U8).
+// that keeps the molecule's computed properties (U8), and makes that copy
+// with removeAllHs (check_removals).
 rust::Vec<double> bcut_2d(const RWMol &mol) {
+  check_removals(mol);
   DescriptorCacheGuard guard(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return to_vec(Desc::BCUT2D(mol));

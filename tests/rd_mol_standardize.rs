@@ -295,8 +295,9 @@ fn skipping_the_cleanup() {
 #[test]
 fn several_molecules() {
     // RDKit's own threads loop forever for 0 threads and race for negative
-    // counts; these split the molecules among the threads they run.
-    for num_threads in [1, 0, -1, 2, 3, 16] {
+    // counts; these split the molecules among the threads they run. RDKit's
+    // thread count negates a negative count in int, undefined for i32::MIN.
+    for num_threads in [1, 0, -1, 2, 3, 16, i32::MIN, i32::MAX] {
         let mut mols: Vec<Mol> = CASES.iter().map(|(input, _)| mol(input)).collect();
         super_parent_in_place_mols(&mut mols, num_threads).unwrap();
         for (m, (input, expected)) in mols.iter().zip(CASES) {

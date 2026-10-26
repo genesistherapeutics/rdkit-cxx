@@ -562,10 +562,14 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   return o;
 }
 
+// The results remove atoms and bonds from copies of the molecules
+// (makeCliqueFrags, extractRings, makeMolFrags), which trusts what
+// check_removals checks.
 void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols) {
   int large = 0;
   for (const auto *mol : mols) {
     check_matrix_size(*mol);
+    check_removals(*mol);
     if (std::int64_t{mol->getNumAtoms()} + mol->getNumBonds() >
         kRascalMaxSquared) {
       ++large;

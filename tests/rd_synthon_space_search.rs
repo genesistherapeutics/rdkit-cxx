@@ -12,7 +12,9 @@ use rdkit_cxx::chem::rd_dist_geom::{embed_multiple_confs_with_params, etkdg_v3};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
-use rdkit_cxx::chem::rd_generalized_substruct::create_extended_query_mol;
+use rdkit_cxx::chem::rd_generalized_substruct::{
+    CreateExtendedQueryMolParams, create_extended_query_mol, create_extended_query_mol_with_params,
+};
 use rdkit_cxx::chem::rd_rascal_mces::RascalOptions;
 use rdkit_cxx::chem::rd_synthon_space_search::*;
 use rdkit_cxx::chem::*;
@@ -869,7 +871,15 @@ fn substance_group_parents() {
     for query in [&cycle, &end_points] {
         let err = space.substructure_search(query).unwrap_err();
         assert!(matches!(err, Error::Value { .. }), "{err:?}");
-        let extended = create_extended_query_mol(query).unwrap();
+        // Enumerating or making tautomers removes atoms too.
+        let err = create_extended_query_mol(query).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{err:?}");
+        let as_is = CreateExtendedQueryMolParams {
+            do_enumeration: false,
+            do_tautomers: false,
+            ..Default::default()
+        };
+        let extended = create_extended_query_mol_with_params(query, &as_is).unwrap();
         let err = space
             .substructure_search_extended_query_mol(&extended)
             .unwrap_err();

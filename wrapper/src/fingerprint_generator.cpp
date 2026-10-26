@@ -22,7 +22,6 @@
 #include <GraphMol/Fingerprints/RDKitFPGenerator.h>
 #include <GraphMol/Fingerprints/TopologicalTorsionGenerator.h>
 #include <RDGeneral/Exceptions.h>
-#include <RDGeneral/RDThreads.h>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
@@ -33,6 +32,7 @@
 #include "rdkit-cxx/ffi/fingerprints.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -334,35 +334,24 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
     }
   };
   auto control_c = lock_control_c_for(gen);
-  unsigned n =
-      control_c.owns_lock() ? 1 : RDKit::getNumThreadsToUse(num_threads);
-  if (n <= 1 || list.size() <= 1) {
+  // RDKit's getNumThreadsToUse negates a negative count in int, undefined
+  // for INT_MIN (num_threads_to_use). Threads past the molecules would have
+  // nothing to do, and run_on_threads joins the threads it started when
+  // another cannot start, where destroying a joinable std::thread would
+  // call std::terminate.
+  std::size_t n = control_c.owns_lock() ? 1 : num_threads_to_use(num_threads);
+  n = std::min(n, list.size());
+  if (n <= 1) {
     for (std::size_t i = 0; i < list.size(); ++i) {
       work(i);
     }
     return result;
   }
-  std::vector<std::exception_ptr> errors(n);
-  std::vector<std::thread> threads;
-  for (unsigned t = 0; t < n; ++t) {
-    threads.emplace_back([&, t]() {
-      try {
-        for (std::size_t i = t; i < list.size(); i += n) {
-          work(i);
-        }
-      } catch (...) {
-        errors[t] = std::current_exception();
-      }
-    });
-  }
-  for (auto &thread : threads) {
-    thread.join();
-  }
-  for (const auto &error : errors) {
-    if (error) {
-      std::rethrow_exception(error);
+  run_on_threads(static_cast<unsigned>(n), [&](unsigned t) {
+    for (std::size_t i = t; i < list.size(); i += n) {
+      work(i);
     }
-  }
+  });
   return result;
 }
 

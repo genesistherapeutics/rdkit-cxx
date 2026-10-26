@@ -44,6 +44,16 @@ void check_room(std::uint32_t size) {
   }
 }
 
+// The SMILES holders keep a molecule as its SMILES, whose writer removes
+// atoms from copies of a molecule of several fragments (check_removals).
+void check_smiles_holder_removals(const RDKit::MolHolderBase &holder,
+                                  const RDKit::ROMol &mol) {
+  if (dynamic_cast<const CachedSmilesMolHolder *>(&holder) ||
+      dynamic_cast<const CachedTrustedSmilesMolHolder *>(&holder)) {
+    check_removals(mol);
+  }
+}
+
 // PatternFingerprintMol makes ExplicitBitVects of the holder's size, which
 // count their bits in int (U3).
 void check_num_bits(std::uint32_t num_bits) {
@@ -165,6 +175,7 @@ std::uint32_t mol_holder_len(const MolHolderHandle &holder) {
 // matches substructures.
 std::uint32_t mol_holder_add_mol(MolHolderHandle &holder, const RWMol &mol) {
   check_room(holder.ptr->size());
+  check_smiles_holder_removals(*holder.ptr, mol);
   return holder.ptr->addMol(mol);
 }
 
@@ -203,7 +214,7 @@ std::unique_ptr<RWMol> mol_holder_get_mol(const MolHolderHandle &holder,
     throw RDKit::SmilesParse::SmilesParseException(
         "the molecule's SMILES does not parse");
   }
-  check_monomer_types(*mol);
+  check_pickled_mol(*mol);
   return copy_out(*mol);
 }
 
@@ -352,6 +363,7 @@ void substruct_library_view_set_search_order(
 std::uint32_t substruct_library_add_mol(SubstructLibrary &view,
                                         const RWMol &mol) {
   check_room(view.getMolHolder()->size());
+  check_smiles_holder_removals(*view.getMolHolder(), mol);
   if (view.getFpHolder()) {
     check_room(view.getFpHolder()->size());
   }
@@ -668,7 +680,7 @@ std::unique_ptr<SubstructLibrary> substruct_library_from_pickle(
       if (!mol) {
         throw ValueErrorException("the library holds a null molecule");
       }
-      check_monomer_types(*mol);
+      check_pickled_mol(*mol);
     }
   }
   for (auto idx : lib->getSearchOrder()) {

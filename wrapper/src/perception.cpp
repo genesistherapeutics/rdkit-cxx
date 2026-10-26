@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/perception.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -81,13 +82,17 @@ void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags,
   RDKit::MolOps::KekulizeIfPossible(mol, clear_aromatic_flags, canonical);
 }
 
+// Both remove atoms or bonds from the copy, which trusts what
+// check_removals checks.
 std::unique_ptr<RWMol> haptic_bonds_to_dative(const RWMol &mol) {
+  check_removals(mol);
   auto res = std::make_unique<RWMol>(mol);
   RDKit::MolOps::hapticBondsToDative(*res);
   return res;
 }
 
 std::unique_ptr<RWMol> dative_bonds_to_haptic(const RWMol &mol) {
+  check_removals(mol);
   auto res = std::make_unique<RWMol>(mol);
   RDKit::MolOps::dativeBondsToHaptic(*res);
   return res;

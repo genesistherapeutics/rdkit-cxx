@@ -425,7 +425,9 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
 
   // MCSBondCompareOrder and MCSBondCompareOrderExact index a table by both
   // bonds' types, through ZERO; a molecule pickle can carry any type up to
-  // 127, which would be read past the table.
+  // 127, which would be read past the table. Unpickling now refuses one
+  // (check_pickled_mol), so this checks again only in case another path
+  // sets one.
   if (params.BondTyper == RDKit::MCSBondCompareOrder ||
       params.BondTyper == RDKit::MCSBondCompareOrderExact) {
     for (const auto &mol : mols.mols()) {

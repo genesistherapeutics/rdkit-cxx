@@ -17,6 +17,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/scaffold_network.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -167,6 +168,11 @@ void update_scaffold_network(BorrowedMols &mols, ScaffoldNetwork &network,
                              const ScaffoldNetworkFlags &flags,
                              const ScaffoldNetworkParams &params) {
   check_network(network);
+  // RDKit removes atoms from copies of each molecule (MurckoDecompose, its
+  // fragmenters) and writes them as SMILES (check_removals).
+  for (const auto &mol : mols.mols()) {
+    check_removals(*mol);
+  }
   auto with = with_flags(params, flags);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   RDKit::ScaffoldNetwork::updateScaffoldNetwork(mols.mols(), network, with);

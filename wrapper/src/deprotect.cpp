@@ -98,12 +98,16 @@ std::unique_ptr<RWMol> deprotect_default(const RWMol &mol) {
       RDKit::Deprotect::deprotect(mol, RDKit::Deprotect::getDeprotections()));
 }
 
+// In place, the reactions remove atoms from the molecule (runReactant),
+// which trusts what check_removals checks, checked before the first edit.
 bool deprotect_in_place_with(RWMol &mol, const DeprotectList &list) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return RDKit::Deprotect::deprotectInPlace(mol, list.items);
 }
 
 bool deprotect_in_place_default(RWMol &mol) {
+  check_removals(mol);
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return RDKit::Deprotect::deprotectInPlace(
       mol, RDKit::Deprotect::getDeprotections());

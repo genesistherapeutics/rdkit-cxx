@@ -307,16 +307,15 @@ fn core_labels() {
 }
 
 // MCS alignment's bond comparison indexes a table by bond types, which a
-// pickle can set past BondType::Zero.
+// pickle could set past BondType::Zero; unpickling refuses such a type
+// (check_pickled_mol), so no such core reaches the decomposition.
 #[test]
 fn core_bond_types() {
     let mut pickle = mol_from_smiles("CC=O").unwrap().to_binary();
     assert_eq!((pickle[55], pickle[62]), (11, 2));
     pickle[62] = 30;
-    let odd = Mol::from_pkl_string(&pickle).unwrap();
-    let cores = [mol_from_smiles("CC=O").unwrap(), odd];
     assert!(matches!(
-        RGroupDecomposition::new(&cores),
+        Mol::from_pkl_string(&pickle),
         Err(Error::Value { .. })
     ));
 }
