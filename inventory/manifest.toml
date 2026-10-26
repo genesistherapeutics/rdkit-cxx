@@ -3913,7 +3913,7 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidatio
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.__init__"
 rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::FeaturesValidation::default"]
-overloads_note = "the keyword arguments are the struct's public fields; with none, Default"
+overloads_note = "the keyword arguments are the struct's public fields; with none, Default; Boost.Python spells the allow_dummies keyword allowDummmies"
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.FeaturesValidation.allowAromaticBondType"
@@ -8581,8 +8581,8 @@ rust = ["rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator::ge
 
 [[entry]]
 python = "rdkit.Chem.rdEnumerateStereoisomers.StereoisomerEnumerator.__init__"
-rust = ["rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator::new", "rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator::new_with_verbose", "rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator::new_with_params"]
-overloads_note = "(mol, verbose) is new and new_with_verbose (A2); (mol, options, verbose) is new_with_params, whose StereoEnumerationOptions carries verbose (A3)"
+rust = ["rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator::new", "rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator::new_with_params"]
+overloads_note = "StereoisomerEnumerator(mol, options, verbose) is new and new_with_params (A2), whose StereoEnumerationOptions carries verbose (A3)"
 
 [[entry]]
 python = "rdkit.Chem.rdEnumerateStereoisomers.StereoisomerEnumerator.next"
@@ -9716,6 +9716,7 @@ rust = ["rdkit_cxx::chem::rd_gaussian_shape::ShapeInput::shape_volume"]
 [[entry]]
 python = "rdkit.Chem.rdGaussianShape.ShapeInput.__init__"
 rust = ["rdkit_cxx::chem::rd_gaussian_shape::ShapeInput::new", "rdkit_cxx::chem::rd_gaussian_shape::ShapeInput::new_with_params"]
+overloads_note = "Boost.Python's binding requires all four arguments (and names the molecule self); new uses the C++ constructor's defaults for the last three"
 
 [[entry]]
 python = "rdkit.Chem.rdGaussianShape.ShapeInput.__setattr__"
@@ -9909,7 +9910,7 @@ rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::to_json"]
 
 [[entry]]
 python = "rdkit.Chem.rdGeneralizedSubstruct.ExtendedQueryMol.__init__"
-rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::new", "rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::new_with_is_json", "rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::from_data"]
+rust = ["rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::new", "rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol::new_with_is_json"]
 
 [[entry]]
 python = "rdkit.Chem.rdGeneralizedSubstruct.MolGetSubstructMatch"
@@ -10033,7 +10034,7 @@ rust = ["rdkit_cxx::chem::rd_mif::CoulombDielectric::call"]
 [[entry]]
 python = "rdkit.Chem.rdMIF.CoulombDielectric.__init__"
 rust = ["rdkit_cxx::chem::rd_mif::CoulombDielectric::new", "rdkit_cxx::chem::rd_mif::CoulombDielectric::new_with_params", "rdkit_cxx::chem::rd_mif::CoulombDielectric::from_charges", "rdkit_cxx::chem::rd_mif::CoulombDielectric::from_charges_with_params"]
-overloads_note = "the (mol, ...) overload is new, and the (charges, positions, ...) one from_charges (A5)"
+overloads_note = "the (mol, ...) overload is new, and the (charges, positions, ...) one from_charges (A5); the pickle overload, CoulombDielectric(pklString), is not bound"
 
 [[entry]]
 python = "rdkit.Chem.rdMIF.HBond"
@@ -12863,8 +12864,8 @@ reason = "Python's pickling protocol: to_binary and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdTautomerQuery.TautomerQuery.__init__"
-rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::default", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::from_pickle", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new_with_tautomer_transform_file"]
-rust_generics = ["", "", "", "<&str>"]
+rust = ["rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::from_pickle", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new", "rdkit_cxx::chem::rd_tautomer_query::TautomerQuery::new_with_tautomer_transform_file"]
+rust_generics = ["", "", "<&str>"]
 overloads_note = "the bytes and str pickle overloads share from_pickle; new is TautomerQuery(mol), with new_with_tautomer_transform_file for its optional file"
 
 [[entry]]
@@ -14260,6 +14261,7 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_name"]
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetNumAtoms"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_num_atoms", "rdkit_cxx::chem::rdchem::Mol::get_num_atoms_with_only_explicit"]
+overloads_note = "onlyHeavy, which RDKit deprecates, is not taken; get_num_heavy_atoms counts heavy atoms"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetNumBonds"
@@ -15581,6 +15583,7 @@ rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog"]
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.AddEntry"
 rust = ["rdkit_cxx::chem::rdfiltercatalog::FilterCatalog::add_entry"]
+overloads_note = "Boost.Python's binding names its parameters entry and updateFPLength, one place off: the function takes the catalog and the entry"
 
 [[entry]]
 python = "rdkit.Chem.rdfiltercatalog.FilterCatalog.GetEntry"
@@ -16206,7 +16209,7 @@ reason = "Python's pickling protocol: serialize and from_pickle cover it"
 
 [[entry]]
 python = "rdkit.Chem.rdfragcatalog.FragCatalog.__init__"
-rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::default", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::new", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::from_pickle"]
+rust = ["rdkit_cxx::chem::rdfragcatalog::FragCatalog::new", "rdkit_cxx::chem::rdfragcatalog::FragCatalog::from_pickle"]
 overloads_note = "the bytes and str pickle overloads share from_pickle"
 
 [[entry]]
@@ -19487,7 +19490,7 @@ reason = "Python's operator protocol: `a += &b` (AddAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.DiscreteValueVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::default", "rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::new", "rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::new", "rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -19612,7 +19615,7 @@ reason = "Python's operator protocol: `a += &b` (AddAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ExplicitBitVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::default", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::new", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::from_pkl", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::new_with_bits_set"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::new", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::from_pkl", "rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect::new_with_bits_set"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -19781,7 +19784,7 @@ reason = "Python's operator protocol: `a *= n` (MulAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.IntSparseIntVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -19887,7 +19890,7 @@ reason = "Python's operator protocol: `a *= n` (MulAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.LongSparseIntVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -20036,7 +20039,7 @@ reason = "Python's operator protocol: `a += &b` (AddAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.RealValueVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::default", "rdkit_cxx::data_structs::c_data_structs::RealValueVect::new", "rdkit_cxx::data_structs::c_data_structs::RealValueVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::RealValueVect::new", "rdkit_cxx::data_structs::c_data_structs::RealValueVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -20192,7 +20195,7 @@ reason = "Python's pickling protocol: to_binary and from_pkl cover it"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.SparseBitVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::default", "rdkit_cxx::data_structs::c_data_structs::SparseBitVect::new", "rdkit_cxx::data_structs::c_data_structs::SparseBitVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::SparseBitVect::new", "rdkit_cxx::data_structs::c_data_structs::SparseBitVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -20312,7 +20315,7 @@ reason = "Python's operator protocol: `a *= n` (MulAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.UIntSparseIntVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]
@@ -20405,7 +20408,7 @@ reason = "Python's operator protocol: `a *= n` (MulAssign)"
 
 [[entry]]
 python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__init__"
-rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::default", "rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::from_pkl"]
+rust = ["rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::new", "rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect::from_pkl"]
 overloads_note = "the str pickle overload is from_pkl too, since a pickle is bytes"
 
 [[entry]]

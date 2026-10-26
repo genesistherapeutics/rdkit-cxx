@@ -19,7 +19,6 @@ pub(crate) mod ffi {
             crate::ffi::substruct::ffi::SubstructMatchParametersData;
         type TautomerQuery;
 
-        fn tautomer_query_new_empty() -> Result<UniquePtr<TautomerQuery>>;
         fn tautomer_query_clone(query: &TautomerQuery) -> Result<UniquePtr<TautomerQuery>>;
         fn tautomer_query_from_mol(
             mol: &RWMol,

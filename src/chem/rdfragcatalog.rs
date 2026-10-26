@@ -262,8 +262,8 @@ impl FragCatalog {
     }
 }
 
-/// A catalog without parameters, to which no fragments can be added.
-/// Mirrors `FragCatalog()`.
+/// A catalog without parameters, to which no fragments can be added; a
+/// Rust addition (Python's constructors take parameters or a pickle).
 impl Default for FragCatalog {
     fn default() -> FragCatalog {
         FragCatalog {

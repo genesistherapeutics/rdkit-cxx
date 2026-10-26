@@ -44,7 +44,7 @@ fn default_options() {
             unique: true,
             max_isomers: 0,
             random_seed: -1,
-            verbose: false,
+            verbose: true,
         }
     );
 }
@@ -140,12 +140,8 @@ fn try_embedding() {
         .unwrap()
         .unwrap();
     assert_eq!(plain.get_num_conformers(), 0);
-    assert_eq!(
-        StereoisomerEnumerator::new_with_verbose(&mol, true)
-            .unwrap()
-            .count(),
-        8
-    );
+    // verbose defaults to true, as in Python.
+    assert_eq!(StereoisomerEnumerator::new(&mol).unwrap().count(), 8);
 }
 
 // With its hydrogens the chain has more atoms than RDKit's minimizer can

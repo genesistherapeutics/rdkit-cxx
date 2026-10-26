@@ -15,11 +15,11 @@
 //! unchecked, where RDKit's reads past their end.
 
 use std::fmt;
-use std::io::{Read, Write};
 use std::path::Path;
 
 use cxx::UniquePtr;
 
+use crate::Result;
 use crate::chem::Mol;
 use crate::chem::rdchem::SubstructMatchParameters;
 use crate::chem::rdmolops::mol_list_into_vec;
@@ -28,7 +28,6 @@ use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::tautomer_query::ffi;
 use crate::util::path_bytes;
-use crate::{Error, Result};
 
 const DEFAULT_FINGERPRINT_SIZE: u32 = 2048;
 
@@ -237,45 +236,6 @@ impl TautomerQuery {
     /// (`tautomer_query_can_serialize`). Mirrors `TautomerQuery.ToBinary`.
     pub fn to_binary(&self) -> Result<Vec<u8>> {
         Ok(ffi::tautomer_query_to_binary(self.as_ffi())?)
-    }
-
-    /// Writes the pickle (`to_binary`) to `fileobj`, a Python file object's
-    /// counterpart; `Error::Os` if writing fails. Mirrors
-    /// `TautomerQuery.ToStream`.
-    pub fn to_stream<W: Write + ?Sized>(&self, fileobj: &mut W) -> Result<()> {
-        fileobj.write_all(&self.to_binary()?).map_err(os_error)
-    }
-
-    /// Replaces the query with one read from the rest of `fileobj`, a pickle
-    /// as `from_pickle` reads. Python's reads only the pickle from a stream;
-    /// this one reads to the end. On an error the query is unchanged.
-    /// Mirrors `TautomerQuery.InitFromStream`.
-    ///
-    /// # Safety
-    ///
-    /// The rest of `fileobj` must be a pickle as `from_pickle` requires.
-    pub unsafe fn init_from_stream<R: Read + ?Sized>(&mut self, fileobj: &mut R) -> Result<()> {
-        let mut pickle = Vec::new();
-        fileobj.read_to_end(&mut pickle).map_err(os_error)?;
-        // SAFETY: the caller's contract is `from_pickle`'s.
-        *self = unsafe { TautomerQuery::from_pickle(&pickle) }?;
-        Ok(())
-    }
-}
-
-fn os_error(err: std::io::Error) -> Error {
-    Error::Os {
-        message: err.to_string(),
-    }
-}
-
-/// An empty query: its template has no atoms, so it matches nothing.
-/// Python's leaves the template null, which every method then dereferences;
-/// it exists to be filled by `InitFromStream` or unpickling. Mirrors
-/// `TautomerQuery()`.
-impl Default for TautomerQuery {
-    fn default() -> TautomerQuery {
-        TautomerQuery::from_ffi(expect_ok(ffi::tautomer_query_new_empty()))
     }
 }
 

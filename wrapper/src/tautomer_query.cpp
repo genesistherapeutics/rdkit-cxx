@@ -301,14 +301,6 @@ void check_fingerprint_size(std::uint32_t fingerprint_size) {
   }
 }
 
-// RDKit's default constructor leaves the template null, which every method
-// dereferences; this query's template is an empty molecule.
-std::unique_ptr<TautomerQuery> tautomer_query_new_empty() {
-  return std::make_unique<TautomerQuery>(
-      std::vector<RDKit::ROMOL_SPTR>(), new RDKit::ROMol(),
-      std::vector<size_t>(), std::vector<size_t>());
-}
-
 std::unique_ptr<TautomerQuery> tautomer_query_clone(
     const TautomerQuery &query) {
   return std::make_unique<TautomerQuery>(query);

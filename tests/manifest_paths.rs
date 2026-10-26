@@ -2228,7 +2228,6 @@ fn manifest_paths_exist() {
     let _: Option<rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator> = None;
     let _ = <rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator>::get_stereoisomer_count;
     let _ = <rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator>::new;
-    let _ = <rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator>::new_with_verbose;
     let _ = <rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator>::new_with_params;
     let _ = <rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator>::next;
     let _: Option<rdkit_cxx::chem::rd_fmcs::AtomCompare> = None;
@@ -2562,7 +2561,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol>::to_json;
     let _ = <rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol>::new;
     let _ = <rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol>::new_with_is_json;
-    let _ = <rdkit_cxx::chem::rd_generalized_substruct::ExtendedQueryMol>::from_data;
     use rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_match as _;
     use rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_match_with_params as _;
     use rdkit_cxx::chem::rd_generalized_substruct::mol_get_substruct_matches as _;
@@ -3420,7 +3418,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::pattern_fingerprint_template;
     let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::pattern_fingerprint_template_with_fingerprint_size;
     let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::to_binary;
-    let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::default;
     let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::from_pickle;
     let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::new;
     let _ = <rdkit_cxx::chem::rd_tautomer_query::TautomerQuery>::new_with_tautomer_transform_file::<&str>;
@@ -4557,7 +4554,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rdfragcatalog::FragCatalog>::get_fp_length;
     let _ = <rdkit_cxx::chem::rdfragcatalog::FragCatalog>::get_num_entries;
     let _ = <rdkit_cxx::chem::rdfragcatalog::FragCatalog>::serialize;
-    let _ = <rdkit_cxx::chem::rdfragcatalog::FragCatalog>::default;
     let _ = <rdkit_cxx::chem::rdfragcatalog::FragCatalog>::new;
     let _ = <rdkit_cxx::chem::rdfragcatalog::FragCatalog>::from_pickle;
     let _: Option<rdkit_cxx::chem::rdfragcatalog::FragFPGenerator> = None;
@@ -5543,7 +5539,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::get_total_val;
     let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::get_value_type;
     let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::get_val;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::DiscreteValueVect>::len;
@@ -5565,7 +5560,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::un_set_bit;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::un_set_bits_from_list;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::get_bit;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ExplicitBitVect>::new_with_bits_set;
@@ -5602,7 +5596,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::to_list;
     let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::update_from_sequence;
     let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::get_val;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::IntSparseIntVect>::set_val;
@@ -5621,7 +5614,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::to_list;
     let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::update_from_sequence;
     let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::get_val;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::LongSparseIntVect>::set_val;
@@ -5655,7 +5647,6 @@ fn manifest_paths_exist() {
     let _: Option<rdkit_cxx::data_structs::c_data_structs::RealValueVect> = None;
     let _ = <rdkit_cxx::data_structs::c_data_structs::RealValueVect>::get_total_val;
     let _ = <rdkit_cxx::data_structs::c_data_structs::RealValueVect>::get_val;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::RealValueVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::RealValueVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::RealValueVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::RealValueVect>::len;
@@ -5695,7 +5686,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::un_set_bit;
     let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::un_set_bits_from_list;
     let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::get_bit;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::SparseBitVect>::get_num_bits;
@@ -5725,7 +5715,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::to_list;
     let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::update_from_sequence;
     let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::get_val;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::UIntSparseIntVect>::set_val;
@@ -5738,7 +5727,6 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::to_list;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::update_from_sequence;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::get_val;
-    let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::default;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::new;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::from_pkl;
     let _ = <rdkit_cxx::data_structs::c_data_structs::ULongSparseIntVect>::set_val;

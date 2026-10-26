@@ -471,16 +471,17 @@ its Boost.Python modules and its `.py` modules.
   arguments (lists the call fills in) are not bound as arguments; the return
   value carries that information, from the function itself or, when that
   would change its return type, from a `_with_outputs` form (A9).
-- **A5.** Overloads that differ by an argument's type: the first that
-  Python's docstring lists keeps the name, and the others append `_<type>` in
-  snake_case. Constructors: a zero-argument `__init__` is `Default`; a copy
-  `__init__` is `Clone`; the first other `__init__` is `new` (with
-  `new_with_params` for its optional parameters, per A2); the rest are
-  `from_<first parameter>`, or a `From` impl when the parameter is another
-  bound class (`RWMol(mol)` → `From<Mol>`), which the manifest records in
-  `overloads_note`. Overloads that differ in which parameters they take, not
-  only in a type, get a suffix naming what sets them apart, recorded in the
-  manifest's `overloads_note`:
+- **A5.** Overloads that differ by an argument's type: the first that Python
+  tries keeps the name, and the others append `_<type>` in snake_case
+  (Boost.Python tries overloads last registered first, the reverse of the
+  order its docstrings and the inventory list them). Constructors: a
+  zero-argument `__init__` is `Default`; a copy `__init__` is `Clone`; the
+  first other `__init__` is `new` (with `new_with_params` for its optional
+  parameters, per A2); the rest are `from_<first parameter>`, or a `From` impl
+  when the parameter is another bound class (`RWMol(mol)` → `From<Mol>`),
+  which the manifest records in `overloads_note`. Overloads that differ in
+  which parameters they take, not only in a type, get a suffix naming what
+  sets them apart, recorded in the manifest's `overloads_note`:
   `ReplaceCore(mol, coreQuery)`, which matches the core itself, is
   `replace_core_query`; `CopyMolSubset(mol, atomIndices, bondIndices)` is
   `copy_mol_subset_atoms_bonds`; `molzip(a)` is `molzip_single`, and
