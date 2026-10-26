@@ -286,12 +286,12 @@ rust::Vec<AbbreviationDefinitionData> parse_abbreviations(
 // As condenseMolAbbreviations, which finds the matches and applies them, with
 // the matches checked in between. Finding them matches substructures, and
 // every match constructs a ControlCHandler (control_c_lock.h); applying them
-// removes atoms, which rewrites the bonds' _MolFileBondEndPts.
+// removes atoms (check_removals).
 std::unique_ptr<RWMol> condense_mol_abbreviations(
     const RWMol &mol, const AbbreviationList &abbrevs, double max_coverage,
     bool sanitize) {
   auto res = std::make_unique<RWMol>(mol);
-  check_bond_end_points(*res);
+  check_removals(*res);
   std::vector<A::AbbreviationMatch> matches;
   {
     std::lock_guard<std::mutex> control_c(control_c_mutex());
@@ -320,7 +320,7 @@ std::unique_ptr<RWMol> label_mol_abbreviations(const RWMol &mol,
 std::unique_ptr<RWMol> condense_abbreviation_substance_groups(
     const RWMol &mol) {
   auto res = std::make_unique<RWMol>(mol);
-  check_bond_end_points(*res);
+  check_removals(*res);
   check_apply_matches(*res, sup_matches(*res));
   A::condenseAbbreviationSubstanceGroups(*res);
   return res;

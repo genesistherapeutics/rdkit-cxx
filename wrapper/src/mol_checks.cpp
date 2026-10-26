@@ -9,12 +9,14 @@
 #include <cmath>
 #include <cstdlib>
 #include <limits>
+#include <map>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 #include <GraphMol/MonomerInfo.h>
 #include <GraphMol/QueryOps.h>
+#include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDValue.h>
 #include <boost/shared_array.hpp>
@@ -213,6 +215,56 @@ void check_bond_end_points(const RDKit::ROMol &mol) {
       }
     }
   }
+}
+
+// Follows the chains as removeSubstanceGroupsReferencing (SubstanceGroup.cpp)
+// does: a later group with the same index replaces an earlier one.
+void check_substance_group_parents(const RDKit::ROMol &mol) {
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  std::map<unsigned, std::size_t> by_index;
+  bool parents = false;
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    unsigned index;
+    if (sgroups[i].getPropIfPresent("index", index)) {
+      by_index[index] = i;
+    }
+    unsigned parent;
+    parents = sgroups[i].getPropIfPresent("PARENT", parent) || parents;
+  }
+  if (!parents) {
+    return;
+  }
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    std::vector<char> seen(sgroups.size(), 0);
+    std::size_t at = i;
+    unsigned length = 0;
+    unsigned parent;
+    while (sgroups[at].getPropIfPresent("PARENT", parent)) {
+      auto next = by_index.find(parent);
+      if (next == by_index.end()) {
+        break;
+      }
+      seen[at] = 1;
+      at = next->second;
+      if (seen[at]) {
+        throw ValueErrorException(
+            "substance group " + std::to_string(i) +
+            "'s PARENT chain is a cycle, which RDKit follows forever when it "
+            "removes an atom or bond");
+      }
+      if (++length > MAX_PARENT_CHAIN) {
+        throw ValueErrorException("substance group " + std::to_string(i) +
+                                  "'s PARENT chain is longer than " +
+                                  std::to_string(MAX_PARENT_CHAIN) +
+                                  ", which RDKit follows recursively");
+      }
+    }
+  }
+}
+
+void check_removals(const RDKit::ROMol &mol) {
+  check_bond_end_points(mol);
+  check_substance_group_parents(mol);
 }
 
 }  // namespace rdkit_cxx

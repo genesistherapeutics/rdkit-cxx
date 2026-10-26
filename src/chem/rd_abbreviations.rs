@@ -201,8 +201,8 @@ impl Default for CondenseMolAbbreviationsParams {
 /// RDKit marks the atoms and bonds it removes in sets sized for the
 /// molecule as it was, but adds bonds as it goes, so abbreviations whose
 /// matches it would bond into each other are refused with `Error::Value`, as
-/// is a bond whose `_MolFileBondEndPts` RDKit would misread when it removes
-/// the atoms.
+/// is what RDKit would misread when it removes the atoms: a bond's
+/// `_MolFileBondEndPts`, or substance groups whose `PARENT`s form a cycle.
 pub fn condense_mol_abbreviations(mol: &Mol, abbrevs: &[AbbreviationDefinition]) -> Result<Mol> {
     condense_mol_abbreviations_with_params(mol, abbrevs, &CondenseMolAbbreviationsParams::default())
 }
@@ -248,9 +248,8 @@ pub fn label_mol_abbreviations_with_max_coverage(
 /// `rdAbbreviations.CondenseAbbreviationSubstanceGroups`.
 ///
 /// As for `condense_mol_abbreviations`, groups RDKit would bond into each
-/// other as it condenses them, groups with atoms out of range, and bonds
-/// whose `_MolFileBondEndPts` RDKit would misread are refused with
-/// `Error::Value`.
+/// other as it condenses them, groups with atoms out of range, and what RDKit
+/// would misread when it removes the atoms are refused with `Error::Value`.
 pub fn condense_abbreviation_substance_groups(mol: &Mol) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::condense_abbreviation_substance_groups(
         mol.as_ffi(),

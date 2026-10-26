@@ -331,3 +331,30 @@ fn threads() {
         }
     });
 }
+
+// Removing atom 0 drops the group that holds it, and RDKit then follows the
+// other groups' PARENT chains, which here form a cycle it would follow
+// forever.
+#[test]
+fn refuses_parent_cycles() {
+    let abbrevs = get_default_abbreviations();
+    for (parents, ok) in [([2, 1], false), ([1, 1], false), ([3, 3], true)] {
+        let mut mol = smiles(BENZOATE);
+        for (i, (atom, parent)) in [(8, Some(parents[0])), (9, Some(parents[1])), (0, None)]
+            .into_iter()
+            .enumerate()
+        {
+            let mut group = create_mol_substance_group(&mut mol, "DAT");
+            group.add_atom_with_idx(atom).unwrap();
+            group.set_unsigned_prop("index", i as u32 + 1);
+            if let Some(parent) = parent {
+                group.set_unsigned_prop("PARENT", parent);
+            }
+        }
+        let res = condense_mol_abbreviations_with_params(&mol, &abbrevs, &ALL);
+        assert_eq!(res.is_ok(), ok, "{parents:?}: {res:?}");
+        if let Err(err) = res {
+            assert!(matches!(err, Error::Value { .. }), "{err:?}");
+        }
+    }
+}

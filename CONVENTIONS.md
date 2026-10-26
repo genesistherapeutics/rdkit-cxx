@@ -324,6 +324,13 @@ rule changes the rule first.
   getters are not bound: `has_prop` covers them. A class whose Python
   `GetPropsAsDict` has other defaults (`SubstanceGroup`) passes them to
   `prop_getters!`; `GetPropsAsDictParams::default()` stays `Mol`'s.
+- **P2.** Properties RDKit reads back as data, which any caller can set,
+  are input under U1. When RDKit removes atoms or bonds (`RWMol`'s removals
+  and batch edits, and the RDKit calls built on them) it parses every
+  bond's `_MolFileBondEndPts` without checks and follows the substance
+  groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
+  wrapper whose RDKit call removes atoms or bonds from a molecule, or from
+  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first.
 
 ## Documentation
 

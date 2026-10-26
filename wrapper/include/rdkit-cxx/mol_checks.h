@@ -94,4 +94,19 @@ void check_monomer_types(const RDKit::ROMol &mol);
 // std::stod rejects, which they would throw for halfway through the edit.
 void check_bond_end_points(const RDKit::ROMol &mol);
 
+// When RWMol removes an atom or bond it drops the substance groups that hold
+// it, and those whose PARENT chain leads to a dropped one: it follows each
+// group's PARENT to the group with that "index", both properties any caller
+// can set, recursively and without noting where it has been, so a cycle never
+// ends. Throws ValueErrorException for a cycle, or a chain longer than
+// MAX_PARENT_CHAIN, and for a PARENT or index that is not an unsigned int as
+// RDKit throws midway through the edit.
+constexpr unsigned MAX_PARENT_CHAIN = 4000;
+void check_substance_group_parents(const RDKit::ROMol &mol);
+
+// What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
+// bonds from it (or a copy): check_bond_end_points and
+// check_substance_group_parents.
+void check_removals(const RDKit::ROMol &mol);
+
 }  // namespace rdkit_cxx
