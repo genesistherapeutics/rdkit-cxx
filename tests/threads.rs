@@ -98,9 +98,11 @@ use rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecomposition;
 use rdkit_cxx::chem::rd_rascal_mces::{find_mces, rascal_cluster};
 use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
 use rdkit_cxx::chem::rd_substruct_library::{MolHolder, SubstructLibrary};
+use rdkit_cxx::chem::rd_synthon_space_search::{ShapeBuildParams, SynthonSpace};
 use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
 use rdkit_cxx::chem::rdfiltercatalog::{FilterCatalog, FilterCatalogEntry, SmartsMatcher};
 use rdkit_cxx::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog};
+use rdkit_cxx::chem::rdinchi::{inchi_to_mol, mol_to_inchi};
 use rdkit_cxx::chem::scaffolds::rd_scaffold_network::{
     ScaffoldNetworkParams, create_scaffold_network,
 };
@@ -111,8 +113,9 @@ use rdkit_cxx::chem::{
     fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
     mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
-    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
+    mol_to_cdxml_block, mol_to_cx_smiles_with_params, mol_to_mol_block,
+    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
+    molzip_fragments_with_params, pattern_fingerprint,
 };
 use rdkit_cxx::chem::{rd_gaussian_shape, rd_shape_align};
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
@@ -175,6 +178,7 @@ fn main() {
         "-C(=O)O\t*-C(=O)[O;H1,-]\tcarboxylic acids\n-O\t*-[O;H1,-]\talcohols\n\n=O\t*=O\taldehydes\n",
     )
     .unwrap();
+    std::fs::write(synthons(), SYNTHONS).unwrap();
 
     // RDKit's random number generator: each module's writers against the
     // SMILES writer.
@@ -192,6 +196,7 @@ fn main() {
     phase(bounds_matrix_embedding(), random_smiles());
     phase(random_transforms(), random_smiles());
     phase(embedded_stereoisomers(), random_smiles());
+    phase(synthon_shapes(), random_smiles());
     // Comic-mode drawing draws its lines with std::rand, under the same
     // lock.
     phase(comic_drawing(), comic_drawing());
@@ -264,6 +269,11 @@ fn main() {
     phase(condensed_abbreviations(), substruct_matches());
     phase(enumerated_link_nodes(), substruct_matches());
     phase(embedded_stereoisomers(), substruct_matches());
+    phase(synthon_substructure_search(), substruct_matches());
+    phase(synthon_rascal_search(), substruct_matches());
+    phase(synthon_shapes(), substruct_matches());
+    phase(inchi_written(), substruct_matches());
+    phase(inchi_read(), substruct_matches());
 
     // The rest: the grid centroids' cache, the property registry, DCLV's
     // surface cache, the shape modules' globals, and Murtagh's statics.
@@ -272,10 +282,13 @@ fn main() {
     phase(dclv_surfaces(), dclv_surfaces());
     phase(pubchem_shape_alignment(), pubchem_shape_scores());
     phase(gaussian_shapes(), gaussian_shapes());
+    phase(synthon_shapes(), gaussian_shapes());
     phase(murtagh_clusters(), hierarchical_picks());
+    phase(cdxml_blocks(), cdxml_blocks());
 
     std::fs::remove_file(templates()).unwrap();
     std::fs::remove_file(groups()).unwrap();
+    std::fs::remove_file(synthons()).unwrap();
 }
 
 /// One thread's call in a phase: `run` on the input `make` builds, on the
@@ -1358,6 +1371,110 @@ fn embedded_stereoisomers() -> Call<Mol> {
             };
             let isomers = StereoisomerEnumerator::new_with_params(&mol, &options).unwrap();
             assert_eq!(isomers.count(), 4);
+        },
+    }
+}
+
+// MolToInchi's reverse cleanup matches a pattern on every call.
+fn inchi_written() -> Call<Mol> {
+    Call {
+        make: |_| mol(ASPIRIN),
+        run: |mol| assert!(mol_to_inchi(&mol).unwrap().inchi.starts_with("InChI=1S/")),
+    }
+}
+
+// InchiToMol's cleanup matches patterns around neutral five-valent
+// nitrogens, which InChI gives for nitro groups.
+fn inchi_read() -> Call<String> {
+    Call {
+        make: |_| "InChI=1S/CH3NO2/c1-2(3)4/h1H3".to_string(),
+        run: |inchi| assert!(inchi_to_mol(&inchi).unwrap().mol.is_some()),
+    }
+}
+
+// The ChemDraw library fills its attribute-name maps on the first CDXML
+// write (chemdraw_mutex), which this phase must make.
+fn cdxml_blocks() -> Call<Mol> {
+    Call {
+        make: |_| depicted("CCO"),
+        run: |mol| assert!(mol_to_cdxml_block(&mol).unwrap().contains("BondLength")),
+    }
+}
+
+/// A synthon space of benzamides, written by `main`. The second amine's
+/// unassigned stereocenter makes shape building enumerate its isomers.
+const SYNTHONS: &str = "SMILES\tsynton_id\tsynton#\treaction_id
+c1ccccc1C(=O)[1*]\t1-1\t1\tamide
+[1*]N1CCCC1\t2-1\t2\tamide
+[1*]NC(C)CC\t2-2\t2\tamide
+";
+
+fn synthons() -> PathBuf {
+    std::env::temp_dir().join(format!(
+        "rdkit-cxx-threads-{}-synthons.txt",
+        std::process::id()
+    ))
+}
+
+// Reading the space and searching it construct ControlCHandlers.
+fn synthon_substructure_search() -> Call<Mol> {
+    Call {
+        make: |_| mol_from_smarts("c1ccccc1C(=O)N").unwrap(),
+        run: |query| {
+            let mut space = SynthonSpace::default();
+            space.read_text_file(synthons()).unwrap();
+            let hits = space.substructure_search(&query).unwrap();
+            assert_eq!(hits.get_hit_molecules().len(), 2);
+        },
+    }
+}
+
+// RASCAL matches substructures, and its incremental search releases the
+// Ctrl-C lock for the closure, which matches too.
+fn synthon_rascal_search() -> Call<(SynthonSpace, Mol, Mol)> {
+    Call {
+        make: |_| {
+            let mut space = SynthonSpace::default();
+            space.read_text_file(synthons()).unwrap();
+            (
+                space,
+                mol("c1ccccc1C(=O)NC(C)CC"),
+                mol_from_smarts("C(=O)N").unwrap(),
+            )
+        },
+        run: |(mut space, query, pattern)| {
+            let mut hits = 0;
+            space
+                .rascal_search_incremental(&query, None, |batch| {
+                    for hit in &batch {
+                        assert!(hit.has_substruct_match(&pattern)?);
+                    }
+                    hits += batch.len();
+                    Ok(false)
+                })
+                .unwrap();
+            assert!(hits > 0);
+        },
+    }
+}
+
+// Shape building embeds each sample product's stereoisomers without a seed
+// (from RDKit's generator) and its conformers, and fills and matches the
+// shapes' feature patterns (gaussian_shape_mutex).
+fn synthon_shapes() -> Call<SynthonSpace> {
+    Call {
+        make: |_| {
+            let mut space = SynthonSpace::default();
+            space.read_text_file(synthons()).unwrap();
+            space
+        },
+        run: |mut space| {
+            let params = ShapeBuildParams {
+                num_confs: 2,
+                ..Default::default()
+            };
+            space.build_synthon_shapes_with_py_params(&params).unwrap();
+            assert_eq!(space.get_num_synthons_with_shapes(), 3);
         },
     }
 }

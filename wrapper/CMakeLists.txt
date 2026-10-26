@@ -131,6 +131,8 @@ set(RDKIT_CXX_SOURCES
   src/draw.cpp
   src/draw_checks.cpp
   src/draw_drawer.cpp
+  src/synthon_space_search.cpp
+  src/inchi.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -194,6 +196,8 @@ set(RDKIT_CXX_RDKIT_TARGETS
   EnumerateStereoisomers
   MolEnumerator
   MolInterchange
+  SynthonSpaceSearch
+  RDInchiLib
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which
@@ -220,7 +224,10 @@ target_include_directories(rdkitcxx PRIVATE
   # install that has it finds its own first, next to the including header.
   # It installs none of ML/InfoTheory's headers (RDKit::InfoTheory's), so
   # vendor/ML/InfoTheory holds them, from the same release; an install
-  # that has them finds its own first, earlier on the path.
+  # that has them finds its own first, earlier on the path. Nor does it
+  # install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
+  # SynthonSpace.h and Synthon.h include; vendor/GraphMol holds it, from the
+  # same release.
   # vendor/GraphMol/MolDraw2D holds the drawing code's internal headers
   # (DrawText.h, DrawMol.h, and those they include, and MolDraw2DDetails.h),
   # from the same release, which no package installs (draw_drawer.cpp).
