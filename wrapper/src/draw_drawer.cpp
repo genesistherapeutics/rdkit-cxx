@@ -208,24 +208,53 @@ std::vector<int> to_ints(const rust::Vec<std::uint32_t> &v) {
   return std::vector<int>(v.begin(), v.end());
 }
 
-// A molecule as DrawMol will draw it, and the locks drawing it needs.
-// DrawMol gives a molecule without conformers 2D coordinates
-// (initDrawMolecule), after MolDraw2D::drawMolecule has symmetrized its
-// rings (drawMoleculeWithHighlights does not: symmetrize); this does the
-// same on a copy, under the depiction lock, so the
-// coordinates can be checked before RDKit draws, and DrawMol depicts no
-// more. Depiction matches ring templates to the molecule (control_c_lock.h).
-// Comic mode draws its lines with std::rand (handdrawnLine in
-// MolDraw2DDetails.cpp), a global with no lock on some platforms, so the
-// drawing holds random_mutex() too.
+// The locks a drawing call holds for the whole call (CONVENTIONS.md U4),
+// in U4's order:
+// - lock_depiction(), when it depicts a molecule without conformers
+//   (DrawnMol) or a reaction template without one;
+// - control_c_mutex(): depiction matches ring templates to the molecule
+//   (control_c_lock.h); and every DrawMol (a molecule's layout, the
+//   wrappers' and RDKit's) runs prepareMolForDrawing, which, as RDKit's
+//   reaction components do (makeReactionDrawMol), blocks the logs with
+//   RDLog::LogStateSetter, writing every logger's enabled flag without a
+//   lock. RDKit's other LogStateSetter users the wrappers reach
+//   (deprotection, R-group decomposition, link nodes, the embedder's
+//   torsion preferences) match substructures, so they hold this lock too,
+//   and it orders them all.
+// - random_mutex(), for a drawing in comic mode, which draws its lines with
+//   std::rand (handdrawnLine in MolDraw2DDetails.cpp), a global with no
+//   lock on some platforms.
+class DrawingLocks {
+ public:
+  DrawingLocks(bool depicts, bool comic) {
+    if (depicts) {
+      d_depict = lock_depiction();
+    }
+    d_control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    if (comic) {
+      d_random = std::unique_lock<std::mutex>(random_mutex());
+    }
+  }
+
+ private:
+  std::unique_lock<std::mutex> d_depict;
+  std::unique_lock<std::mutex> d_control_c;
+  std::unique_lock<std::mutex> d_random;
+};
+
+bool lacks_conformers(const RWMol &mol) { return !mol.getNumConformers(); }
+
+// A molecule as DrawMol will draw it. DrawMol gives a molecule without
+// conformers 2D coordinates (initDrawMolecule), after
+// MolDraw2D::drawMolecule has symmetrized its rings (drawMoleculeWithHighlights
+// does not: symmetrize); this does the same on a copy, so the coordinates
+// can be checked before RDKit draws, and DrawMol depicts no more. The
+// caller holds DrawingLocks, with the depiction lock for a molecule without
+// conformers.
 class DrawnMol {
  public:
-  DrawnMol(const RWMol &mol, const RDKit::MolDrawOptions &opts,
-           bool symmetrize = true, bool lock_random = true)
-      : d_mol(&mol) {
-    if (!mol.getNumConformers()) {
-      auto depict = lock_depiction();
-      std::lock_guard<std::mutex> control_c(control_c_mutex());
+  DrawnMol(const RWMol &mol, bool symmetrize = true) : d_mol(&mol) {
+    if (lacks_conformers(mol)) {
       d_copy = std::make_unique<RWMol>(mol);
       MatrixCacheGuard guard(*d_copy);
       if (symmetrize && !d_copy->getRingInfo()->isSymmSssr()) {
@@ -236,16 +265,12 @@ class DrawnMol {
       RDDepict::compute2DCoords(*d_copy, nullptr, canon_orient);
       d_mol = d_copy.get();
     }
-    if (opts.comicMode && lock_random) {
-      d_random = std::unique_lock<std::mutex>(random_mutex());
-    }
   }
   const RWMol &mol() const { return *d_mol; }
 
  private:
   const RWMol *d_mol;
   std::unique_ptr<RWMol> d_copy;
-  std::unique_lock<std::mutex> d_random;
 };
 
 // DrawMoleculeData as RDKit takes it.
@@ -848,15 +873,17 @@ void check_drawing(Drawer &d, const RWMol &mol, int conf_id,
   check_drawn_mol(mol, conf_id, opts, d.freetype, annotations, symmetrized);
 }
 
+bool comic(const Drawer &d) { return d.drawer->drawOptions().comicMode; }
+
 // Without highlight bonds, Python's first DrawMolecule overload highlights
 // the bonds between highlighted atoms (bonds_from_atoms); its other drawing
-// functions highlight none.
+// functions highlight none. The caller holds DrawingLocks.
 void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
                    bool bonds_from_atoms) {
   check_usable(d);
   const auto h = read_highlights(mol, data);
   const std::string legend(data.legend);
-  DrawnMol drawn(mol, d.drawer->drawOptions());
+  DrawnMol drawn(mol);
   check_drawing(d, drawn.mol(), data.conf_id, legend,
                 d.drawer->supportsAnnotations(), true);
   // The bonds RDKit highlights: as given, or, for Python's first overload,
@@ -1083,6 +1110,7 @@ void drawer_set_monochrome_mode(Drawer &d, const DrawColour &fg_colour,
 
 void drawer_draw_molecule(Drawer &d, const RWMol &mol,
                           const DrawMoleculeData &data) {
+  const DrawingLocks locks(lacks_conformers(mol), comic(d));
   draw_molecule(d, mol, data, true);
 }
 
@@ -1091,7 +1119,9 @@ DrawSize drawer_get_mol_size(Drawer &d, const RWMol &mol,
   check_usable(d);
   const auto h = read_highlights(mol, data);
   const std::string legend(data.legend);
-  DrawnMol drawn(mol, d.drawer->drawOptions());
+  // It draws nothing, so no std::rand.
+  const DrawingLocks locks(lacks_conformers(mol), false);
+  DrawnMol drawn(mol);
   check_drawing(d, drawn.mol(), data.conf_id, legend,
                 d.drawer->supportsAnnotations(), true);
   const bool drawing = false;
@@ -1114,7 +1144,8 @@ void drawer_draw_molecule_with_highlights(
   auto h = read_multi_highlights(mol, data, opts);
   const std::string legend(data.legend);
   const bool symmetrize = false;
-  DrawnMol drawn(mol, opts, symmetrize);
+  const DrawingLocks locks(lacks_conformers(mol), comic(d));
+  DrawnMol drawn(mol, symmetrize);
   check_mch_bonds(drawn.mol(), h, opts);
   // DrawMolMCH passes confId where DrawMol takes includeAnnotations, so
   // RDKit draws the first conformer, with annotations unless confId is 0.
@@ -1183,6 +1214,11 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
   const int n_rows = draw.height() / ph;
   check_pixels(double(n_rows > 1 ? (n - 1) / n_cols : 0) * ph);
   const auto &opts = draw.drawOptions();
+  bool depicts = false;
+  for (const auto &m : list) {
+    depicts = depicts || !m->getNumConformers();
+  }
+  const DrawingLocks locks(depicts, comic(d));
 
   struct Entry {
     std::unique_ptr<DrawnMol> drawn;
@@ -1229,11 +1265,9 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
     }
     e.conf_id = data.has_conf_ids ? data.conf_ids[i] : -1;
     e.legend = data.has_legends ? std::string(data.legends[i]) : "";
-    // RDKit draws each molecule as given, without symmetrizing its rings;
-    // the random lock waits for the depictions to finish (U4's order).
+    // RDKit draws each molecule as given, without symmetrizing its rings.
     const bool symmetrize = false;
-    const bool lock_random = false;
-    e.drawn = std::make_unique<DrawnMol>(mol, opts, symmetrize, lock_random);
+    e.drawn = std::make_unique<DrawnMol>(mol, symmetrize);
     check_drawing(d, e.drawn->mol(), e.conf_id, e.legend,
                   draw.supportsAnnotations(), symmetrize);
     if (e.h.has_bonds) {
@@ -1241,10 +1275,6 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
     } else if (opts.continuousHighlight && e.h.has_atoms) {
       detail::getBondHighlightsForAtoms(e.drawn->mol(), e.h.atoms, e.bonds);
     }
-  }
-  std::unique_lock<std::mutex> random;
-  if (opts.comicMode) {
-    random = std::unique_lock<std::mutex>(random_mutex());
   }
   set_up_text_drawer(d);
   std::vector<std::unique_ptr<detail::DrawMol>> probes;
@@ -1340,9 +1370,8 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
         "confIds needs an entry for each reactant, product, and agent "
         "position");
   }
-  // RDKit depicts the templates without coordinates (makeReactionDrawMol),
-  // matching ring templates to them (control_c_lock.h); the wrappers' layout
-  // does so first, on a copy.
+  // RDKit depicts the templates without coordinates (makeReactionDrawMol);
+  // the wrappers' layout does so first, on a copy.
   bool depicts = false;
   for (const auto *group :
        {&rxn.getReactants(), &rxn.getProducts(), &rxn.getAgents()}) {
@@ -1350,14 +1379,7 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
       depicts = depicts || !t->getNumConformers();
     }
   }
-  std::unique_lock<std::mutex> depict, control_c, random;
-  if (depicts) {
-    depict = lock_depiction();
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
-  }
-  if (d.drawer->drawOptions().comicMode) {
-    random = std::unique_lock<std::mutex>(random_mutex());
-  }
+  const DrawingLocks locks(depicts, comic(d));
   check_draw_area(d.drawer->panelWidth(), d.drawer->panelHeight(),
                   d.drawer->drawOptions());
   check_font(d);
@@ -1386,6 +1408,8 @@ void drawer_prepare_and_draw_molecule(Drawer &d, const RWMol &mol,
   auto &opts = d.drawer->drawOptions();
   const bool prepare = opts.prepareMolsBeforeDrawing;
   opts.prepareMolsBeforeDrawing = false;
+  // The copy has coordinates.
+  const DrawingLocks locks(false, comic(d));
   try {
     draw_molecule(d, *copy, data, false);
   } catch (...) {
@@ -1594,14 +1618,15 @@ void set_scale(Drawer &d, int width, int height, const Point2D &minv_data,
   double x_min, x_max, x_range, y_min, y_max, y_range;
   double font_scale = 0;
   bool set_font_scale = false;
+  std::unique_ptr<DrawingLocks> locks;
   std::unique_ptr<DrawnMol> drawn;
   if (mol) {
     // RDKit lays the molecule out in a DrawMol of the panel's size, as
     // drawMoleculeWithHighlights does (rings as given, the first
     // conformer), but draws nothing, so no std::rand.
+    locks = std::make_unique<DrawingLocks>(lacks_conformers(*mol), false);
     const bool symmetrize = false;
-    const bool lock_random = false;
-    drawn = std::make_unique<DrawnMol>(*mol, opts, symmetrize, lock_random);
+    drawn = std::make_unique<DrawnMol>(*mol, symmetrize);
     // DrawMol's defaults: annotations, and the first conformer.
     const bool annotations = true;
     check_drawing(d, drawn->mol(), -1, "", annotations, symmetrize);
@@ -1907,6 +1932,7 @@ void drawer_draw_molecule_acs1996(Drawer &d, const RWMol &mol,
   // highlighting only the bonds given.
   check_usable(d);
   auto &draw = *d.drawer;
+  const DrawingLocks locks(lacks_conformers(mol), comic(d));
   if (draw.width() != -1 || draw.height() != -1) {
     BOOST_LOG(rdWarningLog)
         << "ACS drawing mode works best with a flexiCanvas i.e. a drawer"
@@ -1915,8 +1941,7 @@ void drawer_draw_molecule_acs1996(Drawer &d, const RWMol &mol,
         << std::endl;
   }
   const bool symmetrize = false;
-  const bool lock_random = false;
-  const DrawnMol depicted(mol, draw.drawOptions(), symmetrize, lock_random);
+  const DrawnMol depicted(mol, symmetrize);
   auto opts = draw.drawOptions();
   RDKit::MolDraw2DUtils::setACS1996Options(
       opts,
@@ -2069,12 +2094,11 @@ std::unique_ptr<RWMol> prepare_mol_for_drawing(const RWMol &mol, bool kekulize,
   // It computes 2D coordinates when forced or when the molecule has none,
   // after kekulizing and adding the chiral hydrogens (without coordinates
   // then), so the depictor's checks see the molecule so prepared: chiral
-  // atoms as isAtomCandForChiralH in MolDraw2DUtils.cpp picks them.
-  std::unique_lock<std::mutex> depict;
-  std::unique_lock<std::mutex> control_c;
-  if (force_coords || !mol.getNumConformers()) {
-    depict = lock_depiction();
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+  // atoms as isAtomCandForChiralH in MolDraw2DUtils.cpp picks them. It
+  // blocks the logs to kekulize (DrawingLocks).
+  const bool depicts = force_coords || lacks_conformers(mol);
+  const DrawingLocks locks(depicts, false);
+  if (depicts) {
     RWMol with_hs(mol);
     if (kekulize) {
       RDKit::MolOps::KekulizeIfPossible(with_hs, false);
@@ -2120,7 +2144,10 @@ std::unique_ptr<std::string> mol_to_svg(const RWMol &mol, int width, int height,
   data.has_highlight_atoms = has_atoms;
   data.has_highlight_bonds = false;
   data.conf_id = conf_id;
-  draw_molecule(*d, mol, data, true);
+  {
+    const DrawingLocks locks(lacks_conformers(mol), comic(*d));
+    draw_molecule(*d, mol, data, true);
+  }
   svg_finish_drawing(*d);
   return svg_drawing_text(*d);
 }
