@@ -279,6 +279,16 @@ pub struct FingerprintOptions {
     pub kind: FingerprintKindOptions,
 }
 
+/// The options of a Morgan generator with Python's defaults,
+/// `get_morgan_generator().get_options()`. Python has no constructor for
+/// `FingerprintOptions`, so the default picks the kind most code starts
+/// from; options for another kind come from that kind's generator.
+impl Default for FingerprintOptions {
+    fn default() -> FingerprintOptions {
+        get_morgan_generator().get_options()
+    }
+}
+
 impl FingerprintOptions {
     /// Sets the count bounds. Mirrors `FingerprintOptions.SetCountBounds`;
     /// pass the options to `FingerprintGenerator64::set_options`.
