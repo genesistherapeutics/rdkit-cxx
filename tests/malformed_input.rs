@@ -534,3 +534,58 @@ fn fpb_screens() {
     assert_eq!(nbrs.len(), everything);
     assert!(nbrs.windows(2).all(|w| w[0].0 >= w[1].0));
 }
+
+/// A `Read` that claims to have read more than its buffer holds, which a safe
+/// impl may do.
+struct OverstatingReader(bool);
+
+impl std::io::Read for OverstatingReader {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if self.0 {
+            return Ok(0);
+        }
+        self.0 = true;
+        let record = b"\n  RDKit\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0\nM  END\n> <p>\n";
+        buf[..record.len()].copy_from_slice(record);
+        Ok(buf.len() + (1 << 20))
+    }
+}
+
+#[test]
+fn overstating_reader() {
+    // RDKit would read past the stream's buffer; the read is an error.
+    let mut suppl =
+        rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::from_fileobj(OverstatingReader(false))
+            .unwrap();
+    let results: Vec<_> = suppl.mols().collect();
+    assert!(results.iter().any(|r| r.is_err()), "{results:?}");
+}
+
+/// A `Read` that gives one record, then fails.
+struct FailingReader(bool);
+
+impl std::io::Read for FailingReader {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        if self.0 {
+            return Err(std::io::Error::other("the connection dropped"));
+        }
+        self.0 = true;
+        let record = b"\n  RDKit\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0\nM  END\n$$$$\n";
+        buf[..record.len()].copy_from_slice(record);
+        Ok(record.len())
+    }
+}
+
+#[test]
+fn failing_reader() {
+    // A read that fails is an error, not the end of the input.
+    let mut suppl =
+        rdkit_cxx::chem::rdmolfiles::ForwardSDMolSupplier::from_fileobj(FailingReader(false))
+            .unwrap();
+    let results: Vec<_> = suppl.mols().collect();
+    let err = results
+        .iter()
+        .find_map(|r| r.as_ref().err())
+        .unwrap_or_else(|| panic!("no error: {results:?}"));
+    assert!(err.to_string().contains("the connection dropped"), "{err}");
+}

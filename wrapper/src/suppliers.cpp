@@ -56,6 +56,12 @@ class RustReadBuf : public std::streambuf {
     if (n == 0) {
       return traits_type::eof();
     }
+    // rust_reader_read refuses a count past the buffer; this keeps the
+    // stream inside it regardless.
+    if (n > kSize) {
+      d_error = "the reader returned more bytes than its buffer holds";
+      return traits_type::eof();
+    }
     setg(d_buffer.get(), d_buffer.get(), d_buffer.get() + n);
     return traits_type::to_int_type(*gptr());
   }
@@ -218,7 +224,11 @@ std::uint32_t sd_mol_supplier_length(SDMolSupplier &s) {
   return checked(s.input, [&] { return s.suppl->length(); });
 }
 
-bool sd_mol_supplier_at_end(SDMolSupplier &s) { return s.suppl->atEnd(); }
+// atEnd reads ahead, so a read that fails there is reported here, not taken
+// for the end of the input.
+bool sd_mol_supplier_at_end(SDMolSupplier &s) {
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
+}
 
 void sd_mol_supplier_reset(SDMolSupplier &s) { s.suppl->reset(); }
 
@@ -259,7 +269,7 @@ std::unique_ptr<RWMol> forward_sd_mol_supplier_next(ForwardSDMolSupplier &s) {
 }
 
 bool forward_sd_mol_supplier_at_end(ForwardSDMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 bool forward_sd_mol_supplier_get_eof_hit_on_read(
@@ -345,7 +355,7 @@ std::uint32_t smiles_mol_supplier_length(SmilesMolSupplier &s) {
 }
 
 bool smiles_mol_supplier_at_end(SmilesMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 void smiles_mol_supplier_reset(SmilesMolSupplier &s) { s.suppl->reset(); }
@@ -613,7 +623,7 @@ std::unique_ptr<RWMol> mt_sd_mol_supplier_next(MultithreadedSDMolSupplier &s,
 }
 
 bool mt_sd_mol_supplier_at_end(MultithreadedSDMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 std::uint32_t mt_sd_mol_supplier_get_last_record_id(
@@ -669,7 +679,7 @@ std::unique_ptr<RWMol> mt_smiles_mol_supplier_next(
 }
 
 bool mt_smiles_mol_supplier_at_end(MultithreadedSmilesMolSupplier &s) {
-  return s.suppl->atEnd();
+  return checked(s.input, [&] { return s.suppl->atEnd(); });
 }
 
 std::uint32_t mt_smiles_mol_supplier_get_last_record_id(

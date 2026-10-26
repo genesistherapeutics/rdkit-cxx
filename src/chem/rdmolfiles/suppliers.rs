@@ -33,10 +33,17 @@ pub(crate) struct RustReader(Box<dyn Read + Send>);
 
 impl RustReader {
     /// Reads into `buf`, retrying interrupted reads; a panic is an error, so
-    /// it does not unwind into C++.
+    /// it does not unwind into C++. `Read` is a safe trait, so a count larger
+    /// than `buf`, which C++ would read past the buffer by, is an error too.
     pub(crate) fn read(&mut self, buf: &mut [u8]) -> std::result::Result<usize, String> {
         loop {
             match catch_unwind(AssertUnwindSafe(|| self.0.read(buf))) {
+                Ok(Ok(n)) if n > buf.len() => {
+                    return Err(format!(
+                        "the reader said it read {n} bytes into a buffer of {}",
+                        buf.len()
+                    ));
+                }
                 Ok(Ok(n)) => return Ok(n),
                 Ok(Err(err)) if err.kind() == std::io::ErrorKind::Interrupted => continue,
                 Ok(Err(err)) => return Err(err.to_string()),
@@ -202,9 +209,16 @@ impl SDMolSupplier {
         Ok(self.len()? == 0)
     }
 
-    /// Whether the last record has been read. Mirrors `SDMolSupplier.atEnd`.
+    /// Whether the last record has been read, which it also is once reading
+    /// the input failed; iterating then yields the error. Mirrors
+    /// `SDMolSupplier.atEnd`.
     pub fn at_end(&mut self) -> bool {
-        expect_ok(ffi::sd_mol_supplier_at_end(self.raw_mut()))
+        self.try_at_end().unwrap_or(true)
+    }
+
+    /// As `at_end`, with the error reading the input failed with.
+    fn try_at_end(&mut self) -> Result<bool> {
+        Ok(ffi::sd_mol_supplier_at_end(self.raw_mut())?)
     }
 
     /// Returns to the first record. Mirrors `SDMolSupplier.reset`.
@@ -272,8 +286,16 @@ impl Iterator for SDMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done {
             return None;
+        }
+        match self.suppl.try_at_end() {
+            Ok(false) => {}
+            Ok(true) => return None,
+            Err(err) => {
+                self.done = true;
+                return Some(Err(err));
+            }
         }
         Some(step(
             &mut self.done,
@@ -371,9 +393,16 @@ impl ForwardSDMolSupplier {
         })
     }
 
-    /// Whether the input is exhausted. Mirrors `ForwardSDMolSupplier.atEnd`.
+    /// Whether the input is exhausted, which it also is once reading it
+    /// failed; iterating then yields the error. Mirrors
+    /// `ForwardSDMolSupplier.atEnd`.
     pub fn at_end(&mut self) -> bool {
-        expect_ok(ffi::forward_sd_mol_supplier_at_end(self.raw_mut()))
+        self.try_at_end().unwrap_or(true)
+    }
+
+    /// As `at_end`, with the error reading the input failed with.
+    fn try_at_end(&mut self) -> Result<bool> {
+        Ok(ffi::forward_sd_mol_supplier_at_end(self.raw_mut())?)
     }
 
     /// Whether the last read met the end of the input instead of a record.
@@ -426,11 +455,22 @@ impl Iterator for ForwardSDMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done {
             return None;
         }
+        match self.suppl.try_at_end() {
+            Ok(false) => {}
+            Ok(true) => return None,
+            Err(err) => {
+                self.done = true;
+                return Some(Err(err));
+            }
+        }
         let mol = ffi::forward_sd_mol_supplier_next(self.suppl.raw_mut());
-        if self.suppl.at_end() && self.suppl.get_eof_hit_on_read() {
+        if mol.is_ok()
+            && matches!(self.suppl.try_at_end(), Ok(true))
+            && self.suppl.get_eof_hit_on_read()
+        {
             return None;
         }
         Some(step(&mut self.done, mol))
@@ -557,9 +597,15 @@ impl SmilesMolSupplier {
         Ok(self.len()? == 0)
     }
 
-    /// Whether the last record has been read.
+    /// Whether the last record has been read, which it also is once reading
+    /// the input failed; iterating then yields the error.
     pub fn at_end(&mut self) -> bool {
-        expect_ok(ffi::smiles_mol_supplier_at_end(self.raw_mut()))
+        self.try_at_end().unwrap_or(true)
+    }
+
+    /// As `at_end`, with the error reading the input failed with.
+    fn try_at_end(&mut self) -> Result<bool> {
+        Ok(ffi::smiles_mol_supplier_at_end(self.raw_mut())?)
     }
 
     /// Returns to the first record. Mirrors `SmilesMolSupplier.reset`.
@@ -632,8 +678,16 @@ impl Iterator for SmilesMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done {
             return None;
+        }
+        match self.suppl.try_at_end() {
+            Ok(false) => {}
+            Ok(true) => return None,
+            Err(err) => {
+                self.done = true;
+                return Some(Err(err));
+            }
         }
         Some(step(
             &mut self.done,
@@ -764,6 +818,11 @@ impl TDTMolSupplier {
         expect_ok(ffi::tdt_mol_supplier_at_end(self.raw_mut()))
     }
 
+    /// As `at_end`: a TDT supplier reads text it holds, so it cannot fail.
+    fn try_at_end(&mut self) -> Result<bool> {
+        Ok(self.at_end())
+    }
+
     /// Returns to the first record. Mirrors `TDTMolSupplier.reset`.
     pub fn reset(&mut self) {
         expect_ok(ffi::tdt_mol_supplier_reset(self.raw_mut()))
@@ -815,8 +874,16 @@ impl Iterator for TDTMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done {
             return None;
+        }
+        match self.suppl.try_at_end() {
+            Ok(false) => {}
+            Ok(true) => return None,
+            Err(err) => {
+                self.done = true;
+                return Some(Err(err));
+            }
         }
         Some(step(
             &mut self.done,
@@ -944,10 +1011,16 @@ impl MultithreadedSDMolSupplier {
         })
     }
 
-    /// Whether every record has been returned. Mirrors
+    /// Whether every record has been returned, which they also have once
+    /// reading the input failed; iterating then yields the error. Mirrors
     /// `MultithreadedSDMolSupplier.atEnd`.
     pub fn at_end(&mut self) -> bool {
-        expect_ok(ffi::mt_sd_mol_supplier_at_end(self.raw_mut()))
+        self.try_at_end().unwrap_or(true)
+    }
+
+    /// As `at_end`, with the error reading the input failed with.
+    fn try_at_end(&mut self) -> Result<bool> {
+        Ok(ffi::mt_sd_mol_supplier_at_end(self.raw_mut())?)
     }
 
     /// The 1-based record number of the last molecule returned, or 0.
@@ -1011,8 +1084,16 @@ impl Iterator for MultithreadedSDMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done {
             return None;
+        }
+        match self.suppl.try_at_end() {
+            Ok(false) => {}
+            Ok(true) => return None,
+            Err(err) => {
+                self.done = true;
+                return Some(Err(err));
+            }
         }
         let mut id = 0;
         let mol = ffi::mt_sd_mol_supplier_next(self.suppl.raw_mut(), &mut id);
@@ -1125,10 +1206,16 @@ impl MultithreadedSmilesMolSupplier {
         })
     }
 
-    /// Whether every record has been returned. Mirrors
+    /// Whether every record has been returned, which they also have once
+    /// reading the input failed; iterating then yields the error. Mirrors
     /// `MultithreadedSmilesMolSupplier.atEnd`.
     pub fn at_end(&mut self) -> bool {
-        expect_ok(ffi::mt_smiles_mol_supplier_at_end(self.raw_mut()))
+        self.try_at_end().unwrap_or(true)
+    }
+
+    /// As `at_end`, with the error reading the input failed with.
+    fn try_at_end(&mut self) -> Result<bool> {
+        Ok(ffi::mt_smiles_mol_supplier_at_end(self.raw_mut())?)
     }
 
     /// The 1-based record number of the last molecule returned, or 0.
@@ -1176,8 +1263,16 @@ impl Iterator for MultithreadedSmilesMols<'_> {
     type Item = Result<Mol>;
 
     fn next(&mut self) -> Option<Result<Mol>> {
-        if self.done || self.suppl.at_end() {
+        if self.done {
             return None;
+        }
+        match self.suppl.try_at_end() {
+            Ok(false) => {}
+            Ok(true) => return None,
+            Err(err) => {
+                self.done = true;
+                return Some(Err(err));
+            }
         }
         let mut id = 0;
         let mol = ffi::mt_smiles_mol_supplier_next(self.suppl.raw_mut(), &mut id);
