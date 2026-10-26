@@ -55,7 +55,7 @@ fn main() -> Result<()> {
         let (begin, end) = (b.get_begin_atom_idx(), b.get_end_atom_idx());
         rwmol.remove_bond(begin, end)?;
     }
-    rwmol.commit_batch_edit();
+    rwmol.commit_batch_edit()?;
     // get_mol_frags_as_mols then returns sanitized fragments whose empty
     // valences are filled with implicit hydrogens:
     let frags = smiles(&get_mol_frags_as_mols(&rwmol)?)?;
