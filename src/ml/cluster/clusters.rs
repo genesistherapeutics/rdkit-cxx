@@ -18,12 +18,12 @@
 //! ```no_run
 //! use rdkit_cxx::ml::cluster::clusters::{Cluster, ClusterParams};
 //!
-//! let mut root = Cluster::new_with_params(ClusterParams {
+//! let mut root = Cluster::new_with_params(&ClusterParams {
 //!     index: 1,
 //!     metric: 1000.0,
 //!     ..Default::default()
 //! });
-//! root.add_child(Cluster::new_with_params(ClusterParams {
+//! root.add_child(Cluster::new_with_params(&ClusterParams {
 //!     index: 10,
 //!     ..Default::default()
 //! }));
