@@ -371,7 +371,7 @@ rule changes the rule first.
   fails when a chunk rereads differently or the file ends sooner than it did,
   so RDKit parses only the bytes that were checked. Python file objects are
   bound as `Read` values, read through the same streams, and `Write`
-  values, which a writer may borrow for its lifetime. Gzipped files are
+  values, which a supplier or writer may borrow for its lifetime. Gzipped files are
   decompressed as RDKit's `gzstream` decompresses them and checked after;
   the stream RDKit reads them through throws for every seek and tell, as
   `gzstream`'s does. RDKit's writers ignore
@@ -486,7 +486,9 @@ rule changes the rule first.
   functions, whose manifest entries set `rust_generics = "<&str>"` so the
   path test can name them (or a list, one per Rust path, with `""` for a
   path that is not generic). Python file objects → `R: Read + Send +
-  'static` or `W: Write + Send + 'static` (U12). Tuples of indices →
+  'r` or `W: Write + Send + 'w` (U12), which the reader or writer borrows
+  for its lifetime parameter (`ForwardSDMolSupplier<'r>`, `SDWriter<'w>`);
+  one made from a file name has `'static`. Tuples of indices →
   `Vec<u32>`, nested → `Vec<Vec<u32>>`. `None`-able results → `Option`.
   NumPy coordinate arrays → `Vec<Point3D>`; other NumPy matrices → rows,
   `Vec<Vec<f64>>` (or `i32` for integer matrices). `dict` →
