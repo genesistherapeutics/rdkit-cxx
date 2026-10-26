@@ -26,6 +26,7 @@ pub mod rd_mol_align;
 pub mod rd_mol_catalog;
 pub mod rd_mol_descriptors;
 pub mod rd_mol_hash;
+pub mod rd_mol_interchange;
 pub mod rd_mol_processing;
 pub mod rd_mol_transforms;
 pub mod rd_partial_charges;
@@ -45,6 +46,7 @@ pub mod rdqueries;
 pub mod scaffolds;
 
 pub use rd_cip_labeler::*;
+pub use rd_mol_interchange::*;
 pub use rdchem::*;
 pub use rdmolfiles::*;
 pub use rdmolops::*;

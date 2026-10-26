@@ -91,6 +91,7 @@ const BRIDGES: &[&str] = &[
     "substruct_library",
     "rgroup",
     "mol_processing",
+    "mol_interchange",
 ];
 
 fn main() {

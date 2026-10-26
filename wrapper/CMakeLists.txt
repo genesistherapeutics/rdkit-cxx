@@ -113,6 +113,7 @@ set(RDKIT_CXX_SOURCES
   src/substruct_library.cpp
   src/rgroup.cpp
   src/mol_processing.cpp
+  src/mol_interchange.cpp
 )
 
 # RDKit targets the wrappers link, without the RDKit:: prefix (B4).
@@ -163,6 +164,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ScaffoldNetwork
   SubstructLibrary
   RGroupDecomposition
+  MolInterchange
 )
 
 # DetermineBonds' Hückel option reads YAeHMOP's parameter table, which

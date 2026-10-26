@@ -179,7 +179,19 @@ rule changes the rule first.
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
-  monomer infos). Text a wrapper checks before RDKit parses it
+  monomer infos). RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
+  no fuzzer covers, trusts the indices, counts, and query trees it reads,
+  so `json_to_mols` parses the document first, with the same boost::json
+  parser, checks what RDKit would read unchecked (`DocumentChecker` in
+  `mol_interchange.cpp`, which follows RDKit's reads and leaves RDKit's own
+  errors to RDKit), and hands RDKit the checked document serialized again.
+  Its queries must be ones RDKit makes, since RDKit takes a query's class
+  from its tag and its meaning from its description, while the code that
+  reads queries takes the description to imply the class: each
+  description with a class RDKit gives it, AND, OR, and XOR with two or
+  more children, and no bond XOR or null bond in an AND or OR, which
+  RDKit's own bond matcher and SMARTS writer cast. Text a wrapper checks
+  before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
