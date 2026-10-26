@@ -13,6 +13,9 @@ From RDKit's source tree, under RDKit's BSD license:
 - `amide_space.txt`, `amide_space_error.txt`, `triazole_space.txt`,
   `extended_query.csv`, `doebner_miller_space.txt`:
   `Code/GraphMol/SynthonSpaceSearch/data`
+- `Pharm2D_BaseFeatures.fdef`, `Pharm2D_orderBug.sdf`: `BaseFeatures.fdef` and
+  `orderBug.sdf` in `rdkit/Chem/Pharm2D/test_data`, with a final newline added
+  and trailing whitespace trimmed
 - `RP-6306_atrop1.sdf`: `Code/GraphMol/FileParsers/test_data/atropisomers`,
   with trailing whitespace trimmed
 
@@ -22,3 +25,6 @@ Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
   files of the same names in `rdkit/Chem/test_data`, with bond orders assigned
   from `UnitTestMol3D.py`'s template by `AllChem.AssignBondOrdersFromTemplate`,
   written by `Chem.MolToMolFile`
+- `feat_dirs.mol`: an ETKDG conformer (seed 42) of
+  `O=C(N)c1ccc(cc1)N(C)CCOC(=O)CS(=O)(=O)N1CCOCC1` with hydrogens, from
+  `AllChem.EmbedMolecule`, written by `Chem.MolToMolFile`
