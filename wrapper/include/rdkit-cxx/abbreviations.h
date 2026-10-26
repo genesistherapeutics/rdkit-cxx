@@ -6,7 +6,7 @@
  */
 
 // rdAbbreviations: abbreviations (and linkers) found in molecules, condensed
-// to labelled dummy atoms or labelled with SUP substance groups.
+// to labeled dummy atoms or labeled with SUP substance groups.
 
 #pragma once
 

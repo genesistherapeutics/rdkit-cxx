@@ -109,7 +109,7 @@ fn decompose() {
         ]
     );
 
-    // A labelled core, matched anywhere or only at its labels.
+    // A labeled core, matched anywhere or only at its labels.
     let labelled = mols(&["[*:1]c1ccc([*:2])cc1"]);
     let expected = [
         row(&[

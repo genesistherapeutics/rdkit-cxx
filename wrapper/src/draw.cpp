@@ -319,7 +319,7 @@ MolDrawOptionsData update_mol_draw_options_from_json(
 }
 
 void check_draw_colour(const DrawColour &colour) {
-  check_colour(colour_from_data(colour), "colour");
+  check_colour(colour_from_data(colour), "color");
 }
 
 }  // namespace rdkit_cxx

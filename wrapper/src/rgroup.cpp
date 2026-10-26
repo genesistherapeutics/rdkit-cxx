@@ -106,7 +106,7 @@ void check_params(const RDKit::RGroupDecompositionParameters &p) {
 // bits) into ints and
 // keeps one past the largest in int (setLabel's maxLabel = label + 1, and
 // prepareCore's rlabel + 1 for an aligned core), which overflows for
-// INT_MAX; relabelling adds one per atom past that. Labels are refused at
+// INT_MAX; relabeling adds one per atom past that. Labels are refused at
 // 2^30 and above: RDKit's R-group labels are below 1000 elsewhere (the MDL
 // labels setAtomRLabel writes, atom map numbers).
 constexpr std::int64_t kMaxLabel = std::int64_t{1} << 30;
