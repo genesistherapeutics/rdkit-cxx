@@ -267,4 +267,108 @@ void check_removals(const RDKit::ROMol &mol) {
   check_substance_group_parents(mol);
 }
 
+namespace {
+
+// The group, holding `bonds` instead of its own, with its ids.
+RDKit::StereoGroup with_bonds(const RDKit::StereoGroup &group,
+                              std::vector<RDKit::Bond *> bonds) {
+  RDKit::StereoGroup res(group.getGroupType(), group.getAtoms(), bonds,
+                         group.getReadId());
+  res.setWriteId(group.getWriteId());
+  return res;
+}
+
+}  // namespace
+
+// replaceBond deletes the old bond, so the groups' pointers to it are found
+// first, by position, and never read once it is gone.
+void replace_bond(RDKit::RWMol &mol, unsigned idx, RDKit::Bond *bond,
+                  bool preserve_props, bool keep_s_groups) {
+  const RDKit::Bond *old_bond =
+      idx < mol.getNumBonds() ? mol.getBondWithIdx(idx) : nullptr;
+  std::vector<std::vector<bool>> held;
+  bool any = false;
+  for (const auto &group : mol.getStereoGroups()) {
+    std::vector<bool> positions;
+    for (const auto *member : group.getBonds()) {
+      positions.push_back(member == old_bond);
+      any = any || member == old_bond;
+    }
+    held.push_back(std::move(positions));
+  }
+  mol.replaceBond(idx, bond, preserve_props, keep_s_groups);
+  if (!any) {
+    return;
+  }
+  auto *new_bond = mol.getBondWithIdx(idx);
+  const auto &groups = mol.getStereoGroups();
+  std::vector<RDKit::StereoGroup> updated;
+  updated.reserve(groups.size());
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    const auto &members = groups[g].getBonds();
+    std::vector<RDKit::Bond *> bonds;
+    bonds.reserve(members.size());
+    for (std::size_t i = 0; i < members.size(); ++i) {
+      bonds.push_back(held[g][i] ? new_bond : members[i]);
+    }
+    updated.push_back(with_bonds(groups[g], std::move(bonds)));
+  }
+  mol.setStereoGroups(std::move(updated));
+}
+
+bool has_stereo_group_bonds(const RDKit::ROMol &mol) {
+  for (const auto &group : mol.getStereoGroups()) {
+    if (!group.getBonds().empty()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void clear_stereo_group_bonds(RDKit::ROMol &mol) {
+  if (!has_stereo_group_bonds(mol)) {
+    return;
+  }
+  std::vector<RDKit::StereoGroup> stripped;
+  for (const auto &group : mol.getStereoGroups()) {
+    stripped.push_back(with_bonds(group, {}));
+  }
+  mol.setStereoGroups(std::move(stripped));
+}
+
+StereoGroupBondGuard::StereoGroupBondGuard(RDKit::ROMol &mol) : d_mol(mol) {
+  if (!has_stereo_group_bonds(mol)) {
+    return;
+  }
+  for (const auto &group : mol.getStereoGroups()) {
+    std::vector<unsigned> indices;
+    for (const auto *bond : group.getBonds()) {
+      indices.push_back(bond->getIdx());
+    }
+    d_bonds.push_back(std::move(indices));
+  }
+  clear_stereo_group_bonds(mol);
+}
+
+// The guarded calls keep the groups and the bonds' indices; were they to
+// change, the groups would be left without bonds, which is safe.
+StereoGroupBondGuard::~StereoGroupBondGuard() {
+  const auto &groups = d_mol.getStereoGroups();
+  if (d_bonds.empty() || groups.size() != d_bonds.size()) {
+    return;
+  }
+  std::vector<RDKit::StereoGroup> restored;
+  restored.reserve(groups.size());
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    std::vector<RDKit::Bond *> bonds;
+    for (auto idx : d_bonds[g]) {
+      if (idx < d_mol.getNumBonds()) {
+        bonds.push_back(d_mol.getBondWithIdx(idx));
+      }
+    }
+    restored.push_back(with_bonds(groups[g], std::move(bonds)));
+  }
+  d_mol.setStereoGroups(std::move(restored));
+}
+
 }  // namespace rdkit_cxx

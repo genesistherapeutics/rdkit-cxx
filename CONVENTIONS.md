@@ -366,6 +366,15 @@ rule changes the rule first.
   a stream that fails, so the wrappers own the output (a file they open, or
   the Rust writer), hand RDKit the stream without ownership, and check it
   after every call: a failed write is `Error::Os` from then on.
+- **U13.** `RWMol::replaceBond` deletes the bond it replaces but, unlike
+  `replaceAtom`, leaves the stereo groups that held it (an atropisomer's)
+  pointing at it, for copying, pickling, and the writers to read. So the
+  wrappers replace bonds with `replace_bond` (`rdkit-cxx/mol_checks.h`),
+  which points those groups at the new bond, and an RDKit call that replaces
+  bonds of a molecule Rust will see runs under a `StereoGroupBondGuard`,
+  which takes the bonds out of the groups and puts back those then at the
+  same indices (or on a copy whose groups hold no bonds, if nothing returns
+  it); `mol_checks.h` lists RDKit's calls and why the others need neither.
 
 ## Properties
 

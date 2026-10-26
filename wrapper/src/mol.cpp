@@ -197,9 +197,10 @@ void rwmol_replace_atom(RWMol &mol, unsigned index, const Atom &new_atom,
 void rwmol_replace_bond(RWMol &mol, unsigned index, const Bond &new_bond,
                         bool preserve_props, bool keep_s_groups) {
   check_index(index, mol.getNumBonds());
-  // replaceBond copies the bond.
-  mol.replaceBond(index, const_cast<Bond *>(&new_bond), preserve_props,
-                  keep_s_groups);
+  // replaceBond copies the bond. RDKit's would leave a stereo group that
+  // held the old bond pointing at it, deleted (replace_bond).
+  replace_bond(mol, index, const_cast<Bond *>(&new_bond), preserve_props,
+               keep_s_groups);
 }
 
 void rwmol_insert_mol(RWMol &mol, const RWMol &other) {

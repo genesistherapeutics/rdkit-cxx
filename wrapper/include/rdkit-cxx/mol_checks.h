@@ -10,8 +10,10 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 #include <GraphMol/ROMol.h>
+#include <GraphMol/RWMol.h>
 
 namespace rdkit_cxx {
 
@@ -108,5 +110,54 @@ void check_substance_group_parents(const RDKit::ROMol &mol);
 // bonds from it (or a copy): check_bond_end_points and
 // check_substance_group_parents.
 void check_removals(const RDKit::ROMol &mol);
+
+// RWMol::replaceBond deletes the bond it replaces but, unlike replaceAtom,
+// leaves the molecule's stereo groups (an atropisomer's group holds its bond)
+// pointing at it, a pointer that copying, pickling, stereo perception, and
+// the CXSMILES and mol-block writers then read (CONVENTIONS.md U13).
+//
+// RDKit's own calls of it that the wrappers reach, where a group can hold
+// the bond and be read after, are guarded: adjustQueryProperties
+// (adjust_query.cpp, generalized_substruct.cpp, reactions' adjust_templates,
+// and the depictor's allowRGroups) and TautomerQuery::fromMol (replaced by
+// tautomer_query.cpp's own). MolInterchange's reader is refused such a
+// document (mol_interchange.cpp). The others leave no pointer that is read:
+// MolFragmenter replaces bonds it has just added; ReactionRunner's products'
+// groups hold no bonds; the mol-file parser replaces coordinate bonds before
+// stereo perception puts bonds in groups; the adjustments of R-group
+// decomposition's prepareCore and of the abbreviations replace no bonds; and
+// the copies that symmetrizeTerminalAtoms (in the embedder's pruning) and
+// R-group decomposition (its matching core, and its tautomer query's
+// template) replace bonds in are only matched, which reads groups' atoms.
+
+// As RWMol::replaceBond, and then points the stereo groups that held the old
+// bond at the new one, as replaceAtom does for atoms.
+void replace_bond(RDKit::RWMol &mol, unsigned idx, RDKit::Bond *bond,
+                  bool preserve_props, bool keep_s_groups);
+
+// Whether any of the molecule's stereo groups holds a bond.
+bool has_stereo_group_bonds(const RDKit::ROMol &mol);
+
+// Takes the bonds out of the molecule's stereo groups, for a copy that an
+// RDKit call replaces bonds in and that nothing returns afterwards.
+void clear_stereo_group_bonds(RDKit::ROMol &mol);
+
+// Takes the bonds out of the molecule's stereo groups when it is made, for
+// an RDKit call that replaces bonds without renumbering bonds or stereo
+// groups (adjustQueryProperties), and when it is destroyed, even when the
+// call throws, puts back into each group the bonds now at the indices it
+// held, as replace_bond does.
+class StereoGroupBondGuard {
+ public:
+  explicit StereoGroupBondGuard(RDKit::ROMol &mol);
+  ~StereoGroupBondGuard();
+  StereoGroupBondGuard(const StereoGroupBondGuard &) = delete;
+  StereoGroupBondGuard &operator=(const StereoGroupBondGuard &) = delete;
+
+ private:
+  RDKit::ROMol &d_mol;
+  // Each group's bond indices; empty when no group held a bond.
+  std::vector<std::vector<unsigned>> d_bonds;
+};
 
 }  // namespace rdkit_cxx

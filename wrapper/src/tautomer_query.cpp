@@ -99,7 +99,11 @@ std::unique_ptr<TautomerQuery> from_mol(
   for (auto idx : modified_bonds) {
     RDKit::QueryBond query_bond;
     query_bond.setQuery(RDKit::makeSingleOrDoubleOrAromaticBondQuery());
-    templ->replaceBond(idx, &query_bond, true);
+    // RDKit's replaceBond would leave a stereo group that held the bond
+    // pointing at it, deleted, for pickling and copying to read.
+    const bool preserve_props = true;
+    const bool keep_s_groups = true;
+    replace_bond(*templ, idx, &query_bond, preserve_props, keep_s_groups);
   }
 
   // As fromMol: the enumerator's quick copies lack the molecule's
@@ -319,6 +323,12 @@ std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
   // The enumerator matches its transforms (control_c_lock.h).
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   return from_mol(mol, params);
+}
+
+std::unique_ptr<TautomerQuery> make_tautomer_query(const RDKit::ROMol &query) {
+  // An empty path reads RDKit's default transforms, as fromMol's default.
+  MolStandardize::TautomerCatalogParams params("");
+  return from_mol(query, params);
 }
 
 std::unique_ptr<TautomerQuery> tautomer_query_from_pickle(

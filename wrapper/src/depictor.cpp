@@ -303,10 +303,27 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
   // (control_c_lock.h).
   std::lock_guard<std::mutex> control_c(control_c_mutex());
   check_constrained_inputs(mol, reference, data.conf_id, params);
+  // With allowRGroups, RDKit adjusts a copy of the pattern, or of the
+  // reference, with adjustQueryProperties, whose RWMol::replaceBond leaves
+  // the copy's stereo groups pointing at the bonds it deletes, and then
+  // copies the copy, which reads them (prepareTemplateForRGroups in
+  // DepictUtils.cpp). The depictor reads nothing else of those groups, so it
+  // gets a copy whose groups hold no bonds.
+  const RDKit::ROMol &query = has_ref_patt ? ref_patt : reference;
+  std::unique_ptr<RDKit::RWMol> stripped;
+  if (params.allowRGroups && has_stereo_group_bonds(query)) {
+    stripped = std::make_unique<RDKit::RWMol>(query);
+    clear_stereo_group_bonds(*stripped);
+  }
+  const RDKit::ROMol &ref = stripped && !has_ref_patt ? *stripped : reference;
+  const RDKit::ROMol *patt = nullptr;
+  if (has_ref_patt) {
+    patt = stripped ? stripped.get() : &ref_patt;
+  }
   MatrixCacheGuard mol_guard(mol);
-  MatrixCacheGuard reference_guard(reference);
+  MatrixCacheGuard reference_guard(ref);
   auto match = RDDepict::generateDepictionMatching2DStructure(
-      mol, reference, data.conf_id, has_ref_patt ? &ref_patt : nullptr, params);
+      mol, ref, data.conf_id, patt, params);
   rust::Vec<IndexPair> pairs;
   for (const auto &[ref_idx, mol_idx] : match) {
     pairs.push_back(IndexPair{static_cast<std::uint32_t>(ref_idx),

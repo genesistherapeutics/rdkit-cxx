@@ -9,6 +9,7 @@
 #include <cmath>
 #include <cstring>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <sstream>
 #include <stdexcept>
@@ -1166,6 +1167,23 @@ PreprocessReactionData preprocess_reaction(ChemicalReaction &rxn,
                                 to_labels(labels)};
 }
 
+namespace {
+
+// As RxnOps::adjustTemplates, which runs adjustQueryProperties on each
+// template: that replaces bonds with RWMol::replaceBond, which would leave a
+// template's stereo groups pointing at the bonds it deletes (replace_bond),
+// so the groups are guarded.
+void adjust_templates(const RDKit::MOL_SPTR_VECT &templates,
+                      const RDKit::MolOps::AdjustQueryParameters &params) {
+  std::vector<std::unique_ptr<StereoGroupBondGuard>> guards;
+  for (const auto &templ : templates) {
+    guards.push_back(std::make_unique<StereoGroupBondGuard>(*templ));
+  }
+  RDKit::RxnOps::adjustTemplates(templates, params);
+}
+
+}  // namespace
+
 std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
                            const AdjustQueryParametersData &data,
                            bool catch_errors) {
@@ -1185,11 +1203,11 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
     }
     if (sanitize_ops & RxnOps::SANITIZE_ADJUST_REACTANTS) {
       failed = RxnOps::SANITIZE_ADJUST_REACTANTS;
-      RxnOps::adjustTemplates(rxn.getReactants(), params);
+      adjust_templates(rxn.getReactants(), params);
     }
     if (sanitize_ops & RxnOps::SANITIZE_ADJUST_PRODUCTS) {
       failed = RxnOps::SANITIZE_ADJUST_PRODUCTS;
-      RxnOps::adjustTemplates(rxn.getProducts(), params);
+      adjust_templates(rxn.getProducts(), params);
     }
     if (sanitize_ops & RxnOps::SANITIZE_MERGEHS) {
       failed = RxnOps::SANITIZE_MERGEHS;

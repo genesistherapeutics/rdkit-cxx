@@ -44,6 +44,11 @@ std::vector<RDKit::MatchVectType> tautomer_query_substruct_of(
     std::vector<RDKit::ROMOL_SPTR> *matching_tautomers);
 // Fingerprints are ExplicitBitVects, which hold at most INT_MAX bits (U3).
 void check_fingerprint_size(std::uint32_t fingerprint_size);
+// As TautomerQuery::fromMol(query), with RDKit's default transforms; it
+// replaces the template's bonds with replace_bond (mol_checks.h). The
+// enumerator matches its transforms, so the caller holds control_c_mutex
+// (control_c_lock.h).
+std::unique_ptr<TautomerQuery> make_tautomer_query(const RDKit::ROMol &query);
 
 std::unique_ptr<TautomerQuery> tautomer_query_new_empty();
 std::unique_ptr<TautomerQuery> tautomer_query_clone(const TautomerQuery &query);

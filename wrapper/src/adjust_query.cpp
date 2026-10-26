@@ -11,6 +11,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/adjust_query.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -87,21 +88,26 @@ AdjustQueryParametersData adjust_query_parameters_no_adjustments() {
   return to_data(RDKit::MolOps::AdjustQueryParameters::noAdjustments());
 }
 
+// adjustQueryProperties replaces bonds with RWMol::replaceBond, which would
+// leave the copy's stereo groups pointing at the bonds it deletes
+// (replace_bond), so the groups are guarded.
 std::unique_ptr<RWMol> adjust_query_properties(
     const RWMol &mol, const AdjustQueryParametersData &data) {
   auto params = from_data(data);
   auto res = std::make_unique<RWMol>(mol);
+  StereoGroupBondGuard guard(*res);
   RDKit::MolOps::adjustQueryProperties(*res, &params);
   return res;
 }
 
+// As GenericGroups::adjustQueryPropertiesWithGenericGroups, which copies the
+// molecule and adjusts it as adjust_query_properties does, without the
+// guard.
 std::unique_ptr<RWMol> adjust_query_properties_with_generic_groups(
     const RWMol &mol, const AdjustQueryParametersData &data) {
-  auto params = from_data(data);
-  std::unique_ptr<RDKit::ROMol> res(
-      RDKit::GenericGroups::adjustQueryPropertiesWithGenericGroups(mol,
-                                                                   &params));
-  return std::make_unique<RWMol>(*res);
+  auto res = adjust_query_properties(mol, data);
+  RDKit::GenericGroups::setGenericQueriesFromProperties(*res);
+  return res;
 }
 
 void set_generic_queries_from_properties(RWMol &mol, bool use_atom_labels,
