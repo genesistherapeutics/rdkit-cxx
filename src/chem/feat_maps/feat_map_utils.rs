@@ -17,7 +17,7 @@ use std::fmt;
 
 /// How two merged points' positions and weights combine. Mirrors
 /// `FeatMapUtils.MergeMethod`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum MergeMethod {
     /// The weighted mean of the positions, and the mean weight.
@@ -30,7 +30,7 @@ pub enum MergeMethod {
 }
 
 /// What decides which points merge. Mirrors `FeatMapUtils.MergeMetric`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum MergeMetric {
     /// No points merge.
@@ -44,7 +44,7 @@ pub enum MergeMetric {
 
 /// How merged points' directions combine. Python accepts it and does not
 /// use it. Mirrors `FeatMapUtils.DirMergeMode`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum DirMergeMode {
     /// Directions are not merged.

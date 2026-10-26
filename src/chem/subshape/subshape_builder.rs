@@ -21,7 +21,7 @@ use crate::{Error, Result};
 
 /// How [`SubshapeBuilder::combine_subshapes_with_operation`] combines two
 /// shapes' grids. Mirrors `SubshapeBuilder.SubshapeCombineOperations`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum SubshapeCombineOperations {
     /// Each point's larger value.
