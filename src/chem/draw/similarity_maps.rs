@@ -29,8 +29,12 @@ use crate::chem::draw::rd_mol_draw_2d::{
     prepare_mol_for_drawing_with_params,
 };
 use crate::chem::rd_depictor::compute_2d_coords;
+use std::any::Any;
+use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::fmt;
+use std::marker::PhantomData;
+use std::rc::Rc;
 
 use crate::chem::rd_fingerprint_generator::{
     AdditionalOutput, FingerprintGenerator64, GetAtomPairGeneratorParams, GetFingerprintParams,
@@ -52,7 +56,10 @@ use crate::{Error, Result};
 /// Mirrors `SimilarityMaps.GetAtomicWeightsForFingerprint`.
 ///
 /// `fp_function` is called on the reference, then on the probe, then on
-/// the probe without each atom in turn.
+/// the probe without each atom in turn. Meanwhile, the RDKit and atom-pair
+/// fingerprint functions here compute the probe's full fingerprint once and
+/// take each atom's bits from it, as Python's `GetRDKFingerprint` does with
+/// the fingerprint it keeps on the molecule.
 pub fn get_atomic_weights_for_fingerprint<F: BitVect>(
     ref_mol: &Mol,
     probe_mol: &Mol,
@@ -70,6 +77,7 @@ pub fn get_atomic_weights_for_fingerprint_with_metric<F>(
     mut fp_function: impl FnMut(&Mol, Option<u32>) -> Result<F>,
     metric: impl Fn(&F, &F) -> Result<f64>,
 ) -> Result<Vec<f64>> {
+    let _memo = ProbeMemoScope::new(probe_mol);
     let ref_fp = fp_function(ref_mol, None)?;
     let base_similarity = metric(&ref_fp, &fp_function(probe_mol, None)?)?;
     (0..probe_mol.get_num_atoms())
@@ -86,12 +94,102 @@ pub fn get_atomic_weights_for_model<F>(
     mut fp_function: impl FnMut(&Mol, Option<u32>) -> Result<F>,
     mut prediction_function: impl FnMut(&F) -> Result<f64>,
 ) -> Result<Vec<f64>> {
+    let _memo = ProbeMemoScope::new(probe_mol);
     let base_proba = prediction_function(&fp_function(probe_mol, None)?)?;
     (0..probe_mol.get_num_atoms())
         .map(|atom_id| {
             Ok(base_proba - prediction_function(&fp_function(probe_mol, Some(atom_id))?)?)
         })
         .collect()
+}
+
+/// The fingerprint functions' full fingerprints of a probe, which
+/// `ProbeMemoScope` keeps while the weights of its atoms are computed.
+struct ProbeMemo {
+    /// Compared, never read. The scope borrows the probe, so no other
+    /// molecule has its address meanwhile, and nothing changes it (S1:
+    /// changes to a molecule's atoms and bonds take `&mut Mol`).
+    mol: *const Mol,
+    /// The full fingerprints, by function and parameters; `None` where
+    /// computing one failed, so each call computes its own.
+    entries: Vec<(MemoKey, Option<Rc<dyn Any>>)>,
+}
+
+/// A full fingerprint, and the bits each atom sets in it.
+type FullFingerprint<T> = (T, Vec<Vec<u64>>);
+
+/// A fingerprint function and its parameters, without the atom.
+#[derive(PartialEq)]
+enum MemoKey {
+    Rdk(GetRDKFingerprintParams),
+    Ap(ApFingerprintType, GetAPFingerprintParams),
+}
+
+#[derive(Clone, Copy, PartialEq)]
+enum ApFingerprintType {
+    Normal,
+    Hashed,
+    Bv,
+}
+
+thread_local! {
+    /// The probes of the weights being computed on this thread, innermost
+    /// last.
+    static PROBE_MEMOS: RefCell<Vec<ProbeMemo>> = const { RefCell::new(Vec::new()) };
+}
+
+/// Keeps the fingerprint functions' full fingerprints of a probe while it
+/// lives, for the calls that leave out each of its atoms.
+struct ProbeMemoScope<'m>(PhantomData<&'m Mol>);
+
+impl<'m> ProbeMemoScope<'m> {
+    fn new(probe_mol: &'m Mol) -> ProbeMemoScope<'m> {
+        PROBE_MEMOS.with_borrow_mut(|memos| {
+            memos.push(ProbeMemo {
+                mol: probe_mol,
+                entries: Vec::new(),
+            });
+        });
+        ProbeMemoScope(PhantomData)
+    }
+}
+
+impl Drop for ProbeMemoScope<'_> {
+    fn drop(&mut self) {
+        PROBE_MEMOS.with_borrow_mut(|memos| memos.pop());
+    }
+}
+
+/// The full fingerprint `build` computes for `key`, once for each probe
+/// scope `mol` is in; `None` outside one, or if `build` failed.
+fn probe_memo<T: 'static>(
+    mol: &Mol,
+    key: MemoKey,
+    build: impl FnOnce() -> Result<T>,
+) -> Option<Rc<T>> {
+    let is_probe = |memo: &&mut ProbeMemo| std::ptr::eq(memo.mol, mol);
+    let found = PROBE_MEMOS.with_borrow_mut(|memos| {
+        let memo = memos.iter_mut().rev().find(is_probe)?;
+        Some(
+            memo.entries
+                .iter()
+                .find(|(k, _)| *k == key)
+                .map(|(_, value)| value.clone()),
+        )
+    })?;
+    let value = match found {
+        Some(value) => value,
+        None => {
+            let value = build().ok().map(|value| Rc::new(value) as Rc<dyn Any>);
+            PROBE_MEMOS.with_borrow_mut(|memos| {
+                if let Some(memo) = memos.iter_mut().rev().find(is_probe) {
+                    memo.entries.push((key, value.clone()));
+                }
+            });
+            value
+        }
+    };
+    value?.downcast().ok()
 }
 
 /// The weights scaled so the largest in magnitude is 1 (unless all are 0),
@@ -643,33 +741,48 @@ pub fn get_rdk_fingerprint(mol: &Mol) -> Result<ExplicitBitVect> {
 /// maxPath, nBitsPerHash)`; `Error::Value` for an atom past the last, as
 /// in Python. Python keeps the fingerprint on the molecule for later calls
 /// (whatever their parameters, until `GetAtomicWeightsForFingerprint`
-/// deletes it); this computes it each time.
+/// deletes it); this keeps it, for the same parameters, only while
+/// `get_atomic_weights_for_fingerprint` or `get_atomic_weights_for_model`
+/// weighs `mol`'s atoms, and computes it each time otherwise.
 pub fn get_rdk_fingerprint_with_params(
     mol: &Mol,
     params: &GetRDKFingerprintParams,
 ) -> Result<ExplicitBitVect> {
-    let (mut fp, outputs) = rdk_fingerprint_with_outputs(
-        mol,
-        &RDKFingerprintParams {
-            fp_size: params.n_bits,
-            min_path: params.min_path,
-            max_path: params.max_path,
-            n_bits_per_hash: params.n_bits_per_hash,
-            ..Default::default()
-        },
-    )?;
-    let Some(atom_id) = params.atom_id else {
-        return Ok(fp);
+    let compute = || {
+        let (fp, outputs) = rdk_fingerprint_with_outputs(
+            mol,
+            &RDKFingerprintParams {
+                fp_size: params.n_bits,
+                min_path: params.min_path,
+                max_path: params.max_path,
+                n_bits_per_hash: params.n_bits_per_hash,
+                ..Default::default()
+            },
+        )?;
+        Ok((fp, outputs.atom_bits))
     };
+    let Some(atom_id) = params.atom_id else {
+        return Ok(compute()?.0);
+    };
+    let key = MemoKey::Rdk(GetRDKFingerprintParams {
+        atom_id: None,
+        ..params.clone()
+    });
+    let full = match probe_memo(mol, key, compute) {
+        Some(full) => full,
+        None => Rc::new(compute()?),
+    };
+    let (fp, atom_bits) = &*full;
     if atom_id >= mol.get_num_atoms() {
         return Err(Error::Value {
             message: "atom index greater than number of atoms".to_owned(),
         });
     }
-    let bits = outputs.atom_bits[atom_id as usize]
+    let bits = atom_bits[atom_id as usize]
         .iter()
         .map(|&bit| bit_index(bit))
         .collect::<Result<Vec<u32>>>()?;
+    let mut fp = fp.clone();
     fp.un_set_bits_from_list(&bits)?;
     Ok(fp)
 }
@@ -749,6 +862,43 @@ impl GetAPFingerprintParams {
             ..Default::default()
         })
     }
+
+    /// The atom `fp_type`'s fingerprint leaves out, and its full
+    /// fingerprint from `get`, with the bits of each atom's pairs (once for
+    /// each pair), while `mol`'s atoms are weighed (`ProbeMemoScope`).
+    /// Leaving an atom out leaves out its pairs and nothing else, so these
+    /// give the fingerprint without the atom from one distance matrix,
+    /// where computing each would build one for each atom (U6).
+    fn memo<T: 'static>(
+        &self,
+        mol: &Mol,
+        fp_type: ApFingerprintType,
+        get: impl FnOnce(&Mol, &GetFingerprintParams) -> Result<(T, AdditionalOutput)>,
+    ) -> Option<(u32, Rc<FullFingerprint<T>>)> {
+        let atom_id = self
+            .atom_id
+            .filter(|&atom_id| atom_id < mol.get_num_atoms())?;
+        let key = MemoKey::Ap(
+            fp_type,
+            GetAPFingerprintParams {
+                atom_id: None,
+                ..self.clone()
+            },
+        );
+        let full = probe_memo(mol, key, || {
+            let (fp, atoms_per_bit) = probe_fingerprint(mol, get)?;
+            let mut atom_bits = vec![Vec::new(); mol.get_num_atoms() as usize];
+            for (&bit, entries) in &atoms_per_bit {
+                for entry in entries {
+                    for &aid in entry {
+                        atom_bits[aid as usize].push(bit);
+                    }
+                }
+            }
+            Ok((fp, atom_bits))
+        })?;
+        Some((atom_id, full))
+    }
 }
 
 /// The atom-pair fingerprint, unfolded counts. Mirrors
@@ -767,9 +917,19 @@ pub fn get_ap_fingerprint_with_params(
     mol: &Mol,
     params: &GetAPFingerprintParams,
 ) -> Result<ULongSparseIntVect> {
-    params
-        .generator(None)?
-        .get_sparse_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+    let fpg = params.generator(None)?;
+    if let Some((atom_id, full)) = params.memo(mol, ApFingerprintType::Normal, |m, p| {
+        fpg.get_sparse_count_fingerprint_with_outputs(m, p)
+    }) {
+        let (fp, atom_bits) = &*full;
+        let mut fp = fp.clone();
+        for &bit in &atom_bits[atom_id as usize] {
+            let val = fp.get_val(bit)?;
+            fp.set_val(bit, val - 1)?;
+        }
+        return Ok(fp);
+    }
+    fpg.get_sparse_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
 }
 
 /// The hashed atom-pair fingerprint, counts in `n_bits`. Mirrors
@@ -785,9 +945,26 @@ pub fn get_ap_fingerprint_hashed_with_params(
     mol: &Mol,
     params: &GetAPFingerprintParams,
 ) -> Result<UIntSparseIntVect> {
-    params
-        .generator(None)?
-        .get_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+    let fpg = params.generator(None)?;
+    // With no bits, the generator does not fold the counts.
+    let memo = (params.n_bits > 0)
+        .then(|| {
+            params.memo(mol, ApFingerprintType::Hashed, |m, p| {
+                fpg.get_count_fingerprint_with_outputs(m, p)
+            })
+        })
+        .flatten();
+    if let Some((atom_id, full)) = memo {
+        let (fp, atom_bits) = &*full;
+        let mut fp = fp.clone();
+        for &bit in &atom_bits[atom_id as usize] {
+            let bit = bit_index(bit)?;
+            let val = fp.get_val(bit)?;
+            fp.set_val(bit, val - 1)?;
+        }
+        return Ok(fp);
+    }
+    fpg.get_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
 }
 
 /// The hashed atom-pair fingerprint as bits. Mirrors
@@ -804,9 +981,43 @@ pub fn get_ap_fingerprint_bv_with_params(
     mol: &Mol,
     params: &GetAPFingerprintParams,
 ) -> Result<ExplicitBitVect> {
-    params
-        .generator(Some(count_bounds(params.n_bits_per_entry)?))?
-        .get_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+    let bounds = count_bounds(params.n_bits_per_entry)?;
+    let fpg = params.generator(Some(bounds.clone()))?;
+    // RDKit's `getFingerprint` simulates counts: it folds the counts into
+    // n_bits / bounds bits, and sets bit `bit * bounds + i` where the count
+    // at `bit` reaches `bounds[i]`.
+    let n_counts = params.n_bits / bounds.len() as u32;
+    let memo = (n_counts > 0)
+        .then(|| {
+            params.memo(mol, ApFingerprintType::Bv, |m, p| {
+                GetAPFingerprintParams {
+                    n_bits: n_counts,
+                    ..params.clone()
+                }
+                .generator(None)?
+                .get_count_fingerprint_with_outputs(m, p)
+            })
+        })
+        .flatten();
+    if let Some((atom_id, full)) = memo {
+        let (counts, atom_bits) = &*full;
+        let mut counts = counts.get_nonzero_elements();
+        for &bit in &atom_bits[atom_id as usize] {
+            if let Some(count) = counts.get_mut(&bit_index(bit)?) {
+                *count -= 1;
+            }
+        }
+        let mut fp = ExplicitBitVect::new(params.n_bits);
+        for (bit, count) in counts {
+            for (i, &bound) in (0..).zip(&bounds) {
+                if i64::from(count) >= i64::from(bound) {
+                    fp.set_bit(bit * bounds.len() as u32 + i)?;
+                }
+            }
+        }
+        return Ok(fp);
+    }
+    fpg.get_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
 }
 
 /// Parameters for the `get_tt_fingerprint` functions, with Python's

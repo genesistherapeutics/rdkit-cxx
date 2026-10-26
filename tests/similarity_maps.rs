@@ -672,3 +672,126 @@ fn color_maps_are_rounded_as_python_rounds_them() {
     assert!(svg.contains("#1933E5"));
     assert!(!svg.contains("#1932E5"));
 }
+
+/// The fingerprints `fp` gives while the weights of the probe's atoms are
+/// computed (when the RDKit and atom-pair functions take each atom's bits
+/// from the full fingerprint), and its weights, against the fingerprints
+/// it gives outside, and the weights computed from those.
+fn assert_weights_unchanged<F: PartialEq + std::fmt::Debug>(
+    ref_mol: &Mol,
+    probe_mol: &Mol,
+    fp: impl Fn(&Mol, Option<u32>) -> rdkit_cxx::Result<F>,
+    metric: impl Fn(&F, &F) -> rdkit_cxx::Result<f64> + Copy,
+) {
+    let mut seen = Vec::new();
+    let weights = get_atomic_weights_for_fingerprint_with_metric(
+        ref_mol,
+        probe_mol,
+        |m, i| {
+            let f = fp(m, i)?;
+            if std::ptr::eq(m, probe_mol) {
+                seen.push((i, fp(m, i)?));
+            }
+            Ok(f)
+        },
+        metric,
+    )
+    .unwrap();
+    assert_eq!(seen.len(), probe_mol.get_num_atoms() as usize + 1);
+    for (i, f) in &seen {
+        assert_eq!(f, &fp(probe_mol, *i).unwrap(), "atom {i:?}");
+    }
+    let ref_fp = fp(ref_mol, None).unwrap();
+    let base = metric(&ref_fp, &fp(probe_mol, None).unwrap()).unwrap();
+    let expected = (0..probe_mol.get_num_atoms())
+        .map(|i| base - metric(&ref_fp, &fp(probe_mol, Some(i)).unwrap()).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(weights, expected);
+    let model = get_atomic_weights_for_model(probe_mol, &fp, |f| metric(&ref_fp, f)).unwrap();
+    assert_eq!(model, expected);
+}
+
+// The RDKit and atom-pair fingerprints keep the probe's full fingerprint
+// while its atoms are weighed; the weights are those computed without.
+#[test]
+fn kept_fingerprints_give_the_same_weights() {
+    let big = mol_from_smiles(&format!(
+        "OC(=O)[C@@H](N){}C(=O)O",
+        "c1ccc(cc1)C(=O)N[C@@H](C)C(=O)NC1CC[N+](C)(CC1)C".repeat(5)
+    ))
+    .unwrap();
+    assert!(big.get_num_atoms() >= 100);
+    let mols = [
+        (benzene(), pyridine()),
+        (refmol(), probe()),
+        (probe(), big),
+        (
+            mol_from_smiles("C").unwrap(),
+            mol_from_smiles("CC.[Na+]").unwrap(),
+        ),
+    ];
+    let aps = [
+        GetAPFingerprintParams::default(),
+        GetAPFingerprintParams {
+            n_bits: 1000,
+            min_length: 2,
+            max_length: 6,
+            n_bits_per_entry: 3,
+            include_chirality: true,
+            ..Default::default()
+        },
+        GetAPFingerprintParams {
+            n_bits: 64,
+            n_bits_per_entry: 1,
+            ..Default::default()
+        },
+    ];
+    let rdks = [
+        GetRDKFingerprintParams::default(),
+        GetRDKFingerprintParams {
+            n_bits: 512,
+            min_path: 2,
+            max_path: 4,
+            n_bits_per_hash: 1,
+            ..Default::default()
+        },
+    ];
+    for (ref_mol, probe_mol) in &mols {
+        for params in &aps {
+            let with = |i| GetAPFingerprintParams {
+                atom_id: i,
+                ..params.clone()
+            };
+            assert_weights_unchanged(
+                ref_mol,
+                probe_mol,
+                |m: &Mol, i| get_ap_fingerprint_with_params(m, &with(i)),
+                dice_similarity_sparse_int_vect,
+            );
+            assert_weights_unchanged(
+                ref_mol,
+                probe_mol,
+                |m: &Mol, i| get_ap_fingerprint_hashed_with_params(m, &with(i)),
+                dice_similarity_sparse_int_vect,
+            );
+            assert_weights_unchanged(
+                ref_mol,
+                probe_mol,
+                |m: &Mol, i| get_ap_fingerprint_bv_with_params(m, &with(i)),
+                dice_similarity,
+            );
+        }
+        for params in &rdks {
+            let with = |i| GetRDKFingerprintParams {
+                atom_id: i,
+                ..params.clone()
+            };
+            assert_weights_unchanged(
+                ref_mol,
+                probe_mol,
+                |m: &Mol, i| get_rdk_fingerprint_with_params(m, &with(i)),
+                tanimoto_similarity,
+            );
+        }
+    }
+}
