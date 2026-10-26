@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.ChemUtils.DescriptorUtilities", "rdkit.Chem.Crippen", "rdkit.Chem.Descriptors", "rdkit.Chem.Descriptors3D", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EState.AtomTypes", "rdkit.Chem.EState.EState", "rdkit.Chem.EState.EState_VSA", "rdkit.Chem.EState.Fingerprinter", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Fragments", "rdkit.Chem.GraphDescriptors", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.MolSurf", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.QED", "rdkit.Chem.ReducedGraphs", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SpacialScore", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Descriptors.Descriptors", "rdkit.ML.Descriptors.MoleculeDescriptors", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.ChemUtils.DescriptorUtilities", "rdkit.Chem.Crippen", "rdkit.Chem.Descriptors", "rdkit.Chem.Descriptors3D", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EState.AtomTypes", "rdkit.Chem.EState.EState", "rdkit.Chem.EState.EState_VSA", "rdkit.Chem.EState.Fingerprinter", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Fragments", "rdkit.Chem.GraphDescriptors", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.MolSurf", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.QED", "rdkit.Chem.ReducedGraphs", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SpacialScore", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Descriptors.Descriptors", "rdkit.ML.Descriptors.MoleculeDescriptors", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [modules.reasons]
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
@@ -444,6 +444,206 @@ overloads_note = "force, which only steers RDKit's descriptor caches, is not bou
 [[entry]]
 python = "rdkit.Chem.Descriptors3D.descList"
 rust = ["rdkit_cxx::chem::descriptors_3d::desc_list"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.DebugDraw"
+rust = ["rdkit_cxx::chem::draw::debug_draw", "rdkit_cxx::chem::draw::debug_draw_with_params", "rdkit_cxx::chem::draw::debug_draw_as_png", "rdkit_cxx::chem::draw::debug_draw_as_png_with_params", "rdkit_cxx::chem::draw::debug_draw_with_drawer"]
+overloads_note = "asSVG=False is debug_draw_as_png (A4); a drawer is debug_draw_with_drawer, which draws on it"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawMolWithMatches"
+rust = ["rdkit_cxx::chem::draw::draw_mol_with_matches", "rdkit_cxx::chem::draw::draw_mol_with_matches_with_params", "rdkit_cxx::chem::draw::draw_mol_with_matches_as_svg", "rdkit_cxx::chem::draw::draw_mol_with_matches_as_svg_with_params"]
+overloads_note = "doPNG=False is draw_mol_with_matches_as_svg (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawMorganBit"
+rust = ["rdkit_cxx::chem::draw::draw_morgan_bit", "rdkit_cxx::chem::draw::draw_morgan_bit_with_params", "rdkit_cxx::chem::draw::draw_morgan_bit_as_png", "rdkit_cxx::chem::draw::draw_morgan_bit_as_png_with_params"]
+overloads_note = "useSVG=False is draw_morgan_bit_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawMorganBits"
+rust = ["rdkit_cxx::chem::draw::draw_morgan_bits", "rdkit_cxx::chem::draw::draw_morgan_bits_with_params", "rdkit_cxx::chem::draw::draw_morgan_bits_as_png", "rdkit_cxx::chem::draw::draw_morgan_bits_as_png_with_params"]
+overloads_note = "useSVG=False is draw_morgan_bits_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawMorganEnv"
+rust = ["rdkit_cxx::chem::draw::draw_morgan_env", "rdkit_cxx::chem::draw::draw_morgan_env_with_params", "rdkit_cxx::chem::draw::draw_morgan_env_as_png", "rdkit_cxx::chem::draw::draw_morgan_env_as_png_with_params"]
+overloads_note = "useSVG=False is draw_morgan_env_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawMorganEnvs"
+rust = ["rdkit_cxx::chem::draw::draw_morgan_envs", "rdkit_cxx::chem::draw::draw_morgan_envs_with_params", "rdkit_cxx::chem::draw::draw_morgan_envs_as_png", "rdkit_cxx::chem::draw::draw_morgan_envs_as_png_with_params"]
+overloads_note = "useSVG=False is draw_morgan_envs_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawRDKitBit"
+rust = ["rdkit_cxx::chem::draw::draw_rdkit_bit", "rdkit_cxx::chem::draw::draw_rdkit_bit_with_params", "rdkit_cxx::chem::draw::draw_rdkit_bit_as_png", "rdkit_cxx::chem::draw::draw_rdkit_bit_as_png_with_params"]
+name_exception = "RDKit is one word: draw_rdkit_bit"
+overloads_note = "useSVG=False is draw_rdkit_bit_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawRDKitBits"
+rust = ["rdkit_cxx::chem::draw::draw_rdkit_bits", "rdkit_cxx::chem::draw::draw_rdkit_bits_with_params", "rdkit_cxx::chem::draw::draw_rdkit_bits_as_png", "rdkit_cxx::chem::draw::draw_rdkit_bits_as_png_with_params"]
+name_exception = "RDKit is one word: draw_rdkit_bits"
+overloads_note = "useSVG=False is draw_rdkit_bits_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawRDKitEnv"
+rust = ["rdkit_cxx::chem::draw::draw_rdkit_env", "rdkit_cxx::chem::draw::draw_rdkit_env_with_params", "rdkit_cxx::chem::draw::draw_rdkit_env_as_png", "rdkit_cxx::chem::draw::draw_rdkit_env_as_png_with_params"]
+name_exception = "RDKit is one word: draw_rdkit_env"
+overloads_note = "useSVG=False is draw_rdkit_env_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.DrawRDKitEnvs"
+rust = ["rdkit_cxx::chem::draw::draw_rdkit_envs", "rdkit_cxx::chem::draw::draw_rdkit_envs_with_params", "rdkit_cxx::chem::draw::draw_rdkit_envs_as_png", "rdkit_cxx::chem::draw::draw_rdkit_envs_as_png_with_params"]
+name_exception = "RDKit is one word: draw_rdkit_envs"
+overloads_note = "useSVG=False is draw_rdkit_envs_as_png (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.__getnewargs__"
+reason = "the pickling hook of a Python named tuple; Rust's FingerprintEnv is a plain struct"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.__repr__"
+reason = "the named tuple's repr; Rust's FingerprintEnv derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.atomColors"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv::atom_colors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.bondColors"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv::bond_colors"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.highlightAtoms"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv::highlight_atoms"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.highlightBonds"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv::highlight_bonds"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.highlightRadii"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv::highlight_radii"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.FingerprintEnv.submol"
+rust = ["rdkit_cxx::chem::draw::FingerprintEnv::submol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.MolToFile"
+rust = ["rdkit_cxx::chem::draw::mol_to_file", "rdkit_cxx::chem::draw::mol_to_file_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.MolToImage"
+rust = ["rdkit_cxx::chem::draw::mol_to_image", "rdkit_cxx::chem::draw::mol_to_image_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.MolToSVG"
+rust = ["rdkit_cxx::chem::draw::mol_to_svg", "rdkit_cxx::chem::draw::mol_to_svg_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.MolsMatrixToGridImage"
+rust = ["rdkit_cxx::chem::draw::mols_matrix_to_grid_image", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_with_params", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_use_svg", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_use_svg_with_params"]
+overloads_note = "useSVG=True is mols_matrix_to_grid_image_use_svg (A4); returnPNG, which returns PNG data for a PIL image, is how both PNG forms return"
+
+[[entry]]
+python = "rdkit.Chem.Draw.MolsToGridImage"
+rust = ["rdkit_cxx::chem::draw::mols_to_grid_image", "rdkit_cxx::chem::draw::mols_to_grid_image_with_params", "rdkit_cxx::chem::draw::mols_to_grid_image_use_svg", "rdkit_cxx::chem::draw::mols_to_grid_image_use_svg_with_params"]
+overloads_note = "useSVG=True is mols_to_grid_image_use_svg (A4); returnPNG, which returns PNG data for a PIL image, is how both PNG forms return"
+
+[[entry]]
+python = "rdkit.Chem.Draw.MolsToImage"
+reason = "pastes MolToImage's PIL images side by side into a new PIL image; Rust has no PIL images, and mols_to_grid_image with every molecule in one row draws them so"
+
+[[entry]]
+python = "rdkit.Chem.Draw.ReactionToImage"
+rust = ["rdkit_cxx::chem::draw::reaction_to_image", "rdkit_cxx::chem::draw::reaction_to_image_with_params", "rdkit_cxx::chem::draw::reaction_to_image_use_svg", "rdkit_cxx::chem::draw::reaction_to_image_use_svg_with_params"]
+overloads_note = "useSVG=True is reaction_to_image_use_svg (A4); returnPNG, which returns PNG data for a PIL image, is how both PNG forms return"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SetComicMode"
+rust = ["rdkit_cxx::chem::draw::set_comic_mode"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.ShowMol"
+reason = "shows MolToImage's PIL image in a Tkinter window; Rust has no GUI, and mol_to_image returns the PNG"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetAPFingerprint"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_hashed", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_hashed_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_bv", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_bv_with_params"]
+overloads_note = "each fpType returns its own type, so 'hashed' and 'bv' are get_ap_fingerprint_hashed and get_ap_fingerprint_bv (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForFingerprint"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_with_metric"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForFingerprintGenerator"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator", "rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator_with_metric", "rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator_use_counts", "rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator_use_counts_with_metric"]
+overloads_note = "useCounts=True, which changes the metric's type, is get_atomic_weights_for_fingerprint_generator_use_counts (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForModel"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_model"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetMorganFingerprint"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_count", "rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_count_with_params"]
+overloads_note = "fpType='count' returns counts, so it is get_morgan_fingerprint_count (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetRDKFingerprint"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_rdk_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_rdk_fingerprint_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForFingerprint"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForFingerprintGenerator"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint_generator", "rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint_generator_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint_generator_use_counts", "rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint_generator_use_counts_with_params"]
+overloads_note = "useCounts=True, which changes the metric's type, is get_similarity_map_for_fingerprint_generator_use_counts (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForModel"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_model", "rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_model_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapFromWeights"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_from_weights", "rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_from_weights_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetStandardizedWeights"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_standardized_weights"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.GetTTFingerprint"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_hashed", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_hashed_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_bv", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_bv_with_params"]
+overloads_note = "each fpType returns its own type, so 'hashed' and 'bv' are get_tt_fingerprint_hashed and get_tt_fingerprint_bv (A4)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.apDict"
+reason = "a dict of lambdas through which GetAPFingerprint picks rdMolDescriptors' function for its fpType; the Rust functions for each fpType replace it"
+
+[[entry]]
+python = "rdkit.Chem.Draw.SimilarityMaps.ttDict"
+reason = "a dict of lambdas through which GetTTFingerprint picks rdMolDescriptors' function for its fpType; the Rust functions for each fpType replace it"
+
+[[entry]]
+python = "rdkit.Chem.Draw.calcAtomGaussians"
+reason = "reads the atom positions the legacy MolDrawing code kept on molecules (mol._atomPs), which nothing in RDKit sets any longer"
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.ALL"
@@ -1443,6 +1643,10 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_drawer_params_from_json"]
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.UpdateMolDrawOptionsFromJSON"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::update_mol_draw_options_from_json"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.shouldKekulize"
+rust = ["rdkit_cxx::chem::draw::should_kekulize"]
 
 [[entry]]
 python = "rdkit.Chem.EState.AtomTypes.BuildPatts"
