@@ -48,6 +48,7 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::Mol;
+use crate::chem::rd_enumerate_stereoisomers::StereoEnumerationOptions;
 use crate::chem::rd_fingerprint_generator::FingerprintGenerator64;
 use crate::chem::rd_generalized_substruct::ExtendedQueryMol;
 use crate::chem::rd_rascal_mces::RascalOptions;
@@ -184,8 +185,7 @@ impl SynthonSpaceSearchParams {
 
 /// Parameters for building the synthons' shapes, Gaussian shapes of their
 /// conformers. Mirrors `rdSynthonSpaceSearch.ShapeBuildParams` (A3);
-/// `Default` reads RDKit's defaults. Its `stereoEnumOpts`, a
-/// `StereoEnumerationOptions`, are the `stereo_enum_opts_*` fields.
+/// `Default` reads RDKit's defaults.
 #[derive(Clone)]
 pub struct ShapeBuildParams {
     /// The most conformers per synthon.
@@ -200,18 +200,9 @@ pub struct ShapeBuildParams {
     pub num_threads: i32,
     /// The embedding's seed; -1 for a random one.
     pub random_seed: i32,
-    /// Keeps only stereoisomers that embed (`tryEmbedding`).
-    pub stereo_enum_opts_try_embedding: bool,
-    /// Leaves specified stereocenters as they are (`onlyUnassigned`).
-    pub stereo_enum_opts_only_unassigned: bool,
-    /// Enumerates only the stereo groups (`onlyStereoGroups`).
-    pub stereo_enum_opts_only_stereo_groups: bool,
-    /// Keeps only isomers with different canonical SMILES (`unique`).
-    pub stereo_enum_opts_unique: bool,
-    /// The most isomers; 0 for all of them (`maxIsomers`).
-    pub stereo_enum_opts_max_isomers: u64,
-    /// The enumeration's seed; -1 for a random one (`randomSeed`).
-    pub stereo_enum_opts_random_seed: i32,
+    /// How the stereoisomers whose shapes are built are enumerated. Its
+    /// `verbose` is not read: RDKit's enumerator logs nothing here.
+    pub stereo_enum_opts: StereoEnumerationOptions,
     /// Builds shapes only for synthons of at most this many heavy atoms; 0
     /// for all.
     pub max_synthon_atoms: u32,
@@ -269,6 +260,7 @@ impl fmt::Debug for ShapeBuildParams {
             .field("rms_threshold", &self.rms_threshold)
             .field("shape_sim_threshold", &self.shape_sim_threshold)
             .field("random_seed", &self.random_seed)
+            .field("stereo_enum_opts", &self.stereo_enum_opts)
             .field("interim_file", &self.interim_file)
             .field("user_conformer_generator", &self.user_conformer_generator)
             .finish_non_exhaustive()
@@ -284,12 +276,15 @@ impl Default for ShapeBuildParams {
             shape_sim_threshold: d.shape_sim_threshold,
             num_threads: d.num_threads,
             random_seed: d.random_seed,
-            stereo_enum_opts_try_embedding: d.stereo_try_embedding,
-            stereo_enum_opts_only_unassigned: d.stereo_only_unassigned,
-            stereo_enum_opts_only_stereo_groups: d.stereo_only_stereo_groups,
-            stereo_enum_opts_unique: d.stereo_unique,
-            stereo_enum_opts_max_isomers: d.stereo_max_isomers,
-            stereo_enum_opts_random_seed: d.stereo_random_seed,
+            stereo_enum_opts: StereoEnumerationOptions {
+                try_embedding: d.stereo_try_embedding,
+                only_unassigned: d.stereo_only_unassigned,
+                only_stereo_groups: d.stereo_only_stereo_groups,
+                unique: d.stereo_unique,
+                max_isomers: d.stereo_max_isomers,
+                random_seed: d.stereo_random_seed,
+                verbose: false,
+            },
             max_synthon_atoms: d.max_synthon_atoms,
             max_embed_attempts: d.max_embed_attempts,
             time_out: d.time_out,
@@ -308,12 +303,12 @@ impl ShapeBuildParams {
             shape_sim_threshold: self.shape_sim_threshold,
             num_threads: self.num_threads,
             random_seed: self.random_seed,
-            stereo_try_embedding: self.stereo_enum_opts_try_embedding,
-            stereo_only_unassigned: self.stereo_enum_opts_only_unassigned,
-            stereo_only_stereo_groups: self.stereo_enum_opts_only_stereo_groups,
-            stereo_unique: self.stereo_enum_opts_unique,
-            stereo_max_isomers: self.stereo_enum_opts_max_isomers,
-            stereo_random_seed: self.stereo_enum_opts_random_seed,
+            stereo_try_embedding: self.stereo_enum_opts.try_embedding,
+            stereo_only_unassigned: self.stereo_enum_opts.only_unassigned,
+            stereo_only_stereo_groups: self.stereo_enum_opts.only_stereo_groups,
+            stereo_unique: self.stereo_enum_opts.unique,
+            stereo_max_isomers: self.stereo_enum_opts.max_isomers,
+            stereo_random_seed: self.stereo_enum_opts.random_seed,
             max_synthon_atoms: self.max_synthon_atoms,
             max_embed_attempts: self.max_embed_attempts,
             time_out: self.time_out,

@@ -868,12 +868,12 @@ fn shape_build_params_defaults() {
     assert_eq!(p.shape_sim_threshold, 0.95);
     assert_eq!(p.num_threads, 1);
     assert_eq!(p.random_seed, 0xdac);
-    assert!(p.stereo_enum_opts_try_embedding);
-    assert!(p.stereo_enum_opts_only_unassigned);
-    assert!(!p.stereo_enum_opts_only_stereo_groups);
-    assert!(p.stereo_enum_opts_unique);
-    assert_eq!(p.stereo_enum_opts_max_isomers, 0);
-    assert_eq!(p.stereo_enum_opts_random_seed, 0xdac);
+    assert!(p.stereo_enum_opts.try_embedding);
+    assert!(p.stereo_enum_opts.only_unassigned);
+    assert!(!p.stereo_enum_opts.only_stereo_groups);
+    assert!(p.stereo_enum_opts.unique);
+    assert_eq!(p.stereo_enum_opts.max_isomers, 0);
+    assert_eq!(p.stereo_enum_opts.random_seed, 0xdac);
     assert_eq!(p.max_synthon_atoms, 0);
     assert_eq!(p.max_embed_attempts, 10);
     assert_eq!(p.time_out, 60);
