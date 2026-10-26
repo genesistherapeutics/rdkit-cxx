@@ -543,3 +543,22 @@ rule changes the rule first.
   covers with fewer Rust paths, or does not bind yet.
 - **I3.** A module joins `complete` once every inventory entry in it is
   mapped; CI then holds it there.
+
+## Ports of pure-Python modules
+
+- **R1.** RDKit's pure-Python code is ported to Rust on top of the bound
+  API, at the paths N1 gives its modules: `rdkit.Chem.RegistrationHash` →
+  `rdkit_cxx::chem::registration_hash`. Functions in a package's
+  `__init__.py` go in a private `init` module that the package's Rust
+  module re-exports (`Chem.FindMolChiralCenters` →
+  `rdkit_cxx::chem::find_mol_chiral_centers`). Ports follow the naming and
+  argument rules (N2–N4, A1–A2), and leave Python's private names (a
+  leading underscore) private.
+- **R2.** A port computes what Python computes, byte for byte where Python
+  returns text or a hash (`RegistrationHash`'s `json.dumps` and SHA-1), and
+  its tests pin values from Python's module in the supported RDKit release.
+  Where Python changes process-wide state for a call
+  (`SetUseLegacyStereoPerception`), the port requires the state instead
+  and is `Error::Value` without it (U5).
+- **R3.** The inventory lists only nanobind modules, so ports have no
+  manifest entries.
