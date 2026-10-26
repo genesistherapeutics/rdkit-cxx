@@ -22,6 +22,7 @@ pub mod graphs;
 pub mod inchi;
 mod init;
 pub mod lipinski;
+pub mod mol_key;
 pub mod mol_standardize;
 mod py_compat;
 pub mod randomize;
