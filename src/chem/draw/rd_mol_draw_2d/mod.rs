@@ -64,6 +64,11 @@
 //!   a molecule drawn or `set_scale` to place them by: `Error::Runtime`
 //!   otherwise, as in Python.
 //!
+//! - Contours (`contour_and_draw_grid`, `contour_and_draw_gaussians`) of
+//!   values and levels that are not finite or beyond 1e300 (RDKit's fill
+//!   colours come out NaN), of gaussians with widths outside 1e-100 to
+//!   1e100, which RDKit divides by, or on grids of more than 1e8 points.
+//!
 //! A drawing call that fails inside RDKit after it has started laying out
 //! the molecule leaves the drawer unable to draw (later drawing calls
 //! return `Error::Value`), since RDKit may keep the half-built molecule and
@@ -79,8 +84,10 @@
 //! on a line of no length, as in Python; the wrappers refuse molecules with
 //! two bonded atoms at one position in comic mode.
 
+mod contours;
 mod drawer;
 mod options;
 
+pub use contours::*;
 pub use drawer::*;
 pub use options::*;

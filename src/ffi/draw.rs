@@ -216,6 +216,24 @@ pub(crate) mod ffi {
         height: i32,
     }
 
+    /// `MolDraw2DUtils::ContourParams`, as `ContourParams` holds it.
+    struct ContourParamsData {
+        set_scale: bool,
+        dash_negative: bool,
+        fill_grid: bool,
+        grid_resolution: f64,
+        contour_width: f64,
+        extra_grid_padding: f64,
+        contour_colour: DrawColour,
+        colour_map: Vec<DrawColour>,
+        draw_as_lines: bool,
+        coord_scale_for_quantization: f64,
+        isoval_scale_for_quantization: f64,
+        use_fill_threshold: bool,
+        fill_threshold: f64,
+        fill_threshold_is_fraction: bool,
+    }
+
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/draw.h");
@@ -417,6 +435,13 @@ pub(crate) mod ffi {
             maxv: &Point2D,
             mol: &RWMol,
         ) -> Result<()>;
+        fn drawer_draw_molecule_acs1996(
+            d: Pin<&mut Drawer>,
+            mol: &RWMol,
+            data: &DrawMoleculeData,
+        ) -> Result<()>;
+        fn mol_to_acs1996_svg(mol: &RWMol, data: &DrawMoleculeData)
+        -> Result<UniquePtr<CxxString>>;
         fn svg_finish_drawing(d: Pin<&mut Drawer>) -> Result<()>;
         fn svg_drawing_text(d: &Drawer) -> Result<UniquePtr<CxxString>>;
         fn svg_add_molecule_metadata(d: Pin<&mut Drawer>, mol: &RWMol, conf_id: i32) -> Result<()>;
@@ -458,6 +483,30 @@ pub(crate) mod ffi {
             conf_id: i32,
         ) -> Result<UniquePtr<CxxString>>;
         fn mean_bond_length(mol: &RWMol, conf_id: i32) -> Result<f64>;
+
+        fn contour_params_default() -> ContourParamsData;
+        #[allow(clippy::too_many_arguments)]
+        fn contour_and_draw_grid(
+            d: Pin<&mut Drawer>,
+            data: &[f64],
+            xcoords: &[f64],
+            ycoords: &[f64],
+            n_contours: u32,
+            levels: &[f64],
+            params: &ContourParamsData,
+            mols: Pin<&mut BorrowedMols>,
+        ) -> Result<()>;
+        #[allow(clippy::too_many_arguments)]
+        fn contour_and_draw_gaussians(
+            d: Pin<&mut Drawer>,
+            locs: &[Point2D],
+            heights: &[f64],
+            widths: &[f64],
+            n_contours: u32,
+            levels: &[f64],
+            params: &ContourParamsData,
+            mols: Pin<&mut BorrowedMols>,
+        ) -> Result<()>;
     }
 
     impl Vec<DrawText> {}

@@ -1126,3 +1126,61 @@ fn multi_colour_bond_highlights_need_bond_length() {
         &BTreeMap::new(),
     ));
 }
+
+#[test]
+fn acs1996_drawings() {
+    let size = |svg: &str| {
+        let start = svg.find("width='").unwrap() + 7;
+        let w: i32 = svg[start..].split("px").next().unwrap().parse().unwrap();
+        let start = svg.find("height='").unwrap() + 8;
+        let h: i32 = svg[start..].split("px").next().unwrap().parse().unwrap();
+        (w, h)
+    };
+    let m = mol("c1ccccc1O");
+    // Python's sizes and counts.
+    let text = mol_to_acs1996_svg(&m).unwrap();
+    assert_eq!((size(&text), text.matches("<path").count()), ((58, 27), 17));
+    let params = MolToACS1996SVGParams {
+        legend: "phenol".into(),
+        highlight_atoms: vec![0, 1],
+        ..Default::default()
+    };
+    assert_eq!(params.conf_id, -1);
+    let text = mol_to_acs1996_svg_with_params(&m, &params).unwrap();
+    assert_eq!(
+        (
+            size(&text),
+            text.matches("<path").count(),
+            text.matches("#FF7F7F").count()
+        ),
+        ((58, 30), 23, 4)
+    );
+    let mut d = MolDraw2DSVG::new(-1, -1).unwrap();
+    draw_molecule_acs1996(&mut d, &m).unwrap();
+    assert_eq!((d.width(), d.height()), (58, 27));
+    let opts = d.draw_options();
+    assert_close_to(opts.scaling_factor, 9.6, 1e-9);
+    assert_eq!(opts.fixed_font_size, 10);
+    if std::env::var_os("RDBASE").is_none() {
+        assert_eq!(opts.font_file, "BuiltinRobotoRegular");
+    }
+
+    // RDKit's check of the mean bond length, and the conformer.
+    assert_value_error(mol_to_acs1996_svg(&mol("C")));
+    let bad_conf = MolToACS1996SVGParams {
+        conf_id: 3,
+        ..Default::default()
+    };
+    assert_value_error(mol_to_acs1996_svg_with_params(&m, &bad_conf));
+    // A bond of 0.01 makes RDKit's scaling factor 1440, beyond the bounds
+    // the options are checked to (1e-12 makes it 1.44e13).
+    for len in [0.01, 1e-12] {
+        let mut tiny = depicted("CC");
+        let mut conf = tiny.get_conformer_mut().unwrap();
+        conf.set_atom_position(0, Point3D::new(0.0, 0.0, 0.0))
+            .unwrap();
+        conf.set_atom_position(1, Point3D::new(len, 0.0, 0.0))
+            .unwrap();
+        assert_value_error(mol_to_acs1996_svg(&tiny));
+    }
+}

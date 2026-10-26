@@ -29,6 +29,7 @@
 #include <GraphMol/MolOps.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
+#include <RDGeneral/RDLog.h>
 #ifdef RDK_BUILD_CAIRO_SUPPORT
 #include <GraphMol/FileParsers/PNGParser.h>
 #include <GraphMol/MolDraw2D/MolDraw2DCairo.h>
@@ -1897,6 +1898,46 @@ void drawer_set_scale_with_mol(Drawer &d, int width, int height,
   set_scale(d, width, height, minv, maxv, &mol);
 }
 
+void drawer_draw_molecule_acs1996(Drawer &d, const RWMol &mol,
+                                  const DrawMoleculeData &data) {
+  // MolDraw2DUtils::drawMolACS1996, step by step: it depicts a copy of a
+  // molecule without conformers (its rings as given), sets the drawer's
+  // options for the molecule's mean bond length, unchecked (a tiny one
+  // makes the scaling factor huge), and draws the copy with drawMolecule,
+  // highlighting only the bonds given.
+  check_usable(d);
+  auto &draw = *d.drawer;
+  if (draw.width() != -1 || draw.height() != -1) {
+    BOOST_LOG(rdWarningLog)
+        << "ACS drawing mode works best with a flexiCanvas i.e. a drawer"
+        << " created with width and height of -1.  The scale will be fixed,"
+        << " and that may not look great with a pre-determined size."
+        << std::endl;
+  }
+  const bool symmetrize = false;
+  const bool lock_random = false;
+  const DrawnMol depicted(mol, draw.drawOptions(), symmetrize, lock_random);
+  auto opts = draw.drawOptions();
+  RDKit::MolDraw2DUtils::setACS1996Options(
+      opts,
+      RDKit::MolDraw2DUtils::meanBondLength(depicted.mol(), data.conf_id));
+  check_draw_options(opts);
+  // The font file can come from $RDBASE, which need not be UTF-8.
+  check_utf8(opts.fontFile, "fontFile");
+  draw.drawOptions() = opts;
+  draw_molecule(d, depicted.mol(), data, false);
+}
+
+std::unique_ptr<std::string> mol_to_acs1996_svg(const RWMol &mol,
+                                                const DrawMoleculeData &data) {
+  // As molToACS1996SVG in nbWrap/rdMolDraw2D.cpp, on a drawer of the
+  // wrappers' own.
+  auto d = mol_draw_2d_svg_new(-1, -1, -1, -1, false);
+  drawer_draw_molecule_acs1996(*d, mol, data);
+  svg_finish_drawing(*d);
+  return svg_drawing_text(*d);
+}
+
 void svg_finish_drawing(Drawer &d) {
   static_cast<RDKit::MolDraw2DSVG &>(*d.drawer).finishDrawing();
 }
@@ -2082,6 +2123,328 @@ std::unique_ptr<std::string> mol_to_svg(const RWMol &mol, int width, int height,
   draw_molecule(*d, mol, data, true);
   svg_finish_drawing(*d);
   return svg_drawing_text(*d);
+}
+
+// Contours: MolDraw2DUtils::contourAndDrawGrid draws a grid's values as
+// filled boxes (fillGrid) and contour lines, in the molecule's frame, after
+// giving the drawer the grid's scale (setScale), which the wrappers do with
+// set_scale, so that they keep its transformation.
+namespace {
+
+namespace utils = RDKit::MolDraw2DUtils;
+
+// The largest grid value, and level: within it, the differences
+// contourAndDrawGrid takes stay finite (an infinite one makes the fill
+// colours NaN, which the SVG drawer converts to int).
+constexpr double kMaxContourValue = 1e300;
+
+// The most contour levels RDKit computes for itself (it makes nContours of
+// them when given none).
+constexpr std::uint32_t kMaxContours = 100000;
+
+// The most grid points ContourAndDrawGaussians computes: it converts the
+// count to size_t from double, and allocates and fills them all.
+constexpr double kMaxGridPoints = 1e8;
+
+utils::ContourParams contour_params_from_data(const ContourParamsData &data) {
+  utils::ContourParams ps;
+  ps.setScale = data.set_scale;
+  ps.dashNegative = data.dash_negative;
+  ps.fillGrid = data.fill_grid;
+  ps.gridResolution = data.grid_resolution;
+  ps.contourWidth = data.contour_width;
+  ps.extraGridPadding = data.extra_grid_padding;
+  ps.contourColour = colour_from_data(data.contour_colour);
+  ps.colourMap.clear();
+  for (const auto &c : data.colour_map) {
+    ps.colourMap.push_back(colour_from_data(c));
+  }
+  ps.drawAsLines = data.draw_as_lines;
+  ps.coordScaleForQuantization = data.coord_scale_for_quantization;
+  ps.isovalScaleForQuantization = data.isoval_scale_for_quantization;
+  ps.useFillThreshold = data.use_fill_threshold;
+  ps.fillThreshold = data.fill_threshold;
+  ps.fillThresholdIsFraction = data.fill_threshold_is_fraction;
+  return ps;
+}
+
+const RWMol *optional_mol(BorrowedMols &mols) {
+  return mols.mols().empty() ? nullptr
+                             : static_cast<const RWMol *>(mols.mols()[0].get());
+}
+
+void check_contour_value(double v, const char *what) {
+  if (!(std::abs(v) <= kMaxContourValue)) {
+    throw ValueErrorException(std::string(what) +
+                              " must be finite and within 1e300");
+  }
+}
+
+// What contourAndDrawGrid trusts of its parameters: its colours (the fill
+// interpolates between colourMap's), and the contour width, which it sets
+// as the drawer's line width (and leaves there if nothing is contoured).
+void check_contour_params(const Drawer &d, const utils::ContourParams &ps) {
+  // RDKit's PRECONDITION.
+  if (ps.colourMap.size() < 2) {
+    throw std::runtime_error("colourMap must have at least two entries");
+  }
+  for (const auto &c : ps.colourMap) {
+    check_colour(c, "colourMap");
+  }
+  check_colour(ps.contourColour, "contourColour");
+  auto opts = d.drawer->drawOptions();
+  opts.bondLineWidth = ps.contourWidth;
+  check_draw_options(opts);
+  for (double v : {ps.coordScaleForQuantization, ps.isovalScaleForQuantization,
+                   ps.fillThreshold}) {
+    if (!std::isfinite(v)) {
+      throw ValueErrorException(
+          "the contour parameters must be finite (coordScaleForQuantization, "
+          "isovalScaleForQuantization, fillThreshold)");
+    }
+  }
+}
+
+// contourAndDrawGrid, checked: the grid as given, then the drawing as RDKit
+// will make it (scaled first when setScale is set).
+void draw_contours(Drawer &d, const double *grid, std::size_t n_grid,
+                   const std::vector<double> &xs, const std::vector<double> &ys,
+                   std::uint32_t n_contours, std::vector<double> levels,
+                   utils::ContourParams ps, const RWMol *mol) {
+  check_canvas(d);
+  // Python's checks, then RDKit's.
+  if (xs.empty()) {
+    throw ValueErrorException("xcoords argument must be non-empty");
+  }
+  if (ys.empty()) {
+    throw ValueErrorException("ycoords argument must be non-empty");
+  }
+  if (n_grid != xs.size() * ys.size()) {
+    throw ValueErrorException(
+        "data must have a value for each x and y coordinate (x-major)");
+  }
+  check_contour_params(d, ps);
+  for (double v : xs) {
+    check_free_coordinate(v);
+  }
+  for (double v : ys) {
+    check_free_coordinate(v);
+  }
+  for (std::size_t i = 0; i < n_grid; ++i) {
+    check_contour_value(grid[i], "the grid's values");
+  }
+  for (double v : levels) {
+    check_contour_value(v, "levels");
+  }
+  if (n_contours > kMaxContours) {
+    throw ValueErrorException("nContours must be at most 100000");
+  }
+  if (ps.setScale) {
+    set_scale(d, d.drawer->width(), d.drawer->height(),
+              Point2D{xs.front(), ys.front()}, Point2D{xs.back(), ys.back()},
+              mol);
+    ps.setScale = false;
+  }
+  // RDKit draws nothing unless it finds the grid's range (with no levels,
+  // or to fill), and the range is not empty.
+  double min_v = std::numeric_limits<double>::max();
+  double max_v = std::numeric_limits<double>::lowest();
+  if (levels.empty() || ps.fillGrid) {
+    for (std::size_t i = 0; i < n_grid; ++i) {
+      min_v = std::min(min_v, grid[i]);
+      max_v = std::max(max_v, grid[i]);
+    }
+  }
+  if (max_v > min_v) {
+    // What it then draws: boxes and lines in the molecule's frame, within
+    // the grid's.
+    check_line_width(d);
+    const auto [x_lo, x_hi] = std::minmax_element(xs.begin(), xs.end());
+    const auto [y_lo, y_hi] = std::minmax_element(ys.begin(), ys.end());
+    const bool raw = false;
+    check_drawn_box(d, RDGeom::Point2D(*x_lo, *y_lo),
+                    RDGeom::Point2D(*x_hi, *y_hi), raw);
+    if (n_contours) {
+      // It throws for these after filling the grid, leaving the drawer's
+      // fill and line width as the fill set them.
+      if (!levels.empty() && n_contours > levels.size()) {
+        throw ValueErrorException(
+            "nContours larger than the size of the level list");
+      }
+      // Contour's PRECONDITIONs.
+      if (xs.size() < 2 || ys.size() < 2) {
+        throw std::runtime_error("bad bounds");
+      }
+    }
+  }
+  utils::contourAndDrawGrid(*d.drawer, grid, xs, ys, n_contours, levels, ps);
+}
+
+}  // namespace
+
+ContourParamsData contour_params_default() {
+  const utils::ContourParams ps;
+  ContourParamsData data;
+  data.set_scale = ps.setScale;
+  data.dash_negative = ps.dashNegative;
+  data.fill_grid = ps.fillGrid;
+  data.grid_resolution = ps.gridResolution;
+  data.contour_width = ps.contourWidth;
+  data.extra_grid_padding = ps.extraGridPadding;
+  data.contour_colour = colour_to_data(ps.contourColour);
+  for (const auto &c : ps.colourMap) {
+    data.colour_map.push_back(colour_to_data(c));
+  }
+  data.draw_as_lines = ps.drawAsLines;
+  data.coord_scale_for_quantization = ps.coordScaleForQuantization;
+  data.isoval_scale_for_quantization = ps.isovalScaleForQuantization;
+  data.use_fill_threshold = ps.useFillThreshold;
+  data.fill_threshold = ps.fillThreshold;
+  data.fill_threshold_is_fraction = ps.fillThresholdIsFraction;
+  return data;
+}
+
+void contour_and_draw_grid(Drawer &d, rust::Slice<const double> data,
+                           rust::Slice<const double> xcoords,
+                           rust::Slice<const double> ycoords,
+                           std::uint32_t n_contours,
+                           rust::Slice<const double> levels,
+                           const ContourParamsData &params,
+                           BorrowedMols &mols) {
+  draw_contours(d, data.data(), data.size(),
+                std::vector<double>(xcoords.begin(), xcoords.end()),
+                std::vector<double>(ycoords.begin(), ycoords.end()), n_contours,
+                std::vector<double>(levels.begin(), levels.end()),
+                contour_params_from_data(params), optional_mol(mols));
+}
+
+void contour_and_draw_gaussians(Drawer &d, rust::Slice<const Point2D> locs,
+                                rust::Slice<const double> heights,
+                                rust::Slice<const double> widths,
+                                std::uint32_t n_contours,
+                                rust::Slice<const double> levels,
+                                const ContourParamsData &params,
+                                BorrowedMols &mols) {
+  // MolDraw2DUtils::contourAndDrawGaussians, step by step: it sets the
+  // scale from the gaussians, computes their sum on a grid of the drawing's
+  // range, and contours that grid. Each step is checked before RDKit's
+  // arithmetic: the grid's size, which it converts from double to size_t
+  // and allocates, and the gaussians, whose widths it divides by.
+  check_canvas(d);
+  auto ps = contour_params_from_data(params);
+  // Python's checks, then RDKit's PRECONDITIONs.
+  if (locs.empty()) {
+    throw ValueErrorException("locs argument must be non-empty");
+  }
+  if (heights.empty()) {
+    throw ValueErrorException("heights argument must be non-empty");
+  }
+  if (widths.empty()) {
+    throw ValueErrorException("widths argument must be non-empty");
+  }
+  if (locs.size() != heights.size() || locs.size() != widths.size()) {
+    throw std::runtime_error("size mismatch");
+  }
+  std::vector<RDGeom::Point2D> points;
+  for (const auto &p : locs) {
+    points.push_back(to_rdkit(p));
+    if (!(std::abs(p.x) <= kMaxDepictionCoordinate &&
+          std::abs(p.y) <= kMaxDepictionCoordinate)) {
+      throw ValueErrorException(
+          "the gaussians' locations must be finite and within 1e5");
+    }
+  }
+  for (double h : heights) {
+    if (!(std::abs(h) <= 1e100)) {
+      throw ValueErrorException(
+          "the gaussians' heights must be finite and within 1e100");
+    }
+  }
+  for (double w : widths) {
+    // Each value divides by the width, and by its square.
+    if (!(w >= 1e-100 && w <= 1e100)) {
+      throw ValueErrorException(
+          "the gaussians' widths must be from 1e-100 to 1e100");
+    }
+  }
+  check_contour_params(d, ps);
+  if (!(ps.gridResolution > 0 && std::isfinite(ps.gridResolution))) {
+    throw ValueErrorException("gridResolution must be positive and finite");
+  }
+  auto &draw = *d.drawer;
+  if (ps.setScale) {
+    if (!(std::abs(ps.extraGridPadding) <= kMaxDepictionCoordinate)) {
+      throw ValueErrorException(
+          "extraGridPadding must be finite and within 1e5");
+    }
+    RDGeom::Point2D min_p, max_p;
+    min_p.x = min_p.y = std::numeric_limits<double>::max();
+    max_p.x = max_p.y = std::numeric_limits<double>::lowest();
+    for (const auto &loc : points) {
+      min_p.x = std::min(loc.x, min_p.x);
+      min_p.y = std::min(loc.y, min_p.y);
+      max_p.x = std::max(loc.x, max_p.x);
+      max_p.y = std::max(loc.y, max_p.y);
+    }
+    const auto dims = max_p - min_p;
+    const double padding = draw.drawOptions().padding;
+    min_p.x -= padding * dims.x;
+    min_p.y -= padding * dims.y;
+    max_p.x += padding * dims.x;
+    max_p.y += padding * dims.y;
+    if (ps.extraGridPadding > 0) {
+      min_p.x -= ps.extraGridPadding;
+      min_p.y -= ps.extraGridPadding;
+      max_p.x += ps.extraGridPadding;
+      max_p.y += ps.extraGridPadding;
+    }
+    set_scale(d, draw.width(), draw.height(), from_rdkit(min_p),
+              from_rdkit(max_p), optional_mol(mols));
+  }
+  // range() and minPt() read the transformation, or the last molecule
+  // drawn (drawMols_[activeMolIdx_]).
+  if (!has_transform(d)) {
+    throw std::runtime_error("bad active mol");
+  }
+  const auto range = draw.range();
+  const auto min_pt = draw.minPt();
+  const double steps_x = std::ceil(range.x / ps.gridResolution);
+  const double steps_y = std::ceil(range.y / ps.gridResolution);
+  if (!(steps_x >= 0 && steps_y >= 0 &&
+        (steps_x + 1) * (steps_y + 1) <= kMaxGridPoints)) {
+    throw ValueErrorException(
+        "the gaussians' grid would have more than 1e8 points: increase "
+        "gridResolution");
+  }
+  const std::size_t nx = static_cast<std::size_t>(steps_x) + 1;
+  const std::size_t ny = static_cast<std::size_t>(steps_y) + 1;
+  std::vector<double> xcoords(nx);
+  for (std::size_t i = 0; i < nx; ++i) {
+    xcoords[i] = min_pt.x + i * ps.gridResolution;
+  }
+  std::vector<double> ycoords(ny);
+  for (std::size_t i = 0; i < ny; ++i) {
+    ycoords[i] = min_pt.y + i * ps.gridResolution;
+  }
+  std::vector<double> grid(nx * ny);
+  for (std::size_t ix = 0; ix < nx; ++ix) {
+    const auto px = min_pt.x + ix * ps.gridResolution;
+    for (std::size_t iy = 0; iy < ny; ++iy) {
+      const auto py = min_pt.y + iy * ps.gridResolution;
+      const RDGeom::Point2D pt(px, py);
+      double accum = 0.0;
+      for (std::size_t ig = 0; ig < points.size(); ++ig) {
+        const auto d2 = (pt - points[ig]).lengthSq();
+        const auto contrib = heights[ig] / widths[ig] *
+                             std::exp(-0.5 * d2 / (widths[ig] * widths[ig]));
+        accum += contrib;
+      }
+      grid[ix * ny + iy] = accum / (2 * M_PI);
+    }
+  }
+  ps.setScale = false;
+  draw_contours(d, grid.data(), grid.size(), xcoords, ycoords, n_contours,
+                std::vector<double>(levels.begin(), levels.end()), ps, nullptr);
 }
 
 double mean_bond_length(const RWMol &mol, int conf_id) {

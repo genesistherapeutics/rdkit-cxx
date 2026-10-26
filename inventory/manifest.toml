@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [[entry]]
 python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
@@ -181,6 +181,104 @@ rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MultiColourHighlightStyle::Circl
 name_exception = "an exported enum value maps to its variant (N7)"
 
 [[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourAndDrawGaussians"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::contour_and_draw_gaussians", "rdkit_cxx::chem::draw::rd_mol_draw_2d::contour_and_draw_gaussians_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourAndDrawGrid"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::contour_and_draw_grid", "rdkit_cxx::chem::draw::rd_mol_draw_2d::contour_and_draw_grid_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.__init__"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::default"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.__setattr__"
+reason = "Python's attribute protocol: it rejects misspelled attributes, which Rust's compiler does"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.colourMap"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::colour_map"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.contourColour"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::contour_colour"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.contourWidth"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::contour_width"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.coordScaleForQuantization"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::coord_scale_for_quantization"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.dashNegative"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::dash_negative"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.drawAsLines"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::draw_as_lines"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.extraGridPadding"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::extra_grid_padding"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.fillGrid"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::fill_grid"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.fillThreshold"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::fill_threshold"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.fillThresholdIsFraction"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::fill_threshold_is_fraction"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.gridResolution"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::grid_resolution"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.isovalScaleForQuantization"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::isoval_scale_for_quantization"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.setColourMap"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::set_colour_map"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.setContourColour"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::set_contour_colour"]
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.setScale"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::set_scale"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.ContourParams.useFillThreshold"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::ContourParams::use_fill_threshold"]
+rust_kind = "field"
+
+[[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.DrawElement"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement"]
 
@@ -228,6 +326,10 @@ name_exception = "a flag enum keeps Python's spelling (F1)"
 python = "rdkit.Chem.Draw.rdMolDraw2D.DrawElement.RADICALS"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement::RADICALS"]
 name_exception = "a flag enum keeps Python's spelling (F1)"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.DrawMoleculeACS1996"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::draw_molecule_acs1996", "rdkit_cxx::chem::draw::rd_mol_draw_2d::draw_molecule_acs1996_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.HIGHLIGHTS"
@@ -966,6 +1068,10 @@ rust_kind = "field"
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions.variableBondWidthMultiplier"
 rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDrawOptions::variable_bond_width_multiplier"]
 rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Draw.rdMolDraw2D.MolToACS1996SVG"
+rust = ["rdkit_cxx::chem::draw::rd_mol_draw_2d::mol_to_acs1996_svg", "rdkit_cxx::chem::draw::rd_mol_draw_2d::mol_to_acs1996_svg_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.rdMolDraw2D.MolToSVG"

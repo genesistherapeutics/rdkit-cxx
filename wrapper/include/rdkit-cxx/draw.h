@@ -41,6 +41,7 @@ struct DrawMoleculeData;
 struct DrawMoleculeWithHighlightsData;
 struct DrawMoleculesData;
 struct DrawSize;
+struct ContourParamsData;
 struct Point2D;
 
 using RDKit::RWMol;
@@ -186,6 +187,10 @@ void drawer_set_scale(Drawer &d, int width, int height, const Point2D &minv,
 void drawer_set_scale_with_mol(Drawer &d, int width, int height,
                                const Point2D &minv, const Point2D &maxv,
                                const RWMol &mol);
+void drawer_draw_molecule_acs1996(Drawer &d, const RWMol &mol,
+                                  const DrawMoleculeData &data);
+std::unique_ptr<std::string> mol_to_acs1996_svg(const RWMol &mol,
+                                                const DrawMoleculeData &data);
 void svg_finish_drawing(Drawer &d);
 std::unique_ptr<std::string> svg_drawing_text(const Drawer &d);
 void svg_add_molecule_metadata(Drawer &d, const RWMol &mol, int conf_id);
@@ -212,6 +217,20 @@ std::unique_ptr<std::string> mol_to_svg(const RWMol &mol, int width, int height,
                                         std::uint32_t line_width_mult,
                                         bool include_atom_circles, int conf_id);
 double mean_bond_length(const RWMol &mol, int conf_id);
+ContourParamsData contour_params_default();
+void contour_and_draw_grid(Drawer &d, rust::Slice<const double> data,
+                           rust::Slice<const double> xcoords,
+                           rust::Slice<const double> ycoords,
+                           std::uint32_t n_contours,
+                           rust::Slice<const double> levels,
+                           const ContourParamsData &params, BorrowedMols &mols);
+void contour_and_draw_gaussians(Drawer &d, rust::Slice<const Point2D> locs,
+                                rust::Slice<const double> heights,
+                                rust::Slice<const double> widths,
+                                std::uint32_t n_contours,
+                                rust::Slice<const double> levels,
+                                const ContourParamsData &params,
+                                BorrowedMols &mols);
 
 // Conversions for the other drawing wrappers.
 RDKit::MolDrawOptions options_from_data(const MolDrawOptionsData &data);

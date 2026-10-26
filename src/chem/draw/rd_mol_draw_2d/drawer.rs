@@ -1359,6 +1359,100 @@ pub fn prepare_and_draw_molecule_with_params(
     )?)
 }
 
+/// Parameters for `draw_molecule_acs1996_with_params` and
+/// `mol_to_acs1996_svg_with_params`, with Python's defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct DrawMoleculeACS1996Params {
+    /// Text drawn under (or by) the molecule.
+    pub legend: String,
+    /// Atoms to highlight.
+    pub highlight_atoms: Vec<u32>,
+    /// Bonds to highlight (none are highlighted for the atoms alone).
+    pub highlight_bonds: Vec<u32>,
+    /// Highlight colours of atoms, by index.
+    pub highlight_atom_colors: BTreeMap<u32, DrawColour>,
+    /// Highlight colours of bonds, by index.
+    pub highlight_bond_colors: BTreeMap<u32, DrawColour>,
+    /// Highlight radii of atoms, by index, in molecule coordinates.
+    pub highlight_atom_radii: BTreeMap<u32, f64>,
+    /// The conformer to draw; -1 for the first.
+    pub conf_id: i32,
+}
+
+/// Parameters for `mol_to_acs1996_svg_with_params`, with Python's defaults
+/// (A2): the same as `draw_molecule_acs1996_with_params`'s.
+pub type MolToACS1996SVGParams = DrawMoleculeACS1996Params;
+
+impl Default for DrawMoleculeACS1996Params {
+    fn default() -> DrawMoleculeACS1996Params {
+        DrawMoleculeACS1996Params {
+            legend: String::new(),
+            highlight_atoms: Vec::new(),
+            highlight_bonds: Vec::new(),
+            highlight_atom_colors: BTreeMap::new(),
+            highlight_bond_colors: BTreeMap::new(),
+            highlight_atom_radii: BTreeMap::new(),
+            conf_id: -1,
+        }
+    }
+}
+
+impl DrawMoleculeACS1996Params {
+    fn args(&self) -> MoleculeArgs<'_> {
+        MoleculeArgs {
+            highlight_atoms: &self.highlight_atoms,
+            highlight_bonds: Some(self.highlight_bonds.as_slice()),
+            highlight_atom_colors: &self.highlight_atom_colors,
+            highlight_bond_colors: &self.highlight_bond_colors,
+            highlight_atom_radii: &self.highlight_atom_radii,
+            conf_id: self.conf_id,
+            legend: &self.legend,
+        }
+    }
+}
+
+/// Draws the molecule as the ACS 1996 guidelines ask, setting the drawer's
+/// options as `set_acs1996_mode` does for its mean bond length (best on a
+/// flexible canvas). Mirrors `rdMolDraw2D.DrawMoleculeACS1996(drawer,
+/// mol)`; see `draw_molecule_acs1996_with_params` for its errors.
+pub fn draw_molecule_acs1996(drawer: &mut MolDraw2D, mol: &Mol) -> Result<()> {
+    draw_molecule_acs1996_with_params(drawer, mol, &DrawMoleculeACS1996Params::default())
+}
+
+/// As `draw_molecule_acs1996`, with a legend, highlights, or a conformer.
+/// Mirrors `rdMolDraw2D.DrawMoleculeACS1996`. `Error::Value` for a
+/// molecule without bonds (RDKit's check of the mean bond length), or one
+/// whose options come out beyond the drawer's bounds (a mean bond length
+/// below 0.0144 makes the scaling factor over 1000), and as
+/// `MolDraw2D::draw_molecule_with_params`.
+pub fn draw_molecule_acs1996_with_params(
+    drawer: &mut MolDraw2D,
+    mol: &Mol,
+    params: &DrawMoleculeACS1996Params,
+) -> Result<()> {
+    Ok(ffi::drawer_draw_molecule_acs1996(
+        drawer.pin_mut(),
+        mol.as_ffi(),
+        &params.args().to_ffi(),
+    )?)
+}
+
+/// An SVG drawing of the molecule as the ACS 1996 guidelines ask, on a
+/// flexible canvas. Mirrors `rdMolDraw2D.MolToACS1996SVG(mol)`; errors as
+/// `draw_molecule_acs1996_with_params`.
+pub fn mol_to_acs1996_svg(mol: &Mol) -> Result<String> {
+    mol_to_acs1996_svg_with_params(mol, &MolToACS1996SVGParams::default())
+}
+
+/// As `mol_to_acs1996_svg`, with a legend, highlights, or a conformer.
+/// Mirrors `rdMolDraw2D.MolToACS1996SVG`.
+pub fn mol_to_acs1996_svg_with_params(mol: &Mol, params: &MolToACS1996SVGParams) -> Result<String> {
+    to_string(ffi::mol_to_acs1996_svg(
+        mol.as_ffi(),
+        &params.args().to_ffi(),
+    )?)
+}
+
 /// Parameters for `mol_to_svg_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct MolToSVGParams {
