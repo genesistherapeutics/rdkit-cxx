@@ -317,3 +317,25 @@ fn comparison_inputs_rdkit_trusts() {
     let flat = mol_from_smiles("CCO").unwrap();
     assert!(value(shape_tanimoto_dist(&flat, &mol)));
 }
+
+/// The comparisons orient both shapes along the first's principal axes,
+/// which Eigen's eigensolver finds, so the coordinates must be finite.
+#[test]
+fn comparisons_need_finite_coordinates() {
+    let good = ethanol();
+    let mut bad = ethanol();
+    bad.get_conformer_mut()
+        .unwrap()
+        .set_atom_position(
+            0,
+            Point3D {
+                x: f64::NAN,
+                y: 0.0,
+                z: 0.0,
+            },
+        )
+        .unwrap();
+    assert!(value(shape_tanimoto_dist(&bad, &good)));
+    assert!(value(shape_tanimoto_dist(&good, &bad)));
+    assert_close(shape_tanimoto_dist(&good, &good).unwrap(), 0.0);
+}
