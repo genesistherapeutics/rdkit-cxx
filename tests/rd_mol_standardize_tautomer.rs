@@ -9,7 +9,8 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::*;
 use rdkit_cxx::chem::{
-    Atom, Mol, RWMol, SmilesWriteParams, mol_from_smiles, mol_to_smiles, mol_to_smiles_with_params,
+    Atom, Mol, RWMol, SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
+    mol_to_smiles_with_params,
 };
 
 // Expected values come from Python's rdMolStandardize.
@@ -440,6 +441,32 @@ fn callbacks_see_the_result_so_far() {
     let mut enumerator = TautomerEnumerator::default();
     enumerator.set_callback(Some(&callback));
     assert_eq!(enumerator.enumerate(&mol("Oc1nc(O)ccc1")).unwrap().len(), 5);
+}
+
+#[test]
+fn closures_can_match_substructures() {
+    // Enumerating and scoring hold control_c_mutex, released while a Rust
+    // callback or score runs, so the closures can call wrappers that take it.
+    let callback = TautomerEnumeratorCallback::new(|m, _| {
+        let nitrogen = mol_from_smarts("[#7]").unwrap();
+        m.has_substruct_match(&nitrogen).unwrap()
+    });
+    let mut enumerator = TautomerEnumerator::default();
+    enumerator.set_callback(Some(&callback));
+    let m = mol("Oc1ccccn1");
+    assert_eq!(enumerator.enumerate(&m).unwrap().len(), 3);
+    let hydroxyls = |t: &Mol| {
+        let query = mol_from_smarts("[OX2H]").unwrap();
+        t.get_substruct_matches(&query).unwrap().len() as i32
+    };
+    assert_eq!(
+        smiles(
+            &enumerator
+                .canonicalize_with_score_func(&m, hydroxyls)
+                .unwrap()
+        ),
+        "Oc1ccccn1"
+    );
 }
 
 #[test]

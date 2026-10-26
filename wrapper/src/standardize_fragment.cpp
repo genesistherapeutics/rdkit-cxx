@@ -5,9 +5,11 @@
 
 #include "rdkit-cxx/standardize_fragment.h"
 
+#include <mutex>
 #include <sstream>
 #include <string>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -51,13 +53,16 @@ std::unique_ptr<FragmentRemover> fragment_remover_from_data(
   return std::make_unique<FragmentRemover>(in, leave_last, skip_if_all_match);
 }
 
+// The remover matches its fragments (control_c_lock.h).
 std::unique_ptr<RWMol> fragment_remover_remove(const FragmentRemover &remover,
                                                const RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   return adopt_mol(mut(remover).remove(mol));
 }
 
 void fragment_remover_remove_in_place(const FragmentRemover &remover,
                                       RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   mut(remover).removeInPlace(mol);
 }
 

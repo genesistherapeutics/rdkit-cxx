@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/reduced_graphs.h"
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -12,6 +13,7 @@
 #include <Numerics/Vector.h>
 #include <RDGeneral/Exceptions.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
 
@@ -51,7 +53,10 @@ void check_erg_arguments(const RDKit::ROMol &mol, std::int32_t min_path,
   }
 }
 
+// The reduced graph marks features found by substructure matches
+// (control_c_lock.h).
 std::unique_ptr<RWMol> reduced_graph(const RWMol &mol) {
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::ROMol> graph(
       RDKit::ReducedGraphs::generateMolExtendedReducedGraph(mol));
   return std::make_unique<RWMol>(*graph);
