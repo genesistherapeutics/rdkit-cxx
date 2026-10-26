@@ -57,6 +57,24 @@ jobs:
           cat missing.out
           grep -F "or set RDKIT_PREFIX" missing.out
 
+  # Builds the crate from the files Cargo.toml's include list packages, as the
+  # Release workflow does before it publishes.
+  package:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          init-shell: bash
+          cache-environment: false
+          cache-downloads: false
+      - uses: dtolnay/rust-toolchain@stable
+      - run: cargo package -p rdkit-cxx --locked
+
   # Valgrind's DRD sees RDKit's accesses to its globals even in conda's
   # uninstrumented build, so this fails when a wrapper tests/threads.rs runs
   # lacks a lock U4 needs.
