@@ -5,6 +5,7 @@
 
 //! Private cxx bridges, one per wrapper header (CONVENTIONS.md B3).
 
+pub(crate) mod abbreviations;
 pub(crate) mod adjust_query;
 pub(crate) mod alignment;
 pub(crate) mod atom;

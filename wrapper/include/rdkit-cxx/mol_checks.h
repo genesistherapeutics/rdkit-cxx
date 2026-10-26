@@ -84,4 +84,14 @@ class DescriptorCacheGuard {
 // pickles as molecules.
 void check_monomer_types(const RDKit::ROMol &mol);
 
+// RWMol::removeAtom and batchRemoveAtoms (so commitBatchEdit too) rewrite
+// every bond's _MolFileBondEndPts, a property any caller can set: they read
+// the value's front() without checking that it is not empty, and for one in
+// parentheses they read the first space-separated token without checking
+// that there is one and convert each token's std::stod to unsigned int,
+// which is undefined for a value that does not fit. Throws
+// ValueErrorException for a value they would read so, or one with a token
+// std::stod rejects, which they would throw for halfway through the edit.
+void check_bond_end_points(const RDKit::ROMol &mol);
+
 }  // namespace rdkit_cxx

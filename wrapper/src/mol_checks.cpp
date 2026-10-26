@@ -5,6 +5,8 @@
 
 #include "rdkit-cxx/mol_checks.h"
 
+#include <cerrno>
+#include <cmath>
 #include <cstdlib>
 #include <limits>
 #include <string>
@@ -16,6 +18,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDValue.h>
 #include <boost/shared_array.hpp>
+#include <boost/tokenizer.hpp>
 
 namespace rdkit_cxx {
 
@@ -157,6 +160,56 @@ void check_monomer_types(const RDKit::ROMol &mol) {
         if (seen.insert(child->get()).second) {
           queries.push_back(child->get());
         }
+      }
+    }
+  }
+}
+
+namespace {
+
+// Whether std::stod reads the token, and RDKit's conversion of the result to
+// unsigned int (which truncates toward zero) is defined.
+bool converts_to_unsigned(const std::string &token) {
+  const char *begin = token.c_str();
+  char *end = nullptr;
+  errno = 0;
+  double value = std::strtod(begin, &end);
+  if (end == begin || errno == ERANGE) {
+    return false;
+  }
+  return std::isfinite(value) && value > -1.0 && value < 4294967296.0;
+}
+
+}  // namespace
+
+// Reads each value as RWMol.cpp does.
+void check_bond_end_points(const RDKit::ROMol &mol) {
+  std::string value;
+  for (const auto bond : mol.bonds()) {
+    if (!bond->getPropIfPresent(RDKit::common_properties::_MolFileBondEndPts,
+                                value)) {
+      continue;
+    }
+    if (value.empty()) {
+      throw ValueErrorException("bond " + std::to_string(bond->getIdx()) +
+                                " has an empty _MolFileBondEndPts");
+    }
+    if (value.front() != '(' || value.back() != ')') {
+      continue;
+    }
+    std::string inner = value.substr(1, value.length() - 2);
+    boost::char_separator<char> sep(" ");
+    boost::tokenizer<boost::char_separator<char>> tokens(inner, sep);
+    if (tokens.begin() == tokens.end()) {
+      throw ValueErrorException("bond " + std::to_string(bond->getIdx()) +
+                                " has a _MolFileBondEndPts with no count");
+    }
+    for (const auto &token : tokens) {
+      if (!converts_to_unsigned(token)) {
+        throw ValueErrorException(
+            "bond " + std::to_string(bond->getIdx()) +
+            " has a _MolFileBondEndPts value that is not an unsigned int: " +
+            token);
       }
     }
   }

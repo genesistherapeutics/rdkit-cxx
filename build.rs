@@ -96,6 +96,7 @@ const BRIDGES: &[&str] = &[
     "mif",
     "shape_align",
     "gaussian_shape",
+    "abbreviations",
 ];
 
 fn main() {
