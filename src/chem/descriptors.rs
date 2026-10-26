@@ -14,7 +14,7 @@
 //! names. Python's `force` arguments and the results it caches on the
 //! molecule are not ported: every call computes its result afresh.
 
-use std::collections::BTreeMap;
+use std::collections::HashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::Result;
@@ -1592,25 +1592,38 @@ pub fn desc_list() -> Vec<(&'static str, DescriptorFn)> {
 }
 
 /// Adds the 192 `AUTOCORR2D_*` descriptors to [`desc_list`], and so to
-/// [`calc_mol_descriptors`], for the whole process, as Python's does.
-/// Mirrors `Descriptors.setupAUTOCorrDescriptors`.
+/// [`calc_mol_descriptors`], as Python's does. Mirrors
+/// `Descriptors.setupAUTOCorrDescriptors`.
+///
+/// **This changes process-wide state.** Every later call of `desc_list` or
+/// `calc_mol_descriptors`, on any thread and from any crate in the process,
+/// sees the longer list, and nothing undoes it. A library should not call
+/// it on its callers' behalf; to compute the `AUTOCORR2D_*` descriptors
+/// alone, call [`calc_autocorr_2d`](crate::chem::rd_mol_descriptors::calc_autocorr_2d)
+/// instead.
 pub fn setup_autocorr_descriptors() {
     AUTOCORR.store(true, Ordering::Relaxed);
 }
 
 /// Every descriptor of [`desc_list`], by name, with `None` for one that
-/// fails. Mirrors `Descriptors.CalcMolDescriptors`.
-pub fn calc_mol_descriptors(mol: &Mol) -> BTreeMap<String, Option<f64>> {
+/// fails, in the order of Python's dictionary: `desc_list`'s, each name
+/// once, where it first appears. Mirrors `Descriptors.CalcMolDescriptors`.
+pub fn calc_mol_descriptors(mol: &Mol) -> Vec<(&'static str, Option<f64>)> {
+    let mut seen = HashSet::new();
     desc_list()
         .into_iter()
-        .map(|(name, function)| (name.to_owned(), function(mol).ok()))
+        .filter(|(name, _)| seen.insert(*name))
+        .map(|(name, function)| (name, function(mol).ok()))
         .collect()
 }
 
 /// With `missing_val` for a descriptor that fails. Python's `silent`, which
 /// prints the failures' tracebacks when false, is not bound. Mirrors
 /// `Descriptors.CalcMolDescriptors(mol, missingVal)`.
-pub fn calc_mol_descriptors_with_missing_val(mol: &Mol, missing_val: f64) -> BTreeMap<String, f64> {
+pub fn calc_mol_descriptors_with_missing_val(
+    mol: &Mol,
+    missing_val: f64,
+) -> Vec<(&'static str, f64)> {
     calc_mol_descriptors(mol)
         .into_iter()
         .map(|(name, value)| (name, value.unwrap_or(missing_val)))

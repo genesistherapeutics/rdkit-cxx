@@ -41,6 +41,9 @@ fn autocorr_descriptors() {
         assert_eq!(f(&m).unwrap(), *expected);
     }
     let descs = calc_mol_descriptors(&m);
+    // Python's dictionary keeps each name where it first appears.
     assert_eq!(descs.len(), 409);
-    assert_eq!(descs["AUTOCORR2D_1"], Some(results[0]));
+    let names: Vec<&str> = descs.iter().map(|(name, _)| *name).collect();
+    assert_eq!(names, after[..409]);
+    assert_eq!(descs[0], ("AUTOCORR2D_1", Some(results[0])));
 }

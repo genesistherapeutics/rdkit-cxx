@@ -9,6 +9,8 @@
 // which Python's CalcMolDescriptors wrote (repr of each value, None where a
 // descriptor failed).
 
+use std::collections::BTreeMap;
+
 use rdkit_cxx::chem::descriptors::*;
 use rdkit_cxx::chem::rd_mol_descriptors::bcut_2d;
 use rdkit_cxx::chem::{Mol, mol_from_smiles};
@@ -48,10 +50,11 @@ fn calc_mol_descriptors_match_python() {
         let smiles = fields.next().unwrap();
         let m = mol(smiles);
         let calculated = calc_mol_descriptors(&m);
-        assert_eq!(calculated.len(), names.len());
-        for (name, value) in names.iter().zip(fields) {
+        // In descList's order, as Python's dictionary has them.
+        let calculated_names: Vec<&str> = calculated.iter().map(|(name, _)| *name).collect();
+        assert_eq!(calculated_names, names);
+        for ((name, value), (_, actual)) in names.iter().zip(fields).zip(calculated) {
             let expected = (value != "None").then(|| value.parse::<f64>().unwrap());
-            let actual = calculated[*name];
             match (actual, expected) {
                 (Some(a), Some(e)) => assert!(same(a, e), "{smiles}: {name}: {a} != {e}"),
                 _ => assert_eq!(actual, expected, "{smiles}: {name}"),
@@ -65,8 +68,13 @@ fn calc_mol_descriptors_match_python() {
 #[test]
 fn missing_val() {
     let m = mol("");
-    assert_eq!(calc_mol_descriptors(&m)["BalabanJ"], None);
+    let descs: BTreeMap<&str, Option<f64>> = calc_mol_descriptors(&m).into_iter().collect();
+    assert_eq!(descs["BalabanJ"], None);
     let filled = calc_mol_descriptors_with_missing_val(&m, -1.0);
+    let names: Vec<&str> = desc_list().iter().map(|(name, _)| *name).collect();
+    let filled_names: Vec<&str> = filled.iter().map(|(name, _)| *name).collect();
+    assert_eq!(filled_names, names);
+    let filled: BTreeMap<&str, f64> = filled.into_iter().collect();
     assert_eq!(filled["BalabanJ"], -1.0);
     assert_eq!(filled["MolWt"], 0.0);
 }
@@ -134,7 +142,8 @@ fn vector_descriptors() {
 
 #[test]
 fn get_mol_descriptors() {
-    let descs = calc_mol_descriptors(&mol("CCCO"));
+    let descs: BTreeMap<&str, Option<f64>> =
+        calc_mol_descriptors(&mol("CCCO")).into_iter().collect();
     assert!(descs.contains_key("MolLogP"));
     assert_eq!(descs["NumHDonors"], Some(1.0));
 }
