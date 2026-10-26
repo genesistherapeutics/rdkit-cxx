@@ -592,3 +592,21 @@ fn standardize_methods() {
         .collect();
     assert_eq!(got, expected);
 }
+
+/// Python's ClusterData clusters the first nPts rows and ignores the rest.
+#[test]
+fn murtagh_clusters_the_first_n_pts_rows() {
+    let d: Vec<Vec<f64>> = (0..5)
+        .map(|i| vec![f64::from(i), f64::from(i * i)])
+        .collect();
+    let mut first = murtagh::cluster_data(&d, 3, murtagh::wards())
+        .unwrap()
+        .remove(0);
+    let mut only = murtagh::cluster_data(&d[..3], 3, murtagh::wards())
+        .unwrap()
+        .remove(0);
+    let mut points: Vec<i64> = first.get_points().iter().map(|c| c.get_index()).collect();
+    points.sort();
+    assert_eq!(points, [1, 2, 3]);
+    assert_eq!(first.compare_with_ignore_extras(&mut only, false), 0);
+}
