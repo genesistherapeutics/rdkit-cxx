@@ -43,7 +43,8 @@ const RDProps &substance_group_as_props(const SubstanceGroup &sgroup);
 
 bool props_has_prop(const RDProps &obj, rust::Str key);
 // As GetProp, GetPyProp, and GetPropsAsDict in
-// Code/GraphMol/nbWrap/props.hpp, with nanobind's messages.
+// Code/GraphMol/Wrap/props.hpp, with Boost.Python's messages (a missing key's
+// KeyError carries the bare key).
 std::unique_ptr<std::string> props_get_prop(const RDProps &obj, rust::Str key);
 PropValueData props_get_prop_auto_convert(const RDProps &obj, rust::Str key);
 int props_get_int_prop(const RDProps &obj, rust::Str key);

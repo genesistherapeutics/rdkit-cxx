@@ -158,7 +158,7 @@ rust::Vec<ConfOptimization> optimize_confs(RDKit::ROMol &mol,
   return res;
 }
 
-// As UFFHelper in Code/GraphMol/ForceFieldHelpers/nbWrap/rdForceFields.cpp.
+// As UFFHelper in Code/GraphMol/ForceFieldHelpers/Wrap/rdForceFields.cpp.
 int uff_optimize_molecule(RWMol &mol, unsigned max_iters, double vdw_thresh,
                           int conf_id, bool ignore_interfrag_interactions) {
   check_builder_size(mol);

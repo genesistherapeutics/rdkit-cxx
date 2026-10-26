@@ -55,7 +55,7 @@ bool bond_has_owning_mol(const Bond &bond) { return bond.hasOwningMol(); }
 
 bool bond_has_query(const Bond &bond) { return bond.hasQuery(); }
 
-// As BondIsInRing and BondIsInRingSize in Code/GraphMol/nbWrap/Bond.cpp,
+// As BondIsInRing and BondIsInRingSize in Code/GraphMol/Wrap/Bond.cpp,
 // which find the SSSR on demand.
 bool bond_is_in_ring(const Bond &bond) {
   auto &mol = bond.getOwningMol();

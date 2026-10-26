@@ -40,7 +40,7 @@ void check_initialized(const ForceFields::ForceField &field) {
 std::vector<double> check_pos(const ForceFields::ForceField &field,
                               rust::Slice<const double> pos) {
   check_initialized(field);
-  // As calcEnergyWithPos in Code/ForceField/nbWrap/ForceField.cpp.
+  // As PyForceField::calcEnergyWithPos in Code/ForceField/Wrap/ForceField.cpp.
   if (pos.size() !=
       static_cast<std::size_t>(field.dimension()) * field.numPoints()) {
     throw ValueErrorException(
@@ -285,9 +285,10 @@ double mmff_mol_properties_get_partial_charge(const MMFFMolProperties &props,
   return props.props().getMMFFPartialCharge(idx);
 }
 
-// The parameter getters, as the lambdas in Code/ForceField/nbWrap/
-// ForceField.cpp, take atom indices into the molecule passed and look their
-// types up in the properties, so each index is checked against both.
+// The parameter getters, as PyMMFFMolProperties' in
+// Code/ForceField/Wrap/ForceField.cpp, take atom indices into the molecule
+// passed and look their types up in the properties, so each index is checked
+// against both.
 TermParams mmff_mol_properties_get_bond_stretch_params(
     const MMFFMolProperties &props, const RWMol &mol, unsigned idx1,
     unsigned idx2) {

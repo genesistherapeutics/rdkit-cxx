@@ -87,3 +87,15 @@ fn potential_stereo() {
     assert_eq!(bonds[0].specified, StereoSpecified::Unspecified);
     assert_eq!(StereoInfo::NOATOM, Atom::NOATOM);
 }
+
+#[test]
+fn stereo_info_default() {
+    // Python's StereoInfo().
+    let info = StereoInfo::default();
+    assert_eq!(info.type_, StereoType::Unspecified);
+    assert_eq!(info.specified, StereoSpecified::Unspecified);
+    assert_eq!(info.centered_on, 4294967295);
+    assert_eq!(info.descriptor, StereoDescriptor::NoValue);
+    assert_eq!(info.permutation, 0);
+    assert!(info.controlling_atoms.is_empty());
+}

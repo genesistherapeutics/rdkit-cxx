@@ -122,7 +122,7 @@ std::string encode_current_exception() {
   } catch (const RDKit::ChemicalReactionParserException &e) {
     return encode("Parse", "", e.what());
   } catch (const Invar::Invariant &e) {
-    // As nanobind's translator in Code/RDBoost/nbWrap/RDBase.cpp.
+    // As translate_invariant_error in Code/RDBoost/Wrap.cpp.
     return encode("Runtime", "", e.toUserString());
   } catch (const std::exception &e) {
     return encode("Runtime", "", e.what());

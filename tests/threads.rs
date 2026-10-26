@@ -85,7 +85,7 @@ use rdkit_cxx::chem::rd_mol_chemical_features::{
     MolChemicalFeatureFactory, build_feature_factory_from_string,
 };
 use rdkit_cxx::chem::rd_mol_descriptors::{
-    DoubleCubicLatticeVolume, Properties, PythonPropertyFunctor, calc_crippen_descriptors,
+    DoubleCubicLatticeVolume, Properties, PropertyFunctor, calc_crippen_descriptors,
     get_maccs_keys_fingerprint, get_usrcat,
 };
 use rdkit_cxx::chem::rd_mol_enumerator::enumerate;
@@ -1533,7 +1533,7 @@ fn registered_property() -> Call<(u32, Mol)> {
         make: |i| (i, mol("CCO")),
         run: |(i, mol)| {
             let name = format!("rustThread{i}");
-            let functor = PythonPropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
+            let functor = PropertyFunctor::new(&name, "1.0.0", move |_| f64::from(i));
             Properties::register_property(&functor);
             let properties = Properties::new(&[name.as_str()]).unwrap();
             assert_eq!(

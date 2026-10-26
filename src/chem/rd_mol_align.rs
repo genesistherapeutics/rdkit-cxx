@@ -634,9 +634,9 @@ fn crippen_o3a(
 #[derive(Clone, Debug)]
 pub struct GetO3AParams<'a> {
     /// The probe's MMFF properties; `None` computes them, from a copy.
-    pub prb_mmff_mol_properties: Option<&'a MMFFMolProperties>,
+    pub prb_py_mmff_mol_properties: Option<&'a MMFFMolProperties>,
     /// The reference's MMFF properties; `None` computes them, from a copy.
-    pub ref_mmff_mol_properties: Option<&'a MMFFMolProperties>,
+    pub ref_py_mmff_mol_properties: Option<&'a MMFFMolProperties>,
     /// The probe's conformer; -1 for the first.
     pub prb_cid: i32,
     /// The reference's conformer; -1 for the first.
@@ -656,8 +656,8 @@ pub struct GetO3AParams<'a> {
 impl Default for GetO3AParams<'_> {
     fn default() -> Self {
         GetO3AParams {
-            prb_mmff_mol_properties: None,
-            ref_mmff_mol_properties: None,
+            prb_py_mmff_mol_properties: None,
+            ref_py_mmff_mol_properties: None,
             prb_cid: -1,
             ref_cid: -1,
             reflect: false,
@@ -702,8 +702,8 @@ pub fn get_o3a_with_params<'m>(
     single(mmff_o3a(
         prb_mol,
         ref_mol,
-        params.prb_mmff_mol_properties,
-        params.ref_mmff_mol_properties,
+        params.prb_py_mmff_mol_properties,
+        params.ref_py_mmff_mol_properties,
         false,
         &options,
     )?)
@@ -794,9 +794,9 @@ pub struct GetO3AForProbeConfsParams<'a> {
     /// The threads to use; 0 or less counts back from the hardware's.
     pub num_threads: i32,
     /// The probe's MMFF properties; `None` computes them, from a copy.
-    pub prb_mmff_mol_properties: Option<&'a MMFFMolProperties>,
+    pub prb_py_mmff_mol_properties: Option<&'a MMFFMolProperties>,
     /// The reference's MMFF properties; `None` computes them, from a copy.
-    pub ref_mmff_mol_properties: Option<&'a MMFFMolProperties>,
+    pub ref_py_mmff_mol_properties: Option<&'a MMFFMolProperties>,
     /// The reference's conformer; -1 for the first.
     pub ref_cid: i32,
     /// Reflects the probe.
@@ -815,8 +815,8 @@ impl Default for GetO3AForProbeConfsParams<'_> {
     fn default() -> Self {
         GetO3AForProbeConfsParams {
             num_threads: 1,
-            prb_mmff_mol_properties: None,
-            ref_mmff_mol_properties: None,
+            prb_py_mmff_mol_properties: None,
+            ref_py_mmff_mol_properties: None,
             ref_cid: -1,
             reflect: false,
             max_iters: 50,
@@ -855,8 +855,8 @@ pub fn get_o3a_for_probe_confs_with_params<'m>(
     o3a_list(mmff_o3a(
         prb_mol,
         ref_mol,
-        params.prb_mmff_mol_properties,
-        params.ref_mmff_mol_properties,
+        params.prb_py_mmff_mol_properties,
+        params.ref_py_mmff_mol_properties,
         true,
         &options,
     )?)

@@ -396,6 +396,7 @@ pub struct FragmentOnBondsParams {
     /// dummy is labeled with the index of the atom it replaces.
     pub dummy_labels: Option<Vec<(u32, u32)>>,
     /// The type of each new bond to a dummy; by default the broken bond's.
+    /// Python treats an empty list as `None`.
     pub bond_types: Option<Vec<BondType>>,
 }
 
@@ -486,6 +487,7 @@ pub struct FragmentOnSomeBondsParams {
     /// dummy is labeled with the index of the atom it replaces.
     pub dummy_labels: Option<Vec<(u32, u32)>>,
     /// The type of each new bond to a dummy; by default the broken bond's.
+    /// Python treats an empty list as `None`.
     pub bond_types: Option<Vec<BondType>>,
 }
 

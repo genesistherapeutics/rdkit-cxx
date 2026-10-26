@@ -265,7 +265,7 @@ fn params_defaults() {
         }
     );
     let mmff = GetO3AParams::default();
-    assert!(mmff.prb_mmff_mol_properties.is_none() && mmff.ref_mmff_mol_properties.is_none());
+    assert!(mmff.prb_py_mmff_mol_properties.is_none() && mmff.ref_py_mmff_mol_properties.is_none());
     assert_eq!(
         (
             mmff.prb_cid,
@@ -288,7 +288,7 @@ fn params_defaults() {
         ),
         (1, -1, false, 50, 0)
     );
-    assert!(confs.prb_mmff_mol_properties.is_none() && confs.constraint_map.is_empty());
+    assert!(confs.prb_py_mmff_mol_properties.is_none() && confs.constraint_map.is_empty());
 }
 
 #[test]
@@ -634,8 +634,8 @@ fn o3a() {
     let prb_props = MMFFMolProperties::new(&mut prb.clone()).unwrap();
     let ref_props = MMFFMolProperties::new(&mut reference.clone()).unwrap();
     let params = GetO3AParams {
-        prb_mmff_mol_properties: Some(&prb_props),
-        ref_mmff_mol_properties: Some(&ref_props),
+        prb_py_mmff_mol_properties: Some(&prb_props),
+        ref_py_mmff_mol_properties: Some(&ref_props),
         ..Default::default()
     };
     let o3a = get_o3a_with_params(&mut prb, &reference, &params).unwrap();
@@ -754,7 +754,7 @@ fn o3a_inputs_rdkit_trusts() {
     let mut ethanol = add_hs(&mol_from_smiles("CCO").unwrap()).unwrap();
     let other = MMFFMolProperties::new(&mut ethanol).unwrap();
     let params = GetO3AParams {
-        prb_mmff_mol_properties: Some(&other),
+        prb_py_mmff_mol_properties: Some(&other),
         ..Default::default()
     };
     assert!(value(get_o3a_with_params(

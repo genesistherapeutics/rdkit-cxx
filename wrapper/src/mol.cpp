@@ -144,7 +144,7 @@ void mol_debug(const RWMol &mol, bool use_stdout) {
   mol.debugMol(use_stdout ? std::cout : std::cerr);
 }
 
-// As GetAromaticAtoms in Code/GraphMol/nbWrap/Mol.cpp, which matches an
+// As MolGetAromaticAtoms in Code/GraphMol/Wrap/Mol.cpp, which matches an
 // aromaticity query.
 rust::Vec<std::uint32_t> mol_get_aromatic_atoms(const RWMol &mol) {
   rust::Vec<std::uint32_t> indices;
@@ -156,7 +156,7 @@ rust::Vec<std::uint32_t> mol_get_aromatic_atoms(const RWMol &mol) {
   return indices;
 }
 
-// As ReadWriteMol in Code/GraphMol/nbWrap/Mol.cpp: the molecule copies the
+// As ReadWriteMol in Code/GraphMol/Wrap/Mol.cpp: the molecule copies the
 // atom, and the bond functions return the new number of bonds. RDKit keeps
 // cached matrices through these edits, so they clear them (U6).
 unsigned rwmol_add_atom(RWMol &mol, const Atom &atom) {

@@ -18,8 +18,9 @@
 //! # Ok::<(), rdkit_cxx::Error>(())
 //! ```
 //!
-//! Python's `ChemicalReactionException` and `ChemicalReactionParserException`
-//! are `Error::Value` and `Error::Parse` (CONVENTIONS.md E4).
+//! RDKit's `ChemicalReactionException` and `ChemicalReactionParserException`
+//! (Python's `ValueError`s) are `Error::Value` and `Error::Parse`
+//! (CONVENTIONS.md E4).
 
 mod enumerate;
 mod fingerprints;

@@ -52,8 +52,8 @@ void check_atoms(const Conformer &conf,
 
 }  // namespace
 
-// As computeCentroidHelper in Code/GraphMol/MolTransforms/nbWrap/
-// rdMolTransforms.cpp; RDKit checks the number of weights.
+// As ComputeCentroid in Code/GraphMol/MolTransforms/Wrap/rdMolTransforms.cpp,
+// which binds computeCentroid directly; RDKit checks the number of weights.
 Point3D compute_centroid(const Conformer &conf, bool ignore_hs,
                          bool has_weights, rust::Slice<const double> weights) {
   std::vector<double> weights_vec(weights.begin(), weights.end());

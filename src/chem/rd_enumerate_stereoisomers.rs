@@ -54,8 +54,9 @@ pub struct StereoEnumerationOptions {
     /// The seed of the enumerator's own random generator; -1 for a random
     /// seed. Mirrors `StereoEnumerationOptions.randomSeed`.
     pub random_seed: i32,
-    /// Whether isomers that fail to embed are logged, to RDKit's info log;
-    /// Python's `StereoisomerEnumerator(mol, options, verbose)` argument.
+    /// Whether isomers that fail to embed are logged, to RDKit's info log
+    /// (which RDKit leaves disabled); Python's
+    /// `StereoisomerEnumerator(mol, options, verbose)` argument.
     pub verbose: bool,
 }
 
@@ -69,7 +70,7 @@ impl Default for StereoEnumerationOptions {
             unique: data.unique,
             max_isomers: data.max_isomers,
             random_seed: data.random_seed,
-            verbose: false,
+            verbose: true,
         }
     }
 }
@@ -115,17 +116,6 @@ impl StereoisomerEnumerator {
     /// `StereoisomerEnumerator(mol)`.
     pub fn new(mol: &Mol) -> Result<StereoisomerEnumerator> {
         StereoisomerEnumerator::new_with_params(mol, &StereoEnumerationOptions::default())
-    }
-
-    /// Mirrors `StereoisomerEnumerator(mol, verbose)`.
-    pub fn new_with_verbose(mol: &Mol, verbose: bool) -> Result<StereoisomerEnumerator> {
-        StereoisomerEnumerator::new_with_params(
-            mol,
-            &StereoEnumerationOptions {
-                verbose,
-                ..Default::default()
-            },
-        )
     }
 
     /// Mirrors `StereoisomerEnumerator(mol, options, verbose)`; see

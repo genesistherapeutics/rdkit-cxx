@@ -84,8 +84,8 @@ impl ExtendedQueryMol {
     /// A query from a binary pickle (`to_binary`). `Error::Value` for one
     /// with an empty bundle, a tautomer query whose indices its matcher would
     /// read past, or a molecule with a monomer type its class lacks
-    /// (CONVENTIONS.md U10); RDKit's errors for one it cannot read. Mirrors
-    /// `ExtendedQueryMol(data)`.
+    /// (CONVENTIONS.md U10); RDKit's errors for one it cannot read. A Rust
+    /// addition: Python reads a pickle into a query with `InitFromBinary`.
     ///
     /// # Safety
     ///

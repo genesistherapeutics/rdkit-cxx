@@ -154,7 +154,8 @@ macro_rules! sparse_int_vect_type {
             }
         }
 
-        /// A vector of length 0. Mirrors the class's default constructor.
+        /// A vector of length 0, a Rust addition (Python's constructors take a
+        /// length).
         impl Default for $name {
             fn default() -> $name {
                 $name::new(0).expect("0 is a length")

@@ -9,10 +9,10 @@
 use std::any::TypeId;
 
 use crate::data_structs::{
-    BitVect, SparseBitVect, all_bit_similarity, asymmetric_similarity, bit_vect_to_text,
-    braun_blanquet_similarity, cosine_similarity, dice_similarity,
-    fold_fingerprint_with_fold_factor, kulczynski_similarity, mc_connaughey_similarity,
-    rogot_goldberg_similarity, russel_similarity, sokal_similarity, tanimoto_similarity,
+    BitVect, SparseBitVect, all_bit_similarity, asymmetric_similarity, braun_blanquet_similarity,
+    cosine_similarity, dice_similarity, fold_fingerprint_with_fold_factor, kulczynski_similarity,
+    mc_connaughey_similarity, rogot_goldberg_similarity, russel_similarity, sokal_similarity,
+    tanimoto_similarity,
 };
 use crate::error::expect_ok;
 use crate::ffi::data_structs::ffi;
@@ -191,11 +191,4 @@ pub fn get_element_from_flat_matrix(matrix: &[f64], i: usize, j: usize) -> Resul
         .get(idx)
         .copied()
         .ok_or(Error::index(idx, matrix.len()))
-}
-
-/// The vector as a string of 0s and 1s, as `bit_vect_to_text` gives it.
-/// Mirrors `DataStructs.bvtotext`, which RDKit installs as the vectors'
-/// `ToBitString` method.
-pub fn bvtotext<B: BitVect>(bv: &B) -> String {
-    bit_vect_to_text(bv)
 }

@@ -187,12 +187,6 @@ impl FilterMatch {
     }
 }
 
-/// An (int, int) pair, for `FilterMatch::atom_pairs`. Mirrors
-/// `rdfiltercatalog.IntPair`.
-pub fn int_pair(a: u32, b: u32) -> (u32, u32) {
-    (a, b)
-}
-
 /// Implements what the concrete matchers share: `Deref` to `FilterMatcher`,
 /// `Clone`, `Debug`, and conversion into a `FilterMatcher`.
 macro_rules! matcher_type {

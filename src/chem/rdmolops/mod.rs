@@ -134,7 +134,8 @@ pub struct AddHsParameters {
     pub add_residue_info: bool,
     /// Skips query atoms and atoms with query bonds.
     pub skip_queries: bool,
-    /// The atoms to add hydrogens to; `None` for all.
+    /// The atoms to add hydrogens to; `None` for all, and an empty list for
+    /// none (Python treats an empty list as `None`).
     pub only_on_atoms: Option<Vec<u32>>,
 }
 

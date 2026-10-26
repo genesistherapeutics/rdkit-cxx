@@ -17,9 +17,12 @@ namespace rdkit_cxx {
 
 namespace {
 
-// As pyObjToBitset in Code/GraphMol/CIPLabeler/nbWrap/rdCIPLabeler.cpp,
-// which sets each index unchecked: dynamic_bitset::set writes past the end
-// for an index beyond the atoms or bonds (its bound is only an assert).
+// As pythonObjectToDynBitset in Code/RDBoost/Wrap.cpp, which
+// assignCIPLabelsWrapHelper in Code/GraphMol/CIPLabeler/Wrap/rdCIPLabeler.cpp
+// uses: each index is checked, since dynamic_bitset::set writes past the end
+// for one beyond the atoms or bonds (its bound is only an assert). Python
+// treats empty atom and bond lists as None and labels everything; here they
+// are empty sets.
 boost::dynamic_bitset<> to_bitset(rust::Slice<const std::uint32_t> indices,
                                   unsigned n) {
   boost::dynamic_bitset<> result(n);

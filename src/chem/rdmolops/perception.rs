@@ -266,6 +266,28 @@ pub fn atom_has_conjugated_bond(atom: &impl AsAtom) -> Result<bool> {
     Ok(ffi::atom_has_conjugated_bond(atom.atom())?)
 }
 
+/// The prefix of the atom labels (`atomLabel`) that number attachment
+/// points: `_AP`. Mirrors `rdmolops.ATTACHMENT_POINT_LABEL_PREFIX`.
+pub fn attachment_point_label_prefix() -> &'static str {
+    "_AP"
+}
+
+/// The number in a degree-one dummy atom's `_AP<n>` label, for a positive
+/// decimal `n` in `u32`'s range; 0 for any other atom or label. It names
+/// the attachment point; it is not an MDL `ATTCHPT` position. Mirrors
+/// `rdmolops.GetAttachmentPointLabelNumber`.
+pub fn get_attachment_point_label_number(atom: &impl AsAtom) -> Result<u32> {
+    Ok(ffi::get_attachment_point_label_number(atom.atom())?)
+}
+
+/// Whether an atom is a marked attachment point: a degree-one dummy atom
+/// with RDKit's `_fromAttchpt` property or a numbered `_AP<n>` label,
+/// whether or not it could be collapsed. Mirrors
+/// `rdmolops.IsMarkedAttachmentPoint`.
+pub fn is_marked_attachment_point(atom: &impl AsAtom) -> Result<bool> {
+    Ok(ffi::is_marked_attachment_point(atom.atom())?)
+}
+
 /// The sum of the atoms' formal charges. RDKit sums them in `int`, which
 /// overflows only for molecules of more than 2^24 atoms (each charge is 8
 /// bits); a molecule whose running sum would leave `i32`'s range is

@@ -36,8 +36,10 @@ bool atom_coords_matcher_call(const AtomCoordsMatcherData &matcher,
                               const Atom &query_atom, const Atom &target_atom);
 
 // As helpHasSubstructMatch, helpGetSubstructMatch, and
-// helpGetSubstructMatches in Code/GraphMol/nbWrap/substructmethods.h, for each
-// pairing of molecule and bundle.
+// helpGetSubstructMatches in Code/GraphMol/Wrap/substructmethods.h, for each
+// pairing of molecule and bundle. The first two set maxMatches to 1 on a copy
+// of the parameters but search with the original; here the search stops at
+// one match.
 bool mol_has_substruct_match(const RWMol &target, const RWMol &query,
                              const SubstructMatchParametersData &params);
 rust::Vec<std::uint32_t> mol_get_substruct_match(
@@ -74,7 +76,7 @@ rust::Vec<IndexList> mol_bundle_get_substruct_matches_mol_bundle(
     const SubstructMatchParametersData &params);
 
 // As GetSubstructMatch and GetResonanceSubstructMatches in
-// Code/GraphMol/nbWrap/ResonanceMolSupplier.cpp.
+// Code/GraphMol/Wrap/ResonanceMolSupplier.cpp.
 rust::Vec<std::uint32_t> resonance_mol_supplier_get_substruct_match(
     ResonanceMolSupplier &suppl, const RWMol &query, bool use_chirality,
     bool use_query_query_matches);

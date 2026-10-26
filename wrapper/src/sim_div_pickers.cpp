@@ -89,7 +89,7 @@ class RustDistance {
 };
 
 // One minus the Tanimoto similarity, as pyBVFunctor in
-// Code/SimDivPickers/nbWrap/PickerHelpers.h computes it.
+// Code/SimDivPickers/Wrap/PickerHelpers.h computes it.
 class BitVectDistance {
  public:
   explicit BitVectDistance(std::vector<const ExplicitBitVect *> bvs)
@@ -222,7 +222,7 @@ void check_cluster_picks(std::uint32_t pick_size) {
 
 }  // namespace
 
-// As MaxMinPicks in Code/SimDivPickers/nbWrap/MaxMinPicker.cpp, with
+// As MaxMinPicks in Code/SimDivPickers/Wrap/MaxMinPicker.cpp, with
 // MaxMinPicker::pick's lazyPick of the matrix.
 rust::Vec<std::uint32_t> max_min_picker_pick(
     rust::Slice<const double> dist_mat, std::uint32_t pool_size,
@@ -272,7 +272,7 @@ rust::Vec<std::uint32_t> leader_picker_lazy_bit_vector_pick(
 }
 
 // As HierarchicalPicks in
-// Code/SimDivPickers/nbWrap/HierarchicalClusterPicker.cpp. RDKit's pick
+// Code/SimDivPickers/Wrap/HierarchicalClusterPicker.cpp. RDKit's pick
 // reads the matrix hc_ changed through getDistFromLTM.
 rust::Vec<std::uint32_t> hierarchical_cluster_picker_pick(
     ClusterMethod method, rust::Slice<const double> dist_mat,

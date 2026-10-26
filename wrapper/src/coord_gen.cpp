@@ -88,7 +88,7 @@ CoordGenParamsData coord_gen_params_default() {
   };
 }
 
-// As addCoordsHelper in External/CoordGen/nbWrap/rdCoordGen.cpp. Python's
+// As addCoordsHelper in External/CoordGen/Wrap/rdCoordGen.cpp. Python's
 // SetCoordMap takes any index; CoordGen looks up only the molecule's atoms.
 void add_coords(RWMol &mol, const CoordGenParamsData &data,
                 const RWMol &template_mol, bool has_template_mol) {
@@ -126,7 +126,7 @@ void add_coords_default(RWMol &mol) {
   add_coords_with(mol, RDKit::CoordGen::defaultParams);
 }
 
-// As SetDefaultTemplateFileDir in External/CoordGen/nbWrap/rdCoordGen.cpp.
+// As SetDefaultTemplateFileDir in External/CoordGen/Wrap/rdCoordGen.cpp.
 void set_default_template_file_dir(rust::Slice<const std::uint8_t> dir) {
   auto path = to_path(dir);
   auto lock = lock_depiction();

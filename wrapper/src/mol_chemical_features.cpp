@@ -179,7 +179,7 @@ std::int32_t factory_get_num_mol_features(
       features(factory, mol, include_only, -1).size());
 }
 
-// As getMolFeature in nbWrap/MolChemicalFeatureFactory.cpp, which keeps the
+// As getMolFeature in Wrap/MolChemicalFeatureFactory.cpp, which keeps the
 // features in a static list that recompute=False reads back: a list shared by
 // every thread, holding features of molecules Python may have freed. The
 // features are computed each time here.

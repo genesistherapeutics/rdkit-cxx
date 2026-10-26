@@ -50,7 +50,6 @@ void check_fingerprint_size(std::uint32_t fingerprint_size);
 // (control_c_lock.h).
 std::unique_ptr<TautomerQuery> make_tautomer_query(const RDKit::ROMol &query);
 
-std::unique_ptr<TautomerQuery> tautomer_query_new_empty();
 std::unique_ptr<TautomerQuery> tautomer_query_clone(const TautomerQuery &query);
 std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
     const RWMol &mol, rust::Slice<const std::uint8_t> tautomer_transform_file);

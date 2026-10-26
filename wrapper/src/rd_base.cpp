@@ -24,7 +24,7 @@ std::unique_ptr<std::string> rdkit_build() {
 }
 
 // As DisableLog, EnableLog, LogStatus, and the Log*Msg functions in
-// Code/RDBoost/nbWrap/RDBase.cpp.
+// Code/RDBoost/Wrap/RDBase.cpp.
 void disable_log(rust::Str spec) {
   boost::logging::disable_logs(std::string(spec));
 }

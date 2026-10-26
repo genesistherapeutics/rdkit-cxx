@@ -76,6 +76,8 @@ pub(crate) mod ffi {
         fn needs_hs(mol: &RWMol) -> Result<bool>;
         fn count_atom_elec(atom: &Atom) -> Result<i32>;
         fn atom_has_conjugated_bond(atom: &Atom) -> Result<bool>;
+        fn get_attachment_point_label_number(atom: &Atom) -> Result<u32>;
+        fn is_marked_attachment_point(atom: &Atom) -> Result<bool>;
         fn get_formal_charge(mol: &RWMol) -> Result<i32>;
         fn get_shortest_path(mol: &RWMol, aid1: u32, aid2: u32) -> Result<Vec<u32>>;
         fn set_terminal_atom_coords(mol: Pin<&mut RWMol>, idx: u32, other_idx: u32) -> Result<()>;

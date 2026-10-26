@@ -26,7 +26,7 @@
    "python": "rdkit.Chem.AllChem.ConstrainedEmbed",
    "kind": "module_function",
    "overloads": [
-    "def ConstrainedEmbed(mol, core, useTethers=True, coreConfId=-1, randomseed=2342, getForceField=<nanobind.nb_func object>, **kwargs)"
+    "def ConstrainedEmbed(mol, core, useTethers=True, coreConfId=-1, randomseed=2342, getForceField=<Boost.Python.function object>, **kwargs)"
    ]
   },
   {
@@ -1714,14 +1714,14 @@
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForFingerprint",
    "kind": "module_function",
    "overloads": [
-    "def GetAtomicWeightsForFingerprint(refMol, probeMol, fpFunction, metric=<nanobind.nb_func object>)"
+    "def GetAtomicWeightsForFingerprint(refMol, probeMol, fpFunction, metric=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForFingerprintGenerator",
    "kind": "module_function",
    "overloads": [
-    "def GetAtomicWeightsForFingerprintGenerator(refMol, probeMol, fpg, useCounts=False, metric=<nanobind.nb_func object>)"
+    "def GetAtomicWeightsForFingerprintGenerator(refMol, probeMol, fpg, useCounts=False, metric=<Boost.Python.function object>)"
    ]
   },
   {
@@ -1749,14 +1749,14 @@
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForFingerprint",
    "kind": "module_function",
    "overloads": [
-    "def GetSimilarityMapForFingerprint(refMol, probeMol, fpFunction, draw2d, metric=<nanobind.nb_func object>, **kwargs)"
+    "def GetSimilarityMapForFingerprint(refMol, probeMol, fpFunction, draw2d, metric=<Boost.Python.function object>, **kwargs)"
    ]
   },
   {
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForFingerprintGenerator",
    "kind": "module_function",
    "overloads": [
-    "def GetSimilarityMapForFingerprintGenerator(refMol, probeMol, fpg, draw2d, metric=<nanobind.nb_func object>, useCounts=False, **kwargs)"
+    "def GetSimilarityMapForFingerprintGenerator(refMol, probeMol, fpg, draw2d, metric=<Boost.Python.function object>, useCounts=False, **kwargs)"
    ]
   },
   {
@@ -2856,7 +2856,7 @@
    "python": "rdkit.Chem.Fingerprints.FingerprintMols.FingerprintMol",
    "kind": "module_function",
    "overloads": [
-    "def FingerprintMol(mol, fingerprinter=<nanobind.nb_func object>, **fpArgs)"
+    "def FingerprintMol(mol, fingerprinter=<Boost.Python.function object>, **fpArgs)"
    ]
   },
   {
@@ -2896,21 +2896,21 @@
    "python": "rdkit.Chem.Fingerprints.FingerprintMols.FingerprintsFromMols",
    "kind": "module_function",
    "overloads": [
-    "def FingerprintsFromMols(mols, fingerprinter=<nanobind.nb_func object>, reportFreq=10, maxMols=-1, **fpArgs)"
+    "def FingerprintsFromMols(mols, fingerprinter=<Boost.Python.function object>, reportFreq=10, maxMols=-1, **fpArgs)"
    ]
   },
   {
    "python": "rdkit.Chem.Fingerprints.FingerprintMols.FingerprintsFromPickles",
    "kind": "module_function",
    "overloads": [
-    "def FingerprintsFromPickles(dataSource, idCol, pklCol, fingerprinter=<nanobind.nb_func object>, reportFreq=10, maxMols=-1, **fpArgs)"
+    "def FingerprintsFromPickles(dataSource, idCol, pklCol, fingerprinter=<Boost.Python.function object>, reportFreq=10, maxMols=-1, **fpArgs)"
    ]
   },
   {
    "python": "rdkit.Chem.Fingerprints.FingerprintMols.FingerprintsFromSmiles",
    "kind": "module_function",
    "overloads": [
-    "def FingerprintsFromSmiles(dataSource, idCol, smiCol, fingerprinter=<nanobind.nb_func object>, reportFreq=10, maxMols=-1, **fpArgs)"
+    "def FingerprintsFromSmiles(dataSource, idCol, smiCol, fingerprinter=<Boost.Python.function object>, reportFreq=10, maxMols=-1, **fpArgs)"
    ]
   },
   {
@@ -4213,7 +4213,7 @@
    "python": "rdkit.Chem.Lipinski.FractionCSP3",
    "kind": "module_function",
    "overloads": [
-    "def FractionCSP3(x, y=<nanobind.nb_func object>)"
+    "def FractionCSP3(x, y=<Boost.Python.function object>)"
    ]
   },
   {
@@ -4266,63 +4266,63 @@
    "python": "rdkit.Chem.Lipinski.NumAliphaticCarbocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumAliphaticCarbocycles(x, y=<nanobind.nb_func object>)"
+    "def NumAliphaticCarbocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAliphaticHeterocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumAliphaticHeterocycles(x, y=<nanobind.nb_func object>)"
+    "def NumAliphaticHeterocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAliphaticRings",
    "kind": "module_function",
    "overloads": [
-    "def NumAliphaticRings(x, y=<nanobind.nb_func object>)"
+    "def NumAliphaticRings(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAmideBonds",
    "kind": "module_function",
    "overloads": [
-    "def NumAmideBonds(x, y=<nanobind.nb_func object>)"
+    "def NumAmideBonds(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAromaticCarbocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumAromaticCarbocycles(x, y=<nanobind.nb_func object>)"
+    "def NumAromaticCarbocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAromaticHeterocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumAromaticHeterocycles(x, y=<nanobind.nb_func object>)"
+    "def NumAromaticHeterocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAromaticRings",
    "kind": "module_function",
    "overloads": [
-    "def NumAromaticRings(x, y=<nanobind.nb_func object>)"
+    "def NumAromaticRings(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumAtomStereoCenters",
    "kind": "module_function",
    "overloads": [
-    "def NumAtomStereoCenters(x, y=<nanobind.nb_func object>)"
+    "def NumAtomStereoCenters(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumBridgeheadAtoms",
    "kind": "module_function",
    "overloads": [
-    "def NumBridgeheadAtoms(x, y=<nanobind.nb_func object>)"
+    "def NumBridgeheadAtoms(x, y=<Boost.Python.function object>)"
    ]
   },
   {
@@ -4350,7 +4350,7 @@
    "python": "rdkit.Chem.Lipinski.NumHeterocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumHeterocycles(x, y=<nanobind.nb_func object>)"
+    "def NumHeterocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
@@ -4364,42 +4364,42 @@
    "python": "rdkit.Chem.Lipinski.NumSaturatedCarbocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumSaturatedCarbocycles(x, y=<nanobind.nb_func object>)"
+    "def NumSaturatedCarbocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumSaturatedHeterocycles",
    "kind": "module_function",
    "overloads": [
-    "def NumSaturatedHeterocycles(x, y=<nanobind.nb_func object>)"
+    "def NumSaturatedHeterocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumSaturatedRings",
    "kind": "module_function",
    "overloads": [
-    "def NumSaturatedRings(x, y=<nanobind.nb_func object>)"
+    "def NumSaturatedRings(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumSpiroAtoms",
    "kind": "module_function",
    "overloads": [
-    "def NumSpiroAtoms(x, y=<nanobind.nb_func object>)"
+    "def NumSpiroAtoms(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.NumUnspecifiedAtomStereoCenters",
    "kind": "module_function",
    "overloads": [
-    "def NumUnspecifiedAtomStereoCenters(x, y=<nanobind.nb_func object>)"
+    "def NumUnspecifiedAtomStereoCenters(x, y=<Boost.Python.function object>)"
    ]
   },
   {
    "python": "rdkit.Chem.Lipinski.Phi",
    "kind": "module_function",
    "overloads": [
-    "def Phi(x, y=<nanobind.nb_func object>)"
+    "def Phi(x, y=<Boost.Python.function object>)"
    ]
   },
   {
@@ -4618,40 +4618,49 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.MolDb.Loader_sa.ConnectToSchema",
-   "kind": "module_attribute",
+   "python": "rdkit.Chem.MolDb.Loader_sa.Compound.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(self, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.MolDb.Loader_sa.Compound.guid",
+   "kind": "property",
    "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.MolDb.Loader_sa.Compound.molpkl",
+   "kind": "property",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.MolDb.Loader_sa.ConnectToSchema",
+   "kind": "module_function",
+   "overloads": [
+    "def ConnectToSchema(dbUrl, echo=False)"
+   ]
   },
   {
    "python": "rdkit.Chem.MolDb.Loader_sa.LoadDb",
    "kind": "module_function",
    "overloads": [
-    "def LoadDb(...)"
+    "def LoadDb(suppl, dbName, nameProp='_Name', nameCol='compound_id', silent=False, redraw=False, errorsTo=None, keepHs=False, defaultVal='N/A', skipProps=False, regName='molecules', skipSmiles=False, maxRowsCached=-1, uniqNames=False, addComputedProps=False, lazySupplier=False, numForPropScan=10, startAnew=True)"
    ]
   },
   {
    "python": "rdkit.Chem.MolDb.Loader_sa.ProcessMol",
    "kind": "module_function",
    "overloads": [
-    "def ProcessMol(...)"
+    "def ProcessMol(session, mol, globalProps, nDone, nameProp='_Name', nameCol='compound_id', redraw=False, keepHs=False, skipProps=False, addComputedProps=False, skipSmiles=False)"
    ]
   },
   {
    "python": "rdkit.Chem.MolDb.Loader_sa.RegisterSchema",
    "kind": "module_function",
    "overloads": [
-    "def RegisterSchema(...)"
+    "def RegisterSchema(dbUrl, echo=False)"
    ]
-  },
-  {
-   "python": "rdkit.Chem.MolDb.Loader_sa.decBase",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.MolDb.Loader_sa.logger",
-   "kind": "module_attribute",
-   "overloads": []
   },
   {
    "python": "rdkit.Chem.MolKey.InchiInfo.InchiInfo",
@@ -6186,6 +6195,20 @@
    ]
   },
   {
+   "python": "rdkit.Chem.PropertyMol.PropertyMol.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(self, mol)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.PropertyMol.PropertyMol.__setstate__",
+   "kind": "method",
+   "overloads": [
+    "def __setstate__(self, stateD)"
+   ]
+  },
+  {
    "python": "rdkit.Chem.PropertyMol.deprecated",
    "kind": "module_function",
    "overloads": [
@@ -7081,7 +7104,7 @@
    "python": "rdkit.Chem.SimpleEnum.Enumerator.EnumerateReaction",
    "kind": "module_function",
    "overloads": [
-    "def EnumerateReaction(reaction, bbLists, uniqueProductsOnly=False, funcGroupFilename='/home/user/rdkit-src/Data/Functional_Group_Hierarchy.txt', propName='molFileValue')"
+    "def EnumerateReaction(reaction, bbLists, uniqueProductsOnly=False, funcGroupFilename='/root/micromamba/envs/rdkit-py/share/RDKit/Data/Functional_Group_Hierarchy.txt', propName='molFileValue')"
    ]
   },
   {
@@ -8907,7 +8930,7 @@
    "python": "rdkit.DataStructs.FingerprintSimilarity",
    "kind": "module_function",
    "overloads": [
-    "def FingerprintSimilarity(fp1, fp2, metric=<nanobind.nb_func object>)"
+    "def FingerprintSimilarity(fp1, fp2, metric=<Boost.Python.function object>)"
    ]
   },
   {
@@ -9142,13 +9165,6 @@
    "python": "rdkit.DataStructs.VectCollection.VectCollection.orVect",
    "kind": "property",
    "overloads": []
-  },
-  {
-   "python": "rdkit.DataStructs.bvtotext",
-   "kind": "module_function",
-   "overloads": [
-    "def bvtotext(bv)"
-   ]
   },
   {
    "python": "rdkit.DataStructs.getElementFromFlatMatrix",
@@ -10726,7 +10742,7 @@
    "python": "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self, idList, nCluster, type=ClusterMethod.WARD)"
+    "def __init__(self, idList, nCluster, type=rdkit.SimDivFilters.rdSimDivPickers.ClusterMethod.WARD)"
    ]
   },
   {
@@ -11112,7 +11128,7 @@
    "python": "rdkit.SimDivFilters.SimilarityPickers.SpreadPicker.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self, numToPick=10, probeFps=None, dataSet=None, simMetric=<nanobind.nb_func object>, expectPickles=True, onlyNames=False)"
+    "def __init__(self, numToPick=10, probeFps=None, dataSet=None, simMetric=<Boost.Python.function object>, expectPickles=True, onlyNames=False)"
    ]
   },
   {
@@ -11131,7 +11147,7 @@
    "python": "rdkit.SimDivFilters.SimilarityPickers.TopNOverallPicker.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self, numToPick=10, probeFps=None, dataSet=None, simMetric=<nanobind.nb_func object>)"
+    "def __init__(self, numToPick=10, probeFps=None, dataSet=None, simMetric=<Boost.Python.function object>)"
    ]
   },
   {
@@ -13818,133 +13834,133 @@
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(...)"
+    "def __init__(self, size=(300, 300), name='RLCanvas')"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.clear",
    "kind": "method",
    "overloads": [
-    "def clear(...)"
+    "def clear(self)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.drawArc",
    "kind": "method",
    "overloads": [
-    "def drawArc(...)"
+    "def drawArc(self, x1, y1, x2, y2, startAng=0, extent=360, edgeColor=None, edgeWidth=None, fillColor=None, dash=None, **kwargs)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.drawCurve",
    "kind": "method",
    "overloads": [
-    "def drawCurve(...)"
+    "def drawCurve(self, x1, y1, x2, y2, x3, y3, x4, y4, closed=0, **kwargs)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.drawImage",
    "kind": "method",
    "overloads": [
-    "def drawImage(...)"
+    "def drawImage(self, image, x1, y1, x2=None, y2=None, **kwargs)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.drawLine",
    "kind": "method",
    "overloads": [
-    "def drawLine(...)"
+    "def drawLine(self, x1, y1, x2, y2, color=None, width=None, dash=None, **kwargs)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.drawPolygon",
    "kind": "method",
    "overloads": [
-    "def drawPolygon(...)"
+    "def drawPolygon(self, pointlist, edgeColor=None, edgeWidth=None, fillColor=Color(-1.00,-1.00,-1.00), closed=0, dash=None, **kwargs)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.drawString",
    "kind": "method",
    "overloads": [
-    "def drawString(...)"
+    "def drawString(self, s, x, y, font=None, color=None, angle=0, **kwargs)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.fixY",
    "kind": "method",
    "overloads": [
-    "def fixY(...)"
+    "def fixY(self, y)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.flush",
    "kind": "method",
    "overloads": [
-    "def flush(...)"
+    "def flush(self)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.fontAscent",
    "kind": "method",
    "overloads": [
-    "def fontAscent(...)"
+    "def fontAscent(self, font=None)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.fontDescent",
    "kind": "method",
    "overloads": [
-    "def fontDescent(...)"
+    "def fontDescent(self, font=None)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.save",
    "kind": "method",
    "overloads": [
-    "def save(...)"
+    "def save(self, file=None, format=None)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.RLCanvas.stringWidth",
    "kind": "method",
    "overloads": [
-    "def stringWidth(...)"
+    "def stringWidth(self, s, font=None)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.colorToRL",
    "kind": "module_function",
    "overloads": [
-    "def colorToRL(...)"
+    "def colorToRL(color)"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.dashtest",
    "kind": "module_function",
    "overloads": [
-    "def dashtest(...)"
+    "def dashtest()"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.test",
    "kind": "module_function",
    "overloads": [
-    "def test(...)"
+    "def test()"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.test2",
    "kind": "module_function",
    "overloads": [
-    "def test2(...)"
+    "def test2()"
    ]
   },
   {
    "python": "rdkit.sping.ReportLab.pidReportLab.testit",
    "kind": "module_function",
    "overloads": [
-    "def testit(...)"
+    "def testit(canvas, s, x, y, font=None)"
    ]
   },
   {
@@ -16402,7 +16418,7 @@
    "python": "rdkit.utils.chemutils.GetAtomicData",
    "kind": "module_function",
    "overloads": [
-    "def GetAtomicData(atomDict, descriptorsDesired, dBase='/home/user/rdkit-src/Data/atomdb.gdb', table='atomic_data', where='', user='sysdba', password='masterkey', includeElCounts=0)"
+    "def GetAtomicData(atomDict, descriptorsDesired, dBase='/root/micromamba/envs/rdkit-py/share/RDKit/Data/atomdb.gdb', table='atomic_data', where='', user='sysdba', password='masterkey', includeElCounts=0)"
    ]
   },
   {

@@ -27,5 +27,5 @@ mod matchers;
 pub use catalog::*;
 pub use matchers::{
     CustomFilterMatcher, ExclusionList, FilterHierarchyMatcher, FilterHierarchyMatcherMut,
-    FilterMatch, FilterMatcher, SmartsMatcher, SmartsMatcherParams, int_pair,
+    FilterMatch, FilterMatcher, SmartsMatcher, SmartsMatcherParams,
 };

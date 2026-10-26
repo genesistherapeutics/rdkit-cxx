@@ -65,7 +65,7 @@ const FragCatalogEntry &entry_with_bit(const FragCatalog &catalog,
 }
 
 // The functional groups' ids, in the order of their atoms, as
-// GetEntryFuncGroupIds in nbWrap/FragCatalog.cpp lists them.
+// GetEntryFuncGroupIds in Wrap/FragCatalog.cpp lists them.
 rust::Vec<std::int32_t> func_group_ids(const FragCatalogEntry &entry) {
   rust::Vec<std::int32_t> ids;
   for (const auto &groups : entry.getFuncGroupMap()) {

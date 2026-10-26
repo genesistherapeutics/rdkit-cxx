@@ -34,8 +34,9 @@ struct TermParams;
 enum class MMFFTerm : std::uint8_t;
 
 // A force field and the extra points added to it, as PyForceField in
-// Code/ForceField/nbWrap/PyForceField.h. Its other positions point into a
-// conformer, which the Rust ForceField borrows for as long as it lives.
+// Code/ForceField/Wrap/PyForceField.h, but owned by unique_ptr where Python
+// shares them. Its other positions point into a conformer, which the Rust
+// ForceField borrows for as long as it lives.
 class ForceField {
  public:
   explicit ForceField(std::unique_ptr<ForceFields::ForceField> field)

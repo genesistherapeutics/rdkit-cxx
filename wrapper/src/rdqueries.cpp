@@ -38,7 +38,7 @@ void check_query_value(std::int64_t val) {
   }
 }
 
-// As QAFUNC1 in Code/GraphMol/nbWrap/Queries.cpp: "Less" builds RDKit's
+// As QAFUNC1 in Code/GraphMol/Wrap/Queries.cpp: "Less" builds RDKit's
 // greater-than query, and "Greater" its less-than query, because they read
 // as the atom's value compared to val.
 #define RDKIT_CXX_VALUE_QUERY(name, func)                                 \
@@ -278,7 +278,7 @@ std::unique_ptr<Bond> has_double_prop_with_value_query_bond(rust::Str propname,
                           negate);
 }
 
-// As replaceAtomWithQueryAtomHelper in Code/GraphMol/nbWrap/Queries.cpp,
+// As replaceAtomWithQueryAtomHelper in Code/GraphMol/Wrap/Queries.cpp,
 // with the atom given by index, so it is the molecule's own.
 void replace_atom_with_query_atom(RWMol &mol, std::uint32_t idx) {
   check_index(idx, mol.getNumAtoms());

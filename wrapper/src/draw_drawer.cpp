@@ -2034,7 +2034,7 @@ void drawer_draw_molecule_acs1996(Drawer &d, const RWMol &mol,
 
 std::unique_ptr<std::string> mol_to_acs1996_svg(const RWMol &mol,
                                                 const DrawMoleculeData &data) {
-  // As molToACS1996SVG in nbWrap/rdMolDraw2D.cpp, on a drawer of the
+  // As molToACS1996SVG in Wrap/rdMolDraw2D.cpp, on a drawer of the
   // wrappers' own.
   auto d = mol_draw_2d_svg_new(-1, -1, -1, -1, false);
   drawer_draw_molecule_acs1996(*d, mol, data);
@@ -2209,7 +2209,7 @@ std::unique_ptr<std::string> mol_to_svg(const RWMol &mol, int width, int height,
                                         std::uint32_t line_width_mult,
                                         bool include_atom_circles,
                                         int conf_id) {
-  // As molToSVG in nbWrap/rdMolDraw2D.cpp, on a drawer of the wrappers'
+  // As molToSVG in Wrap/rdMolDraw2D.cpp, on a drawer of the wrappers'
   // own, so it is checked as any other.
   auto d = mol_draw_2d_svg_new(width, height, -1, -1, false);
   auto opts = d->drawer->drawOptions();

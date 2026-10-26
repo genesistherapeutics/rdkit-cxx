@@ -176,8 +176,8 @@ RDKit::SubstructMatchParameters params_with_max_matches_one(
   return params;
 }
 
-// As convertMatch in nbWrap/substructmethods.h: the target atom for each
-// query atom.
+// As convertMatches in Code/GraphMol/Wrap/substructmethods.h: the target atom
+// for each query atom.
 rust::Vec<std::uint32_t> convert_match(const RDKit::MatchVectType &match) {
   std::vector<std::uint32_t> res(match.size());
   for (const auto &[query_idx, mol_idx] : match) {
@@ -299,14 +299,6 @@ void check_fingerprint_size(std::uint32_t fingerprint_size) {
       static_cast<std::uint32_t>(std::numeric_limits<int>::max())) {
     throw ValueErrorException("bit vectors hold at most 2^31 - 1 bits");
   }
-}
-
-// RDKit's default constructor leaves the template null, which every method
-// dereferences; this query's template is an empty molecule.
-std::unique_ptr<TautomerQuery> tautomer_query_new_empty() {
-  return std::make_unique<TautomerQuery>(
-      std::vector<RDKit::ROMOL_SPTR>(), new RDKit::ROMol(),
-      std::vector<size_t>(), std::vector<size_t>());
 }
 
 std::unique_ptr<TautomerQuery> tautomer_query_clone(

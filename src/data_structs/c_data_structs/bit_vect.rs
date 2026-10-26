@@ -272,7 +272,7 @@ impl ExplicitBitVect {
     }
 }
 
-/// An empty vector. Mirrors `ExplicitBitVect()`.
+/// An empty vector, a Rust addition (Python's constructors take a size).
 impl Default for ExplicitBitVect {
     fn default() -> ExplicitBitVect {
         ExplicitBitVect::new(0)
@@ -315,7 +315,7 @@ impl SparseBitVect {
     }
 }
 
-/// An empty vector. Mirrors `SparseBitVect()`.
+/// An empty vector, a Rust addition (Python's constructors take a size).
 impl Default for SparseBitVect {
     fn default() -> SparseBitVect {
         SparseBitVect::new(0)

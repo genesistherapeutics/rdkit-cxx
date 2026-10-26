@@ -97,5 +97,6 @@ pub(crate) mod substruct_library;
 pub(crate) mod suppliers;
 pub(crate) mod synthon_space_search;
 pub(crate) mod tautomer_query;
+pub(crate) mod trajectory;
 pub(crate) mod transforms;
 pub(crate) mod writers;

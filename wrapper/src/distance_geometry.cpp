@@ -33,9 +33,10 @@ namespace rdkit_cxx {
 
 namespace {
 
-// As the checks in Code/DistGeom/nbWrap/DistGeom.cpp, whose nrows * nrows
-// wraps in unsigned int above 65535 rows; matrices are capped where n * n
-// fits in int (U3).
+// As the checks in Code/DistGeom/Wrap/DistGeom.cpp, whose nrows * nrows
+// overflows int above 46340 rows in doTriangleSmoothing and wraps in unsigned
+// int above 65535 in embedBoundsMatrix; matrices are capped where n * n fits
+// in int (U3).
 DistGeom::BoundsMatrix::DATA_SPTR copy_bounds(rust::Slice<const double> bounds,
                                               std::uint32_t n) {
   if (n == 0) {

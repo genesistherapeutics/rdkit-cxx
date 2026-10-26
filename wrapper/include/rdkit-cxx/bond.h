@@ -39,7 +39,7 @@ bool bond_has_query(const Bond &bond);
 bool bond_is_in_ring(const Bond &bond);
 bool bond_is_in_ring_size(const Bond &bond, int size);
 double bond_get_valence_contrib(const Bond &bond, const RDKit::Atom &at);
-// As BondGetSmarts in Code/GraphMol/nbWrap/Bond.cpp.
+// As BondGetSmarts in Code/GraphMol/Wrap/Bond.cpp.
 std::unique_ptr<std::string> bond_get_smarts(const Bond &bond,
                                              bool all_bonds_explicit);
 

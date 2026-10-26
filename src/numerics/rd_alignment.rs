@@ -15,7 +15,7 @@ use crate::geometry::Point3D;
 #[derive(Clone, Debug, PartialEq)]
 pub struct GetAlignmentTransformParams {
     /// A positive weight for each pair of points; `None` weighs them
-    /// equally.
+    /// equally. Python treats an empty list as `None`.
     pub weights: Option<Vec<f64>>,
     /// Reflects the probe points first.
     pub reflect: bool,

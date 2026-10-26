@@ -123,7 +123,7 @@ rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
   return result;
 }
 
-// As canonicalizeStereoGroupsHelper in Code/GraphMol/nbWrap/MolOps.cpp: a
+// As canonicalizeStereoGroupsHelper in Code/GraphMol/Wrap/MolOps.cpp: a
 // copy gets the canonical groups.
 std::unique_ptr<RWMol> canonicalize_stereo_groups(
     const RWMol &mol, StereoGroupAbsOptions output_absolute_groups,

@@ -9,6 +9,7 @@ use common::{assert_close, assert_close_to, ethanol, ethanol_two_confs};
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_force_field_helpers::*;
 use rdkit_cxx::chem::rdmolops::SanitizeFlags;
+use rdkit_cxx::chem::rdtrajectory::Snapshot;
 use rdkit_cxx::chem::*;
 use rdkit_cxx::force_field::*;
 use rdkit_cxx::geometry::Point3D;

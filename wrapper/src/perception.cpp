@@ -109,6 +109,14 @@ bool atom_has_conjugated_bond(const Atom &atom) {
   return RDKit::MolOps::atomHasConjugatedBond(&atom);
 }
 
+std::uint32_t get_attachment_point_label_number(const Atom &atom) {
+  return RDKit::MolOps::getAttachmentPointLabelNumber(&atom);
+}
+
+bool is_marked_attachment_point(const Atom &atom) {
+  return RDKit::MolOps::isMarkedAttachmentPoint(&atom);
+}
+
 // getFormalCharge sums the atoms' charges in an int accumulator, in atom
 // order (std::accumulate in MolOps.cpp). Each charge is 8 bits, so the sum
 // leaves int's range only past 2^24 atoms, and overflows there (U9).
