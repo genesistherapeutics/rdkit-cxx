@@ -174,10 +174,24 @@ pub fn environ_matchers() -> Vec<(&'static str, Mol)> {
         .collect()
 }
 
+/// One of `bond_matchers`: Python's tuple `(i1, i2, bType, patt)`.
+#[derive(Clone, Debug)]
+#[non_exhaustive]
+pub struct BRICSBondMatcher {
+    /// The first environment's label, without its `L`.
+    pub i1: &'static str,
+    /// The second environment's label, without its `L`.
+    pub i2: &'static str,
+    /// The bond between them, as SMARTS.
+    pub b_type: &'static str,
+    /// A pattern for the bond between the two environments.
+    pub patt: Mol,
+}
+
 /// For each group of `reaction_defs`, each pair's labels, its bond, and a
 /// pattern for the bond between the two environments. Mirrors
 /// `BRICS.bondMatchers`.
-pub fn bond_matchers() -> Vec<Vec<(&'static str, &'static str, &'static str, Mol)>> {
+pub fn bond_matchers() -> Vec<Vec<BRICSBondMatcher>> {
     reaction_defs()
         .into_iter()
         .map(|compats| {
@@ -188,7 +202,12 @@ pub fn bond_matchers() -> Vec<Vec<(&'static str, &'static str, &'static str, Mol
                     let e2 = environ(&format!("L{i2}"));
                     let patt = mol_from_smarts(&format!("[$({e1})]{b_type};!@[$({e2})]"))
                         .expect("the BRICS SMARTS parse");
-                    (i1, i2, b_type, patt)
+                    BRICSBondMatcher {
+                        i1,
+                        i2,
+                        b_type,
+                        patt,
+                    }
                 })
                 .collect()
         })
@@ -286,11 +305,11 @@ fn find_bonds(mol: &Mol, mut random: Option<&mut Random>) -> Result<Vec<BRICSBon
     let mut bonds_done = HashSet::new();
     let mut res = Vec::new();
     for gp_idx in indices {
-        let mut compats: Vec<&(&str, &str, &str, Mol)> = bond_matchers[gp_idx].iter().collect();
+        let mut compats: Vec<&BRICSBondMatcher> = bond_matchers[gp_idx].iter().collect();
         if let Some(random) = random.as_deref_mut() {
             shuffle_with_random(&mut compats, || random.random()).expect("random() is in [0, 1)");
         }
-        for (i1, i2, _b_type, patt) in compats {
+        for BRICSBondMatcher { i1, i2, patt, .. } in compats {
             if !env_matches[&format!("L{i1}")] || !env_matches[&format!("L{i2}")] {
                 continue;
             }

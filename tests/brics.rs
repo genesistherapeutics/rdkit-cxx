@@ -927,7 +927,7 @@ fn module_attributes() -> Result<()> {
         r"[$([C;D2,D3]-[#6]):1]=;!@[$([C;D2,D3]-[#6]):2]>>[7*]-[*:1].[7*]-[*:2]"
     );
     assert_eq!(
-        mol_to_smarts(&bond_matchers()[1][2].3)?,
+        mol_to_smarts(&bond_matchers()[1][2].patt)?,
         r"[$([O&D2]-&!@[#0,#6,#1])]-&!@[$([c&$(c(:[c,n,o,s]):[n,o,s])])]"
     );
     assert_eq!(
