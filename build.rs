@@ -127,6 +127,15 @@ fn main() {
     );
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
+    // Clippy checks the Rust and links nothing, so it needs no C++. Cargo
+    // runs this script for clippy apart from its run for `cargo build`
+    // (clippy's rustc wrapper is part of the run's identity), so building the
+    // C++ here would compile all of it a second time. Downstream build
+    // scripts still read the library directory.
+    if under_clippy() {
+        println!("cargo::metadata=libdir={}", prefix.join("lib").display());
+        return;
+    }
 
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let (generated_include, generated_sources) = generate_bridges(&out_dir.join("cxxgen"));
@@ -144,6 +153,16 @@ fn main() {
         .build_target("rdkitcxx")
         .build();
     link(&dst.join("build"));
+}
+
+/// Whether Cargo runs this script for `cargo clippy`, which makes
+/// clippy-driver the workspace's rustc wrapper.
+fn under_clippy() -> bool {
+    env::var_os("RUSTC_WORKSPACE_WRAPPER").is_some_and(|wrapper| {
+        Path::new(&wrapper)
+            .file_stem()
+            .is_some_and(|stem| stem == "clippy-driver")
+    })
 }
 
 /// The RDKit install prefix: `RDKIT_PREFIX`, else `CONDA_PREFIX`.
