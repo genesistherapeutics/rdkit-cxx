@@ -421,7 +421,10 @@ rule changes the rule first.
 
 - **D1.** Doc examples are `no_run` or `compile_fail`; behavior is tested
   under `tests/`. Each public item's doc comment names the Python object it
-  mirrors.
+  mirrors, or says it is a Rust addition (an iterator, a view, a trait, or a
+  type that names what Python leaves untyped). Items whose names start
+  with `__` are `#[doc(hidden)]` hooks for the crate's own tests, not public
+  API: any release may change or remove them.
 
 ## Arguments and overloads
 
@@ -432,7 +435,11 @@ rule changes the rule first.
   `name_with_<param>`, or for two or more, `name_with_params(&<Name>Params)`.
   `<Name>Params` is named for the Python function or method, has the optional
   parameters as snake_case fields, and implements `Default` with Python's
-  defaults, pinned by a test.
+  defaults, pinned by a test. A Python name may itself contain "With"
+  (`SaltRemover.StripMolWithDeleted` is `strip_mol_with_deleted`); A2's
+  suffix then follows it (`strip_mol_with_deleted_with_dont_remove_everything`,
+  `lazy_pick_with_threshold_with_params`), and only the last `_with_` is
+  A2's.
 - **A3.** When Python also accepts a params object (an overload taking, say,
   `SmilesParserParams`), `name_with_params` takes the Rust mirror of that
   class instead. Keyword arguments the class lacks become extra fields on it.

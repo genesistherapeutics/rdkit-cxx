@@ -82,6 +82,13 @@ run inside the environment and fail when linked any other way.) See
   is `get_num_atoms_with_only_explicit(false)`, and calls with several optional
   arguments take a params struct with `Default`:
   `mol_to_smiles_with_params(&mol, &SmilesWriteParams { do_kekule: true, ..Default::default() })`.
+  Params structs gain fields only with a new RDKit series, never in a patch
+  release, so that idiom keeps compiling: an option RDKit adds in a patch
+  release waits for the next series.
+- Enums, and the structs functions return, are `#[non_exhaustive]`: match
+  them with a `_` arm, and read their fields rather than building them.
+- Callbacks Python takes as any callable take closures: `impl Fn`
+  arguments, or `&dyn Fn` fields in params structs.
 - Exceptions become `Result<T, rdkit_cxx::Error>`. A parse that returns `None`
   in Python returns `Error::Parse`, and sanitization errors keep their atom
   indices (`Error::AtomValence { atom_idx, .. }`).
