@@ -130,7 +130,7 @@ pub(crate) mod ffi {
             for_probe_confs: bool,
             options: &O3AOptionsData,
         ) -> Result<UniquePtr<O3AList>>;
-        fn o3a_list_size(list: &O3AList) -> usize;
+        fn o3a_list_size(list: &O3AList) -> Result<usize>;
         fn o3a_list_take(list: Pin<&mut O3AList>, i: usize) -> Result<UniquePtr<O3AHolder>>;
         fn o3a_align(o3a: Pin<&mut O3AHolder>) -> Result<f64>;
         fn o3a_trans(o3a: &O3AHolder, trans: &mut Vec<f64>) -> Result<f64>;

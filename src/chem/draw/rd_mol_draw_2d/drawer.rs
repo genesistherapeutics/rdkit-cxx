@@ -189,17 +189,17 @@ impl MolDraw2D {
     /// The canvas width in pixels. Mirrors `MolDraw2D.Width`; a flexible
     /// canvas (-1) takes its size from its first drawing.
     pub fn width(&self) -> i32 {
-        ffi::drawer_width(self.as_ffi())
+        expect_ok(ffi::drawer_width(self.as_ffi()))
     }
 
     /// The canvas height in pixels. Mirrors `MolDraw2D.Height`.
     pub fn height(&self) -> i32 {
-        ffi::drawer_height(self.as_ffi())
+        expect_ok(ffi::drawer_height(self.as_ffi()))
     }
 
     /// The font size, roughly in pixels. Mirrors `MolDraw2D.FontSize`.
     pub fn font_size(&self) -> f64 {
-        ffi::drawer_font_size(self.as_ffi())
+        expect_ok(ffi::drawer_font_size(self.as_ffi()))
     }
 
     /// Sets the font size, roughly in pixels, which RDKit keeps within the
@@ -212,7 +212,7 @@ impl MolDraw2D {
     /// The bond line width (the `bond_line_width` option). Mirrors
     /// `MolDraw2D.LineWidth`.
     pub fn line_width(&self) -> f64 {
-        ffi::drawer_line_width(self.as_ffi())
+        expect_ok(ffi::drawer_line_width(self.as_ffi()))
     }
 
     /// Sets the bond line width. Mirrors `MolDraw2D.SetLineWidth`;
@@ -223,28 +223,28 @@ impl MolDraw2D {
 
     /// Whether polygons are filled. Mirrors `MolDraw2D.FillPolys`.
     pub fn fill_polys(&self) -> bool {
-        ffi::drawer_fill_polys(self.as_ffi())
+        expect_ok(ffi::drawer_fill_polys(self.as_ffi()))
     }
 
     /// Sets whether polygons are filled. Mirrors `MolDraw2D.SetFillPolys`.
     pub fn set_fill_polys(&mut self, val: bool) {
-        ffi::drawer_set_fill_polys(self.pin_mut(), val);
+        expect_ok(ffi::drawer_set_fill_polys(self.pin_mut(), val))
     }
 
     /// Whether flexible mode is on. Mirrors `MolDraw2D.FlexiMode`.
     pub fn flexi_mode(&self) -> bool {
-        ffi::drawer_flexi_mode(self.as_ffi())
+        expect_ok(ffi::drawer_flexi_mode(self.as_ffi()))
     }
 
     /// In flexible mode, molecules are always drawn with the default bond
     /// length, font size, and so on. Mirrors `MolDraw2D.SetFlexiMode`.
     pub fn set_flexi_mode(&mut self, mode: bool) {
-        ffi::drawer_set_flexi_mode(self.pin_mut(), mode);
+        expect_ok(ffi::drawer_set_flexi_mode(self.pin_mut(), mode))
     }
 
     /// The drawing offset in pixels. Mirrors `MolDraw2D.Offset`.
     pub fn offset(&self) -> Point2D {
-        ffi::drawer_offset(self.as_ffi())
+        expect_ok(ffi::drawer_offset(self.as_ffi()))
     }
 
     /// Sets the drawing offset in pixels. Mirrors `MolDraw2D.SetOffset`;
@@ -1559,7 +1559,7 @@ pub fn update_drawer_params_from_json(drawer: &mut MolDraw2D, json: &str) -> Res
 /// Sets dark-mode colors on the drawer's options. Mirrors
 /// `rdMolDraw2D.SetDarkMode(MolDraw2D)`.
 pub fn set_dark_mode_mol_draw_2d(d2d: &mut MolDraw2D) {
-    ffi::drawer_set_dark_mode(d2d.pin_mut());
+    expect_ok(ffi::drawer_set_dark_mode(d2d.pin_mut()))
 }
 
 /// Draws everything in `fg_colour` on `bg_colour`. Mirrors

@@ -281,24 +281,24 @@ pub(crate) mod ffi {
             panel_height: i32,
             no_freetype: bool,
         ) -> Result<UniquePtr<Drawer>>;
-        fn drawer_width(d: &Drawer) -> i32;
-        fn drawer_height(d: &Drawer) -> i32;
-        fn drawer_font_size(d: &Drawer) -> f64;
+        fn drawer_width(d: &Drawer) -> Result<i32>;
+        fn drawer_height(d: &Drawer) -> Result<i32>;
+        fn drawer_font_size(d: &Drawer) -> Result<f64>;
         fn drawer_set_font_size(d: Pin<&mut Drawer>, size: f64) -> Result<()>;
-        fn drawer_line_width(d: &Drawer) -> f64;
+        fn drawer_line_width(d: &Drawer) -> Result<f64>;
         fn drawer_set_line_width(d: Pin<&mut Drawer>, width: f64) -> Result<()>;
-        fn drawer_fill_polys(d: &Drawer) -> bool;
-        fn drawer_set_fill_polys(d: Pin<&mut Drawer>, val: bool);
-        fn drawer_flexi_mode(d: &Drawer) -> bool;
-        fn drawer_set_flexi_mode(d: Pin<&mut Drawer>, mode: bool);
-        fn drawer_offset(d: &Drawer) -> Point2D;
+        fn drawer_fill_polys(d: &Drawer) -> Result<bool>;
+        fn drawer_set_fill_polys(d: Pin<&mut Drawer>, val: bool) -> Result<()>;
+        fn drawer_flexi_mode(d: &Drawer) -> Result<bool>;
+        fn drawer_set_flexi_mode(d: Pin<&mut Drawer>, mode: bool) -> Result<()>;
+        fn drawer_offset(d: &Drawer) -> Result<Point2D>;
         fn drawer_set_offset(d: Pin<&mut Drawer>, x: i32, y: i32) -> Result<()>;
         fn drawer_set_colour(d: Pin<&mut Drawer>, colour: &DrawColour) -> Result<()>;
         fn drawer_clear_drawing(d: Pin<&mut Drawer>) -> Result<()>;
         fn drawer_draw_options(d: &Drawer) -> Result<MolDrawOptionsData>;
         fn drawer_set_draw_options(d: Pin<&mut Drawer>, data: &MolDrawOptionsData) -> Result<()>;
         fn drawer_update_params_from_json(d: Pin<&mut Drawer>, json: &str) -> Result<()>;
-        fn drawer_set_dark_mode(d: Pin<&mut Drawer>);
+        fn drawer_set_dark_mode(d: Pin<&mut Drawer>) -> Result<()>;
         fn drawer_set_monochrome_mode(
             d: Pin<&mut Drawer>,
             fg_colour: &DrawColour,
@@ -485,7 +485,7 @@ pub(crate) mod ffi {
         ) -> Result<UniquePtr<CxxString>>;
         fn mean_bond_length(mol: &RWMol, conf_id: i32) -> Result<f64>;
 
-        fn contour_params_default() -> ContourParamsData;
+        fn contour_params_default() -> Result<ContourParamsData>;
         #[allow(clippy::too_many_arguments)]
         fn contour_and_draw_grid(
             d: Pin<&mut Drawer>,
