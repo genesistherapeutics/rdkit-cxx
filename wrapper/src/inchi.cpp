@@ -259,6 +259,19 @@ void check_inchi_input(const RWMol &mol) {
     }
     if (is_tetrahedral(*atom)) {
       ++num_stereo;
+      // MolToInchi keeps a tetrahedral center of three or four neighbors,
+      // counting hydrogens, but fills in only its neighbor atoms (and itself
+      // for a fourth), so with fewer than three InChI reads uninitialized
+      // neighbor indices.
+      unsigned total = atom->getTotalDegree();
+      if (total >= 3 && total <= 4 && atom->getDegree() < 3) {
+        throw ValueErrorException(
+            "atom " + std::to_string(idx) +
+            " is a tetrahedral stereo center with " +
+            std::to_string(atom->getDegree()) +
+            " neighbor atoms; InChI needs at least 3, counting only "
+            "hydrogens that are atoms");
+      }
     }
   }
   for (const RDKit::Bond *bond : copy.bonds()) {

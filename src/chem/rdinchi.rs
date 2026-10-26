@@ -107,10 +107,12 @@ pub fn inchi_to_mol_with_params(
 /// hydrogens on an atom whose count RDKit passes (any atom but C, N, O, F,
 /// Cl, Br, and I, whose hydrogens InChI counts itself, and any radical); an
 /// isotope more than 100 from its element's average mass; a coordinate that
-/// is not finite or exceeds 1e18 in magnitude; or a stereo bond whose stereo
-/// atoms are not in the molecule. `Error::Kekulize` (or another sanitization
-/// variant) for aromatic systems RDKit cannot kekulize. Mirrors
-/// `rdinchi.MolToInchi`.
+/// is not finite or exceeds 1e18 in magnitude; a tetrahedral stereo center
+/// with three or four neighbors, counting hydrogens, but fewer than three
+/// neighbor atoms, whose other neighbors RDKit leaves unset; or a stereo
+/// bond whose stereo atoms are not in the molecule. `Error::Kekulize` (or
+/// another sanitization variant) for aromatic systems RDKit cannot kekulize.
+/// Mirrors `rdinchi.MolToInchi`.
 ///
 /// ```no_run
 /// use rdkit_cxx::chem::{mol_from_smiles, rdinchi::mol_to_inchi};
