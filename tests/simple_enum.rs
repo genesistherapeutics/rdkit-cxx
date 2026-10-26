@@ -276,17 +276,28 @@ fn block(text: &str) -> ChemicalReaction {
     rxn
 }
 
+fn counts(
+    result: &rdkit_cxx::chem::rd_chem_reactions::PreprocessReactionResult,
+) -> (u32, u32, u32, u32) {
+    (
+        result.n_warn,
+        result.n_error,
+        result.n_reacts,
+        result.n_prods,
+    )
+}
+
 fn labels(
     result: &rdkit_cxx::chem::rd_chem_reactions::PreprocessReactionResult,
 ) -> Vec<Vec<(u32, String)>> {
-    result.4.clone()
+    result.reactant_labels.clone()
 }
 
 #[test]
 fn preprocessing() -> Result<()> {
     let mut rxn = boronic();
     let result = preprocess_reaction(&mut rxn)?;
-    assert_eq!((result.0, result.1, result.2, result.3), (0, 0, 2, 1));
+    assert_eq!(counts(&result), (0, 0, 2, 1));
     assert_eq!(
         labels(&result),
         [
@@ -342,8 +353,8 @@ fn preprocessing() -> Result<()> {
     let mut empty = ChemicalReaction::default();
     empty.initialize()?;
     let result = preprocess_reaction(&mut empty)?;
-    assert_eq!((result.0, result.1, result.2, result.3), (0, 2, 0, 0));
-    assert!(result.4.is_empty());
+    assert_eq!(counts(&result), (0, 2, 0, 0));
+    assert!(result.reactant_labels.is_empty());
     Ok(())
 }
 
@@ -361,7 +372,7 @@ fn preprocessing_with_a_file() -> Result<()> {
         ..Default::default()
     };
     let result = preprocess_reaction_with_params(&mut rxn, &params)?;
-    assert_eq!((result.0, result.1, result.2, result.3), (0, 0, 2, 1));
+    assert_eq!(counts(&result), (0, 0, 2, 1));
     let r1 = (*rxn.get_reactant_template(0)?).clone();
     assert!(!mol_from_smiles("CCBr")?.has_substruct_match(&r1)?);
     assert!(mol_from_smiles("c1ccccc1Br")?.has_substruct_match(&r1)?);

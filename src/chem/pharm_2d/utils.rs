@@ -156,10 +156,7 @@ pub fn scaffold_passes(combo: &[usize], bins: &[(u32, u32)]) -> Result<bool> {
         })?;
     let bin = |i: usize| -> Result<(u32, u32)> {
         let b = combo[i];
-        bins.get(b).copied().ok_or(Error::Index {
-            index: b as u32,
-            len: bins.len() as u32,
-        })
+        bins.get(b).copied().ok_or(Error::index(b, bins.len()))
     };
     for (a, b, c) in get_triangles(n_pts) {
         if !bins_triangle_inequality(bin(a)?, bin(b)?, bin(c)?) {
@@ -204,10 +201,7 @@ pub fn num_combinations(n_items: usize, n_slots: usize) -> u64 {
 /// `n_slots`. Mirrors `Utils.CountUpTo`.
 pub fn count_up_to(n_items: usize, n_slots: usize, vs: &[usize]) -> Result<u64> {
     if vs.len() < n_slots {
-        return Err(Error::Index {
-            index: vs.len() as u32,
-            len: vs.len() as u32,
-        });
+        return Err(Error::index(vs.len(), vs.len()));
     }
     let mut accum: i128 = 0;
     let mut start_at = 0usize;

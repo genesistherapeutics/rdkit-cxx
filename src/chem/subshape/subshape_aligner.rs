@@ -34,6 +34,7 @@ fn count(stats: &mut PruneStats, key: &str) {
 /// An alignment of a query shape to a target shape by a triangle of
 /// skeleton points. Mirrors `SubshapeAligner.SubshapeAlignment`.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct SubshapeAlignment {
     /// The 4x4 transform of the query onto the target. Mirrors
     /// `SubshapeAlignment.transform`.
@@ -57,7 +58,8 @@ pub struct SubshapeAlignment {
 
 /// The shape distance an aligner uses. Mirrors
 /// `SubshapeAligner.SubshapeDistanceMetric`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SubshapeDistanceMetric {
     /// The Tanimoto distance.
     Tanimoto,
@@ -368,10 +370,7 @@ fn tri(t: (usize, usize, usize)) -> [usize; 3] {
 }
 
 fn point(pts: &[SkeletonPoint], i: usize) -> Result<&SkeletonPoint> {
-    pts.get(i).ok_or(Error::Index {
-        index: i as u32,
-        len: pts.len() as u32,
-    })
+    pts.get(i).ok_or(Error::index(i, pts.len()))
 }
 
 impl SubshapeAligner {

@@ -13,8 +13,6 @@
 //! (CONVENTIONS.md U8). Each fails with `Error::Value` when the molecule
 //! has no such conformer.
 
-use std::collections::BTreeMap;
-
 use crate::chem::Mol;
 use crate::chem::rd_mol_descriptors as descriptors;
 use crate::{Error, Result};
@@ -210,10 +208,11 @@ pub fn desc_list() -> Vec<(&'static str, Descriptor3DFn)> {
     ]
 }
 
-/// Every 3D descriptor of the default conformer, by name. `Error::Value`
+/// Every 3D descriptor of the default conformer, by name, in
+/// [`desc_list`]'s order, as Python's dictionary has them. `Error::Value`
 /// for a molecule without conformers, as Python raises. Mirrors
 /// `Descriptors3D.CalcMolDescriptors3D`.
-pub fn calc_mol_descriptors_3d(mol: &Mol) -> Result<BTreeMap<String, f64>> {
+pub fn calc_mol_descriptors_3d(mol: &Mol) -> Result<Vec<(&'static str, f64)>> {
     calc_mol_descriptors_3d_with_conf_id(mol, -1)
 }
 
@@ -222,7 +221,7 @@ pub fn calc_mol_descriptors_3d(mol: &Mol) -> Result<BTreeMap<String, f64>> {
 pub fn calc_mol_descriptors_3d_with_conf_id(
     mol: &Mol,
     conf_id: i32,
-) -> Result<BTreeMap<String, f64>> {
+) -> Result<Vec<(&'static str, f64)>> {
     if mol.get_num_conformers() == 0 {
         return Err(Error::Value {
             message: "Computing 3D Descriptors requires a structure with at least 1 conformer"
@@ -231,6 +230,6 @@ pub fn calc_mol_descriptors_3d_with_conf_id(
     }
     desc_list()
         .into_iter()
-        .map(|(name, function)| Ok((name.to_owned(), function(mol, conf_id)?)))
+        .map(|(name, function)| Ok((name, function(mol, conf_id)?)))
         .collect()
 }

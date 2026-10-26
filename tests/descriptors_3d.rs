@@ -8,6 +8,8 @@
 // (rdkit/Chem/test_data), and pins values from Python's
 // rdkit.Chem.Descriptors3D in RDKit 2026.09.1.
 
+use std::collections::BTreeMap;
+
 use rdkit_cxx::chem::descriptors_3d::*;
 use rdkit_cxx::chem::rd_mol_descriptors::{CalcNPR1Params, CalcPMI1Params};
 use rdkit_cxx::chem::{
@@ -101,6 +103,10 @@ fn calc_mol_descriptors_3d_matches_python() {
     assert_eq!(names, PROPANOL.map(|(name, _)| name));
 
     let descs = calc_mol_descriptors_3d(&propanol()).unwrap();
+    // In descList's order, as Python's dictionary has them.
+    let calculated: Vec<&str> = descs.iter().map(|(name, _)| *name).collect();
+    assert_eq!(calculated, names);
+    let descs: BTreeMap<&str, f64> = descs.into_iter().collect();
     assert!((descs["PMI1"] - 20.9583).abs() <= 1e-4);
     for (name, expected) in PROPANOL {
         assert_close(descs[name], expected, name);
@@ -108,9 +114,12 @@ fn calc_mol_descriptors_3d_matches_python() {
 
     let mol = multi_conf_mol();
     assert_eq!(mol.get_num_conformers(), 10);
-    let descs = calc_mol_descriptors_3d(&mol).unwrap();
+    let descs: BTreeMap<&str, f64> = calc_mol_descriptors_3d(&mol).unwrap().into_iter().collect();
     assert!((descs["PMI1"] - 20.9595).abs() <= 1e-4);
-    let descs2 = calc_mol_descriptors_3d_with_conf_id(&mol, 2).unwrap();
+    let descs2: BTreeMap<&str, f64> = calc_mol_descriptors_3d_with_conf_id(&mol, 2)
+        .unwrap()
+        .into_iter()
+        .collect();
     for ((name, expected), (_, expected2)) in MULTICONF_DEFAULT.iter().zip(MULTICONF_2) {
         assert_close(descs[*name], *expected, name);
         assert_close(descs2[*name], expected2, name);

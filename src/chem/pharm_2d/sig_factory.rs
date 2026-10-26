@@ -22,6 +22,7 @@ use crate::{Error, Result};
 /// counts, in a vector with 64-bit indices from 2^31 bits on, as Python
 /// chooses its class.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Signature {
     /// Which pharmacophores the molecule has.
     Bits(SparseBitVect),
@@ -291,10 +292,7 @@ impl SigFactory {
             });
         }
         if n_points < self.min_point_count || n_points > self.max_point_count {
-            return Err(Error::Index {
-                index: n_points as u32,
-                len: self.max_point_count as u32 + 1,
-            });
+            return Err(Error::index(n_points, self.max_point_count + 1));
         }
         let start_idx = *self.starts.get(&n_points).ok_or_else(|| Error::Value {
             message: "the factory needs init".to_owned(),
@@ -308,10 +306,7 @@ impl SigFactory {
             .max()
             .expect("at least min_point_count points");
         if max >= self.n_feats {
-            return Err(Error::Index {
-                index: max as u32,
-                len: self.n_feats as u32,
-            });
+            return Err(Error::index(max, self.n_feats));
         }
         let mut dists = dists.to_vec();
         if n_points == 3 {
@@ -326,9 +321,11 @@ impl SigFactory {
         let offset = count_up_to(self.n_feats, n_points, &feat_indices)? * scaffolds.len() as u64;
         // Python raises IndexError for a scaffold its bins lack, and
         // TypeError for a distance in no bin.
-        let not_found = || Error::Index {
-            index: dists.iter().copied().max().unwrap_or_default(),
-            len: self.bins.len() as u32,
+        let not_found = || {
+            Error::index(
+                dists.iter().copied().max().unwrap_or_default(),
+                self.bins.len(),
+            )
         };
         let bin = self.find_bin_idx(&dists, scaffolds).ok_or_else(not_found)?;
         Ok(start_idx + offset + bin as u64)
@@ -340,10 +337,7 @@ impl SigFactory {
     /// signature. Mirrors `SigFactory.GetBitInfo`.
     pub fn get_bit_info(&self, idx: u64) -> Result<(usize, Vec<usize>, Vec<usize>)> {
         if idx >= self.sig_size {
-            return Err(Error::Index {
-                index: u32::try_from(idx).unwrap_or(u32::MAX),
-                len: u32::try_from(self.sig_size).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(idx, self.sig_size as usize));
         }
         let start = |n: usize| -> Result<u64> {
             self.starts.get(&n).copied().ok_or_else(|| Error::Value {

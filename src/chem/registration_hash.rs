@@ -68,6 +68,7 @@ pub fn empty_mol_tautomer_hash() -> &'static str {
 /// A layer of information about a molecule. Mirrors
 /// `RegistrationHash.HashLayer`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum HashLayer {
     /// RDKit's canonical CXSMILES, with the extensions the layers were made
     /// with. Mirrors `CANONICAL_SMILES`.
@@ -91,6 +92,7 @@ pub enum HashLayer {
 
 /// Which layers a hash uses. Mirrors `RegistrationHash.HashScheme`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum HashScheme {
     /// Every layer, the strictest scheme. Mirrors `ALL_LAYERS`.
     AllLayers,
@@ -138,6 +140,7 @@ impl HashScheme {
 /// Mirrors `RegistrationHash.EnhancedStereoUpdateMode`, which the module
 /// does not use.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum EnhancedStereoUpdateMode {
     /// Mirrors `ADD_WEIGHTS`.
     AddWeights,
@@ -392,10 +395,10 @@ fn get_canonical_atom_ranks_and_bonds(mol: &Mol) -> Result<(Vec<i64>, Vec<BondPa
 }
 
 fn lookup<T: Copy>(items: &[T], idx: u32) -> Result<T> {
-    items.get(idx as usize).copied().ok_or(Error::Index {
-        index: idx,
-        len: items.len() as u32,
-    })
+    items
+        .get(idx as usize)
+        .copied()
+        .ok_or(Error::index(idx, items.len()))
 }
 
 fn value_error(message: impl Into<String>) -> Error {
@@ -444,10 +447,7 @@ fn canonicalize_data_sgroup(
             "cannot canonicalize data groups with multiple data fields",
         ));
     }
-    let data = data
-        .into_iter()
-        .next()
-        .ok_or(Error::Index { index: 0, len: 0 })?;
+    let data = data.into_iter().next().ok_or(Error::index(0, 0))?;
     Ok(Some(vec![
         ("fieldName", Value::Str(field_name)),
         ("atom", sorted_ranks(at_ranks, &sg.get_atoms())?),

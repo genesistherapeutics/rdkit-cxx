@@ -128,14 +128,14 @@ fn suppliers_from_filenames() -> Result<()> {
     let sdf = common::temp_path("supplier.SDF");
     std::fs::write(&sdf, ETHANOL_CONFS).unwrap();
     let mut suppl = supplier_from_filename(&sdf)?;
-    assert!(matches!(suppl, FileMolSupplier::SD(_)));
+    assert!(matches!(suppl, FileMolSupplier::Sd(_)));
     assert_eq!(suppl.mols().count(), 3);
 
     // Python's fails for every .tdt file; this one reads it.
     let tdt = common::temp_path("supplier.tdt");
     std::fs::write(&tdt, "$SMI<CCO>\n|\n$SMI<c1ccccc1>\n|\n").unwrap();
     let mut suppl = supplier_from_filename(&tdt)?;
-    assert!(matches!(suppl, FileMolSupplier::TDT(_)));
+    assert!(matches!(suppl, FileMolSupplier::Tdt(_)));
     assert_eq!(suppl.mols().count(), 2);
 
     match supplier_from_filename(common::temp_path("supplier.foo")) {

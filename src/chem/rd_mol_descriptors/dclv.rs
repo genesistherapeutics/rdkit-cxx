@@ -112,6 +112,13 @@ pub struct DoubleCubicLatticeVolume<'m> {
     mol: PhantomData<&'m Mol>,
 }
 
+impl std::fmt::Debug for DoubleCubicLatticeVolume<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DoubleCubicLatticeVolume")
+            .finish_non_exhaustive()
+    }
+}
+
 impl<'m> DoubleCubicLatticeVolume<'m> {
     fn make(mol: &'m Mol, radii: &[f64], params: &DoubleCubicLatticeVolumeParams) -> Result<Self> {
         let ptr = ffi::dclv_new(

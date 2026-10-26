@@ -354,6 +354,7 @@ impl Default for FindAtomEnvironmentOfRadiusNParams {
 
 /// What Python's `atomMap` output argument receives (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct FindAtomEnvironmentOfRadiusNOutputs {
     /// Each atom in the environment and its distance from the root.
     pub atom_map: BTreeMap<u32, u32>,
@@ -413,6 +414,7 @@ pub fn find_atom_environment_of_radius_n_with_outputs(
 
 /// What Python's `atomMap` output argument receives (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct PathToSubmolOutputs {
     /// Each atom's index in the molecule and its index in the submolecule.
     pub atom_map: BTreeMap<u32, u32>,

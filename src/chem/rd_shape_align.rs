@@ -104,6 +104,12 @@ pub struct ShapeInput {
     ptr: UniquePtr<ffi::PubChemShapeInput>,
 }
 
+impl std::fmt::Debug for ShapeInput {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ShapeInput").finish_non_exhaustive()
+    }
+}
+
 impl Clone for ShapeInput {
     fn clone(&self) -> ShapeInput {
         ShapeInput {

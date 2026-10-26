@@ -19,7 +19,7 @@ rdkit_enum! {
         AtomPairFp = AtomPairFP,
         TopologicalTorsion = TopologicalTorsionFP,
         MorganFp = MorganFP,
-        RdKitFp = RDKitFP,
+        RdkitFp = RDKitFP,
         PatternFp = PatternFP,
     }
 }

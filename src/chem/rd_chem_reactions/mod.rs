@@ -183,10 +183,22 @@ impl Default for PreprocessReactionParams {
     }
 }
 
-/// What `preprocess_reaction` returns: the numbers of warnings and errors
-/// from validation, the numbers of reactant and product templates, and each
-/// reactant's labels (none when validation failed).
-pub type PreprocessReactionResult = (u32, u32, u32, u32, ReactantLabels);
+/// What `preprocess_reaction` returns: Python's `nWarn, nError, nReacts,
+/// nProds, reactantLabels`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+#[non_exhaustive]
+pub struct PreprocessReactionResult {
+    /// The number of warnings from validation.
+    pub n_warn: u32,
+    /// The number of errors from validation.
+    pub n_error: u32,
+    /// The number of reactant templates.
+    pub n_reacts: u32,
+    /// The number of product templates.
+    pub n_prods: u32,
+    /// Each reactant's labels; none when validation failed.
+    pub reactant_labels: ReactantLabels,
+}
 
 /// Validates the reaction and, if it has no errors, replaces the reactant
 /// atoms labeled in their `molFileValue` property with the functional group
@@ -209,13 +221,13 @@ pub fn preprocess_reaction_with_params(
             .map(|(name, mol)| (name.as_str(), mol)),
         |list| ffi::preprocess_reaction(reaction.pin_mut(), list, &params.prop_name),
     )?;
-    Ok((
-        data.num_warnings,
-        data.num_errors,
-        data.num_reactants,
-        data.num_products,
-        group_labels(data.labels, data.num_label_lists)?,
-    ))
+    Ok(PreprocessReactionResult {
+        n_warn: data.num_warnings,
+        n_error: data.num_errors,
+        n_reacts: data.num_reactants,
+        n_prods: data.num_products,
+        reactant_labels: group_labels(data.labels, data.num_label_lists)?,
+    })
 }
 
 /// Parameters for `compute_2d_coords_for_reaction_with_params`, with

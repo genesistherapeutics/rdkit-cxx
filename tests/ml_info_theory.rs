@@ -95,10 +95,10 @@ fn bit_rank_matches_python() {
     assert_all_close(&gains, &expected_gains);
     for (bit, gain, n_act, n_inact) in [(2usize, b, 0, 2), (4, b, 2, 0), (5, a, 1, 2)] {
         assert_eq!(
-            (res[bit].0, res[bit].2, res[bit].3),
+            (res[bit].bit, res[bit].n_act, res[bit].n_inact),
             (bit as u32, n_act, n_inact)
         );
-        assert_close(res[bit].1, gain);
+        assert_close(res[bit].gain, gain);
     }
     let (order, info) = sparse_rank_bits(&sv, &sacts).unwrap();
     assert_eq!(info, res);

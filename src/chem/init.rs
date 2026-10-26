@@ -66,13 +66,14 @@ pub fn canon_smiles_with_use_chiral(smi: &str, use_chiral: bool) -> Result<Strin
 /// The supplier [`supplier_from_filename`] makes, by the file's extension.
 /// Python returns the supplier itself.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum FileMolSupplier {
     /// For `.sdf` files.
-    SD(SDMolSupplier),
+    Sd(SDMolSupplier),
     /// For `.csv` and `.txt` files.
     Smiles(SmilesMolSupplier),
     /// For `.tdt` files.
-    TDT(TDTMolSupplier),
+    Tdt(TDTMolSupplier),
 }
 
 impl FileMolSupplier {
@@ -80,9 +81,9 @@ impl FileMolSupplier {
     /// sanitization variant) where Python's supplier yields `None`.
     pub fn mols(&mut self) -> Box<dyn Iterator<Item = Result<Mol>> + '_> {
         match self {
-            FileMolSupplier::SD(suppl) => Box::new(suppl.mols()),
+            FileMolSupplier::Sd(suppl) => Box::new(suppl.mols()),
             FileMolSupplier::Smiles(suppl) => Box::new(suppl.mols()),
-            FileMolSupplier::TDT(suppl) => Box::new(suppl.mols()),
+            FileMolSupplier::Tdt(suppl) => Box::new(suppl.mols()),
         }
     }
 }
@@ -139,12 +140,12 @@ pub fn supplier_from_filename_with_params(
         )?))
     };
     match ext.as_str() {
-        "sdf" => Ok(FileMolSupplier::SD(SDMolSupplier::new_with_params(
+        "sdf" => Ok(FileMolSupplier::Sd(SDMolSupplier::new_with_params(
             file_n, &params.sd,
         )?)),
         "csv" => smiles(","),
         "txt" => smiles("\t"),
-        "tdt" => Ok(FileMolSupplier::TDT(TDTMolSupplier::new_with_params(
+        "tdt" => Ok(FileMolSupplier::Tdt(TDTMolSupplier::new_with_params(
             file_n,
             &params.tdt,
         )?)),

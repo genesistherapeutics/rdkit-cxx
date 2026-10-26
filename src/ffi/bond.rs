@@ -99,3 +99,10 @@ pub(crate) mod ffi {
         fn bond_clone(bond: &Bond) -> Result<UniquePtr<Bond>>;
     }
 }
+
+// SAFETY: as for Atom (atom.rs): a Bond outside a molecule owns all of its
+// data (its stereo atoms, macro info, query, and properties; RDKit's only
+// static, QueryBond.cpp's table of equality queries, is initialized once and
+// only read). Bonds inside a molecule are reached only through views that
+// borrow the molecule, which is not Sync (CONVENTIONS.md S1).
+unsafe impl Send for ffi::Bond {}

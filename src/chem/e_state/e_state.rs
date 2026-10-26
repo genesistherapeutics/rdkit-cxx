@@ -13,10 +13,10 @@
 
 use crate::Result;
 use crate::chem::descriptors::atomic_number;
-use crate::chem::py_util::{py_max, py_min};
 use crate::chem::{
     GetDistanceMatrixParams, Mol, get_distance_matrix_with_params, get_periodic_table,
 };
+use crate::py::{py_max, py_min};
 
 /// The principal quantum number of an element's outer shell. Mirrors
 /// `EState.GetPrincipleQuantumNumber`.

@@ -275,7 +275,7 @@ fn bulk_fingerprints() {
     );
     assert!(get_count_fps(&[]).unwrap().is_empty());
     assert_eq!(
-        get_sparse_fps_with_fp_type(&mols, FPType::RdKitFp)
+        get_sparse_fps_with_fp_type(&mols, FPType::RdkitFp)
             .unwrap()
             .len(),
         3
@@ -313,6 +313,14 @@ fn options_and_json() {
         })
     );
     assert!(generator.get_info_string().unwrap().contains("radius=1"));
+    // The default options are those of GetMorganGenerator().
+    let default = FingerprintOptions::default();
+    assert_eq!(default, get_morgan_generator().get_options());
+    assert_eq!(default.fp_size, 2048);
+    assert!(matches!(
+        default.kind,
+        FingerprintKindOptions::Morgan(MorganFingerprintOptions { radius: 3, .. })
+    ));
     let json = generator.to_json().unwrap();
     assert!(json.contains("\"radius\":\"1\""));
     let copy = fingerprint_generator_from_json(&json).unwrap();

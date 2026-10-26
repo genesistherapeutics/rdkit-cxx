@@ -18,12 +18,12 @@
 //! ```no_run
 //! use rdkit_cxx::ml::cluster::clusters::{Cluster, ClusterParams};
 //!
-//! let mut root = Cluster::new_with_params(ClusterParams {
+//! let mut root = Cluster::new_with_params(&ClusterParams {
 //!     index: 1,
 //!     metric: 1000.0,
 //!     ..Default::default()
 //! });
-//! root.add_child(Cluster::new_with_params(ClusterParams {
+//! root.add_child(Cluster::new_with_params(&ClusterParams {
 //!     index: 10,
 //!     ..Default::default()
 //! }));
@@ -31,7 +31,7 @@
 
 use std::cmp::Ordering;
 
-use crate::ml::py_format::format_f;
+use crate::py::format_f;
 use crate::{Error, Result};
 
 /// Python 2's `cmp`: -1, 0, or 1 as `t1` is less than, equal to, or greater
@@ -122,7 +122,7 @@ pub struct Cluster {
 impl Default for Cluster {
     /// A cluster with Python's defaults. Mirrors `Clusters.Cluster()`.
     fn default() -> Cluster {
-        Cluster::new_with_params(ClusterParams::default())
+        Cluster::new_with_params(&ClusterParams::default())
     }
 }
 
@@ -133,7 +133,13 @@ fn by_metric(a: &Cluster, b: &Cluster) -> Ordering {
 impl Cluster {
     /// Mirrors `Clusters.Cluster(metric, children, position, index, name,
     /// data)`.
-    pub fn new_with_params(params: ClusterParams) -> Cluster {
+    pub fn new_with_params(params: &ClusterParams) -> Cluster {
+        Cluster::from_params(params.clone())
+    }
+
+    /// As [`new_with_params`](Cluster::new_with_params), taking the
+    /// children rather than copying them.
+    pub(crate) fn from_params(params: ClusterParams) -> Cluster {
         let mut cluster = Cluster {
             metric: params.metric,
             children: params.children,
@@ -261,10 +267,7 @@ impl Cluster {
     /// `Error::Index` for an index past the children.
     pub fn remove_child(&mut self, which: usize) -> Result<Cluster> {
         if which >= self.children.len() {
-            return Err(Error::Index {
-                index: u32::try_from(which).unwrap_or(u32::MAX),
-                len: u32::try_from(self.children.len()).unwrap_or(u32::MAX),
-            });
+            return Err(Error::index(which, self.children.len()));
         }
         let child = self.children.remove(which);
         self.update_length();

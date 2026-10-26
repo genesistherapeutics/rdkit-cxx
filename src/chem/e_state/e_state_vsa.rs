@@ -17,7 +17,7 @@ use crate::Result;
 use crate::chem::Mol;
 use crate::chem::e_state::e_state::e_state_indices;
 use crate::chem::mol_surf::labute_helper;
-use crate::chem::py_util::bisect_right;
+use crate::py::bisect_right;
 
 const VSA_BINS: [f64; 9] = [4.78, 5.00, 5.410, 5.740, 6.00, 6.07, 6.45, 7.00, 11.0];
 const ESTATE_BINS: [f64; 10] = [

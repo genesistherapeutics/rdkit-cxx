@@ -22,6 +22,7 @@ use crate::ffi::query::ffi;
 /// RDKit's enum has no fixed underlying type, so cxx cannot check it; it
 /// crosses as `i32`, and tests check each variant's effect.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum CompositeQueryType {
     /// Mirrors `COMPOSITE_AND`.
     CompositeAnd,

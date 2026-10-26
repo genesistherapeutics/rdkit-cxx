@@ -488,6 +488,7 @@ impl std::fmt::Debug for RGroupDecomposition {
 
 /// What Python's `matches` output argument receives (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct GetMatchingCoreIdxOutputs {
     /// Each of the core's matches, as (core atom, molecule atom) pairs
     /// for the molecule's heavy atoms.

@@ -63,14 +63,11 @@ impl<T: Clone, F: FnMut(usize) -> T> LazySig<T, F> {
     /// (and so at `-len`), which Python refuses too.
     pub fn get(&mut self, which: i64) -> Result<T> {
         let size = i64::try_from(self.size).unwrap_or(i64::MAX);
-        let which = if which < 0 { size + which } else { which };
-        if which <= 0 || which >= size {
-            return Err(Error::Index {
-                index: u32::try_from(which.unsigned_abs()).unwrap_or(u32::MAX),
-                len: u32::try_from(self.size).unwrap_or(u32::MAX),
-            });
+        let index = if which < 0 { size + which } else { which };
+        if index <= 0 || index >= size {
+            return Err(Error::index(which, self.size));
         }
-        let which = which as usize;
+        let which = index as usize;
         if let Some(v) = self.cache.get(&which) {
             return Ok(v.clone());
         }

@@ -184,6 +184,7 @@ impl RascalClusterOptions {
 ///
 /// `RascalResult` is `Send` but not `Sync`: its getters cache what they
 /// compute in the result.
+#[non_exhaustive]
 pub struct RascalResult {
     /// Never null.
     ptr: UniquePtr<ffi::RascalResult>,

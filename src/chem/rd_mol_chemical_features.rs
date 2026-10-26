@@ -304,7 +304,7 @@ pub fn get_atom_match_with_max_ats(
         let ids = feat.get_atom_ids();
         for &idx in &ids {
             if idx >= len {
-                return Err(Error::Index { index: idx, len });
+                return Err(Error::index(idx, len as usize));
             }
             if !seen.insert(idx) {
                 return Ok(Vec::new());

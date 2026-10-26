@@ -264,6 +264,7 @@ pub fn calc_fraction_csp3(mol: &Mol) -> Result<f64> {
 
 /// What `calc_num_spiro_atoms_with_outputs` fills in (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct CalcNumSpiroAtomsOutputs {
     /// The spiro atoms. Python's `atoms`.
     pub atoms: Vec<u32>,
@@ -284,6 +285,7 @@ pub fn calc_num_spiro_atoms_with_outputs(mol: &Mol) -> Result<(u32, CalcNumSpiro
 
 /// What `calc_num_bridgehead_atoms_with_outputs` fills in (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct CalcNumBridgeheadAtomsOutputs {
     /// The bridgehead atoms. Python's `atoms`.
     pub atoms: Vec<u32>,
@@ -420,6 +422,7 @@ pub fn calc_chi_nn(mol: &Mol, n: u32) -> Result<f64> {
 
 /// What `calc_hall_kier_alpha_with_outputs` fills in (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct CalcHallKierAlphaOutputs {
     /// Each atom's alpha; 0 for dummy atoms, which RDKit skips. Python's
     /// `atomContribs`.

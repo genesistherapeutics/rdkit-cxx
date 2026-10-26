@@ -39,10 +39,9 @@ pub fn cross(v1: [f64; 3], v2: [f64; 3]) -> [f64; 3] {
 /// The atoms bonded to `atom_id` in an adjacency matrix. Mirrors
 /// `FeatDirUtilsRD.findNeighbors`.
 pub fn find_neighbors(atom_id: usize, adj_mat: &[Vec<i32>]) -> Result<Vec<usize>> {
-    let row = adj_mat.get(atom_id).ok_or(Error::Index {
-        index: atom_id as u32,
-        len: adj_mat.len() as u32,
-    })?;
+    let row = adj_mat
+        .get(atom_id)
+        .ok_or(Error::index(atom_id, adj_mat.len()))?;
     Ok(row
         .iter()
         .enumerate()
@@ -88,10 +87,7 @@ pub fn get_aromatic_feat_vects_with_scale(
 ) -> Result<FeatVects> {
     let head = feat_loc;
     if feat_atoms.len() < 2 {
-        return Err(Error::Index {
-            index: feat_atoms.len() as u32,
-            len: feat_atoms.len() as u32,
-        });
+        return Err(Error::index(feat_atoms.len(), feat_atoms.len()));
     }
     let v1 = conf.get_atom_position(feat_atoms[0])? - head;
     let v2 = conf.get_atom_position(feat_atoms[1])? - head;

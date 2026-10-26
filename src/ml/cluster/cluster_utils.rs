@@ -99,10 +99,10 @@ pub fn find_cluster_centroid_from_dists(cluster: &mut Cluster, dists: &[f64]) ->
             .and_then(|x| (x / 2).checked_add(row))
             .and_then(|x| usize::try_from(x).ok())
             .unwrap_or(usize::MAX);
-        dists.get(idx).copied().ok_or(Error::Index {
-            index: u32::try_from(idx).unwrap_or(u32::MAX),
-            len: u32::try_from(dists.len()).unwrap_or(u32::MAX),
-        })
+        dists
+            .get(idx)
+            .copied()
+            .ok_or(Error::index(idx, dists.len()))
     };
     let mut best = 1e24;
     let mut best_idx = -1;

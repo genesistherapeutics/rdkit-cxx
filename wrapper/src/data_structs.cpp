@@ -42,12 +42,12 @@ rust::Vec<std::uint32_t> to_indices(const std::vector<T> &v) {
   return result;
 }
 
-// An index error for indices that may not fit IndexError's unsigned.
+// An index error for 64-bit indices, which may not fit IndexError's signed
+// index.
 void check_index_64(std::uint64_t idx, std::uint64_t len) {
   if (idx >= len) {
-    constexpr std::uint64_t most = std::numeric_limits<unsigned>::max();
-    throw IndexError(static_cast<unsigned>(std::min(idx, most)),
-                     static_cast<unsigned>(std::min(len, most)));
+    constexpr std::uint64_t most = std::numeric_limits<std::int64_t>::max();
+    throw IndexError(static_cast<std::int64_t>(std::min(idx, most)), len);
   }
 }
 

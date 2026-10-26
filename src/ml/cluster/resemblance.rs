@@ -11,10 +11,12 @@
 //! so the order is (0, 1), (0, 2), (1, 2), (0, 3), and so on.
 
 use crate::ml::cluster::clusters::Cluster;
-use crate::ml::py_format::format_f;
+use crate::py::format_f;
 use crate::{Error, Result};
 
-/// A metric: it takes points and returns their metric matrix.
+/// A metric: it takes points and returns their metric matrix. A Rust
+/// addition, for the entries of [`methods`]; `calc_metric_matrix` takes any
+/// function or closure.
 pub type Metric = fn(&[Vec<f64>]) -> Result<Vec<f64>>;
 
 /// The Euclidean distances between the points, as a metric matrix. Mirrors
@@ -52,7 +54,10 @@ pub fn euclidean_distance(in_data: &[Vec<f64>]) -> Result<Vec<f64>> {
 ///
 /// Python's raises `TypeError` in RDKit 2026.09.1 (it hands the metric a
 /// `map` object, which has no length); this hands it the positions.
-pub fn calc_metric_matrix(in_data: &[Cluster], metric_func: Metric) -> Result<Vec<f64>> {
+pub fn calc_metric_matrix(
+    in_data: &[Cluster],
+    metric_func: impl Fn(&[Vec<f64>]) -> Result<Vec<f64>>,
+) -> Result<Vec<f64>> {
     let positions: Vec<Vec<f64>> = in_data.iter().map(|c| c.get_position().to_vec()).collect();
     metric_func(&positions)
 }
@@ -104,10 +109,7 @@ pub fn find_min_val_in_list_with_min_idx(
     min_idx: usize,
 ) -> Result<(usize, usize, f64)> {
     check_length(mat, n_objs)?;
-    let value = *mat.get(min_idx).ok_or(Error::Index {
-        index: u32::try_from(min_idx).unwrap_or(u32::MAX),
-        len: u32::try_from(mat.len()).unwrap_or(u32::MAX),
-    })?;
+    let value = *mat.get(min_idx).ok_or(Error::index(min_idx, mat.len()))?;
     let mut n_so_far = 0;
     let mut col = 0;
     while n_so_far <= min_idx {

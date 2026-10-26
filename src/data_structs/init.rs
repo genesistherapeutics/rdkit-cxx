@@ -186,10 +186,10 @@ pub fn get_element_from_flat_matrix(matrix: &[f64], i: usize, j: usize) -> Resul
         .checked_mul(j - 1)
         .and_then(|x| (x / 2).checked_add(i))
         .unwrap_or(usize::MAX);
-    matrix.get(idx).copied().ok_or(Error::Index {
-        index: u32::try_from(idx).unwrap_or(u32::MAX),
-        len: u32::try_from(matrix.len()).unwrap_or(u32::MAX),
-    })
+    matrix
+        .get(idx)
+        .copied()
+        .ok_or(Error::index(idx, matrix.len()))
 }
 
 /// The vector as a string of 0s and 1s, as `bit_vect_to_text` gives it.

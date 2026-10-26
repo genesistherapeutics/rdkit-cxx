@@ -52,6 +52,8 @@ pub(crate) mod ffi {
         type ChiralType;
         type ValenceType;
 
+        // Only the crate's unit tests call this.
+        #[allow(dead_code)]
         fn atom_noatom() -> Result<u32>;
 
         fn atom_new(what: &str) -> Result<UniquePtr<Atom>>;

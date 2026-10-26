@@ -64,7 +64,7 @@ std::string encode(const std::string &variant, const std::string &payload,
 
 }  // namespace
 
-IndexError::IndexError(unsigned index, unsigned len)
+IndexError::IndexError(std::int64_t index, std::uint64_t len)
     : d_index(index),
       d_len(len),
       d_msg("index " + std::to_string(index) + " is out of range for length " +
@@ -145,6 +145,8 @@ void raise_for_tests(rust::Str kind_str) {
     throw RDKit::MolSanitizeException(message);
   } else if (kind == "index") {
     throw IndexError(9, 3);
+  } else if (kind == "negative_index") {
+    throw IndexError(-5, 3);
   } else if (kind == "key") {
     throw KeyErrorException(std::string("nope"));
   } else if (kind == "value") {

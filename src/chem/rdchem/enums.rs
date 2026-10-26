@@ -7,6 +7,12 @@ use crate::ffi::{atom, bond, stereo};
 
 /// Defines a public enum mirroring a Python enum, with conversions to and from
 /// the cxx-checked C++ enum (CONVENTIONS.md N4).
+///
+/// The enum is `#[non_exhaustive]` (CONVENTIONS.md N6), so the next RDKit
+/// series can add values without a breaking change. `from_ffi` panics on a
+/// value the enum lacks: the build accepts only the RDKit releases whose
+/// headers were checked against these enums, so such a value is a bug in
+/// this crate, not a reachable input.
 macro_rules! rdkit_enum {
     (
         $(#[$meta:meta])*
@@ -14,6 +20,7 @@ macro_rules! rdkit_enum {
     ) => {
         $(#[$meta])*
         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+        #[non_exhaustive]
         pub enum $name {
             $(#[doc = concat!("Mirrors `", stringify!($cxx), "`.")] $variant,)*
         }

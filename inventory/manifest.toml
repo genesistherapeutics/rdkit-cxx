@@ -5491,7 +5491,7 @@ rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore"]
 
 [[entry]]
 python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__init__"
-rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::default", "rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::new_with_params"]
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::default", "rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::new"]
 
 [[entry]]
 python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__str__"
@@ -7262,7 +7262,8 @@ rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::PatternFp"]
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.FingerprintType.RDKitFP"
-rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::RdKitFp"]
+rust = ["rdkit_cxx::chem::rd_chem_reactions::FingerprintType::RdkitFp"]
+name_exception = "RDKit is one word: RdkitFp"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.FingerprintType.TopologicalTorsion"
@@ -8929,7 +8930,8 @@ rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::MorganFp"]
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.FPType.RDKitFP"
-rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdKitFp"]
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdkitFp"]
+name_exception = "RDKit is one word: RdkitFp"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.FPType.TopologicalTorsionFP"
@@ -9171,8 +9173,8 @@ rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.RDKitFP"
-rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdKitFp"]
-name_exception = "exported enum value (N7)"
+rust = ["rdkit_cxx::chem::rd_fingerprint_generator::FPType::RdkitFp"]
+name_exception = "exported enum value (N7); RDKit is one word: RdkitFp"
 
 [[entry]]
 python = "rdkit.Chem.rdFingerprintGenerator.RDKitFingerprintOptions"
@@ -12165,6 +12167,7 @@ overloads_note = "the parameters overloads are the _with_params forms, whose Has
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.InitFromStream"
 rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::init_from_stream"]
+rust_generics = "<&[u8]>"
 
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.Serialize"
@@ -12177,6 +12180,7 @@ rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::set_search_ord
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.ToStream"
 rust = ["rdkit_cxx::chem::rd_substruct_library::SubstructLibrary::to_stream"]
+rust_generics = "<Vec<u8>>"
 
 [[entry]]
 python = "rdkit.Chem.rdSubstructLibrary.SubstructLibrary.__getstate__"
