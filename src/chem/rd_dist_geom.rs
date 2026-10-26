@@ -592,6 +592,7 @@ pub enum TorsionTerms {
 /// A bond matched by an experimental torsion pattern: one of the
 /// dictionaries `rdDistGeom.GetExperimentalTorsions` returns.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct ExperimentalTorsion {
     /// Python's `bondIndex`.
     pub bond_index: u32,

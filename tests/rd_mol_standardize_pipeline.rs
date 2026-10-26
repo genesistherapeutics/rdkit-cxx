@@ -139,18 +139,22 @@ fn running_the_pipeline() {
     let result = pipeline.run(BENZOATE).unwrap();
     assert_eq!(result.status.bits(), 100663296);
     assert_eq!(result.stage, PipelineStage::Completed);
+    let log: Vec<_> = result
+        .log
+        .iter()
+        .map(|entry| (entry.status, entry.detail.as_str()))
+        .collect();
     assert_eq!(
-        result.log,
+        log,
         [
-            PipelineLogEntry {
-                status: PipelineStatus::FRAGMENTS_REMOVED,
-                detail: "One or more disconnected fragments (e.g., counterions) were removed."
-                    .to_string(),
-            },
-            PipelineLogEntry {
-                status: PipelineStatus::PROTONATION_CHANGED,
-                detail: "The protonation state was adjusted.".to_string(),
-            },
+            (
+                PipelineStatus::FRAGMENTS_REMOVED,
+                "One or more disconnected fragments (e.g., counterions) were removed."
+            ),
+            (
+                PipelineStatus::PROTONATION_CHANGED,
+                "The protonation state was adjusted."
+            ),
         ]
     );
     assert_eq!(result.input_mol_data, BENZOATE);

@@ -375,6 +375,7 @@ pub type SubstructureSearchIncrementalParams = SubstructureSearchParams;
 /// The results of a search: the hits, as copies of RDKit's, and how the
 /// search went. Python's searches return it for every kind of search.
 /// Mirrors `rdSynthonSpaceSearch.SubstructureResult`.
+#[non_exhaustive]
 pub struct SubstructureResult {
     /// Never null.
     ptr: UniquePtr<ffi::SearchResults>,

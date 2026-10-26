@@ -15,6 +15,7 @@ use crate::ffi::fingerprints::ffi;
 
 /// What Python's output arguments receive (CONVENTIONS.md A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct FingerprintOutputs {
     /// The bits each atom sets. Python's `atomBits`.
     pub atom_bits: Vec<Vec<u64>>,

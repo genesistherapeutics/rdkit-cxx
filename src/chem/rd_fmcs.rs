@@ -692,6 +692,7 @@ impl MCSParameters {
 
 /// A maximum common substructure. Mirrors `rdFMCS.MCSResult`.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct MCSResult {
     num_atoms: u32,
     num_bonds: u32,

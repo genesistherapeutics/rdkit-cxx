@@ -24,6 +24,7 @@ use crate::{Error, Result};
 /// A ROC curve: the false- and true-positive rates after each sample.
 /// Mirrors the `RocCurve` named tuple `Scoring.CalcROC` returns.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct RocCurve {
     /// False-positive rates, `FP / (TN + FP)`.
     pub fpr: Vec<f64>,

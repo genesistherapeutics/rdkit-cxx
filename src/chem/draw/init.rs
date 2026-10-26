@@ -1059,6 +1059,7 @@ pub fn debug_draw_with_drawer(
 /// highlights. Mirrors `Draw.FingerprintEnv`, the named tuple the bit
 /// drawings build.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct FingerprintEnv {
     /// The environment, with the molecule's coordinates. Mirrors
     /// `FingerprintEnv.submol`.

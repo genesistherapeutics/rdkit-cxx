@@ -28,6 +28,7 @@ pub(crate) const DEFAULT_HIERARCHY: &str =
 /// A functional group, and the more specific groups under it. Mirrors
 /// `FunctionalGroups.FGHierarchyNode`.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct FGHierarchyNode {
     /// The group's name, such as `Aromatic`.
     pub name: String,

@@ -96,6 +96,7 @@ pub struct FeatMapInitParams {
 /// The scores [`FeatMap::score_feats_with_outputs`] fills in, as Python's
 /// output arguments (A9).
 #[derive(Clone, Debug, Default, PartialEq)]
+#[non_exhaustive]
 pub struct ScoreFeatsOutputs {
     /// Each map feature's score. Mirrors `mapScoreVect`.
     pub map_score_vect: Vec<f64>,

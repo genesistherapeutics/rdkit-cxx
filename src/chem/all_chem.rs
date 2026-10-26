@@ -340,6 +340,7 @@ pub fn get_conformer_rms_matrix_with_params(
 /// the `ProductReactants` named tuple that
 /// `AllChem.EnumerateLibraryFromReaction(..., returnReactants=True)` yields.
 #[derive(Clone, Debug)]
+#[non_exhaustive]
 pub struct ProductReactants {
     /// One set of the reaction's products.
     pub products: Vec<Mol>,

@@ -34,6 +34,7 @@ fn count(stats: &mut PruneStats, key: &str) {
 /// An alignment of a query shape to a target shape by a triangle of
 /// skeleton points. Mirrors `SubshapeAligner.SubshapeAlignment`.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct SubshapeAlignment {
     /// The 4x4 transform of the query onto the target. Mirrors
     /// `SubshapeAlignment.transform`.

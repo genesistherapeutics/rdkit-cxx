@@ -436,6 +436,7 @@ impl Default for BRICSDecomposeParams {
 
 /// What `brics_decompose_with_outputs` returns besides the fragments.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub struct BRICSDecomposeOutputs {
     /// `params.all_nodes` with this decomposition's nodes added.
     pub all_nodes: BTreeSet<String>,
