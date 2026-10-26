@@ -22,8 +22,6 @@
 namespace rdkit_cxx {
 
 using EmbedFailureCauses = RDKit::DGeomHelpers::EmbedFailureCauses;
-using InitialEmbeddingMode = RDKit::DGeomHelpers::InitialEmbeddingMode;
-using EmbedFF = RDKit::DGeomHelpers::EmbedFF;
 
 // Shared types, defined by the bridges (src/ffi/embedder.rs, geometry.rs,
 // chirality.rs).

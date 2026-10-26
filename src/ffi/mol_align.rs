@@ -87,11 +87,6 @@ pub(crate) mod ffi {
             mol: &RWMol,
             params: &BestAlignmentParamsData,
         ) -> Result<Vec<f64>>;
-        fn get_all_conformer_best_rms_to_ref(
-            prb_mol: &RWMol,
-            ref_mol: &RWMol,
-            params: &BestAlignmentParamsData,
-        ) -> Result<Vec<f64>>;
         fn calc_rms(
             prb_mol: &RWMol,
             ref_mol: &RWMol,

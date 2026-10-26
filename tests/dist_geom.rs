@@ -88,16 +88,13 @@ fn default_parameters() {
         use_small_ring_torsions: false,
         use_macrocycle_torsions: false,
         use_macrocycle14config: false,
-        only_initial_embedding: false,
         use_legacy_implementation: true,
-        initial_embedding_mode: InitialEmbeddingMode::DgEmbedding,
         bounds_mat_force_scaling: 1.0,
         use_symmetry_for_pruning: true,
         force_trans_amides: true,
         track_failures: false,
         enable_sequential_random_seeds: false,
         symmetrize_conjugated_terminal_groups_for_pruning: true,
-        embed_force_field: EmbedFF::Uff,
         coord_map: BTreeMap::new(),
         cpci: BTreeMap::new(),
         bounds_mat: None,
@@ -156,10 +153,6 @@ fn presets() {
         summary(sr_etkdg_v3()),
         (true, true, 2, true, false, false, true)
     );
-    assert_eq!(
-        summary(etkdg_v4()),
-        (true, true, 4, true, true, true, false)
-    );
     assert_eq!(summary(etdg()), (true, false, 1, false, false, false, true));
     assert_eq!(
         summary(etdg_v2()),
@@ -171,7 +164,7 @@ fn presets() {
         embed_parameters_to_json(&etkdg_v3()).unwrap(),
         concat!(
             r#"{"basinThresh":"5","boundsMatForceScaling":"1","boxSizeMult":"2","#,
-            r#""clearConfs":"true","embedForceField":"UFF","embedFragmentsSeparately":"true","#,
+            r#""clearConfs":"true","embedFragmentsSeparately":"true","#,
             r#""enableSequentialRandomSeeds":"false","enforceChirality":"true","ETversion":"2","#,
             r#""forceTransAmides":"true","ignoreSmoothingFailures":"false","maxIterations":"0","#,
             r#""numThreads":"1","numZeroFail":"1","onlyHeavyAtomsForRMS":"true","#,
@@ -181,8 +174,7 @@ fn presets() {
             r#""useExpTorsionAnglePrefs":"true","useLegacyImplementation":"true","#,
             r#""useMacrocycle14config":"true","useMacrocycleTorsions":"true","#,
             r#""useRandomCoords":"false","useSmallRingTorsions":"false","#,
-            r#""useSymmetryForPruning":"true","verbose":"false","onlyInitialEmbedding":"false","#,
-            r#""initialEmbeddingMode":"DG_EMBEDDING"}"#
+            r#""useSymmetryForPruning":"true","verbose":"false"}"#
         )
     );
 }
@@ -268,10 +260,6 @@ fn embedding_updates_the_parameters() {
     );
     assert_eq!(params.max_iterations, 90);
     assert_eq!(params.basin_thresh, 1e8);
-    assert_eq!(
-        params.initial_embedding_mode,
-        InitialEmbeddingMode::RandomCoordinateEmbedding
-    );
     assert_eq!(params.get_failure_counts().len(), 15);
 
     // maxIterations comes from the first fragment.
@@ -399,7 +387,6 @@ fn embedding_inputs_rdkit_trusts() {
     let mut mol = mol_from_smiles(&"C".repeat(n)).unwrap();
     let mut params = EmbedParameters {
         random_seed: 42,
-        only_initial_embedding: true,
         ..Default::default()
     };
     params.set_bounds_mat(&bounds).unwrap();
@@ -482,9 +469,9 @@ fn concurrent_embeddings() {
 fn bounds_matrices() {
     let bounds = get_molecule_bounds_matrix(&mol_from_smiles("CCO").unwrap()).unwrap();
     let expected = [
-        [0.0, 1.524, 2.4211],
+        [0.0, 1.524, 2.4157],
         [1.504, 0.0, 1.4038],
-        [2.3299, 1.3838, 0.0],
+        [2.3357, 1.3838, 0.0],
     ];
     assert_eq!(bounds.len(), 3);
     for (row, expected) in bounds.iter().zip(expected) {
@@ -504,7 +491,7 @@ fn bounds_matrices() {
     .unwrap();
     let with_params = get_molecule_bounds_matrix_embed_parameters(&butane, &etkdg_v3()).unwrap();
     for row in [&unsmoothed[0], &with_params[0]] {
-        for (a, e) in row.iter().zip([0.0, 1.524, 2.5195, 3.8754]) {
+        for (a, e) in row.iter().zip([0.0, 1.524, 2.5128, 3.8107]) {
             assert!((a - e).abs() < 1e-4, "{row:?}");
         }
     }
@@ -528,7 +515,6 @@ fn bounds_matrices() {
 }
 
 #[test]
-#[allow(clippy::approx_constant)] // RDKit's torsion table rounds pi to 3.142
 fn experimental_torsions() {
     let mol = with_hs("CCOC");
     let torsions = get_experimental_torsions(&mol).unwrap();
@@ -545,20 +531,19 @@ fn experimental_torsions() {
             signs: vec![1; 6],
         }
     );
-    let torsions = get_experimental_torsions_with_params(&mol, &etkdg_v4()).unwrap();
-    assert_eq!(torsions.len(), 2);
-    assert_eq!(torsions[0].torsion_index, 175);
-    assert_eq!(
-        torsions[0].terms,
-        TorsionTerms::Gaussian {
-            positions: vec![1.396, 3.142],
-            widths: vec![0.349, 0.278],
-            heights: vec![0.084, 0.87],
-        }
-    );
+    // RDKit checks the version only when it reads the torsion preferences.
     let v3 = EmbedParameters {
         et_version: 3,
         ..Default::default()
+    };
+    assert!(
+        get_experimental_torsions_with_params(&mol, &v3)
+            .unwrap()
+            .is_empty()
+    );
+    let v3 = EmbedParameters {
+        use_exp_torsion_angle_prefs: true,
+        ..v3
     };
     assert!(matches!(
         get_experimental_torsions_with_params(&mol, &v3),

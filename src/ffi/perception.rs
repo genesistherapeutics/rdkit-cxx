@@ -17,15 +17,6 @@ pub(crate) mod ffi {
         AROMATICITY_CUSTOM = 0xFFFFFFF,
     }
 
-    /// `RDKit::MolOps::SymmetrizeSSSRAlgorithm`; cxx checks the values.
-    #[repr(i32)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum SymmetrizeSSSRAlgorithm {
-        DEFAULT,
-        LEGACY,
-        RDL,
-    }
-
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/perception.h");
@@ -35,7 +26,6 @@ pub(crate) mod ffi {
         type Atom = crate::ffi::atom::ffi::Atom;
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type AromaticityModel;
-        type SymmetrizeSSSRAlgorithm;
 
         fn get_sssr(
             mol: Pin<&mut RWMol>,
@@ -46,8 +36,6 @@ pub(crate) mod ffi {
             mol: Pin<&mut RWMol>,
             include_dative_bonds: bool,
             include_hydrogen_bonds: bool,
-            algorithm: SymmetrizeSSSRAlgorithm,
-            recalc_sssr: bool,
         ) -> Result<Vec<IndexList>>;
         fn fast_find_rings(mol: Pin<&mut RWMol>) -> Result<()>;
         fn find_ring_families(
@@ -55,8 +43,6 @@ pub(crate) mod ffi {
             include_dative_bonds: bool,
             include_hydrogen_bonds: bool,
         ) -> Result<()>;
-        fn set_use_legacy_ring_finding(val: bool) -> Result<()>;
-        fn get_use_legacy_ring_finding() -> Result<bool>;
 
         fn cleanup(mol: Pin<&mut RWMol>) -> Result<()>;
         fn cleanup_chirality(mol: Pin<&mut RWMol>) -> Result<()>;
@@ -76,8 +62,6 @@ pub(crate) mod ffi {
         fn needs_hs(mol: &RWMol) -> Result<bool>;
         fn count_atom_elec(atom: &Atom) -> Result<i32>;
         fn atom_has_conjugated_bond(atom: &Atom) -> Result<bool>;
-        fn get_attachment_point_label_number(atom: &Atom) -> Result<u32>;
-        fn is_marked_attachment_point(atom: &Atom) -> Result<bool>;
         fn get_formal_charge(mol: &RWMol) -> Result<i32>;
         fn get_shortest_path(mol: &RWMol, aid1: u32, aid2: u32) -> Result<Vec<u32>>;
         fn set_terminal_atom_coords(mol: Pin<&mut RWMol>, idx: u32, other_idx: u32) -> Result<()>;

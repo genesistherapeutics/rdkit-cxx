@@ -45,33 +45,13 @@ rdkit_enum! {
     }
 }
 
-rdkit_enum! {
-    /// How the first coordinates are made. Mirrors
-    /// `rdDistGeom.InitialEmbeddingMode`.
-    InitialEmbeddingMode: ffi::InitialEmbeddingMode {
-        DgEmbedding = DG_EMBEDDING,
-        InternalCoordinateEmbedding = INTERNAL_COORDINATE_EMBEDDING,
-        RandomCoordinateEmbedding = RANDOM_COORDINATE_EMBEDDING,
-    }
-}
-
-rdkit_enum! {
-    /// The force field for ideal 1-2 and 1-3 distances. Mirrors
-    /// `rdDistGeom.EmbedFF`.
-    EmbedFF: ffi::EmbedFF {
-        Uff = UFF,
-        Mmff = MMFF,
-    }
-}
-
 /// Parameters for embedding. Mirrors `rdDistGeom.EmbedParameters`;
 /// `Default` reads a default-constructed C++ object, and [`etkdg_v3`] and
 /// its siblings return RDKit's presets.
 ///
 /// Embedding updates the parameters as Python's do: the failure counts, and
 /// what RDKit changes while it works (a `max_iterations` of 0 becomes ten
-/// times the number of atoms, random coordinates set `basin_thresh` and
-/// `initial_embedding_mode`).
+/// times the number of atoms, random coordinates set `basin_thresh`).
 #[derive(Clone, Debug, PartialEq)]
 pub struct EmbedParameters {
     /// The most attempts per conformer; 0 for ten times the atoms.
@@ -105,7 +85,7 @@ pub struct EmbedParameters {
     pub use_exp_torsion_angle_prefs: bool,
     /// Uses basic knowledge such as flat aromatic rings.
     pub use_basic_knowledge: bool,
-    /// The torsion preferences' version: 1, 2, or 4.
+    /// The torsion preferences' version: 1 or 2.
     pub et_version: u32,
     /// Prints the torsion preferences.
     pub verbose: bool,
@@ -119,19 +99,15 @@ pub struct EmbedParameters {
     pub use_small_ring_torsions: bool,
     /// Uses macrocycle torsion preferences.
     pub use_macrocycle_torsions: bool,
-    /// Keeps amides and esters trans in macrocycles.
+    /// Uses the 1-4 distance bounds heuristics for macrocycles.
     pub use_macrocycle14config: bool,
-    /// Stops after the initial coordinates.
-    pub only_initial_embedding: bool,
     /// Minimizes in stages rather than all at once.
     pub use_legacy_implementation: bool,
-    /// How the first coordinates are made.
-    pub initial_embedding_mode: InitialEmbeddingMode,
     /// Scales the bounds-matrix restraints against the others.
     pub bounds_mat_force_scaling: f64,
     /// Uses the molecule's symmetry when pruning.
     pub use_symmetry_for_pruning: bool,
-    /// Keeps chain amides and esters trans.
+    /// Constrains amide bonds to be trans.
     pub force_trans_amides: bool,
     /// Counts the checks that fail, for `get_failure_counts`.
     pub track_failures: bool,
@@ -139,8 +115,6 @@ pub struct EmbedParameters {
     pub enable_sequential_random_seeds: bool,
     /// Treats conjugated terminal groups symmetrically when pruning.
     pub symmetrize_conjugated_terminal_groups_for_pruning: bool,
-    /// The force field for ideal 1-2 and 1-3 distances.
-    pub embed_force_field: EmbedFF,
     /// Atoms to place relative to each other at these coordinates; see
     /// `set_coord_map`.
     pub coord_map: BTreeMap<u32, Point3D>,
@@ -187,16 +161,13 @@ impl EmbedParameters {
             use_small_ring_torsions: false,
             use_macrocycle_torsions: false,
             use_macrocycle14config: false,
-            only_initial_embedding: false,
             use_legacy_implementation: true,
-            initial_embedding_mode: InitialEmbeddingMode::DgEmbedding,
             bounds_mat_force_scaling: 1.0,
             use_symmetry_for_pruning: true,
             force_trans_amides: true,
             track_failures: false,
             enable_sequential_random_seeds: false,
             symmetrize_conjugated_terminal_groups_for_pruning: true,
-            embed_force_field: EmbedFF::Uff,
             coord_map: BTreeMap::new(),
             cpci: BTreeMap::new(),
             bounds_mat: None,
@@ -231,9 +202,7 @@ impl EmbedParameters {
         self.use_small_ring_torsions = data.use_small_ring_torsions;
         self.use_macrocycle_torsions = data.use_macrocycle_torsions;
         self.use_macrocycle14config = data.use_macrocycle14config;
-        self.only_initial_embedding = data.only_initial_embedding;
         self.use_legacy_implementation = data.use_legacy_implementation;
-        self.initial_embedding_mode = InitialEmbeddingMode::from_ffi(data.initial_embedding_mode);
         self.bounds_mat_force_scaling = data.bounds_mat_force_scaling;
         self.use_symmetry_for_pruning = data.use_symmetry_for_pruning;
         self.force_trans_amides = data.force_trans_amides;
@@ -241,7 +210,6 @@ impl EmbedParameters {
         self.enable_sequential_random_seeds = data.enable_sequential_random_seeds;
         self.symmetrize_conjugated_terminal_groups_for_pruning =
             data.symmetrize_conjugated_terminal_groups_for_pruning;
-        self.embed_force_field = EmbedFF::from_ffi(data.embed_force_field);
         self.failures = data.failures.clone();
     }
 
@@ -275,9 +243,7 @@ impl EmbedParameters {
             use_small_ring_torsions: self.use_small_ring_torsions,
             use_macrocycle_torsions: self.use_macrocycle_torsions,
             use_macrocycle14config: self.use_macrocycle14config,
-            only_initial_embedding: self.only_initial_embedding,
             use_legacy_implementation: self.use_legacy_implementation,
-            initial_embedding_mode: self.initial_embedding_mode.to_ffi(),
             bounds_mat_force_scaling: self.bounds_mat_force_scaling,
             use_symmetry_for_pruning: self.use_symmetry_for_pruning,
             force_trans_amides: self.force_trans_amides,
@@ -285,7 +251,6 @@ impl EmbedParameters {
             enable_sequential_random_seeds: self.enable_sequential_random_seeds,
             symmetrize_conjugated_terminal_groups_for_pruning: self
                 .symmetrize_conjugated_terminal_groups_for_pruning,
-            embed_force_field: self.embed_force_field.to_ffi(),
             coord_map_atoms: self.coord_map.keys().copied().collect(),
             coord_map_points: self.coord_map.values().copied().collect(),
             cpci_pairs: self
@@ -375,7 +340,6 @@ presets! {
     etkdg_v2 = ETKDGv2, "ETKDGv2", "ETKDG, version 2";
     etkdg_v3 = ETKDGv3, "ETKDGv3", "ETKDG, version 3, with macrocycle torsions";
     sr_etkdg_v3 = SrETKDGv3, "srETKDGv3", "ETKDG, version 3, with small-ring torsions";
-    etkdg_v4 = ETKDGv4, "ETKDGv4", "ETKDG, version 4";
     etdg = ETDG, "ETDG", "ETDG";
     etdg_v2 = ETDGv2, "ETDGv2", "ETDG, version 2";
     kdg = KDG, "KDG", "KDG";
@@ -580,21 +544,12 @@ pub fn get_molecule_bounds_matrix_embed_parameters_with_params(
 #[derive(Clone, Debug, PartialEq)]
 #[non_exhaustive]
 pub enum TorsionTerms {
-    /// A cosine series, versions 1 and 2: Python's `V` and `signs`.
+    /// A cosine series: Python's `V` and `signs`.
     Cosine {
         /// The force constants, Python's `V`.
         v: Vec<f64>,
         /// The signs of the terms.
         signs: Vec<i32>,
-    },
-    /// Gaussians, version 4: Python's `positions`, `widths`, and `heights`.
-    Gaussian {
-        /// The Gaussians' centers, in radians.
-        positions: Vec<f64>,
-        /// The Gaussians' widths.
-        widths: Vec<f64>,
-        /// The Gaussians' heights.
-        heights: Vec<f64>,
     },
 }
 
@@ -624,8 +579,8 @@ pub fn get_experimental_torsions(mol: &Mol) -> Result<Vec<ExperimentalTorsion>> 
 
 /// Mirrors `rdDistGeom.GetExperimentalTorsions(mol, embedParams)`, and its
 /// keyword form, whose arguments are fields of `embed_params`
-/// (`printExpTorsionAngles` is `verbose`). An `et_version` other than 1, 2,
-/// or 4 is `Error::Value`.
+/// (`printExpTorsionAngles` is `verbose`). RDKit gives `Error::Value` for an
+/// `et_version` other than 1 or 2 when it reads the torsion preferences.
 pub fn get_experimental_torsions_with_params(
     mol: &Mol,
     embed_params: &EmbedParameters,
@@ -642,24 +597,15 @@ pub fn get_experimental_torsions_with_params(
     torsions
         .into_iter()
         .map(|t| {
-            let terms = if t.gaussian {
-                TorsionTerms::Gaussian {
-                    positions: t.positions,
-                    widths: t.widths,
-                    heights: t.heights,
-                }
-            } else {
-                TorsionTerms::Cosine {
-                    v: t.v,
-                    signs: t.signs,
-                }
-            };
             Ok(ExperimentalTorsion {
                 bond_index: t.bond_index,
                 torsion_index: t.torsion_index,
                 smarts: to_string(t.smarts)?,
                 atom_indices: t.atom_indices,
-                terms,
+                terms: TorsionTerms::Cosine {
+                    v: t.v,
+                    signs: t.signs,
+                },
             })
         })
         .collect()

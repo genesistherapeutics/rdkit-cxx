@@ -27,23 +27,6 @@ pub(crate) mod ffi {
         END_OF_ENUM = 15,
     }
 
-    /// `RDKit::DGeomHelpers::InitialEmbeddingMode`; cxx checks the values.
-    #[repr(i32)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum InitialEmbeddingMode {
-        DG_EMBEDDING = 0,
-        INTERNAL_COORDINATE_EMBEDDING = 1,
-        RANDOM_COORDINATE_EMBEDDING = 2,
-    }
-
-    /// `RDKit::DGeomHelpers::EmbedFF`; cxx checks the values.
-    #[repr(u8)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum EmbedFF {
-        UFF = 0,
-        MMFF = 1,
-    }
-
     /// A default `EmbedParameters`, or one of RDKit's presets.
     #[repr(u8)]
     #[allow(clippy::upper_case_acronyms)]
@@ -53,7 +36,6 @@ pub(crate) mod ffi {
         ETKDGv2,
         ETKDGv3,
         SrETKDGv3,
-        ETKDGv4,
         ETDG,
         ETDGv2,
         KDG,
@@ -86,16 +68,13 @@ pub(crate) mod ffi {
         use_small_ring_torsions: bool,
         use_macrocycle_torsions: bool,
         use_macrocycle14config: bool,
-        only_initial_embedding: bool,
         use_legacy_implementation: bool,
-        initial_embedding_mode: InitialEmbeddingMode,
         bounds_mat_force_scaling: f64,
         use_symmetry_for_pruning: bool,
         force_trans_amides: bool,
         track_failures: bool,
         enable_sequential_random_seeds: bool,
         symmetrize_conjugated_terminal_groups_for_pruning: bool,
-        embed_force_field: EmbedFF,
         coord_map_atoms: Vec<u32>,
         coord_map_points: Vec<Point3D>,
         cpci_pairs: Vec<IndexPair>,
@@ -106,18 +85,13 @@ pub(crate) mod ffi {
         failures: Vec<u32>,
     }
 
-    /// One of `GetExperimentalTorsions`' dictionaries: the cosine terms
-    /// (`v`, `signs`) unless `gaussian`, else the Gaussian ones.
+    /// One of `GetExperimentalTorsions`' dictionaries.
     struct ExperimentalTorsionData {
         bond_index: u32,
         torsion_index: u64,
         smarts: UniquePtr<CxxString>,
-        gaussian: bool,
         v: Vec<f64>,
         signs: Vec<i32>,
-        positions: Vec<f64>,
-        widths: Vec<f64>,
-        heights: Vec<f64>,
         atom_indices: Vec<u32>,
     }
 
@@ -131,8 +105,6 @@ pub(crate) mod ffi {
         type Point3D = crate::ffi::geometry::ffi::Point3D;
         type IndexPair = crate::ffi::chirality::ffi::IndexPair;
         type EmbedFailureCauses;
-        type InitialEmbeddingMode;
-        type EmbedFF;
 
         fn embed_parameters_preset(preset: EmbedPreset) -> Result<EmbedParametersData>;
         fn embed_multiple_confs(

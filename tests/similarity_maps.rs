@@ -174,7 +174,7 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.18541345659989728);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "848e90f20af14f4d3afc8f1aa04632bdd2908d84",
+        "1b1601ab2912b00eb0816da7cbd659b9424cdafe",
         &probe(),
     );
     assert!(!d.draw_options().clear_background);
@@ -187,7 +187,7 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.12255947497949138);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "09d0631bc598e8d48209261d0966d20c4bce3ff8",
+        "975f39c5a5f04cff58915d50ab794051cbbab92b",
         &probe(),
     );
 
@@ -228,7 +228,7 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.08955961037179305);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "5c925d0355e36038b2efe56a7e80ef72407981bc",
+        "57b43737e5b18813d2cf7901907c108049a82813",
         &probe(),
     );
 }
@@ -252,7 +252,7 @@ fn similarity_map_from_weights_matches_python() {
     d.finish_drawing();
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "4b38cf3a5fb9cd6f5b5ef2f67e1666dadce9c8b5",
+        "df576ca36bedf7dbc5bb5604c1514de6682373f7",
         &pyridine(),
     );
     let mut d = MolDraw2DSVG::new(300, 300).unwrap();
@@ -285,7 +285,7 @@ fn similarity_map_for_model_matches_python() {
     assert_eq!(max_weight, 0.29);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "19e4fe241fc791873a000592fbcbf9c170879d83",
+        "9359ca173f49f7ca273e5bcb5b5c3d73308ab0bf",
         &pyridine(),
     );
 }
@@ -631,7 +631,7 @@ fn morgan_similarity_map_matches_python() {
     assert_eq!(max_weight, 0.12255947497949138);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "3093893d6b352ae3a9e64085ed92acb384146395",
+        "f560ccf41475bf4ce2fa7afbc6aed41c07feb361",
         &probe(),
     );
 }

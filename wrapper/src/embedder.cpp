@@ -12,7 +12,6 @@
 #include <mutex>
 #include <tuple>
 #include <utility>
-#include <variant>
 #include <vector>
 
 #include <DistGeom/BoundsMatrix.h>
@@ -71,9 +70,7 @@ void set_fields(EmbedParametersData &d, const DG::EmbedParameters &p) {
   d.use_small_ring_torsions = p.useSmallRingTorsions;
   d.use_macrocycle_torsions = p.useMacrocycleTorsions;
   d.use_macrocycle14config = p.useMacrocycle14config;
-  d.only_initial_embedding = p.onlyInitialEmbedding;
   d.use_legacy_implementation = p.useLegacyImplementation;
-  d.initial_embedding_mode = p.initialEmbeddingMode;
   d.bounds_mat_force_scaling = p.boundsMatForceScaling;
   d.use_symmetry_for_pruning = p.useSymmetryForPruning;
   d.force_trans_amides = p.forceTransAmides;
@@ -81,7 +78,6 @@ void set_fields(EmbedParametersData &d, const DG::EmbedParameters &p) {
   d.enable_sequential_random_seeds = p.enableSequentialRandomSeeds;
   d.symmetrize_conjugated_terminal_groups_for_pruning =
       p.symmetrizeConjugatedTerminalGroupsForPruning;
-  d.embed_force_field = p.embedForceField;
   d.failures = to_vec(p.failures);
 }
 
@@ -120,9 +116,7 @@ std::unique_ptr<NativeParams> to_native(const EmbedParametersData &d) {
   p.useSmallRingTorsions = d.use_small_ring_torsions;
   p.useMacrocycleTorsions = d.use_macrocycle_torsions;
   p.useMacrocycle14config = d.use_macrocycle14config;
-  p.onlyInitialEmbedding = d.only_initial_embedding;
   p.useLegacyImplementation = d.use_legacy_implementation;
-  p.initialEmbeddingMode = d.initial_embedding_mode;
   p.boundsMatForceScaling = d.bounds_mat_force_scaling;
   p.useSymmetryForPruning = d.use_symmetry_for_pruning;
   p.forceTransAmides = d.force_trans_amides;
@@ -130,7 +124,6 @@ std::unique_ptr<NativeParams> to_native(const EmbedParametersData &d) {
   p.enableSequentialRandomSeeds = d.enable_sequential_random_seeds;
   p.symmetrizeConjugatedTerminalGroupsForPruning =
       d.symmetrize_conjugated_terminal_groups_for_pruning;
-  p.embedForceField = d.embed_force_field;
   p.failures.assign(d.failures.begin(), d.failures.end());
 
   for (std::size_t i = 0; i < d.coord_map_atoms.size(); ++i) {
@@ -205,13 +198,12 @@ std::pair<unsigned, unsigned> check_embed_pieces(
   return {num_frags, largest};
 }
 
-// With distance-geometry starting coordinates the embedder casts a sum of
-// squared distances to int (check_initial_coords_cast); useRandomCoords
-// replaces the initial embedding mode.
+// With distance-geometry starting coordinates (without useRandomCoords) the
+// embedder casts a sum of squared distances to int
+// (check_initial_coords_cast).
 void check_initial_coords(const DG::EmbedParameters &params, unsigned largest,
                           double max_bound) {
-  if (!params.useRandomCoords &&
-      params.initialEmbeddingMode == InitialEmbeddingMode::DG_EMBEDDING) {
+  if (!params.useRandomCoords) {
     check_initial_coords_cast(largest, max_bound);
   }
 }
@@ -299,9 +291,6 @@ EmbedParametersData embed_parameters_preset(EmbedPreset preset) {
     case EmbedPreset::SrETKDGv3:
       params = &DG::srETKDGv3;
       break;
-    case EmbedPreset::ETKDGv4:
-      params = &DG::ETKDGv4;
-      break;
     case EmbedPreset::ETDG:
       params = &DG::ETDG;
       break;
@@ -383,7 +372,7 @@ rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
   DistGeom::BoundsMatPtr mat(new DistGeom::BoundsMatrix(n));
   DG::initBoundsMat(mat, 0.0, MAX_TOPOLOGICAL_BOUND);
   DG::setTopolBounds(mol, mat, native->params, scale_vdw, set15bounds,
-                     set14bounds, set13bounds, nullptr, EmbedFF::UFF, nullptr);
+                     set14bounds, set13bounds);
   if (do_triangle_smoothing) {
     DistGeom::triangleSmoothBounds(mat);
   }
@@ -397,19 +386,16 @@ rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
   return values;
 }
 
-// As getExpTorsHelper in rdDistGeom.cpp, which raises ValueError for other
-// versions.
+// As getExpTorsHelper in rdDistGeom.cpp. RDKit raises ValueError for
+// versions other than 1 and 2 when it reads the torsion preferences.
 rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
     const RWMol &mol, bool use_exp_torsion_angle_prefs,
     bool use_small_ring_torsions, bool use_macrocycle_torsions,
     bool use_basic_knowledge, std::uint32_t et_version, bool verbose) {
-  if (et_version != 1 && et_version != 2 && et_version != 4) {
-    throw ValueErrorException("ETversion needs to be either 1, 2 or 4.");
-  }
   namespace CFF = ForceFields::CrystalFF;
   CFF::CrystalFFDetails details;
   std::vector<std::tuple<unsigned int, std::vector<unsigned int>,
-                         CFF::TorsionAnglePtrVariant>>
+                         const CFF::ExpTorsionAngle *>>
       torsions;
   // It matches the torsion patterns (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
@@ -422,21 +408,10 @@ rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
     ExperimentalTorsionData item{};
     item.bond_index = bond;
     item.atom_indices = to_vec(atoms);
-    if (const auto *const *exp =
-            std::get_if<const CFF::ExpTorsionAngle *>(&angle)) {
-      item.torsion_index = (*exp)->torsionIdx;
-      item.smarts = std::make_unique<std::string>((*exp)->smarts);
-      item.v = to_vec((*exp)->V);
-      item.signs = to_vec((*exp)->signs);
-    } else {
-      const auto *gauss = std::get<const CFF::GaussianExpTorsionAngle *>(angle);
-      item.gaussian = true;
-      item.torsion_index = static_cast<std::uint64_t>(gauss->torsionIdx);
-      item.smarts = std::make_unique<std::string>(gauss->smarts);
-      item.positions = to_vec(gauss->positions);
-      item.widths = to_vec(gauss->widths);
-      item.heights = to_vec(gauss->heights);
-    }
+    item.torsion_index = angle->torsionIdx;
+    item.smarts = std::make_unique<std::string>(angle->smarts);
+    item.v = to_vec(angle->V);
+    item.signs = to_vec(angle->signs);
     result.push_back(std::move(item));
   }
   return result;

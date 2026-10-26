@@ -95,7 +95,7 @@ fn defaults_match_python() {
     assert!(c.canon_orient && c.clear_confs && c.coord_map.is_empty());
     assert_eq!((c.n_flips_per_sample, c.n_sample, c.sample_seed), (0, 0, 0));
     assert_eq!((c.permute_deg4_nodes, c.bond_length), (0, -1.0));
-    assert!(!c.force_rdkit && !c.use_ring_templates && c.use_path_angle_expansion);
+    assert!(!c.force_rdkit && !c.use_ring_templates);
 
     let m = Compute2DCoordsMimicDistmatParams::default();
     assert!(!m.canon_orient && m.clear_confs && m.permute_deg4_nodes && !m.force_rdkit);

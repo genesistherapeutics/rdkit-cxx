@@ -1,5 +1,5 @@
 {
- "rdkit_version": "2026.09.1",
+ "rdkit_version": "2026.03.6",
  "entries": [
   {
    "python": "rdkit.Chem.AllChem.AssignBondOrdersFromTemplate",
@@ -3299,7 +3299,7 @@
    "python": "rdkit.Chem.FragmentMatcher.FragmentMatcher.GetMatches",
    "kind": "method",
    "overloads": [
-    "def GetMatches(self, mol, uniquify=True)"
+    "def GetMatches(self, mol, uniquify=1)"
    ]
   },
   {
@@ -4049,7 +4049,7 @@
    "python": "rdkit.Chem.GraphDescriptors.BalabanJ",
    "kind": "module_function",
    "overloads": [
-    "def BalabanJ(mol, dMat=None, forceDMat=False)"
+    "def BalabanJ(mol, dMat=None, forceDMat=0)"
    ]
   },
   {
@@ -5248,28 +5248,28 @@
    "python": "rdkit.Chem.MolSurf.pyLabuteASA",
    "kind": "module_function",
    "overloads": [
-    "def pyLabuteASA(mol, includeHs=True)"
+    "def pyLabuteASA(mol, includeHs=1)"
    ]
   },
   {
    "python": "rdkit.Chem.MolSurf.pyPEOE_VSA_",
    "kind": "module_function",
    "overloads": [
-    "def pyPEOE_VSA_(mol, bins=None, force=True)"
+    "def pyPEOE_VSA_(mol, bins=None, force=1)"
    ]
   },
   {
    "python": "rdkit.Chem.MolSurf.pySMR_VSA_",
    "kind": "module_function",
    "overloads": [
-    "def pySMR_VSA_(mol, bins=None, force=True)"
+    "def pySMR_VSA_(mol, bins=None, force=1)"
    ]
   },
   {
    "python": "rdkit.Chem.MolSurf.pySlogP_VSA_",
    "kind": "module_function",
    "overloads": [
-    "def pySlogP_VSA_(mol, bins=None, force=True)"
+    "def pySlogP_VSA_(mol, bins=None, force=1)"
    ]
   },
   {
@@ -6206,13 +6206,6 @@
    "kind": "method",
    "overloads": [
     "def __setstate__(self, stateD)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.PropertyMol.deprecated",
-   "kind": "module_function",
-   "overloads": [
-    "def deprecated(msg)"
    ]
   },
   {
@@ -11487,7 +11480,7 @@
    "python": "rdkit.VLib.NodeLib.SmilesSupply.SmilesSupplyNode.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self, fileName, delim='\\t', nameColumn=1, smilesColumn=0, titleLine=False, **kwargs)"
+    "def __init__(self, fileName, delim='\\t', nameColumn=1, smilesColumn=0, titleLine=0, **kwargs)"
    ]
   },
   {

@@ -5,8 +5,9 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::Atom::HybridizationType`; cxx checks the values.
-    #[repr(u8)]
+    /// `RDKit::Atom::HybridizationType`; cxx checks the values. RDKit 2026.03 fixes
+    /// no underlying type, so it is `unsigned int`.
+    #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]
     enum HybridizationType {
         UNSPECIFIED = 0,
@@ -20,8 +21,9 @@ pub(crate) mod ffi {
         OTHER,
     }
 
-    /// `RDKit::Atom::ChiralType`; cxx checks the values.
-    #[repr(u8)]
+    /// `RDKit::Atom::ChiralType`; cxx checks the values. RDKit 2026.03 fixes
+    /// no underlying type, so it is `unsigned int`.
+    #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]
     enum ChiralType {
         CHI_UNSPECIFIED = 0,

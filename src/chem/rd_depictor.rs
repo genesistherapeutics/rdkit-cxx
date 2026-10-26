@@ -233,8 +233,6 @@ pub struct Compute2DCoordsParams {
     pub force_rdkit: bool,
     /// Uses ring system templates for complex ring systems.
     pub use_ring_templates: bool,
-    /// Opens angles along paths between colliding atoms.
-    pub use_path_angle_expansion: bool,
 }
 
 impl Default for Compute2DCoordsParams {
@@ -250,7 +248,6 @@ impl Default for Compute2DCoordsParams {
             bond_length: -1.0,
             force_rdkit: false,
             use_ring_templates: false,
-            use_path_angle_expansion: true,
         }
     }
 }
@@ -264,7 +261,7 @@ pub fn compute_2d_coords(mol: &mut Mol) -> Result<u32> {
 
 /// Mirrors `rdDepictor.Compute2DCoords(mol, canonOrient, clearConfs,
 /// coordMap, nFlipsPerSample, nSample, sampleSeed, permuteDeg4Nodes,
-/// bondLength, forceRDKit, useRingTemplates, usePathAngleExpansion)`.
+/// bondLength, forceRDKit, useRingTemplates)`.
 /// `Error::Index` for a coordinate map atom past the end, and `Error::Value`
 /// for coordinates or a bond length that are not finite or beyond 1e5.
 pub fn compute_2d_coords_with_params(mol: &mut Mol, params: &Compute2DCoordsParams) -> Result<u32> {
@@ -280,7 +277,6 @@ pub fn compute_2d_coords_with_params(mol: &mut Mol, params: &Compute2DCoordsPara
         bond_length: params.bond_length,
         force_rdkit: params.force_rdkit,
         use_ring_templates: params.use_ring_templates,
-        use_path_angle_expansion: params.use_path_angle_expansion,
     };
     Ok(ffi::compute_2d_coords(mol.pin_mut(), &data)?)
 }

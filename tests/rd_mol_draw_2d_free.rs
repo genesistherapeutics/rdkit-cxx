@@ -152,13 +152,13 @@ fn draw_coords() {
     d.draw_molecule(&m).unwrap();
     assert_point(
         d.get_draw_coords(&p(0.0, 0.0)).unwrap(),
-        183.18902150851193,
+        117.23073350340938,
         150.0,
     );
     assert_point(
         d.get_draw_coords_int(0).unwrap(),
-        166.22052509326394,
-        218.57736181160652,
+        134.26918908731096,
+        218.86009842558735,
     );
     assert_runtime_error(d.get_draw_coords_int(7));
     assert_runtime_error(d.get_draw_coords_int(u32::MAX));
@@ -176,10 +176,10 @@ fn draw_coords() {
         .unwrap();
     let text = d.get_drawing_text().unwrap();
     assert!(
-        text.contains("<path d='M235.98,123.605 C235.98,123.605 235.98,126.904 235.98,126.904")
+        text.contains("<path d='M170.239,123.496 C170.239,123.496 170.239,126.809 170.239,126.809")
     );
     assert!(
-        text.contains("<path d='M235.98,123.605 C183.189,123.605 183.189,126.904 235.98,126.904")
+        text.contains("<path d='M170.239,123.496 C117.231,123.496 117.231,126.809 170.239,126.809")
     );
 }
 
@@ -201,14 +201,14 @@ fn set_scale() {
         .unwrap();
     assert_point(
         d.get_draw_coords(&p(0.0, 0.0)).unwrap(),
-        156.26783116883118,
+        146.57015584415583,
         173.63636363636363,
     );
     d.draw_molecule(&m).unwrap();
     assert_point(
         d.get_draw_coords_int(0).unwrap(),
-        146.8847142857143,
-        181.35051962286354,
+        145.95327272727272,
+        181.35051962286352,
     );
     // A grid or reaction lays out every molecule the drawer holds anew.
     assert_value_error(d.draw_molecules(&[mol("CC")]));
@@ -218,8 +218,8 @@ fn set_scale() {
         .unwrap();
     assert_point(
         d.get_draw_coords(&p(0.0, 0.0)).unwrap(),
-        86.57870394974958,
-        230.98358018080282,
+        66.95699510070769,
+        239.5199672306539,
     );
 
     // The largest scale, about 2.5e6 pixels an angstrom on this area.
@@ -233,8 +233,8 @@ fn set_scale() {
     d.draw_molecule(&m).unwrap();
     assert_point(
         d.get_draw_coords_int(0).unwrap(),
-        -788933.7662337646,
-        3188820.8048427077,
+        788988.3116883128,
+        3188820.804842706,
     );
     // Molecules drawn after take the scale: here, beyond 1e9 pixels.
     let mut d = svg();

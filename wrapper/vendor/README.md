@@ -2,9 +2,9 @@
 
 The wrapper needs a few RDKit headers that conda-forge's `librdkit-dev` does
 not install: the drawing code's internal classes (`GraphMol/MolDraw2D`, such
-as `DrawMol.h` and `DrawText.h`), `ML/InfoTheory`, `SynthonSpaceSearchHelpers.h`,
-and `BoundsMatrixBuilderDetails.h`. Each directory here holds RDKit's own
-copies of them, unmodified, from the release it is named for:
+as `DrawMol.h` and `DrawText.h`), `ML/InfoTheory`, and
+`SynthonSpaceSearchHelpers.h`. Each directory here holds RDKit's own copies of
+them, unmodified, from the release it is named for:
 
 | Directory | Copied from |
 | --- | --- |

@@ -25,7 +25,9 @@
 
 namespace rdkit_cxx {
 
-using MMFFVerbosity = RDKit::MMFF::MMFFVerbosity;
+// RDKit's MMFF_VERBOSITY values, defined by the bridge
+// (src/ffi/force_field.rs): RDKit 2026.03 declares them in an unnamed enum.
+enum class MMFFVerbosity : std::uint8_t;
 
 // Shared structs, defined by the bridges (src/ffi/force_field.rs,
 // geometry.rs).

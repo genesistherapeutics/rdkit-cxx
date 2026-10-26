@@ -169,8 +169,9 @@ macro_rules! ring_info_getters {
                 )?)
             }
 
-            /// Whether ring families have been found; parsing finds them.
-            /// Mirrors `RingInfo.AreRingFamiliesInitialized`.
+            /// Whether ring families have been found, as `find_ring_families`
+            /// finds them; parsing does not. Mirrors
+            /// `RingInfo.AreRingFamiliesInitialized`.
             pub fn are_ring_families_initialized(&self) -> bool {
                 expect_ok(ffi::ring_info_are_ring_families_initialized(
                     self.mol().as_ffi(),
@@ -182,7 +183,11 @@ macro_rules! ring_info_getters {
                 Ok(ffi::ring_info_num_ring_families(self.mol().as_ffi())?)
             }
 
-            /// Needs the ring families. Mirrors `RingInfo.NumRelevantCycles`.
+            /// Needs the ring families: `Error::Runtime` before they are found,
+            /// where RDKit 2026.03 converts RingDecomposerLib's failure value
+            /// out of `unsigned int`'s range, and `Error::Value` for more
+            /// relevant cycles than `u32` holds. Mirrors
+            /// `RingInfo.NumRelevantCycles`.
             pub fn num_relevant_cycles(&self) -> Result<u32> {
                 Ok(ffi::ring_info_num_relevant_cycles(self.mol().as_ffi())?)
             }

@@ -195,8 +195,9 @@ fn update_from_json() {
     );
     assert_colour(o.highlight_colour, (0.1, 0.2, 0.3, 1.0));
     assert_colour(o.get_atom_palette()[&6], (0.5, 0.5, 0.5, 0.5));
-    // The color scheme sets the dark palette first.
-    assert_colour(o.get_atom_palette()[&7], (0.33, 0.41, 0.92, 1.0));
+    // RDKit 2026.03 reads no colourScheme, so it is ignored like any unknown
+    // key.
+    assert_colour(o.get_atom_palette()[&7], (0.0, 0.0, 1.0, 1.0));
     assert_eq!(o.legend_position, LegendPosition::Top);
     assert_eq!(
         o.multi_colour_highlight_style,
@@ -206,7 +207,7 @@ fn update_from_json() {
         o.drawing_extents_include,
         DrawElement::BONDS | DrawElement::ATOMLABELS
     );
-    assert_colour(o.background_colour, (0.0, 0.0, 0.0, 1.0));
+    assert_colour(o.background_colour, (1.0, 1.0, 1.0, 1.0));
     assert_eq!(o.font_file, "foo");
     // A value of the wrong type is ignored.
     assert_eq!(o.rotate, 0.0);

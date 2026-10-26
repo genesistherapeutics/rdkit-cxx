@@ -143,6 +143,7 @@ set(RDKIT_CXX_SOURCES
 set(RDKIT_CXX_RDKIT_TARGETS
   RDGeneral
   GraphMol
+  RingDecomposerLib
   SmilesParse
   FileParsers
   MarvinParser
@@ -227,19 +228,21 @@ target_include_directories(rdkitcxx PRIVATE
   # (compat/GraphMol/GaussianShape).
   compat
   # RDKit's own copies, from the release found (vendor/<release>), of
-  # headers its packages do not install. conda-forge's librdkit-dev 2026.09
-  # installs DistGeomHelpers/BoundsMatrixBuilder.h without the
-  # BoundsMatrixBuilderDetails.h it includes; an install that has it finds
-  # its own first, next to the including header. It installs none of
-  # ML/InfoTheory's headers (RDKit::InfoTheory's); an install that has them
-  # finds its own first, earlier on the path. Nor does it install
-  # GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
+  # headers its packages do not install. conda-forge's librdkit-dev 2026.03
+  # installs none of ML/InfoTheory's headers (RDKit::InfoTheory's); an
+  # install that has them finds its own first, earlier on the path. Nor does
+  # it install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
   # SynthonSpace.h and Synthon.h include. GraphMol/MolDraw2D holds the
   # drawing code's internal headers (DrawText.h, DrawMol.h, and those they
   # include, and MolDraw2DDetails.h), which no package installs
   # (draw_drawer.cpp).
   vendor/${rdkit_VERSION}
 )
+# RDKit 2026.03's headers test macros that RDConfig.h defines without
+# including it: RingInfo.h declares its ring-family members only under
+# RDK_USE_URF. Every source reads RDConfig.h first, so it compiles against
+# the classes the library was built with.
+target_compile_options(rdkitcxx PRIVATE "SHELL:-include RDGeneral/RDConfig.h")
 foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::${target}>\n")

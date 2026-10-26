@@ -262,7 +262,6 @@ unsigned compute_2d_coords(RWMol &mol, const Compute2DCoordsData &data) {
   params.permuteDeg4Nodes = data.permute_deg4_nodes != 0;
   params.forceRDKit = data.force_rdkit;
   params.useRingTemplates = data.use_ring_templates;
-  params.usePathAngleExpansion = data.use_path_angle_expansion;
   return RDDepict::compute2DCoords(mol, params);
 }
 

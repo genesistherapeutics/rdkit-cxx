@@ -192,7 +192,7 @@ fn contours_of_gaussians() {
     contour_and_draw_gaussians(&mut d, &locs, &heights, &widths).unwrap();
     assert_point(
         d.get_draw_coords(&Point2D::new(0.0, 0.0)).unwrap(),
-        165.93860684769777,
+        134.06139315230223,
         150.0,
     );
     assert_counts(&mut d, (24, 12));
@@ -212,10 +212,10 @@ fn contours_of_gaussians() {
     d.draw_molecule(&m).unwrap();
     assert_point(
         d.get_draw_coords(&Point2D::new(0.0, 0.0)).unwrap(),
-        173.72888034295804,
+        126.6620115292302,
         150.0,
     );
-    assert_counts(&mut d, (199, 6));
+    assert_counts(&mut d, (200, 6));
 }
 
 #[test]

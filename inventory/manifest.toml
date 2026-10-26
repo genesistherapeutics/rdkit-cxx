@@ -8056,11 +8056,6 @@ python = "rdkit.Chem.rdDistGeom.DG"
 rust = ["rdkit_cxx::chem::rd_dist_geom::dg"]
 
 [[entry]]
-python = "rdkit.Chem.rdDistGeom.DG_EMBEDDING"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::DgEmbedding"]
-name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::DgEmbedding"
-
-[[entry]]
 python = "rdkit.Chem.rdDistGeom.ETDG"
 rust = ["rdkit_cxx::chem::rd_dist_geom::etdg"]
 
@@ -8084,11 +8079,6 @@ rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v3"]
 name_exception = "the version stays a suffix: etkdg_v3"
 
 [[entry]]
-python = "rdkit.Chem.rdDistGeom.ETKDGv4"
-rust = ["rdkit_cxx::chem::rd_dist_geom::etkdg_v4"]
-name_exception = "the version stays a suffix: etkdg_v4"
-
-[[entry]]
 python = "rdkit.Chem.rdDistGeom.ETK_MINIMIZATION"
 rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::EtkMinimization"]
 name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::EtkMinimization"
@@ -8097,18 +8087,6 @@ name_exception = "an exported enum value maps to its variant, EmbedFailureCauses
 python = "rdkit.Chem.rdDistGeom.EXCEEDED_TIMEOUT"
 rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::ExceededTimeout"]
 name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::ExceededTimeout"
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.EmbedFF"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF"]
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.EmbedFF.MMFF"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Mmff"]
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.EmbedFF.UFF"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Uff"]
 
 [[entry]]
 python = "rdkit.Chem.rdDistGeom.EmbedFailureCauses"
@@ -8239,11 +8217,6 @@ rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::clear_confs"]
 rust_kind = "field"
 
 [[entry]]
-python = "rdkit.Chem.rdDistGeom.EmbedParameters.embedForceField"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::embed_force_field"]
-rust_kind = "field"
-
-[[entry]]
 python = "rdkit.Chem.rdDistGeom.EmbedParameters.embedFragmentsSeparately"
 rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::embed_fragments_separately"]
 rust_kind = "field"
@@ -8269,11 +8242,6 @@ rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::ignore_smoothing_failur
 rust_kind = "field"
 
 [[entry]]
-python = "rdkit.Chem.rdDistGeom.EmbedParameters.initialEmbeddingMode"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::initial_embedding_mode"]
-rust_kind = "field"
-
-[[entry]]
 python = "rdkit.Chem.rdDistGeom.EmbedParameters.maxIterations"
 rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::max_iterations"]
 rust_kind = "field"
@@ -8291,11 +8259,6 @@ rust_kind = "field"
 [[entry]]
 python = "rdkit.Chem.rdDistGeom.EmbedParameters.onlyHeavyAtomsForRMS"
 rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::only_heavy_atoms_for_rms"]
-rust_kind = "field"
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.EmbedParameters.onlyInitialEmbedding"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedParameters::only_initial_embedding"]
 rust_kind = "field"
 
 [[entry]]
@@ -8413,27 +8376,6 @@ rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::InitialCoords"]
 name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::InitialCoords"
 
 [[entry]]
-python = "rdkit.Chem.rdDistGeom.INTERNAL_COORDINATE_EMBEDDING"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::InternalCoordinateEmbedding"]
-name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::InternalCoordinateEmbedding"
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode"]
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.DG_EMBEDDING"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::DgEmbedding"]
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.INTERNAL_COORDINATE_EMBEDDING"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::InternalCoordinateEmbedding"]
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.RANDOM_COORDINATE_EMBEDDING"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::RandomCoordinateEmbedding"]
-
-[[entry]]
 python = "rdkit.Chem.rdDistGeom.KDG"
 rust = ["rdkit_cxx::chem::rd_dist_geom::kdg"]
 
@@ -8458,23 +8400,8 @@ rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFailureCauses::MinimizeFourthDimens
 name_exception = "an exported enum value maps to its variant, EmbedFailureCauses::MinimizeFourthDimension"
 
 [[entry]]
-python = "rdkit.Chem.rdDistGeom.MMFF"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Mmff"]
-name_exception = "an exported enum value maps to its variant, EmbedFF::Mmff"
-
-[[entry]]
 python = "rdkit.Chem.rdDistGeom.OrderedEmbedFailureCauses"
 rust = ["rdkit_cxx::chem::rd_dist_geom::ordered_embed_failure_causes", "rdkit_cxx::chem::rd_dist_geom::ordered_embed_failure_causes_with_legacy_implementation"]
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.RANDOM_COORDINATE_EMBEDDING"
-rust = ["rdkit_cxx::chem::rd_dist_geom::InitialEmbeddingMode::RandomCoordinateEmbedding"]
-name_exception = "an exported enum value maps to its variant, InitialEmbeddingMode::RandomCoordinateEmbedding"
-
-[[entry]]
-python = "rdkit.Chem.rdDistGeom.UFF"
-rust = ["rdkit_cxx::chem::rd_dist_geom::EmbedFF::Uff"]
-name_exception = "an exported enum value maps to its variant, EmbedFF::Uff"
 
 [[entry]]
 python = "rdkit.Chem.rdDistGeom.srETKDGv3"
@@ -10161,10 +10088,6 @@ rust = ["rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms", "rdkit_cxx:
 overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
 
 [[entry]]
-python = "rdkit.Chem.rdMolAlign.GetAllConformerBestRMSToRef"
-rust = ["rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_to_ref", "rdkit_cxx::chem::rd_mol_align::get_all_conformer_best_rms_to_ref_with_params"]
-
-[[entry]]
 python = "rdkit.Chem.rdMolAlign.GetBestAlignmentTransform"
 rust = ["rdkit_cxx::chem::rd_mol_align::get_best_alignment_transform", "rdkit_cxx::chem::rd_mol_align::get_best_alignment_transform_with_params"]
 overloads_note = "the keyword form and the BestAlignmentParams form are both `_with_params`, which takes the class's mirror (A3)"
@@ -10303,10 +10226,6 @@ python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.GetOrder"
 rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::get_order"]
 
 [[entry]]
-python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.Serialize"
-rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::serialize"]
-
-[[entry]]
 python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.SetDescription"
 rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_description"]
 
@@ -10320,7 +10239,8 @@ rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::set_order"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getinitargs__"
-reason = "Python's pickling protocol: serialize and from_pickle cover it"
+rust = ["rdkit_cxx::chem::rd_mol_catalog::MolCatalogEntry::serialize"]
+name_exception = "Python pickles an entry through the pickle __getinitargs__ returns; Rust names the bytes serialize"
 
 [[entry]]
 python = "rdkit.Chem.rdMolCatalog.MolCatalogEntry.__getstate__"
@@ -10818,7 +10738,7 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surf
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetSurfacePoints"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surface_points", "rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surface_points_with_all_points"]
+rust = ["rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume::get_surface_points"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetVDWVolume"
@@ -15096,6 +15016,11 @@ python = "rdkit.Chem.rdchem.StereoInfo"
 rust = ["rdkit_cxx::chem::rdchem::StereoInfo"]
 
 [[entry]]
+python = "rdkit.Chem.rdchem.StereoInfo.NOATOM"
+rust = ["rdkit_cxx::chem::rdchem::StereoInfo::NOATOM"]
+name_exception = "a constant keeps Python's spelling"
+
+[[entry]]
 python = "rdkit.Chem.rdchem.StereoInfo.__init__"
 rust = ["rdkit_cxx::chem::rdchem::StereoInfo::default"]
 
@@ -16309,19 +16234,11 @@ python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.format"
 reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
 
 [[entry]]
-python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.parseQueries"
-reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
-
-[[entry]]
 python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.removeHs"
 reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.sanitize"
-reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
-
-[[entry]]
-python = "rdkit.Chem.rdmolfiles.CDXMLParserParams.strictQueryParsing"
 reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
 
 [[entry]]
@@ -17623,10 +17540,6 @@ rust = ["rdkit_cxx::chem::rdmolops::AromaticityModel::AromaticitySimple"]
 name_exception = "exported enum value (N7)"
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.ATTACHMENT_POINT_LABEL_PREFIX"
-rust = ["rdkit_cxx::chem::rdmolops::attachment_point_label_prefix"]
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.AddHs"
 rust = ["rdkit_cxx::chem::rdmolops::add_hs", "rdkit_cxx::chem::rdmolops::add_hs_with_params"]
 
@@ -18075,10 +17988,6 @@ python = "rdkit.Chem.rdmolops.GetAllowNontetrahedralChirality"
 rust = ["rdkit_cxx::chem::rdmolops::get_allow_nontetrahedral_chirality"]
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.GetAttachmentPointLabelNumber"
-rust = ["rdkit_cxx::chem::rdmolops::get_attachment_point_label_number"]
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.GetDistanceMatrix"
 rust = ["rdkit_cxx::chem::rdmolops::get_distance_matrix", "rdkit_cxx::chem::rdmolops::get_distance_matrix_with_params"]
 overloads_note = "force and prefix steer RDKit's matrix cache, which the crate never keeps (U6)"
@@ -18108,10 +18017,6 @@ python = "rdkit.Chem.rdmolops.GetSymmSSSR"
 rust = ["rdkit_cxx::chem::rdmolops::get_symm_sssr", "rdkit_cxx::chem::rdmolops::get_symm_sssr_with_params"]
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.GetUseLegacyRingFinding"
-rust = ["rdkit_cxx::chem::rdmolops::get_use_legacy_ring_finding"]
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.GetUseLegacyStereoPerception"
 rust = ["rdkit_cxx::chem::rdmolops::get_use_legacy_stereo_perception"]
 
@@ -18122,10 +18027,6 @@ rust = ["rdkit_cxx::chem::rdmolops::haptic_bonds_to_dative"]
 [[entry]]
 python = "rdkit.Chem.rdmolops.HasQueryHs"
 rust = ["rdkit_cxx::chem::rdmolops::has_query_hs"]
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.IsMarkedAttachmentPoint"
-rust = ["rdkit_cxx::chem::rdmolops::is_marked_attachment_point"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.Kekulize"
@@ -18541,10 +18442,6 @@ python = "rdkit.Chem.rdmolops.SetTerminalAtomCoords"
 rust = ["rdkit_cxx::chem::rdmolops::set_terminal_atom_coords"]
 
 [[entry]]
-python = "rdkit.Chem.rdmolops.SetUseLegacyRingFinding"
-rust = ["rdkit_cxx::chem::rdmolops::set_use_legacy_ring_finding"]
-
-[[entry]]
 python = "rdkit.Chem.rdmolops.SetUseLegacyStereoPerception"
 rust = ["rdkit_cxx::chem::rdmolops::set_use_legacy_stereo_perception"]
 
@@ -18671,22 +18568,6 @@ rust_kind = "field"
 python = "rdkit.Chem.rdmolops.SubsetOptions.sanitize"
 rust = ["rdkit_cxx::chem::rdmolops::SubsetOptions::sanitize"]
 rust_kind = "field"
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm"
-rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm"]
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.DEFAULT"
-rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Default"]
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.LEGACY"
-rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Legacy"]
-
-[[entry]]
-python = "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.RDL"
-rust = ["rdkit_cxx::chem::rdmolops::SymmetrizeSSSRAlgorithm::Rdl"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.TranslateChiralFlagToStereoGroups"

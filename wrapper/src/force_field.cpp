@@ -257,8 +257,8 @@ Point3D force_field_get_extra_point_pos(const ForceField &ff, unsigned idx) {
 
 std::unique_ptr<MMFFMolProperties> mmff_mol_properties_new(
     RWMol &mol, rust::Str variant, MMFFVerbosity verbosity) {
-  return std::make_unique<MMFFMolProperties>(mol, std::string(variant),
-                                             verbosity);
+  return std::make_unique<MMFFMolProperties>(
+      mol, std::string(variant), static_cast<std::uint8_t>(verbosity));
 }
 
 bool mmff_mol_properties_is_valid(const MMFFMolProperties &props) {
@@ -450,7 +450,7 @@ std::unique_ptr<std::string> mmff_mol_properties_get_variant(
 
 void mmff_mol_properties_set_verbosity(MMFFMolProperties &props,
                                        MMFFVerbosity verbosity) {
-  props.props().setMMFFVerbosity(verbosity);
+  props.props().setMMFFVerbosity(static_cast<std::uint8_t>(verbosity));
 }
 
 }  // namespace rdkit_cxx

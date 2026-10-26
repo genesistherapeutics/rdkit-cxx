@@ -5,8 +5,9 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::MMFF::MMFFVerbosity`; cxx checks the values.
-    #[repr(u32)]
+    /// `RDKit::MMFF`'s `MMFF_VERBOSITY` values, which RDKit 2026.03 declares
+    /// in an unnamed enum and takes as `std::uint8_t`.
+    #[repr(u8)]
     #[allow(clippy::enum_variant_names)]
     enum MMFFVerbosity {
         MMFF_VERBOSITY_NONE = 0,
@@ -43,7 +44,6 @@ pub(crate) mod ffi {
         type Point3D = crate::ffi::geometry::ffi::Point3D;
         type ForceField;
         type MMFFMolProperties;
-        type MMFFVerbosity;
 
         fn force_field_calc_energy(ff: &ForceField) -> Result<f64>;
         fn force_field_calc_energy_with_pos(ff: Pin<&mut ForceField>, pos: &[f64]) -> Result<f64>;

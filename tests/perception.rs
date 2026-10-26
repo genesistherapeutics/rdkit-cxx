@@ -24,24 +24,15 @@ fn rings() {
     assert_eq!(get_sssr(&mut cubane).unwrap().len(), 5);
     let symm = get_symm_sssr(&mut cubane).unwrap();
     assert_eq!(symm.len(), 6);
-    assert_eq!(symm[0], [0, 1, 2, 3]);
-    let rdl = GetSymmSSSRParams {
-        algorithm: SymmetrizeSSSRAlgorithm::Rdl,
-        ..Default::default()
-    };
-    assert_eq!(
-        get_symm_sssr_with_params(&mut cubane, &rdl).unwrap().len(),
-        6
-    );
+    assert_eq!(symm[0], [0, 3, 2, 1]);
     find_ring_families(&mut cubane).unwrap();
     assert_eq!(cubane.get_ring_info().num_ring_families().unwrap(), 6);
 
     let mut benzoic = smiles("c1ccccc1C(=O)O");
-    assert_eq!(get_sssr(&mut benzoic).unwrap(), [[0, 1, 2, 3, 4, 5]]);
+    assert_eq!(get_sssr(&mut benzoic).unwrap(), [[0, 5, 4, 3, 2, 1]]);
     let mut fast = unsanitized("C1CC1C");
     fast_find_rings(&mut fast).unwrap();
     assert_eq!(fast.get_ring_info().num_rings().unwrap(), 1);
-    assert!(!get_use_legacy_ring_finding());
 }
 
 #[test]
@@ -53,9 +44,13 @@ fn param_defaults() {
             include_hydrogen_bonds: false
         }
     );
-    let symm = GetSymmSSSRParams::default();
-    assert_eq!(symm.algorithm, SymmetrizeSSSRAlgorithm::Default);
-    assert!(symm.recalc_sssr && !symm.include_dative_bonds && !symm.include_hydrogen_bonds);
+    assert_eq!(
+        GetSymmSSSRParams::default(),
+        GetSymmSSSRParams {
+            include_dative_bonds: false,
+            include_hydrogen_bonds: false
+        }
+    );
     assert_eq!(
         FindRingFamiliesParams::default(),
         FindRingFamiliesParams {
@@ -150,42 +145,6 @@ fn queries() {
         count_atom_elec(&Atom::new("C").unwrap()),
         Err(Error::Runtime { .. })
     ));
-}
-
-#[test]
-fn attachment_points() {
-    // Python's values.
-    assert_eq!(attachment_point_label_prefix(), "_AP");
-    let mut mol = smiles("*CC");
-    for (label, number) in [
-        ("_AP3", 3),
-        ("_AP+3", 0),
-        ("_APx", 0),
-        ("_AP", 0),
-        ("_AP0", 0),
-        ("_AP4294967296", 0),
-    ] {
-        mol.get_atom_with_idx_mut(0)
-            .unwrap()
-            .set_prop("atomLabel", label);
-        let atom = mol.get_atom_with_idx(0).unwrap();
-        assert_eq!(get_attachment_point_label_number(&atom).unwrap(), number);
-        assert_eq!(is_marked_attachment_point(&atom).unwrap(), number != 0);
-    }
-    let carbon = mol.get_atom_with_idx(1).unwrap();
-    assert_eq!(get_attachment_point_label_number(&carbon).unwrap(), 0);
-    let mut chain = smiles("C*C");
-    chain
-        .get_atom_with_idx_mut(1)
-        .unwrap()
-        .set_prop("atomLabel", "_AP1");
-    let dummy = chain.get_atom_with_idx(1).unwrap();
-    assert_eq!(get_attachment_point_label_number(&dummy).unwrap(), 0);
-    assert!(!is_marked_attachment_point(&dummy).unwrap());
-    // An atom in no molecule has degree 0.
-    let free = Atom::new("*").unwrap();
-    assert!(!is_marked_attachment_point(&free).unwrap());
-    assert_eq!(get_attachment_point_label_number(&free).unwrap(), 0);
 }
 
 #[test]

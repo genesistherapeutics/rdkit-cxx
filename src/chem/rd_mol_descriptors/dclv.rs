@@ -210,22 +210,15 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
         )?)
     }
 
-    /// The points of the solvent-accessible surface, by atom. Mirrors
-    /// `GetSurfacePoints`.
+    /// Lattice points of each atom's probe sphere, buried or not, by atom.
+    /// Mirrors `GetSurfacePoints`. In RDKit 2026.03 they are the points the
+    /// surface-area methods have tested, the sphere's 320 once for each time
+    /// an atom's area was computed, or each sphere's once when no area has
+    /// been.
     pub fn get_surface_points(&mut self) -> BTreeMap<u32, Vec<Point3D>> {
-        self.get_surface_points_with_all_points(false)
-    }
-
-    /// With `all_points`, every lattice point of every atom's probe sphere,
-    /// buried or not. Mirrors `GetSurfacePoints(allPoints)`.
-    pub fn get_surface_points_with_all_points(
-        &mut self,
-        all_points: bool,
-    ) -> BTreeMap<u32, Vec<Point3D>> {
         let (mut atoms, mut counts, mut points) = (Vec::new(), Vec::new(), Vec::new());
         expect_ok(ffi::dclv_get_surface_points(
             self.raw(),
-            all_points,
             &mut atoms,
             &mut counts,
             &mut points,

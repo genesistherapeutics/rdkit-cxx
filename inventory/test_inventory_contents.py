@@ -10,7 +10,7 @@ import pathlib
 
 import pytest
 
-INVENTORY = pathlib.Path(__file__).parent / "inventory-2026.09.json"
+INVENTORY = pathlib.Path(__file__).parent / "inventory-2026.03.json"
 
 
 @pytest.fixture(scope="module")
@@ -24,7 +24,7 @@ def by_name(inventory):
 
 
 def test_core_entries(by_name, inventory):
-    assert inventory["rdkit_version"] == "2026.09.1"
+    assert inventory["rdkit_version"] == "2026.03.6"
     assert by_name["rdkit.rdBase.rdkitVersion"]["kind"] == "module_attribute"
     assert by_name["rdkit.rdBase.DisableLog"]["kind"] == "module_function"
     assert by_name["rdkit.Chem.rdchem.Mol"]["kind"] == "class"
@@ -60,7 +60,7 @@ def test_entries_are_sorted_and_unique(inventory):
     assert names == sorted(set(names))
 
 
-PYTHON_INVENTORY = pathlib.Path(__file__).parent / "python-2026.09.json"
+PYTHON_INVENTORY = pathlib.Path(__file__).parent / "python-2026.03.json"
 
 
 @pytest.fixture(scope="module")
@@ -74,7 +74,7 @@ def python_by_name(python_inventory):
 
 
 def test_python_entries(python_by_name, python_inventory):
-    assert python_inventory["rdkit_version"] == "2026.09.1"
+    assert python_inventory["rdkit_version"] == "2026.03.6"
     assert python_by_name["rdkit.Chem.FindMolChiralCenters"]["kind"] == "module_function"
     assert python_by_name["rdkit.Chem.Lipinski.HDonorSmarts"]["kind"] == "module_attribute"
     assert python_by_name["rdkit.Chem.RegistrationHash.HashLayer.CANONICAL_SMILES"]["kind"] == "enum_value"

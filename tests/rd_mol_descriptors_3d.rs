@@ -845,18 +845,19 @@ fn double_cubic_lattice_volume() {
     );
     assert_close(dclv.get_compactness(), 1.1465997055971109, 1e-9);
     assert_close(dclv.get_packing_density(), 0.2728973640459242, 1e-9);
+    // RDKit 2026.03 keeps every point the surface areas above tested, once
+    // per test: atom 0's 320 twice.
     let points = dclv.get_surface_points();
     assert_eq!(points.len(), 20);
-    assert_eq!(points[&0].len(), 30);
+    assert_eq!(points[&0].len(), 640);
     let p = points[&0][0];
-    assert_close(p.x, 3.3012675952076913, 1e-12);
-    assert_close(p.y, -2.8182707559585567, 1e-12);
-    assert_close(p.z, -1.8400875192165373, 1e-12);
-
-    let mut fresh = DoubleCubicLatticeVolume::new(&mol).unwrap();
-    let all_points = fresh.get_surface_points_with_all_points(true);
-    assert_eq!(all_points.len(), 20);
-    assert_eq!(all_points[&0].len(), 320);
+    assert_close(p.x, 1.9523149367332462, 1e-12);
+    assert_close(p.y, -2.075985063266754, 1e-12);
+    assert_close(p.z, -1.896585063266754, 1e-12);
+    let fresh = DoubleCubicLatticeVolume::new(&mol)
+        .unwrap()
+        .get_surface_points();
+    assert!(fresh.values().all(|atom_points| atom_points.len() == 320));
 
     let probe = DoubleCubicLatticeVolumeParams {
         probe_radius: 1.2,

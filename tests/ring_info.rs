@@ -124,8 +124,17 @@ fn memberships_and_sizes() {
 
 #[test]
 fn ring_families() {
-    // Parsing finds ring families along with the rings.
-    let mol = mol_from_smiles("C1CC1").unwrap();
+    // Parsing finds the rings, but not their families.
+    let mut mol = mol_from_smiles("C1CC1").unwrap();
+    let info = mol.get_ring_info();
+    assert!(!info.are_ring_families_initialized());
+    assert_eq!(info.num_ring_families().unwrap(), 0);
+    assert!(info.atom_ring_families().is_empty());
+    assert!(matches!(
+        info.num_relevant_cycles(),
+        Err(Error::Runtime { .. })
+    ));
+    find_ring_families(&mut mol).unwrap();
     let info = mol.get_ring_info();
     assert!(info.are_ring_families_initialized());
     assert_eq!(

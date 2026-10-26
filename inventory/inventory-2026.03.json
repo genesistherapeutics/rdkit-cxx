@@ -1,5 +1,5 @@
 {
- "rdkit_version": "2026.09.1",
+ "rdkit_version": "2026.03.6",
  "entries": [
   {
    "python": "rdkit.Avalon.pyAvalonTools.CheckMolecule",
@@ -3664,14 +3664,14 @@
    "python": "rdkit.Chem.rdChemDraw.MolsFromChemDrawBlock",
    "kind": "module_function",
    "overloads": [
-    "MolsFromChemDrawBlock( (str)block [, (bool)sanitize=True [, (bool)removeHs=True [, (NeedsCleanPolicy)needsCleanPolicy=rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustSource [, (bool)parseQueries=False [, (bool)strictQueryParsing=False]]]]]) -> object :"
+    "MolsFromChemDrawBlock( (str)block [, (bool)sanitize=True [, (bool)removeHs=True [, (NeedsCleanPolicy)needsCleanPolicy=rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustSource]]]) -> object :"
    ]
   },
   {
    "python": "rdkit.Chem.rdChemDraw.MolsFromChemDrawFile",
    "kind": "module_function",
    "overloads": [
-    "MolsFromChemDrawFile( (object)filename [, (bool)sanitize=True [, (bool)removeHs=True [, (NeedsCleanPolicy)needsCleanPolicy=rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustSource [, (bool)parseQueries=False [, (bool)strictQueryParsing=False]]]]]) -> tuple :"
+    "MolsFromChemDrawFile( (object)filename [, (bool)sanitize=True [, (bool)removeHs=True [, (NeedsCleanPolicy)needsCleanPolicy=rdkit.Chem.rdChemDraw.NeedsCleanPolicy.TrustSource]]]) -> tuple :"
    ]
   },
   {
@@ -5076,7 +5076,7 @@
    "python": "rdkit.Chem.rdDepictor.Compute2DCoords",
    "kind": "module_function",
    "overloads": [
-    "Compute2DCoords( (rdkit.Chem.rdchem.Mol)mol [, (bool)canonOrient=True [, (bool)clearConfs=True [, (dict)coordMap={} [, (int)nFlipsPerSample=0 [, (int)nSample=0 [, (int)sampleSeed=0 [, (bool)permuteDeg4Nodes=False [, (float)bondLength=-1.0 [, (bool)forceRDKit=False [, (bool)useRingTemplates=False [, (bool)usePathAngleExpansion=True]]]]]]]]]]]) -> int :"
+    "Compute2DCoords( (rdkit.Chem.rdchem.Mol)mol [, (bool)canonOrient=True [, (bool)clearConfs=True [, (dict)coordMap={} [, (int)nFlipsPerSample=0 [, (int)nSample=0 [, (int)sampleSeed=0 [, (bool)permuteDeg4Nodes=False [, (float)bondLength=-1.0 [, (bool)forceRDKit=False [, (bool)useRingTemplates=False]]]]]]]]]]) -> int :"
    ]
   },
   {
@@ -5426,11 +5426,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.rdDistGeom.DG_EMBEDDING",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdDistGeom.ETDG",
    "kind": "module_function",
    "overloads": [
@@ -5466,13 +5461,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.rdDistGeom.ETKDGv4",
-   "kind": "module_function",
-   "overloads": [
-    "ETKDGv4() -> EmbedParameters :"
-   ]
-  },
-  {
    "python": "rdkit.Chem.rdDistGeom.ETK_MINIMIZATION",
    "kind": "module_attribute",
    "overloads": []
@@ -5480,21 +5468,6 @@
   {
    "python": "rdkit.Chem.rdDistGeom.EXCEEDED_TIMEOUT",
    "kind": "module_attribute",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.EmbedFF",
-   "kind": "class",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.EmbedFF.MMFF",
-   "kind": "enum_value",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.EmbedFF.UFF",
-   "kind": "enum_value",
    "overloads": []
   },
   {
@@ -5666,11 +5639,6 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.rdDistGeom.EmbedParameters.embedForceField",
-   "kind": "property",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdDistGeom.EmbedParameters.embedFragmentsSeparately",
    "kind": "property",
    "overloads": []
@@ -5696,11 +5664,6 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.rdDistGeom.EmbedParameters.initialEmbeddingMode",
-   "kind": "property",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdDistGeom.EmbedParameters.maxIterations",
    "kind": "property",
    "overloads": []
@@ -5717,11 +5680,6 @@
   },
   {
    "python": "rdkit.Chem.rdDistGeom.EmbedParameters.onlyHeavyAtomsForRMS",
-   "kind": "property",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.EmbedParameters.onlyInitialEmbedding",
    "kind": "property",
    "overloads": []
   },
@@ -5849,31 +5807,6 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.rdDistGeom.INTERNAL_COORDINATE_EMBEDDING",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.InitialEmbeddingMode",
-   "kind": "class",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.DG_EMBEDDING",
-   "kind": "enum_value",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.INTERNAL_COORDINATE_EMBEDDING",
-   "kind": "enum_value",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.InitialEmbeddingMode.RANDOM_COORDINATE_EMBEDDING",
-   "kind": "enum_value",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdDistGeom.KDG",
    "kind": "module_function",
    "overloads": [
@@ -5901,26 +5834,11 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.rdDistGeom.MMFF",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdDistGeom.OrderedEmbedFailureCauses",
    "kind": "module_function",
    "overloads": [
     "OrderedEmbedFailureCauses([  (bool)legacyImplementation=True]) -> list :"
    ]
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.RANDOM_COORDINATE_EMBEDDING",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdDistGeom.UFF",
-   "kind": "module_attribute",
-   "overloads": []
   },
   {
    "python": "rdkit.Chem.rdDistGeom.srETKDGv3",
@@ -8191,13 +8109,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.rdMolAlign.GetAllConformerBestRMSToRef",
-   "kind": "module_function",
-   "overloads": [
-    "GetAllConformerBestRMSToRef( (rdkit.Chem.rdchem.Mol)prbMol, (rdkit.Chem.rdchem.Mol)refMol [, (object)params=None]) -> tuple :"
-   ]
-  },
-  {
    "python": "rdkit.Chem.rdMolAlign.GetBestAlignmentTransform",
    "kind": "module_function",
    "overloads": [
@@ -8367,7 +8278,7 @@
    "python": "rdkit.Chem.rdMolCatalog.MolCatalog.Serialize",
    "kind": "method",
    "overloads": [
-    "Serialize( (MolCatalog)self) -> object :"
+    "Serialize( (MolCatalog)self) -> str :"
    ]
   },
   {
@@ -8422,13 +8333,6 @@
    "kind": "method",
    "overloads": [
     "GetOrder( (MolCatalogEntry)self) -> int :"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.rdMolCatalog.MolCatalogEntry.Serialize",
-   "kind": "method",
-   "overloads": [
-    "Serialize( (MolCatalogEntry)self) -> object :"
    ]
   },
   {
@@ -9241,7 +9145,7 @@
    "python": "rdkit.Chem.rdMolDescriptors.DoubleCubicLatticeVolume.GetSurfacePoints",
    "kind": "method",
    "overloads": [
-    "GetSurfacePoints( (DoubleCubicLatticeVolume)self [, (bool)allPoints=False]) -> dict :"
+    "GetSurfacePoints( (DoubleCubicLatticeVolume)arg1) -> dict :"
    ]
   },
   {
@@ -15588,6 +15492,11 @@
    "overloads": []
   },
   {
+   "python": "rdkit.Chem.rdchem.StereoInfo.NOATOM",
+   "kind": "property",
+   "overloads": []
+  },
+  {
    "python": "rdkit.Chem.rdchem.StereoInfo.__init__",
    "kind": "method",
    "overloads": [
@@ -17403,7 +17312,7 @@
    "kind": "method",
    "overloads": [
     "__init__( (object)self) -> None :",
-    "__init__( (object)self, (bool)sanitize, (bool)removeHs, (CDXMLFormat)format [, (bool)parseQueries=False [, (bool)strictQueryParsing=False]]) -> None :"
+    "__init__( (object)self, (bool)sanitize, (bool)removeHs, (CDXMLFormat)format) -> None :"
    ]
   },
   {
@@ -17419,22 +17328,12 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.rdmolfiles.CDXMLParserParams.parseQueries",
-   "kind": "property",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdmolfiles.CDXMLParserParams.removeHs",
    "kind": "property",
    "overloads": []
   },
   {
    "python": "rdkit.Chem.rdmolfiles.CDXMLParserParams.sanitize",
-   "kind": "property",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdmolfiles.CDXMLParserParams.strictQueryParsing",
    "kind": "property",
    "overloads": []
   },
@@ -19377,11 +19276,6 @@
    "overloads": []
   },
   {
-   "python": "rdkit.Chem.rdmolops.ATTACHMENT_POINT_LABEL_PREFIX",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
    "python": "rdkit.Chem.rdmolops.AddHs",
    "kind": "module_function",
    "overloads": [
@@ -20021,13 +19915,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.rdmolops.GetAttachmentPointLabelNumber",
-   "kind": "module_function",
-   "overloads": [
-    "GetAttachmentPointLabelNumber( (rdkit.Chem.rdchem.Atom)atom) -> int :"
-   ]
-  },
-  {
    "python": "rdkit.Chem.rdmolops.GetDistanceMatrix",
    "kind": "module_function",
    "overloads": [
@@ -20073,14 +19960,7 @@
    "python": "rdkit.Chem.rdmolops.GetSymmSSSR",
    "kind": "module_function",
    "overloads": [
-    "GetSymmSSSR( (rdkit.Chem.rdchem.Mol)mol [, (bool)includeDativeBonds=False [, (bool)includeHydrogenBonds=False [, (SymmetrizeSSSRAlgorithm)algorithm=rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.DEFAULT [, (bool)recalcSSSR=True]]]]) -> rdkit.rdBase._vectSt6vectorIiSaIiEE :"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.rdmolops.GetUseLegacyRingFinding",
-   "kind": "module_function",
-   "overloads": [
-    "GetUseLegacyRingFinding() -> bool :"
+    "GetSymmSSSR( (rdkit.Chem.rdchem.Mol)mol [, (bool)includeDativeBonds=False [, (bool)includeHydrogenBonds=False]]) -> rdkit.rdBase._vectSt6vectorIiSaIiEE :"
    ]
   },
   {
@@ -20102,13 +19982,6 @@
    "kind": "module_function",
    "overloads": [
     "HasQueryHs( (rdkit.Chem.rdchem.Mol)mol) -> tuple :"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.rdmolops.IsMarkedAttachmentPoint",
-   "kind": "module_function",
-   "overloads": [
-    "IsMarkedAttachmentPoint( (rdkit.Chem.rdchem.Atom)atom) -> bool :"
    ]
   },
   {
@@ -20631,13 +20504,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.rdmolops.SetUseLegacyRingFinding",
-   "kind": "module_function",
-   "overloads": [
-    "SetUseLegacyRingFinding( (bool)val) -> None :"
-   ]
-  },
-  {
    "python": "rdkit.Chem.rdmolops.SetUseLegacyStereoPerception",
    "kind": "module_function",
    "overloads": [
@@ -20794,26 +20660,6 @@
   {
    "python": "rdkit.Chem.rdmolops.SubsetOptions.sanitize",
    "kind": "property",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm",
-   "kind": "class",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.DEFAULT",
-   "kind": "enum_value",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.LEGACY",
-   "kind": "enum_value",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.rdmolops.SymmetrizeSSSRAlgorithm.RDL",
-   "kind": "enum_value",
    "overloads": []
   },
   {

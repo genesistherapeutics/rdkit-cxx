@@ -29,12 +29,10 @@ rust::Vec<IndexList> get_sssr(RWMol &mol, bool include_dative_bonds,
 }
 
 rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds,
-                                   bool include_hydrogen_bonds,
-                                   SymmetrizeSSSRAlgorithm algorithm,
-                                   bool recalc_sssr) {
+                                   bool include_hydrogen_bonds) {
   std::vector<std::vector<int>> rings;
-  RDKit::MolOps::symmetrizeSSSR(mol, rings, algorithm, recalc_sssr,
-                                include_dative_bonds, include_hydrogen_bonds);
+  RDKit::MolOps::symmetrizeSSSR(mol, rings, include_dative_bonds,
+                                include_hydrogen_bonds);
   return to_index_lists(rings);
 }
 
@@ -44,14 +42,6 @@ void find_ring_families(RWMol &mol, bool include_dative_bonds,
                         bool include_hydrogen_bonds) {
   RDKit::MolOps::findRingFamilies(mol, include_dative_bonds,
                                   include_hydrogen_bonds);
-}
-
-void set_use_legacy_ring_finding(bool val) {
-  RDKit::MolOps::setUseLegacyRingFinding(val);
-}
-
-bool get_use_legacy_ring_finding() {
-  return RDKit::MolOps::getUseLegacyRingFinding();
 }
 
 void cleanup(RWMol &mol) { RDKit::MolOps::cleanUp(mol); }
@@ -107,14 +97,6 @@ std::int32_t count_atom_elec(const Atom &atom) {
 
 bool atom_has_conjugated_bond(const Atom &atom) {
   return RDKit::MolOps::atomHasConjugatedBond(&atom);
-}
-
-std::uint32_t get_attachment_point_label_number(const Atom &atom) {
-  return RDKit::MolOps::getAttachmentPointLabelNumber(&atom);
-}
-
-bool is_marked_attachment_point(const Atom &atom) {
-  return RDKit::MolOps::isMarkedAttachmentPoint(&atom);
 }
 
 // getFormalCharge sums the atoms' charges in an int accumulator, in atom

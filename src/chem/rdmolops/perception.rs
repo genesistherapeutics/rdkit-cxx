@@ -9,7 +9,6 @@ use crate::Result;
 use crate::chem::rdchem::AsAtom;
 use crate::chem::rdchem::enums::rdkit_enum;
 use crate::chem::{Mol, rdmolops::KekulizeParams};
-use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::perception::ffi;
 
@@ -22,16 +21,6 @@ rdkit_enum! {
         AromaticityMdl = AROMATICITY_MDL,
         AromaticityMmff94 = AROMATICITY_MMFF94,
         AromaticityCustom = AROMATICITY_CUSTOM,
-    }
-}
-
-rdkit_enum! {
-    /// How `get_symm_sssr` finds and symmetrizes rings. Mirrors
-    /// `rdmolops.SymmetrizeSSSRAlgorithm`.
-    SymmetrizeSSSRAlgorithm: ffi::SymmetrizeSSSRAlgorithm {
-        Default = DEFAULT,
-        Legacy = LEGACY,
-        Rdl = RDL,
     }
 }
 
@@ -60,27 +49,12 @@ pub fn get_sssr_with_params(mol: &mut Mol, params: &GetSSSRParams) -> Result<Vec
 }
 
 /// Parameters for `get_symm_sssr_with_params`, with Python's defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct GetSymmSSSRParams {
     /// Uses dative bonds in ring finding.
     pub include_dative_bonds: bool,
     /// Uses hydrogen bonds in ring finding.
     pub include_hydrogen_bonds: bool,
-    /// How to find and symmetrize the rings.
-    pub algorithm: SymmetrizeSSSRAlgorithm,
-    /// Finds the SSSR again rather than reusing the molecule's.
-    pub recalc_sssr: bool,
-}
-
-impl Default for GetSymmSSSRParams {
-    fn default() -> GetSymmSSSRParams {
-        GetSymmSSSRParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false,
-            algorithm: SymmetrizeSSSRAlgorithm::Default,
-            recalc_sssr: true,
-        }
-    }
 }
 
 /// The symmetrized SSSR, as atom indices: the SSSR plus the rings that make
@@ -91,7 +65,7 @@ pub fn get_symm_sssr(mol: &mut Mol) -> Result<Vec<Vec<u32>>> {
 }
 
 /// Mirrors `rdmolops.GetSymmSSSR(mol, includeDativeBonds,
-/// includeHydrogenBonds, algorithm, recalcSSSR)`.
+/// includeHydrogenBonds)`.
 pub fn get_symm_sssr_with_params(
     mol: &mut Mol,
     params: &GetSymmSSSRParams,
@@ -100,8 +74,6 @@ pub fn get_symm_sssr_with_params(
         mol.pin_mut(),
         params.include_dative_bonds,
         params.include_hydrogen_bonds,
-        params.algorithm.to_ffi(),
-        params.recalc_sssr,
     )?))
 }
 
@@ -139,25 +111,6 @@ pub fn find_ring_families_with_params(
         params.include_dative_bonds,
         params.include_hydrogen_bonds,
     )?)
-}
-
-/// Whether sanitization uses the legacy symmetrized-SSSR code. Mirrors
-/// `rdmolops.GetUseLegacyRingFinding`.
-pub fn get_use_legacy_ring_finding() -> bool {
-    expect_ok(ffi::get_use_legacy_ring_finding())
-}
-
-/// Makes sanitization use, or stop using, the legacy symmetrized-SSSR code.
-/// Mirrors `rdmolops.SetUseLegacyRingFinding`.
-///
-/// # Safety
-///
-/// RDKit keeps this setting in an environment variable, which it sets with
-/// `setenv`, so this has [`std::env::set_var`]'s contract: no other thread
-/// may read or write the environment while it runs. RDKit reads it during
-/// sanitization and ring finding (CONVENTIONS.md U5).
-pub unsafe fn set_use_legacy_ring_finding(val: bool) {
-    expect_ok(ffi::set_use_legacy_ring_finding(val))
 }
 
 /// Removes common mistakes in drawn structures: charge-separated nitro
@@ -264,28 +217,6 @@ pub fn count_atom_elec(atom: &impl AsAtom) -> Result<i32> {
 /// `rdmolops.AtomHasConjugatedBond`.
 pub fn atom_has_conjugated_bond(atom: &impl AsAtom) -> Result<bool> {
     Ok(ffi::atom_has_conjugated_bond(atom.atom())?)
-}
-
-/// The prefix of the atom labels (`atomLabel`) that number attachment
-/// points: `_AP`. Mirrors `rdmolops.ATTACHMENT_POINT_LABEL_PREFIX`.
-pub fn attachment_point_label_prefix() -> &'static str {
-    "_AP"
-}
-
-/// The number in a degree-one dummy atom's `_AP<n>` label, for a positive
-/// decimal `n` in `u32`'s range; 0 for any other atom or label. It names
-/// the attachment point; it is not an MDL `ATTCHPT` position. Mirrors
-/// `rdmolops.GetAttachmentPointLabelNumber`.
-pub fn get_attachment_point_label_number(atom: &impl AsAtom) -> Result<u32> {
-    Ok(ffi::get_attachment_point_label_number(atom.atom())?)
-}
-
-/// Whether an atom is a marked attachment point: a degree-one dummy atom
-/// with RDKit's `_fromAttchpt` property or a numbered `_AP<n>` label,
-/// whether or not it could be collapsed. Mirrors
-/// `rdmolops.IsMarkedAttachmentPoint`.
-pub fn is_marked_attachment_point(atom: &impl AsAtom) -> Result<bool> {
-    Ok(ffi::is_marked_attachment_point(atom.atom())?)
 }
 
 /// The sum of the atoms' formal charges. RDKit sums them in `int`, which

@@ -67,9 +67,6 @@ double get_best_rms(RWMol &prb_mol, const RWMol &ref_mol,
                     const BestAlignmentParamsData &params);
 rust::Vec<double> get_all_conformer_best_rms(
     const RWMol &mol, const BestAlignmentParamsData &params);
-rust::Vec<double> get_all_conformer_best_rms_to_ref(
-    const RWMol &prb_mol, const RWMol &ref_mol,
-    const BestAlignmentParamsData &params);
 double calc_rms(const RWMol &prb_mol, const RWMol &ref_mol,
                 const BestAlignmentParamsData &params);
 rust::Vec<double> align_mol_conformers(

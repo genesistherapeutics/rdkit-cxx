@@ -38,7 +38,7 @@ double dclv_get_partial_surface_area(
     DoubleCubicLatticeVolume &dclv,
     rust::Slice<const std::uint32_t> atom_indices);
 // Each atom with points, its number of points, and the points in order.
-void dclv_get_surface_points(DoubleCubicLatticeVolume &dclv, bool all_points,
+void dclv_get_surface_points(DoubleCubicLatticeVolume &dclv,
                              rust::Vec<std::uint32_t> &atoms,
                              rust::Vec<std::uint32_t> &counts,
                              rust::Vec<Point3D> &points);

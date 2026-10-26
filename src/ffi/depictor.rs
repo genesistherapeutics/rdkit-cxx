@@ -19,7 +19,6 @@ pub(crate) mod ffi {
         bond_length: f64,
         force_rdkit: bool,
         use_ring_templates: bool,
-        use_path_angle_expansion: bool,
     }
 
     /// `rdDepictor.Compute2DCoordsMimicDistmat`'s optional arguments.

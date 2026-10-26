@@ -8,7 +8,7 @@ use rdkit_cxx::rd_base;
 
 #[test]
 fn rdkit_version_is_the_supported_series() {
-    assert!(rd_base::rdkit_version().starts_with("2026.09."));
+    assert!(rd_base::rdkit_version().starts_with("2026.03."));
 }
 
 #[test]

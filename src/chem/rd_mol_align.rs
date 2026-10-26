@@ -301,27 +301,6 @@ pub fn get_all_conformer_best_rms_with_params(
     )?)
 }
 
-/// The best RMSD between each of the reference's conformers and each of
-/// the probe's, by reference conformer. Mirrors
-/// `rdMolAlign.GetAllConformerBestRMSToRef`.
-pub fn get_all_conformer_best_rms_to_ref(prb_mol: &Mol, ref_mol: &Mol) -> Result<Vec<f64>> {
-    get_all_conformer_best_rms_to_ref_with_params(prb_mol, ref_mol, &Default::default())
-}
-
-/// Mirrors `rdMolAlign.GetAllConformerBestRMSToRef(prbMol, refMol, params)`,
-/// with the errors of `get_best_alignment_transform_with_params`.
-pub fn get_all_conformer_best_rms_to_ref_with_params(
-    prb_mol: &Mol,
-    ref_mol: &Mol,
-    params: &BestAlignmentParams,
-) -> Result<Vec<f64>> {
-    Ok(ffi::get_all_conformer_best_rms_to_ref(
-        prb_mol.as_ffi(),
-        ref_mol.as_ffi(),
-        &params.to_ffi(),
-    )?)
-}
-
 /// Parameters for `calc_rms_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CalcRMSParams {

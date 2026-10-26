@@ -8,6 +8,7 @@
 #include <climits>
 #include <cstdlib>
 #include <iterator>
+#include <memory>
 #include <mutex>
 #include <utility>
 
@@ -56,6 +57,25 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
 
  private:
   rust::Box<TautomerCallback> d_callback;
+};
+
+// RDKit 2026.03's setCallback takes ownership of a raw pointer, so each
+// enumerator gets its own forwarder to a handle's callback, which handles
+// and enumerators share (as Python's setCallbackHelper gives each a new
+// PyTautomerEnumeratorCallback).
+class SharedTautomerCallback : public MS::TautomerEnumeratorCallback {
+ public:
+  explicit SharedTautomerCallback(
+      std::shared_ptr<MS::TautomerEnumeratorCallback> callback)
+      : d_callback(std::move(callback)) {}
+
+  bool operator()(const RDKit::ROMol &mol,
+                  const TautomerEnumeratorResult &res) override {
+    return (*d_callback)(mol, res);
+  }
+
+ private:
+  std::shared_ptr<MS::TautomerEnumeratorCallback> d_callback;
 };
 
 // A scoring function that calls a Rust closure with a copy of each
@@ -186,11 +206,11 @@ void tautomer_enumerator_set_reassign_stereo(TautomerEnumerator &enumerator,
 
 void tautomer_enumerator_set_callback(TautomerEnumerator &enumerator,
                                       const TautomerCallbackHandle &callback) {
-  enumerator.setCallback(callback.ptr);
+  enumerator.setCallback(new SharedTautomerCallback(callback.ptr));
 }
 
 void tautomer_enumerator_clear_callback(TautomerEnumerator &enumerator) {
-  enumerator.setCallback(std::shared_ptr<MS::TautomerEnumeratorCallback>());
+  enumerator.setCallback(nullptr);
 }
 
 // Enumerating, and the default scores, match substructures

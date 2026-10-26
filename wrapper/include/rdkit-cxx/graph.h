@@ -10,8 +10,11 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 #include <memory>
 
+// RDKit 2026.03's Subset.h uses std::map and ROMol without including them.
+#include <GraphMol/ROMol.h>
 #include <GraphMol/Subset.h>
 
 #include "rdkit-cxx/mol.h"

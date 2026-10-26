@@ -65,8 +65,8 @@ fn defaults() {
 #[test]
 fn triangle_smoothing() {
     let mut bounds = butane_bounds();
-    assert!((bounds[2][0] - 2.4257022902910914).abs() < 1e-9);
-    assert!((bounds[0][3] - 3.8753832408954354).abs() < 1e-9);
+    assert!((bounds[2][0] - 2.432790629029564).abs() < 1e-9);
+    assert!((bounds[0][3] - 3.810719484563623).abs() < 1e-9);
     let raw = bounds.clone();
     assert!(do_triangle_smoothing(&mut bounds).unwrap());
     assert_matrix_close(&bounds, &raw);

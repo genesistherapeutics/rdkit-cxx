@@ -157,12 +157,12 @@ double dclv_get_partial_surface_area(
   return dclv.getPartialSurfaceArea(atoms);
 }
 
-void dclv_get_surface_points(DoubleCubicLatticeVolume &dclv, bool all_points,
+void dclv_get_surface_points(DoubleCubicLatticeVolume &dclv,
                              rust::Vec<std::uint32_t> &atoms,
                              rust::Vec<std::uint32_t> &counts,
                              rust::Vec<Point3D> &points) {
   std::lock_guard<std::mutex> lock(record_cache_mutex());
-  for (const auto &[atom, atom_points] : dclv.getSurfacePoints(all_points)) {
+  for (const auto &[atom, atom_points] : dclv.getSurfacePoints()) {
     atoms.push_back(atom);
     counts.push_back(static_cast<std::uint32_t>(atom_points.size()));
     for (const auto &p : atom_points) {

@@ -10,6 +10,8 @@ From RDKit's source tree, under RDKit's BSD license:
 - `AlexRxn.mrv`: `Code/GraphMol/MarvinParse/test_data`
 - `RiboseFullname.mol`: `Code/GraphMol/FileParsers/test_data/macromols`, with
   trailing whitespace trimmed
+- `cip_max_iterations.mol`: the mol block of the "Test early termination of
+  CIP calculation" test in `Code/GraphMol/CIPLabeler/catch_tests.cpp`
 - `amide_space.txt`, `amide_space_error.txt`, `triazole_space.txt`,
   `extended_query.csv`, `doebner_miller_space.txt`:
   `Code/GraphMol/SynthonSpaceSearch/data`

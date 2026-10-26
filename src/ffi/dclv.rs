@@ -38,7 +38,6 @@ pub(crate) mod ffi {
         ) -> Result<f64>;
         fn dclv_get_surface_points(
             dclv: Pin<&mut DoubleCubicLatticeVolume>,
-            all_points: bool,
             atoms: &mut Vec<u32>,
             counts: &mut Vec<u32>,
             points: &mut Vec<Point3D>,

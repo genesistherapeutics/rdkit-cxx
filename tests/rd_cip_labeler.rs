@@ -65,15 +65,25 @@ fn cip_labels() {
 
 #[test]
 fn iteration_limit() {
-    let mut mol = without_labels("C[C@H](N)C(=O)O");
+    // RDKit resolves easy centers in a first pass the limit does not bound,
+    // so it takes RDKit's own example of a hard one.
+    let mut hard = mol_from_mol_file_with_params(
+        concat!(env!("CARGO_MANIFEST_DIR"), "/tests/data/cip_max_iterations.mol"),
+        &MolFromMolFileParams {
+            sanitize: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
     let limited = AssignCIPLabelsParams {
         max_recursive_iterations: 1,
         ..Default::default()
     };
     assert!(matches!(
-        assign_cip_labels_with_params(&mut mol, &limited),
+        assign_cip_labels_with_params(&mut hard, &limited),
         Err(Error::Runtime { .. })
     ));
+    let mut mol = without_labels("C[C@H](N)C(=O)O");
     assign_cip_labels_with_params(
         &mut mol,
         &AssignCIPLabelsParams {

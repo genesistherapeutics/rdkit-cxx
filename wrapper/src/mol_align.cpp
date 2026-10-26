@@ -78,11 +78,10 @@ std::unique_ptr<RDNumeric::DoubleVector> to_vector(
   return vec;
 }
 
-// RDKit's own threads (getBestRMSInternal, getAllConformerBestRMS,
-// getAllConformerBestRMSToRef) call std::terminate on any exception,
-// getNumThreadsToUse negates its argument in int, which is undefined for
-// INT_MIN, and nothing bounds the count. The count is computed here, at
-// most the hardware's.
+// RDKit's own threads (getBestRMSInternal, getAllConformerBestRMS) call
+// std::terminate on any exception, getNumThreadsToUse negates its argument
+// in int, which is undefined for INT_MIN, and nothing bounds the count. The
+// count is computed here, at most the hardware's.
 int thread_count(std::int32_t target) {
   unsigned n = num_threads_to_use(target);
   unsigned hardware = std::max(1u, std::thread::hardware_concurrency());
@@ -448,18 +447,6 @@ rust::Vec<double> get_all_conformer_best_rms(
   auto native = to_native(params, mol, mol, params.ignore_hs);
   rust::Vec<double> result;
   for (double v : MolAlign::getAllConformerBestRMS(mol, native.params)) {
-    result.push_back(v);
-  }
-  return result;
-}
-
-rust::Vec<double> get_all_conformer_best_rms_to_ref(
-    const RWMol &prb_mol, const RWMol &ref_mol,
-    const BestAlignmentParamsData &params) {
-  auto native = to_native(params, prb_mol, ref_mol, params.ignore_hs);
-  rust::Vec<double> result;
-  for (double v :
-       MolAlign::getAllConformerBestRMSToRef(prb_mol, ref_mol, native.params)) {
     result.push_back(v);
   }
   return result;

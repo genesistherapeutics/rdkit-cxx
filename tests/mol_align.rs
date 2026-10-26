@@ -480,19 +480,6 @@ fn all_conformers() {
         }
     }
     assert_eq!(get_all_conformer_best_rms(&mol).unwrap().len(), 3);
-    let to_ref = get_all_conformer_best_rms_to_ref(&mol, &reference()).unwrap();
-    assert_eq!(to_ref.len(), 3);
-    assert!(to_ref[0].abs() < 1e-6);
-    assert_close(to_ref[1], 0.6937072271379565);
-    assert_close(to_ref[2], 0.09168170803172553);
-    let threads = BestAlignmentParams {
-        num_threads: 3,
-        ..Default::default()
-    };
-    assert_eq!(
-        get_all_conformer_best_rms_to_ref_with_params(&mol, &reference(), &threads).unwrap(),
-        to_ref
-    );
 
     let mut mol = acetanilide();
     let rms = align_mol_conformers(&mut mol).unwrap();
