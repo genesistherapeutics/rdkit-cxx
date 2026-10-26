@@ -1,8 +1,9 @@
 # rdkit-cxx
 
-Rust bindings for [RDKit](https://github.com/rdkit/rdkit)'s C++ API. The API
-mirrors RDKit's nanobind Python wrappers in Rust spelling, so Python code ports
-line by line:
+Rust bindings for [RDKit](https://github.com/rdkit/rdkit)'s C++ API, and Rust
+ports of RDKit's pure-Python modules, which together cover RDKit's Python
+interface. The API mirrors both, RDKit's nanobind wrappers and its Python
+modules, in Rust spelling, so Python code ports line by line:
 
 ```rust,no_run
 use rdkit_cxx::chem::{mol_from_smarts, mol_from_smiles, mol_to_smiles};
@@ -13,11 +14,13 @@ println!("{} {:?}", mol_to_smiles(&mol)?, mol.get_substruct_matches(&hydroxyl)?)
 # Ok::<(), rdkit_cxx::Error>(())
 ```
 
-The crate binds RDKit; it reimplements nothing in C++. It compiles a C++
+The crate binds RDKit's C++ and reimplements none of it. It compiles a C++
 wrapper layer (with [cxx](https://cxx.rs) and CMake) against RDKit from
-conda-forge and links RDKit's shared libraries. RDKit's pure-Python modules
-are ported to Rust on top of the bindings: `rdkit.Chem.RegistrationHash` is
-`rdkit_cxx::chem::registration_hash`.
+conda-forge and links RDKit's shared libraries. What RDKit implements in
+Python (descriptors such as QED, BRICS and Recap, pharmacophore fingerprints,
+`Draw`, Butina clustering, and the rest) is ported to Rust on top of those
+bindings, and computes what Python computes: `rdkit.Chem.QED` is
+`rdkit_cxx::chem::qed`.
 
 Coverage: every name RDKit 2026.09's Python interface offers, in its
 nanobind modules and its pure-Python modules, has a Rust counterpart or a
