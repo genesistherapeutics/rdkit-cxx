@@ -163,7 +163,7 @@ fn features_of_a_molecule() {
     ));
     assert!(matches!(
         factory.get_mol_feature(&mol, -1),
-        Err(Error::Index { .. })
+        Err(Error::Index { index: -1, len: 4 })
     ));
 }
 
