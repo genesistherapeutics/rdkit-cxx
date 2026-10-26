@@ -18,7 +18,7 @@ pub mod lipinski;
 pub mod maccs_keys;
 pub mod mol_standardize;
 pub mod pharm_2d;
-mod py_math;
+pub(crate) mod py_math;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;

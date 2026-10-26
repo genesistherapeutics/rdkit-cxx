@@ -5,6 +5,9 @@
 
 //! Mirrors `rdkit.ML.InfoTheory`, which re-exports `rdInfoTheory`.
 
+pub mod bit_clusterer;
+pub mod bit_rank;
+pub mod entropy;
 pub mod rd_info_theory;
 
 pub use rd_info_theory::*;

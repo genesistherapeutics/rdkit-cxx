@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs", "rdkit.DataStructs.BitEnsemble", "rdkit.DataStructs.BitUtils", "rdkit.DataStructs.LazySignature", "rdkit.DataStructs.TopNContainer", "rdkit.DataStructs.VectCollection", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Butina", "rdkit.ML.Cluster.ClusterUtils", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Cluster.Clusters", "rdkit.ML.Cluster.Murtagh", "rdkit.ML.Cluster.Resemblance", "rdkit.ML.Cluster.Standardize", "rdkit.ML.Data.DataUtils", "rdkit.ML.Data.MLData", "rdkit.ML.Data.Quantize", "rdkit.ML.Data.SplitData", "rdkit.ML.Data.Stats", "rdkit.ML.Data.Transforms", "rdkit.ML.InfoTheory.BitClusterer", "rdkit.ML.InfoTheory.BitRank", "rdkit.ML.InfoTheory.entropy", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.ML.SLT.Risk", "rdkit.ML.Scoring.Scoring", "rdkit.ML.files", "rdkit.Numerics.rdAlignment", "rdkit.RDLogger", "rdkit.RDPaths", "rdkit.RDRandom", "rdkit.SimDivFilters.SimilarityPickers", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase", "rdkit.utils.chemutils", "rdkit.utils.fileutils", "rdkit.utils.listutils"]
 
 [modules.reasons]
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
@@ -28,12 +28,15 @@ complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.C
 "rdkit.DataStructs.HierarchyVis" = "draws on sping canvases, and does not import (it imports sping as a top-level package)"
 "rdkit.Dbase" = "database helpers over Python's DB-API connections; Rust programs use their own database crates"
 "rdkit.ML.Cluster.ClusterVis" = "draws cluster trees on sping canvases"
+"rdkit.ML.Data.FindQuantBounds" = "a command-line script that finds quantization bounds for the columns of a database table through rdkit.Dbase; rdkit_cxx::ml::data::quantize does the work"
 "rdkit.ML.MLUtils.VoteImg" = "draws vote images with PIL"
+"rdkit.RDConfig" = "Python configuration: database defaults, the Python executable and test command, a molecule viewer, and exception classes for obsolete code; RDKit's data directories are in rdkit_cxx::rd_paths"
 "rdkit.VLib" = "a framework for pipelines of Python supplier, filter, and output nodes; Rust iterators fill that role"
 "rdkit.sping" = "a legacy drawing library (PDF, PostScript, SVG, PIL, Tk, Qt, and wx canvases) that predates rdMolDraw2D; Rust draws with rdMolDraw2D, which is bound"
 "rdkit.utils.cactvs" = "runs the CACTVS toolkit's command-line program to draw images"
 "rdkit.utils.chemdraw" = "drives ChemDraw through Windows COM"
 "rdkit.utils.chemdraw_qax" = "drives ChemDraw through a Qt ActiveX control"
+"rdkit.utils.spiral" = "draws spirals on sping canvases"
 
 [[entry]]
 python = "rdkit.Avalon.pyAvalonTools.CheckMolecule"
@@ -15708,6 +15711,176 @@ rust = ["rdkit_cxx::data_manip::metric::rd_metric_matrix_calc::get_tanimoto_sim_
 overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
 
 [[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble"]
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.AddBit"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::add_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.GetBits"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::get_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.GetNumBits"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.ScoreWithIndex"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::score_with_index"]
+rust_generics = "<rdkit_cxx::data_structs::ExplicitBitVect>"
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.ScoreWithOnBits"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::score_with_on_bits"]
+rust_generics = "<rdkit_cxx::data_structs::ExplicitBitVect>"
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.SetBits"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::set_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.BitEnsemble.BitEnsemble.__init__"
+rust = ["rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::default", "rdkit_cxx::data_structs::bit_ensemble::BitEnsemble::new_with_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.BitUtils.ConstructEnsembleBV"
+rust = ["rdkit_cxx::data_structs::bit_utils::construct_ensemble_bv"]
+
+[[entry]]
+python = "rdkit.DataStructs.FingerprintSimilarity"
+rust = ["rdkit_cxx::data_structs::fingerprint_similarity", "rdkit_cxx::data_structs::fingerprint_similarity_with_metric"]
+
+[[entry]]
+python = "rdkit.DataStructs.FoldToTargetDensity"
+rust = ["rdkit_cxx::data_structs::fold_to_target_density", "rdkit_cxx::data_structs::fold_to_target_density_with_params"]
+
+[[entry]]
+python = "rdkit.DataStructs.LazySignature.LazySig"
+rust = ["rdkit_cxx::data_structs::lazy_signature::LazySig"]
+
+[[entry]]
+python = "rdkit.DataStructs.LazySignature.LazySig.__getitem__"
+rust = ["rdkit_cxx::data_structs::lazy_signature::LazySig::get"]
+
+[[entry]]
+python = "rdkit.DataStructs.LazySignature.LazySig.__init__"
+rust = ["rdkit_cxx::data_structs::lazy_signature::LazySig::new"]
+
+[[entry]]
+python = "rdkit.DataStructs.LazySignature.LazySig.__len__"
+rust = ["rdkit_cxx::data_structs::lazy_signature::LazySig::len"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.GetExtras"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::get_extras"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.GetPts"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::get_pts"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.Insert"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::insert", "rdkit_cxx::data_structs::top_n_container::TopNContainer::insert_with_extra"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.__getitem__"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::get"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.__init__"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::new", "rdkit_cxx::data_structs::top_n_container::TopNContainer::new_with_most_neg"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.__len__"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::len"]
+
+[[entry]]
+python = "rdkit.DataStructs.TopNContainer.TopNContainer.reverse"
+rust = ["rdkit_cxx::data_structs::top_n_container::TopNContainer::reverse"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.AddVect"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::add_vect"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.DetachVectsMatchingBit"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::detach_vects_matching_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.DetachVectsNotMatchingBit"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::detach_vects_not_matching_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.GetBit"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.GetChildren"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_children"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.GetNumBits"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.GetOnBits"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_on_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.GetOrVect"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_or_vect"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.NumChildren"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::num_children"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.Reset"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::reset"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.Uniquify"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::uniquify"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.__getitem__"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_bit"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.__getstate__"
+reason = "a pickling hook; Clone copies a collection"
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.__init__"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::default"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.__len__"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::get_num_bits"]
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.__setstate__"
+reason = "a pickling hook; Clone copies a collection"
+
+[[entry]]
+python = "rdkit.DataStructs.VectCollection.VectCollection.orVect"
+rust = ["rdkit_cxx::data_structs::vect_collection::VectCollection::or_vect"]
+
+[[entry]]
+python = "rdkit.DataStructs.bvtotext"
+rust = ["rdkit_cxx::data_structs::bvtotext"]
+
+[[entry]]
 python = "rdkit.DataStructs.cDataStructs.AllBitSimilarity"
 rust = ["rdkit_cxx::data_structs::c_data_structs::all_bit_similarity"]
 overloads_note = "generic over ExplicitBitVect and SparseBitVect (A5)"
@@ -16871,6 +17044,18 @@ python = "rdkit.DataStructs.cDataStructs.ULongSparseIntVect.__sub__"
 reason = "Python's operator protocol: `&a - &b` (Sub)"
 
 [[entry]]
+python = "rdkit.DataStructs.getElementFromFlatMatrix"
+rust = ["rdkit_cxx::data_structs::get_element_from_flat_matrix"]
+
+[[entry]]
+python = "rdkit.DataStructs.getNForFlatMatrix"
+rust = ["rdkit_cxx::data_structs::get_n_for_flat_matrix"]
+
+[[entry]]
+python = "rdkit.DataStructs.similarityFunctions"
+rust = ["rdkit_cxx::data_structs::similarity_functions"]
+
+[[entry]]
 python = "rdkit.DistanceGeometry.DistGeom.DoTriangleSmoothing"
 rust = ["rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing", "rdkit_cxx::distance_geometry::dist_geom::do_triangle_smoothing_with_tol"]
 
@@ -17655,12 +17840,500 @@ python = "rdkit.Geometry.rdGeometry.WriteGridToFile"
 rust = ["rdkit_cxx::geometry::rd_geometry::write_grid_to_file"]
 
 [[entry]]
+python = "rdkit.ML.Cluster.Butina.ClusterData"
+rust = ["rdkit_cxx::ml::cluster::butina::cluster_data", "rdkit_cxx::ml::cluster::butina::cluster_data_with_params", "rdkit_cxx::ml::cluster::butina::cluster_data_flat", "rdkit_cxx::ml::cluster::butina::cluster_data_flat_with_reordering", "rdkit_cxx::ml::cluster::butina::cluster_data_with_dist_func"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Butina.EuclideanDist"
+rust = ["rdkit_cxx::ml::cluster::butina::euclidean_dist"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Butina.compute_distance_matrix"
+rust = ["rdkit_cxx::ml::cluster::butina::compute_distance_matrix"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.ClusterUtils.FindClusterCentroidFromDists"
+rust = ["rdkit_cxx::ml::cluster::cluster_utils::find_cluster_centroid_from_dists"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.ClusterUtils.GetNodeList"
+rust = ["rdkit_cxx::ml::cluster::cluster_utils::get_node_list"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.ClusterUtils.GetNodesDownToCentroids"
+rust = ["rdkit_cxx::ml::cluster::cluster_utils::get_nodes_down_to_centroids"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.ClusterUtils.SplitIntoNClusters"
+rust = ["rdkit_cxx::ml::cluster::cluster_utils::split_into_n_clusters", "rdkit_cxx::ml::cluster::cluster_utils::split_into_n_clusters_with_breadth_first"]
+
+[[entry]]
 python = "rdkit.ML.Cluster.Clustering.MurtaghCluster"
 rust = ["rdkit_cxx::ml::cluster::clustering::murtagh_cluster"]
 
 [[entry]]
 python = "rdkit.ML.Cluster.Clustering.MurtaghDistCluster"
 rust = ["rdkit_cxx::ml::cluster::clustering::murtagh_dist_cluster"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.CMPTOL"
+rust = ["rdkit_cxx::ml::cluster::clusters::cmptol"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.AddChild"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::add_child"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.AddChildren"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::add_children"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.Compare"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::compare", "rdkit_cxx::ml::cluster::clusters::Cluster::compare_with_ignore_extras"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.FindSubtree"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::find_subtree"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetChildren"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_children"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetData"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_data"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetIndex"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_index"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetMetric"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_metric"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetName"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_name"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetPoints"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_points"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetPointsPositions"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_points_positions"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.GetPosition"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::get_position"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.IsTerminal"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::is_terminal"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.Print"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::print", "rdkit_cxx::ml::cluster::clusters::Cluster::print_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.RemoveChild"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::remove_child"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.SetData"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::set_data"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.SetIndex"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::set_index"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.SetMetric"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::set_metric"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.SetName"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::set_name"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.SetPosition"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::set_position"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.__cmp__"
+reason = "a Python 2 comparison hook, which Python 3 never calls; Cluster::compare compares trees"
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.__init__"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::default", "rdkit_cxx::ml::cluster::clusters::Cluster::new_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.Cluster.__len__"
+rust = ["rdkit_cxx::ml::cluster::clusters::Cluster::len"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Clusters.cmp"
+rust = ["rdkit_cxx::ml::cluster::clusters::cmp"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.CENTROID"
+rust = ["rdkit_cxx::ml::cluster::murtagh::centroid"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.CLINK"
+rust = ["rdkit_cxx::ml::cluster::murtagh::clink"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.ClusterData"
+rust = ["rdkit_cxx::ml::cluster::murtagh::cluster_data", "rdkit_cxx::ml::cluster::murtagh::cluster_data_dists"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.GOWER"
+rust = ["rdkit_cxx::ml::cluster::murtagh::gower"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.MCQUITTY"
+rust = ["rdkit_cxx::ml::cluster::murtagh::mcquitty"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.SLINK"
+rust = ["rdkit_cxx::ml::cluster::murtagh::slink"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.UPGMA"
+rust = ["rdkit_cxx::ml::cluster::murtagh::upgma"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.WARDS"
+rust = ["rdkit_cxx::ml::cluster::murtagh::wards"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Murtagh.methods"
+rust = ["rdkit_cxx::ml::cluster::murtagh::methods"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Resemblance.CalcMetricMatrix"
+rust = ["rdkit_cxx::ml::cluster::resemblance::calc_metric_matrix"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Resemblance.EuclideanDistance"
+rust = ["rdkit_cxx::ml::cluster::resemblance::euclidean_distance"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Resemblance.FindMinValInList"
+rust = ["rdkit_cxx::ml::cluster::resemblance::find_min_val_in_list", "rdkit_cxx::ml::cluster::resemblance::find_min_val_in_list_with_min_idx"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Resemblance.ShowMetricMat"
+rust = ["rdkit_cxx::ml::cluster::resemblance::show_metric_mat"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Resemblance.methods"
+rust = ["rdkit_cxx::ml::cluster::resemblance::methods"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Standardize.StdDev"
+rust = ["rdkit_cxx::ml::cluster::standardize::std_dev"]
+
+[[entry]]
+python = "rdkit.ML.Cluster.Standardize.methods"
+rust = ["rdkit_cxx::ml::cluster::standardize::methods"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.BuildDataSet"
+rust = ["rdkit_cxx::ml::data::data_utils::build_data_set"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.BuildQuantDataSet"
+rust = ["rdkit_cxx::ml::data::data_utils::build_quant_data_set"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.CalcNPossibleUsingMap"
+rust = ["rdkit_cxx::ml::data::data_utils::calc_n_possible_using_map", "rdkit_cxx::ml::data::data_utils::calc_n_possible_using_map_with_n_q_bounds"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.CountResults"
+rust = ["rdkit_cxx::ml::data::data_utils::count_results", "rdkit_cxx::ml::data::data_utils::count_results_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.DBToData"
+reason = "reads a data set from a database through rdkit.Dbase, which has no Rust counterpart"
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.FilterData"
+rust = ["rdkit_cxx::ml::data::data_utils::filter_data", "rdkit_cxx::ml::data::data_utils::filter_data_with_params", "rdkit_cxx::ml::data::data_utils::filter_data_indices_only", "rdkit_cxx::ml::data::data_utils::filter_data_indices_only_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.InitRandomNumbers"
+rust = ["rdkit_cxx::ml::data::data_utils::init_random_numbers"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.RandomizeActivities"
+rust = ["rdkit_cxx::ml::data::data_utils::randomize_activities", "rdkit_cxx::ml::data::data_utils::randomize_activities_with_shuffle"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.ReadGeneralExamples"
+rust = ["rdkit_cxx::ml::data::data_utils::read_general_examples"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.ReadQuantExamples"
+rust = ["rdkit_cxx::ml::data::data_utils::read_quant_examples"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.ReadVars"
+rust = ["rdkit_cxx::ml::data::data_utils::read_vars"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.TakeEnsemble"
+rust = ["rdkit_cxx::ml::data::data_utils::take_ensemble", "rdkit_cxx::ml::data::data_utils::take_ensemble_with_is_data_vect"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.TextFileToData"
+rust = ["rdkit_cxx::ml::data::data_utils::text_file_to_data", "rdkit_cxx::ml::data::data_utils::text_file_to_data_with_only_cols"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.TextToData"
+rust = ["rdkit_cxx::ml::data::data_utils::text_to_data", "rdkit_cxx::ml::data::data_utils::text_to_data_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.WriteData"
+rust = ["rdkit_cxx::ml::data::data_utils::write_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.WritePickledData"
+reason = "writes a data set as Python pickles, which only Python reads"
+
+[[entry]]
+python = "rdkit.ML.Data.DataUtils.permutation"
+rust = ["rdkit_cxx::ml::data::data_utils::permutation"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.AddPoint"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::add_point"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.AddPoints"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::add_points"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetAllData"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_all_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetInputData"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_input_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetNPossibleVals"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_n_possible_vals"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetNPts"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_n_pts"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetNResults"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_n_results"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetNVars"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_n_vars"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetNamedData"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_named_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetPtNames"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_pt_names"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetQuantBounds"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_quant_bounds"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetResults"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_results"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.GetVarNames"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get_var_names"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.__getitem__"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::get"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.__init__"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::new", "rdkit_cxx::ml::data::ml_data::MLDataSet::new_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLDataSet.__setitem__"
+rust = ["rdkit_cxx::ml::data::ml_data::MLDataSet::set"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLQuantDataSet"
+rust = ["rdkit_cxx::ml::data::ml_data::MLQuantDataSet"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLQuantDataSet.GetAllData"
+rust = ["rdkit_cxx::ml::data::ml_data::MLQuantDataSet::get_all_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLQuantDataSet.GetInputData"
+rust = ["rdkit_cxx::ml::data::ml_data::MLQuantDataSet::get_input_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLQuantDataSet.GetNamedData"
+rust = ["rdkit_cxx::ml::data::ml_data::MLQuantDataSet::get_named_data"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLQuantDataSet.GetResults"
+rust = ["rdkit_cxx::ml::data::ml_data::MLQuantDataSet::get_results"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.MLQuantDataSet.__init__"
+rust = ["rdkit_cxx::ml::data::ml_data::MLQuantDataSet::new", "rdkit_cxx::ml::data::ml_data::MLQuantDataSet::new_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Data.MLData.numericTypes"
+reason = "the tuple of Python types the data sets count as numbers; Rust's Value enum names its kinds"
+
+[[entry]]
+python = "rdkit.ML.Data.Quantize.FindVarMultQuantBounds"
+rust = ["rdkit_cxx::ml::data::quantize::find_var_mult_quant_bounds"]
+
+[[entry]]
+python = "rdkit.ML.Data.Quantize.FindVarQuantBound"
+rust = ["rdkit_cxx::ml::data::quantize::find_var_quant_bound"]
+
+[[entry]]
+python = "rdkit.ML.Data.Quantize.feq"
+rust = ["rdkit_cxx::ml::data::quantize::feq", "rdkit_cxx::ml::data::quantize::feq_with_tol"]
+
+[[entry]]
+python = "rdkit.ML.Data.SplitData.SeqTypes"
+reason = "the tuple of Python sequence types SplitDbData accepts as fractions"
+
+[[entry]]
+python = "rdkit.ML.Data.SplitData.SplitDataSet"
+rust = ["rdkit_cxx::ml::data::split_data::split_data_set"]
+
+[[entry]]
+python = "rdkit.ML.Data.SplitData.SplitDbData"
+reason = "splits a table held in a database through rdkit.Dbase, which has no Rust counterpart"
+
+[[entry]]
+python = "rdkit.ML.Data.SplitData.SplitIndices"
+rust = ["rdkit_cxx::ml::data::split_data::split_indices", "rdkit_cxx::ml::data::split_data::split_indices_with_params"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.FormCorrelationMatrix"
+rust = ["rdkit_cxx::ml::data::stats::form_correlation_matrix"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.FormCovarianceMatrix"
+rust = ["rdkit_cxx::ml::data::stats::form_covariance_matrix"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.GetConfidenceInterval"
+rust = ["rdkit_cxx::ml::data::stats::get_confidence_interval", "rdkit_cxx::ml::data::stats::get_confidence_interval_with_level"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.MeanAndDev"
+rust = ["rdkit_cxx::ml::data::stats::mean_and_dev", "rdkit_cxx::ml::data::stats::mean_and_dev_with_sample_sd"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.PrincipalComponents"
+rust = ["rdkit_cxx::ml::data::stats::principal_components", "rdkit_cxx::ml::data::stats::principal_components_with_reverse_order"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.R2"
+rust = ["rdkit_cxx::ml::data::stats::r2"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.StandardizeMatrix"
+rust = ["rdkit_cxx::ml::data::stats::standardize_matrix"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.TransformPoints"
+rust = ["rdkit_cxx::ml::data::stats::transform_points"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.tConfs"
+rust = ["rdkit_cxx::ml::data::stats::t_confs"]
+
+[[entry]]
+python = "rdkit.ML.Data.Stats.tTable"
+rust = ["rdkit_cxx::ml::data::stats::t_table"]
+
+[[entry]]
+python = "rdkit.ML.Data.Transforms.GetAvailTransforms"
+rust = ["rdkit_cxx::ml::data::transforms::get_avail_transforms"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.ClusterBits"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::cluster_bits"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.GetClusters"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::get_clusters"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.MapToClusterFP"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::map_to_cluster_fp"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.MapToClusterScores"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::map_to_cluster_scores"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.SetClusters"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::set_clusters"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer.__init__"
+rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::new", "rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer::new_with_type_"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitRank.AnalyzeSparseVects"
+rust = ["rdkit_cxx::ml::info_theory::bit_rank::analyze_sparse_vects"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitRank.CalcInfoGains"
+rust = ["rdkit_cxx::ml::info_theory::bit_rank::calc_info_gains", "rdkit_cxx::ml::info_theory::bit_rank::calc_info_gains_with_n_possible_bit_vals"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitRank.FormCounts"
+rust = ["rdkit_cxx::ml::info_theory::bit_rank::form_counts", "rdkit_cxx::ml::info_theory::bit_rank::form_counts_with_n_possible_bit_vals"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitRank.RankBits"
+rust = ["rdkit_cxx::ml::info_theory::bit_rank::rank_bits", "rdkit_cxx::ml::info_theory::bit_rank::rank_bits_with_params"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.BitRank.SparseRankBits"
+rust = ["rdkit_cxx::ml::info_theory::bit_rank::sparse_rank_bits", "rdkit_cxx::ml::info_theory::bit_rank::sparse_rank_bits_with_metric_func"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.entropy.PyInfoEntropy"
+rust = ["rdkit_cxx::ml::info_theory::entropy::py_info_entropy"]
+
+[[entry]]
+python = "rdkit.ML.InfoTheory.entropy.PyInfoGain"
+rust = ["rdkit_cxx::ml::info_theory::entropy::py_info_gain"]
 
 [[entry]]
 python = "rdkit.ML.InfoTheory.rdInfoTheory.BIASCHISQUARE"
@@ -17772,8 +18445,188 @@ python = "rdkit.ML.InfoTheory.rdInfoTheory.InfoType.ENTROPY"
 rust = ["rdkit_cxx::ml::info_theory::rd_info_theory::InfoType::Entropy"]
 
 [[entry]]
+python = "rdkit.ML.SLT.Risk.BurgesRiskBound"
+rust = ["rdkit_cxx::ml::slt::risk::burges_risk_bound"]
+
+[[entry]]
+python = "rdkit.ML.SLT.Risk.CherkasskyRiskBound"
+rust = ["rdkit_cxx::ml::slt::risk::cherkassky_risk_bound", "rdkit_cxx::ml::slt::risk::cherkassky_risk_bound_with_params"]
+
+[[entry]]
+python = "rdkit.ML.SLT.Risk.CristianiRiskBound"
+rust = ["rdkit_cxx::ml::slt::risk::cristiani_risk_bound"]
+
+[[entry]]
+python = "rdkit.ML.SLT.Risk.log2"
+rust = ["rdkit_cxx::ml::slt::risk::log2"]
+
+[[entry]]
+python = "rdkit.ML.Scoring.Scoring.CalcAUC"
+rust = ["rdkit_cxx::ml::scoring::scoring::calc_auc"]
+
+[[entry]]
+python = "rdkit.ML.Scoring.Scoring.CalcBEDROC"
+rust = ["rdkit_cxx::ml::scoring::scoring::calc_bedroc"]
+
+[[entry]]
+python = "rdkit.ML.Scoring.Scoring.CalcEnrichment"
+rust = ["rdkit_cxx::ml::scoring::scoring::calc_enrichment"]
+
+[[entry]]
+python = "rdkit.ML.Scoring.Scoring.CalcRIE"
+rust = ["rdkit_cxx::ml::scoring::scoring::calc_rie"]
+
+[[entry]]
+python = "rdkit.ML.Scoring.Scoring.CalcROC"
+rust = ["rdkit_cxx::ml::scoring::scoring::calc_roc"]
+
+[[entry]]
+python = "rdkit.ML.files.ReFile"
+rust = ["rdkit_cxx::ml::files::ReFile"]
+
+[[entry]]
+python = "rdkit.ML.files.ReFile.__init__"
+rust = ["rdkit_cxx::ml::files::ReFile::new", "rdkit_cxx::ml::files::ReFile::new_with_params"]
+rust_generics = "<&str>"
+
+[[entry]]
+python = "rdkit.ML.files.ReFile.readline"
+rust = ["rdkit_cxx::ml::files::ReFile::readline"]
+
+[[entry]]
+python = "rdkit.ML.files.ReFile.readlines"
+rust = ["rdkit_cxx::ml::files::ReFile::readlines"]
+
+[[entry]]
+python = "rdkit.ML.files.ReFile.rewind"
+rust = ["rdkit_cxx::ml::files::ReFile::rewind"]
+
+[[entry]]
+python = "rdkit.ML.files.ReadDataFile"
+rust = ["rdkit_cxx::ml::files::read_data_file", "rdkit_cxx::ml::files::read_data_file_with_params"]
+
+[[entry]]
 python = "rdkit.Numerics.rdAlignment.GetAlignmentTransform"
 rust = ["rdkit_cxx::numerics::rd_alignment::get_alignment_transform", "rdkit_cxx::numerics::rd_alignment::get_alignment_transform_with_params"]
+
+[[entry]]
+python = "rdkit.RDLogger.CRITICAL"
+rust = ["rdkit_cxx::rd_logger::critical"]
+
+[[entry]]
+python = "rdkit.RDLogger.DEBUG"
+rust = ["rdkit_cxx::rd_logger::debug"]
+
+[[entry]]
+python = "rdkit.RDLogger.ERROR"
+rust = ["rdkit_cxx::rd_logger::error"]
+
+[[entry]]
+python = "rdkit.RDLogger.INFO"
+rust = ["rdkit_cxx::rd_logger::info"]
+
+[[entry]]
+python = "rdkit.RDLogger.WARNING"
+rust = ["rdkit_cxx::rd_logger::warning"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger"
+rust = ["rdkit_cxx::rd_logger::Logger"]
+name_exception = "a Rust type is UpperCamelCase"
+
+[[entry]]
+python = "rdkit.RDLogger.logger.critical"
+rust = ["rdkit_cxx::rd_logger::Logger::critical"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger.debug"
+rust = ["rdkit_cxx::rd_logger::Logger::debug"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger.error"
+rust = ["rdkit_cxx::rd_logger::Logger::error"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger.info"
+rust = ["rdkit_cxx::rd_logger::Logger::info"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger.logIt"
+rust = ["rdkit_cxx::rd_logger::Logger::log_it"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger.setLevel"
+rust = ["rdkit_cxx::rd_logger::Logger::set_level"]
+
+[[entry]]
+python = "rdkit.RDLogger.logger.warning"
+rust = ["rdkit_cxx::rd_logger::Logger::warning"]
+
+[[entry]]
+python = "rdkit.RDPaths.RDCodeDir"
+reason = "the directory of RDKit's Python package, which Rust programs do not use"
+
+[[entry]]
+python = "rdkit.RDPaths.RDContribDir"
+rust = ["rdkit_cxx::rd_paths::rd_contrib_dir"]
+
+[[entry]]
+python = "rdkit.RDPaths.RDDataDir"
+rust = ["rdkit_cxx::rd_paths::rd_data_dir"]
+
+[[entry]]
+python = "rdkit.RDPaths.RDDocsDir"
+rust = ["rdkit_cxx::rd_paths::rd_docs_dir"]
+
+[[entry]]
+python = "rdkit.RDPaths.RDProjDir"
+rust = ["rdkit_cxx::rd_paths::rd_proj_dir"]
+
+[[entry]]
+python = "rdkit.RDRandom.shuffle"
+rust = ["rdkit_cxx::rd_random::shuffle", "rdkit_cxx::rd_random::shuffle_with_random"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.GenericPicker"
+reason = "an abstract base class whose MakePicks only raises; each picker has its own methods"
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.GenericPicker.MakePicks"
+reason = "the abstract base class's MakePicks, which only raises NotImplementedError"
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.GenericPicker.__getitem__"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::TopNOverallPicker::get", "rdkit_cxx::sim_div_filters::similarity_pickers::SpreadPicker::get"]
+overloads_note = "the base class's indexing, on each picker"
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.GenericPicker.__len__"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::TopNOverallPicker::len", "rdkit_cxx::sim_div_filters::similarity_pickers::SpreadPicker::len"]
+overloads_note = "the base class's length, on each picker"
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.SpreadPicker"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::SpreadPicker"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.SpreadPicker.MakePicks"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::SpreadPicker::make_picks", "rdkit_cxx::sim_div_filters::similarity_pickers::SpreadPicker::make_picks_with_force"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.SpreadPicker.__init__"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::SpreadPicker::new_with_params"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.TopNOverallPicker"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::TopNOverallPicker"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.TopNOverallPicker.MakePicks"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::TopNOverallPicker::make_picks", "rdkit_cxx::sim_div_filters::similarity_pickers::TopNOverallPicker::make_picks_with_force"]
+
+[[entry]]
+python = "rdkit.SimDivFilters.SimilarityPickers.TopNOverallPicker.__init__"
+rust = ["rdkit_cxx::sim_div_filters::similarity_pickers::TopNOverallPicker::new_with_params"]
 
 [[entry]]
 python = "rdkit.SimDivFilters.rdSimDivPickers.CENTROID"
@@ -18025,3 +18878,27 @@ rust = ["rdkit_cxx::rd_base::rdkit_build"]
 [[entry]]
 python = "rdkit.rdBase.rdkitVersion"
 rust = ["rdkit_cxx::rd_base::rdkit_version"]
+
+[[entry]]
+python = "rdkit.utils.chemutils.ConfigToNumElectrons"
+rust = ["rdkit_cxx::utils::chemutils::config_to_num_electrons", "rdkit_cxx::utils::chemutils::config_to_num_electrons_with_params"]
+
+[[entry]]
+python = "rdkit.utils.chemutils.GetAtomicData"
+reason = "reads atomic data from RDKit's atomdb database through rdkit.Dbase, which has no Rust counterpart"
+
+[[entry]]
+python = "rdkit.utils.chemutils.SplitComposition"
+rust = ["rdkit_cxx::utils::chemutils::split_composition"]
+
+[[entry]]
+python = "rdkit.utils.fileutils.MoveToMatchingLine"
+rust = ["rdkit_cxx::utils::fileutils::move_to_matching_line", "rdkit_cxx::utils::fileutils::move_to_matching_line_with_full_match"]
+
+[[entry]]
+python = "rdkit.utils.fileutils.NoMatchFoundError"
+reason = "an exception class; move_to_matching_line returns Error::Runtime instead"
+
+[[entry]]
+python = "rdkit.utils.listutils.CompactListRepr"
+rust = ["rdkit_cxx::utils::listutils::compact_list_repr"]
