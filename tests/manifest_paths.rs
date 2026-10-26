@@ -33,6 +33,8 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::avalon::py_avalon_tools::StruChkResult::transformed_set;
     use rdkit_cxx::avalon::py_avalon_tools::avalon_sss_bits as _;
     use rdkit_cxx::avalon::py_avalon_tools::avalon_similarity_bits as _;
+    use rdkit_cxx::chem::canon_smiles as _;
+    use rdkit_cxx::chem::canon_smiles_with_use_chiral as _;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement::ALL;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement::ANNOTATIONS;
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement::ATOMLABELS;
@@ -277,6 +279,8 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::draw::rd_mol_draw_2d::LegendPosition::Top;
     use rdkit_cxx::chem::draw::rd_mol_draw_2d::update_drawer_params_from_json as _;
     use rdkit_cxx::chem::draw::rd_mol_draw_2d::update_mol_draw_options_from_json as _;
+    use rdkit_cxx::chem::find_mol_chiral_centers as _;
+    use rdkit_cxx::chem::find_mol_chiral_centers_with_params as _;
     use rdkit_cxx::chem::lipinski::fraction_csp3 as _;
     use rdkit_cxx::chem::lipinski::h_acceptor_smarts as _;
     use rdkit_cxx::chem::lipinski::h_donor_smarts as _;
@@ -648,6 +652,10 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::Layout2DValidation::validate_with_report_all_failures;
     let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate;
     let _ = rdkit_cxx::chem::mol_standardize::rd_mol_standardize::StereoValidation::validate_with_report_all_failures;
+    use rdkit_cxx::chem::multi_conf_mol_from_sdf as _;
+    use rdkit_cxx::chem::multi_conf_mol_from_sdf_with_params as _;
+    use rdkit_cxx::chem::quick_smarts_match as _;
+    use rdkit_cxx::chem::quick_smarts_match_with_unique as _;
     use rdkit_cxx::chem::registration_hash::atom_prop_map_number as _;
     use rdkit_cxx::chem::registration_hash::default_cxflag as _;
     use rdkit_cxx::chem::registration_hash::empty_mol_tautomer_hash as _;
@@ -676,6 +684,18 @@ fn manifest_paths_exist() {
     let _ = rdkit_cxx::chem::registration_hash::HashScheme::AllLayers;
     let _ = rdkit_cxx::chem::registration_hash::HashScheme::StereoInsensitiveLayers;
     let _ = rdkit_cxx::chem::registration_hash::HashScheme::TautomerInsensitiveLayers;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::get_scaffold_for_mol as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::make_scaffold_generic as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_with_include_chirality as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_mol as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_mol_with_include_chirality as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_from_smiles as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_from_smiles_with_include_chirality as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::aromatic_n_transform as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_patts as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_q as _;
+    use rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_transforms as _;
     use rdkit_cxx::chem::scaffolds::rd_scaffold_network::brics_scaffold_params as _;
     use rdkit_cxx::chem::scaffolds::rd_scaffold_network::create_scaffold_network as _;
     let _: Option<rdkit_cxx::chem::scaffolds::rd_scaffold_network::EdgeType> = None;
@@ -711,6 +731,8 @@ fn manifest_paths_exist() {
     let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.keep_only_first_fragment; };
     let _ = |value: &rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams| { let _ = &value.prune_before_fragmenting; };
     use rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_network as _;
+    use rdkit_cxx::chem::supplier_from_filename as _;
+    use rdkit_cxx::chem::supplier_from_filename_with_params as _;
     let _: Option<rdkit_cxx::chem::rd_abbreviations::AbbreviationDefinition> = None;
     let _ = rdkit_cxx::chem::rd_abbreviations::AbbreviationDefinition::default;
     let _ = |value: &rdkit_cxx::chem::rd_abbreviations::AbbreviationDefinition| { let _ = &value.display_label; };

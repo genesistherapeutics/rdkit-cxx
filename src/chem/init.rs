@@ -5,13 +5,196 @@
 
 //! Ports the Python code in `rdkit/Chem/__init__.py`, re-exported from
 //! `rdkit_cxx::chem` as Python's is from `rdkit.Chem`.
+//!
+//! Python's package also patches faster iterators onto Boost.Python's
+//! molecules; Rust's `get_atoms` and `get_bonds` are iterators already.
+
+use std::path::Path;
 
 use crate::chem::{
-    AssignCIPLabelsParams, AssignStereochemistryParams, Mol, StereoDescriptor, StereoSpecified,
-    StereoType, assign_cip_labels_with_params, assign_stereochemistry_with_params,
-    find_potential_stereo, get_use_legacy_stereo_perception,
+    AssignCIPLabelsParams, AssignStereochemistryParams, Conformer, Mol, SDMolSupplier,
+    SDMolSupplierParams, SmilesMolSupplier, SmilesMolSupplierParams, SmilesWriteParams,
+    StereoDescriptor, StereoSpecified, StereoType, SubstructMatchParameters, TDTMolSupplier,
+    TDTMolSupplierParams, assign_cip_labels_with_params, assign_stereochemistry_with_params,
+    find_potential_stereo, get_use_legacy_stereo_perception, mol_from_smarts, mol_from_smiles,
+    mol_to_smiles_with_params,
 };
 use crate::{Error, Result};
+
+/// The matches of a SMARTS pattern in a molecule given as SMILES, as atom
+/// indices, each match once. `Error::Parse` for SMILES or SMARTS RDKit
+/// cannot parse, where Python fails on `None`. Mirrors
+/// `Chem.QuickSmartsMatch(smi, sma)`.
+pub fn quick_smarts_match(smi: &str, sma: &str) -> Result<Vec<Vec<u32>>> {
+    quick_smarts_match_with_unique(smi, sma, true)
+}
+
+/// As [`quick_smarts_match`]; `unique` false returns every match, in each
+/// atom order. Python's `display` argument does nothing and is not ported.
+/// Mirrors `Chem.QuickSmartsMatch(smi, sma, unique)`.
+pub fn quick_smarts_match_with_unique(smi: &str, sma: &str, unique: bool) -> Result<Vec<Vec<u32>>> {
+    let m = mol_from_smiles(smi)?;
+    let p = mol_from_smarts(sma)?;
+    m.get_substruct_matches_with_params(
+        &p,
+        &SubstructMatchParameters {
+            uniquify: unique,
+            ..Default::default()
+        },
+    )
+}
+
+/// The canonical SMILES for a SMILES, with stereochemistry. `Error::Parse`
+/// for SMILES RDKit cannot parse. Mirrors `Chem.CanonSmiles(smi)`.
+pub fn canon_smiles(smi: &str) -> Result<String> {
+    canon_smiles_with_use_chiral(smi, true)
+}
+
+/// As [`canon_smiles`]; `use_chiral` false leaves out stereochemistry and
+/// isotopes. Mirrors `Chem.CanonSmiles(smi, useChiral)`.
+pub fn canon_smiles_with_use_chiral(smi: &str, use_chiral: bool) -> Result<String> {
+    let m = mol_from_smiles(smi)?;
+    mol_to_smiles_with_params(
+        &m,
+        &SmilesWriteParams {
+            do_isomeric_smiles: use_chiral,
+            ..Default::default()
+        },
+    )
+}
+
+/// The supplier [`supplier_from_filename`] makes, by the file's extension.
+/// Python returns the supplier itself.
+#[derive(Debug)]
+pub enum FileMolSupplier {
+    /// For `.sdf` files.
+    SD(SDMolSupplier),
+    /// For `.csv` and `.txt` files.
+    Smiles(SmilesMolSupplier),
+    /// For `.tdt` files.
+    TDT(TDTMolSupplier),
+}
+
+impl FileMolSupplier {
+    /// The supplier's molecules from its start, each `Error::Parse` (or a
+    /// sanitization variant) where Python's supplier yields `None`.
+    pub fn mols(&mut self) -> Box<dyn Iterator<Item = Result<Mol>> + '_> {
+        match self {
+            FileMolSupplier::SD(suppl) => Box::new(suppl.mols()),
+            FileMolSupplier::Smiles(suppl) => Box::new(suppl.mols()),
+            FileMolSupplier::TDT(suppl) => Box::new(suppl.mols()),
+        }
+    }
+}
+
+/// Parameters for `supplier_from_filename_with_params`, with Python's
+/// defaults (A2). Python passes its other keyword arguments to the
+/// supplier's constructor; here each kind of supplier has its own.
+#[derive(Clone, Debug, PartialEq)]
+pub struct SupplierFromFilenameParams {
+    /// The delimiter of a SMILES file; empty for `,` in `.csv` files and a
+    /// tab in `.txt` files. It replaces `smiles.delimiter`.
+    pub delim: String,
+    /// The parameters of an SD supplier.
+    pub sd: SDMolSupplierParams,
+    /// The parameters of a SMILES supplier but its delimiter.
+    pub smiles: SmilesMolSupplierParams,
+    /// The parameters of a TDT supplier.
+    pub tdt: TDTMolSupplierParams,
+}
+
+impl Default for SupplierFromFilenameParams {
+    fn default() -> SupplierFromFilenameParams {
+        SupplierFromFilenameParams {
+            delim: String::new(),
+            sd: SDMolSupplierParams::default(),
+            smiles: SmilesMolSupplierParams::default(),
+            tdt: TDTMolSupplierParams::default(),
+        }
+    }
+}
+
+/// A supplier for a file, picked by its extension, in any case: `.sdf`,
+/// `.csv`, `.txt`, or `.tdt`. Another extension is `Error::Value`, as in
+/// Python, and a file the supplier cannot open is `Error::Os`. Mirrors
+/// `Chem.SupplierFromFilename(fileN)`.
+pub fn supplier_from_filename(file_n: impl AsRef<Path>) -> Result<FileMolSupplier> {
+    supplier_from_filename_with_params(file_n, &SupplierFromFilenameParams::default())
+}
+
+/// As [`supplier_from_filename`]. Python passes its delimiter to
+/// `TDTMolSupplier`, which takes none, so it fails for every `.tdt` file;
+/// here a TDT supplier ignores `delim`. Mirrors
+/// `Chem.SupplierFromFilename(fileN, delim, **kwargs)`.
+pub fn supplier_from_filename_with_params(
+    file_n: impl AsRef<Path>,
+    params: &SupplierFromFilenameParams,
+) -> Result<FileMolSupplier> {
+    let file_n = file_n.as_ref();
+    // Python splits the name at its last dot, so a name without one is its
+    // own extension.
+    let name = file_n.to_string_lossy();
+    let ext = name.rsplit('.').next().unwrap_or_default().to_lowercase();
+    let smiles = |default: &str| -> Result<FileMolSupplier> {
+        let delimiter = if params.delim.is_empty() {
+            default.to_owned()
+        } else {
+            params.delim.clone()
+        };
+        let smiles = SmilesMolSupplierParams {
+            delimiter,
+            ..params.smiles.clone()
+        };
+        Ok(FileMolSupplier::Smiles(SmilesMolSupplier::new_with_params(
+            file_n, &smiles,
+        )?))
+    };
+    match ext.as_str() {
+        "sdf" => Ok(FileMolSupplier::SD(SDMolSupplier::new_with_params(
+            file_n, &params.sd,
+        )?)),
+        "csv" => smiles(","),
+        "txt" => smiles("\t"),
+        "tdt" => Ok(FileMolSupplier::TDT(TDTMolSupplier::new_with_params(
+            file_n,
+            &params.tdt,
+        )?)),
+        _ => Err(Error::Value {
+            message: format!("unrecognized extension: {ext}"),
+        }),
+    }
+}
+
+/// One molecule with a conformer for each record of an SD file, all of
+/// which are taken to be the same molecule: the first record, with the
+/// others' conformers added under new ids. `None` for a file without
+/// records, as in Python; the first record that does not parse is its error.
+/// Mirrors `Chem.MultiConfMolFromSDF(sdf)`.
+pub fn multi_conf_mol_from_sdf(sdf: impl AsRef<Path>) -> Result<Option<Mol>> {
+    multi_conf_mol_from_sdf_with_params(sdf, &SDMolSupplierParams::default())
+}
+
+/// As [`multi_conf_mol_from_sdf`], with the supplier's `sanitize`,
+/// `remove_hs`, and `strict_parsing`. Mirrors
+/// `Chem.MultiConfMolFromSDF(sdf, sanitize, removeHs, strictParsing)`.
+pub fn multi_conf_mol_from_sdf_with_params(
+    sdf: impl AsRef<Path>,
+    params: &SDMolSupplierParams,
+) -> Result<Option<Mol>> {
+    let mut suppl = SDMolSupplier::new_with_params(sdf, params)?;
+    let mut return_mol: Option<Mol> = None;
+    for mol in suppl.mols() {
+        let mol = mol?;
+        match &mut return_mol {
+            None => return_mol = Some(mol),
+            Some(return_mol) => {
+                return_mol
+                    .add_conformer_with_assign_id(&Conformer::from(mol.get_conformer()?), true)?;
+            }
+        }
+    }
+    Ok(return_mol)
+}
 
 /// Parameters for `find_mol_chiral_centers_with_params`, with Python's
 /// defaults (A2).

@@ -6,4 +6,5 @@
 //! Mirrors `rdkit.Chem.Scaffolds`, whose compiled module is
 //! `rdScaffoldNetwork`.
 
+pub mod murcko_scaffold;
 pub mod rd_scaffold_network;

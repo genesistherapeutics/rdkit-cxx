@@ -1,0 +1,1204 @@
+// Copyright (c) 2026 Steven Kearnes
+// All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Ports rdkit/Chem/Scaffolds/UnitTestMurckoScaffold.py and the module's
+// doctests; values from Python's MurckoScaffold in RDKit 2026.09.1.
+
+use rdkit_cxx::Result;
+use rdkit_cxx::chem::rd_chem_reactions::reaction_to_smarts;
+use rdkit_cxx::chem::scaffolds::murcko_scaffold::*;
+use rdkit_cxx::chem::{mol_from_smiles, mol_to_smarts, mol_to_smiles};
+
+/// Each test molecule of `testMolecules` and `testMolecules2`, with the
+/// canonical SMILES of its scaffold.
+const SCAFFOLDS: &[(&str, &str)] = &[
+    ("CC1CCC1", "C1CCC1"),
+    ("NCNCC2CC2C1CC1O", "C1CC1C1CC1"),
+    ("OC2C(C)C21C(N)C1C", "C1CC12CC2"),
+    ("C1CC1C(=O)OC", "C1CC1"),
+    ("C1CC1C=C", "C1CC1"),
+    ("C1CC1C=CC1CC1C=CNNCO", "C(=CC1CC1)C1CC1"),
+    ("CC1CC1C(N)C1C(N)C1", "C1CC1CC1CC1"),
+    ("C1CC1C(C(C)C)=NC1CC1", "C(=NC1CC1)C1CC1"),
+    ("C1CC1S(=O)C1CC1C=CNNCO", "O=S(C1CC1)C1CC1"),
+    ("O=SCNC1CC1S(=O)C1CC1C=CNNCO", "O=S(C1CC1)C1CC1"),
+    ("C1CC1S(=O)(=O)C1CC1C=CNNCO", "O=S(=O)(C1CC1)C1CC1"),
+    (
+        "O=S(CNCNC)(=O)CNC1CC1S(=O)(=O)C1CC1C=CNNCO",
+        "O=S(=O)(C1CC1)C1CC1",
+    ),
+    ("C1CC1C=NO", "C1CC1"),
+    ("C1CC1C#N", "C1CC1"),
+    ("C1CC1C#CNC", "C1CC1"),
+    ("O=C1N(C)C(=O)N1C#CNC", "O=C1NC(=O)N1"),
+    (
+        "[O-][N+](=O)c1cc(ccc1Cl)NS(=O)(=O)Cc2ccccc2",
+        "O=S(=O)(Cc1ccccc1)Nc1ccccc1",
+    ),
+    ("Cn1cccc1", "c1cc[nH]c1"),
+    ("C1CC1[CH](C)C1CC1", "C1CC1CC1CC1"),
+    (
+        "CCOc1ccccc1N(S(C)(=O)=O)CC(NC1CCCCC1)=O",
+        "O=C(CNc1ccccc1)NC1CCCCC1",
+    ),
+    (
+        "c1ccc(-c2c(C)n(-c3c(C(O)=O)cccc3)c(C)nc2=O)cc1",
+        "O=c1ncn(-c2ccccc2)cc1-c1ccccc1",
+    ),
+    (
+        "Cc1ccc(Cl)c2c1NC(=O)C2=C1NC(=S)NC1=O",
+        "O=C1NC(=S)NC1=C1C(=O)Nc2ccccc21",
+    ),
+    (
+        "CNC(=O)CCc1[nH]c2c(c1Sc1ccccc1)cccc2",
+        "c1ccc(Sc2c[nH]c3ccccc23)cc1",
+    ),
+    (
+        "CC(=O)OCC(=O)C1(O)CCC2C1(C)CC(=O)C1C3(C)CCC(=O)C=C3CCC21",
+        "O=C1C=C2CCC3C4CCCC4CC(=O)C3C2CC1",
+    ),
+    ("CC(C)CC(Nc1nc(Cl)ccc1[N+]([O-])=O)C(O)=O", "c1ccncc1"),
+    (
+        "COc1ccc(C(Nc2ccc(S(N3C(C)CCCC3)(=O)=O)cc2)=O)c(OC)c1OC",
+        "O=C(Nc1ccc(S(=O)(=O)N2CCCCC2)cc1)c1ccccc1",
+    ),
+    ("CC(C)CCNc1nc(N)c([N+](=O)[O-])c(NCCO)n1", "c1cncnc1"),
+    (
+        "c1ccc(Oc2c(NC(COC(c3c(C)noc3C)=O)=O)cccc2)cc1",
+        "O=C(COC(=O)c1cnoc1)Nc1ccccc1Oc1ccccc1",
+    ),
+    ("COC(CCCCC1SCC(NC(OC)=O)C1NC(OC)=O)=O", "C1CCSC1"),
+    (
+        "CSc1ccc(-c2c(C#N)c(N)nc3n(-c4ccccc4)nc(C)c32)cc1",
+        "c1ccc(-c2ccnc3c2cnn3-c2ccccc2)cc1",
+    ),
+    ("O=C1Cc2ccccc2Sc2c1cc(Cl)cc2", "O=C1Cc2ccccc2Sc2ccccc21"),
+    (
+        "COC(c1n(CC(N(C)c2ccccc2)=O)c2ccsc2c1)=O",
+        "O=C(Cn1ccc2sccc21)Nc1ccccc1",
+    ),
+    (
+        "N=C1C(=Cc2coc3ccccc3c2=O)C(=O)N=C2SC(c3ccncc3)=NN12",
+        "N=C1C(=Cc2coc3ccccc3c2=O)C(=O)N=C2SC(c3ccncc3)=NN12",
+    ),
+    (
+        "CCOC(c1ccc(NC(CCc2c(C)nc3ncnn3c2C)=O)cc1)=O",
+        "O=C(CCc1cnc2ncnn2c1)Nc1ccccc1",
+    ),
+    (
+        "COC(=O)C1=C(C)NC(C)=C(C(OC)=O)C1c1oc(-c2c(Cl)c(Cl)ccc2)cc1",
+        "C1=CC(c2ccc(-c3ccccc3)o2)C=CN1",
+    ),
+    (
+        "CCN(S(c1cc(NC(COC(CCc2nc3ccccc3s2)=O)=O)ccc1)(=O)=O)CC",
+        "O=C(COC(=O)CCc1nc2ccccc2s1)Nc1ccccc1",
+    ),
+    (
+        "CCOC(c1cc(OC(c2ccccc2)=O)n(-c2ccccc2)n1)=O",
+        "O=C(Oc1ccnn1-c1ccccc1)c1ccccc1",
+    ),
+    (
+        "CCOC(=O)c1nc2c(c(NCc3ccccc3F)n1)cccc2",
+        "c1ccc(CNc2ncnc3ccccc23)cc1",
+    ),
+    (
+        "Cc1nc(C)n(CC(N2CCCC(C(c3c(C)cc(Cl)cc3)=O)C2)=O)n1",
+        "O=C(c1ccccc1)C1CCCN(C(=O)Cn2cncn2)C1",
+    ),
+    (
+        "COc1cc(NC(=O)c2nnn(CCc3ccccc3)c2N)c(OC)cc1",
+        "O=C(Nc1ccccc1)c1cn(CCc2ccccc2)nn1",
+    ),
+    (
+        "Cc1cc(C(=O)CN2C(=O)c3ccccc3C2=O)c(C)n1Cc1cccs1",
+        "O=C(CN1C(=O)c2ccccc2C1=O)c1ccn(Cc2cccs2)c1",
+    ),
+    (
+        "c1cnc2c(c1)cccc2S(N1CCC(C(=O)N2CCN(c3ccc(Cl)cc3)CC2)CC1)(=O)=O",
+        "O=C(C1CCN(S(=O)(=O)c2cccc3cccnc23)CC1)N1CCN(c2ccccc2)CC1",
+    ),
+    (
+        "CCOC(c1c(C)[nH]c(C(NNC(c2ccc(C(C)(C)C)cc2)=O)=O)c1C)=O",
+        "O=C(NNC(=O)c1ccc[nH]1)c1ccccc1",
+    ),
+    (
+        "CCOC(c1cc(C(C)C)sc1NC(=O)COC(CCS(c1ccccc1)(=O)=O)=O)=O",
+        "O=C(COC(=O)CCS(=O)(=O)c1ccccc1)Nc1cccs1",
+    ),
+    (
+        "CCC1CCCCN1CCCNC(=O)Cn1nc(-c2ccccc2)ccc1=O",
+        "O=C(Cn1nc(-c2ccccc2)ccc1=O)NCCCN1CCCCC1",
+    ),
+    (
+        "CCc1cc(OCCn2nc(C(O)=O)c3ccccc3c2=O)ccc1",
+        "O=c1c2ccccc2cnn1CCOc1ccccc1",
+    ),
+    (
+        "Fc1ccc(CN2CCN3C(CCC3)C2C2CCCCC2)cc1F",
+        "c1ccc(CN2CCN3CCCC3C2C2CCCCC2)cc1",
+    ),
+    (
+        "O=[N+]([O-])c1cc(-c2nnc(N3CCOCC3)c3ccccc23)ccc1N1CCOCC1",
+        "c1ccc2c(N3CCOCC3)nnc(-c3ccc(N4CCOCC4)cc3)c2c1",
+    ),
+    (
+        "Cc1ccnc(NC(=O)COc2ccc3oc4c(c3c2)CCCC4)c1",
+        "O=C(COc1ccc2oc3c(c2c1)CCCC3)Nc1ccccn1",
+    ),
+    (
+        "Cc1cc(=O)oc(C)c1C(=O)NCCCN1CCN(c2ccc(F)cc2)CC1",
+        "O=C(NCCCN1CCN(c2ccccc2)CC1)c1ccc(=O)oc1",
+    ),
+    (
+        "Cc1cc(C(=O)CSc2nc(=O)cc(N)[nH]2)c(C)n1-c1cccc(F)c1",
+        "O=C(CSc1nc(=O)cc[nH]1)c1ccn(-c2ccccc2)c1",
+    ),
+    (
+        "CCN(S(c1cccc(C(=O)N2CCCCC2)c1)(=O)=O)CC",
+        "O=C(c1ccccc1)N1CCCCC1",
+    ),
+    (
+        "CNC(=S)N1CCC(NC(=O)C23CC4CC(C2)CC(C3)C4)CC1",
+        "O=C(NC1CCNCC1)C12CC3CC(CC(C3)C1)C2",
+    ),
+    ("Cc1cc2c(cc1)N=C(C)C(N=O)=C(C)N2", "C1=CNc2ccccc2N=C1"),
+    (
+        "COc1ccc(Sc2cc(C(F)(F)F)nc(-c3ncccc3)n2)cc1",
+        "c1ccc(Sc2ccnc(-c3ccccn3)n2)cc1",
+    ),
+    (
+        "c1coc(CNC(Cn2cc(C(c3ccccc3)=O)c3c2cccc3)=O)c1",
+        "O=C(Cn1cc(C(=O)c2ccccc2)c2ccccc21)NCc1ccco1",
+    ),
+    (
+        "O=C(NCc1ccc(Cl)cc1)c1noc(-c2ccco2)c1",
+        "O=C(NCc1ccccc1)c1cc(-c2ccco2)on1",
+    ),
+    (
+        "CN(C)c1ccc(C(c2n(CCOC(=O)Nc3ccc(Cl)cc3)nnn2)N2CCOCC2)cc1",
+        "O=C(Nc1ccccc1)OCCn1nnnc1C(c1ccccc1)N1CCOCC1",
+    ),
+    (
+        "NC(=NOC(=O)c1cc(Cn2cc(C(F)(F)F)ccc2=O)ccc1)c1ccccc1",
+        "O=C(ON=Cc1ccccc1)c1cccc(Cn2ccccc2=O)c1",
+    ),
+    (
+        "CCc1nnc(NC(=O)Cc2c(-c3ccc(C)cc3)nc(C)s2)s1",
+        "O=C(Cc1scnc1-c1ccccc1)Nc1nncs1",
+    ),
+    ("COCCCNC(=O)CN1C(=O)N(Cc2ccccc2Cl)CC1", "O=C1NCCN1Cc1ccccc1"),
+    (
+        "Cc1cc([N+]([O-])=O)nn1CC(=O)NCCCn1ccnc1",
+        "O=C(Cn1cccn1)NCCCn1ccnc1",
+    ),
+    (
+        "c1cc(F)c(N2CCN(C(=O)c3ccc(S(NCC4OCCC4)(=O)=O)cc3)CC2)cc1",
+        "O=C(c1ccc(S(=O)(=O)NCC2CCCO2)cc1)N1CCN(c2ccccc2)CC1",
+    ),
+    (
+        "CC(NCc1cccnc1)=C1C(=O)NC(=O)N(c2ccc(C)cc2)C1=O",
+        "O=C1NC(=O)N(c2ccccc2)C(=O)C1=CNCc1cccnc1",
+    ),
+    ("Cc1ccn(C)c(=N)c1", "N=c1cccc[nH]1"),
+    (
+        "Cc1cc(C)nc(N2CCC(CNC(=O)CCc3ccccc3)CC2)n1",
+        "O=C(CCc1ccccc1)NCC1CCN(c2ncccn2)CC1",
+    ),
+    (
+        "CCOC1=CC(=CNNC(CCCC(NC2CCCCC2)=O)=O)C=CC1=O",
+        "O=C1C=CC(=CNNC(=O)CCCC(=O)NC2CCCCC2)C=C1",
+    ),
+    (
+        "CC(=O)N1CCN(c2ccc([N+]([O-])=O)cc2)CC1",
+        "c1ccc(N2CCNCC2)cc1",
+    ),
+    (
+        "CS(N(CC(=O)N1CCCCC1)Cc1ccc(Cl)cc1)(=O)=O",
+        "O=C(CNCc1ccccc1)N1CCCCC1",
+    ),
+    (
+        "c1coc(C(=O)N2CCN(C(COc3cc(C(NCc4ccccc4)=O)ccc3)=O)CC2)c1",
+        "O=C(NCc1ccccc1)c1cccc(OCC(=O)N2CCN(C(=O)c3ccco3)CC2)c1",
+    ),
+    (
+        "Cc1cccc2sc(NNC(=O)C3=COCCO3)nc12",
+        "O=C(NNc1nc2ccccc2s1)C1=COCCO1",
+    ),
+    (
+        "c1ccc2c(c1)N(C)C1(C=Nc3c(cc(N4CCOCC4)c4ccccc34)O1)C2(C)C",
+        "C1=Nc2c(cc(N3CCOCC3)c3ccccc23)OC12Cc1ccccc1N2",
+    ),
+    (
+        "COc1cccc(C2N(CCN3CCOCC3)C(=O)C(O)=C2C(=O)c2sc(C)nc2C)c1",
+        "O=C(C1=CC(=O)N(CCN2CCOCC2)C1c1ccccc1)c1cncs1",
+    ),
+    (
+        "COc1cc(OC)c(NC(CSc2nc3c(c(=O)n2-c2ccc(F)cc2)SCC3)=O)cc1",
+        "O=C(CSc1nc2c(c(=O)n1-c1ccccc1)SCC2)Nc1ccccc1",
+    ),
+    (
+        "Cc1ccccc1CN1c2ccccc2C2(C1=O)OCCCO2",
+        "O=C1N(Cc2ccccc2)c2ccccc2C12OCCCO2",
+    ),
+    (
+        "O=C(N1C2(OCC1)CCN(c1ncc(C(F)(F)F)cc1Cl)CC2)c1ccccc1",
+        "O=C(c1ccccc1)N1CCOC12CCN(c1ccccn1)CC2",
+    ),
+    ("CC=CC=CC(=O)Nc1nccs1", "c1cscn1"),
+    (
+        "CC(C)(C)c1ccc(C(c2c[nH]c(C(NCc3cccnc3)=O)c2)=O)cc1",
+        "O=C(c1ccccc1)c1c[nH]c(C(=O)NCc2cccnc2)c1",
+    ),
+    ("CCC(=O)Nc1c(C)nn(-c2cc(C)c(C)cc2)c1C", "c1ccc(-n2cccn2)cc1"),
+    (
+        "Cc1ccc(SCCC(=O)NCCSCc2c(C)cccc2)cc1",
+        "O=C(CCSc1ccccc1)NCCSCc1ccccc1",
+    ),
+    (
+        "CC1=NN(Cc2ccccc2)C(=O)C1=Cc1ccc(N(C)C)cc1",
+        "O=C1C(=Cc2ccccc2)C=NN1Cc1ccccc1",
+    ),
+    (
+        "COCC(=O)Nc1ccc(S(NCCc2ccccc2)(=O)=O)cc1",
+        "O=S(=O)(NCCc1ccccc1)c1ccccc1",
+    ),
+    ("CCOC(=O)N(C)c1ccc(C(O)(C(F)(F)F)C(F)(F)F)cc1", "c1ccccc1"),
+    ("Fc1ccc(COC2=C(C(O)=O)CCNC2=O)cc1F", "O=C1NCCC=C1OCc1ccccc1"),
+    ("O=C1N2C(Nc3ccccc31)CCCCC2", "O=C1c2ccccc2NC2CCCCCN12"),
+    (
+        "Cl.COc1ccc(-c2nc3n(ccc4ccccc43)c2CN2CCOCC2)cc1OC",
+        "c1ccc(-c2nc3c4ccccc4ccn3c2CN2CCOCC2)cc1",
+    ),
+    ("ClCc1oc(-c2ccccc2)nn1", "c1ccc(-c2nnco2)cc1"),
+    (
+        "Cl.Cc1ccc(OCC(O)Cn2c(=N)n(CCN3CCCCC3)c3ccccc32)cc1",
+        "N=c1n(CCCOc2ccccc2)c2ccccc2n1CCN1CCCCC1",
+    ),
+    (
+        "COc1ccc(C(=O)C=C(C)Nc2ccc3c(c2)OCO3)cc1",
+        "O=C(C=CNc1ccc2c(c1)OCO2)c1ccccc1",
+    ),
+    (
+        "c1csc(CN(C(c2ccc(F)cc2)C(NC2CCCCC2)=O)C(=O)CN2S(=O)(=O)c3ccccc3C2=O)c1",
+        "O=C(NC1CCCCC1)C(c1ccccc1)N(Cc1cccs1)C(=O)CN1C(=O)c2ccccc2S1(=O)=O",
+    ),
+    (
+        "c1csc(S(NCCSc2n(-c3ccccc3)nnn2)(=O)=O)c1",
+        "O=S(=O)(NCCSc1nnnn1-c1ccccc1)c1cccs1",
+    ),
+    (
+        "Cc1cccc(C=NNC(=O)Cn2c(N)nnn2)n1",
+        "O=C(Cn1cnnn1)NN=Cc1ccccn1",
+    ),
+    (
+        "CCOC(C1(Cc2ccc(Cl)cc2)CCN(C(c2cc(C)nc(C)n2)=O)CC1)=O",
+        "O=C(c1ccncn1)N1CCC(Cc2ccccc2)CC1",
+    ),
+    (
+        "c1ccc(C(N(CC2OCCC2)C(Cn2nnc3ccccc23)=O)C(NCc2ccc(F)cc2)=O)cc1",
+        "O=C(NCc1ccccc1)C(c1ccccc1)N(CC1CCCO1)C(=O)Cn1nnc2ccccc21",
+    ),
+    ("O=C1CSC(c2ccncc2)N1Cc1occc1", "O=C1CSC(c2ccncc2)N1Cc1ccco1"),
+    (
+        "COc1c(OCc2ccccc2)c(Br)cc(C=NNC(=O)Cn2nc([N+]([O-])=O)cc2C)c1",
+        "O=C(Cn1cccn1)NN=Cc1ccc(OCc2ccccc2)cc1",
+    ),
+    (
+        "Cc1c(Cn2nnc(-c3cc(C(=O)O)ccc3)n2)cccc1",
+        "c1ccc(Cn2nnc(-c3ccccc3)n2)cc1",
+    ),
+    ("O=C(c1ccc2snnc2c1)N1CCCC1", "O=C(c1ccc2snnc2c1)N1CCCC1"),
+    (
+        "c1ccc(CC(NN2C(=O)C(=Cc3c(C(O)=O)cccc3)SC2=S)=O)cc1",
+        "O=C(Cc1ccccc1)NN1C(=O)C(=Cc2ccccc2)SC1=S",
+    ),
+    (
+        "Cc1ccccc1OCC(=O)NN=Cc1ccncc1",
+        "O=C(COc1ccccc1)NN=Cc1ccncc1",
+    ),
+    (
+        "O=C(C=Cc1ccccc1)NC(=S)Nc1ccc(CN2CCOCC2)cc1",
+        "O=C(C=Cc1ccccc1)NC(=S)Nc1ccc(CN2CCOCC2)cc1",
+    ),
+    (
+        "COc1ccc(NC(=S)N(Cc2cnccc2)Cc2c(=O)[nH]c3c(c2)cc(OC)c(OC)c3)cc1",
+        "O=c1[nH]c2ccccc2cc1CN(Cc1cccnc1)C(=S)Nc1ccccc1",
+    ),
+    (
+        "Nc1ccc2nc3c([nH]c(=O)n(C4CCCCC4)c3=O)nc2c1",
+        "O=c1[nH]c2nc3ccccc3nc2c(=O)n1C1CCCCC1",
+    ),
+    (
+        "Cc1cc(NC(=O)c2ccc(S(Nc3ccccc3)(=O)=O)cc2)no1",
+        "O=C(Nc1ccon1)c1ccc(S(=O)(=O)Nc2ccccc2)cc1",
+    ),
+    (
+        "Nn1c(Cc2c3c(cccc3)ccc2)nnc1SCc1ccccc1",
+        "c1ccc(CSc2nnc(Cc3cccc4ccccc34)[nH]2)cc1",
+    ),
+    (
+        "Cc1[nH]nc(Nc2cc(C)ccc2)c1[N+](=O)[O-]",
+        "c1ccc(Nc2cc[nH]n2)cc1",
+    ),
+    (
+        "CC1Cn2c(nc3n(C)c(=O)[nH]c(=O)c23)O1",
+        "O=c1[nH]c(=O)c2c(nc3n2CCO3)[nH]1",
+    ),
+    (
+        "c1csc(C(OCC(NC23CC4CC(C2)CC(C3)C4)=O)=O)c1",
+        "O=C(COC(=O)c1cccs1)NC12CC3CC(CC(C3)C1)C2",
+    ),
+    (
+        "c1ccc(S(NC2=NC(=O)C(=Cc3cnccc3)S2)(=O)=O)cc1",
+        "O=C1N=C(NS(=O)(=O)c2ccccc2)SC1=Cc1cccnc1",
+    ),
+    (
+        "CCCn1c(N2CCN(C)CC2)nc2n(C)c(=O)[nH]c(=O)c12",
+        "O=c1[nH]c(=O)c2[nH]c(N3CCNCC3)nc2[nH]1",
+    ),
+    (
+        "CCn1c(SCC(Nc2cc(S(N3CCOCC3)(=O)=O)ccc2OC)=O)nnc1-c1ccncc1",
+        "O=C(CSc1nnc(-c2ccncc2)[nH]1)Nc1cccc(S(=O)(=O)N2CCOCC2)c1",
+    ),
+    (
+        "C#CCNC(=O)C1=CC(c2ccc(Br)cc2)CC(OCc2ccc(CO)cc2)O1",
+        "C1=CC(c2ccccc2)CC(OCc2ccccc2)O1",
+    ),
+    (
+        "CCc1c(SCC(=O)Nc2cc(C)on2)nc2ccc(C)cc2c1",
+        "O=C(CSc1ccc2ccccc2n1)Nc1ccon1",
+    ),
+    (
+        "CCOCCCN(C(C(NC1CCCC1)=O)c1cccc(OC)c1OC)C(c1ccco1)=O",
+        "O=C(NC(C(=O)NC1CCCC1)c1ccccc1)c1ccco1",
+    ),
+    (
+        "Cc1ccc(C(=O)NC(=S)NNS(c2ccccc2)(=O)=O)cc1",
+        "O=C(NC(=S)NNS(=O)(=O)c1ccccc1)c1ccccc1",
+    ),
+    (
+        "COc1ccc(CC(N)=NOC(=O)c2sccc2)cc1",
+        "O=C(ON=CCc1ccccc1)c1cccs1",
+    ),
+    (
+        "c1ccc(C(O)=C2C(c3ncccc3)N(CC(OC)OC)C(=O)C2=O)cc1",
+        "O=C1NC(c2ccccn2)C(=Cc2ccccc2)C1=O",
+    ),
+    ("COC(=O)CSc1nc(C)cc(Oc2ccccc2)n1", "c1ccc(Oc2ccncn2)cc1"),
+    ("COc1ccc(Cn2c(C)ccc2C)cc1", "c1ccc(Cn2cccc2)cc1"),
+    (
+        "COc1cccc(N2CCN(C3CC(=O)N(c4ccc(C)c(Cl)c4)C3=O)CC2)c1",
+        "O=C1CC(N2CCN(c3ccccc3)CC2)C(=O)N1c1ccccc1",
+    ),
+    ("COc1cccc(OC)c1OCCN(C)C.OC(=O)C(O)=O", "c1ccccc1"),
+    (
+        "C1CCC(NC(=O)c2ccc(S(N3CCCC3)(=O)=O)cc2)C1",
+        "O=C(NC1CCCC1)c1ccc(S(=O)(=O)N2CCCC2)cc1",
+    ),
+    (
+        "CCCN(C(=O)Cn1ncc2c(=O)oc3c(c12)cccc3)c1cc(C)ccc1",
+        "O=C(Cn1ncc2c(=O)oc3ccccc3c21)Nc1ccccc1",
+    ),
+    ("CNC(NC(CSc1nnc(C(F)(F)F)n1C)=O)=O", "c1nnc[nH]1"),
+    (
+        "CCOCCCN1C(=O)CC(C(NCCc2ccc(C)cc2)=O)C1",
+        "O=C1CC(C(=O)NCCc2ccccc2)CN1",
+    ),
+    (
+        "COc1c([N+](=O)[O-])cc(CSc2n[nH]c(C)n2)cc1",
+        "c1ccc(CSc2nc[nH]n2)cc1",
+    ),
+    ("CN(C)CC(=O)c1ccc(-c2ccccc2)cc1", "c1ccc(-c2ccccc2)cc1"),
+    (
+        "CC1(O)C(=O)c2c(cccc2)N(c2ccccc2)C1=O",
+        "O=C1CC(=O)N(c2ccccc2)c2ccccc21",
+    ),
+    (
+        "CN(S(c1ccccc1)(=O)=O)CC(=O)NCCc1ccccc1",
+        "O=C(CNS(=O)(=O)c1ccccc1)NCCc1ccccc1",
+    ),
+    ("CCNc1ccccc1C(=O)O", "c1ccccc1"),
+    (
+        "CC1(C)C(CSc2nc3ccccc3[nH]2)C1(Cl)Cl",
+        "c1ccc2[nH]c(SCC3CC3)nc2c1",
+    ),
+    (
+        "CC(C)c1ccc(OCC(=O)NC(=S)Nc2c3cccc4c3c(cc2)CC4)cc1",
+        "O=C(COc1ccccc1)NC(=S)Nc1ccc2c3c(cccc13)CC2",
+    ),
+    (
+        "CN(C)c1ccc(NC(CN2CCC(C(c3ccc(F)cc3)=O)CC2)=O)cc1",
+        "O=C(CN1CCC(C(=O)c2ccccc2)CC1)Nc1ccccc1",
+    ),
+    ("CCCCN(C)C(=O)Cc1c(OC)ccc2cc(Br)ccc21", "c1ccc2ccccc2c1"),
+    (
+        "Cc1ccc(NC(CSc2sc(NC(CN3CCOCC3)=O)nn2)=O)cc1",
+        "O=C(CSc1nnc(NC(=O)CN2CCOCC2)s1)Nc1ccccc1",
+    ),
+    ("COCCNC(=S)NNc1cccc(C(=O)O)c1", "c1ccccc1"),
+    (
+        "O=C(CNc1ccccc1)NN=Cc1ccc2c(c1)OCCO2",
+        "O=C(CNc1ccccc1)NN=Cc1ccc2c(c1)OCCO2",
+    ),
+    (
+        "COc1cc2ccccc2cc1C(=O)NCC(c1sccc1)N(C)C",
+        "O=C(NCCc1cccs1)c1ccc2ccccc2c1",
+    ),
+    (
+        "COc1ccc(C(N(C)C)CNC(=O)CCOc2ccccc2)cc1",
+        "O=C(CCOc1ccccc1)NCCc1ccccc1",
+    ),
+    (
+        "Cl.CCN(CC)CCCN1C(=O)CSC1c1ccc([N+]([O-])=O)cc1",
+        "O=C1CSC(c2ccccc2)N1",
+    ),
+    (
+        "CCC(Nc1ccc(OC)cc1OC)=C1C(=O)NC(=O)NC1=O",
+        "O=C1NC(=O)C(=CNc2ccccc2)C(=O)N1",
+    ),
+    (
+        "c1coc(-c2cc(C(F)(F)F)nc(NCc3ccc(F)cc3)n2)c1",
+        "c1ccc(CNc2nccc(-c3ccco3)n2)cc1",
+    ),
+    ("CCOC(Nc1sc(C)c(C)c1C(OCC)=O)=O", "c1ccsc1"),
+    (
+        "O=CN1CCN(C(C(=O)NC2CCCCC2)c2cc3c(cc2[N+]([O-])=O)OCO3)CC1",
+        "O=C(NC1CCCCC1)C(c1ccc2c(c1)OCO2)N1CCNCC1",
+    ),
+    (
+        "COc1cc(C2N(c3ccc(Br)cc3)C(=O)c3n[nH]c(C)c32)ccc1O",
+        "O=C1c2n[nH]cc2C(c2ccccc2)N1c1ccccc1",
+    ),
+    (
+        "c1cc(NC(=O)c2ccccc2[N+]([O-])=O)c(N2CCOCC2)cc1",
+        "O=C(Nc1ccccc1N1CCOCC1)c1ccccc1",
+    ),
+    (
+        "N#Cc1cc2c(nc1SCC(=O)N1CCCCC1)CCCCC2",
+        "O=C(CSc1ccc2c(n1)CCCCC2)N1CCCCC1",
+    ),
+    (
+        "CCN(CC)c1ccc(CN(C(=O)c2cc(OC)c(OC)c(OC)c2)C2CCS(=O)(=O)C2)cc1",
+        "O=C(c1ccccc1)N(Cc1ccccc1)C1CCS(=O)(=O)C1",
+    ),
+    (
+        "COc1cc(NC(=S)N2CCN(Cc3ccccc3)CC2)cc(OC)c1",
+        "S=C(Nc1ccccc1)N1CCN(Cc2ccccc2)CC1",
+    ),
+    (
+        "CC(=O)C(=CNc1ccc(OCc2ccccc2)cc1)c1ccccc1",
+        "C(=Cc1ccccc1)Nc1ccc(OCc2ccccc2)cc1",
+    ),
+    (
+        "CC(C)C(C(NC(C)C(N)=O)=O)NC(C1CCCN1C(OC(C)(C)C)=O)=O",
+        "C1CCNC1",
+    ),
+    (
+        "CCOc1ccc(N2CC(C(=O)Nc3cccc(S(NC4=NCCC4)(=O)=O)c3)CC2=O)cc1",
+        "O=C(Nc1cccc(S(=O)(=O)NC2=NCCC2)c1)C1CC(=O)N(c2ccccc2)C1",
+    ),
+    (
+        "O=C(NCc1ccccc1Cl)CSc1ccc(-c2cccs2)nn1",
+        "O=C(CSc1ccc(-c2cccs2)nn1)NCc1ccccc1",
+    ),
+    ("COc1ccc(OC)c(N=c2ssnc2Cl)c1", "c1ccc(N=c2cnss2)cc1"),
+    (
+        "CC(=O)C1=C(C)NC(=O)CC1c1c(Cl)cccc1",
+        "O=C1CC(c2ccccc2)C=CN1",
+    ),
+    ("CCC(=O)N=C(N)Nc1nc(C)c2cc(C)c(C)cc2n1", "c1ccc2ncncc2c1"),
+    (
+        "Cc1ccccc1C(OC1OC(=O)C(Cl)=C1Nc1ccc(C(O)=O)cc1)=O",
+        "O=C1C=C(Nc2ccccc2)C(OC(=O)c2ccccc2)O1",
+    ),
+    (
+        "CCOc1cc(CN2CCC(CO)(Cc3cccc(C(F)(F)F)c3)CC2)ccc1OC",
+        "c1ccc(CC2CCN(Cc3ccccc3)CC2)cc1",
+    ),
+    (
+        "Cc1cc2c([nH]c(=O)c(CCNC(c3cccs3)=O)c2)cc1C",
+        "O=C(NCCc1cc2ccccc2[nH]c1=O)c1cccs1",
+    ),
+    (
+        "Cc1ccc(Nc2cc(=O)[nH]c(=O)[nH]2)cc1C",
+        "O=c1cc(Nc2ccccc2)[nH]c(=O)[nH]1",
+    ),
+    (
+        "Cc1cc(OCC(=O)NC2CCS(=O)(=O)C2)c2c(oc(=O)c3c2CCC3)c1",
+        "O=C(COc1cccc2oc(=O)c3c(c12)CCC3)NC1CCS(=O)(=O)C1",
+    ),
+    (
+        "CCc1sc(NC(CCC(NCCc2ccc(OC)c(OC)c2)=O)=O)nn1",
+        "O=C(CCC(=O)Nc1nncs1)NCCc1ccccc1",
+    ),
+    (
+        "N#CC1=C(SCc2ccccc2)NC(=O)CC1c1ccc(O)cc1",
+        "O=C1CC(c2ccccc2)C=C(SCc2ccccc2)N1",
+    ),
+    (
+        "O=C(NCCN1CCOCC1)c1csc2c1CCCC2",
+        "O=C(NCCN1CCOCC1)c1csc2c1CCCC2",
+    ),
+    (
+        "CCCCC(=O)Nc1cc(OC)c(NC(C2CCCCC2)=O)cc1OC",
+        "O=C(Nc1ccccc1)C1CCCCC1",
+    ),
+    (
+        "Cc1ccc(C(C(C)OC(C2CC(=O)N(C3CCCCC3)C2)=O)=O)cc1",
+        "O=C(COC(=O)C1CC(=O)N(C2CCCCC2)C1)c1ccccc1",
+    ),
+    (
+        "Cc1ccc(S(C(C#N)c2c(N3CCCC3)nc3ccccc3n2)(=O)=O)cc1C",
+        "O=S(=O)(Cc1nc2ccccc2nc1N1CCCC1)c1ccccc1",
+    ),
+    (
+        "CC1(C)OC(=O)C(=Cc2[nH]ccc2)C(=O)O1",
+        "O=C1OCOC(=O)C1=Cc1ccc[nH]1",
+    ),
+    (
+        "Cc1cc(C)cc(Oc2nc3n(cccc3C)c(=O)c2C=C(C#N)C(=O)NC2CCS(=O)(=O)C2)c1",
+        "O=C(C=Cc1c(Oc2ccccc2)nc2ccccn2c1=O)NC1CCS(=O)(=O)C1",
+    ),
+    (
+        "COc1cc(NC(=O)NCc2c(C)onc2-c2ccccc2)ccc1",
+        "O=C(NCc1conc1-c1ccccc1)Nc1ccccc1",
+    ),
+    (
+        "c1ccc(C(Oc2cc3c(cc2)C(=O)CO3)=O)cc1",
+        "O=C(Oc1ccc2c(c1)OCC2=O)c1ccccc1",
+    ),
+    (
+        "CCN1C(=O)C2C(c3cccs3)N3C4C(=O)N(CC)C(=O)C4C(c4cccs4)N3C2C1=O",
+        "O=C1NC(=O)C2C1C(c1cccs1)N1C3C(=O)NC(=O)C3C(c3cccs3)N21",
+    ),
+    (
+        "Cc1cc(C(N2CCCC(C(c3cc(F)ccc3F)=O)C2)=O)c(C)o1",
+        "O=C(c1ccccc1)C1CCCN(C(=O)c2ccoc2)C1",
+    ),
+    (
+        "COc1cc(C=NO)ccc1Oc1c([N+]([O-])=O)cc([N+]([O-])=O)cc1",
+        "c1ccc(Oc2ccccc2)cc1",
+    ),
+    (
+        "Cc1ccc(N(Cc2c(=O)[nH]c3ccc(C)cc3c2)C(c2cccs2)=O)cc1",
+        "O=C(c1cccs1)N(Cc1cc2ccccc2[nH]c1=O)c1ccccc1",
+    ),
+    (
+        "COc1ccc(C(=O)Nn2c(C)nnc2-n2c(C)cc(C)n2)cc1OC",
+        "O=C(Nn1cnnc1-n1cccn1)c1ccccc1",
+    ),
+    (
+        "Cc1c(NC(=O)c2c(C)c(Cl)c(C)nc2Cl)cccc1",
+        "O=C(Nc1ccccc1)c1cccnc1",
+    ),
+    (
+        "c1ccc(CNC(CC(C(=O)NCc2ccccc2)c2nc(=O)c3ccccc3[nH]2)=O)cc1",
+        "O=C(CC(C(=O)NCc1ccccc1)c1nc(=O)c2ccccc2[nH]1)NCc1ccccc1",
+    ),
+    ("CNc1n(-c2ccccc2)ncc1[N+](=O)[O-]", "c1ccc(-n2cccn2)cc1"),
+    (
+        "CC1SC2(NC1=O)C1CC3CC(C1)CC2C3",
+        "O=C1CSC2(N1)C1CC3CC(C1)CC2C3",
+    ),
+    (
+        "CCc1ccccc1NC(=S)N(C(C)c1occc1)CCOC",
+        "S=C(NCc1ccco1)Nc1ccccc1",
+    ),
+    (
+        "CCC(C)NC(=O)C1CCCN(S(c2ccc(-n3cnnn3)cc2)(=O)=O)C1",
+        "O=S(=O)(c1ccc(-n2cnnn2)cc1)N1CCCCC1",
+    ),
+    (
+        "COc1c2c(ccc1)C1CC(C)(O2)N(Cc2ccccc2)C(=O)N1",
+        "O=C1NC2CC(Oc3ccccc32)N1Cc1ccccc1",
+    ),
+    (
+        "COc1ccc(C2NC(=O)c3c(cccc3)O2)c(OC)c1OC",
+        "O=C1NC(c2ccccc2)Oc2ccccc21",
+    ),
+    (
+        "O=C(NNC=C1C=Nc2ccccc21)c1ccn(Cc2c(Cl)cc(Cl)cc2)n1",
+        "O=C(NNC=C1C=Nc2ccccc21)c1ccn(Cc2ccccc2)n1",
+    ),
+    (
+        "c1ccc(NS(c2ccc(OCC(=O)NCc3cnccc3)cc2)(=O)=O)cc1",
+        "O=C(COc1ccc(S(=O)(=O)Nc2ccccc2)cc1)NCc1cccnc1",
+    ),
+    (
+        "COC1=CC(=O)C(=C2NNC(C(F)(F)F)=C2c2cc3ccccc3o2)C=C1",
+        "O=C1C=CC=CC1=C1NNC=C1c1cc2ccccc2o1",
+    ),
+    (
+        "CCOC(=O)c1c(C(COC(C=Cc2ccc(Cl)cc2)=O)=O)c(C)[nH]c1C",
+        "O=C(C=Cc1ccccc1)OCC(=O)c1cc[nH]c1",
+    ),
+    (
+        "Cc1nc2ncnn2c(N2CCN(c3nnnn3-c3ccccc3)CC2)c1",
+        "c1ccc(-n2nnnc2N2CCN(c3ccnc4ncnn34)CC2)cc1",
+    ),
+    (
+        "CC(C)Oc1ccc(C(=O)Nc2ccc(NC(c3ccco3)=O)c(Cl)c2)cc1",
+        "O=C(Nc1ccc(NC(=O)c2ccco2)cc1)c1ccccc1",
+    ),
+    (
+        "CC(c1ccccc1)NC(C(NCC1OCCC1)=O)=O",
+        "O=C(NCc1ccccc1)C(=O)NCC1CCCO1",
+    ),
+    (
+        "CCCCOc1ccc(NC(=O)CCSc2nccn2C)cc1",
+        "O=C(CCSc1ncc[nH]1)Nc1ccccc1",
+    ),
+    (
+        "O=C(OCc1ncccc1)c1oc(COc2c(Cl)cccc2)cc1",
+        "O=C(OCc1ccccn1)c1ccc(COc2ccccc2)o1",
+    ),
+    ("COc1ccc(C=NNC(=O)OC(C)(C)C)cc1OC", "c1ccccc1"),
+    (
+        "CC1CCCCC1NC(COC(c1ccc(S(NCc2ccco2)(=O)=O)cc1)=O)=O",
+        "O=C(COC(=O)c1ccc(S(=O)(=O)NCc2ccco2)cc1)NC1CCCCC1",
+    ),
+    (
+        "Nn1c(SCC(=O)Nc2cccc(F)c2)nnc1C1CCCCC1",
+        "O=C(CSc1nnc(C2CCCCC2)[nH]1)Nc1ccccc1",
+    ),
+    ("Cc1n[nH]c(NC2CCCCC2)nc1=O", "O=c1cn[nH]c(NC2CCCCC2)n1"),
+    ("CCCCCCCCC(=O)NC(C(Cl)(Cl)Cl)NC(=S)N1CCOCC1", "C1COCCN1"),
+    (
+        "CCCc1ccc(Oc2coc3cc(OCC(Nc4c(C)cccc4)=O)ccc3c2=O)cc1",
+        "O=C(COc1ccc2c(=O)c(Oc3ccccc3)coc2c1)Nc1ccccc1",
+    ),
+    (
+        "Cc1ccc(C(=O)NN=C2CCSC2)cc1[N+]([O-])=O",
+        "O=C(NN=C1CCSC1)c1ccccc1",
+    ),
+    (
+        "N#CC1=C2SCN(c3ccc(F)cc3)CN2C(=O)CC1c1cc(F)ccc1",
+        "O=C1CC(c2ccccc2)C=C2SCN(c3ccccc3)CN12",
+    ),
+    (
+        "c1ccc(CN2C(=O)CC(Nc3cc4c(cc3)cccc4)C2=O)cc1",
+        "O=C1CC(Nc2ccc3ccccc3c2)C(=O)N1Cc1ccccc1",
+    ),
+    (
+        "COc1ccc(NC(C)=O)cc1NC(=O)CN1CCN(CC(=O)Nc2ccc(Cl)cc2)CC1",
+        "O=C(CN1CCN(CC(=O)Nc2ccccc2)CC1)Nc1ccccc1",
+    ),
+    (
+        "Clc1c(Cl)c(C2NC(=O)CCC2[N+]([O-])=O)ccc1",
+        "O=C1CCCC(c2ccccc2)N1",
+    ),
+    (
+        "CCN(C(=O)CSc1n(-c2ccccc2)c(-c2ccccc2)nn1)CC",
+        "c1ccc(-c2nncn2-c2ccccc2)cc1",
+    ),
+    (
+        "CC(=O)CCCCn1cnc2n(C)c(=O)n(C)c(=O)c12",
+        "O=c1[nH]c(=O)c2[nH]cnc2[nH]1",
+    ),
+    (
+        "CC1=NN(c2ccccc2)C(=N)C1=NNc1ccc(Cl)cc1",
+        "N=C1C(=NNc2ccccc2)C=NN1c1ccccc1",
+    ),
+    ("CCc1ccc(OCC(=O)N(CC)CC)cc1", "c1ccccc1"),
+    (
+        "CN(CC(=O)N1CCCCC1)S(c1ccc(Cl)cc1)(=O)=O",
+        "O=C(CNS(=O)(=O)c1ccccc1)N1CCCCC1",
+    ),
+    (
+        "CSc1ncc(C=C2C(=O)NC(=O)N(c3ccc(C)cc3)C2=O)cn1",
+        "O=C1NC(=O)N(c2ccccc2)C(=O)C1=Cc1cncnc1",
+    ),
+    ("COCCNC(=S)Nc1c(Cc2ccccc2)cccc1", "c1ccc(Cc2ccccc2)cc1"),
+    (
+        "COc1cc(C(=O)Nc2nnc(C(C)(C)C)s2)c([N+]([O-])=O)cc1OC",
+        "O=C(Nc1nncs1)c1ccccc1",
+    ),
+    (
+        "CCOC(=O)c1ccc(NC(=O)c2cc(OC)c(OC(C)C)cc2)cc1",
+        "O=C(Nc1ccccc1)c1ccccc1",
+    ),
+    (
+        "COc1ccc(C(=O)C=C2Sc3cc4c(cc3N2C)OCO4)cc1",
+        "O=C(C=C1Nc2cc3c(cc2S1)OCO3)c1ccccc1",
+    ),
+    (
+        "CCCC1=NN(c2sc3c(n2)cccc3)C(=O)C1=CNCCCN(CC)CC",
+        "C=C1C=NN(c2nc3ccccc3s2)C1=O",
+    ),
+    (
+        "COc1ccc(C(COC(CN2C(=O)NC(C)(C)C2=O)=O)=O)cc1OC",
+        "O=C(CN1C(=O)CNC1=O)OCC(=O)c1ccccc1",
+    ),
+    (
+        "O=C(Oc1ccc(Br)cc1)C1CC(=O)N(c2ccc(F)cc2)C1",
+        "O=C(Oc1ccccc1)C1CC(=O)N(c2ccccc2)C1",
+    ),
+    (
+        "O=c1nc(-c2ccccn2)[nH]c(C(F)(F)F)c1Br",
+        "O=c1cc[nH]c(-c2ccccn2)n1",
+    ),
+    (
+        "CCOC(c1oc2ccccc2c1NC(CN1CCN(C)CC1)=O)=O",
+        "O=C(CN1CCNCC1)Nc1coc2ccccc12",
+    ),
+    (
+        "CSc1nsc(NN=Cc2ccc3c(c2)OCO3)c1C#N",
+        "C(=NNc1ccns1)c1ccc2c(c1)OCO2",
+    ),
+    ("CC(C)(C)NC(NC(CSc1nc(C)c(C)c(C)n1)=O)=O", "c1cncnc1"),
+    (
+        "Cc1cccnc1CN1CCN(Cc2onc(C(c3ccccc3)c3ccccc3)n2)CC1",
+        "c1ccc(C(c2ccccc2)c2noc(CN3CCN(Cc4ccccn4)CC3)n2)cc1",
+    ),
+    (
+        "COc1ccc(Nc2oc3cc(=O)ccc-3cc2C(=O)Nc2ncccc2)cc1OC",
+        "O=C(Nc1ccccn1)c1cc2ccc(=O)cc-2oc1Nc1ccccc1",
+    ),
+    (
+        "c1cc(C)c(OCC(NS(c2ccc(C)cc2)(=O)=O)=O)cc1",
+        "O=C(COc1ccccc1)NS(=O)(=O)c1ccccc1",
+    ),
+    (
+        "CCOc1ccc(-c2scc(CSc3sc(N)nn3)n2)cc1OC",
+        "c1ccc(-c2nc(CSc3nncs3)cs2)cc1",
+    ),
+    (
+        "c1ccc(C(=O)COC(=O)CN2C(=O)C3C4CC(C3C2=O)C=C4)cc1",
+        "O=C(CN1C(=O)C2C3C=CC(C3)C2C1=O)OCC(=O)c1ccccc1",
+    ),
+    (
+        "Cc1occc1C(=O)NC(C)c1ccc2c(c1)OCO2",
+        "O=C(NCc1ccc2c(c1)OCO2)c1ccoc1",
+    ),
+    (
+        "CCn1c(SCC(=O)Nc2c(Cl)nccc2)nnc1-c1ccccc1",
+        "O=C(CSc1nnc(-c2ccccc2)[nH]1)Nc1cccnc1",
+    ),
+    (
+        "CCC(C)N(C)C1CCN(C(=S)Nc2cc(OC)ccc2)CC1",
+        "S=C(Nc1ccccc1)N1CCCCC1",
+    ),
+    (
+        "Brc1oc(C(=O)N2CC(=O)Nc3c(cc(Br)cc3)C2c2ccccc2)cc1",
+        "O=C1CN(C(=O)c2ccco2)C(c2ccccc2)c2ccccc2N1",
+    ),
+    (
+        "CN(C(=O)CCSc1nc(-c2cc3c(cc2)OCO3)cc(C(F)(F)F)n1)Cc1ccccc1",
+        "O=C(CCSc1nccc(-c2ccc3c(c2)OCO3)n1)NCc1ccccc1",
+    ),
+    (
+        "[Br-].COc1c(OC)c(OC)cc(-c2nc3c[n+](CC(=O)c4ccccc4)ccc3n2C)c1",
+        "O=C(C[n+]1ccc2[nH]c(-c3ccccc3)nc2c1)c1ccccc1",
+    ),
+    (
+        "CCOC(CSc1n(-c2c(OC)cccc2)c(CNC(Cc2ccccc2)=O)nn1)=O",
+        "O=C(Cc1ccccc1)NCc1nncn1-c1ccccc1",
+    ),
+    (
+        "CS(N(Cc1ccccc1)c1ccc(C(Nc2c(Sc3ccccc3)cccc2)=O)cc1)(=O)=O",
+        "O=C(Nc1ccccc1Sc1ccccc1)c1ccc(NCc2ccccc2)cc1",
+    ),
+    (
+        "Cc1nc(C2N(C(=O)c3cn(C)c4c(c3=O)cccc4)CCc3c4c([nH]c32)cccc4)ccc1",
+        "O=C(c1c[nH]c2ccccc2c1=O)N1CCc2c([nH]c3ccccc23)C1c1ccccn1",
+    ),
+    (
+        "CCCCc1nc(N2CCOCC2)c(C#N)c2c1CCCC2",
+        "c1nc(N2CCOCC2)cc2c1CCCC2",
+    ),
+    (
+        "O=C(NN=Cc1cc([N+]([O-])=O)ccc1Cl)c1nccnc1",
+        "O=C(NN=Cc1ccccc1)c1cnccn1",
+    ),
+    (
+        "COc1ccc(-n2c(SCC(=O)c3ccc4c(c3)OCCO4)nnn2)cc1",
+        "O=C(CSc1nnnn1-c1ccccc1)c1ccc2c(c1)OCCO2",
+    ),
+    (
+        "COc1c(C=CC(=O)Nc2cc(S(NC3=NCCCCC3)(=O)=O)ccc2)cccc1",
+        "O=C(C=Cc1ccccc1)Nc1cccc(S(=O)(=O)NC2=NCCCCC2)c1",
+    ),
+    (
+        "Cc1nn(-c2ccc(F)cc2)c(Cl)c1C=C(CC(=O)O)c1sc2ccccc2n1",
+        "C(=Cc1nc2ccccc2s1)c1cnn(-c2ccccc2)c1",
+    ),
+    (
+        "COc1c(OC)c(OC)cc(C2N(c3ccccc3)OC3C2C(=O)N(Cc2ccccc2)C3=O)c1",
+        "O=C1C2ON(c3ccccc3)C(c3ccccc3)C2C(=O)N1Cc1ccccc1",
+    ),
+    (
+        "COCCNC(=S)Nc1cc(OC)c(NC(=O)c2ccco2)cc1OC",
+        "O=C(Nc1ccccc1)c1ccco1",
+    ),
+    (
+        "N#Cc1c(SCC(=O)c2cc3c(oc2=O)cccc3)nc(-c2ccccc2)cc1",
+        "O=C(CSc1cccc(-c2ccccc2)n1)c1cc2ccccc2oc1=O",
+    ),
+    (
+        "O=C(N1CCCC1)c1nc2ccccn2c1CN1CCCC(OCc2ccccc2)C1",
+        "O=C(c1nc2ccccn2c1CN1CCCC(OCc2ccccc2)C1)N1CCCC1",
+    ),
+    ("Brc1cccc(OCCSc2ncccn2)c1", "c1ccc(OCCSc2ncccn2)cc1"),
+    (
+        "CC(C)(C)NC(=O)C12CCC(C)(C1(C)C)c1nc3ccccc3nc12",
+        "c1ccc2nc3c(nc2c1)C1CCC3C1",
+    ),
+    (
+        "[I-].CC(C)C1C(OCC(O)C[N+]2(C)CCCCC2)CC(C)CC1",
+        "C1CCC(OCCC[NH+]2CCCCC2)CC1",
+    ),
+    (
+        "Cc1ccccc1NS(=O)(=O)c1ccc(OCC(=O)N2CCCCC2)cc1",
+        "O=C(COc1ccc(S(=O)(=O)Nc2ccccc2)cc1)N1CCCCC1",
+    ),
+    (
+        "Cc1cc(NC(=O)CSc2nc3c(c(=O)n2-c2ccc(Br)cc2)SCC3)no1",
+        "O=C(CSc1nc2c(c(=O)n1-c1ccccc1)SCC2)Nc1ccon1",
+    ),
+    (
+        "Cc1ccccc1C(NC(C(C)C)C(OCC(c1[nH]ccc1)=O)=O)=O",
+        "O=C(CNC(=O)c1ccccc1)OCC(=O)c1ccc[nH]1",
+    ),
+    (
+        "Cc1ccnc(NS(c2ccc(NS(C)(=O)=O)cc2)(=O)=O)n1",
+        "O=S(=O)(Nc1ncccn1)c1ccccc1",
+    ),
+    (
+        "Cn1c(-c2ccc(Cl)cc2)cnc1NCc1cc2c(cc1[N+]([O-])=O)OCO2.OC(=O)C(O)=O",
+        "c1ccc(-c2cnc(NCc3ccc4c(c3)OCO4)[nH]2)cc1",
+    ),
+    (
+        "CC1Cc2ccccc2N1C(=O)CON=Cc1ccc(OC(F)F)cc1",
+        "O=C(CON=Cc1ccccc1)N1CCc2ccccc21",
+    ),
+    (
+        "C=C1C(=O)OC2C(O)C(C)=CC(=O)C=C(C)CC(OC(C(C)=CC)=O)C12",
+        "C=C1C(=O)OC2CC=CC(=O)C=CCCC12",
+    ),
+    (
+        "O=C1C2N(CSC2)c2c(cc(C(F)(F)F)cc2)N1Cc1cccc(F)c1",
+        "O=C1C2CSCN2c2ccccc2N1Cc1ccccc1",
+    ),
+    (
+        "Cc1ccc(OCC(=O)Nc2c[nH]c(=O)[nH]c2=O)cc1C",
+        "O=C(COc1ccccc1)Nc1c[nH]c(=O)[nH]c1=O",
+    ),
+    (
+        "Cn1c(CN2CCOCC2)nc2cc(NC(=O)c3ccccc3Cl)ccc12",
+        "O=C(Nc1ccc2[nH]c(CN3CCOCC3)nc2c1)c1ccccc1",
+    ),
+    (
+        "O=c1oc2ccc(O)cc2c(CN2CCN(CC=Cc3ccccc3)CC2)c1",
+        "O=c1cc(CN2CCN(CC=Cc3ccccc3)CC2)c2ccccc2o1",
+    ),
+    (
+        "Cn1c(Cc2ccccc2)nnc1SCCC(=O)Nc1ccccc1",
+        "O=C(CCSc1nnc(Cc2ccccc2)[nH]1)Nc1ccccc1",
+    ),
+    (
+        "c1cc2nc(CC(=O)c3cc([N+]([O-])=O)ccc3)[nH]c2cc1",
+        "O=C(Cc1nc2ccccc2[nH]1)c1ccccc1",
+    ),
+    (
+        "c1cc2cc(C(=O)N3CCN(c4ccc(N5CCOCC5)nn4)CC3)c(=O)oc2cc1",
+        "O=C(c1cc2ccccc2oc1=O)N1CCN(c2ccc(N3CCOCC3)nn2)CC1",
+    ),
+    (
+        "COc1ccccc1-n1c(=S)[nH]nc1CCn1nc(C)c(Br)c1C",
+        "S=c1[nH]nc(CCn2cccn2)n1-c1ccccc1",
+    ),
+    ("CCC(=O)NC(=S)Nc1ccc(N2CCOCC2)cc1", "c1ccc(N2CCOCC2)cc1"),
+    (
+        "CCCCCC(=O)N1CCN(CCNC=C2C(=O)CC(c3ccc(OC)c(OC)c3)CC2=O)CC1",
+        "O=C1CC(c2ccccc2)CC(=O)C1=CNCCN1CCNCC1",
+    ),
+    (
+        "CN1CCN(C(=O)CN(S(C)(=O)=O)Cc2ccc(Cl)cc2)CC1",
+        "O=C(CNCc1ccccc1)N1CCNCC1",
+    ),
+    ("COc1cc(OC)cc(C(=O)NCc2cccnc2)c1", "O=C(NCc1cccnc1)c1ccccc1"),
+    (
+        "c1cncc(NC(=O)C2CCCN(S(c3cccc4c3nsn4)(=O)=O)C2)c1",
+        "O=C(Nc1cccnc1)C1CCCN(S(=O)(=O)c2cccc3nsnc23)C1",
+    ),
+    ("CC(NC1=NN(C(C)=O)C(C)(c2cccs2)S1)=O", "C1=NNC(c2cccs2)S1"),
+    (
+        "CCCC(=O)Nc1ccc(-c2nc3cc(C)c(C)cc3o2)cc1",
+        "c1ccc(-c2nc3ccccc3o2)cc1",
+    ),
+    (
+        "Cc1c(C)n(CC(O)CN2CCOCC2)c2ccccc12.OC(=O)C(O)=O",
+        "c1ccc2c(c1)ccn2CCCN1CCOCC1",
+    ),
+    (
+        "Cc1occc1-c1n(CCc2ccccc2)c(SCC(=O)Nc2sccn2)nn1",
+        "O=C(CSc1nnc(-c2ccoc2)n1CCc1ccccc1)Nc1nccs1",
+    ),
+    (
+        "Cc1oc(-c2cc(F)ccc2)nc1CN1C(CCc2ncccc2)CCCC1",
+        "c1ccc(-c2nc(CN3CCCCC3CCc3ccccn3)co2)cc1",
+    ),
+    (
+        "COc1c(OC)c(C(O)=O)c(C=NNC(c2cc(NC(c3ccc(F)cc3)=O)ccc2)=O)cc1",
+        "O=C(NN=Cc1ccccc1)c1cccc(NC(=O)c2ccccc2)c1",
+    ),
+    (
+        "CCn1c(Cc2ccccc2)nnc1SCC(=O)Nc1ccc(S(N)(=O)=O)cc1",
+        "O=C(CSc1nnc(Cc2ccccc2)[nH]1)Nc1ccccc1",
+    ),
+    (
+        "CCn1c(COc2nn(-c3ccccc3)c(=O)cc2)nnc1SCc1ccc(OC)cc1",
+        "O=c1ccc(OCc2nnc(SCc3ccccc3)[nH]2)nn1-c1ccccc1",
+    ),
+    (
+        "CC1=NC(=O)C(=C2CC(O)(C(F)(F)F)ON2)C(C)=C1",
+        "O=C1N=CC=CC1=C1CCON1",
+    ),
+    (
+        "COc1ccc(NC(=S)Nc2ccccc2C(F)(F)F)cc1",
+        "S=C(Nc1ccccc1)Nc1ccccc1",
+    ),
+    (
+        "CCCc1cc(=O)nc(SCC(=O)c2cc(C)n(CCOC)c2C)[nH]1",
+        "O=C(CSc1nc(=O)cc[nH]1)c1cc[nH]c1",
+    ),
+    ("CC(=O)Nc1ccc2c(c1)C(C)(C)C(C)N2C", "c1ccc2c(c1)CCN2"),
+    (
+        "CCN1CCN(C(c2ccc(OCC(Nc3ccc(F)cc3)=O)c(OC)c2)=O)CC1",
+        "O=C(COc1ccc(C(=O)N2CCNCC2)cc1)Nc1ccccc1",
+    ),
+    (
+        "CCCCN1C2CCCC1CC(NC(=O)c1ccc(OC)c(OC)c1)C2",
+        "O=C(NC1CC2CCCC(C1)N2)c1ccccc1",
+    ),
+    (
+        "c1ccc(N(CC(=O)N2CCOCC2)S(c2ccccc2)(=O)=O)cc1",
+        "O=C(CN(c1ccccc1)S(=O)(=O)c1ccccc1)N1CCOCC1",
+    ),
+    (
+        "CCn1c(C)nc2cc(C(=O)NN=Cc3ccc(OC)c(O)c3)ccc12",
+        "O=C(NN=Cc1ccccc1)c1ccc2[nH]cnc2c1",
+    ),
+    ("[Cl-].NC(=O)CN1C=CC(=C[NH+]=O)C=C1", "C=C1C=CNC=C1"),
+    (
+        "Cn1cnnc1SC1C(NS(c2ccccc2)(=O)=O)c2c3c(ccc2)cccc31",
+        "O=S(=O)(NC1c2cccc3cccc(c23)C1Sc1nnc[nH]1)c1ccccc1",
+    ),
+    (
+        "COc1ccc(Nc2nc(NCc3ccco3)nc(NN=Cc3ccccc3F)n2)cc1",
+        "C(=NNc1nc(NCc2ccco2)nc(Nc2ccccc2)n1)c1ccccc1",
+    ),
+    (
+        "CC1=CC(=O)C(=C2C=C(c3ccccc3[N+]([O-])=O)NN2)C=C1",
+        "O=C1C=CC=CC1=C1C=C(c2ccccc2)NN1",
+    ),
+    (
+        "COc1ccc(CC2[N+]([O-])(C)CCc3cc(OC)c(O)cc32)cc1O",
+        "c1ccc(CC2[NH2+]CCc3ccccc32)cc1",
+    ),
+    ("Cl.NC(N)=Nc1nc(=O)c2cc(Br)ccc2[nH]1", "O=c1nc[nH]c2ccccc12"),
+    (
+        "CC(=O)N1CCC(=NNc2ccc(S(=O)(=O)N3CCOCC3)cc2[N+]([O-])=O)CC1",
+        "O=S(=O)(c1ccc(NN=C2CCNCC2)cc1)N1CCOCC1",
+    ),
+    (
+        "Cc1cc(S(N(Cc2ccc(F)cc2)CC2OCCC2)(=O)=O)ccc1-n1cnnn1",
+        "O=S(=O)(c1ccc(-n2cnnn2)cc1)N(Cc1ccccc1)CC1CCCO1",
+    ),
+    (
+        "CC1(C)OCc2c(c3c(sc4c(NCCCO)ncnc43)nc2-c2ccco2)C1",
+        "c1coc(-c2nc3sc4cncnc4c3c3c2COCC3)c1",
+    ),
+    (
+        "COc1ccc(CCNC(=O)CSc2n(-c3ccc(OC)c(OC)c3)nnn2)cc1OC",
+        "O=C(CSc1nnnn1-c1ccccc1)NCCc1ccccc1",
+    ),
+    (
+        "CC(C)(CC(O)=O)CC(NCc1c(Cl)cccc1Sc1ccc(Cl)cc1)=O",
+        "c1ccc(Sc2ccccc2)cc1",
+    ),
+    (
+        "COc1ccc(-c2cc(CCCC(=O)NCCc3cc(OC)ccc3OC)no2)cc1",
+        "O=C(CCCc1cc(-c2ccccc2)on1)NCCc1ccccc1",
+    ),
+    ("Cc1ccc(-c2ncns2)cc1", "c1ccc(-c2ncns2)cc1"),
+    (
+        "C(O)CCn1c(=O)c2c(nc1C=Cc1ccc([N+]([O-])=O)o1)cccc2",
+        "O=c1[nH]c(C=Cc2ccco2)nc2ccccc12",
+    ),
+    ("COC(CC(O)CC(O)C(C)OCc1ccccc1)OC", "c1ccccc1"),
+    (
+        "Cl.CCCC(N1CCN(C(=O)c2occc2)CC1)c1n(C(C)(C)C)nnn1",
+        "O=C(c1ccco1)N1CCN(Cc2nnn[nH]2)CC1",
+    ),
+    ("O=C(NC(CO)c1ccccc1)c1occc1", "O=C(NCc1ccccc1)c1ccco1"),
+    (
+        "O=C(Nc1ccc(N2CCOCC2)cc1)c1c(Cl)cc(F)c(F)c1",
+        "O=C(Nc1ccc(N2CCOCC2)cc1)c1ccccc1",
+    ),
+    (
+        "CCc1sc(N2C(=O)c3ccc(Oc4ccc([N+]([O-])=O)cc4)cc3C2=O)nn1",
+        "O=C1c2ccc(Oc3ccccc3)cc2C(=O)N1c1nncs1",
+    ),
+    ("CC(C)Cc1ccc(C(C)C(=O)O)cc1", "c1ccccc1"),
+    (
+        "Cl.N=c1sccn1CC(=O)Nc1cc(S(N2CCCC2)(=O)=O)ccc1Cl",
+        "N=c1sccn1CC(=O)Nc1cccc(S(=O)(=O)N2CCCC2)c1",
+    ),
+    (
+        "c1ccc(-c2ccc(C(=O)OC3CC4OC(=O)CC4C3CO)cc2)cc1",
+        "O=C1CC2CC(OC(=O)c3ccc(-c4ccccc4)cc3)CC2O1",
+    ),
+    ("CN(CCC#N)CC(=O)Nc1ccc(S(N)(=O)=O)cc1", "c1ccccc1"),
+    (
+        "Cc1nc(-c2ccc([N+]([O-])=O)cc2)sc1C(=O)O",
+        "c1ccc(-c2nccs2)cc1",
+    ),
+    (
+        "c1coc(C(=O)N2CCN(C(Cn3nnc(-c4ccc(NC(c5ccc(F)cc5)=O)cc4)n3)=O)CC2)c1",
+        "O=C(Nc1ccc(-c2nnn(CC(=O)N3CCN(C(=O)c4ccco4)CC3)n2)cc1)c1ccccc1",
+    ),
+    ("Cc1onc(-c2c(Cl)cccc2Cl)c1C(N)=S", "c1ccc(-c2ccon2)cc1"),
+    ("CCOC(=O)c1cnc2ccccc2c1NCCO", "c1ccc2ncccc2c1"),
+    (
+        "Cc1ccc(C)c(NC(=O)Cn2nnc(-c3ccc(N4CCOCC4)cc3)n2)c1",
+        "O=C(Cn1nnc(-c2ccc(N3CCOCC3)cc2)n1)Nc1ccccc1",
+    ),
+    (
+        "CC(C)(C)c1cc(C(=O)NNc2ccc(OC(F)(F)F)cc2)n(Cc2ccccc2)n1",
+        "O=C(NNc1ccccc1)c1ccnn1Cc1ccccc1",
+    ),
+    (
+        "CCCCCOC(=O)C1=C(C)N=C2N(NN=N2)C1c1ccc(OC)c(OC)c1OC",
+        "C1=CC(c2ccccc2)N2NN=NC2=N1",
+    ),
+    (
+        "Cc1cc2cc(CNC(=O)C3CC3)ccc2n1C",
+        "O=C(NCc1ccc2[nH]ccc2c1)C1CC1",
+    ),
+    (
+        "Cc1ccccc1C(NC(CC(C)C)C(Nc1cc(S(N(C)C)(=O)=O)ccc1)=O)=O",
+        "O=C(CNC(=O)c1ccccc1)Nc1ccccc1",
+    ),
+    (
+        "COCCCNC(=S)N1CCC(NC(=O)c2ccco2)CC1",
+        "O=C(NC1CCNCC1)c1ccco1",
+    ),
+    (
+        "Cn1c(C=Cc2oc([N+]([O-])=O)cc2)nc2ccccc2c1=O",
+        "O=c1[nH]c(C=Cc2ccco2)nc2ccccc12",
+    ),
+    (
+        "c1cc2nc(SCc3cc(=O)n4ccsc4n3)n(CCCO)c(=O)c2cc1",
+        "O=c1[nH]c(SCc2cc(=O)n3ccsc3n2)nc2ccccc12",
+    ),
+    (
+        "c1ccc2c(c1)cccc2NC(=O)CC1SC(NCC2OCCC2)=NC1=O",
+        "O=C(CC1SC(NCC2CCCO2)=NC1=O)Nc1cccc2ccccc12",
+    ),
+];
+
+#[test]
+fn scaffolds_match_python() -> Result<()> {
+    for &(smiles, scaffold) in SCAFFOLDS {
+        let mol = mol_from_smiles(smiles)?;
+        assert_eq!(
+            mol_to_smiles(&get_scaffold_for_mol(&mol)?)?,
+            scaffold,
+            "{smiles}"
+        );
+    }
+    Ok(())
+}
+
+#[test]
+fn scaffold_smiles() -> Result<()> {
+    let smiles = "Cc1cc(Oc2nccc(CCC)c2)ccc1";
+    assert_eq!(murcko_scaffold_smiles(smiles)?, "c1ccc(Oc2ccccn2)cc1");
+    assert_eq!(
+        murcko_scaffold_smiles_from_smiles(smiles)?,
+        "c1ccc(Oc2ccccn2)cc1"
+    );
+    assert_eq!(murcko_scaffold_smiles_from_smiles("CCCC")?, "");
+    assert_eq!(
+        murcko_scaffold_smiles_mol(&mol_from_smiles(smiles)?)?,
+        "c1ccc(Oc2ccccn2)cc1"
+    );
+    assert!(matches!(
+        murcko_scaffold_smiles(""),
+        Err(rdkit_cxx::Error::Value { .. })
+    ));
+    let chiral = "CC[C@H]1CC[C@H]2CCCC[C@@H]2C1";
+    assert_eq!(murcko_scaffold_smiles(chiral)?, "C1CCC2CCCCC2C1");
+    assert_eq!(
+        murcko_scaffold_smiles_with_include_chirality(chiral, true)?,
+        "C1CC[C@H]2CCCC[C@@H]2C1"
+    );
+    assert_eq!(
+        murcko_scaffold_smiles_from_smiles_with_include_chirality(chiral, true)?,
+        "C1CC[C@H]2CCCC[C@@H]2C1"
+    );
+    assert_eq!(
+        murcko_scaffold_smiles_mol_with_include_chirality(&mol_from_smiles(chiral)?, true)?,
+        "C1CC[C@H]2CCCC[C@@H]2C1"
+    );
+    Ok(())
+}
+
+#[test]
+fn generic_scaffolds() -> Result<()> {
+    for (smiles, generic) in [
+        ("c1ccccc1", "C1CCCCC1"),
+        ("c1cccnc1", "C1CCCCC1"),
+        // sf.net issue 246
+        ("c1[nH]ccc1", "C1CCCC1"),
+        ("C1[NH2+]C1", "C1CC1"),
+        ("C1[C@](Cl)(F)O1", "CC1(C)CC1"),
+        // GitHub issue 6855
+        ("[235U]1CC1", "C1CC1"),
+    ] {
+        let scaffold = make_scaffold_generic(&mol_from_smiles(smiles)?)?;
+        assert_eq!(mol_to_smiles(&scaffold)?, generic, "{smiles}");
+    }
+    Ok(())
+}
+
+#[test]
+fn patterns_and_reactions() -> Result<()> {
+    assert_eq!(
+        mol_to_smarts(&murcko_q())?,
+        "[$([!#1&D3&$([D3]-[!#1])](=[A&D1])=[A&D1]),$([!#1&D2&$([D2]-[!#1])]=,#[A&D1]),$([!#1&D1&$([D1]-[!#1&!n])])]"
+    );
+    let patts: Vec<String> = murcko_patts()
+        .iter()
+        .map(mol_to_smarts)
+        .collect::<Result<_>>()?;
+    assert_eq!(
+        patts,
+        [
+            "[!#1&D3&$([D3]-[!#1])](=[A&D1])=[A&D1]",
+            "[!#1&D2&$([D2]-[!#1])]=,#[A&D1]",
+            "[!#1&D1&$([D1]-[!#1&!n])]",
+        ]
+    );
+    let transforms: Vec<String> = murcko_transforms()
+        .iter()
+        .map(reaction_to_smarts)
+        .collect::<Result<_>>()?;
+    assert_eq!(
+        transforms,
+        [
+            "[*:1]-[!#1&D1]>>[*:1][#1]",
+            "[*:1]-[!#1&D2]#[A&D1]>>[*:1][#1]",
+            "[*:1]-[!#1&D2]=[A&D1]>>[*:1][#1]",
+            "[*:1]-[!#1&D3](=[A&D1])=[A&D1]>>[*:1][#1]",
+        ]
+    );
+    assert_eq!(
+        reaction_to_smarts(&aromatic_n_transform())?,
+        "[n:1]-[D1]>>[n&H1:1]"
+    );
+    Ok(())
+}
