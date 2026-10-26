@@ -6,7 +6,8 @@ The first release. It supports RDKit 2026.09.1 from conda-forge on Linux
 (x86-64 and arm64) and macOS (arm64), and builds with Rust 1.88 or newer. The
 build refuses other RDKit releases: the wrapper compiles against copies of
 headers RDKit does not install, whose layouts can change between patch
-releases (`wrapper/vendor/`).
+releases (`wrapper/vendor/`). A program built against one release stops
+when it loads with another.
 
 ### Bindings
 

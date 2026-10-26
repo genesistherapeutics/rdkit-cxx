@@ -127,6 +127,14 @@ fn main() {
     );
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
+    // conda appends to an environment's history whenever it changes it, and
+    // installs packages' files with the times they were built at, which can
+    // be older than the last build, so the history, not RDKit's files (see
+    // link), shows an update in place.
+    let history = prefix.join("conda-meta").join("history");
+    if history.exists() {
+        println!("cargo::rerun-if-changed={}", history.display());
+    }
     // Clippy checks the Rust and links nothing, so it needs no C++. Cargo
     // runs this script for clippy apart from its run for `cargo build`
     // (clippy's rustc wrapper is part of the run's identity), so building the
@@ -255,10 +263,11 @@ fn link(build_dir: &Path) {
     let lib_dir = lib_dir.expect("CMake listed no RDKit libraries");
 
     // RDKit's files are outside the package, so Cargo does not watch them.
-    // An update or reinstall in the same prefix replaces them, and the
-    // wrapper must then be rebuilt, and its release check rerun, against the
-    // new headers. Only existing paths: Cargo reruns every build for a path
-    // that does not exist.
+    // An update in the same prefix replaces them, and the wrapper must then
+    // be rebuilt, and its release check rerun, against the new headers. For
+    // an install outside conda (whose files keep their packages' times; see
+    // main), the files' times show it. Only existing paths: Cargo reruns
+    // every build for a path that does not exist.
     let watched = build_dir.join("rdkit-files.txt");
     let watched = fs::read_to_string(&watched)
         .unwrap_or_else(|err| panic!("reading {}: {err}", watched.display()));

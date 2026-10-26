@@ -47,8 +47,9 @@ Each crate version supports one RDKit release series (2026.9.x supports RDKit
 2026.09), and within it the releases it has checked: 2026.9.0 supports RDKit
 2026.09.1. The wrapper compiles against copies of a few headers RDKit does not
 install, whose layouts can change between patch releases, so the build refuses
-any other release ([`wrapper/vendor/`](wrapper/vendor/README.md)). It builds
-with Rust 1.88 or newer.
+any other release ([`wrapper/vendor/`](wrapper/vendor/README.md)), and a
+program built against one stops when it loads with another, as after an
+update in place. It builds with Rust 1.88 or newer.
 
 Install RDKit's development packages from conda-forge and activate the
 environment before building:

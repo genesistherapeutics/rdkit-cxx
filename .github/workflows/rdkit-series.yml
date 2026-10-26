@@ -43,47 +43,61 @@ jobs:
             exit 1
           fi
           series="${pinned%.*}"
-          # Final releases only: a pre-release (2027.03.1b1) waits for its
-          # release.
-          latest="$(curl -sSf --retry 3 https://api.anaconda.org/package/conda-forge/librdkit-dev \
+          # Final releases only, oldest first: a pre-release (2027.03.1b1)
+          # waits for its release.
+          versions="$(curl -sSf --retry 3 https://api.anaconda.org/package/conda-forge/librdkit-dev \
             | jq -r '.versions[] | select(test("^[0-9]{4}\\.[0-9]{2}\\.[0-9]+$"))' \
-            | sort -V | tail -n 1)"
-          if [ -z "${latest}" ]; then
+            | sort -V)"
+          if [ -z "${versions}" ]; then
             echo "conda-forge lists no librdkit-dev release" >&2
             exit 1
           fi
-          if [ "$(printf '%s\n%s\n' "${pinned}" "${latest}" | sort -V | tail -n 1)" = "${pinned}" ]; then
-            echo "conda-forge's latest librdkit-dev, ${latest}, is no newer than RDKit ${pinned}"
-            exit 0
-          fi
+          latest="$(tail -n 1 <<< "${versions}")"
+          latest_patch=""
+          while read -r version; do
+            if [[ "${version}" == "${series}".* ]]; then
+              latest_patch="${version}"
+            fi
+          done <<< "${versions}"
           # A closed issue counts too, as a closed Dependabot pull request
           # ignores its version.
-          new_series="${latest%.*}"
-          if [ "${new_series}" = "${series}" ]; then
-            title="RDKit ${latest} is on conda-forge"
-          else
-            title="RDKit ${new_series} is on conda-forge"
-          fi
           titles="$(gh issue list --state all --limit 1000 --json title --jq '.[].title')"
-          if grep -Fxq "${title}" <<< "${titles}"; then
-            echo "an issue already tracks ${title%% is on*}"
-            exit 0
-          fi
-          tag="Release_${latest//./_}"
-          notes="([release notes](https://github.com/rdkit/rdkit/releases/tag/${tag}))"
-          if [ "${new_series}" = "${series}" ]; then
-            gh issue create --title "${title}" --assignee "${ASSIGNEE}" --body-file - <<EOF
-          conda-forge has \`librdkit-dev\` ${latest} ${notes}, and this crate supports RDKit ${pinned}. The build refuses releases that \`wrapper/vendor\` holds no headers for (\`wrapper/vendor/README.md\`). A patch release for it (README.md, Releases):
+          # Opens an issue titled $1, with the body on stdin, unless one has
+          # that title.
+          open_issue() {
+            if grep -Fxq "$1" <<< "${titles}"; then
+              echo "an issue already tracks ${1% is on conda-forge}"
+              cat > /dev/null
+            else
+              gh issue create --title "$1" --assignee "${ASSIGNEE}" --body-file -
+            fi
+          }
+          opened=""
+          # A patch release of the pinned series, which the build refuses
+          # until wrapper/vendor holds its headers. Checked on its own, as
+          # RDKit can patch a series after the next one is out.
+          if [ "${latest_patch}" != "${pinned}" ] \
+            && [ "$(printf '%s\n%s\n' "${pinned}" "${latest_patch}" | sort -V | tail -n 1)" = "${latest_patch}" ]; then
+            opened=1
+            tag="Release_${latest_patch//./_}"
+            open_issue "RDKit ${latest_patch} is on conda-forge" <<EOF
+          conda-forge has \`librdkit-dev\` ${latest_patch} ([release notes](https://github.com/rdkit/rdkit/releases/tag/${tag})), and this crate supports RDKit ${pinned}. The build refuses releases that \`wrapper/vendor\` holds no headers for (\`wrapper/vendor/README.md\`). A patch release for it (README.md, Releases):
 
-          - [ ] Copy the vendored headers from \`${tag}\` into \`wrapper/vendor/${latest}/\`, and update the wrappers for any class that changed: \`git diff --no-index wrapper/vendor/${pinned} wrapper/vendor/${latest}\`.
+          - [ ] Copy the vendored headers from \`${tag}\` into \`wrapper/vendor/${latest_patch}/\`, and update the wrappers for any class that changed: \`git diff --no-index wrapper/vendor/${pinned} wrapper/vendor/${latest_patch}\`.
           - [ ] Check the release's new values in the enums the bindings mirror (\`rdkit_enum!\`), which the crate panics on.
-          - [ ] Pin \`librdkit-dev ${latest}\` in \`environment.yml\`, and add the release to \`wrapper/vendor/README.md\`.
+          - [ ] Pin \`librdkit-dev ${latest_patch}\` in \`environment.yml\`, and add the release to \`wrapper/vendor/README.md\`.
           EOF
-          else
+          fi
+          # A newer series, which needs a crate version of its own. Series are
+          # YYYY.MM, so they compare as strings.
+          new_series="${latest%.*}"
+          if [[ "${new_series}" > "${series}" ]]; then
+            opened=1
+            tag="Release_${latest//./_}"
             year="${series%.*}"
             month="$((10#${series#*.}))"
-            gh issue create --title "${title}" --assignee "${ASSIGNEE}" --body-file - <<EOF
-          conda-forge has \`librdkit-dev\` ${latest} ${notes}, and this crate supports RDKit ${pinned}. A crate version for the new series (README.md, Parity and Releases):
+            open_issue "RDKit ${new_series} is on conda-forge" <<EOF
+          conda-forge has \`librdkit-dev\` ${latest} ([release notes](https://github.com/rdkit/rdkit/releases/tag/${tag})), and this crate supports RDKit ${pinned}. A crate version for the new series (README.md, Parity and Releases):
 
           - [ ] Pin \`librdkit-dev ${latest}\` in \`environment.yml\`.
           - [ ] \`bump-my-version bump --new-version ${new_series%.*}.$((10#${new_series#*.})).0\`
@@ -91,4 +105,7 @@ jobs:
           - [ ] Copy the vendored headers from \`${tag}\` into \`wrapper/vendor/${latest}/\` (\`wrapper/vendor/README.md\`), and remove the RDKit ${series} directories.
           - [ ] Update what names RDKit ${series}: \`git grep -nE '${year}[._]0?${month}'\`
           EOF
+          fi
+          if [ -z "${opened}" ]; then
+            echo "conda-forge's latest librdkit-dev releases are no newer than RDKit ${pinned}"
           fi

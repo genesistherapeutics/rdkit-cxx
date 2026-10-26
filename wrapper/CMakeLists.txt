@@ -210,6 +210,10 @@ if(TARGET RDKit::EHTLib)
 endif()
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
+# The release the wrapper compiles against, which errors.cpp compares with the
+# one loaded. Only that file needs it, so the others' flags stay the same.
+set_source_files_properties(src/errors.cpp PROPERTIES
+  COMPILE_DEFINITIONS RDKIT_CXX_RDKIT_VERSION="${rdkit_VERSION}")
 # GraphMol/CoordGen.h includes coordgen's headers, which RDKit's packages
 # do not install; third_party/coordgen holds the version RDKit builds in.
 target_include_directories(rdkitcxx PRIVATE
