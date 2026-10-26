@@ -229,7 +229,7 @@ pub fn build_quant_data_set(file_name: impl AsRef<Path>) -> Result<MLQuantDataSe
     let mut in_file = open(file_name.as_ref())?;
     let (var_names, q_bounds) = read_vars(&mut in_file)?;
     let (pt_names, examples) = read_quant_examples(&mut in_file)?;
-    MLQuantDataSet::new_with_params(
+    MLQuantDataSet::from_params(
         examples,
         MLDataSetParams {
             q_bounds: Some(q_bounds),
@@ -248,7 +248,7 @@ pub fn build_data_set(file_name: impl AsRef<Path>) -> Result<MLDataSet> {
     let mut in_file = open(file_name.as_ref())?;
     let (var_names, q_bounds) = read_vars(&mut in_file)?;
     let (pt_names, examples) = read_general_examples(&mut in_file)?;
-    MLDataSet::new_with_params(
+    MLDataSet::from_params(
         examples,
         MLDataSetParams {
             q_bounds: Some(q_bounds),
@@ -444,7 +444,7 @@ pub fn text_to_data_with_params<I: IntoIterator<Item = Vec<String>>>(
                 .collect(),
         );
     }
-    MLDataSet::new_with_params(
+    MLDataSet::from_params(
         vals,
         MLDataSetParams {
             var_names: Some(kept_names),

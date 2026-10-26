@@ -11,7 +11,8 @@
 //! class, whose `MakePicks` only raises, has no counterpart; each picker
 //! has its own `len` and `get`.
 
-use crate::data_structs::init::SimilarityFunction;
+use std::fmt;
+
 use crate::data_structs::top_n_container::TopNContainer;
 use crate::data_structs::{
     ExplicitBitVect, fingerprint_similarity_with_metric, tanimoto_similarity,
@@ -39,7 +40,7 @@ fn pick_at<T: Copy>(picks: &[(T, f64)], which: i64) -> Result<(T, f64)> {
 /// Parameters for [`TopNOverallPicker::new_with_params`] and
 /// [`SpreadPicker::new_with_params`], with Python's defaults (A2), except
 /// that Python's default probes and data set, `None`, are empty here.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy)]
 pub struct PickerParams<'a> {
     /// How many fingerprints to pick.
     pub num_to_pick: usize,
@@ -48,8 +49,19 @@ pub struct PickerParams<'a> {
     /// The fingerprints to pick from.
     pub data_set: &'a [ExplicitBitVect],
     /// The similarity, taken with `fingerprint_similarity_with_metric`,
-    /// which folds fingerprints of different sizes.
-    pub sim_metric: SimilarityFunction<ExplicitBitVect>,
+    /// which folds fingerprints of different sizes. Any function or closure
+    /// will do, such as `&|a, b| tversky_similarity(a, b, 0.3, 0.7)`.
+    pub sim_metric: &'a dyn Fn(&ExplicitBitVect, &ExplicitBitVect) -> Result<f64>,
+}
+
+impl fmt::Debug for PickerParams<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("PickerParams")
+            .field("num_to_pick", &self.num_to_pick)
+            .field("probe_fps", &self.probe_fps)
+            .field("data_set", &self.data_set)
+            .finish_non_exhaustive()
+    }
 }
 
 impl Default for PickerParams<'_> {
@@ -58,7 +70,7 @@ impl Default for PickerParams<'_> {
             num_to_pick: 10,
             probe_fps: &[],
             data_set: &[],
-            sim_metric: tanimoto_similarity::<ExplicitBitVect>,
+            sim_metric: &tanimoto_similarity::<ExplicitBitVect>,
         }
     }
 }
@@ -74,9 +86,9 @@ pub struct TopNOverallPicker<'a> {
 impl<'a> TopNOverallPicker<'a> {
     /// A picker. Mirrors `TopNOverallPicker(numToPick, probeFps, dataSet,
     /// simMetric)`.
-    pub fn new_with_params(params: PickerParams<'a>) -> TopNOverallPicker<'a> {
+    pub fn new_with_params(params: &PickerParams<'a>) -> TopNOverallPicker<'a> {
         TopNOverallPicker {
-            params,
+            params: *params,
             picks: None,
         }
     }
@@ -162,9 +174,9 @@ pub struct SpreadPicker<'a> {
 impl<'a> SpreadPicker<'a> {
     /// A picker. Mirrors `SpreadPicker(numToPick, probeFps, dataSet,
     /// simMetric)`.
-    pub fn new_with_params(params: PickerParams<'a>) -> SpreadPicker<'a> {
+    pub fn new_with_params(params: &PickerParams<'a>) -> SpreadPicker<'a> {
         SpreadPicker {
-            params,
+            params: *params,
             picks: None,
         }
     }

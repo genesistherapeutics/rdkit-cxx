@@ -122,7 +122,7 @@ pub struct Cluster {
 impl Default for Cluster {
     /// A cluster with Python's defaults. Mirrors `Clusters.Cluster()`.
     fn default() -> Cluster {
-        Cluster::new_with_params(ClusterParams::default())
+        Cluster::new_with_params(&ClusterParams::default())
     }
 }
 
@@ -133,7 +133,13 @@ fn by_metric(a: &Cluster, b: &Cluster) -> Ordering {
 impl Cluster {
     /// Mirrors `Clusters.Cluster(metric, children, position, index, name,
     /// data)`.
-    pub fn new_with_params(params: ClusterParams) -> Cluster {
+    pub fn new_with_params(params: &ClusterParams) -> Cluster {
+        Cluster::from_params(params.clone())
+    }
+
+    /// As [`new_with_params`](Cluster::new_with_params), taking the
+    /// children rather than copying them.
+    pub(crate) fn from_params(params: ClusterParams) -> Cluster {
         let mut cluster = Cluster {
             metric: params.metric,
             children: params.children,

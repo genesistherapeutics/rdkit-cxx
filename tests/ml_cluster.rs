@@ -176,14 +176,14 @@ fn butina_points_match_python() {
 }
 
 fn leaf(index: i64) -> Cluster {
-    Cluster::new_with_params(ClusterParams {
+    Cluster::new_with_params(&ClusterParams {
         index,
         ..Default::default()
     })
 }
 
 fn node(metric: f64, children: Vec<Cluster>, index: i64) -> Cluster {
-    Cluster::new_with_params(ClusterParams {
+    Cluster::new_with_params(&ClusterParams {
         metric,
         children,
         index,
@@ -232,24 +232,24 @@ fn divide() {
 
 #[test]
 fn cluster_class() {
-    let mut root = Cluster::new_with_params(ClusterParams {
+    let mut root = Cluster::new_with_params(&ClusterParams {
         index: 1,
         position: vec![1.0],
         ..Default::default()
     });
-    let mut c1 = Cluster::new_with_params(ClusterParams {
+    let mut c1 = Cluster::new_with_params(&ClusterParams {
         index: 10,
         position: vec![10.0],
         ..Default::default()
     });
     for i in [30, 31] {
-        c1.add_child(Cluster::new_with_params(ClusterParams {
+        c1.add_child(Cluster::new_with_params(&ClusterParams {
             index: i,
             position: vec![i as f64],
             ..Default::default()
         }));
     }
-    c1.add_child(Cluster::new_with_params(ClusterParams {
+    c1.add_child(Cluster::new_with_params(&ClusterParams {
         index: 32,
         position: vec![32.0],
         ..Default::default()
@@ -308,17 +308,17 @@ fn cluster_class() {
 
 #[test]
 fn print_matches_python() {
-    let mut root = Cluster::new_with_params(ClusterParams {
+    let mut root = Cluster::new_with_params(&ClusterParams {
         index: 1,
         ..Default::default()
     });
     let mut c1 = leaf(10);
-    c1.add_child(Cluster::new_with_params(ClusterParams {
+    c1.add_child(Cluster::new_with_params(&ClusterParams {
         index: 30,
         metric: 2.0,
         ..Default::default()
     }));
-    c1.add_child(Cluster::new_with_params(ClusterParams {
+    c1.add_child(Cluster::new_with_params(&ClusterParams {
         index: 31,
         metric: 1.0,
         ..Default::default()
@@ -554,7 +554,7 @@ fn resemblance_matches_python() {
     let clusters: Vec<Cluster> = pts
         .iter()
         .map(|p| {
-            Cluster::new_with_params(ClusterParams {
+            Cluster::new_with_params(&ClusterParams {
                 position: p.clone(),
                 ..Default::default()
             })

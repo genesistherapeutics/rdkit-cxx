@@ -207,7 +207,7 @@ impl MLDataSet {
     ///
     /// Errors as [`new_with_params`](Self::new_with_params).
     pub fn new(data: Vec<Vec<Value>>) -> Result<MLDataSet> {
-        MLDataSet::new_with_params(data, MLDataSetParams::default())
+        MLDataSet::new_with_params(data, &MLDataSetParams::default())
     }
 
     /// Mirrors `MLDataSet(data, nVars, nPts, nPossibleVals, qBounds,
@@ -217,7 +217,13 @@ impl MLDataSet {
     /// the quantization bounds are given, or for a row shorter than the
     /// first, as Python raises; `Error::Value` for an infinite or NaN float
     /// in a column whose values are counted.
-    pub fn new_with_params(data: Vec<Vec<Value>>, params: MLDataSetParams) -> Result<MLDataSet> {
+    pub fn new_with_params(data: Vec<Vec<Value>>, params: &MLDataSetParams) -> Result<MLDataSet> {
+        MLDataSet::from_params(data, params.clone())
+    }
+
+    /// As [`new_with_params`](MLDataSet::new_with_params), taking the
+    /// parameters.
+    pub(crate) fn from_params(data: Vec<Vec<Value>>, params: MLDataSetParams) -> Result<MLDataSet> {
         let n_results = params.n_results;
         let n_vars = match params.n_vars {
             Some(n) => n,
@@ -416,7 +422,7 @@ impl MLQuantDataSet {
     ///
     /// Errors as [`new_with_params`](Self::new_with_params).
     pub fn new(data: Vec<Vec<i64>>) -> Result<MLQuantDataSet> {
-        MLQuantDataSet::new_with_params(data, MLDataSetParams::default())
+        MLQuantDataSet::new_with_params(data, &MLDataSetParams::default())
     }
 
     /// Mirrors `MLQuantDataSet(data, nVars, nPts, nPossibleVals, qBounds,
@@ -426,7 +432,19 @@ impl MLQuantDataSet {
     /// `Error::Index` for no rows unless the number of variables is given;
     /// `Error::Value` for rows of different lengths (which NumPy cannot
     /// make an integer array of) or no rows and no possible values.
-    pub fn new_with_params(data: Vec<Vec<i64>>, params: MLDataSetParams) -> Result<MLQuantDataSet> {
+    pub fn new_with_params(
+        data: Vec<Vec<i64>>,
+        params: &MLDataSetParams,
+    ) -> Result<MLQuantDataSet> {
+        MLQuantDataSet::from_params(data, params.clone())
+    }
+
+    /// As [`new_with_params`](MLQuantDataSet::new_with_params), taking the
+    /// parameters.
+    pub(crate) fn from_params(
+        data: Vec<Vec<i64>>,
+        params: MLDataSetParams,
+    ) -> Result<MLQuantDataSet> {
         let ncols = data.first().map_or(0, Vec::len);
         if data.iter().any(|row| row.len() != ncols) {
             return Err(Error::Value {
