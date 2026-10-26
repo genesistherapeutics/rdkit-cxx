@@ -160,9 +160,11 @@ def path_statement(path: str, rust_kind: str | None, rust_generics: str | None =
     if rust_kind == "field":
         return f"let _ = |value: &{owner}| {{ let _ = &value.{last}; }};"
     if parents[-1][0].isupper():
-        # An associated function, method, constant, or enum variant. A generic
-        # one is named with the manifest's instantiation (CONVENTIONS.md T1).
-        return f"let _ = {path}{'::' + rust_generics if rust_generics else ''};"
+        # An associated function, method, constant, or enum variant, named
+        # through a qualified path, which applies a generic type's default
+        # parameters (R3). A generic item is named with the manifest's
+        # instantiation (CONVENTIONS.md T1).
+        return f"let _ = <{owner}>::{last}{'::' + rust_generics if rust_generics else ''};"
     if last[0].isupper():
         return f"let _: Option<{path}> = None;"
     # A free function. `use` also covers `impl Trait` parameters, whose types

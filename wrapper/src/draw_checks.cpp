@@ -439,7 +439,7 @@ void check_sgroup_brackets(const RDKit::SubstanceGroup &sg, bool freetype,
 }
 
 // The atom coordinates DrawMol draws (extractAtomCoords): the conformer,
-// centred when centreMoleculesBeforeDrawing (centerMolForDrawing), with y
+// centered when centreMoleculesBeforeDrawing (centerMolForDrawing), with y
 // inverted and rotated by the rotate option.
 std::vector<RDGeom::Point2D> drawn_coords(const RDKit::Conformer &conf,
                                           const RDKit::MolDrawOptions &opts) {
@@ -691,7 +691,7 @@ void check_json_options(const std::string &json) {
   auto check_rgba = [](const boost::property_tree::ptree &node,
                        const std::string &what) {
     if (node.size() < 3) {
-      refuse(what + " needs at least three colour components");
+      refuse(what + " needs at least three color components");
     }
   };
   // RDKit reads whichever child find() returns for a repeated key, so every
@@ -968,7 +968,7 @@ void check_highlight_bonds(const RDKit::ROMol &mol,
 
 void check_highlight_colours(const std::map<int, RDKit::DrawColour> &colours) {
   for (const auto &[idx, colour] : colours) {
-    check_colour(colour, "highlight colour");
+    check_colour(colour, "highlight color");
   }
 }
 

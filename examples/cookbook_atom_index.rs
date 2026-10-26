@@ -35,7 +35,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     write_image("atom_index_default.svg", &svg)?;
     assert_eq!(labelled_atoms(&svg), BTreeSet::from([10, 15, 16, 18, 21]));
 
-    // With atom index: each atom is labelled with its map number, but atom
+    // With atom index: each atom is labeled with its map number, but atom
     // 0, whose map number is 0 (no map number), is not.
     mol_with_atom_index(&mut mol)?;
     let svg = show(&mol, MOL_SIZE, &console)?;

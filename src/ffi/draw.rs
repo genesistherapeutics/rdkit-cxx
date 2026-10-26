@@ -5,7 +5,7 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// A colour as red, green, blue, and alpha components, each from 0 to 1.
+    /// A color as red, green, blue, and alpha components, each from 0 to 1.
     /// Mirrors the `(r, g, b, a)` tuples of `rdMolDraw2D` (RDKit's
     /// `DrawColour`).
     #[derive(Clone, Copy, Debug, PartialEq)]
@@ -159,7 +159,7 @@ pub(crate) mod ffi {
         legend: String,
     }
 
-    /// The colours of one atom's or bond's multi-colour highlight.
+    /// The colors of one atom's or bond's multi-color highlight.
     struct ColourList {
         colours: Vec<DrawColour>,
     }
@@ -179,7 +179,7 @@ pub(crate) mod ffi {
         conf_id: i32,
     }
 
-    /// Highlight colours by atom or bond index.
+    /// Highlight colors by atom or bond index.
     struct IndexColourMap {
         keys: Vec<u32>,
         values: Vec<DrawColour>,
@@ -249,7 +249,7 @@ pub(crate) mod ffi {
         type DrawElement;
 
         fn mol_draw_options_default() -> Result<MolDrawOptionsData>;
-        /// Applies one of RDKit's colour presets: 0 to 3 the default, black
+        /// Applies one of RDKit's color presets: 0 to 3 the default, black
         /// and white, Avalon, and CDK atom palettes, 4 dark mode.
         fn mol_draw_options_preset(
             data: &MolDrawOptionsData,

@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 //! Highlight Molecule with Multiple Colors (RDKitCB_39): highlight a
-//! molecule's aromatic atoms and bonds in one colour and the rest in
+//! molecule's aromatic atoms and bonds in one color and the rest in
 //! another.
 //!
 //! From the [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html#highlight-molecule-with-multiple-colors),

@@ -123,7 +123,7 @@ pub struct MolToImageParams {
     pub highlight_atoms: Vec<u32>,
     /// Bonds to highlight.
     pub highlight_bonds: Vec<u32>,
-    /// The highlight colour; `None` for the options'.
+    /// The highlight color; `None` for the options'.
     pub highlight_color: Option<DrawColour>,
     /// Text drawn under (or by) the molecule.
     pub legend: String,
@@ -387,8 +387,8 @@ pub struct DrawMolWithMatchesParams {
     pub label: String,
     /// The drawing options.
     pub options: MolDrawOptions,
-    /// A colour for each match, in turn; `None` for the options' highlight
-    /// colour.
+    /// A color for each match, in turn; `None` for the options' highlight
+    /// color.
     pub colors: Option<Vec<DrawColour>>,
     /// Kekulizes the molecule before drawing.
     pub kekulize: bool,
@@ -451,7 +451,7 @@ pub fn draw_mol_with_matches_as_svg_with_params(
     drawer.get_drawing_text()
 }
 
-/// Adds `colour` to each element's colours, once.
+/// Adds `colour` to each element's colors, once.
 fn add_colors_to_map(els: &[u32], cols: &mut BTreeMap<u32, Vec<DrawColour>>, colour: DrawColour) {
     for &el in els {
         let colours = cols.entry(el).or_default();

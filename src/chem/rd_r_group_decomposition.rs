@@ -134,10 +134,10 @@ pub struct RGroupDecompositionParameters {
     /// The molecules `GreedyChunks` processes at a time, above 0 for it.
     /// Mirrors `RGroupDecompositionParameters.chunkSize`.
     pub chunk_size: u32,
-    /// Decomposes only at the cores' labelled R groups. Mirrors
+    /// Decomposes only at the cores' labeled R groups. Mirrors
     /// `RGroupDecompositionParameters.onlyMatchAtRGroups`.
     pub only_match_at_r_groups: bool,
-    /// Drops labelled R groups that are only hydrogens. Mirrors
+    /// Drops labeled R groups that are only hydrogens. Mirrors
     /// `RGroupDecompositionParameters.removeAllHydrogenRGroups`.
     pub remove_all_hydrogen_r_groups: bool,
     /// Drops them and their labels from the core too. Mirrors
@@ -146,10 +146,10 @@ pub struct RGroupDecompositionParameters {
     /// Removes hydrogens from the results. Mirrors
     /// `RGroupDecompositionParameters.removeHydrogensPostMatch`.
     pub remove_hydrogens_post_match: bool,
-    /// Allows labelled R groups of degree 2 or more. Mirrors
+    /// Allows labeled R groups of degree 2 or more. Mirrors
     /// `RGroupDecompositionParameters.allowNonTerminalRGroups`.
     pub allow_non_terminal_r_groups: bool,
-    /// Allows several R groups on an unlabelled core atom. Mirrors
+    /// Allows several R groups on an unlabeled core atom. Mirrors
     /// `RGroupDecompositionParameters.allowMultipleRGroupsOnUnlabelled`.
     pub allow_multiple_r_groups_on_unlabelled: bool,
     /// Allows a core to match a molecule more than once, on different

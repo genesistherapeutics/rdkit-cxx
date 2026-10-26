@@ -85,7 +85,7 @@ fn shapes_and_text() {
     };
     d.draw_wavy_line_with_params(&p(10.0, 280.0), &p(200.0, 280.0), BLUE, GREEN, &raw_wavy)
         .unwrap();
-    // The text takes the current colour, which the wavy line left blue.
+    // The text takes the current color, which the wavy line left blue.
     d.draw_string_with_raw_coords("CH<sub>3</sub>", &p(250.0, 30.0), true)
         .unwrap();
     d.draw_string_aligned_with_raw_coords("label", &p(250.0, 60.0), 1, true)
