@@ -110,9 +110,9 @@ std::unique_ptr<std::string> property_functor_get_version(
 double property_functor_call(const PropertyFunctorHandle &functor,
                              const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   if (!dynamic_cast<const RustPropertyFunctor *>(functor.ptr.get())) {
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
   }
   return (*functor.ptr)(mol);
 }
@@ -202,7 +202,7 @@ std::unique_ptr<PropertyRangeQuery> make_property_range_query(rust::Str name,
 bool property_range_query_match(const PropertyRangeQuery &query,
                                 const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return query.Match(mol);
 }
 

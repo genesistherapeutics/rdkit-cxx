@@ -290,7 +290,7 @@ rust::Vec<double> get_usrcat(const RWMol &mol, bool has_atom_selections,
       12 * ((has_atom_selections ? atom_ids.size() : 4) + 1));
   // Without selections, USRCAT finds its features by substructure matches
   // (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   Desc::USRCAT(mol, descriptor, atom_ids, conf_id);
   return to_vec(descriptor);
 }

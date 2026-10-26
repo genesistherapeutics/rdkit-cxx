@@ -335,7 +335,7 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
   check_embed(mol, data, params);
   params.numThreads = 1;
   MatrixCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   // Pruning by RMS symmetrizes terminal groups (getMolSelfMatches).
   std::unique_lock<std::mutex> symmetrize(symmetrize_mutex(), std::defer_lock);
   if (params.pruneRmsThresh > 0.0 && params.useSymmetryForPruning &&
@@ -411,7 +411,7 @@ rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
                          CFF::TorsionAnglePtrVariant>>
       torsions;
   // It matches the torsion patterns (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   CFF::getExperimentalTorsions(mol, details, torsions,
                                use_exp_torsion_angle_prefs,
                                use_small_ring_torsions, use_macrocycle_torsions,

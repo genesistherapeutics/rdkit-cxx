@@ -44,7 +44,7 @@ std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
   // MolHash edits the molecule it is given.
   RWMol copy(mol);
   // Some hashes match substructures (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::make_unique<std::string>(
       RDKit::MolHash::MolHash(&copy, func, use_cx_smiles, cx_flags_to_skip));
 }

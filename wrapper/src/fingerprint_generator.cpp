@@ -362,10 +362,10 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
 // by substructure matches (a generator that has one names it in its info
 // string), and otherwise when it may run the CIP labeler
 // (lock_control_c_for_cip).
-std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen) {
+std::unique_lock<ControlCMutex> lock_control_c_for(const FpGenerator &gen) {
   if (gen.infoString().find("MorganFeatureInvariantGenerator") !=
       std::string::npos) {
-    return std::unique_lock<std::mutex>(control_c_mutex());
+    return std::unique_lock<ControlCMutex>(control_c_mutex());
   }
   return lock_control_c_for_cip();
 }

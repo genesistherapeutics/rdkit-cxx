@@ -18,6 +18,7 @@
 
 #include <GraphMol/Fingerprints/FingerprintGenerator.h>
 
+#include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/data_structs.h"
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/mol_list.h"
@@ -111,7 +112,7 @@ std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
 // Holds control_c_mutex while the generator may construct a ControlCHandler
 // (control_c_lock.h): for feature invariants, which it finds by substructure
 // matches, and when it may run the CIP labeler (lock_control_c_for_cip).
-std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen);
+std::unique_lock<ControlCMutex> lock_control_c_for(const FpGenerator &gen);
 
 // What a fingerprint of `mol` without arguments trusts, checked as the
 // generator's own calls check it: throws ValueErrorException for a molecule

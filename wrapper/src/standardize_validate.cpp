@@ -214,7 +214,7 @@ std::unique_ptr<std::vector<std::string>> validate_smiles(rust::Str smiles) {
   // (validation_validate).
   check_removals(*mol);
   MS::MolVSValidation validation;
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return strings(validation.validate(*mol, true));
 }
 

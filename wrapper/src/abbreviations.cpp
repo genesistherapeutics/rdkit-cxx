@@ -294,7 +294,7 @@ std::unique_ptr<RWMol> condense_mol_abbreviations(
   check_removals(*res);
   std::vector<A::AbbreviationMatch> matches;
   {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     matches =
         A::findApplicableAbbreviationMatches(*res, abbrevs.defs, max_coverage);
   }
@@ -312,7 +312,7 @@ std::unique_ptr<RWMol> label_mol_abbreviations(const RWMol &mol,
                                                const AbbreviationList &abbrevs,
                                                double max_coverage) {
   auto res = std::make_unique<RWMol>(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   A::labelMolAbbreviations(*res, abbrevs.defs, max_coverage);
   return res;
 }

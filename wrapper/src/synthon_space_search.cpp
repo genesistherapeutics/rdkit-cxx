@@ -627,7 +627,7 @@ void read_text(SynthonSpace &space, const std::string &name,
     std::istringstream in(std::move(text));
     // readStream constructs a ControlCHandler, and the synthons' pattern
     // fingerprints match patterns (control_c_lock.h).
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     fresh->readStream(in, cancelled);
   }
   if (cancelled) {
@@ -1469,7 +1469,7 @@ void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
     check_space_matrix_sizes(*space.space);
   }
   SpaceMatrixCacheGuard guard(*space.space);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   space.space->buildSynthonFingerprints(gen, 0);
 }
 
@@ -1505,7 +1505,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search(
   PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->substructureSearch(query, match, params);
   }
   output.check();
@@ -1522,7 +1522,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended(
   PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->substructureSearch(query, match, params);
   }
   output.check();
@@ -1541,7 +1541,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_lines(
       params, start_line, finish_line, kAnyAtoms,
       [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
           std::uint64_t finish) {
-        std::lock_guard<std::mutex> control_c(control_c_mutex());
+        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
         return space.space->substructureSearch(query, match, p, start, finish);
       });
   return finish(std::move(results), "SubstructureSearch");
@@ -1559,7 +1559,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended_lines(
       params, start_line, finish_line, kAnyAtoms,
       [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
           std::uint64_t finish) {
-        std::lock_guard<std::mutex> control_c(control_c_mutex());
+        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
         return space.space->substructureSearch(query, match, p, start, finish);
       });
   return finish(std::move(results), "SubstructureSearch");
@@ -1574,7 +1574,7 @@ void synthon_space_substructure_search_incremental(
   check_query(query);
   PossibleHitsOutput output(params.possibleHitsFile);
   {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     space.space->substructureSearch(query, held_callback(callback), match,
                                     params);
   }
@@ -1595,7 +1595,7 @@ std::unique_ptr<SearchResults> synthon_space_fingerprint_search(
   {
     MatrixCacheGuard query_guard(query);
     SpaceMatrixCacheGuard space_guard(*space.space);
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->fingerprintSearch(query, gen, params);
   }
   output.check();
@@ -1616,7 +1616,7 @@ std::unique_ptr<SearchResults> synthon_space_fingerprint_search_lines(
       [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
           std::uint64_t finish) {
         MatrixCacheGuard query_guard(query);
-        std::lock_guard<std::mutex> control_c(control_c_mutex());
+        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
         return space.space->fingerprintSearch(query, gen, p, start, finish);
       });
   return finish(std::move(results), "FingerprintSearch");
@@ -1631,7 +1631,7 @@ void synthon_space_fingerprint_search_incremental(
   {
     MatrixCacheGuard query_guard(query);
     SpaceMatrixCacheGuard space_guard(*space.space);
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     space.space->fingerprintSearch(query, gen, held_callback(callback), params);
   }
   output.check();
@@ -1651,7 +1651,7 @@ std::unique_ptr<SearchResults> synthon_space_rascal_search(
   SSS::SearchResults results;
   {
     SpaceMatrixCacheGuard space_guard(*space.space);
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->rascalSearch(query, options, params);
   }
   output.check();
@@ -1671,7 +1671,7 @@ std::unique_ptr<SearchResults> synthon_space_rascal_search_lines(
       [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
           std::uint64_t finish) {
         SpaceMatrixCacheGuard space_guard(*space.space);
-        std::lock_guard<std::mutex> control_c(control_c_mutex());
+        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
         return space.space->rascalSearch(query, options, p, start, finish);
       });
   return finish(std::move(results), "RascalSearch");

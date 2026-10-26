@@ -58,7 +58,7 @@ class Locks {
 
  private:
   std::lock_guard<std::mutex> d_rgroup;
-  std::lock_guard<std::mutex> d_control_c;
+  std::lock_guard<ControlCMutex> d_control_c;
 };
 
 RDKit::RGroupDecompositionParameters params_from(

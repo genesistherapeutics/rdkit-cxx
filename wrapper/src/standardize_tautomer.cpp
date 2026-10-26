@@ -368,7 +368,7 @@ std::int32_t score_hetero_hs(const RWMol &mol) {
 
 // The default terms' scores times their at most 1000 matches stay in int.
 std::int32_t score_substructs(const RWMol &mol) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return TSF::scoreSubstructs(mol);
 }
 
@@ -391,13 +391,13 @@ std::int32_t score_substructs_with_terms(
                            term.smarts.data(), term.smarts.size())),
                        term.score);
   }
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return TSF::scoreSubstructs(mol, terms);
 }
 
 std::int32_t score_tautomer(const RWMol &mol) {
   check_default_score(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return TSF::scoreTautomer(mol);
 }
 

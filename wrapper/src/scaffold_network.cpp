@@ -174,7 +174,7 @@ void update_scaffold_network(BorrowedMols &mols, ScaffoldNetwork &network,
     check_removals(*mol);
   }
   auto with = with_flags(params, flags);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::ScaffoldNetwork::updateScaffoldNetwork(mols.mols(), network, with);
 }
 

@@ -262,7 +262,7 @@ rust::Vec<std::uint32_t> frag_catalog_get_entry_down_ids(
 std::uint32_t frag_cat_generator_add_frags_from_mol(const RWMol &mol,
                                                     FragCatalog &fcat) {
   check_num_bonds(mol, params_of(fcat));
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::FragCatGenerator().addFragsFromMol(mol, &fcat);
 }
 
@@ -289,7 +289,7 @@ std::unique_ptr<BitVect> frag_fp_generator_get_fp_for_mol(
                                 std::to_string(num_bits));
     }
   }
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::unique_ptr<ExplicitBitVect> fp(
       RDKit::FragFPGenerator().getFPForMol(mol, fcat));
   return wrap_bit_vect(std::move(fp));

@@ -225,7 +225,7 @@ GaussianShapeInput make_shape(const RWMol &mol, int conf_id,
   auto copy = checked_mol(mol, conf_id, opts);
   std::lock_guard<std::mutex> lock(gaussian_shape_mutex());
   // Feature patterns are matched (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   if (opts.shapePruneThreshold > 0.0 && conf_id < 0 &&
       copy->getNumConformers() > 1) {
     // Pruning overlays the conformers' shapes in the A_LA_PUBCHEM mode, so

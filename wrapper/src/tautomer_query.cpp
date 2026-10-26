@@ -324,7 +324,7 @@ std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
   // removes atoms from copies of a molecule of several fragments.
   check_removals(mol);
   // The enumerator matches its transforms (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return from_mol(mol, params);
 }
 
@@ -348,7 +348,7 @@ rust::Vec<std::uint8_t> tautomer_query_to_binary(const TautomerQuery &query) {
 bool tautomer_query_is_substruct_of(
     const TautomerQuery &query, const RWMol &target,
     const SubstructMatchParametersData &params) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return !tautomer_query_substruct_of(
               query, target, params_with_max_matches_one(params), nullptr)
               .empty();
@@ -357,7 +357,7 @@ bool tautomer_query_is_substruct_of(
 rust::Vec<std::uint32_t> tautomer_query_get_substruct_match(
     const TautomerQuery &query, const RWMol &target,
     const SubstructMatchParametersData &params) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   auto matches = tautomer_query_substruct_of(
       query, target, params_with_max_matches_one(params), nullptr);
   return matches.empty() ? rust::Vec<std::uint32_t>()
@@ -368,7 +368,7 @@ rust::Vec<IndexList> tautomer_query_get_substruct_matches(
     const TautomerQuery &query, const RWMol &target,
     const SubstructMatchParametersData &params) {
   rust::Vec<IndexList> result;
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   for (const auto &match : tautomer_query_substruct_of(
            query, target, substruct_params_from_data(params), nullptr)) {
     result.push_back(IndexList{convert_match(match)});
@@ -380,7 +380,7 @@ std::unique_ptr<MolList> tautomer_query_get_substruct_matches_with_tautomers(
     const TautomerQuery &query, const RWMol &target,
     const SubstructMatchParametersData &params, rust::Vec<IndexList> &matches) {
   std::vector<RDKit::ROMOL_SPTR> tautomers;
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   auto res = tautomer_query_substruct_of(
       query, target, substruct_params_from_data(params), &tautomers);
   auto list = std::make_unique<MolList>();
@@ -395,7 +395,7 @@ std::unique_ptr<BitVect> tautomer_query_pattern_fingerprint_template(
     const TautomerQuery &query, std::uint32_t fingerprint_size) {
   check_fingerprint_size(fingerprint_size);
   // Pattern fingerprints match their patterns (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return wrap_bit_vect(std::unique_ptr<ExplicitBitVect>(
       query.patternFingerprintTemplate(fingerprint_size)));
 }
@@ -429,7 +429,7 @@ std::unique_ptr<MolList> tautomer_query_get_tautomers(
 std::unique_ptr<BitVect> pattern_fingerprint_tautomer_target(
     const RWMol &target, std::uint32_t fingerprint_size) {
   check_fingerprint_size(fingerprint_size);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return wrap_bit_vect(std::unique_ptr<ExplicitBitVect>(
       TautomerQuery::patternFingerprintTarget(target, fingerprint_size)));
 }

@@ -230,7 +230,7 @@ class DrawingLocks {
     if (depicts) {
       d_depict = lock_depiction();
     }
-    d_control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    d_control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
     if (comic) {
       d_random = std::unique_lock<std::mutex>(random_mutex());
     }
@@ -238,7 +238,7 @@ class DrawingLocks {
 
  private:
   std::unique_lock<std::mutex> d_depict;
-  std::unique_lock<std::mutex> d_control_c;
+  std::unique_lock<ControlCMutex> d_control_c;
   std::unique_lock<std::mutex> d_random;
 };
 

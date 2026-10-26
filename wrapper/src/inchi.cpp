@@ -298,7 +298,7 @@ InchiToMolData inchi_to_mol(rust::Str inchi, bool sanitize, bool remove_hs) {
   {
     // InchiToMol's cleanup matches patterns, and each match constructs a
     // ControlCHandler (control_c_lock.h, CONVENTIONS.md U4).
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     mol.reset(RDKit::InchiToMol(std::string(inchi), rv, sanitize, remove_hs));
   }
   return InchiToMolData{std::move(mol), rv.returnCode,
@@ -314,7 +314,7 @@ MolToInchiData mol_to_inchi(const RWMol &mol, rust::Str options) {
   std::string inchi;
   {
     // MolToInchi's reverse cleanup matches patterns (U4).
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     inchi = RDKit::MolToInchi(mol, rv, opts.empty() ? nullptr : opts.c_str());
   }
   return MolToInchiData{std::make_unique<std::string>(std::move(inchi)),
@@ -329,7 +329,7 @@ std::unique_ptr<std::string> mol_to_inchi_key(const RWMol &mol,
   std::string opts(options);
   check_options(opts);
   check_inchi_input(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return std::make_unique<std::string>(
       RDKit::MolToInchiKey(mol, opts.empty() ? nullptr : opts.c_str()));
 }

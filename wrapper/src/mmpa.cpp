@@ -65,7 +65,7 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
   check_removals(mol);
   Results results;
   // fragmentMol matches the pattern (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   if (!RDKit::MMPA::fragmentMol(mol, results, min_cuts, max_cuts, max_cut_bonds,
                                 smarts)) {
     results.clear();

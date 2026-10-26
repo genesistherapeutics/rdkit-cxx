@@ -97,7 +97,7 @@ int thread_count(std::int32_t target) {
 std::vector<MatchVectType> all_matches(const ROMol &prb, const ROMol &ref,
                                        int max_matches, bool symmetrize,
                                        bool ignore_hs) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::RWMol> symmetrized;
   if (symmetrize) {
     symmetrized = std::make_unique<RDKit::RWMol>(prb);
@@ -348,7 +348,7 @@ std::vector<double> crippen_contribs(const RWMol &mol, bool has_given,
   // getCrippenAtomContribs caches them in the molecule's properties (U8),
   // and types the atoms by substructure matches (control_c_lock.h).
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::Descriptors::getCrippenAtomContribs(mol, logp, mr, true, &types,
                                              &labels);
   return logp;
@@ -389,7 +389,7 @@ double get_alignment_transform(const RWMol &prb_mol, const RWMol &ref_mol,
   }
   RDGeom::Transform3D transform;
   // RDKit matches the probe to the reference itself (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   double rmsd = MolAlign::getAlignmentTransform(
       prb_mol, ref_mol, transform, prb_cid, ref_cid,
       map.empty() ? nullptr : &map, weights_vec.get(), reflect, max_iters);
@@ -411,7 +411,7 @@ double align_mol(RWMol &prb_mol, const RWMol &ref_mol, std::int32_t prb_cid,
     }
   }
   // RDKit matches the probe to the reference itself (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return MolAlign::alignMol(prb_mol, ref_mol, prb_cid, ref_cid,
                             map.empty() ? nullptr : &map, weights_vec.get(),
                             reflect, max_iters);

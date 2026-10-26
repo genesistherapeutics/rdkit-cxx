@@ -455,7 +455,7 @@ std::unique_ptr<RWMol> standardize_copy(StandardizeOp op, const RWMol &mol,
   Standardizer standardizer(op, data, skip_standardize);
   standardizer.check(mol);
   // Standardizing matches substructures (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return standardizer.copy(mol);
 }
 
@@ -464,7 +464,7 @@ void standardize_in_place(StandardizeOp op, RWMol &mol,
                           bool skip_standardize) {
   Standardizer standardizer(op, data, skip_standardize);
   standardizer.check(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   standardizer.in_place(mol);
 }
 
@@ -489,7 +489,7 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
     standardizer.check(*mol);
   }
   run_threads(list.size(), num_threads, [&](std::size_t i) {
-    std::lock_guard<std::mutex> control_c(control_c_mutex());
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     standardizer.in_place(*list[i]);
   });
 }
@@ -505,7 +505,7 @@ std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   check_reionizer_atoms(*mol);
   // CXSMILES can give the substance groups PARENT chains (Standardizer).
   check_removals(*mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   MS::cleanupInPlace(*mol);
   return std::make_unique<std::string>(RDKit::MolToSmiles(*mol));
 }

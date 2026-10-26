@@ -94,7 +94,7 @@ void check_property_table_atoms(const RWMol &mol) {
 // (control_c_lock.h).
 rust::Vec<double> calc_crippen_descriptors(const RWMol &mol, bool include_hs) {
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   double logp = 0.0;
   double mr = 0.0;
   Desc::calcCrippenDescriptors(mol, logp, mr, include_hs);
@@ -140,7 +140,7 @@ rust::Vec<double> calc_labute_asa_contribs(const RWMol &mol, bool include_hs) {
 // calc_crippen_descriptors.
 rust::Vec<double> calc_crippen_contribs(const RWMol &mol) {
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::vector<double> logp(mol.getNumAtoms());
   std::vector<double> mr(mol.getNumAtoms());
   Desc::getCrippenAtomContribs(mol, logp, mr, true);
@@ -165,10 +165,10 @@ std::unique_ptr<std::string> calc_mol_formula(const RWMol &mol,
 
 #define RDKIT_CXX_COUNT(name, function) \
   std::uint32_t name(const RWMol &mol) { return function(mol); }
-#define RDKIT_CXX_COUNT_MATCHES(name, function)               \
-  std::uint32_t name(const RWMol &mol) {                      \
-    std::lock_guard<std::mutex> control_c(control_c_mutex()); \
-    return function(mol);                                     \
+#define RDKIT_CXX_COUNT_MATCHES(name, function)                  \
+  std::uint32_t name(const RWMol &mol) {                         \
+    std::lock_guard<ControlCMutex> control_c(control_c_mutex()); \
+    return function(mol);                                        \
   }
 
 RDKIT_CXX_COUNT(calc_num_lipinski_hbd, Desc::calcLipinskiHBD)
@@ -204,7 +204,7 @@ RDKIT_CXX_COUNT(calc_num_unspecified_atom_stereo_centers,
 
 std::uint32_t calc_num_rotatable_bonds(const RWMol &mol,
                                        NumRotatableBondsOptions strict) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return Desc::calcNumRotatableBonds(mol, strict);
 }
 
@@ -233,14 +233,14 @@ std::uint32_t calc_num_bridgehead_atoms(const RWMol &mol,
 rust::Vec<double> slogp_vsa(const RWMol &mol, rust::Slice<const double> bins) {
   auto lbins = checked_bins(bins);
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_vec(Desc::calcSlogP_VSA(mol, lbins ? &*lbins : nullptr));
 }
 
 rust::Vec<double> smr_vsa(const RWMol &mol, rust::Slice<const double> bins) {
   auto lbins = checked_bins(bins);
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_vec(Desc::calcSMR_VSA(mol, lbins ? &*lbins : nullptr));
 }
 
@@ -260,7 +260,7 @@ rust::Vec<double> custom_prop_vsa(const RWMol &mol, rust::Str custom_prop_name,
 }
 
 rust::Vec<std::uint32_t> mqns(const RWMol &mol) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_vec(Desc::calcMQNs(mol));
 }
 
@@ -345,7 +345,7 @@ rust::Vec<double> calc_autocorr_2d(const RWMol &mol,
 rust::Vec<double> bcut_2d(const RWMol &mol) {
   check_removals(mol);
   DescriptorCacheGuard guard(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_vec(Desc::BCUT2D(mol));
 }
 
@@ -366,7 +366,7 @@ rust::Vec<double> bcut_2d_atom_propname(const RWMol &mol,
 // later calls only read them. Every call matches the patterns
 // (control_c_lock.h).
 std::unique_ptr<BitVect> get_maccs_keys_fingerprint(const RWMol &mol) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   static std::once_flag patterns_made;
   std::call_once(patterns_made, [] {
     RDKit::ROMol empty;
@@ -381,7 +381,7 @@ std::uint32_t get_atom_pair_atom_code(const Atom &atom,
                                       std::uint32_t branch_subtract,
                                       bool include_chirality) {
   // getAtomCode may run the CIP labeler on the atom's molecule.
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   if (include_chirality) {
     control_c = lock_control_c_for_cip();
   }
@@ -409,7 +409,7 @@ rust::Vec<std::uint32_t> get_connectivity_invariants(
 // The feature invariants come from substructure matches (control_c_lock.h).
 rust::Vec<std::uint32_t> get_feature_invariants(const RWMol &mol) {
   std::vector<std::uint32_t> invars(mol.getNumAtoms());
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::MorganFingerprints::getFeatureInvariants(mol, invars);
   return to_vec(invars);
 }

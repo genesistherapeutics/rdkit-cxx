@@ -59,14 +59,14 @@ std::unique_ptr<FragmentRemover> fragment_remover_from_data(
 std::unique_ptr<RWMol> fragment_remover_remove(const FragmentRemover &remover,
                                                const RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(mut(remover).remove(mol));
 }
 
 void fragment_remover_remove_in_place(const FragmentRemover &remover,
                                       RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   mut(remover).removeInPlace(mol);
 }
 

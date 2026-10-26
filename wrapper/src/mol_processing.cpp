@@ -311,7 +311,7 @@ Fingerprints read_in_threads_fingerprint_here(const Input &in, S &suppl,
 template <class Gen>
 Fingerprints run(const std::string &path, const Gen &gen,
                  const FpGenerator *checked_gen,
-                 std::unique_lock<std::mutex> control_c,
+                 std::unique_lock<ControlCMutex> control_c,
                  const Options &options) {
   std::string format;
   std::string compression;

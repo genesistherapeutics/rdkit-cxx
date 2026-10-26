@@ -263,7 +263,9 @@ rule changes the rule first.
   `ReleaseControlC`). A closure RDKit calls inside a match (FMCS's final
   match checks) runs with the lock held, so a wrapper it calls that takes
   this lock, or one ordered before it, fails instead
-  (`check_not_in_control_c_callback`). MolAlign's
+  (`check_not_in_control_c_callback`), as does one a `ReleaseControlC`
+  runs while the thread holds the lock through anything but `HoldControlC`,
+  which it cannot release. MolAlign's
   `symmetrizeTerminalAtoms`, which the best-alignment functions and the
   embedder's pruning reach, assigns a static on every call, so callers hold
   `symmetrize_mutex()` (`rdkit-cxx/symmetrize_lock.h`). A wrapper that needs

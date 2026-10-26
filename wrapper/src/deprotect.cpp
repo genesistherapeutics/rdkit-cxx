@@ -88,12 +88,12 @@ void deprotect_list_push(DeprotectList &list, const DeprotectData &data) {
 // Deprotection runs reactions, which match substructures (control_c_lock.h).
 std::unique_ptr<RWMol> deprotect_with(const RWMol &mol,
                                       const DeprotectList &list) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_rwmol(RDKit::Deprotect::deprotect(mol, list.items));
 }
 
 std::unique_ptr<RWMol> deprotect_default(const RWMol &mol) {
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_rwmol(
       RDKit::Deprotect::deprotect(mol, RDKit::Deprotect::getDeprotections()));
 }
@@ -102,13 +102,13 @@ std::unique_ptr<RWMol> deprotect_default(const RWMol &mol) {
 // which trusts what check_removals checks, checked before the first edit.
 bool deprotect_in_place_with(RWMol &mol, const DeprotectList &list) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::Deprotect::deprotectInPlace(mol, list.items);
 }
 
 bool deprotect_in_place_default(RWMol &mol) {
   check_removals(mol);
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::Deprotect::deprotectInPlace(
       mol, RDKit::Deprotect::getDeprotections());
 }

@@ -149,7 +149,7 @@ PubChemShapeInput prepare(const RDKit::ROMol &mol, int conf_id,
   }
   std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
   // The color features come from substructure matches (control_c_lock.h).
-  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return PrepareConformer(mol, conf_id, opts);
 }
 

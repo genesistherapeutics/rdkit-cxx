@@ -96,7 +96,7 @@ std::uint64_t stereoisomer_enumerator_get_stereoisomer_count(
 // CXSMILES, none of which shares state with other threads.
 std::unique_ptr<RWMol> stereoisomer_enumerator_next(
     StereoisomerEnumerator &enumerator) {
-  std::unique_lock<std::mutex> control_c;
+  std::unique_lock<ControlCMutex> control_c;
   std::unique_lock<std::mutex> random;
   if (enumerator.embeds) {
     if (enumerator.unchecked) {
@@ -105,7 +105,7 @@ std::unique_ptr<RWMol> stereoisomer_enumerator_next(
       check_embed_mol(*with_hs, embed_molecule_params());
       enumerator.unchecked.reset();
     }
-    control_c = std::unique_lock<std::mutex>(control_c_mutex());
+    control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
     random = std::unique_lock<std::mutex>(random_mutex());
   }
   auto isomer = enumerator.enumerator->next();
