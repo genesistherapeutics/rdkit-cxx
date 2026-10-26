@@ -933,29 +933,50 @@ fn preprocessing() {
         vec![(0, "halogen.bromine.aromatic".to_owned())],
         vec![(1, "boronicacid".to_owned())],
     ];
+    let result = preprocess_reaction(&mut rxn).unwrap();
     assert_eq!(
-        preprocess_reaction(&mut rxn).unwrap(),
-        (0, 0, 2, 1, labels.clone())
+        (
+            result.n_warn,
+            result.n_error,
+            result.n_reacts,
+            result.n_prods
+        ),
+        (0, 0, 2, 1)
     );
+    assert_eq!(result.reactant_labels, labels);
     let template = rxn.get_reactant_template(0).unwrap();
     assert!(!smiles("CCBr").has_substruct_match(&template).unwrap());
     assert!(smiles("c1ccccc1Br").has_substruct_match(&template).unwrap());
 
     let mut uninitialized = reaction_from_rxn_file(data("boronic1.rxn")).unwrap();
+    let result = preprocess_reaction(&mut uninitialized).unwrap();
     assert_eq!(
-        preprocess_reaction(&mut uninitialized).unwrap(),
-        (0, 0, 2, 1, labels)
+        (
+            result.n_warn,
+            result.n_error,
+            result.n_reacts,
+            result.n_prods
+        ),
+        (0, 0, 2, 1)
     );
+    assert_eq!(result.reactant_labels, labels);
 
     let mut invalid = reaction_from_smarts("C>>").unwrap();
     let params = PreprocessReactionParams {
         queries: BTreeMap::from([("x".to_owned(), mol_from_smarts("C").unwrap())]),
         ..Default::default()
     };
+    let result = preprocess_reaction_with_params(&mut invalid, &params).unwrap();
     assert_eq!(
-        preprocess_reaction_with_params(&mut invalid, &params).unwrap(),
-        (1, 1, 1, 0, vec![])
+        (
+            result.n_warn,
+            result.n_error,
+            result.n_reacts,
+            result.n_prods
+        ),
+        (1, 1, 1, 0)
     );
+    assert!(result.reactant_labels.is_empty());
 }
 
 #[test]
