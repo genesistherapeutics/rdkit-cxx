@@ -34,6 +34,9 @@ rust::Vec<double> calc_crippen_descriptors(const RWMol &mol, bool include_hs);
 double calc_labute_asa(const RWMol &mol, bool include_hs);
 double calc_tpsa(const RWMol &mol, bool include_s_and_p);
 double calc_exact_mol_wt(const RWMol &mol, bool only_heavy);
+double calc_amw(const RWMol &mol, bool only_heavy);
+rust::Vec<double> calc_labute_asa_contribs(const RWMol &mol, bool include_hs);
+rust::Vec<double> calc_crippen_contribs(const RWMol &mol);
 std::unique_ptr<std::string> calc_mol_formula(const RWMol &mol,
                                               bool separate_isotopes,
                                               bool abbreviate_h_isotopes);

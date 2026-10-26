@@ -7,20 +7,26 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.RegistrationHash", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs", "rdkit.DataStructs.BitEnsemble", "rdkit.DataStructs.BitUtils", "rdkit.DataStructs.LazySignature", "rdkit.DataStructs.TopNContainer", "rdkit.DataStructs.VectCollection", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Butina", "rdkit.ML.Cluster.ClusterUtils", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Cluster.Clusters", "rdkit.ML.Cluster.Murtagh", "rdkit.ML.Cluster.Resemblance", "rdkit.ML.Cluster.Standardize", "rdkit.ML.Data.DataUtils", "rdkit.ML.Data.MLData", "rdkit.ML.Data.Quantize", "rdkit.ML.Data.SplitData", "rdkit.ML.Data.Stats", "rdkit.ML.Data.Transforms", "rdkit.ML.InfoTheory.BitClusterer", "rdkit.ML.InfoTheory.BitRank", "rdkit.ML.InfoTheory.entropy", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.ML.SLT.Risk", "rdkit.ML.Scoring.Scoring", "rdkit.ML.files", "rdkit.Numerics.rdAlignment", "rdkit.RDLogger", "rdkit.RDPaths", "rdkit.RDRandom", "rdkit.SimDivFilters.SimilarityPickers", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase", "rdkit.utils.chemutils", "rdkit.utils.fileutils", "rdkit.utils.listutils"]
+complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.AtomPairs.Pairs", "rdkit.Chem.AtomPairs.Sheridan", "rdkit.Chem.AtomPairs.Torsions", "rdkit.Chem.AtomPairs.Utils", "rdkit.Chem.BRICS", "rdkit.Chem.BuildFragmentCatalog", "rdkit.Chem.ChemUtils.AlignDepict", "rdkit.Chem.ChemUtils.DescriptorUtilities", "rdkit.Chem.ChemUtils.SDFToCSV", "rdkit.Chem.ChemUtils.TemplateExpand", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Crippen", "rdkit.Chem.Descriptors", "rdkit.Chem.Descriptors3D", "rdkit.Chem.Draw", "rdkit.Chem.Draw.SimilarityMaps", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EState.AtomTypes", "rdkit.Chem.EState.EState", "rdkit.Chem.EState.EState_VSA", "rdkit.Chem.EState.Fingerprinter", "rdkit.Chem.EnumerateHeterocycles", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FeatFinderCLI", "rdkit.Chem.FeatMaps.FeatMapParser", "rdkit.Chem.FeatMaps.FeatMapPoint", "rdkit.Chem.FeatMaps.FeatMapUtils", "rdkit.Chem.FeatMaps.FeatMaps", "rdkit.Chem.Features.FeatDirUtilsRD", "rdkit.Chem.FilterCatalog", "rdkit.Chem.Fraggle.FraggleSim", "rdkit.Chem.FragmentCatalog", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.Fragments", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.GraphDescriptors", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MACCSkeys", "rdkit.Chem.MolKey.InchiInfo", "rdkit.Chem.MolKey.MolKey", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.MolSurf", "rdkit.Chem.Pharm2D", "rdkit.Chem.Pharm2D.Generate", "rdkit.Chem.Pharm2D.Gobbi_Pharm2D", "rdkit.Chem.Pharm2D.Matcher", "rdkit.Chem.Pharm2D.SigFactory", "rdkit.Chem.Pharm2D.Utils", "rdkit.Chem.Pharm3D.EmbedLib", "rdkit.Chem.Pharm3D.ExcludedVolume", "rdkit.Chem.Pharm3D.Pharmacophore", "rdkit.Chem.QED", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.ReducedGraphs", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.SpacialScore", "rdkit.Chem.Subshape.BuilderUtils", "rdkit.Chem.Subshape.SubshapeAligner", "rdkit.Chem.Subshape.SubshapeBuilder", "rdkit.Chem.Subshape.SubshapeObjects", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.TorsionFingerprints", "rdkit.Chem.inchi", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs", "rdkit.DataStructs.BitEnsemble", "rdkit.DataStructs.BitUtils", "rdkit.DataStructs.LazySignature", "rdkit.DataStructs.TopNContainer", "rdkit.DataStructs.VectCollection", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Butina", "rdkit.ML.Cluster.ClusterUtils", "rdkit.ML.Cluster.Clustering", "rdkit.ML.Cluster.Clusters", "rdkit.ML.Cluster.Murtagh", "rdkit.ML.Cluster.Resemblance", "rdkit.ML.Cluster.Standardize", "rdkit.ML.Data.DataUtils", "rdkit.ML.Data.MLData", "rdkit.ML.Data.Quantize", "rdkit.ML.Data.SplitData", "rdkit.ML.Data.Stats", "rdkit.ML.Data.Transforms", "rdkit.ML.Descriptors.Descriptors", "rdkit.ML.Descriptors.MoleculeDescriptors", "rdkit.ML.InfoTheory.BitClusterer", "rdkit.ML.InfoTheory.BitRank", "rdkit.ML.InfoTheory.entropy", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.ML.SLT.Risk", "rdkit.ML.Scoring.Scoring", "rdkit.ML.files", "rdkit.Numerics.rdAlignment", "rdkit.RDLogger", "rdkit.RDPaths", "rdkit.RDRandom", "rdkit.SimDivFilters.SimilarityPickers", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase", "rdkit.utils.chemutils", "rdkit.utils.fileutils", "rdkit.utils.listutils"]
 
 [modules.reasons]
+"rdkit.Chem.ChemUtils.BulkTester" = "a broken legacy script: TestMolecule calls Randomize.CheckCanonicalization, which RDKit removed, so it fails every molecule that sanitizes, and TestSupplier calls the supplier's Python 2 next method"
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
 "rdkit.Chem.Draw.IPythonConsole" = "installs Jupyter display hooks for molecules and reactions"
 "rdkit.Chem.Draw.InteractiveRenderer" = "renders molecules in Jupyter with RDKit's JavaScript library"
 "rdkit.Chem.Draw.MolDrawing" = "the legacy drawing code, which draws on sping canvases; rdMolDraw2D, which is bound, replaced it"
 "rdkit.Chem.Features.ShowFeats" = "draws molecules' features as arrows and spheres in PyMOL, over its XML-RPC server"
+"rdkit.Chem.Fingerprints.ClusterMols" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its clustering, use ml::cluster::murtagh::cluster_data_dists"
 "rdkit.Chem.Fingerprints.DbFpSupplier" = "supplies fingerprints from rdkit.Dbase query results"
+"rdkit.Chem.Fingerprints.FingerprintMols" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its fingerprints, use rdmolops::rdk_fingerprint_with_params or rd_fingerprint_generator"
+"rdkit.Chem.Fingerprints.MolSimilarity" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its similarity screens, use data_structs::fingerprint_similarity, with data_structs::top_n_container::TopNContainer for the best hits"
+"rdkit.Chem.Fingerprints.SimilarityScreener" = "deprecated in RDKit: importing rdkit.Chem.Fingerprints warns that the package is deprecated; for its screens, use data_structs::fingerprint_similarity, with data_structs::top_n_container::TopNContainer for the best hits"
 "rdkit.Chem.MCS" = "a deprecated wrapper over the legacy MCS search written in Python (rdkit.Chem.fmcs); rdFMCS, which is bound, replaced it"
 "rdkit.Chem.MolDb" = "builds and reads molecule databases through rdkit.Dbase"
 "rdkit.Chem.PandasPatcher" = "patches pandas' HTML rendering for PandasTools"
 "rdkit.Chem.PandasTools" = "adds molecules and their drawings to pandas DataFrames"
 "rdkit.Chem.Pharm2D.LazyGenerator" = "unfinished: importing it raises NotImplementedError"
+"rdkit.Chem.PropertyMol" = "deprecated: a Mol subclass that pickles its properties; Rust pickles them with set_default_pickle_properties(PropertyPickleOptions::MolProps)"
 "rdkit.Chem.PyMol" = "drives a PyMOL server over XML-RPC"
 "rdkit.Chem.Subshape.demoCombined" = "a demonstration script that reads files from RDKit's source tree"
 "rdkit.Chem.Suppliers.DbMolSupplier" = "supplies molecules from rdkit.Dbase query results"
@@ -29,6 +35,8 @@ complete = ["rdkit.Avalon.pyAvalonTools", "rdkit.Chem.AtomPairs.Pairs", "rdkit.C
 "rdkit.Dbase" = "database helpers over Python's DB-API connections; Rust programs use their own database crates"
 "rdkit.ML.Cluster.ClusterVis" = "draws cluster trees on sping canvases"
 "rdkit.ML.Data.FindQuantBounds" = "a command-line script that finds quantization bounds for the columns of a database table through rdkit.Dbase; rdkit_cxx::ml::data::quantize does the work"
+"rdkit.ML.Descriptors.CompoundDescriptors" = "a calculator of descriptors of compositions whose atomic data it reads from an rdkit.Dbase database (chemutils.GetAtomicData), with compound descriptors that Parser evaluates as Python code"
+"rdkit.ML.Descriptors.Parser" = "evaluates compound-descriptor formulas by rewriting them into Python source and running eval on it, so a formula is Python code; Rust has no Python evaluator to run it"
 "rdkit.ML.MLUtils.VoteImg" = "draws vote images with PIL"
 "rdkit.RDConfig" = "Python configuration: database defaults, the Python executable and test command, a molecule viewer, and exception classes for obsolete code; RDKit's data directories are in rdkit_cxx::rd_paths"
 "rdkit.VLib" = "a framework for pipelines of Python supplier, filter, and output nodes; Rust iterators fill that role"
@@ -180,6 +188,41 @@ python = "rdkit.Avalon.pyAvalonTools.avalonSimilarityBits"
 rust = ["rdkit_cxx::avalon::py_avalon_tools::avalon_similarity_bits"]
 
 [[entry]]
+python = "rdkit.Chem.AllChem.AssignBondOrdersFromTemplate"
+rust = ["rdkit_cxx::chem::all_chem::assign_bond_orders_from_template"]
+
+[[entry]]
+python = "rdkit.Chem.AllChem.ComputeMolShape"
+rust = ["rdkit_cxx::chem::all_chem::compute_mol_shape", "rdkit_cxx::chem::all_chem::compute_mol_shape_with_params"]
+overloads_note = "the keyword arguments Python passes to EncodeShape are ComputeMolShapeParams.encode_shape"
+
+[[entry]]
+python = "rdkit.Chem.AllChem.ComputeMolVolume"
+rust = ["rdkit_cxx::chem::all_chem::compute_mol_volume", "rdkit_cxx::chem::all_chem::compute_mol_volume_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.AllChem.ConstrainedEmbed"
+rust = ["rdkit_cxx::chem::all_chem::constrained_embed", "rdkit_cxx::chem::all_chem::constrained_embed_with_params"]
+overloads_note = "the keyword arguments Python passes to EmbedMolecule are ConstrainedEmbedParams.embed_params, and getForceField is a GetForceField function; the molecule is changed in place, as Python changes the one it returns"
+
+[[entry]]
+python = "rdkit.Chem.AllChem.EnumerateLibraryFromReaction"
+rust = ["rdkit_cxx::chem::all_chem::enumerate_library_from_reaction", "rdkit_cxx::chem::all_chem::enumerate_library_from_reaction_return_reactants"]
+overloads_note = "returnReactants=True, which changes what is yielded, is enumerate_library_from_reaction_return_reactants (A4); the sidechain sets are slices, where Python's may be lazy iterators"
+
+[[entry]]
+python = "rdkit.Chem.AllChem.GetConformerRMS"
+rust = ["rdkit_cxx::chem::all_chem::get_conformer_rms", "rdkit_cxx::chem::all_chem::get_conformer_rms_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.AllChem.GetConformerRMSMatrix"
+rust = ["rdkit_cxx::chem::all_chem::get_conformer_rms_matrix", "rdkit_cxx::chem::all_chem::get_conformer_rms_matrix_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.AllChem.TransformMol"
+rust = ["rdkit_cxx::chem::all_chem::transform_mol", "rdkit_cxx::chem::all_chem::transform_mol_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.AtomPairs.Pairs.ExplainPairScore"
 rust = ["rdkit_cxx::chem::atom_pairs::pairs::explain_pair_score", "rdkit_cxx::chem::atom_pairs::pairs::explain_pair_score_include_chirality"]
 
@@ -263,6 +306,462 @@ rust = ["rdkit_cxx::chem::atom_pairs::utils::dot"]
 python = "rdkit.Chem.AtomPairs.Utils.ExplainAtomCode"
 rust = ["rdkit_cxx::chem::atom_pairs::utils::explain_atom_code", "rdkit_cxx::chem::atom_pairs::utils::explain_atom_code_include_chirality"]
 overloads_note = "branchSubtract, which Python accepts and ignores, is not bound; includeChirality changes the result (A4)"
+
+[[entry]]
+python = "rdkit.Chem.BRICS.BRICSBuild"
+rust = ["rdkit_cxx::chem::brics::brics_build", "rdkit_cxx::chem::brics::brics_build_with_params"]
+overloads_note = "draws from a rd_random::Random, where Python draws from the random module's global generator; the molecules come from a BRICSBuild iterator, as from Python's generator"
+
+[[entry]]
+python = "rdkit.Chem.BRICS.BRICSDecompose"
+rust = ["rdkit_cxx::chem::brics::brics_decompose", "rdkit_cxx::chem::brics::brics_decompose_with_params", "rdkit_cxx::chem::brics::brics_decompose_with_outputs", "rdkit_cxx::chem::brics::brics_decompose_return_mols"]
+overloads_note = "returnMols=True, which changes the return type, is brics_decompose_return_mols (A4); allNodes, which Python updates, comes back from brics_decompose_with_outputs (A9); silent, which only prints progress, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BRICS.BreakBRICSBonds"
+rust = ["rdkit_cxx::chem::brics::break_brics_bonds", "rdkit_cxx::chem::brics::break_brics_bonds_with_params"]
+overloads_note = "silent, which Python ignores, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BRICS.FindBRICSBonds"
+rust = ["rdkit_cxx::chem::brics::find_brics_bonds", "rdkit_cxx::chem::brics::find_brics_bonds_with_random_order"]
+overloads_note = "randomizeOrder=True is find_brics_bonds_with_random_order, which draws from a rd_random::Random, where Python draws from the random module's global generator; silent, which Python ignores, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BRICS.bondMatchers"
+rust = ["rdkit_cxx::chem::brics::bond_matchers"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.dummyPattern"
+rust = ["rdkit_cxx::chem::brics::dummy_pattern"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.environMatchers"
+rust = ["rdkit_cxx::chem::brics::environ_matchers"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.environs"
+rust = ["rdkit_cxx::chem::brics::environs"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.reactionDefs"
+rust = ["rdkit_cxx::chem::brics::reaction_defs"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.reactions"
+rust = ["rdkit_cxx::chem::brics::reactions"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.reverseReactions"
+rust = ["rdkit_cxx::chem::brics::reverse_reactions"]
+
+[[entry]]
+python = "rdkit.Chem.BRICS.smartsGps"
+rust = ["rdkit_cxx::chem::brics::smarts_gps"]
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.BuildCatalog"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::build_catalog", "rdkit_cxx::chem::build_fragment_catalog::build_catalog_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.CalcGains"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::calc_gains", "rdkit_cxx::chem::build_fragment_catalog::calc_gains_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.CalcGainsFromFps"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::calc_gains_from_fps", "rdkit_cxx::chem::build_fragment_catalog::calc_gains_from_fps_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.OutputGainsData"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::output_gains_data", "rdkit_cxx::chem::build_fragment_catalog::output_gains_data_with_n_acts"]
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ParseArgs"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ProcessGainsData"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::process_gains_data", "rdkit_cxx::chem::build_fragment_catalog::process_gains_data_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails"
+reason = "the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.actCol"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.biasList"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.catalogName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.dbName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.delim"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.detailsName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doBuild"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doDetails"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doGains"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doScore"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.doSigs"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.fpName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.gainsName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.hasTitle"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.inFileName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.maxPath"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.minPath"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.nActs"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.nBits"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.nameCol"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.numMols"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.onBitsName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.scoresName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.smiCol"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.tableName"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.RunDetails.topN"
+reason = "one of the script's command-line options"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ScoreFromLists"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::score_from_lists", "rdkit_cxx::chem::build_fragment_catalog::score_from_lists_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ScoreMolecules"
+rust = ["rdkit_cxx::chem::build_fragment_catalog::score_molecules", "rdkit_cxx::chem::build_fragment_catalog::score_molecules_with_params"]
+overloads_note = "reportFreq, the frequency of progress messages to stdout, is not ported; nor maxPts, which Python ignores"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.ShowDetails"
+reason = "broken in Python: it calls FragCatalog.GetFragDescription, which does not exist, so it raises AttributeError for any gains"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.SupplierFromDetails"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.Usage"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.BuildFragmentCatalog.message"
+reason = "writes a string to a stream (sys.stdout by default); Rust writes with write!"
+
+[[entry]]
+python = "rdkit.Chem.CanonSmiles"
+rust = ["rdkit_cxx::chem::canon_smiles", "rdkit_cxx::chem::canon_smiles_with_use_chiral"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.AlignDepict"
+rust = ["rdkit_cxx::chem::chem_utils::align_depict::align_depict", "rdkit_cxx::chem::chem_utils::align_depict::align_depict_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.initParser"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.main"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.AlignDepict.processArgs"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.DescriptorUtilities.VectorDescriptorNamespace"
+reason = "a dict subclass that holds the functions VectorDescriptorWrapper defines in a Python namespace; Rust code calls VectorDescriptorWrapper::call_desc"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.DescriptorUtilities.VectorDescriptorNamespace.__init__"
+reason = "initializes the dict subclass VectorDescriptorNamespace, which has no Rust counterpart"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.DescriptorUtilities.VectorDescriptorWrapper"
+rust = ["rdkit_cxx::chem::chem_utils::descriptor_utilities::VectorDescriptorWrapper"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.DescriptorUtilities.VectorDescriptorWrapper.__init__"
+rust = ["rdkit_cxx::chem::chem_utils::descriptor_utilities::VectorDescriptorWrapper::new"]
+rust_generics = "<fn(&rdkit_cxx::chem::Mol) -> rdkit_cxx::Result<Vec<f64>>>"
+overloads_note = "namespace, the Python namespace Python adds a function per name to, is not bound; Rust code calls call_desc with the index"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.DescriptorUtilities.VectorDescriptorWrapper.call_desc"
+rust = ["rdkit_cxx::chem::chem_utils::descriptor_utilities::VectorDescriptorWrapper::call_desc"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.DescriptorUtilities.setDescriptorVersion"
+reason = "a decorator that sets a Python function's version attribute; the ported descriptors' versions are in MolecularDescriptorCalculator::get_descriptor_versions"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.Convert"
+rust = ["rdkit_cxx::chem::chem_utils::sdf_to_csv::convert", "rdkit_cxx::chem::chem_utils::sdf_to_csv::convert_with_params"]
+overloads_note = "the supplier is an SDMolSupplier, which Python's must be to be indexed, and outFile a Write"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.existingFile"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.initParser"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.SDFToCSV.main"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.ConstructSidechains"
+rust = ["rdkit_cxx::chem::chem_utils::template_expand::construct_sidechains", "rdkit_cxx::chem::chem_utils::template_expand::construct_sidechains_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.Explode"
+rust = ["rdkit_cxx::chem::chem_utils::template_expand::explode", "rdkit_cxx::chem::chem_utils::template_expand::explode_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.MoveDummyNeighborsToBeginning"
+rust = ["rdkit_cxx::chem::chem_utils::template_expand::move_dummy_neighbors_to_beginning", "rdkit_cxx::chem::chem_utils::template_expand::move_dummy_neighbors_to_beginning_with_use_all"]
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.Usage"
+reason = "part of the script's command-line interface"
+
+[[entry]]
+python = "rdkit.Chem.ChemUtils.TemplateExpand.nDumped"
+reason = "the module's count of the molecules Explode has written, reset by each call; Rust counts within the call"
+
+[[entry]]
+python = "rdkit.Chem.ChemicalFeatures.MCFF_GetFeaturesForMol"
+rust = ["rdkit_cxx::chem::chemical_features::mcff_get_features_for_mol", "rdkit_cxx::chem::chemical_features::mcff_get_features_for_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Crippen.MolLogP"
+rust = ["rdkit_cxx::chem::crippen::mol_log_p", "rdkit_cxx::chem::crippen::mol_log_p_with_include_hs"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Crippen.MolMR"
+rust = ["rdkit_cxx::chem::crippen::mol_mr", "rdkit_cxx::chem::crippen::mol_mr_with_include_hs"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Crippen.defaultPatternFileName"
+reason = "the path of Crippen.txt in RDKit's Python data directory, which only Python's private reference implementation, written in Python, reads; the C++ code Rust calls has the parameters built in"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.CalcMolDescriptors"
+rust = ["rdkit_cxx::chem::descriptors::calc_mol_descriptors", "rdkit_cxx::chem::descriptors::calc_mol_descriptors_with_missing_val"]
+overloads_note = "missingVal, which sets the values of descriptors that fail and so their type, is calc_mol_descriptors_with_missing_val (A4); silent, which only prints the failures' tracebacks, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.ExactMolWt"
+rust = ["rdkit_cxx::chem::descriptors::exact_mol_wt", "rdkit_cxx::chem::descriptors::exact_mol_wt_with_only_heavy"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.FpDensityMorgan1"
+rust = ["rdkit_cxx::chem::descriptors::fp_density_morgan1"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.FpDensityMorgan2"
+rust = ["rdkit_cxx::chem::descriptors::fp_density_morgan2"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.FpDensityMorgan3"
+rust = ["rdkit_cxx::chem::descriptors::fp_density_morgan3"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.HeavyAtomMolWt"
+rust = ["rdkit_cxx::chem::descriptors::heavy_atom_mol_wt"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.MaxAbsPartialCharge"
+rust = ["rdkit_cxx::chem::descriptors::max_abs_partial_charge"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.MaxPartialCharge"
+rust = ["rdkit_cxx::chem::descriptors::max_partial_charge"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.MinAbsPartialCharge"
+rust = ["rdkit_cxx::chem::descriptors::min_abs_partial_charge"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.MinPartialCharge"
+rust = ["rdkit_cxx::chem::descriptors::min_partial_charge"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.MolWt"
+rust = ["rdkit_cxx::chem::descriptors::mol_wt", "rdkit_cxx::chem::descriptors::mol_wt_with_only_heavy"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.NumRadicalElectrons"
+rust = ["rdkit_cxx::chem::descriptors::num_radical_electrons"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.NumValenceElectrons"
+rust = ["rdkit_cxx::chem::descriptors::num_valence_electrons"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.PropertyFunctor"
+reason = "a Python base class for property functions, which subclasses define __call__ on; Rust makes them from closures with rd_mol_descriptors::PythonPropertyFunctor::new, which is bound"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.PropertyFunctor.__call__"
+reason = "the method PropertyFunctor's subclasses override; Rust passes the closure to rd_mol_descriptors::PythonPropertyFunctor::new"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.PropertyFunctor.__init__"
+reason = "initializes the PythonPropertyFunctor a subclass derives from; Rust makes one with rd_mol_descriptors::PythonPropertyFunctor::new"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.descList"
+rust = ["rdkit_cxx::chem::descriptors::desc_list"]
+
+[[entry]]
+python = "rdkit.Chem.Descriptors.setupAUTOCorrDescriptors"
+rust = ["rdkit_cxx::chem::descriptors::setup_autocorr_descriptors"]
+name_exception = "AUTOCorr is one word, as in calc_autocorr_2d: setup_autocorr_descriptors"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.Asphericity"
+rust = ["rdkit_cxx::chem::descriptors_3d::asphericity", "rdkit_cxx::chem::descriptors_3d::asphericity_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.CalcMolDescriptors3D"
+rust = ["rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d", "rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d_with_conf_id"]
+name_exception = "digits stay with their letters: calc_mol_descriptors_3d"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.Eccentricity"
+rust = ["rdkit_cxx::chem::descriptors_3d::eccentricity", "rdkit_cxx::chem::descriptors_3d::eccentricity_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.InertialShapeFactor"
+rust = ["rdkit_cxx::chem::descriptors_3d::inertial_shape_factor", "rdkit_cxx::chem::descriptors_3d::inertial_shape_factor_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.NPR1"
+rust = ["rdkit_cxx::chem::descriptors_3d::npr1", "rdkit_cxx::chem::descriptors_3d::npr1_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.NPR2"
+rust = ["rdkit_cxx::chem::descriptors_3d::npr2", "rdkit_cxx::chem::descriptors_3d::npr2_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.PBF"
+rust = ["rdkit_cxx::chem::descriptors_3d::pbf", "rdkit_cxx::chem::descriptors_3d::pbf_with_conf_id"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.PMI1"
+rust = ["rdkit_cxx::chem::descriptors_3d::pmi1", "rdkit_cxx::chem::descriptors_3d::pmi1_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.PMI2"
+rust = ["rdkit_cxx::chem::descriptors_3d::pmi2", "rdkit_cxx::chem::descriptors_3d::pmi2_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.PMI3"
+rust = ["rdkit_cxx::chem::descriptors_3d::pmi3", "rdkit_cxx::chem::descriptors_3d::pmi3_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.RadiusOfGyration"
+rust = ["rdkit_cxx::chem::descriptors_3d::radius_of_gyration", "rdkit_cxx::chem::descriptors_3d::radius_of_gyration_with_params"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.SpherocityIndex"
+rust = ["rdkit_cxx::chem::descriptors_3d::spherocity_index", "rdkit_cxx::chem::descriptors_3d::spherocity_index_with_conf_id"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.Descriptors3D.descList"
+rust = ["rdkit_cxx::chem::descriptors_3d::desc_list"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.DebugDraw"
@@ -1468,6 +1967,225 @@ python = "rdkit.Chem.Draw.shouldKekulize"
 rust = ["rdkit_cxx::chem::draw::should_kekulize"]
 
 [[entry]]
+python = "rdkit.Chem.EState.AtomTypes.BuildPatts"
+rust = ["rdkit_cxx::chem::e_state::atom_types::build_patts", "rdkit_cxx::chem::e_state::atom_types::build_patts_with_raw_v"]
+
+[[entry]]
+python = "rdkit.Chem.EState.AtomTypes.TypeAtoms"
+rust = ["rdkit_cxx::chem::e_state::atom_types::type_atoms"]
+
+[[entry]]
+python = "rdkit.Chem.EState.AtomTypes.esPatterns"
+rust = ["rdkit_cxx::chem::e_state::atom_types::es_patterns"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState.EStateIndices"
+rust = ["rdkit_cxx::chem::e_state::e_state::e_state_indices"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState.GetPrincipleQuantumNumber"
+rust = ["rdkit_cxx::chem::e_state::e_state::get_principle_quantum_number"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState.MaxAbsEStateIndex"
+rust = ["rdkit_cxx::chem::e_state::e_state::max_abs_e_state_index"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState.MaxEStateIndex"
+rust = ["rdkit_cxx::chem::e_state::e_state::max_e_state_index"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState.MinAbsEStateIndex"
+rust = ["rdkit_cxx::chem::e_state::e_state::min_abs_e_state_index"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState.MinEStateIndex"
+rust = ["rdkit_cxx::chem::e_state::e_state::min_e_state_index"]
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA1"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa1"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA10"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa10"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA11"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa11"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA2"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa2"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA3"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa3"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA4"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa4"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA5"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa5"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA6"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa6"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA7"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa7"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA8"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa8"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA9"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa9"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.EState_VSA_"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa", "rdkit_cxx::chem::e_state::e_state_vsa::e_state_vsa_with_bins"]
+name_exception = "the trailing underscore is dropped: e_state_vsa"
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState1"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state1"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState10"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state10"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState2"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state2"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState3"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state3"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState4"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state4"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState5"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state5"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState6"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state6"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState7"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state7"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState8"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state8"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState9"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state9"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.VSA_EState_"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state", "rdkit_cxx::chem::e_state::e_state_vsa::vsa_e_state_with_bins"]
+name_exception = "the trailing underscore is dropped: vsa_e_state"
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.estateBins"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::estate_bins"]
+
+[[entry]]
+python = "rdkit.Chem.EState.EState_VSA.vsaBins"
+rust = ["rdkit_cxx::chem::e_state::e_state_vsa::vsa_bins"]
+
+[[entry]]
+python = "rdkit.Chem.EState.Fingerprinter.FingerprintMol"
+rust = ["rdkit_cxx::chem::e_state::fingerprinter::fingerprint_mol"]
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.EnumerateHeterocycles"
+rust = ["rdkit_cxx::chem::enumerate_heterocycles::enumerate_heterocycles", "rdkit_cxx::chem::enumerate_heterocycles::enumerate_heterocycles_with_depth"]
+overloads_note = "the molecules come from a Heterocycles iterator, as from Python's generator"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.GetHeterocycleReactionSmarts"
+rust = ["rdkit_cxx::chem::enumerate_heterocycles::get_heterocycle_reaction_smarts"]
+overloads_note = "the named tuples are HeteroAtomReaction structs"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.GetHeterocycleReactions"
+rust = ["rdkit_cxx::chem::enumerate_heterocycles::get_heterocycle_reactions"]
+
+[[entry]]
+python = "rdkit.Chem.EnumerateHeterocycles.REACTION_CACHE"
+reason = "the module's cache of GetHeterocycleReactions' reactions; Rust parses new ones for each call, since a ChemicalReaction cannot be shared between threads"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.EnumerateStereoisomers"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::enumerate_stereoisomers", "rdkit_cxx::chem::enumerate_stereoisomers::enumerate_stereoisomers_with_options"]
+overloads_note = "verbose is StereoEnumerationOptions.verbose (A3); the isomers come from a Stereoisomers iterator, as from Python's generator"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.GetStereoisomerCount"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::get_stereoisomer_count", "rdkit_cxx::chem::enumerate_stereoisomers::get_stereoisomer_count_with_options"]
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions"]
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.__init__"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::default"]
+overloads_note = "the keyword arguments are the struct's fields"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.maxIsomers"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::max_isomers"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.onlyStereoGroups"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::only_stereo_groups"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.onlyUnassigned"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::only_unassigned"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.rand"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::rand"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.tryEmbedding"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::try_embedding"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.EnumerateStereoisomers.StereoEnumerationOptions.unique"
+rust = ["rdkit_cxx::chem::enumerate_stereoisomers::StereoEnumerationOptions::unique"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FastSDMolSupplier.FastSDMolSupplier"
+reason = "deprecated (importing the module warns): a subclass of SDMolSupplier that adds nothing; use rdmolfiles::SDMolSupplier, which is bound"
+
+[[entry]]
 python = "rdkit.Chem.FeatFinderCLI.GetAtomFeatInfo"
 rust = ["rdkit_cxx::chem::feat_finder_cli::get_atom_feat_info"]
 
@@ -1818,6 +2536,817 @@ python = "rdkit.Chem.Features.FeatDirUtilsRD.findNeighbors"
 rust = ["rdkit_cxx::chem::features::feat_dir_utils_rd::find_neighbors"]
 
 [[entry]]
+python = "rdkit.Chem.FilterCatalog.FilterMatcher"
+rust = ["rdkit_cxx::chem::filter_catalog::FilterMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.FilterCatalog.FilterMatcher.GetMatches"
+rust = ["rdkit_cxx::chem::filter_catalog::FilterMatcher::get_matches"]
+
+[[entry]]
+python = "rdkit.Chem.FilterCatalog.FilterMatcher.GetName"
+rust = ["rdkit_cxx::chem::filter_catalog::FilterMatcher::get_name"]
+
+[[entry]]
+python = "rdkit.Chem.FilterCatalog.FilterMatcher.HasMatch"
+rust = ["rdkit_cxx::chem::filter_catalog::FilterMatcher::has_match"]
+
+[[entry]]
+python = "rdkit.Chem.FilterCatalog.FilterMatcher.IsValid"
+rust = ["rdkit_cxx::chem::filter_catalog::FilterMatcher::is_valid"]
+
+[[entry]]
+python = "rdkit.Chem.FilterCatalog.FilterMatcher.__init__"
+rust = ["rdkit_cxx::chem::filter_catalog::FilterMatcher::new"]
+rust_generics = "<Box<dyn rdkit_cxx::chem::filter_catalog::CustomFilterMatcher>>"
+overloads_note = "the methods Python's subclasses override are a CustomFilterMatcher's, which new takes"
+
+[[entry]]
+python = "rdkit.Chem.FindMolChiralCenters"
+rust = ["rdkit_cxx::chem::find_mol_chiral_centers", "rdkit_cxx::chem::find_mol_chiral_centers_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.ACYC_SMARTS"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::acyc_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.CYC_SMARTS"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::cyc_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.FTYPE_ACYCLIC"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::ftype_acyclic"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.FTYPE_CYCLIC"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::ftype_cyclic"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.FTYPE_CYCLIC_ACYCLIC"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::ftype_cyclic_acyclic"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.GetFraggleSimilarity"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::get_fraggle_similarity", "rdkit_cxx::chem::fraggle::fraggle_sim::get_fraggle_similarity_with_tversky_thresh"]
+overloads_note = "the query's fragmentation is computed for each call, where Python caches it on the molecule"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.atomContrib"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::atom_contrib", "rdkit_cxx::chem::fraggle::fraggle_sim::atom_contrib_with_tversky_thresh"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.cSma1"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::c_sma1"]
+name_exception = "digits stay with their letters: c_sma1"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.cSma2"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::c_sma2"]
+name_exception = "digits stay with their letters: c_sma2"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.compute_fraggle_similarity_for_subs"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::compute_fraggle_similarity_for_subs", "rdkit_cxx::chem::fraggle::fraggle_sim::compute_fraggle_similarity_for_subs_with_tversky_thresh"]
+overloads_note = "the modified query's fingerprint is computed for each call; Python caches it by query and fragment but not threshold, so its later calls with another threshold reuse the first one's"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.delete_bonds"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::delete_bonds"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.dummyAtomQuery"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::dummy_atom_query"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.generate_fraggle_fragmentation"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::generate_fraggle_fragmentation"]
+overloads_note = "verbose, which only prints the matched atoms, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.isValidRingCut"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::is_valid_ring_cut"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.modified_query_fps"
+reason = "the module's cache of modified queries' fingerprints, keyed without the Tversky threshold; Rust computes them for each call"
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.rdkitFpParams"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::rdkit_fp_params"]
+
+[[entry]]
+python = "rdkit.Chem.Fraggle.FraggleSim.select_fragments"
+rust = ["rdkit_cxx::chem::fraggle::fraggle_sim::select_fragments"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.description"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::description"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.gain"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::gain"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.id"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BitGainsInfo.nPerClass"
+rust = ["rdkit_cxx::chem::fragment_catalog::BitGainsInfo::n_per_class"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.BuildAdjacencyList"
+rust = ["rdkit_cxx::chem::fragment_catalog::build_adjacency_list", "rdkit_cxx::chem::fragment_catalog::build_adjacency_list_with_limit_inclusion"]
+overloads_note = "orderLevels is not ported: Python's raises NameError (argsort is never imported); fragments without bits are left out, where Python links 2**32 - 1"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.GetMolsMatchingBit"
+rust = ["rdkit_cxx::chem::fragment_catalog::get_mols_matching_bit"]
+overloads_note = "bit is the id; for a BitGainsInfo, pass its id"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.ProcessGainsFile"
+rust = ["rdkit_cxx::chem::fragment_catalog::process_gains_file", "rdkit_cxx::chem::fragment_catalog::process_gains_file_with_params"]
+overloads_note = "Python's fails on Python 3 (it calls the file's Python 2 xreadlines); the port reads the file as that meant to"
+
+[[entry]]
+python = "rdkit.Chem.FragmentCatalog.message"
+reason = "writes a string to a stream (sys.stdout by default); Rust writes with write!"
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.AddExclusion"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::add_exclusion"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.GetBond"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::get_bond"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.GetExclusionSMARTS"
+reason = "a stub: Python's method has no body and returns None"
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.GetMatch"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::get_match"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.GetMatches"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::get_matches", "rdkit_cxx::chem::fragment_matcher::FragmentMatcher::get_matches_with_uniquify"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.GetSMARTS"
+reason = "a stub: Python's method has no body and returns None"
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.HasMatch"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::has_match"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.Init"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::init"]
+
+[[entry]]
+python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.__init__"
+rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::default"]
+
+[[entry]]
+python = "rdkit.Chem.Fragments.defaultPatternFileName"
+reason = "the path of FragmentDescriptors.csv in RDKit's Python data directory, which Python reads on import; the crate embeds the file (src/chem/data)"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fn"
+reason = "the loop variable left over from defining the fragment functions, set to None"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fns"
+rust = ["rdkit_cxx::chem::fragments::fns"]
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Al_COO"
+rust = ["rdkit_cxx::chem::fragments::fr_al_coo", "rdkit_cxx::chem::fragments::fr_al_coo_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Al_OH"
+rust = ["rdkit_cxx::chem::fragments::fr_al_oh", "rdkit_cxx::chem::fragments::fr_al_oh_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Al_OH_noTert"
+rust = ["rdkit_cxx::chem::fragments::fr_al_oh_no_tert", "rdkit_cxx::chem::fragments::fr_al_oh_no_tert_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_ArN"
+rust = ["rdkit_cxx::chem::fragments::fr_arn", "rdkit_cxx::chem::fragments::fr_arn_with_count_unique"]
+name_exception = "ArN is one word, apart from fr_Ar_N (fr_ar_n): fr_arn"
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Ar_COO"
+rust = ["rdkit_cxx::chem::fragments::fr_ar_coo", "rdkit_cxx::chem::fragments::fr_ar_coo_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Ar_N"
+rust = ["rdkit_cxx::chem::fragments::fr_ar_n", "rdkit_cxx::chem::fragments::fr_ar_n_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Ar_NH"
+rust = ["rdkit_cxx::chem::fragments::fr_ar_nh", "rdkit_cxx::chem::fragments::fr_ar_nh_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Ar_OH"
+rust = ["rdkit_cxx::chem::fragments::fr_ar_oh", "rdkit_cxx::chem::fragments::fr_ar_oh_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_COO"
+rust = ["rdkit_cxx::chem::fragments::fr_coo", "rdkit_cxx::chem::fragments::fr_coo_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_COO2"
+rust = ["rdkit_cxx::chem::fragments::fr_coo2", "rdkit_cxx::chem::fragments::fr_coo2_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_C_O"
+rust = ["rdkit_cxx::chem::fragments::fr_c_o", "rdkit_cxx::chem::fragments::fr_c_o_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_C_O_noCOO"
+rust = ["rdkit_cxx::chem::fragments::fr_c_o_no_coo", "rdkit_cxx::chem::fragments::fr_c_o_no_coo_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_C_S"
+rust = ["rdkit_cxx::chem::fragments::fr_c_s", "rdkit_cxx::chem::fragments::fr_c_s_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_HOCCN"
+rust = ["rdkit_cxx::chem::fragments::fr_hoccn", "rdkit_cxx::chem::fragments::fr_hoccn_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Imine"
+rust = ["rdkit_cxx::chem::fragments::fr_imine", "rdkit_cxx::chem::fragments::fr_imine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_NH0"
+rust = ["rdkit_cxx::chem::fragments::fr_nh0", "rdkit_cxx::chem::fragments::fr_nh0_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_NH1"
+rust = ["rdkit_cxx::chem::fragments::fr_nh1", "rdkit_cxx::chem::fragments::fr_nh1_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_NH2"
+rust = ["rdkit_cxx::chem::fragments::fr_nh2", "rdkit_cxx::chem::fragments::fr_nh2_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_N_O"
+rust = ["rdkit_cxx::chem::fragments::fr_n_o", "rdkit_cxx::chem::fragments::fr_n_o_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Ndealkylation1"
+rust = ["rdkit_cxx::chem::fragments::fr_ndealkylation1", "rdkit_cxx::chem::fragments::fr_ndealkylation1_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Ndealkylation2"
+rust = ["rdkit_cxx::chem::fragments::fr_ndealkylation2", "rdkit_cxx::chem::fragments::fr_ndealkylation2_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_Nhpyrrole"
+rust = ["rdkit_cxx::chem::fragments::fr_nhpyrrole", "rdkit_cxx::chem::fragments::fr_nhpyrrole_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_SH"
+rust = ["rdkit_cxx::chem::fragments::fr_sh", "rdkit_cxx::chem::fragments::fr_sh_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_aldehyde"
+rust = ["rdkit_cxx::chem::fragments::fr_aldehyde", "rdkit_cxx::chem::fragments::fr_aldehyde_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_alkyl_carbamate"
+rust = ["rdkit_cxx::chem::fragments::fr_alkyl_carbamate", "rdkit_cxx::chem::fragments::fr_alkyl_carbamate_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_alkyl_halide"
+rust = ["rdkit_cxx::chem::fragments::fr_alkyl_halide", "rdkit_cxx::chem::fragments::fr_alkyl_halide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_allylic_oxid"
+rust = ["rdkit_cxx::chem::fragments::fr_allylic_oxid", "rdkit_cxx::chem::fragments::fr_allylic_oxid_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_amide"
+rust = ["rdkit_cxx::chem::fragments::fr_amide", "rdkit_cxx::chem::fragments::fr_amide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_amidine"
+rust = ["rdkit_cxx::chem::fragments::fr_amidine", "rdkit_cxx::chem::fragments::fr_amidine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_aniline"
+rust = ["rdkit_cxx::chem::fragments::fr_aniline", "rdkit_cxx::chem::fragments::fr_aniline_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_aryl_methyl"
+rust = ["rdkit_cxx::chem::fragments::fr_aryl_methyl", "rdkit_cxx::chem::fragments::fr_aryl_methyl_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_azide"
+rust = ["rdkit_cxx::chem::fragments::fr_azide", "rdkit_cxx::chem::fragments::fr_azide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_azo"
+rust = ["rdkit_cxx::chem::fragments::fr_azo", "rdkit_cxx::chem::fragments::fr_azo_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_barbitur"
+rust = ["rdkit_cxx::chem::fragments::fr_barbitur", "rdkit_cxx::chem::fragments::fr_barbitur_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_benzene"
+rust = ["rdkit_cxx::chem::fragments::fr_benzene", "rdkit_cxx::chem::fragments::fr_benzene_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_benzodiazepine"
+rust = ["rdkit_cxx::chem::fragments::fr_benzodiazepine", "rdkit_cxx::chem::fragments::fr_benzodiazepine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_bicyclic"
+rust = ["rdkit_cxx::chem::fragments::fr_bicyclic", "rdkit_cxx::chem::fragments::fr_bicyclic_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_diazo"
+rust = ["rdkit_cxx::chem::fragments::fr_diazo", "rdkit_cxx::chem::fragments::fr_diazo_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_dihydropyridine"
+rust = ["rdkit_cxx::chem::fragments::fr_dihydropyridine", "rdkit_cxx::chem::fragments::fr_dihydropyridine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_epoxide"
+rust = ["rdkit_cxx::chem::fragments::fr_epoxide", "rdkit_cxx::chem::fragments::fr_epoxide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_ester"
+rust = ["rdkit_cxx::chem::fragments::fr_ester", "rdkit_cxx::chem::fragments::fr_ester_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_ether"
+rust = ["rdkit_cxx::chem::fragments::fr_ether", "rdkit_cxx::chem::fragments::fr_ether_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_furan"
+rust = ["rdkit_cxx::chem::fragments::fr_furan", "rdkit_cxx::chem::fragments::fr_furan_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_guanido"
+rust = ["rdkit_cxx::chem::fragments::fr_guanido", "rdkit_cxx::chem::fragments::fr_guanido_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_halogen"
+rust = ["rdkit_cxx::chem::fragments::fr_halogen", "rdkit_cxx::chem::fragments::fr_halogen_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_hdrzine"
+rust = ["rdkit_cxx::chem::fragments::fr_hdrzine", "rdkit_cxx::chem::fragments::fr_hdrzine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_hdrzone"
+rust = ["rdkit_cxx::chem::fragments::fr_hdrzone", "rdkit_cxx::chem::fragments::fr_hdrzone_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_imidazole"
+rust = ["rdkit_cxx::chem::fragments::fr_imidazole", "rdkit_cxx::chem::fragments::fr_imidazole_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_imide"
+rust = ["rdkit_cxx::chem::fragments::fr_imide", "rdkit_cxx::chem::fragments::fr_imide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_isocyan"
+rust = ["rdkit_cxx::chem::fragments::fr_isocyan", "rdkit_cxx::chem::fragments::fr_isocyan_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_isothiocyan"
+rust = ["rdkit_cxx::chem::fragments::fr_isothiocyan", "rdkit_cxx::chem::fragments::fr_isothiocyan_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_ketone"
+rust = ["rdkit_cxx::chem::fragments::fr_ketone", "rdkit_cxx::chem::fragments::fr_ketone_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_ketone_Topliss"
+rust = ["rdkit_cxx::chem::fragments::fr_ketone_topliss", "rdkit_cxx::chem::fragments::fr_ketone_topliss_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_lactam"
+rust = ["rdkit_cxx::chem::fragments::fr_lactam", "rdkit_cxx::chem::fragments::fr_lactam_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_lactone"
+rust = ["rdkit_cxx::chem::fragments::fr_lactone", "rdkit_cxx::chem::fragments::fr_lactone_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_methoxy"
+rust = ["rdkit_cxx::chem::fragments::fr_methoxy", "rdkit_cxx::chem::fragments::fr_methoxy_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_morpholine"
+rust = ["rdkit_cxx::chem::fragments::fr_morpholine", "rdkit_cxx::chem::fragments::fr_morpholine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_nitrile"
+rust = ["rdkit_cxx::chem::fragments::fr_nitrile", "rdkit_cxx::chem::fragments::fr_nitrile_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_nitro"
+rust = ["rdkit_cxx::chem::fragments::fr_nitro", "rdkit_cxx::chem::fragments::fr_nitro_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_nitro_arom"
+rust = ["rdkit_cxx::chem::fragments::fr_nitro_arom", "rdkit_cxx::chem::fragments::fr_nitro_arom_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_nitro_arom_nonortho"
+rust = ["rdkit_cxx::chem::fragments::fr_nitro_arom_nonortho", "rdkit_cxx::chem::fragments::fr_nitro_arom_nonortho_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_nitroso"
+rust = ["rdkit_cxx::chem::fragments::fr_nitroso", "rdkit_cxx::chem::fragments::fr_nitroso_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_oxazole"
+rust = ["rdkit_cxx::chem::fragments::fr_oxazole", "rdkit_cxx::chem::fragments::fr_oxazole_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_oxime"
+rust = ["rdkit_cxx::chem::fragments::fr_oxime", "rdkit_cxx::chem::fragments::fr_oxime_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_para_hydroxylation"
+rust = ["rdkit_cxx::chem::fragments::fr_para_hydroxylation", "rdkit_cxx::chem::fragments::fr_para_hydroxylation_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_phenol"
+rust = ["rdkit_cxx::chem::fragments::fr_phenol", "rdkit_cxx::chem::fragments::fr_phenol_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_phenol_noOrthoHbond"
+rust = ["rdkit_cxx::chem::fragments::fr_phenol_no_ortho_hbond", "rdkit_cxx::chem::fragments::fr_phenol_no_ortho_hbond_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_phos_acid"
+rust = ["rdkit_cxx::chem::fragments::fr_phos_acid", "rdkit_cxx::chem::fragments::fr_phos_acid_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_phos_ester"
+rust = ["rdkit_cxx::chem::fragments::fr_phos_ester", "rdkit_cxx::chem::fragments::fr_phos_ester_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_piperdine"
+rust = ["rdkit_cxx::chem::fragments::fr_piperdine", "rdkit_cxx::chem::fragments::fr_piperdine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_piperzine"
+rust = ["rdkit_cxx::chem::fragments::fr_piperzine", "rdkit_cxx::chem::fragments::fr_piperzine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_priamide"
+rust = ["rdkit_cxx::chem::fragments::fr_priamide", "rdkit_cxx::chem::fragments::fr_priamide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_prisulfonamd"
+rust = ["rdkit_cxx::chem::fragments::fr_prisulfonamd", "rdkit_cxx::chem::fragments::fr_prisulfonamd_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_pyridine"
+rust = ["rdkit_cxx::chem::fragments::fr_pyridine", "rdkit_cxx::chem::fragments::fr_pyridine_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_quatN"
+rust = ["rdkit_cxx::chem::fragments::fr_quat_n", "rdkit_cxx::chem::fragments::fr_quat_n_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_sulfide"
+rust = ["rdkit_cxx::chem::fragments::fr_sulfide", "rdkit_cxx::chem::fragments::fr_sulfide_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_sulfonamd"
+rust = ["rdkit_cxx::chem::fragments::fr_sulfonamd", "rdkit_cxx::chem::fragments::fr_sulfonamd_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_sulfone"
+rust = ["rdkit_cxx::chem::fragments::fr_sulfone", "rdkit_cxx::chem::fragments::fr_sulfone_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_term_acetylene"
+rust = ["rdkit_cxx::chem::fragments::fr_term_acetylene", "rdkit_cxx::chem::fragments::fr_term_acetylene_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_tetrazole"
+rust = ["rdkit_cxx::chem::fragments::fr_tetrazole", "rdkit_cxx::chem::fragments::fr_tetrazole_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_thiazole"
+rust = ["rdkit_cxx::chem::fragments::fr_thiazole", "rdkit_cxx::chem::fragments::fr_thiazole_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_thiocyan"
+rust = ["rdkit_cxx::chem::fragments::fr_thiocyan", "rdkit_cxx::chem::fragments::fr_thiocyan_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_thiophene"
+rust = ["rdkit_cxx::chem::fragments::fr_thiophene", "rdkit_cxx::chem::fragments::fr_thiophene_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_unbrch_alkane"
+rust = ["rdkit_cxx::chem::fragments::fr_unbrch_alkane", "rdkit_cxx::chem::fragments::fr_unbrch_alkane_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.Fragments.fr_urea"
+rust = ["rdkit_cxx::chem::fragments::fr_urea", "rdkit_cxx::chem::fragments::fr_urea_with_count_unique"]
+overloads_note = "pattern, a defaulted argument that holds each function's pattern, is not bound: each function is its pattern"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.BuildFuncGroupHierarchy"
+rust = ["rdkit_cxx::chem::functional_groups::build_func_group_hierarchy", "rdkit_cxx::chem::functional_groups::build_func_group_hierarchy_with_params"]
+overloads_note = "force, which only bypasses the module's cache of the last hierarchy, is not ported: each call builds a new hierarchy"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.CreateMolFingerprint"
+rust = ["rdkit_cxx::chem::functional_groups::create_mol_fingerprint"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.__init__"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::new", "rdkit_cxx::chem::functional_groups::FGHierarchyNode::new_with_params"]
+overloads_note = "parent is the parent's label, where Python takes the parent node"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.__len__"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::len"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.children"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::children"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.label"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::label"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.name"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::name"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.parent"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::parent"]
+rust_kind = "field"
+overloads_note = "the parent's label, where Python holds a weak reference to the parent node"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.pattern"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::pattern"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.removalReaction"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::removal_reaction"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.rxnSmarts"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::rxn_smarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.smarts"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::smarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FuncGroupFileParseError"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value, as for the ValueError it subclasses"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.groupDefns"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.hierarchy"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.lastData"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.lastFilename"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.AvgIpc"
+rust = ["rdkit_cxx::chem::graph_descriptors::avg_ipc", "rdkit_cxx::chem::graph_descriptors::avg_ipc_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.BalabanJ"
+rust = ["rdkit_cxx::chem::graph_descriptors::balaban_j", "rdkit_cxx::chem::graph_descriptors::balaban_j_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.BertzCT"
+rust = ["rdkit_cxx::chem::graph_descriptors::bertz_ct", "rdkit_cxx::chem::graph_descriptors::bertz_ct_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi0"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi0"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi0n"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi0n"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi0v"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi0v"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi1"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi1"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi1n"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi1n"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi1v"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi1v"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi2n"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi2n"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi2v"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi2v"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi3n"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi3n"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi3v"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi3v"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi4n"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi4n"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Chi4v"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi4v"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.ChiNn_"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi_nn"]
+name_exception = "the trailing underscore is dropped: chi_nn"
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.ChiNv_"
+rust = ["rdkit_cxx::chem::graph_descriptors::chi_nv"]
+name_exception = "the trailing underscore is dropped: chi_nv"
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.HallKierAlpha"
+rust = ["rdkit_cxx::chem::graph_descriptors::hall_kier_alpha"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Ipc"
+rust = ["rdkit_cxx::chem::graph_descriptors::ipc", "rdkit_cxx::chem::graph_descriptors::ipc_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Kappa1"
+rust = ["rdkit_cxx::chem::graph_descriptors::kappa1"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Kappa2"
+rust = ["rdkit_cxx::chem::graph_descriptors::kappa2"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.Kappa3"
+rust = ["rdkit_cxx::chem::graph_descriptors::kappa3"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.hallKierAlphas"
+rust = ["rdkit_cxx::chem::graph_descriptors::hall_kier_alphas"]
+
+[[entry]]
+python = "rdkit.Chem.GraphDescriptors.ptable"
+reason = "an alias of Chem.GetPeriodicTable(), which is bound as rdkit_cxx::chem::get_periodic_table"
+
+[[entry]]
+python = "rdkit.Chem.Graphs.CharacteristicPolynomial"
+rust = ["rdkit_cxx::chem::graphs::characteristic_polynomial"]
+overloads_note = "mat is required: Python fails without it"
+
+[[entry]]
 python = "rdkit.Chem.Lipinski.FractionCSP3"
 rust = ["rdkit_cxx::chem::lipinski::fraction_csp3"]
 
@@ -1948,6 +3477,241 @@ rust = ["rdkit_cxx::chem::maccs_keys::maccs_keys"]
 [[entry]]
 python = "rdkit.Chem.MACCSkeys.smartsPatts"
 rust = ["rdkit_cxx::chem::maccs_keys::smarts_patts"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo.__init__"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo::new"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo.get_mobile_h"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo::get_mobile_h"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.InchiInfo.get_sp3_stereo"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::InchiInfo::get_sp3_stereo"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.all_stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::all_stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.console"
+reason = "a logging.StreamHandler the module creates for Python's logging and never uses"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.defined_stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::defined_stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.fixed_h_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::fixed_h_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.h_layer_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::h_layer_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.isotope_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::isotope_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.mobile_h_atoms_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::mobile_h_atoms_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.mobile_h_group_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::mobile_h_group_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.reconnected_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::reconnected_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.stereo_all_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::stereo_all_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.undef_stereo_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::undef_stereo_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.InchiInfo.version_re"
+rust = ["rdkit_cxx::chem::mol_key::inchi_info::version_re"]
+overloads_note = "the pattern's text: the crate has no regular expressions, and InchiInfo matches what the pattern matches"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.BAD_SET"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::bad_set"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.BadMoleculeException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.CHIRAL_POS"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::chiral_pos"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.CheckCTAB"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.ERROR_DICT"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::error_dict"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.ErrorBitsToText"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::error_bits_to_text"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.GET_STEREO_RE"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::get_stereo_re"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.GetInchiForCTAB"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.GetKeyForCTAB"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.INCHI_COMPUTATION_ERROR"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::inchi_computation_error"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.INCHI_READWRITE_ERROR"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::inchi_readwrite_error"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.__getnewargs__"
+reason = "a named tuple's pickling hook"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.__repr__"
+reason = "a named tuple's repr; the struct derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.error"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult::error"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.fixed_ctab"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult::fixed_ctab"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.InchiResult.inchi"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::InchiResult::inchi"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MOL_KEY_VERSION"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::mol_key_version"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolIdentifierException"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.__getnewargs__"
+reason = "a named tuple's pickling hook"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.__repr__"
+reason = "a named tuple's repr; the struct derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.error"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::error"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.fixed_ctab"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::fixed_ctab"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.inchi"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::inchi"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.mol_key"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::mol_key"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.stereo_code"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::stereo_code"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.MolKeyResult.stereo_comment"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::MolKeyResult::stereo_comment"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.NULL_MOL"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::null_mol"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.NULL_SMILES_RE"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::null_smiles_re"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.PATTERN_NULL_MOL"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::pattern_null_mol"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.RDKIT_CONVERSION_ERROR"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::rdkit_conversion_error"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.T_NULL_MOL"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::t_null_mol"]
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.initStruchk"
+reason = "not ported: it runs the Avalon structure checker (pyAvalonTools.InitializeCheckMol and CheckMoleculeString), which is not bound because its parsers and configuration readers trust their input (U1)"
+
+[[entry]]
+python = "rdkit.Chem.MolKey.MolKey.stereo_code_dict"
+rust = ["rdkit_cxx::chem::mol_key::mol_key::stereo_code_dict"]
+
+[[entry]]
+python = "rdkit.Chem.MolStandardize.ReorderTautomers"
+rust = ["rdkit_cxx::chem::mol_standardize::reorder_tautomers"]
 
 [[entry]]
 python = "rdkit.Chem.MolStandardize.rdMolStandardize.AllowedAtomsValidation"
@@ -3239,6 +5003,254 @@ rust = ["rdkit_cxx::chem::mol_standardize::rd_mol_standardize::ValidationMethod:
 overloads_note = "every validation has the two forms, as the Python subclasses inherit validate"
 
 [[entry]]
+python = "rdkit.Chem.MolSurf.LabuteASA"
+rust = ["rdkit_cxx::chem::mol_surf::labute_asa", "rdkit_cxx::chem::mol_surf::labute_asa_with_include_hs"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA1"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa1"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA10"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa10"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA11"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa11"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA12"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa12"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA13"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa13"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA14"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa14"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA2"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa2"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA3"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa3"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA4"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa4"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA5"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa5"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA6"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa6"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA7"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa7"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA8"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa8"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.PEOE_VSA9"
+rust = ["rdkit_cxx::chem::mol_surf::peoe_vsa9"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA1"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa1"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA10"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa10"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA2"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa2"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA3"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa3"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA4"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa4"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA5"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa5"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA6"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa6"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA7"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa7"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA8"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa8"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SMR_VSA9"
+rust = ["rdkit_cxx::chem::mol_surf::smr_vsa9"]
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA1"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa1"]
+name_exception = "SlogP is one word: slogp_vsa1"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA10"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa10"]
+name_exception = "SlogP is one word: slogp_vsa10"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA11"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa11"]
+name_exception = "SlogP is one word: slogp_vsa11"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA12"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa12"]
+name_exception = "SlogP is one word: slogp_vsa12"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA2"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa2"]
+name_exception = "SlogP is one word: slogp_vsa2"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA3"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa3"]
+name_exception = "SlogP is one word: slogp_vsa3"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA4"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa4"]
+name_exception = "SlogP is one word: slogp_vsa4"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA5"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa5"]
+name_exception = "SlogP is one word: slogp_vsa5"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA6"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa6"]
+name_exception = "SlogP is one word: slogp_vsa6"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA7"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa7"]
+name_exception = "SlogP is one word: slogp_vsa7"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA8"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa8"]
+name_exception = "SlogP is one word: slogp_vsa8"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.SlogP_VSA9"
+rust = ["rdkit_cxx::chem::mol_surf::slogp_vsa9"]
+name_exception = "SlogP is one word: slogp_vsa9"
+overloads_note = "y, a defaulted argument that picks the bin, is not bound: each function is its bin"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.TPSA"
+rust = ["rdkit_cxx::chem::mol_surf::tpsa", "rdkit_cxx::chem::mol_surf::tpsa_with_include_s_and_p"]
+overloads_note = "force, which only steers RDKit's descriptor caches, is not bound (U8)"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.bondScaleFacts"
+rust = ["rdkit_cxx::chem::mol_surf::bond_scale_facts"]
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.chgBins"
+rust = ["rdkit_cxx::chem::mol_surf::chg_bins"]
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.logpBins"
+rust = ["rdkit_cxx::chem::mol_surf::logp_bins"]
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.mrBins"
+rust = ["rdkit_cxx::chem::mol_surf::mr_bins"]
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.ptable"
+reason = "an alias of Chem.GetPeriodicTable(), which is bound as rdkit_cxx::chem::get_periodic_table"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.pyLabuteASA"
+rust = ["rdkit_cxx::chem::mol_surf::py_labute_asa", "rdkit_cxx::chem::mol_surf::py_labute_asa_with_include_hs"]
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.pyPEOE_VSA_"
+rust = ["rdkit_cxx::chem::mol_surf::py_peoe_vsa", "rdkit_cxx::chem::mol_surf::py_peoe_vsa_with_bins"]
+name_exception = "the trailing underscore is dropped: py_peoe_vsa"
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.pySMR_VSA_"
+rust = ["rdkit_cxx::chem::mol_surf::py_smr_vsa", "rdkit_cxx::chem::mol_surf::py_smr_vsa_with_bins"]
+name_exception = "the trailing underscore is dropped: py_smr_vsa"
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.MolSurf.pySlogP_VSA_"
+rust = ["rdkit_cxx::chem::mol_surf::py_slogp_vsa", "rdkit_cxx::chem::mol_surf::py_slogp_vsa_with_bins"]
+name_exception = "SlogP is one word, and the trailing underscore is dropped: py_slogp_vsa"
+overloads_note = "force, which only steers Python's cache of results on the molecule, is not bound"
+
+[[entry]]
+python = "rdkit.Chem.MultiConfMolFromSDF"
+rust = ["rdkit_cxx::chem::multi_conf_mol_from_sdf", "rdkit_cxx::chem::multi_conf_mol_from_sdf_with_params"]
+
+[[entry]]
 python = "rdkit.Chem.Pharm2D.DefaultSigFactory"
 rust = ["rdkit_cxx::chem::pharm_2d::default_sig_factory", "rdkit_cxx::chem::pharm_2d::default_sig_factory_with_params"]
 
@@ -3384,6 +5396,508 @@ python = "rdkit.Chem.Pharm2D.Utils.nPointDistDict"
 rust = ["rdkit_cxx::chem::pharm_2d::utils::n_point_dist_dict"]
 
 [[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.AddExcludedVolumes"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::add_excluded_volumes", "rdkit_cxx::chem::pharm_3d::embed_lib::add_excluded_volumes_with_smooth_it"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.Check2DBounds"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::check_2d_bounds"]
+name_exception = "2D is one word: check_2d_bounds"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.CoarseScreenPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::coarse_screen_pharmacophore"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.CombiEnum"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::combi_enum"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.ComputeChiralVolume"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::compute_chiral_volume", "rdkit_cxx::chem::pharm_3d::embed_lib::compute_chiral_volume_with_conf_id"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.ConstrainedEnum"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::constrained_enum", "rdkit_cxx::chem::pharm_3d::embed_lib::constrained_enum_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.DownsampleBoundsMatrix"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::downsample_bounds_matrix", "rdkit_cxx::chem::pharm_3d::embed_lib::downsample_bounds_matrix_with_max_thresh"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.EmbedMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::embed_mol", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_mol_with_params", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_mol_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.EmbedOne"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::embed_one", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_one_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.EmbedPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::embed_pharmacophore", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_pharmacophore_with_params", "rdkit_cxx::chem::pharm_3d::embed_lib::embed_pharmacophore_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.GetAllPharmacophoreMatches"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::get_all_pharmacophore_matches", "rdkit_cxx::chem::pharm_3d::embed_lib::get_all_pharmacophore_matches_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.GetAtomHeavyNeighbors"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::get_atom_heavy_neighbors"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.MatchFeatsToMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::match_feats_to_mol"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.MatchPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::match_pharmacophore", "rdkit_cxx::chem::pharm_3d::embed_lib::match_pharmacophore_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.MatchPharmacophoreToMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::match_pharmacophore_to_mol"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.OptimizeMol"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::optimize_mol", "rdkit_cxx::chem::pharm_3d::embed_lib::optimize_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.ReplaceGroup"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::replace_group", "rdkit_cxx::chem::pharm_3d::embed_lib::replace_group_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.UpdatePharmacophoreBounds"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::update_pharmacophore_bounds", "rdkit_cxx::chem::pharm_3d::embed_lib::update_pharmacophore_bounds_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.defaultFeatLength"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::default_feat_length"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.EmbedLib.isNaN"
+rust = ["rdkit_cxx::chem::pharm_3d::embed_lib::is_nan"]
+name_exception = "NaN is one word: is_nan"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.ExcludedVolume.ExcludedVolume"
+rust = ["rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.ExcludedVolume.ExcludedVolume.__init__"
+rust = ["rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume::new", "rdkit_cxx::chem::pharm_3d::excluded_volume::ExcludedVolume::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__init__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::default", "rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::new_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.__str__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::to_string"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getFeature"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_feature"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getFeatures"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_features"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getRadii"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_radii"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.getRadius"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::get_radius"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.initFromFile"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::init_from_file"]
+rust_generics = ["<&[u8]>"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.initFromLines"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::init_from_lines"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.initFromString"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::init_from_string"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.ExplicitPharmacophore.setRadius"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::ExplicitPharmacophore::set_radius"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.__init__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::new", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::new_with_init_mats"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.__str__"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::to_string"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getFeature"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_feature"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getFeatures"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_features"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getLowerBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_lower_bound"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getLowerBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_lower_bound_2d"]
+name_exception = "2D is one word: get_lower_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getUpperBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_upper_bound"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.getUpperBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::get_upper_bound_2d"]
+name_exception = "2D is one word: get_upper_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setLowerBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound_with_check_bounds"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setLowerBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound_2d", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_lower_bound_2d_with_check_bounds"]
+name_exception = "2D is one word: set_lower_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setUpperBound"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound_with_check_bounds"]
+
+[[entry]]
+python = "rdkit.Chem.Pharm3D.Pharmacophore.Pharmacophore.setUpperBound2D"
+rust = ["rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound_2d", "rdkit_cxx::chem::pharm_3d::pharmacophore::Pharmacophore::set_upper_bound_2d_with_check_bounds"]
+name_exception = "2D is one word: set_upper_bound_2d"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter"
+rust = ["rdkit_cxx::chem::qed::ADSparameter"]
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.A"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::a"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.B"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::b"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.C"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::c"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.D"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::d"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.DMAX"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::dmax"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.E"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::e"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.F"
+rust = ["rdkit_cxx::chem::qed::ADSparameter::f"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.__getnewargs__"
+reason = "namedtuple's pickling hook; the struct is Copy"
+
+[[entry]]
+python = "rdkit.Chem.QED.ADSparameter.__repr__"
+reason = "namedtuple's repr; the struct derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.QED.AcceptorSmarts"
+rust = ["rdkit_cxx::chem::qed::acceptor_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.QED.Acceptors"
+rust = ["rdkit_cxx::chem::qed::acceptors"]
+
+[[entry]]
+python = "rdkit.Chem.QED.AliphaticRings"
+rust = ["rdkit_cxx::chem::qed::aliphatic_rings"]
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties"
+rust = ["rdkit_cxx::chem::qed::QEDproperties"]
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.ALERTS"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::alerts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.ALOGP"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::alogp"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.AROM"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::arom"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.HBA"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::hba"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.HBD"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::hbd"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.MW"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::mw"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.PSA"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::psa"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.ROTB"
+rust = ["rdkit_cxx::chem::qed::QEDproperties::rotb"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.__getnewargs__"
+reason = "namedtuple's pickling hook; the struct is Copy"
+
+[[entry]]
+python = "rdkit.Chem.QED.QEDproperties.__repr__"
+reason = "namedtuple's repr; the struct derives Debug"
+
+[[entry]]
+python = "rdkit.Chem.QED.StructuralAlertSmarts"
+rust = ["rdkit_cxx::chem::qed::structural_alert_smarts"]
+
+[[entry]]
+python = "rdkit.Chem.QED.StructuralAlerts"
+rust = ["rdkit_cxx::chem::qed::structural_alerts"]
+
+[[entry]]
+python = "rdkit.Chem.QED.WEIGHT_MAX"
+rust = ["rdkit_cxx::chem::qed::weight_max"]
+
+[[entry]]
+python = "rdkit.Chem.QED.WEIGHT_MEAN"
+rust = ["rdkit_cxx::chem::qed::weight_mean"]
+
+[[entry]]
+python = "rdkit.Chem.QED.WEIGHT_NONE"
+rust = ["rdkit_cxx::chem::qed::weight_none"]
+
+[[entry]]
+python = "rdkit.Chem.QED.ads"
+rust = ["rdkit_cxx::chem::qed::ads"]
+
+[[entry]]
+python = "rdkit.Chem.QED.adsParameters"
+rust = ["rdkit_cxx::chem::qed::ads_parameters"]
+
+[[entry]]
+python = "rdkit.Chem.QED.default"
+rust = ["rdkit_cxx::chem::qed::default"]
+
+[[entry]]
+python = "rdkit.Chem.QED.properties"
+rust = ["rdkit_cxx::chem::qed::properties"]
+
+[[entry]]
+python = "rdkit.Chem.QED.qed"
+rust = ["rdkit_cxx::chem::qed::qed", "rdkit_cxx::chem::qed::qed_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.QED.weights_max"
+rust = ["rdkit_cxx::chem::qed::weights_max"]
+
+[[entry]]
+python = "rdkit.Chem.QED.weights_mean"
+rust = ["rdkit_cxx::chem::qed::weights_mean"]
+
+[[entry]]
+python = "rdkit.Chem.QED.weights_none"
+rust = ["rdkit_cxx::chem::qed::weights_none"]
+
+[[entry]]
+python = "rdkit.Chem.QuickSmartsMatch"
+rust = ["rdkit_cxx::chem::quick_smarts_match", "rdkit_cxx::chem::quick_smarts_match_with_unique"]
+overloads_note = "display, which Python ignores, is not ported"
+
+[[entry]]
+python = "rdkit.Chem.Randomize.RandomizeMol"
+rust = ["rdkit_cxx::chem::randomize::randomize_mol"]
+overloads_note = "draws from a rd_random::Random, where Python draws from the random module's global generator"
+
+[[entry]]
+python = "rdkit.Chem.Randomize.RandomizeMolBlock"
+rust = ["rdkit_cxx::chem::randomize::randomize_mol_block"]
+overloads_note = "draws from a rd_random::Random, where Python draws from the random module's global generator"
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapDecompose"
+rust = ["rdkit_cxx::chem::recap::recap_decompose", "rdkit_cxx::chem::recap::recap_decompose_with_params", "rdkit_cxx::chem::recap::RecapHierarchy::recap_decompose"]
+overloads_note = "allNodes is a RecapHierarchy, which owns the nodes, and decomposing into one is its recap_decompose; the free functions return a new hierarchy whose root is the molecule's node"
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.GetAllChildren"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::get_all_children"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.GetLeaves"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::get_leaves"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.__del__"
+reason = "a Python finalizer that clears the node's references; a RecapHierarchy owns its nodes"
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.__init__"
+reason = "nodes belong to the RecapHierarchy that recap_decompose builds; Python makes them only there"
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.children"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::children"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.getUltimateParents"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::get_ultimate_parents"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.mol"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::mol"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.parents"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::parents"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.RecapHierarchyNode.smiles"
+rust = ["rdkit_cxx::chem::recap::RecapHierarchyNode::smiles"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase"
+reason = "the module's unittest.TestCase; its tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.test1"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.test2"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.test3"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testAmideRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testAmineRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testAromCAromCRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testAromNAliphCRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testAromNAromCRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testEsterRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testEtherRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testLactamNAliphCRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testMinFragmentSize"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testOlefinRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testSFNetIssue1801871"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testSFNetIssue1804418"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testSFNetIssue1881803"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testSulfonamideRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.TestCase.testUreaRxn"
+reason = "a test of the module's unittest.TestCase; the tests are ported to tests/recap.rs"
+
+[[entry]]
+python = "rdkit.Chem.Recap.reactionDefs"
+rust = ["rdkit_cxx::chem::recap::reaction_defs"]
+
+[[entry]]
+python = "rdkit.Chem.Recap.reactions"
+rust = ["rdkit_cxx::chem::recap::reactions"]
+
+[[entry]]
+python = "rdkit.Chem.ReducedGraphs.TanimotoSimilarity"
+rust = ["rdkit_cxx::chem::reduced_graphs::tanimoto_similarity"]
+
+[[entry]]
 python = "rdkit.Chem.RegistrationHash.ATOM_PROP_MAP_NUMBER"
 rust = ["rdkit_cxx::chem::registration_hash::atom_prop_map_number"]
 
@@ -3478,6 +5992,115 @@ rust = ["rdkit_cxx::chem::registration_hash::HashScheme::StereoInsensitiveLayers
 [[entry]]
 python = "rdkit.Chem.RegistrationHash.HashScheme.TAUTOMER_INSENSITIVE_LAYERS"
 rust = ["rdkit_cxx::chem::registration_hash::HashScheme::TautomerInsensitiveLayers"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.SATISTypes"
+rust = ["rdkit_cxx::chem::satis::satis_types", "rdkit_cxx::chem::satis::satis_types_with_neighbors_to_include"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.aldehydePatt"
+rust = ["rdkit_cxx::chem::satis::aldehyde_patt"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.amidePatt"
+rust = ["rdkit_cxx::chem::satis::amide_patt"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.carboxylPatt"
+rust = ["rdkit_cxx::chem::satis::carboxyl_patt"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.carboxylatePatt"
+rust = ["rdkit_cxx::chem::satis::carboxylate_patt"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.esterPatt"
+rust = ["rdkit_cxx::chem::satis::ester_patt"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.ketonePatt"
+rust = ["rdkit_cxx::chem::satis::ketone_patt"]
+
+[[entry]]
+python = "rdkit.Chem.SATIS.specialCases"
+rust = ["rdkit_cxx::chem::satis::special_cases"]
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.InputFormat"
+rust = ["rdkit_cxx::chem::salt_remover::InputFormat"]
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.InputFormat.MOL"
+rust = ["rdkit_cxx::chem::salt_remover::InputFormat::Mol"]
+name_exception = "a class of string constants that Rust makes an enum: InputFormat::Mol"
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.InputFormat.SMARTS"
+rust = ["rdkit_cxx::chem::salt_remover::InputFormat::Smarts"]
+name_exception = "a class of string constants that Rust makes an enum: InputFormat::Smarts"
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.InputFormat.SMILES"
+rust = ["rdkit_cxx::chem::salt_remover::InputFormat::Smiles"]
+name_exception = "a class of string constants that Rust makes an enum: InputFormat::Smiles"
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.SaltRemover"
+rust = ["rdkit_cxx::chem::salt_remover::SaltRemover"]
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.SaltRemover.StripMol"
+rust = ["rdkit_cxx::chem::salt_remover::SaltRemover::strip_mol", "rdkit_cxx::chem::salt_remover::SaltRemover::strip_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.SaltRemover.StripMolWithDeleted"
+rust = ["rdkit_cxx::chem::salt_remover::SaltRemover::strip_mol_with_deleted", "rdkit_cxx::chem::salt_remover::SaltRemover::strip_mol_with_deleted_with_dont_remove_everything"]
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.SaltRemover.__call__"
+rust = ["rdkit_cxx::chem::salt_remover::SaltRemover::strip_mol", "rdkit_cxx::chem::salt_remover::SaltRemover::strip_mol_with_params"]
+overloads_note = "calling the remover is strip_mol"
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.SaltRemover.__init__"
+rust = ["rdkit_cxx::chem::salt_remover::SaltRemover::new", "rdkit_cxx::chem::salt_remover::SaltRemover::new_with_params", "rdkit_cxx::chem::salt_remover::SaltRemover::default"]
+
+[[entry]]
+python = "rdkit.Chem.SaltRemover.SaltRemover.defnFilename"
+rust = ["rdkit_cxx::chem::salt_remover::SaltRemover::defn_filename"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.GetScaffoldForMol"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::get_scaffold_for_mol"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.MakeScaffoldGeneric"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::make_scaffold_generic"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.MurckoScaffoldSmiles"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles", "rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_with_include_chirality", "rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_mol", "rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_mol_with_include_chirality"]
+overloads_note = "smiles and mol are separate functions, the second with the suffix mol (A5)"
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.MurckoScaffoldSmilesFromSmiles"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_from_smiles", "rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_scaffold_smiles_from_smiles_with_include_chirality"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.aromaticNTransform"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::aromatic_n_transform"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.murckoPatts"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_patts"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.murckoQ"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_q"]
+
+[[entry]]
+python = "rdkit.Chem.Scaffolds.MurckoScaffold.murckoTransforms"
+rust = ["rdkit_cxx::chem::scaffolds::murcko_scaffold::murcko_transforms"]
 
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.BRICSScaffoldParams"
@@ -3643,6 +6266,408 @@ python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.UpdateScaffoldNetwork"
 rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_network"]
 
 [[entry]]
+python = "rdkit.Chem.SimpleEnum.Enumerator.EnumerateReaction"
+rust = ["rdkit_cxx::chem::simple_enum::enumerator::enumerate_reaction", "rdkit_cxx::chem::simple_enum::enumerator::enumerate_reaction_with_unique_products_only"]
+overloads_note = "funcGroupFilename and propName, which Python ignores (it preprocesses with the defaults), are not ported"
+
+[[entry]]
+python = "rdkit.Chem.SimpleEnum.Enumerator.PreprocessReaction"
+rust = ["rdkit_cxx::chem::simple_enum::enumerator::preprocess_reaction", "rdkit_cxx::chem::simple_enum::enumerator::preprocess_reaction_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.SpacialScore.SPS"
+rust = ["rdkit_cxx::chem::spacial_score::sps", "rdkit_cxx::chem::spacial_score::sps_with_normalize"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.AppendSkeletonPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::append_skeleton_points", "rdkit_cxx::chem::subshape::builder_utils::append_skeleton_points_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.AssignMolFeatsToPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::assign_mol_feats_to_points"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.CalculateDirectionsAtPoint"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::calculate_directions_at_point"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ClusterTerminalPts"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::cluster_terminal_pts"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ComputeGridIndices"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::compute_grid_indices"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ComputeShapeGridCentroid"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::compute_shape_grid_centroid"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.ExpandTerminalPts"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::expand_terminal_pts", "rdkit_cxx::chem::subshape::builder_utils::expand_terminal_pts_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindFarthestGridPoint"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_farthest_grid_point"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindGridPointBetweenPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_grid_point_between_points"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindTerminalPtsFromConformer"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_terminal_pts_from_conformer"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.FindTerminalPtsFromShape"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::find_terminal_pts_from_shape"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.BuilderUtils.GetMoreTerminalPoints"
+rust = ["rdkit_cxx::chem::subshape::builder_utils::get_more_terminal_points", "rdkit_cxx::chem::subshape::builder_utils::get_more_terminal_points_with_target_number"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.ClusterAlignments"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::cluster_alignments", "rdkit_cxx::chem::subshape::subshape_aligner::cluster_alignments_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.GetShapeShapeDistance"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::get_shape_shape_distance"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.GetSubshapeAlignments"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_subshape_alignments", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_subshape_alignments_with_params", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_subshape_alignments_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.GetTriangleMatches"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::get_triangle_matches"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.PruneMatchesUsingDirection"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_direction", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_direction_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.PruneMatchesUsingFeatures"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_features", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_features_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.PruneMatchesUsingShape"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_shape", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_shape_with_params", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::prune_matches_using_shape_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.__call__"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::call", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::call_with_params", "rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::call_with_outputs"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.coarseGridToleranceMult"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::coarse_grid_tolerance_mult"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.dirThresh"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::dir_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.distMetric"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::dist_metric"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.edgeTol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::edge_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.medGridToleranceMult"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::med_grid_tolerance_mult"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.numFeatThresh"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::num_feat_thresh"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.shapeDistTol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::shape_dist_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAligner.triangleRMSTol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAligner::triangle_rms_tol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.alignedConfId"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::aligned_conf_id"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.dirMatch"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::dir_match"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.queryTri"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::query_tri"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.shapeDist"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::shape_dist"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.targetTri"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::target_tri"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.transform"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::transform"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeAlignment.triangleSSD"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeAlignment::triangle_ssd"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeDistanceMetric"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeDistanceMetric"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeDistanceMetric.PROTRUDE"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeDistanceMetric::Protrude"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.SubshapeDistanceMetric.TANIMOTO"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::SubshapeDistanceMetric::Tanimoto"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeAligner.TransformMol"
+rust = ["rdkit_cxx::chem::subshape::subshape_aligner::transform_mol", "rdkit_cxx::chem::subshape::subshape_aligner::transform_mol_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.CombineSubshapes"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::combine_subshapes", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::combine_subshapes_with_operation"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.GenerateSubshapeShape"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_shape", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_shape_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.GenerateSubshapeSkeleton"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_skeleton", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::generate_subshape_skeleton_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.SampleSubshape"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::sample_subshape"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.__call__"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::call", "rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::call_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.featFactory"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::feat_factory"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.fraction"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::fraction"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.gridDims"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::grid_dims"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.gridSpacing"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::grid_spacing"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.nbrCount"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::nbr_count"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.stepSize"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::step_size"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.terminalPtRadScale"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::terminal_pt_rad_scale"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeBuilder.winRad"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeBuilder::win_rad"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations.INTERSECT"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations::Intersect"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations.SUM"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations::Sum"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeBuilder.SubshapeCombineOperations.UNION"
+rust = ["rdkit_cxx::chem::subshape::subshape_builder::SubshapeCombineOperations::Union"]
+name_exception = "a class constant of an enum-like class maps to its enum variant"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.DisplaySubshape"
+reason = "draws a shape and its skeleton in PyMOL, over its XML-RPC server"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.DisplaySubshapeSkeleton"
+reason = "draws a shape's skeleton in PyMOL, over its XML-RPC server"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton.__init__"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton::default"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton.grid"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton::grid"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.ShapeWithSkeleton.skelPts"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::ShapeWithSkeleton::skel_pts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.__init__"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::default", "rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::from_location"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.featmapFeatures"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::featmap_features"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.fracVol"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::frac_vol"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.location"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::location"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.molFeatures"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::mol_features"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.shapeDirs"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::shape_dirs"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SkeletonPoint.shapeMoments"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SkeletonPoint::shape_moments"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.__init__"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::default"]
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.featMap"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::feat_map"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.keyFeat"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::key_feat"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.Subshape.SubshapeObjects.SubshapeShape.shapes"
+rust = ["rdkit_cxx::chem::subshape::subshape_objects::SubshapeShape::shapes"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.SupplierFromFilename"
+rust = ["rdkit_cxx::chem::supplier_from_filename", "rdkit_cxx::chem::supplier_from_filename_with_params"]
+overloads_note = "the keyword arguments Python passes to the supplier are SupplierFromFilenameParams' fields for each kind of supplier, and the supplier is a FileMolSupplier"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier"
+reason = "an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier.NextMol"
+reason = "part of an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier.Reset"
+reason = "part of an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier.__init__"
+reason = "part of an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier.__iter__"
+reason = "part of an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier.__next__"
+reason = "part of an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.Suppliers.MolSupplier.MolSupplier.next"
+reason = "part of an abstract base class that gives Python's suppliers the iterator protocol over a NextMol method; Rust's suppliers are iterators"
+
+[[entry]]
+python = "rdkit.Chem.TemplateAlign.AlignMolToTemplate2D"
+rust = ["rdkit_cxx::chem::template_align::align_mol_to_template_2d", "rdkit_cxx::chem::template_align::align_mol_to_template_2d_with_params"]
+name_exception = "digits stay with their letters: align_mol_to_template_2d"
+
+[[entry]]
 python = "rdkit.Chem.TorsionFingerprints.CalculateTFD"
 rust = ["rdkit_cxx::chem::torsion_fingerprints::calculate_tfd", "rdkit_cxx::chem::torsion_fingerprints::calculate_tfd_with_weights"]
 
@@ -3673,6 +6698,55 @@ rust = ["rdkit_cxx::chem::torsion_fingerprints::get_tfd_between_molecules", "rdk
 [[entry]]
 python = "rdkit.Chem.TorsionFingerprints.GetTFDMatrix"
 rust = ["rdkit_cxx::chem::torsion_fingerprints::get_tfd_matrix", "rdkit_cxx::chem::torsion_fingerprints::get_tfd_matrix_with_params"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.INCHI_AVAILABLE"
+rust = ["rdkit_cxx::chem::inchi::inchi_available"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.InchiReadWriteError"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value with InChI's message"
+
+[[entry]]
+python = "rdkit.Chem.inchi.InchiToInchiKey"
+rust = ["rdkit_cxx::chem::inchi::inchi_to_inchi_key"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolBlockToInchi"
+reason = "not ported: it calls rdinchi.MolBlockToInchi, which is not bound because the InChI library's own mol-file reader it uses trusts its input; parse the block with mol_from_mol_block and call mol_to_inchi instead"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolBlockToInchiAndAuxInfo"
+reason = "not ported: it calls rdinchi.MolBlockToInchi, which is not bound because the InChI library's own mol-file reader it uses trusts its input; parse the block with mol_from_mol_block and call mol_to_inchi_and_aux_info instead"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolFromInchi"
+rust = ["rdkit_cxx::chem::inchi::mol_from_inchi", "rdkit_cxx::chem::inchi::mol_from_inchi_with_params"]
+overloads_note = "logLevel is an InchiLogLevel"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolFromInchiAndAuxInfo"
+rust = ["rdkit_cxx::chem::inchi::mol_from_inchi_and_aux_info", "rdkit_cxx::chem::inchi::mol_from_inchi_and_aux_info_with_params"]
+overloads_note = "logLevel is an InchiLogLevel; an absent AuxInfo is empty"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolToInchi"
+rust = ["rdkit_cxx::chem::inchi::mol_to_inchi", "rdkit_cxx::chem::inchi::mol_to_inchi_with_params"]
+overloads_note = "logLevel is an InchiLogLevel"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolToInchiAndAuxInfo"
+rust = ["rdkit_cxx::chem::inchi::mol_to_inchi_and_aux_info", "rdkit_cxx::chem::inchi::mol_to_inchi_and_aux_info_with_params"]
+overloads_note = "logLevel is an InchiLogLevel"
+
+[[entry]]
+python = "rdkit.Chem.inchi.MolToInchiKey"
+rust = ["rdkit_cxx::chem::inchi::mol_to_inchi_key", "rdkit_cxx::chem::inchi::mol_to_inchi_key_with_options"]
+
+[[entry]]
+python = "rdkit.Chem.inchi.logLevelToLogFunctionLookup"
+reason = "maps Python's logging levels to RDLogger's functions; Rust takes an InchiLogLevel, which logs as those functions do"
 
 [[entry]]
 python = "rdkit.Chem.rdAbbreviations.AbbreviationDefinition"
@@ -18280,6 +21354,62 @@ python = "rdkit.ML.Data.Transforms.GetAvailTransforms"
 rust = ["rdkit_cxx::ml::data::transforms::get_avail_transforms"]
 
 [[entry]]
+python = "rdkit.ML.Descriptors.Descriptors.DescriptorCalculator"
+reason = "an abstract base class; MolecularDescriptorCalculator has its methods itself"
+
+[[entry]]
+python = "rdkit.ML.Descriptors.Descriptors.DescriptorCalculator.CalcDescriptors"
+reason = "abstract: raises NotImplementedError; MolecularDescriptorCalculator::calc_descriptors implements it"
+
+[[entry]]
+python = "rdkit.ML.Descriptors.Descriptors.DescriptorCalculator.GetDescriptorNames"
+reason = "abstract: raises NotImplementedError; MolecularDescriptorCalculator::get_descriptor_names implements it"
+
+[[entry]]
+python = "rdkit.ML.Descriptors.Descriptors.DescriptorCalculator.SaveState"
+reason = "pickles the calculator to a file; a Rust calculator is its list of names"
+
+[[entry]]
+python = "rdkit.ML.Descriptors.Descriptors.DescriptorCalculator.ShowDescriptors"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::show_descriptors"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.Descriptors.DescriptorCalculator.__init__"
+reason = "initializes the abstract base class's attributes"
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.CalcDescriptors"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::calc_descriptors"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.GetDescriptorFuncs"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::get_descriptor_funcs"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.GetDescriptorNames"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::get_descriptor_names"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.GetDescriptorSummaries"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::get_descriptor_summaries"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.GetDescriptorVersions"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::get_descriptor_versions"]
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.SaveState"
+reason = "pickles the calculator to a file; a Rust calculator is its list of names, which new takes"
+
+[[entry]]
+python = "rdkit.ML.Descriptors.MoleculeDescriptors.MolecularDescriptorCalculator.__init__"
+rust = ["rdkit_cxx::ml::descriptors::molecule_descriptors::MolecularDescriptorCalculator::new"]
+
+[[entry]]
 python = "rdkit.ML.InfoTheory.BitClusterer.BitClusterer"
 rust = ["rdkit_cxx::ml::info_theory::bit_clusterer::BitClusterer"]
 
@@ -18764,6 +21894,30 @@ name_exception = "an exported enum value maps to its variant, ClusterMethod::Upg
 python = "rdkit.SimDivFilters.rdSimDivPickers.WARD"
 rust = ["rdkit_cxx::sim_div_filters::rd_sim_div_pickers::ClusterMethod::Ward"]
 name_exception = "an exported enum value maps to its variant, ClusterMethod::Ward"
+
+[[entry]]
+python = "rdkit.VECT_WRAPS"
+reason = "names the Boost.Python vector classes whose slow iterators the package replaces; Rust's vectors iterate natively"
+
+[[entry]]
+python = "rdkit.VectIter"
+reason = "a fast iterator the package patches onto Boost.Python's vector classes; Rust's vectors iterate natively"
+
+[[entry]]
+python = "rdkit.VectIter.__init__"
+reason = "a fast iterator the package patches onto Boost.Python's vector classes; Rust's vectors iterate natively"
+
+[[entry]]
+python = "rdkit.VectIter.__iter__"
+reason = "Python's iterator protocol"
+
+[[entry]]
+python = "rdkit.VectIter.__next__"
+reason = "Python's iterator protocol"
+
+[[entry]]
+python = "rdkit.log_handler"
+reason = "the logging.StreamHandler the package gives Python's rdkit logger; RDKit's own logs are rd_base's"
 
 [[entry]]
 python = "rdkit.rdBase.AttachFileToLog"

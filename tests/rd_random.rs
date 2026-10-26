@@ -51,3 +51,44 @@ fn shared_generator() {
     rd_random::seed(0);
     assert_eq!(rd_random::random(), 0.8444218515250481);
 }
+
+#[test]
+fn draws_for_the_chem_ports_match_python() {
+    // getrandbits, sample, and RDRandom's float shuffle, as BRICS,
+    // EnumerateStereoisomers, and Randomize draw them.
+    let mut r = Random::new(23);
+    assert_eq!(r.random(), 0.9248652516259452);
+    assert_eq!(r.random(), 0.9486057779931771);
+    let mut r = Random::new(0xf00d);
+    assert_eq!(r.getrandbits_words(20), [485_582]);
+    assert_eq!(r.getrandbits_words(40), [3_965_503_819, 32]);
+    let mut r = Random::new(0xf00d);
+    assert_eq!(r.getrandbits(20), 485_582);
+    assert_eq!(r.getrandbits(40), (32 << 32) | 3_965_503_819);
+    assert!(Random::new(1).getrandbits_words(0).is_empty());
+    assert_eq!(Random::new(1 << 40).random(), 0.1036394562812375);
+    let mut r = Random::new(42);
+    assert_eq!(
+        r.sample(&[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], 10),
+        [1, 0, 4, 9, 6, 5, 8, 2, 3, 7]
+    );
+    let mut r = Random::new(42);
+    let mut x: Vec<u32> = (0..10).collect();
+    rd_random::shuffle_with_random(&mut x, || r.random()).unwrap();
+    assert_eq!(x, [9, 7, 8, 5, 3, 4, 1, 2, 0, 6]);
+    // Thirty of a hundred, from Python's pool; five of a thousand, by sets.
+    let mut r = Random::new(7);
+    let population: Vec<u32> = (0..100).collect();
+    assert_eq!(
+        r.sample(&population, 30),
+        [
+            41, 19, 50, 83, 6, 9, 68, 12, 46, 74, 7, 64, 27, 4, 11, 55, 53, 8, 30, 85, 70, 54, 89,
+            72, 15, 28, 77, 97, 95, 90
+        ]
+    );
+    let population: Vec<u32> = (0..1000).collect();
+    assert_eq!(
+        Random::new(7).sample(&population, 5),
+        [331, 970, 154, 404, 666]
+    );
+}

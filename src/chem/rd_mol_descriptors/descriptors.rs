@@ -127,6 +127,30 @@ pub fn calc_mol_formula_with_params(mol: &Mol, params: &CalcMolFormulaParams) ->
     )?)
 }
 
+/// The average molecular weight, of the heavy atoms alone when
+/// `only_heavy`. Python's private `rdMolDescriptors._CalcMolWt`, behind
+/// `Descriptors.MolWt`.
+pub(crate) fn calc_mol_wt(mol: &Mol, only_heavy: bool) -> Result<f64> {
+    Ok(ffi::calc_amw(mol.as_ffi(), only_heavy)?)
+}
+
+/// Each atom's contribution to Labute's surface area, after the implicit
+/// hydrogens' (which is 0 unless `include_hs`). Python's private
+/// `rdMolDescriptors._CalcLabuteASAContribs`, as `MolSurf._LabuteHelper`
+/// arranges it.
+pub(crate) fn calc_labute_asa_contribs(mol: &Mol, include_hs: bool) -> Result<Vec<f64>> {
+    Ok(ffi::calc_labute_asa_contribs(mol.as_ffi(), include_hs)?)
+}
+
+/// Each atom's Wildman-Crippen (logP, MR) contributions. Python's private
+/// `rdMolDescriptors._CalcCrippenContribs`.
+pub(crate) fn calc_crippen_contribs(mol: &Mol) -> Result<Vec<(f64, f64)>> {
+    Ok(ffi::calc_crippen_contribs(mol.as_ffi())?
+        .chunks_exact(2)
+        .map(|pair| (pair[0], pair[1]))
+        .collect())
+}
+
 /// Defines functions of a molecule that return a count and can fail.
 macro_rules! fallible_counts {
     ($($(#[$meta:meta])* $name:ident;)*) => {

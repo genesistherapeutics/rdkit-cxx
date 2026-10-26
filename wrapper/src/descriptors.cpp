@@ -115,6 +115,44 @@ double calc_exact_mol_wt(const RWMol &mol, bool only_heavy) {
   return Desc::calcExactMW(mol, only_heavy);
 }
 
+double calc_amw(const RWMol &mol, bool only_heavy) {
+  return Desc::calcAMW(mol, only_heavy);
+}
+
+// Python's _CalcLabuteASAContribs: the implicit hydrogens' contribution,
+// then each atom's.
+rust::Vec<double> calc_labute_asa_contribs(const RWMol &mol, bool include_hs) {
+  DescriptorCacheGuard guard(mol);
+  std::vector<double> contribs(mol.getNumAtoms());
+  double h_contrib = 0.0;
+  Desc::getLabuteAtomContribs(mol, contribs, h_contrib, include_hs, true);
+  rust::Vec<double> result;
+  result.reserve(contribs.size() + 1);
+  result.push_back(h_contrib);
+  for (auto contrib : contribs) {
+    result.push_back(contrib);
+  }
+  return result;
+}
+
+// Python's _CalcCrippenContribs: each atom's logP and MR contributions, in
+// pairs. The atoms are typed by substructure matches, as in
+// calc_crippen_descriptors.
+rust::Vec<double> calc_crippen_contribs(const RWMol &mol) {
+  DescriptorCacheGuard guard(mol);
+  std::lock_guard<std::mutex> control_c(control_c_mutex());
+  std::vector<double> logp(mol.getNumAtoms());
+  std::vector<double> mr(mol.getNumAtoms());
+  Desc::getCrippenAtomContribs(mol, logp, mr, true);
+  rust::Vec<double> result;
+  result.reserve(2 * logp.size());
+  for (std::size_t i = 0; i < logp.size(); ++i) {
+    result.push_back(logp[i]);
+    result.push_back(mr[i]);
+  }
+  return result;
+}
+
 // getMolFormula (MolProps.cpp) sums the formal charges in int and negates a
 // negative sum (U9).
 std::unique_ptr<std::string> calc_mol_formula(const RWMol &mol,

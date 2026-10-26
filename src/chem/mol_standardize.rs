@@ -4,6 +4,10 @@
 // license that can be found in the LICENSE file.
 
 //! Mirrors `rdkit.Chem.MolStandardize`, whose compiled module is
-//! `rdMolStandardize`.
+//! `rdMolStandardize` and whose own Python function (`ReorderTautomers`) is
+//! ported here.
 
+mod init;
 pub mod rd_mol_standardize;
+
+pub use init::*;

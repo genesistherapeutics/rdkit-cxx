@@ -8,17 +8,44 @@
 //! Python functions of its own (`FindMolChiralCenters`), ported here; its
 //! other submodules are reached by path, as in Python.
 
+pub mod all_chem;
 pub mod atom_pairs;
+pub mod brics;
+pub mod build_fragment_catalog;
+pub mod chem_utils;
+pub mod chemical_features;
+pub mod crippen;
+pub mod descriptors;
+pub mod descriptors_3d;
 pub mod draw;
+pub mod e_state;
+pub mod enumerate_heterocycles;
+pub mod enumerate_stereoisomers;
 pub mod feat_finder_cli;
 pub mod feat_maps;
 pub mod features;
+pub mod filter_catalog;
+pub mod fraggle;
+pub mod fragment_catalog;
+pub mod fragment_matcher;
+pub mod fragments;
+pub mod functional_groups;
+pub mod graph_descriptors;
+pub mod graphs;
+pub mod inchi;
 mod init;
 pub mod lipinski;
 pub mod maccs_keys;
+pub mod mol_key;
 pub mod mol_standardize;
+pub mod mol_surf;
 pub mod pharm_2d;
+pub mod pharm_3d;
+mod py_compat;
 pub(crate) mod py_math;
+mod py_util;
+pub mod qed;
+pub mod randomize;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
@@ -66,10 +93,25 @@ pub mod rdinchi;
 pub mod rdmolfiles;
 pub mod rdmolops;
 pub mod rdqueries;
+pub mod recap;
+pub mod reduced_graphs;
 pub mod registration_hash;
+pub mod salt_remover;
+pub mod satis;
 pub mod scaffolds;
+pub mod simple_enum;
+pub mod spacial_score;
+pub mod subshape;
+pub mod template_align;
 pub mod torsion_fingerprints;
 
+pub use inchi::{
+    InchiLogLevel, MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key,
+    mol_from_inchi, mol_from_inchi_and_aux_info, mol_from_inchi_and_aux_info_with_params,
+    mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
+    mol_to_inchi_and_aux_info_with_params, mol_to_inchi_key, mol_to_inchi_key_with_options,
+    mol_to_inchi_with_params,
+};
 pub use init::*;
 pub use rd_cip_labeler::*;
 pub use rd_mol_interchange::*;
