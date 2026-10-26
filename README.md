@@ -1,7 +1,7 @@
 # rdkit-cxx
 
 Rust bindings for [RDKit](https://github.com/rdkit/rdkit)'s C++ API, with Rust
-ports of much of the functionality RDKit currently offers only in Python. The
+ports for much of the functionality RDKit currently offers only in Python. The
 API mirrors RDKit's nanobind wrappers and its Python modules in Rust spelling,
 so Python code ports line by line:
 
@@ -329,7 +329,8 @@ first release of an RDKit series), and otherwise bumps the patch level with
 [bump-my-version](https://github.com/callowayproject/bump-my-version). It
 tests the release commit, builds the packaged crate, publishes it to crates.io
 through trusted publishing, pushes the version bump and a `v<version>` tag to
-`main`, and creates a GitHub release with generated notes. A release that
+`main`, and creates a GitHub release with generated notes;
+[CHANGELOG.md](CHANGELOG.md) records the notable changes. A release that
 fails partway finishes when its failed jobs are re-run: each step skips what
 an earlier attempt finished, including the upload.
 
