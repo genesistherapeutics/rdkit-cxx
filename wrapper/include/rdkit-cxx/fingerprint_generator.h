@@ -103,6 +103,11 @@ std::unique_ptr<FingerprintList> fp_generator_bulk(const FpGenerator &gen,
 std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
                                               FPType fp_type,
                                               FingerprintOutput output);
+// What a fingerprint of `mol` without arguments trusts, checked as the
+// generator's own calls check it: throws ValueErrorException for a molecule
+// whose matrices or 3D distances RDKit's int arithmetic and casts cannot hold.
+void check_fingerprint_mol(const FpGenerator &gen, const RDKit::ROMol &mol);
+
 std::size_t fingerprint_list_size(const FingerprintList &list);
 std::unique_ptr<BitVect> fingerprint_list_take_bits(FingerprintList &list,
                                                     std::size_t i);

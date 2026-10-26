@@ -701,6 +701,10 @@ std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
   return run_bulk(*gen, mols, output, 1);
 }
 
+void check_fingerprint_mol(const FpGenerator &gen, const RDKit::ROMol &mol) {
+  check_call(gen, mol, nullptr, nullptr, nullptr, nullptr, -1, false);
+}
+
 std::size_t fingerprint_list_size(const FingerprintList &list) {
   return list.bit_vects.empty() ? list.int_vects.size() : list.bit_vects.size();
 }

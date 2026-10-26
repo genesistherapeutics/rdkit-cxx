@@ -26,6 +26,7 @@ pub mod rd_mol_align;
 pub mod rd_mol_catalog;
 pub mod rd_mol_descriptors;
 pub mod rd_mol_hash;
+pub mod rd_mol_processing;
 pub mod rd_mol_transforms;
 pub mod rd_partial_charges;
 pub mod rd_r_group_decomposition;

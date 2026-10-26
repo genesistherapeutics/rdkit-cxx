@@ -141,6 +141,14 @@ rule changes the rule first.
   (`copy_pattern` in `filter_catalog.cpp`). Matching holds
   `control_c_mutex()` (U4) and releases it while a Rust matcher's methods
   run, which RDKit calls between its matches.
+- **S6.** An exception that leaves a `std::thread` calls `std::terminate`,
+  so RDKit's own threads run wrapper work only where RDKit catches what it
+  throws: `MultithreadedMolSupplier`'s parsing threads catch everything
+  their write callback throws (`MultithreadedMolSupplier::writer`), so
+  `rdMolProcessing` fingerprints each molecule there, as RDKit's
+  `getFingerprintsForMolsInFile` does. Such a callback takes, around each
+  RDKit call in it that needs one, the locks U4 names, and the calling
+  thread, which waits for the callbacks, holds none of them meanwhile.
 
 ## Unchecked input
 
@@ -308,7 +316,10 @@ rule changes the rule first.
   fails when a chunk rereads differently or the file ends sooner than it did,
   so RDKit parses only the bytes that were checked. Python file objects are
   bound as `Read` values, read through the same streams, and `Write`
-  values, which a writer may borrow for its lifetime. RDKit's writers ignore
+  values, which a writer may borrow for its lifetime. Gzipped files are
+  decompressed as RDKit's `gzstream` decompresses them and checked after;
+  the stream RDKit reads them through throws for every seek and tell, as
+  `gzstream`'s does. RDKit's writers ignore
   a stream that fails, so the wrappers own the output (a file they open, or
   the Rust writer), hand RDKit the stream without ownership, and check it
   after every call: a failed write is `Error::Os` from then on.
