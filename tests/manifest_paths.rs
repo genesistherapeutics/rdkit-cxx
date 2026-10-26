@@ -100,6 +100,12 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::draw::reaction_to_image_use_svg as _;
     use rdkit_cxx::chem::draw::reaction_to_image_use_svg_with_params as _;
     use rdkit_cxx::chem::draw::set_comic_mode as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_with_params as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_hashed as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_hashed_with_params as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_bv as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_bv_with_params as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_with_metric as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator as _;
@@ -107,6 +113,10 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator_use_counts as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_fingerprint_generator_use_counts_with_metric as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_model as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_with_params as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_count as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_count_with_params as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_rdk_fingerprint as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_rdk_fingerprint_with_params as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_for_fingerprint as _;
@@ -120,6 +130,12 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_from_weights as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_similarity_map_from_weights_with_params as _;
     use rdkit_cxx::chem::draw::similarity_maps::get_standardized_weights as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_with_params as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_hashed as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_hashed_with_params as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_bv as _;
+    use rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_bv_with_params as _;
     let _ = <rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement>::ALL;
     let _ = <rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement>::ANNOTATIONS;
     let _ = <rdkit_cxx::chem::draw::rd_mol_draw_2d::DrawElement>::ATOMLABELS;

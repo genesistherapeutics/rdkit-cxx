@@ -312,7 +312,8 @@ reason = "shows MolToImage's PIL image in a Tkinter window; Rust has no GUI, and
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.GetAPFingerprint"
-reason = "calls rdMolDescriptors' deprecated atom-pair fingerprint functions, which are not bound; get_atomic_weights_for_fingerprint_generator weighs atoms with a fingerprint generator instead"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_hashed", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_hashed_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_bv", "rdkit_cxx::chem::draw::similarity_maps::get_ap_fingerprint_bv_with_params"]
+overloads_note = "each fpType returns its own type, so 'hashed' and 'bv' are get_ap_fingerprint_hashed and get_ap_fingerprint_bv (A4)"
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForFingerprint"
@@ -329,7 +330,8 @@ rust = ["rdkit_cxx::chem::draw::similarity_maps::get_atomic_weights_for_model"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.GetMorganFingerprint"
-reason = "calls rdMolDescriptors' deprecated Morgan fingerprint functions, which are not bound; get_atomic_weights_for_fingerprint_generator weighs atoms with a fingerprint generator instead"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_count", "rdkit_cxx::chem::draw::similarity_maps::get_morgan_fingerprint_count_with_params"]
+overloads_note = "fpType='count' returns counts, so it is get_morgan_fingerprint_count (A4)"
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.GetRDKFingerprint"
@@ -358,15 +360,16 @@ rust = ["rdkit_cxx::chem::draw::similarity_maps::get_standardized_weights"]
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.GetTTFingerprint"
-reason = "calls rdMolDescriptors' deprecated topological-torsion fingerprint functions, which are not bound; get_atomic_weights_for_fingerprint_generator weighs atoms with a fingerprint generator instead"
+rust = ["rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_hashed", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_hashed_with_params", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_bv", "rdkit_cxx::chem::draw::similarity_maps::get_tt_fingerprint_bv_with_params"]
+overloads_note = "each fpType returns its own type, so 'hashed' and 'bv' are get_tt_fingerprint_hashed and get_tt_fingerprint_bv (A4)"
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.apDict"
-reason = "a dict of lambdas over rdMolDescriptors' deprecated atom-pair fingerprint functions, through which GetAPFingerprint picks its fpType; neither is ported"
+reason = "a dict of lambdas through which GetAPFingerprint picks rdMolDescriptors' function for its fpType; the Rust functions for each fpType replace it"
 
 [[entry]]
 python = "rdkit.Chem.Draw.SimilarityMaps.ttDict"
-reason = "a dict of lambdas over rdMolDescriptors' deprecated topological-torsion fingerprint functions, through which GetTTFingerprint picks its fpType; neither is ported"
+reason = "a dict of lambdas through which GetTTFingerprint picks rdMolDescriptors' function for its fpType; the Rust functions for each fpType replace it"
 
 [[entry]]
 python = "rdkit.Chem.Draw.calcAtomGaussians"

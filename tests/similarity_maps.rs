@@ -16,7 +16,9 @@ use rdkit_cxx::chem::rd_fingerprint_generator::{
     FingerprintGenerator64, GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
 use rdkit_cxx::chem::{Mol, mol_from_smiles};
-use rdkit_cxx::data_structs::{ExplicitBitVect, tanimoto_similarity};
+use rdkit_cxx::data_structs::{
+    ExplicitBitVect, dice_similarity, dice_similarity_sparse_int_vect, tanimoto_similarity,
+};
 
 fn sha1(text: &str) -> String {
     let mut h = sha1_smol::Sha1::new();
@@ -282,5 +284,326 @@ fn similarity_map_params_defaults_match_python() {
             rdk.n_bits_per_hash
         ),
         (None, 2048, 1, 5, 2)
+    );
+}
+
+fn weights<F>(
+    a: &str,
+    b: &str,
+    fp: impl FnMut(&Mol, Option<u32>) -> rdkit_cxx::Result<F>,
+    metric: impl Fn(&F, &F) -> rdkit_cxx::Result<f64>,
+) -> Vec<f64> {
+    get_atomic_weights_for_fingerprint_with_metric(
+        &mol_from_smiles(a).unwrap(),
+        &mol_from_smiles(b).unwrap(),
+        fp,
+        metric,
+    )
+    .unwrap()
+}
+
+fn bz_py<F>(
+    fp: impl FnMut(&Mol, Option<u32>) -> rdkit_cxx::Result<F>,
+    metric: impl Fn(&F, &F) -> rdkit_cxx::Result<f64>,
+) -> Vec<f64> {
+    weights("c1ccccc1", "c1ccncc1", fp, metric)
+}
+
+// UnitTestSimilarityMaps.testSimilarityMap, against Python's values.
+#[test]
+fn deprecated_fingerprint_weights_match_python() {
+    let morgan = |m: &Mol, i| {
+        get_morgan_fingerprint_with_params(
+            m,
+            &GetMorganFingerprintParams {
+                atom_id: i,
+                ..Default::default()
+            },
+        )
+    };
+    assert_close(
+        &bz_py(morgan, dice_similarity),
+        &[0.5, 0.5, 0.5, -0.5, 0.5, 0.5],
+    );
+    let morgan_count = |m: &Mol, i| {
+        get_morgan_fingerprint_count_with_params(
+            m,
+            &GetMorganFingerprintParams {
+                atom_id: i,
+                ..Default::default()
+            },
+        )
+    };
+    assert_close(
+        &bz_py(morgan_count, dice_similarity_sparse_int_vect),
+        &[
+            0.20370370370370372,
+            0.12962962962962965,
+            0.05555555555555558,
+            -0.16666666666666663,
+            0.05555555555555558,
+            0.12962962962962965,
+        ],
+    );
+    let morgan_features = |m: &Mol, i| {
+        get_morgan_fingerprint_with_params(
+            m,
+            &GetMorganFingerprintParams {
+                atom_id: i,
+                use_features: true,
+                ..Default::default()
+            },
+        )
+    };
+    assert_close(
+        &bz_py(morgan_features, dice_similarity),
+        &[0.5, 0.5, 0.5, -0.5, 0.5, 0.5],
+    );
+
+    let ap_bv = |m: &Mol, i| {
+        get_ap_fingerprint_bv_with_params(
+            m,
+            &GetAPFingerprintParams {
+                atom_id: i,
+                n_bits: 1024,
+                ..Default::default()
+            },
+        )
+    };
+    assert_close(
+        &bz_py(ap_bv, dice_similarity),
+        &[
+            0.09523809523809523,
+            0.17366946778711478,
+            0.17366946778711478,
+            -0.23809523809523814,
+            0.17366946778711478,
+            0.17366946778711478,
+        ],
+    );
+    let ap_params = |i| GetAPFingerprintParams {
+        atom_id: i,
+        ..Default::default()
+    };
+    let (a, b) = (0.18666666666666665, -0.13333333333333341);
+    assert_close(
+        &bz_py(
+            |m: &Mol, i| get_ap_fingerprint_with_params(m, &ap_params(i)),
+            dice_similarity_sparse_int_vect,
+        ),
+        &[a, a, a, b, a, a],
+    );
+    assert_close(
+        &bz_py(
+            |m: &Mol, i| get_ap_fingerprint_hashed_with_params(m, &ap_params(i)),
+            dice_similarity_sparse_int_vect,
+        ),
+        &[a, a, a, b, a, a],
+    );
+
+    let tt_bv = |m: &Mol, i| {
+        get_tt_fingerprint_bv_with_params(
+            m,
+            &GetTTFingerprintParams {
+                atom_id: i,
+                n_bits: 1024,
+                n_bits_per_entry: 1,
+                ..Default::default()
+            },
+        )
+    };
+    let c = -0.16666666666666663;
+    assert_close(&bz_py(tt_bv, dice_similarity), &[0.5, 0.5, c, -0.5, c, 0.5]);
+    let tt_params = |i| GetTTFingerprintParams {
+        atom_id: i,
+        ..Default::default()
+    };
+    let expected = [
+        1.0 / 3.0,
+        1.0 / 3.0,
+        0.08333333333333331,
+        -0.16666666666666669,
+        0.08333333333333331,
+        1.0 / 3.0,
+    ];
+    assert_close(
+        &bz_py(
+            |m: &Mol, i| get_tt_fingerprint_with_params(m, &tt_params(i)),
+            dice_similarity_sparse_int_vect,
+        ),
+        &expected,
+    );
+    assert_close(
+        &bz_py(
+            |m: &Mol, i| get_tt_fingerprint_hashed_with_params(m, &tt_params(i)),
+            dice_similarity_sparse_int_vect,
+        ),
+        &expected,
+    );
+    for err in [
+        get_ap_fingerprint_with_params(&benzene(), &ap_params(Some(6))).err(),
+        get_tt_fingerprint_with_params(&benzene(), &tt_params(Some(6))).err(),
+        get_morgan_fingerprint_with_params(
+            &benzene(),
+            &GetMorganFingerprintParams {
+                atom_id: Some(6),
+                ..Default::default()
+            },
+        )
+        .err(),
+    ] {
+        assert!(matches!(err, Some(Error::Value { .. })));
+    }
+}
+
+// UnitTestSimilarityMaps.testSimilarityMapKWArgs, against Python's values.
+#[test]
+fn deprecated_fingerprint_keywords_match_python() {
+    let (m1, m2) = ("CC[C@](F)(Cl)c1ccccc1", "CC[C@@](F)(Cl)c1ccccc1");
+    let ap = |include_chirality| {
+        move |m: &Mol, i| {
+            get_ap_fingerprint_with_params(
+                m,
+                &GetAPFingerprintParams {
+                    atom_id: i,
+                    include_chirality,
+                    ..Default::default()
+                },
+            )
+        }
+    };
+    let w = 0.09999999999999998;
+    assert_close(
+        &weights(m1, m2, ap(false), dice_similarity_sparse_int_vect),
+        &[w; 11],
+    );
+    let (w, c) = (0.09818181818181826, -0.08181818181818179);
+    assert_close(
+        &weights(m1, m2, ap(true), dice_similarity_sparse_int_vect),
+        &[w, w, c, w, w, w, w, w, w, w, w],
+    );
+    let tt = |m: &Mol, i| {
+        get_tt_fingerprint_with_params(
+            m,
+            &GetTTFingerprintParams {
+                atom_id: i,
+                ..Default::default()
+            },
+        )
+    };
+    assert_close(
+        &weights(m1, m2, tt, dice_similarity_sparse_int_vect),
+        &[
+            0.09677419354838712,
+            0.1724137931034483,
+            0.4782608695652174,
+            0.09677419354838712,
+            0.09677419354838712,
+            0.6190476190476191,
+            0.3076923076923077,
+            0.1724137931034483,
+            0.1333333333333333,
+            0.1724137931034483,
+            0.3076923076923077,
+        ],
+    );
+    let tt_chiral = |m: &Mol, i| {
+        get_tt_fingerprint_hashed_with_params(
+            m,
+            &GetTTFingerprintParams {
+                atom_id: i,
+                include_chirality: true,
+                ..Default::default()
+            },
+        )
+    };
+    assert_close(
+        &weights(m1, m2, tt_chiral, dice_similarity_sparse_int_vect),
+        &[
+            -0.03415559772296012,
+            -0.0608519269776876,
+            -0.16879795396419434,
+            -0.03415559772296012,
+            -0.03415559772296012,
+            0.1624649859943978,
+            0.1990950226244344,
+            0.21501014198782964,
+            0.21960784313725493,
+            0.21501014198782964,
+            0.1990950226244344,
+        ],
+    );
+    let morgan = |use_chirality| {
+        move |m: &Mol, i| {
+            get_morgan_fingerprint_with_params(
+                m,
+                &GetMorganFingerprintParams {
+                    atom_id: i,
+                    radius: 1,
+                    use_chirality,
+                    ..Default::default()
+                },
+            )
+        }
+    };
+    let weights1 = weights(m1, m2, morgan(false), dice_similarity);
+    assert_close(
+        &weights1,
+        &[
+            0.11111111111111116,
+            0.15384615384615385,
+            0.25,
+            0.11111111111111116,
+            0.11111111111111116,
+            0.15384615384615385,
+            0.15384615384615385,
+            0.11111111111111116,
+            0.0714285714285714,
+            0.11111111111111116,
+            0.15384615384615385,
+        ],
+    );
+    let weights2 = weights(m1, m2, morgan(true), dice_similarity);
+    assert_close(
+        &weights2,
+        &[
+            0.11851851851851858,
+            0.0871794871794872,
+            0.18333333333333335,
+            0.04444444444444451,
+            0.04444444444444451,
+            0.0871794871794872,
+            0.16410256410256407,
+            0.11851851851851858,
+            0.07619047619047625,
+            0.11851851851851858,
+            0.16410256410256407,
+        ],
+    );
+    // The chiral center's contribution drops.
+    assert!(weights1[2] > weights2[2]);
+}
+
+// The common recipe: a map of Morgan bit-vector weights.
+#[test]
+fn morgan_similarity_map_matches_python() {
+    let mut d = MolDraw2DSVG::new(400, 400).unwrap();
+    d.clear_drawing().unwrap();
+    let morgan = |m: &Mol, i| {
+        get_morgan_fingerprint_with_params(
+            m,
+            &GetMorganFingerprintParams {
+                atom_id: i,
+                ..Default::default()
+            },
+        )
+    };
+    let max_weight =
+        get_similarity_map_for_fingerprint(&refmol(), &probe(), morgan, &mut d).unwrap();
+    d.finish_drawing();
+    assert_eq!(max_weight, 0.12255947497949138);
+    assert_eq!(
+        sha1(&d.get_drawing_text().unwrap()),
+        "3093893d6b352ae3a9e64085ed92acb384146395"
     );
 }

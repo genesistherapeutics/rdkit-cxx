@@ -15,11 +15,12 @@
 //! (`dice_similarity_sparse_int_vect`, say).
 //!
 //! Python's matplotlib colormaps are not ported: a map's colours are given
-//! as three colours. The atom-pair, topological-torsion, and Morgan
-//! fingerprint functions are not ported either: they are built on
-//! `rdMolDescriptors`' deprecated fingerprint functions, which are not
-//! bound. `get_atomic_weights_for_fingerprint_generator` weighs atoms with
-//! the fingerprint generators that replace them.
+//! as three colours. Python's atom-pair, topological-torsion, and Morgan
+//! fingerprint functions call `rdMolDescriptors`' deprecated fingerprint
+//! functions; these compute the same fingerprints with the generators that
+//! replace them, in the generators' vector types. Each of Python's
+//! `fpType`s is a function of its own (`_hashed`, `_bv`, `_count`), since
+//! the types differ (A4).
 
 use crate::chem::Mol;
 use crate::chem::draw::rd_mol_draw_2d::{
@@ -28,11 +29,21 @@ use crate::chem::draw::rd_mol_draw_2d::{
     prepare_mol_for_drawing_with_params,
 };
 use crate::chem::rd_depictor::compute_2d_coords;
+use std::collections::BTreeMap;
+
 use crate::chem::rd_fingerprint_generator::{
-    AdditionalOutput, FingerprintGenerator64, GetFingerprintParams,
+    AdditionalOutput, FingerprintGenerator64, GetAtomPairGeneratorParams, GetFingerprintParams,
+    GetMorganGeneratorParams, GetTopologicalTorsionGeneratorParams,
+    get_atom_pair_generator_with_params, get_morgan_feature_atom_inv_gen,
+    get_morgan_generator_with_params, get_topological_torsion_generator_with_params,
 };
-use crate::chem::{RDKFingerprintParams, rdk_fingerprint_with_outputs};
-use crate::data_structs::{BitVect, ExplicitBitVect, UIntSparseIntVect, dice_similarity};
+use crate::chem::{
+    RDKFingerprintParams, find_atom_environment_of_radius_n, path_to_submol_with_outputs,
+    rdk_fingerprint_with_outputs,
+};
+use crate::data_structs::{
+    BitVect, ExplicitBitVect, UIntSparseIntVect, ULongSparseIntVect, dice_similarity,
+};
 use crate::geometry::{Point2D, Point3D};
 use crate::{Error, Result};
 
@@ -319,7 +330,7 @@ fn draw_standardized(
 
 /// The atoms that set each bit, as `AdditionalOutput::get_atoms_per_bit`
 /// gives them.
-type AtomsPerBit = std::collections::BTreeMap<u64, Vec<Vec<u32>>>;
+type AtomsPerBit = BTreeMap<u64, Vec<Vec<u32>>>;
 
 /// The probe's fingerprint and the atoms that set each of its bits.
 fn probe_fingerprint<T>(
@@ -644,5 +655,391 @@ pub fn get_rdk_fingerprint_with_params(
         .map(|&bit| bit_index(bit))
         .collect::<Result<Vec<u32>>>()?;
     fp.un_set_bits_from_list(&bits)?;
+    Ok(fp)
+}
+
+/// `atom_id` as Python's fingerprint functions take it: `None` for none,
+/// else an atom of the molecule (`Error::Value` past the last, as in
+/// Python), which the fingerprint ignores.
+fn ignored_atoms(mol: &Mol, atom_id: Option<u32>) -> Result<Option<Vec<u32>>> {
+    match atom_id {
+        None => Ok(None),
+        Some(atom_id) if atom_id >= mol.get_num_atoms() => Err(Error::Value {
+            message: "atom index greater than number of atoms".to_owned(),
+        }),
+        Some(atom_id) => Ok(Some(vec![atom_id])),
+    }
+}
+
+/// The count bounds of `rdMolDescriptors`' hashed bit fingerprints: 1, 2,
+/// 4, and 8 for four bits per entry, else 1, 2, ... for each bit.
+fn count_bounds(n_bits_per_entry: u32) -> Result<Vec<u32>> {
+    match n_bits_per_entry {
+        0 => Err(Error::Value {
+            message: "nBitsPerEntry must be positive".to_owned(),
+        }),
+        4 => Ok(vec![1, 2, 4, 8]),
+        n => Ok((1..=n).collect()),
+    }
+}
+
+/// Parameters for the `get_ap_fingerprint` functions, with Python's
+/// defaults (A2). Python's `fpType` picks the function.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GetAPFingerprintParams {
+    /// The atom whose pairs to leave out; `None` for none (Python's -1).
+    pub atom_id: Option<u32>,
+    /// The number of bits of the hashed fingerprints.
+    pub n_bits: u32,
+    /// The shortest distance between a pair's atoms.
+    pub min_length: u32,
+    /// The longest distance between a pair's atoms.
+    pub max_length: u32,
+    /// The bits each pair sets in the bit vector.
+    pub n_bits_per_entry: u32,
+    /// Includes chirality in the atom codes (Python's `includeChirality`
+    /// keyword).
+    pub include_chirality: bool,
+}
+
+impl Default for GetAPFingerprintParams {
+    fn default() -> GetAPFingerprintParams {
+        GetAPFingerprintParams {
+            atom_id: None,
+            n_bits: 2048,
+            min_length: 1,
+            max_length: 30,
+            n_bits_per_entry: 4,
+            include_chirality: false,
+        }
+    }
+}
+
+impl GetAPFingerprintParams {
+    fn generator(&self, count_bounds: Option<Vec<u32>>) -> Result<FingerprintGenerator64> {
+        get_atom_pair_generator_with_params(&GetAtomPairGeneratorParams {
+            min_distance: self.min_length,
+            max_distance: self.max_length,
+            include_chirality: self.include_chirality,
+            count_bounds,
+            fp_size: self.n_bits,
+            ..Default::default()
+        })
+    }
+
+    fn fingerprint_params(&self, mol: &Mol) -> Result<GetFingerprintParams> {
+        Ok(GetFingerprintParams {
+            ignore_atoms: ignored_atoms(mol, self.atom_id)?,
+            ..Default::default()
+        })
+    }
+}
+
+/// The atom-pair fingerprint, unfolded counts. Mirrors
+/// `SimilarityMaps.GetAPFingerprint(mol)`.
+pub fn get_ap_fingerprint(mol: &Mol) -> Result<ULongSparseIntVect> {
+    get_ap_fingerprint_with_params(mol, &GetAPFingerprintParams::default())
+}
+
+/// The atom-pair fingerprint without `atom_id`'s pairs. Mirrors
+/// `SimilarityMaps.GetAPFingerprint(mol, atomId, fpType='normal',
+/// minLength=..., maxLength=..., includeChirality=...)`, with an atom-pair
+/// generator, whose sparse count fingerprint has the same counts as the
+/// `rdMolDescriptors.GetAtomPairFingerprint` Python calls (an
+/// `IntSparseIntVect`). `Error::Value` for an atom past the last.
+pub fn get_ap_fingerprint_with_params(
+    mol: &Mol,
+    params: &GetAPFingerprintParams,
+) -> Result<ULongSparseIntVect> {
+    params
+        .generator(None)?
+        .get_sparse_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+}
+
+/// The hashed atom-pair fingerprint, counts in `n_bits`. Mirrors
+/// `SimilarityMaps.GetAPFingerprint(mol, fpType='hashed')`.
+pub fn get_ap_fingerprint_hashed(mol: &Mol) -> Result<UIntSparseIntVect> {
+    get_ap_fingerprint_hashed_with_params(mol, &GetAPFingerprintParams::default())
+}
+
+/// Mirrors `SimilarityMaps.GetAPFingerprint(mol, atomId, fpType='hashed',
+/// nBits, ...)`, as `get_ap_fingerprint_with_params`; the generator's count
+/// fingerprint has the counts of `GetHashedAtomPairFingerprint`.
+pub fn get_ap_fingerprint_hashed_with_params(
+    mol: &Mol,
+    params: &GetAPFingerprintParams,
+) -> Result<UIntSparseIntVect> {
+    params
+        .generator(None)?
+        .get_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+}
+
+/// The hashed atom-pair fingerprint as bits. Mirrors
+/// `SimilarityMaps.GetAPFingerprint(mol, fpType='bv')`.
+pub fn get_ap_fingerprint_bv(mol: &Mol) -> Result<ExplicitBitVect> {
+    get_ap_fingerprint_bv_with_params(mol, &GetAPFingerprintParams::default())
+}
+
+/// Mirrors `SimilarityMaps.GetAPFingerprint(mol, atomId, fpType='bv',
+/// nBits, ..., nBitsPerEntry)`, as `get_ap_fingerprint_with_params`, with
+/// the bits of `GetHashedAtomPairFingerprintAsBitVect` (simulated counts);
+/// `Error::Value` for no bits per entry.
+pub fn get_ap_fingerprint_bv_with_params(
+    mol: &Mol,
+    params: &GetAPFingerprintParams,
+) -> Result<ExplicitBitVect> {
+    params
+        .generator(Some(count_bounds(params.n_bits_per_entry)?))?
+        .get_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+}
+
+/// Parameters for the `get_tt_fingerprint` functions, with Python's
+/// defaults (A2). Python's `fpType` picks the function.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GetTTFingerprintParams {
+    /// The atom whose torsions to leave out; `None` for none (Python's -1).
+    pub atom_id: Option<u32>,
+    /// The number of bits of the hashed fingerprints.
+    pub n_bits: u32,
+    /// The atoms in a torsion.
+    pub target_size: u32,
+    /// The bits each torsion sets in the bit vector.
+    pub n_bits_per_entry: u32,
+    /// Includes chirality in the atom codes (Python's `includeChirality`
+    /// keyword).
+    pub include_chirality: bool,
+}
+
+impl Default for GetTTFingerprintParams {
+    fn default() -> GetTTFingerprintParams {
+        GetTTFingerprintParams {
+            atom_id: None,
+            n_bits: 2048,
+            target_size: 4,
+            n_bits_per_entry: 4,
+            include_chirality: false,
+        }
+    }
+}
+
+impl GetTTFingerprintParams {
+    fn generator(&self, count_bounds: Option<Vec<u32>>) -> Result<FingerprintGenerator64> {
+        get_topological_torsion_generator_with_params(&GetTopologicalTorsionGeneratorParams {
+            include_chirality: self.include_chirality,
+            torsion_atom_count: self.target_size,
+            count_bounds,
+            fp_size: self.n_bits,
+            ..Default::default()
+        })
+    }
+
+    fn fingerprint_params(&self, mol: &Mol) -> Result<GetFingerprintParams> {
+        Ok(GetFingerprintParams {
+            ignore_atoms: ignored_atoms(mol, self.atom_id)?,
+            ..Default::default()
+        })
+    }
+}
+
+/// The topological-torsion fingerprint, unfolded counts. Mirrors
+/// `SimilarityMaps.GetTTFingerprint(mol)`.
+pub fn get_tt_fingerprint(mol: &Mol) -> Result<ULongSparseIntVect> {
+    get_tt_fingerprint_with_params(mol, &GetTTFingerprintParams::default())
+}
+
+/// The topological-torsion fingerprint without `atom_id`'s torsions.
+/// Mirrors `SimilarityMaps.GetTTFingerprint(mol, atomId, fpType='normal',
+/// targetSize=..., includeChirality=...)`, with a torsion generator, whose
+/// sparse count fingerprint has the counts of the
+/// `rdMolDescriptors.GetTopologicalTorsionFingerprint` Python calls (a
+/// `LongSparseIntVect`). `Error::Value` for an atom past the last.
+///
+/// One case differs: with `include_chirality` and an `atom_id`, RDKit's
+/// deprecated function counts torsions its own way, and can count others.
+pub fn get_tt_fingerprint_with_params(
+    mol: &Mol,
+    params: &GetTTFingerprintParams,
+) -> Result<ULongSparseIntVect> {
+    params
+        .generator(None)?
+        .get_sparse_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+}
+
+/// The hashed topological-torsion fingerprint, counts in `n_bits`. Mirrors
+/// `SimilarityMaps.GetTTFingerprint(mol, fpType='hashed')`.
+pub fn get_tt_fingerprint_hashed(mol: &Mol) -> Result<UIntSparseIntVect> {
+    get_tt_fingerprint_hashed_with_params(mol, &GetTTFingerprintParams::default())
+}
+
+/// Mirrors `SimilarityMaps.GetTTFingerprint(mol, atomId, fpType='hashed',
+/// nBits, ...)`, with the counts of `GetHashedTopologicalTorsionFingerprint`
+/// (which RDKit computes with the same generator); `Error::Value` for an
+/// atom past the last.
+pub fn get_tt_fingerprint_hashed_with_params(
+    mol: &Mol,
+    params: &GetTTFingerprintParams,
+) -> Result<UIntSparseIntVect> {
+    params
+        .generator(None)?
+        .get_count_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+}
+
+/// The hashed topological-torsion fingerprint as bits. Mirrors
+/// `SimilarityMaps.GetTTFingerprint(mol, fpType='bv')`.
+pub fn get_tt_fingerprint_bv(mol: &Mol) -> Result<ExplicitBitVect> {
+    get_tt_fingerprint_bv_with_params(mol, &GetTTFingerprintParams::default())
+}
+
+/// Mirrors `SimilarityMaps.GetTTFingerprint(mol, atomId, fpType='bv',
+/// nBits, ..., nBitsPerEntry)`, with the bits of
+/// `GetHashedTopologicalTorsionFingerprintAsBitVect`; `Error::Value` for an
+/// atom past the last, or no bits per entry.
+pub fn get_tt_fingerprint_bv_with_params(
+    mol: &Mol,
+    params: &GetTTFingerprintParams,
+) -> Result<ExplicitBitVect> {
+    params
+        .generator(Some(count_bounds(params.n_bits_per_entry)?))?
+        .get_fingerprint_with_params(mol, &params.fingerprint_params(mol)?)
+}
+
+/// Parameters for the `get_morgan_fingerprint` functions, with Python's
+/// defaults (A2). Python's `fpType` picks the function.
+#[derive(Clone, Debug, PartialEq)]
+pub struct GetMorganFingerprintParams {
+    /// The atom whose environments to leave out; `None` for none (Python's
+    /// -1).
+    pub atom_id: Option<u32>,
+    /// The largest radius.
+    pub radius: u32,
+    /// The number of bits of the bit vector.
+    pub n_bits: u32,
+    /// Uses feature invariants (FeatureMorgan) instead of connectivity ones.
+    pub use_features: bool,
+    /// Includes chirality in the invariants (Python's `useChirality`
+    /// keyword).
+    pub use_chirality: bool,
+}
+
+impl Default for GetMorganFingerprintParams {
+    fn default() -> GetMorganFingerprintParams {
+        GetMorganFingerprintParams {
+            atom_id: None,
+            radius: 2,
+            n_bits: 2048,
+            use_features: false,
+            use_chirality: false,
+        }
+    }
+}
+
+impl GetMorganFingerprintParams {
+    fn generator(&self) -> Result<FingerprintGenerator64> {
+        get_morgan_generator_with_params(&GetMorganGeneratorParams {
+            radius: self.radius,
+            include_chirality: self.use_chirality,
+            fp_size: self.n_bits,
+            atom_invariants_generator: self.use_features.then(get_morgan_feature_atom_inv_gen),
+            ..Default::default()
+        })
+    }
+}
+
+/// Python's bitmap: the bits each atom is in an environment of, once for
+/// each environment.
+fn morgan_bitmap(mol: &Mol, info: &BTreeMap<u64, Vec<(u32, u32)>>) -> Result<Vec<Vec<u64>>> {
+    let mut bitmap = vec![Vec::new(); mol.get_num_atoms() as usize];
+    for (&bit, envs) in info {
+        for &(at1, rad) in envs {
+            if rad == 0 {
+                bitmap[at1 as usize].push(bit);
+            } else {
+                let env = find_atom_environment_of_radius_n(mol, rad, at1)?;
+                let (_, outputs) = path_to_submol_with_outputs(mol, &env, false)?;
+                for &at2 in outputs.atom_map.keys() {
+                    bitmap[at2 as usize].push(bit);
+                }
+            }
+        }
+    }
+    Ok(bitmap)
+}
+
+/// The fingerprint, and Python's bitmap when an atom is left out.
+fn morgan_with_bitmap<T>(
+    mol: &Mol,
+    atom_id: Option<u32>,
+    get: impl FnOnce(&GetFingerprintParams) -> Result<(T, AdditionalOutput)>,
+) -> Result<(T, Option<Vec<u64>>)> {
+    ignored_atoms(mol, atom_id)?;
+    let mut ao = AdditionalOutput::default();
+    ao.allocate_bit_info_map();
+    let (fp, outputs) = get(&GetFingerprintParams {
+        additional_output: Some(ao),
+        ..Default::default()
+    })?;
+    let Some(atom_id) = atom_id else {
+        return Ok((fp, None));
+    };
+    let info = outputs.get_bit_info_map().cloned().unwrap_or_default();
+    let mut bitmap = morgan_bitmap(mol, &info)?;
+    Ok((fp, Some(std::mem::take(&mut bitmap[atom_id as usize]))))
+}
+
+/// The Morgan fingerprint as bits. Mirrors
+/// `SimilarityMaps.GetMorganFingerprint(mol)`.
+pub fn get_morgan_fingerprint(mol: &Mol) -> Result<ExplicitBitVect> {
+    get_morgan_fingerprint_with_params(mol, &GetMorganFingerprintParams::default())
+}
+
+/// The Morgan fingerprint without the bits of `atom_id`'s environments.
+/// Mirrors `SimilarityMaps.GetMorganFingerprint(mol, atomId, radius,
+/// fpType='bv', nBits, useFeatures, useChirality=...)`, with a Morgan
+/// generator, whose bits and bit information are those of the
+/// `rdMolDescriptors.GetMorganFingerprintAsBitVect` Python calls.
+/// `Error::Value` for an atom past the last. Python keeps the fingerprint on
+/// the molecule for later calls (as `get_rdk_fingerprint_with_params`
+/// says); this computes it each time.
+pub fn get_morgan_fingerprint_with_params(
+    mol: &Mol,
+    params: &GetMorganFingerprintParams,
+) -> Result<ExplicitBitVect> {
+    let fpg = params.generator()?;
+    let (fp, bits) = morgan_with_bitmap(mol, params.atom_id, |p| {
+        fpg.get_fingerprint_with_outputs(mol, p)
+    })?;
+    let Some(bits) = bits else {
+        return Ok(fp);
+    };
+    let mut atom_bits = ExplicitBitVect::new(params.n_bits);
+    for bit in bits {
+        atom_bits.set_bit(bit_index(bit)?)?;
+    }
+    Ok(&fp ^ &atom_bits)
+}
+
+/// The Morgan fingerprint as unfolded counts. Mirrors
+/// `SimilarityMaps.GetMorganFingerprint(mol, fpType='count')`.
+pub fn get_morgan_fingerprint_count(mol: &Mol) -> Result<ULongSparseIntVect> {
+    get_morgan_fingerprint_count_with_params(mol, &GetMorganFingerprintParams::default())
+}
+
+/// Mirrors `SimilarityMaps.GetMorganFingerprint(mol, atomId, radius,
+/// fpType='count', useFeatures, useChirality=...)`, with the counts of
+/// `rdMolDescriptors.GetMorganFingerprint` (a `UIntSparseIntVect`), each
+/// less one for each of `atom_id`'s environments; `n_bits` is unused.
+/// `Error::Value` for an atom past the last.
+pub fn get_morgan_fingerprint_count_with_params(
+    mol: &Mol,
+    params: &GetMorganFingerprintParams,
+) -> Result<ULongSparseIntVect> {
+    let fpg = params.generator()?;
+    let (mut fp, bits) = morgan_with_bitmap(mol, params.atom_id, |p| {
+        fpg.get_sparse_count_fingerprint_with_outputs(mol, p)
+    })?;
+    for bit in bits.unwrap_or_default() {
+        let val = fp.get_val(bit)?;
+        fp.set_val(bit, val - 1)?;
+    }
     Ok(fp)
 }
