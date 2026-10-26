@@ -123,6 +123,9 @@ set(RDKIT_CXX_SOURCES
   src/cluster.cpp
   src/sim_div_pickers.cpp
   src/info_theory.cpp
+  src/abbreviations.cpp
+  src/enumerate_stereoisomers.cpp
+  src/mol_enumerator.cpp
   src/mol_processing.cpp
   src/mol_interchange.cpp
 )
@@ -184,6 +187,9 @@ set(RDKIT_CXX_RDKIT_TARGETS
   hc
   SimDivPickers
   InfoTheory
+  Abbreviations
+  EnumerateStereoisomers
+  MolEnumerator
   MolInterchange
 )
 

@@ -100,6 +100,9 @@ const BRIDGES: &[&str] = &[
     "cluster",
     "sim_div_pickers",
     "info_theory",
+    "abbreviations",
+    "enumerate_stereoisomers",
+    "mol_enumerator",
     "mol_processing",
     "mol_interchange",
 ];

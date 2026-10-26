@@ -5,17 +5,22 @@
 
 #include "rdkit-cxx/mol_checks.h"
 
+#include <cerrno>
+#include <cmath>
 #include <cstdlib>
 #include <limits>
+#include <map>
 #include <string>
 #include <unordered_set>
 #include <vector>
 
 #include <GraphMol/MonomerInfo.h>
 #include <GraphMol/QueryOps.h>
+#include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDValue.h>
 #include <boost/shared_array.hpp>
+#include <boost/tokenizer.hpp>
 
 namespace rdkit_cxx {
 
@@ -160,6 +165,106 @@ void check_monomer_types(const RDKit::ROMol &mol) {
       }
     }
   }
+}
+
+namespace {
+
+// Whether std::stod reads the token, and RDKit's conversion of the result to
+// unsigned int (which truncates toward zero) is defined.
+bool converts_to_unsigned(const std::string &token) {
+  const char *begin = token.c_str();
+  char *end = nullptr;
+  errno = 0;
+  double value = std::strtod(begin, &end);
+  if (end == begin || errno == ERANGE) {
+    return false;
+  }
+  return std::isfinite(value) && value > -1.0 && value < 4294967296.0;
+}
+
+}  // namespace
+
+// Reads each value as RWMol.cpp does.
+void check_bond_end_points(const RDKit::ROMol &mol) {
+  std::string value;
+  for (const auto bond : mol.bonds()) {
+    if (!bond->getPropIfPresent(RDKit::common_properties::_MolFileBondEndPts,
+                                value)) {
+      continue;
+    }
+    if (value.empty()) {
+      throw ValueErrorException("bond " + std::to_string(bond->getIdx()) +
+                                " has an empty _MolFileBondEndPts");
+    }
+    if (value.front() != '(' || value.back() != ')') {
+      continue;
+    }
+    std::string inner = value.substr(1, value.length() - 2);
+    boost::char_separator<char> sep(" ");
+    boost::tokenizer<boost::char_separator<char>> tokens(inner, sep);
+    if (tokens.begin() == tokens.end()) {
+      throw ValueErrorException("bond " + std::to_string(bond->getIdx()) +
+                                " has a _MolFileBondEndPts with no count");
+    }
+    for (const auto &token : tokens) {
+      if (!converts_to_unsigned(token)) {
+        throw ValueErrorException(
+            "bond " + std::to_string(bond->getIdx()) +
+            " has a _MolFileBondEndPts value that is not an unsigned int: " +
+            token);
+      }
+    }
+  }
+}
+
+// Follows the chains as removeSubstanceGroupsReferencing (SubstanceGroup.cpp)
+// does: a later group with the same index replaces an earlier one.
+void check_substance_group_parents(const RDKit::ROMol &mol) {
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  std::map<unsigned, std::size_t> by_index;
+  bool parents = false;
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    unsigned index;
+    if (sgroups[i].getPropIfPresent("index", index)) {
+      by_index[index] = i;
+    }
+    unsigned parent;
+    parents = sgroups[i].getPropIfPresent("PARENT", parent) || parents;
+  }
+  if (!parents) {
+    return;
+  }
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    std::vector<char> seen(sgroups.size(), 0);
+    std::size_t at = i;
+    unsigned length = 0;
+    unsigned parent;
+    while (sgroups[at].getPropIfPresent("PARENT", parent)) {
+      auto next = by_index.find(parent);
+      if (next == by_index.end()) {
+        break;
+      }
+      seen[at] = 1;
+      at = next->second;
+      if (seen[at]) {
+        throw ValueErrorException(
+            "substance group " + std::to_string(i) +
+            "'s PARENT chain is a cycle, which RDKit follows forever when it "
+            "removes an atom or bond");
+      }
+      if (++length > MAX_PARENT_CHAIN) {
+        throw ValueErrorException("substance group " + std::to_string(i) +
+                                  "'s PARENT chain is longer than " +
+                                  std::to_string(MAX_PARENT_CHAIN) +
+                                  ", which RDKit follows recursively");
+      }
+    }
+  }
+}
+
+void check_removals(const RDKit::ROMol &mol) {
+  check_bond_end_points(mol);
+  check_substance_group_parents(mol);
 }
 
 }  // namespace rdkit_cxx
