@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Features.FeatDirUtilsRD`, a pure-Python module: the
+//! Ports `rdkit.Chem.Features.FeatDirUtilsRD`, a Python module: the
 //! direction vectors of donors, acceptors, and aromatic rings in a
 //! conformer.
 //!

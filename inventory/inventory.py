@@ -9,7 +9,7 @@ The inventory lists every class, function, method, static method, property,
 module attribute, and enum value the compiled modules expose, with nanobind's
 signature for each overload. check.py measures the manifest against it.
 
-With --python it writes the inventory of RDKit's pure-Python modules instead:
+With --python it writes the inventory of RDKit's Python (.py) modules instead:
 the functions, classes, methods, properties, enum values, and module
 attributes each defines, leaving out tests and what it imports. Modules that
 do not import (they need IPython, Qt, or Windows) are read from their source.
@@ -117,7 +117,7 @@ def is_test(part: str) -> bool:
 
 
 def python_modules(root: pathlib.Path) -> list[str]:
-    """The dotted names of the pure-Python modules under root/rdkit, without tests."""
+    """The dotted names of the Python (.py) modules under root/rdkit, without tests."""
     names = set()
     for path in (root / "rdkit").rglob("*.py"):
         parts = path.relative_to(root).with_suffix("").parts
@@ -193,7 +193,7 @@ def python_class_entries(cls, qualified: str) -> list[dict]:
 
 
 def python_module_entries(module, tree: ast.Module) -> list[dict]:
-    """What a pure-Python module defines: functions and classes whose
+    """What a Python module defines: functions and classes whose
     __module__ is the module (so also those it makes at import), and the
     names its top level assigns that hold neither."""
     entries = []
@@ -261,7 +261,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--rdkit-path", type=pathlib.Path, required=True, help="directory holding the rdkit package")
     parser.add_argument("--output", type=pathlib.Path, required=True)
-    parser.add_argument("--python", action="store_true", help="inventory the pure-Python modules instead")
+    parser.add_argument("--python", action="store_true", help="inventory the Python (.py) modules instead")
     args = parser.parse_args()
     sys.path.insert(0, str(args.rdkit_path))
     from rdkit import rdBase

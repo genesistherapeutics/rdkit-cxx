@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm2D.Matcher`, a pure-Python module: the atoms
+//! Ports `rdkit.Chem.Pharm2D.Matcher`, a Python module: the atoms
 //! that match a 2D pharmacophore's bit.
 //!
 //! Python's `MatchError` is an exception class nothing raises, so it is

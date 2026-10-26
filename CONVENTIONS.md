@@ -542,12 +542,14 @@ rule changes the rule first.
   yet has no entry. `overloads_note` explains overloads a binding
   covers with fewer Rust paths, or does not bind yet.
 - **I3.** A module joins `complete` once every inventory entry in it is
-  mapped; CI then holds it there. Ports of pure-Python modules follow R3.
+  mapped; CI then holds it there. Ports of Python-only functionality follow
+  R3.
 
-## Ports of pure-Python modules
+## Ports of Python-only functionality
 
-- **R1.** RDKit's pure-Python code is ported to Rust on top of the bound
-  API, at the paths N1 gives its modules: `rdkit.Chem.RegistrationHash` →
+- **R1.** Functionality RDKit offers only in Python, in its `.py` modules,
+  is ported to Rust on top of the bound API, at the paths N1 gives its
+  modules: `rdkit.Chem.RegistrationHash` →
   `rdkit_cxx::chem::registration_hash`. Functions in a package's
   `__init__.py` go in a private `init` module that the package's Rust
   module re-exports (`Chem.FindMolChiralCenters` →
@@ -561,7 +563,7 @@ rule changes the rule first.
   (`SetUseLegacyStereoPerception`), the port requires the state instead
   and is `Error::Value` without it (U5).
 - **R3.** Ports are measured as bindings are. `inventory/python-<series>.json`
-  (`inventory.py --python`) lists what each pure-Python module defines,
+  (`inventory.py --python`) lists what each of RDKit's Python modules defines,
   leaving out tests and what it imports. Each name gets a manifest entry,
   with Rust paths or a reason (I1, I2), and a module joins `complete` the
   same way (I3). A module or package with no Rust counterpart by design,

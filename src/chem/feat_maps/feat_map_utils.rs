@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FeatMaps.FeatMapUtils`, a pure-Python module: merging
+//! Ports `rdkit.Chem.FeatMaps.FeatMapUtils`, a Python module: merging
 //! and combining feature maps.
 //!
 //! Python's mode classes hold integer constants, and their `valid` class

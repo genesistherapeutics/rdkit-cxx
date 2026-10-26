@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.RDRandom`, a pure-Python module: the random numbers RDKit's
+//! Ports `rdkit.RDRandom`, a Python module: the random numbers RDKit's
 //! Python code draws, which come from Python's `random` module.
 //!
 //! [`Random`] is Python's generator (the Mersenne Twister of

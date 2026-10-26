@@ -7,7 +7,7 @@
 
 The inventories, written by inventory.py, list every class, function, method,
 property, and enum value RDKit's nanobind modules expose
-(inventory-<series>.json) and that its pure-Python modules define
+(inventory-<series>.json) and that its Python (`.py`) modules define
 (python-<series>.json). The manifest (manifest.toml) maps each to Rust paths,
 or to a reason it has none, given for the name or for its whole module
 (`[modules.reasons]`, CONVENTIONS.md R3). This script reports manifest entries

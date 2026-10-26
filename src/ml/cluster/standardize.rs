@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Cluster.Standardize`, a pure-Python module: the ways of
+//! Ports `rdkit.ML.Cluster.Standardize`, a Python module: the ways of
 //! standardizing a data matrix before clustering it.
 
 use crate::Result;

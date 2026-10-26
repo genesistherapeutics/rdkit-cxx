@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Cluster.ClusterUtils`, a pure-Python module: functions
+//! Ports `rdkit.ML.Cluster.ClusterUtils`, a Python module: functions
 //! that walk and split cluster trees.
 //!
 //! Like Python's, these sort the children of the clusters they visit in

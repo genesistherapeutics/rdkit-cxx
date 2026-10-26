@@ -15,7 +15,7 @@ the drawing holds: the indices, notes, CIP labels, highlights, and colors
 the recipe adds. Where the recipe draws with `MolDraw2DCairo`, the example
 writes the PNG and checks its size.
 
-Where a recipe calls RDKit's pure-Python code, the example calls its port in
+Where a recipe calls code RDKit offers only in Python, the example calls its port in
 the crate: `rdkit_cxx::chem::find_mol_chiral_centers`,
 `rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`,
 `mol_to_svg`, `mols_to_grid_image`, and `draw_mol_with_matches`.

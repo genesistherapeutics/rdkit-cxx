@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Cluster.Clusters`, a pure-Python module: the `Cluster`
+//! Ports `rdkit.ML.Cluster.Clusters`, a Python module: the `Cluster`
 //! class for hierarchical cluster trees.
 //!
 //! A [`Cluster`] owns its children, so a tree changes only through its

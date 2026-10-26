@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm2D.Utils`, a pure-Python module: the
+//! Ports `rdkit.Chem.Pharm2D.Utils`, a Python module: the
 //! combinatorics of 2D pharmacophores.
 //!
 //! An N-point pharmacophore has the distances between its points that

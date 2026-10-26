@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.DataStructs.LazySignature`, a pure-Python module: a
+//! Ports `rdkit.DataStructs.LazySignature`, a Python module: a
 //! signature whose bits are computed when first read.
 
 use std::collections::HashMap;

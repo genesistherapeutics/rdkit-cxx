@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.InfoTheory.BitRank`, a pure-Python module: ranking bits
+//! Ports `rdkit.ML.InfoTheory.BitRank`, a Python module: ranking bits
 //! by their information gain about activities.
 //!
 //! In RDKit 2026.09.1 with NumPy 2, Python's functions raise `TypeError`

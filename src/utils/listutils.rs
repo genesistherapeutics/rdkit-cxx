@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.utils.listutils`, a pure-Python module: utilities for
+//! Ports `rdkit.utils.listutils`, a Python module: utilities for
 //! lists.
 
 use std::fmt::Debug;

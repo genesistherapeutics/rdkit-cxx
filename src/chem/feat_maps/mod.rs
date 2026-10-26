@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FeatMaps`, a pure-Python package: feature maps, sets
+//! Ports `rdkit.Chem.FeatMaps`, a Python package: feature maps, sets
 //! of weighted feature points that score other features by family and
 //! distance.
 

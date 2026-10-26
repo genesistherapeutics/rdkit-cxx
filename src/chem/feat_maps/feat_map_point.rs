@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FeatMaps.FeatMapPoint`, a pure-Python module: a
+//! Ports `rdkit.Chem.FeatMaps.FeatMapPoint`, a Python module: a
 //! feature map's points.
 
 use std::ops::{Deref, DerefMut};

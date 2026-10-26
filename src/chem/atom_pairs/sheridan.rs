@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.AtomPairs.Sheridan`, a pure-Python module:
+//! Ports `rdkit.Chem.AtomPairs.Sheridan`, a Python module:
 //! physicochemical-property fingerprints (Kearsley et al., J. Chem. Inf.
 //! Model. 36, 118-127 (1996)), atom pairs and torsions over Patty's atom
 //! types.

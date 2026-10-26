@@ -1,9 +1,9 @@
 # rdkit-cxx
 
-Rust bindings for [RDKit](https://github.com/rdkit/rdkit)'s C++ API, and Rust
-ports of RDKit's pure-Python modules, which together cover RDKit's Python
-interface. The API mirrors both, RDKit's nanobind wrappers and its Python
-modules, in Rust spelling, so Python code ports line by line:
+Rust bindings for [RDKit](https://github.com/rdkit/rdkit)'s C++ API, with Rust
+ports of the functionality RDKit currently offers only in Python. Together they
+cover RDKit's Python interface: the API mirrors RDKit's nanobind wrappers and
+its Python modules in Rust spelling, so Python code ports line by line:
 
 ```rust,no_run
 use rdkit_cxx::chem::{mol_from_smarts, mol_from_smiles, mol_to_smiles};
@@ -23,7 +23,7 @@ bindings, and computes what Python computes: `rdkit.Chem.QED` is
 `rdkit_cxx::chem::qed`.
 
 Coverage: every name RDKit 2026.09's Python interface offers, in its
-nanobind modules and its pure-Python modules, has a Rust counterpart or a
+nanobind modules and its Python modules, has a Rust counterpart or a
 recorded reason it has none ([Parity](#parity)). The patterns every wrapper
 follows are in [CONVENTIONS.md](CONVENTIONS.md), and the limits that remain
 are under [Known limitations](#known-limitations). [`examples/`](examples)
@@ -265,9 +265,9 @@ Other limits:
 ## Parity
 
 [`inventory/`](inventory) measures coverage of the nanobind modules and of
-RDKit's pure-Python modules. `inventory-2026.09.json` lists every class,
+RDKit's Python modules. `inventory-2026.09.json` lists every class,
 function, method, property, and enum value the nanobind modules expose, and
-`python-2026.09.json` what each pure-Python module defines; `manifest.toml`
+`python-2026.09.json` what each Python module defines; `manifest.toml`
 maps each to Rust paths or to the reason it has none, given for the name or,
 for Python-ecosystem glue and legacy code, for its whole module. CI runs:
 

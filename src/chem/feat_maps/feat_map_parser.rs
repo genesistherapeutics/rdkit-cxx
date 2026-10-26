@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.FeatMaps.FeatMapParser`, a pure-Python module: the
+//! Ports `rdkit.Chem.FeatMaps.FeatMapParser`, a Python module: the
 //! text format of feature maps.
 //!
 //! ```text

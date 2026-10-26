@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.utils.fileutils`, a pure-Python module: utilities for
+//! Ports `rdkit.utils.fileutils`, a Python module: utilities for
 //! reading files.
 
 use std::io::BufRead;

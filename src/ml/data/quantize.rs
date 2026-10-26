@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.ML.Data.Quantize`, a pure-Python module: finding
+//! Ports `rdkit.ML.Data.Quantize`, a Python module: finding
 //! quantization bounds for a variable by the information gain they give
 //! about a result.
 //!

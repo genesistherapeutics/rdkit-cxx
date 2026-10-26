@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! Ports `rdkit.Chem.Pharm2D.SigFactory`, a pure-Python module: the
+//! Ports `rdkit.Chem.Pharm2D.SigFactory`, a Python module: the
 //! parameters of 2D pharmacophore signatures and the numbering of their
 //! bits.
 
