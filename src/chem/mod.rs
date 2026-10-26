@@ -10,10 +10,14 @@
 
 pub mod atom_pairs;
 pub mod draw;
+pub mod feat_finder_cli;
+pub mod feat_maps;
+pub mod features;
 mod init;
 pub mod lipinski;
 pub mod maccs_keys;
 pub mod mol_standardize;
+pub mod pharm_2d;
 pub(crate) mod py_math;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
