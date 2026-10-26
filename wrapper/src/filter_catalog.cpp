@@ -438,7 +438,7 @@ bool filter_matcher_has_match(const FilterMatcherHandle &matcher,
   return matcher.ptr->hasMatch(mol);
 }
 
-// As FilterMatcherBaseGetMatches in nbWrap/FilterCatalog.cpp: the matches
+// As FilterMatcherBaseGetMatches in Wrap/FilterCatalog.cpp: the matches
 // only when it matches.
 std::unique_ptr<FilterMatchList> filter_matcher_get_matches(
     const FilterMatcherHandle &matcher, const RWMol &mol) {
@@ -528,7 +528,7 @@ std::unique_ptr<FilterMatcherList> filter_matcher_list_new() {
   return std::make_unique<FilterMatcherList>();
 }
 
-// As SetOffPatterns in nbWrap/FilterCatalog.cpp, which copies each.
+// As SetOffPatterns in Wrap/FilterCatalog.cpp, which copies each.
 void filter_matcher_list_push(FilterMatcherList &list,
                               const FilterMatcherHandle &matcher) {
   check_use(matcher);
@@ -654,7 +654,7 @@ void filter_catalog_entry_set_description(FilterCatalogEntryHandle &entry,
   entry_mut(entry).setDescription(std::string(description));
 }
 
-// As FilterCatalogEntryGetMatches in nbWrap/FilterCatalog.cpp.
+// As FilterCatalogEntryGetMatches in Wrap/FilterCatalog.cpp.
 std::unique_ptr<FilterMatchList> filter_catalog_entry_get_filter_matches(
     const FilterCatalogEntryHandle &entry, const RWMol &mol) {
   std::vector<FilterMatch> matches;
@@ -772,7 +772,7 @@ rust::Vec<std::uint8_t> filter_catalog_entry_serialize(
   return to_bytes(entry.ptr->Serialize());
 }
 
-// As filter_catalog_add_entry in nbWrap/FilterCatalog.cpp, the catalog gets
+// As filter_catalog_add_entry in Wrap/FilterCatalog.cpp, the catalog gets
 // a copy.
 void filter_catalog_add_entry(FilterCatalog &catalog,
                               const FilterCatalogEntryHandle &entry) {

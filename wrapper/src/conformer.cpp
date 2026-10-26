@@ -91,7 +91,7 @@ void conformer_set_atom_position(Conformer &conf, unsigned aid,
   conf.setAtomPos(aid, from_point(loc));
 }
 
-// As SetPos in Code/GraphMol/nbWrap/Conformer.cpp.
+// As SetPos in Code/GraphMol/Wrap/Conformer.cpp.
 void conformer_set_positions(Conformer &conf,
                              rust::Slice<const Point3D> positions) {
   if (positions.size() != conf.getNumAtoms()) {
@@ -158,7 +158,7 @@ const Conformer &mol_get_conformer_at(const RWMol &mol, unsigned position) {
   return **it;
 }
 
-// As Mol.AddConformer in Code/GraphMol/nbWrap/Mol.cpp, which copies.
+// As AddMolConformer in Code/GraphMol/Wrap/Mol.cpp, which copies.
 // addConformer assigns the largest id, as an int, plus one, which overflows
 // when that is INT_MAX.
 unsigned mol_add_conformer(RWMol &mol, const Conformer &conf, bool assign_id) {

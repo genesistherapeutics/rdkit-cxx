@@ -49,7 +49,8 @@ using RDKit::TopologicalTorsion::TopologicalTorsionArguments;
 std::vector<std::uint32_t> count_bounds(
     bool count_simulation, bool has_count_bounds,
     const rust::Vec<std::uint32_t> &bounds) {
-  // As the generator wrappers in Code/GraphMol/Fingerprints/nbWrap.
+  // As the generator wrappers in Code/GraphMol/Fingerprints/Wrap, except that
+  // they treat an empty countBounds list as None; here it is used as given.
   if (!has_count_bounds) {
     return {1, 2, 4, 8};
   }
@@ -377,7 +378,7 @@ bool fingerprint_reads_distance_matrix(const FpGenerator &gen) {
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,
     std::unique_ptr<BondInvGen> bond_inv_gen) {
-  // As getMorganGenerator in Code/GraphMol/Fingerprints/nbWrap/
+  // As getMorganGenerator in Code/GraphMol/Fingerprints/Wrap/
   // MorganWrapper.cpp, which ignores includeRingMembership.
   return checked(RDKit::MorganFingerprint::getMorganGenerator<std::uint64_t>(
       data.radius, data.count_simulation, data.include_chirality,

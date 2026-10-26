@@ -46,7 +46,7 @@ bool atom_has_owning_mol(const Atom &atom);
 bool atom_has_query(const Atom &atom);
 bool atom_needs_update_property_cache(const Atom &atom);
 unsigned atom_get_valence(const Atom &atom, ValenceType which);
-// As AtomGetSmarts in Code/GraphMol/nbWrap/Atom.cpp.
+// As AtomGetSmarts in Code/GraphMol/Wrap/Atom.cpp.
 std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,
                                              bool all_hs_explicit,
                                              bool isomeric_smiles);
@@ -75,7 +75,7 @@ bool atom_is_in_ring(const Atom &atom);
 bool atom_is_in_ring_size(const Atom &atom, int size);
 bool atom_has_valence_violation(const Atom &atom);
 
-// The module-level atom label functions in Code/GraphMol/nbWrap/Atom.cpp.
+// The module-level atom label functions in Code/GraphMol/Wrap/Atom.cpp.
 std::unique_ptr<std::string> atom_get_alias(const Atom &atom);
 void atom_set_alias(Atom &atom, rust::Str rlabel);
 int atom_get_r_label(const Atom &atom);

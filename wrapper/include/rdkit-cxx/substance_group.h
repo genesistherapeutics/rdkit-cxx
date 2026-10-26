@@ -35,7 +35,7 @@ const SubstanceGroup &mol_get_substance_group(const RWMol &mol,
 SubstanceGroup &mol_get_substance_group_mut(RWMol &mol, std::uint32_t idx);
 void mol_clear_substance_groups(RWMol &mol);
 // As createMolSubstanceGroup, createMolDataSubstanceGroup, and
-// addMolSubstanceGroup in Code/GraphMol/nbWrap/SubstanceGroup.cpp; each
+// addMolSubstanceGroup in Code/GraphMol/Wrap/SubstanceGroup.cpp; each
 // returns the new group's index. The copy's indices are checked against the
 // molecule it joins (CONVENTIONS.md E3).
 std::uint32_t mol_create_substance_group(RWMol &mol, rust::Str type);
@@ -78,7 +78,7 @@ void substance_group_add_cstate(SubstanceGroup &sgroup, std::uint32_t bond_idx,
 void substance_group_add_attach_point(SubstanceGroup &sgroup,
                                       std::uint32_t a_idx, int lv_idx,
                                       rust::Str id_str);
-// As addBracketHelper in Code/GraphMol/nbWrap/SubstanceGroup.cpp.
+// As addBracketHelper in Code/GraphMol/Wrap/SubstanceGroup.cpp.
 void substance_group_add_bracket(SubstanceGroup &sgroup,
                                  rust::Slice<const Point3D> pts);
 void substance_group_clear_brackets(SubstanceGroup &sgroup);

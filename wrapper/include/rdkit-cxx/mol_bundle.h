@@ -31,7 +31,8 @@ void mol_bundle_add_borrowed(MolBundle &bundle, const RWMol &mol);
 // bundle whose first molecule is `first`.
 void fixed_mol_size_mol_bundle_check(const RWMol &first, const RWMol &nmol);
 // As MolBundle(pklString) and BundleToBinary in
-// Code/GraphMol/nbWrap/MolBundle.cpp.
+// Code/GraphMol/Wrap/MolBundle.cpp, except that without serialization support
+// BundleToBinary raises RuntimeError there and ValueError here.
 std::unique_ptr<MolList> mol_bundle_from_pkl_string(
     rust::Slice<const std::uint8_t> pkl);
 rust::Vec<std::uint8_t> mol_bundle_to_binary(const MolBundle &bundle);

@@ -17,7 +17,7 @@
 
 namespace rdkit_cxx {
 
-// As sanitizeMol in Code/GraphMol/nbWrap/MolOps.cpp: with catch_errors, a
+// As sanitizeMol in Code/GraphMol/Wrap/MolOps.cpp: with catch_errors, a
 // failure returns the operation that failed instead of throwing.
 std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
                            bool catch_errors) {
@@ -47,7 +47,10 @@ AddHsParametersData add_hs_parameters_default() {
                              {}};
 }
 
-// As addHs2 in Code/GraphMol/nbWrap/MolOps.cpp: a copy gains the hydrogens.
+// As addHs2 in Code/GraphMol/Wrap/MolOps.cpp: a copy gains the hydrogens.
+// Python (pythonObjectToVect in Code/RDBoost/Wrap.h) treats an empty
+// onlyOnAtoms list as None, adding hydrogens to every atom; here an empty list
+// adds none.
 std::unique_ptr<RWMol> add_hs(const RWMol &mol,
                               const AddHsParametersData &data) {
   RDKit::MolOps::AddHsParameters params;

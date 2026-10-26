@@ -284,7 +284,7 @@ MolDrawOptionsData mol_draw_options_monochrome(const MolDrawOptionsData &data,
   auto opts = options_from_data(data);
   auto fg = colour_from_data(fg_colour);
   auto bg = colour_from_data(bg_colour);
-  // As pyTupleToDrawColour in nbWrap/rdMolDraw2D.cpp.
+  // As pyTupleToDrawColour in Wrap/rdMolDraw2D.cpp.
   check_colour(fg, "fgColour");
   check_colour(bg, "bgColour");
   RDKit::setMonochromeMode(opts, fg, bg);

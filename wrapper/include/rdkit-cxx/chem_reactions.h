@@ -138,7 +138,7 @@ SubstructMatchParametersData chemical_reaction_get_substruct_params(
 void chemical_reaction_set_substruct_params(
     ChemicalReaction &rxn, const SubstructMatchParametersData &params);
 
-// Parsers and writers, as in Code/GraphMol/ChemReactions/nbWrap.
+// Parsers and writers, as in Code/GraphMol/ChemReactions/Wrap.
 std::unique_ptr<ChemicalReaction> reaction_from_smarts(
     rust::Str smarts, const rust::Vec<rust::String> &replacement_keys,
     const rust::Vec<rust::String> &replacement_values, bool use_smiles);

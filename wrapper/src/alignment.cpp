@@ -19,8 +19,10 @@
 
 namespace rdkit_cxx {
 
-// As AlignPointPairs in Code/Numerics/Alignment/nbWrap/rdAlignment.cpp; RDKit
-// checks that the weights are positive.
+// As AlignPointPairs in Code/Numerics/Alignment/Wrap/rdAlignment.cpp; RDKit
+// checks that the weights are positive. Python treats an empty weights list
+// as no weights and reports empty points as "Empty sequence passed in"; here
+// empty weights must match the points like any others.
 double align_point_pairs(rust::Slice<const Point3D> ref_points,
                          rust::Slice<const Point3D> probe_points,
                          bool has_weights, rust::Slice<const double> weights,

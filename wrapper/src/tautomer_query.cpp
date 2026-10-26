@@ -176,8 +176,8 @@ RDKit::SubstructMatchParameters params_with_max_matches_one(
   return params;
 }
 
-// As convertMatch in nbWrap/substructmethods.h: the target atom for each
-// query atom.
+// As convertMatches in Code/GraphMol/Wrap/substructmethods.h: the target atom
+// for each query atom.
 rust::Vec<std::uint32_t> convert_match(const RDKit::MatchVectType &match) {
   std::vector<std::uint32_t> res(match.size());
   for (const auto &[query_idx, mol_idx] : match) {

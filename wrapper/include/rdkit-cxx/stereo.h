@@ -29,11 +29,13 @@ struct StereoGroupData;
 struct StereoInfoData;
 
 rust::Vec<StereoGroupData> mol_get_stereo_groups(const RWMol &mol);
-// As ReadWriteMol::SetStereoGroups in Code/GraphMol/nbWrap/Mol.cpp, with
+// As ReadWriteMol::SetStereoGroups in Code/GraphMol/Wrap/Mol.cpp, with
 // indices checked against the molecule (CONVENTIONS.md E3).
 void rwmol_set_stereo_groups(RWMol &mol,
                              rust::Slice<const StereoGroupData> groups);
-// As createStereoGroup in Code/GraphMol/nbWrap/StereoGroup.cpp.
+// As createStereoGroup in Code/GraphMol/Wrap/StereoGroup.cpp, whose index
+// checks have their own messages; here the indices are checked as for
+// rwmol_set_stereo_groups.
 StereoGroupData create_stereo_group(StereoGroupType group_type,
                                     const RWMol &mol,
                                     rust::Slice<const std::uint32_t> atom_ids,

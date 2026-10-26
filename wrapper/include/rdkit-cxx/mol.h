@@ -22,7 +22,7 @@ namespace rdkit_cxx {
 using RWMol = RDKit::RWMol;
 
 std::unique_ptr<RWMol> mol_new();
-// Pickles, as MolToBinary and the pickle constructors in nbWrap/Mol.cpp.
+// Pickles, as MolToBinary and the pickle constructors in Wrap/Mol.cpp.
 std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
                                            bool has_flags, unsigned flags);
 rust::Vec<std::uint8_t> mol_to_binary(const RWMol &mol, bool has_flags,

@@ -91,8 +91,9 @@ struct NativeParams {
   std::map<int, RDGeom::Point3D> coord_map;
 };
 
-// As PyEmbedParameters' setters in Code/GraphMol/DistGeomHelpers/nbWrap/
-// rdDistGeom.cpp; an empty map is no map.
+// As PyEmbedParameters' setters in Code/GraphMol/DistGeomHelpers/Wrap/
+// rdDistGeom.cpp, except that an empty map is no map here, where Python sets
+// an empty one.
 std::unique_ptr<NativeParams> to_native(const EmbedParametersData &d) {
   auto native = std::make_unique<NativeParams>();
   auto &p = native->params;

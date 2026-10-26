@@ -61,7 +61,7 @@ std::vector<unsigned> to_vector(rust::Slice<const std::uint32_t> indices) {
   return std::vector<unsigned>(indices.begin(), indices.end());
 }
 
-// As getResidue and getChainId in Code/GraphMol/nbWrap/MolOps.cpp, which
+// As getResidue and getChainId in Code/GraphMol/Wrap/MolOps.cpp, which
 // read only info whose type is PDBRESIDUE, but with dynamic_cast where
 // Python static_casts (only an AtomPDBResidueInfo can have the type,
 // CONVENTIONS.md U10).
@@ -206,7 +206,7 @@ rust::Vec<IndexList> find_all_subgraphs_of_length_n(
       RDKit::findAllSubgraphsOfLengthN(mol, length, use_hs, rooted_at_atom));
 }
 
-// As findAllSubgraphsOfLengthsMtoNHelper in Code/GraphMol/nbWrap/MolOps.cpp,
+// As findAllSubgraphsOfLengthsMtoNHelper in Code/GraphMol/Wrap/MolOps.cpp,
 // flattened: counts[i] is the number of subgraphs of length min + i. Lengths
 // past the number of bonds have none; RDKit would loop to max, which never
 // ends for UINT_MAX.
@@ -293,8 +293,11 @@ std::unique_ptr<MolList> split_mol_by_pdb_chain_id(
   return split_mol(mol, get_chain_id, has_white_list, white_list, negate_list);
 }
 
-// As renumberAtomsHelper in Code/GraphMol/nbWrap/MolOps.cpp; renumberAtoms
-// checks the values.
+// As renumberAtomsHelper in Code/GraphMol/Wrap/MolOps.cpp, which rejects a
+// short newOrder and values past the atoms, and (pythonObjectToVect in
+// Code/RDBoost/Wrap.h treating an empty list as None) an empty one even for a
+// molecule without atoms. Here newOrder needs one entry per atom, and
+// renumberAtoms checks the values.
 std::unique_ptr<RWMol> renumber_atoms(
     const RWMol &mol, rust::Slice<const std::uint32_t> new_order) {
   if (new_order.size() != mol.getNumAtoms()) {

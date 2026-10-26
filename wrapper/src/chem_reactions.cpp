@@ -1233,7 +1233,7 @@ void remove_mapping_numbers_from_reactions(ChemicalReaction &rxn) {
 PreprocessReactionData preprocess_reaction(ChemicalReaction &rxn,
                                            BorrowedMols &queries,
                                            rust::Str prop_name) {
-  // As PreprocessReaction in nbWrap/rdChemReactions.cpp.
+  // As PreprocessReaction in Wrap/rdChemReactions.cpp.
   std::map<std::string, ROMOL_SPTR> qs;
   if (queries.mols().empty()) {
     const bool normalized = true;
@@ -1312,7 +1312,7 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
     }
     failed = RxnOps::SANITIZE_NONE;
   } catch (...) {
-    // As sanitizeReaction in nbWrap/rdChemReactions.cpp.
+    // As sanitizeReaction in Wrap/rdChemReactions.cpp.
     if (!catch_errors) {
       throw;
     }

@@ -76,7 +76,7 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
 std::unique_ptr<MolList> fragment_mol_bonds(
     const RWMol &mol, rust::Slice<const std::uint32_t> bonds_to_cut,
     std::uint32_t min_cuts, std::uint32_t max_cuts) {
-  // As Code/GraphMol/MMPA/nbWrap/rdMMPA.cpp.
+  // As fragmentMolHelper3 in Code/GraphMol/MMPA/Wrap/rdMMPA.cpp.
   if (bonds_to_cut.empty()) {
     throw ValueErrorException("bondsToCut must be non-empty");
   }

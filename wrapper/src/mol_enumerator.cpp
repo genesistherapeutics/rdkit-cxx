@@ -38,7 +38,8 @@ constexpr std::size_t MAX_VARIATION_POINTS = 4000;
 // in 16 bits, and finds each label again with a reaction's SMARTS.
 constexpr unsigned MAX_LINK_NODE_ATOM = 64;
 
-// As opFromName in nbWrap/rdMolEnumerator.cpp.
+// As opFromName in Wrap/rdMolEnumerator.cpp, where an unknown type raises
+// ValueError.
 std::shared_ptr<ME::MolEnumeratorOp> op_from_type(EnumeratorType type) {
   switch (type) {
     case EnumeratorType::LinkNode:
