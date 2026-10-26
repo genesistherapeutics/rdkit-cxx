@@ -141,8 +141,6 @@ struct FmcsState {
   // RDKit's timeout check.
   bool user_progress = false;
   std::chrono::steady_clock::time_point start;
-  // The call's hold on control_c_mutex.
-  std::unique_lock<std::mutex> *control_c = nullptr;
 };
 
 std::size_t mol_index(const FmcsState &state, const RDKit::ROMol &mol) {
@@ -178,14 +176,11 @@ const FmcsState &state_of(const void *user_data) {
 // Calls a closure RDKit calls with no ControlCHandler alive (the typers,
 // from MaximumCommonSubgraph::init; the progress callback, between seeds;
 // the acceptance check, after its matches), with control_c_mutex released
-// so the closure may call wrappers that take it. The Rust side catches
-// everything, so the lock is always taken back.
+// (ReleaseControlC) so the closure may call wrappers that take it.
 template <typename Call>
-bool unlocked(const FmcsState &state, Call &&call) {
-  state.control_c->unlock();
-  bool result = call();
-  state.control_c->lock();
-  return result;
+bool unlocked(Call &&call) {
+  ReleaseControlC release;
+  return call();
 }
 
 // Marks a closure RDKit may call from inside vf2, with a ControlCHandler
@@ -217,7 +212,7 @@ bool atom_typer_trampoline(const RDKit::MCSAtomCompareParameters &p,
     auto data = atom_params_to_data(p);
     auto index1 = mol_index(state, mol1);
     auto index2 = mol_index(state, mol2);
-    return unlocked(state, [&] {
+    return unlocked([&] {
       return mcs_call_atom_typer(state.callbacks, data, index1, atom1, index2,
                                  atom2);
     });
@@ -233,7 +228,7 @@ bool bond_typer_trampoline(const RDKit::MCSBondCompareParameters &p,
     auto data = bond_params_to_data(p);
     auto index1 = mol_index(state, mol1);
     auto index2 = mol_index(state, mol2);
-    return unlocked(state, [&] {
+    return unlocked([&] {
       return mcs_call_bond_typer(state.callbacks, data, index1, bond1, index2,
                                  bond2);
     });
@@ -255,7 +250,7 @@ bool progress_trampoline(const RDKit::MCSProgressData &stat,
                                     params.Timeout * 1000000ULL;
     }
     auto data = params_to_data(params);
-    return unlocked(state, [&] {
+    return unlocked([&] {
       return mcs_call_progress(state.callbacks, stat.NumAtoms, stat.NumBonds,
                                stat.SeedProcessed, data);
     });
@@ -330,7 +325,7 @@ bool should_accept_trampoline(
     auto query_index = mol_index(state, query);
     auto target_index = mol_index(state, target);
     auto data = params_to_data(*params);
-    return unlocked(state, [&] {
+    return unlocked([&] {
       return mcs_call_should_accept_mcs(state.callbacks, query_index,
                                         target_index, slice(atoms),
                                         slice(bonds), data);
@@ -481,8 +476,7 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   // lock where none is alive.
   RDKit::MCSResult result;
   {
-    std::unique_lock<std::mutex> control_c(control_c_mutex());
-    state.control_c = &control_c;
+    HoldControlC control_c;
     RingInfoGuard guard(mols.mols());
     state.start = std::chrono::steady_clock::now();
     result = RDKit::findMCS(mols.mols(), &params);

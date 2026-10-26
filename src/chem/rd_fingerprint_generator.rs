@@ -702,6 +702,10 @@ impl FingerprintGenerator64 {
         FingerprintGenerator64 { ptr }
     }
 
+    pub(crate) fn as_ffi(&self) -> &ffi::FpGenerator {
+        self.ptr.as_ref().unwrap()
+    }
+
     fingerprint_methods!(
         Bits, ExplicitBitVect, fp_generator_bits, "GetFingerprint", "fingerprint":
         get_fingerprint, get_fingerprint_with_params, get_fingerprint_with_outputs

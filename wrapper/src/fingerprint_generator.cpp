@@ -244,19 +244,6 @@ class Outputs {
   bool d_any = false;
 };
 
-// Holds control_c_mutex while the generator may construct a ControlCHandler:
-// always for feature invariants, which MorganFeatureAtomInvGenerator finds
-// by substructure matches (a generator that has one names it in its info
-// string), and otherwise when it may run the CIP labeler
-// (lock_control_c_for_cip).
-std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen) {
-  if (gen.infoString().find("MorganFeatureInvariantGenerator") !=
-      std::string::npos) {
-    return std::unique_lock<std::mutex>(control_c_mutex());
-  }
-  return lock_control_c_for_cip();
-}
-
 // Runs `call` with the arguments RDKit takes, after the checks, and with the
 // molecule's matrix caches cleared around it (U6).
 template <class Call>
@@ -380,6 +367,19 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
 }
 
 }  // namespace
+
+// Holds control_c_mutex while the generator may construct a ControlCHandler:
+// always for feature invariants, which MorganFeatureAtomInvGenerator finds
+// by substructure matches (a generator that has one names it in its info
+// string), and otherwise when it may run the CIP labeler
+// (lock_control_c_for_cip).
+std::unique_lock<std::mutex> lock_control_c_for(const FpGenerator &gen) {
+  if (gen.infoString().find("MorganFeatureInvariantGenerator") !=
+      std::string::npos) {
+    return std::unique_lock<std::mutex>(control_c_mutex());
+  }
+  return lock_control_c_for_cip();
+}
 
 std::unique_ptr<FpGenerator> get_morgan_generator(
     const MorganGeneratorData &data, std::unique_ptr<AtomInvGen> atom_inv_gen,
@@ -713,6 +713,10 @@ std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
       throw ValueErrorException("unknown fingerprint type");
   }
   return run_bulk(*gen, mols, output, 1);
+}
+
+void check_fingerprint_mol(const FpGenerator &gen, const RDKit::ROMol &mol) {
+  check_call(gen, mol, nullptr, nullptr, nullptr, nullptr, -1, false);
 }
 
 std::size_t fingerprint_list_size(const FingerprintList &list) {

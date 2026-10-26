@@ -141,6 +141,13 @@ rule changes the rule first.
   (`copy_pattern` in `filter_catalog.cpp`). Matching holds
   `control_c_mutex()` (U4) and releases it while a Rust matcher's methods
   run, which RDKit calls between its matches.
+- **S6.** An exception that leaves a `std::thread` calls `std::terminate`,
+  so RDKit's own threads run wrapper work only where RDKit catches what it
+  throws: `MultithreadedMolSupplier`'s parsing threads catch everything
+  their write callback throws (`MultithreadedMolSupplier::writer`), so
+  `rdMolProcessing` fingerprints each molecule there, as RDKit's
+  `getFingerprintsForMolsInFile` does. Work that needs one of U4's locks
+  does not run there: the calling thread, holding the lock, does it.
 
 ## Unchecked input
 
@@ -171,7 +178,19 @@ rule changes the rule first.
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
-  monomer infos). Text a wrapper checks before RDKit parses it
+  monomer infos). RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
+  no fuzzer covers, trusts the indices, counts, and query trees it reads,
+  so `json_to_mols` parses the document first, with the same boost::json
+  parser, checks what RDKit would read unchecked (`DocumentChecker` in
+  `mol_interchange.cpp`, which follows RDKit's reads and leaves RDKit's own
+  errors to RDKit), and hands RDKit the checked document serialized again.
+  Its queries must be ones RDKit makes, since RDKit takes a query's class
+  from its tag and its meaning from its description, while the code that
+  reads queries takes the description to imply the class: each
+  description with a class RDKit gives it, AND, OR, and XOR with two or
+  more children, and no bond XOR or null bond in an AND or OR, which
+  RDKit's own bond matcher and SMARTS writer cast. Text a wrapper checks
+  before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
@@ -328,7 +347,10 @@ rule changes the rule first.
   counts lines in `int`, so input is refused past 2^31 - 2^20 lines, and it
   matches V3000 enhanced-stereo lines with `std::regex`, which recurses once
   per character (about 300 bytes of stack each), so such lines are refused
-  past 4000 characters. A checked stream stops delivering bytes before the
+  past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
+  run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
+  value that is empty, or in parentheses holds anything but numbers below
+  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record
@@ -337,7 +359,10 @@ rule changes the rule first.
   fails when a chunk rereads differently or the file ends sooner than it did,
   so RDKit parses only the bytes that were checked. Python file objects are
   bound as `Read` values, read through the same streams, and `Write`
-  values, which a writer may borrow for its lifetime. RDKit's writers ignore
+  values, which a writer may borrow for its lifetime. Gzipped files are
+  decompressed as RDKit's `gzstream` decompresses them and checked after;
+  the stream RDKit reads them through throws for every seek and tell, as
+  `gzstream`'s does. RDKit's writers ignore
   a stream that fails, so the wrappers own the output (a file they open, or
   the Rust writer), hand RDKit the stream without ownership, and check it
   after every call: a failed write is `Error::Os` from then on.

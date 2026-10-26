@@ -94,52 +94,14 @@ bool is_empty_node(const FilterMatcherBase &matcher) {
 
 // Every substructure match constructs a ControlCHandler, so the wrappers
 // whose RDKit call can match hold control_c_mutex for the whole call
-// (control_c_lock.h, CONVENTIONS.md U4). A Rust matcher's methods may call
-// such wrappers themselves, and RDKit calls them only between its matches,
-// with no ControlCHandler alive (one lives only inside a SubstructMatch,
-// which calls no matcher), so the lock is released while they run and
-// taken back after, even when they throw. This is the lock the thread's
-// innermost matching call holds.
-thread_local std::unique_lock<std::mutex> *matching_control_c = nullptr;
-
-class Matching {
- public:
-  Matching() : d_lock(control_c_mutex()), d_outer(matching_control_c) {
-    matching_control_c = &d_lock;
-  }
-  ~Matching() { matching_control_c = d_outer; }
-  Matching(const Matching &) = delete;
-  Matching &operator=(const Matching &) = delete;
-
- private:
-  std::unique_lock<std::mutex> d_lock;
-  std::unique_lock<std::mutex> *d_outer;
-};
-
-// Releases the thread's matching lock, if it holds it, until destroyed. A
-// callback can run while it is already released: one that calls a wrapper
-// that does not match (filter_matcher_is_valid) on another Rust matcher.
-class ReleasedForCallback {
- public:
-  ReleasedForCallback()
-      : d_held(matching_control_c && matching_control_c->owns_lock()
-                   ? matching_control_c
-                   : nullptr) {
-    if (d_held) {
-      d_held->unlock();
-    }
-  }
-  ~ReleasedForCallback() {
-    if (d_held) {
-      d_held->lock();
-    }
-  }
-  ReleasedForCallback(const ReleasedForCallback &) = delete;
-  ReleasedForCallback &operator=(const ReleasedForCallback &) = delete;
-
- private:
-  std::unique_lock<std::mutex> *d_held;
-};
+// through HoldControlC (control_c_lock.h, CONVENTIONS.md U4). A Rust
+// matcher's methods may call such wrappers themselves, and RDKit calls them
+// only between its matches, with no ControlCHandler alive (one lives only
+// inside a SubstructMatch, which calls no matcher), so each runs inside a
+// ReleaseControlC, which releases the lock and takes it back after, even
+// when they throw. A callback can run while it is already released: one
+// that calls a wrapper that does not match (filter_matcher_is_valid) on
+// another Rust matcher.
 
 // A Rust callback gets its own copy of the molecule, as a Rust molecule,
 // without cached matrices or descriptors (U6, U8).
@@ -161,13 +123,13 @@ class RustFilterMatcher : public FilterMatcherBase {
       : FilterMatcherBase(std::move(name)), d_callback(std::move(callback)) {}
 
   bool isValid() const override {
-    ReleasedForCallback released;
+    ReleaseControlC released;
     return filter_matcher_callback_is_valid(**d_callback);
   }
 
   bool hasMatch(const RDKit::ROMol &mol) const override {
     auto copy = callback_mol(mol);
-    ReleasedForCallback released;
+    ReleaseControlC released;
     return filter_matcher_callback_has_match(**d_callback, std::move(copy));
   }
 
@@ -177,7 +139,7 @@ class RustFilterMatcher : public FilterMatcherBase {
     auto copy = callback_mol(mol);
     bool matched;
     {
-      ReleasedForCallback released;
+      ReleaseControlC released;
       matched = filter_matcher_callback_get_matches(**d_callback,
                                                     std::move(copy), list);
     }
@@ -472,7 +434,7 @@ bool filter_matcher_has_match(const FilterMatcherHandle &matcher,
   if (is_empty_node(*matcher.ptr)) {
     throw ValueErrorException("a FilterHierarchyMatcher without a pattern");
   }
-  Matching matching;
+  HoldControlC control_c;
   return matcher.ptr->hasMatch(mol);
 }
 
@@ -484,7 +446,7 @@ std::unique_ptr<FilterMatchList> filter_matcher_get_matches(
     throw ValueErrorException("a FilterHierarchyMatcher without a pattern");
   }
   std::vector<FilterMatch> matches;
-  Matching matching;
+  HoldControlC control_c;
   if (!matcher.ptr->getMatches(mol, matches)) {
     matches.clear();
   }
@@ -696,7 +658,7 @@ void filter_catalog_entry_set_description(FilterCatalogEntryHandle &entry,
 std::unique_ptr<FilterMatchList> filter_catalog_entry_get_filter_matches(
     const FilterCatalogEntryHandle &entry, const RWMol &mol) {
   std::vector<FilterMatch> matches;
-  Matching matching;
+  HoldControlC control_c;
   if (!entry.ptr->getFilterMatches(mol, matches)) {
     matches.clear();
   }
@@ -705,7 +667,7 @@ std::unique_ptr<FilterMatchList> filter_catalog_entry_get_filter_matches(
 
 bool filter_catalog_entry_has_filter_match(
     const FilterCatalogEntryHandle &entry, const RWMol &mol) {
-  Matching matching;
+  HoldControlC control_c;
   return entry.ptr->hasFilterMatch(mol);
 }
 
@@ -839,7 +801,7 @@ std::unique_ptr<FilterCatalogEntryHandle> filter_catalog_get_entry(
 }
 
 bool filter_catalog_has_match(const FilterCatalog &catalog, const RWMol &mol) {
-  Matching matching;
+  HoldControlC control_c;
   return catalog.hasMatch(mol);
 }
 
@@ -847,7 +809,7 @@ std::unique_ptr<FilterCatalogEntryHandle> filter_catalog_get_first_match(
     const FilterCatalog &catalog, const RWMol &mol) {
   boost::shared_ptr<const FilterCatalogEntry> entry;
   {
-    Matching matching;
+    HoldControlC control_c;
     entry = catalog.getFirstMatch(mol);
   }
   if (!entry) {
@@ -861,7 +823,7 @@ std::unique_ptr<FilterCatalogEntryList> filter_catalog_get_matches(
   auto list = std::make_unique<FilterCatalogEntryList>();
   std::vector<FilterCatalog::CONST_SENTRY> entries;
   {
-    Matching matching;
+    HoldControlC control_c;
     entries = catalog.getMatches(mol);
   }
   for (auto &entry : entries) {
@@ -874,7 +836,7 @@ std::unique_ptr<FilterCatalogEntryList> filter_catalog_get_matches(
 
 std::unique_ptr<FilterMatchList> filter_catalog_get_filter_matches(
     const FilterCatalog &catalog, const RWMol &mol) {
-  Matching matching;
+  HoldControlC control_c;
   return match_list(catalog.getFilterMatches(mol));
 }
 
@@ -907,7 +869,7 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
     for (std::size_t i = t; i < texts.size(); i += n) {
       std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(texts[i]));
       if (mol) {
-        Matching matching;
+        HoldControlC control_c;
         results[i] = catalog.getMatches(*mol);
       } else {
         results[i].push_back(bad_smiles_entry());
