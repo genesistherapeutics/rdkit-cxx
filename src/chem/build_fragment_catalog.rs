@@ -30,6 +30,7 @@ const DEFAULT_FUNCTIONAL_GROUPS: &str =
 /// Where the molecules' activities come from. Python's `actName` and `acts`
 /// arguments.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Activities {
     /// The property of each molecule named by the first molecule's last
     /// property. Python's default.

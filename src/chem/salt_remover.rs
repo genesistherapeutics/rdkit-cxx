@@ -25,6 +25,7 @@ const DEFAULT_SALTS: &str = include_str!("../../wrapper/third_party/rdkit/Data/S
 /// The format of salt definitions. Python's `InputFormat` is a class of
 /// string constants. Mirrors `SaltRemover.InputFormat`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum InputFormat {
     /// SMARTS, one per line, with `//` comments and anything after the
     /// first space or tab ignored. Mirrors `InputFormat.SMARTS` (`'smarts'`).

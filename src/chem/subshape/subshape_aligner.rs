@@ -58,6 +58,7 @@ pub struct SubshapeAlignment {
 /// The shape distance an aligner uses. Mirrors
 /// `SubshapeAligner.SubshapeDistanceMetric`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SubshapeDistanceMetric {
     /// The Tanimoto distance.
     Tanimoto,

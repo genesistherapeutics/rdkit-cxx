@@ -33,6 +33,7 @@ use crate::ffi::free_sasa::ffi;
 /// The algorithm FreeSASA computes areas with. Mirrors
 /// `rdFreeSASA.SASAAlgorithm`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SASAAlgorithm {
     /// Lee and Richards' slices. Mirrors `LeeRichards`.
     LeeRichards,
@@ -60,6 +61,7 @@ impl SASAAlgorithm {
 /// The classifier that gives atoms of PDB residues their radii and
 /// classes. Mirrors `rdFreeSASA.SASAClassifier`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SASAClassifier {
     /// Mirrors `Protor`.
     Protor,
@@ -95,6 +97,7 @@ impl SASAClassifier {
 /// `SASAClassName` property holds the name (`Apolar`, `Polar`, or
 /// `Unclassified`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum SASAClass {
     /// Mirrors `Unclassified` (0).
     Unclassified,

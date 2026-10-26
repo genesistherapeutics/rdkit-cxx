@@ -29,6 +29,7 @@ pub fn inchi_available() -> bool {
 /// `logging` levels choose `RDLogger`'s functions
 /// (`inchi.logLevelToLogFunctionLookup`).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum InchiLogLevel {
     /// `logging.DEBUG`: `rdApp.debug`, as `DEBUG: ...`.
     Debug,

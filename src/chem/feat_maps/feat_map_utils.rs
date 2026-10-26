@@ -17,6 +17,7 @@ use crate::chem::feat_maps::feat_maps::{FeatMap, FeatMapInitParams};
 /// How two merged points' positions and weights combine. Mirrors
 /// `FeatMapUtils.MergeMethod`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MergeMethod {
     /// The weighted mean of the positions, and the mean weight.
     #[default]
@@ -29,6 +30,7 @@ pub enum MergeMethod {
 
 /// What decides which points merge. Mirrors `FeatMapUtils.MergeMetric`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MergeMetric {
     /// No points merge.
     #[default]
@@ -42,6 +44,7 @@ pub enum MergeMetric {
 /// How merged points' directions combine. Python accepts it and does not
 /// use it. Mirrors `FeatMapUtils.DirMergeMode`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum DirMergeMode {
     /// Directions are not merged.
     #[default]

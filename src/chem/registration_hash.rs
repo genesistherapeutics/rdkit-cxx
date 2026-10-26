@@ -68,6 +68,7 @@ pub fn empty_mol_tautomer_hash() -> &'static str {
 /// A layer of information about a molecule. Mirrors
 /// `RegistrationHash.HashLayer`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[non_exhaustive]
 pub enum HashLayer {
     /// RDKit's canonical CXSMILES, with the extensions the layers were made
     /// with. Mirrors `CANONICAL_SMILES`.
@@ -91,6 +92,7 @@ pub enum HashLayer {
 
 /// Which layers a hash uses. Mirrors `RegistrationHash.HashScheme`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum HashScheme {
     /// Every layer, the strictest scheme. Mirrors `ALL_LAYERS`.
     AllLayers,
@@ -138,6 +140,7 @@ impl HashScheme {
 /// Mirrors `RegistrationHash.EnhancedStereoUpdateMode`, which the module
 /// does not use.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[non_exhaustive]
 pub enum EnhancedStereoUpdateMode {
     /// Mirrors `ADD_WEIGHTS`.
     AddWeights,

@@ -35,6 +35,7 @@ pub type TorsionAngles = (Vec<f64>, f64);
 /// How [`calculate_torsion_lists_with_params`] normalizes the torsions of
 /// bonds outside rings. Mirrors the `maxDev` argument's strings.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum MaxDev {
     /// Every torsion by 180 degrees (`'equal'`).
     #[default]

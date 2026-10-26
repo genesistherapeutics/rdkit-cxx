@@ -19,6 +19,7 @@ use crate::{Error, Result};
 /// How [`FeatMap::score_feats`] scores each feature. Mirrors
 /// `FeatMaps.FeatMapScoreMode`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FeatMapScoreMode {
     /// Against every matching feature of the map.
     #[default]
@@ -32,6 +33,7 @@ pub enum FeatMapScoreMode {
 /// How feature directions weigh in a score. Mirrors
 /// `FeatMaps.FeatDirScoreMode`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FeatDirScoreMode {
     /// Directions are ignored.
     #[default]
@@ -45,6 +47,7 @@ pub enum FeatDirScoreMode {
 
 /// A feature's scoring profile. Mirrors `FeatMaps.FeatMapParams.FeatProfile`.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum FeatProfile {
     /// A Gaussian of width `width`.
     #[default]

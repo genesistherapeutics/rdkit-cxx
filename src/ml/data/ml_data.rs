@@ -15,6 +15,7 @@ use crate::{Error, Result};
 
 /// A value in an [`MLDataSet`]: what RDKit's readers make of a field.
 #[derive(Clone, Debug, PartialEq)]
+#[non_exhaustive]
 pub enum Value {
     /// An integer.
     Int(i64),

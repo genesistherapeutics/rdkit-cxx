@@ -137,6 +137,7 @@ impl ReFile {
 /// How [`read_data_file_with_params`] reads values. Mirrors the types
 /// `files.ReadDataFile`'s `dataType` takes.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum DataType {
     /// Floats, as Python's `float`, `numpy.float32`, and `numpy.float64`
     /// read them.

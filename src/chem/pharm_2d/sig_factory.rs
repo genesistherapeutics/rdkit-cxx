@@ -22,6 +22,7 @@ use crate::{Error, Result};
 /// counts, in a vector with 64-bit indices from 2^31 bits on, as Python
 /// chooses its class.
 #[derive(Debug)]
+#[non_exhaustive]
 pub enum Signature {
     /// Which pharmacophores the molecule has.
     Bits(SparseBitVect),
