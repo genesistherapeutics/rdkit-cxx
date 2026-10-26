@@ -274,6 +274,11 @@ pip install pre-commit
 pre-commit install
 ```
 
+The workflows pin each action to a commit. Dependabot proposes updates to the
+actions, the Cargo dependencies, and the pre-commit hooks every week, a week
+after each release. A new RDKit series opens an issue instead, since moving to
+one takes more than its pin ([Releases](#releases)).
+
 ## Releases
 
 Releases are cut by hand: run the

@@ -1,0 +1,46 @@
+# Copyright (c) 2026 Steven Kearnes
+# All rights reserved.
+# Use of this source code is governed by a BSD-style
+# license that can be found in the LICENSE file.
+
+# Weekly updates, each waiting a week after its release, so a bad release can
+# be yanked before it reaches a pull request. The conda environment is not
+# here: its specs are loose, so CI installs the latest builds on every run,
+# and a new RDKit series opens an issue instead (rdkit-series.yml).
+version: 2
+updates:
+  # The workflows pin each action to a commit, with its version in a comment;
+  # Dependabot moves both.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # cxx-gen writes C++ for the cxx runtime of the same release, so the two are
+  # pinned exactly and move together. Other requirements change only when a
+  # release falls outside them; Cargo.lock takes every update.
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase-if-necessary
+    groups:
+      cxx:
+        patterns: ["cxx", "cxx-gen"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pre-commit:
+        patterns: ["*"]
