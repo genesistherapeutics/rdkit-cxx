@@ -497,6 +497,37 @@ impl Snapshot {
     }
 }
 
+/// MMFF torsion parameters: Python's `(torsionType, V1, V2, V3)`, from
+/// `MMFFMolProperties::get_mmff_torsion_params`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct MMFFTorsionParams {
+    /// The torsion type.
+    pub torsion_type: u32,
+    /// The onefold term, `V1`.
+    pub v1: f64,
+    /// The twofold term, `V2`.
+    pub v2: f64,
+    /// The threefold term, `V3`.
+    pub v3: f64,
+}
+
+/// MMFF van der Waals parameters: Python's `(R_ij_starUnscaled,
+/// epsilonUnscaled, R_ij_star, epsilon)`, from
+/// `MMFFMolProperties::get_mmff_vdw_params`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[non_exhaustive]
+pub struct MMFFVdWParams {
+    /// `R_ij_starUnscaled`.
+    pub r_ij_star_unscaled: f64,
+    /// `epsilonUnscaled`.
+    pub epsilon_unscaled: f64,
+    /// `R_ij_star`.
+    pub r_ij_star: f64,
+    /// `epsilon`.
+    pub epsilon: f64,
+}
+
 /// MMFF atom types, charges, and settings for a molecule. Mirrors
 /// `rdForceField.MMFFMolProperties`.
 pub struct MMFFMolProperties {
@@ -635,7 +666,7 @@ impl MMFFMolProperties {
         Ok(term_params(params).map(|(t, v)| (t, v[0], v[1])))
     }
 
-    /// `(torsionType, V1, V2, V3)`, or `None`. Mirrors
+    /// The torsion's parameters, or `None`. Mirrors
     /// `MMFFMolProperties.GetMMFFTorsionParams`.
     pub fn get_mmff_torsion_params(
         &self,
@@ -644,7 +675,7 @@ impl MMFFMolProperties {
         idx2: u32,
         idx3: u32,
         idx4: u32,
-    ) -> Result<Option<(u32, f64, f64, f64)>> {
+    ) -> Result<Option<MMFFTorsionParams>> {
         let params = ffi::mmff_mol_properties_get_torsion_params(
             self.raw(),
             mol.as_ffi(),
@@ -653,7 +684,12 @@ impl MMFFMolProperties {
             idx3,
             idx4,
         )?;
-        Ok(term_params(params).map(|(t, v)| (t, v[0], v[1], v[2])))
+        Ok(term_params(params).map(|(t, v)| MMFFTorsionParams {
+            torsion_type: t,
+            v1: v[0],
+            v2: v[1],
+            v3: v[2],
+        }))
     }
 
     /// The out-of-plane bending force constant `koop`, or `None`. Mirrors
@@ -677,15 +713,16 @@ impl MMFFMolProperties {
         Ok(term_params(params).map(|(_, v)| v[0]))
     }
 
-    /// `(R_ij_starUnscaled, epsilonUnscaled, R_ij_star, epsilon)`, or
-    /// `None`. Mirrors `MMFFMolProperties.GetMMFFVdWParams`.
-    pub fn get_mmff_vdw_params(
-        &self,
-        idx1: u32,
-        idx2: u32,
-    ) -> Result<Option<(f64, f64, f64, f64)>> {
+    /// The pair's van der Waals parameters, or `None`. Mirrors
+    /// `MMFFMolProperties.GetMMFFVdWParams`.
+    pub fn get_mmff_vdw_params(&self, idx1: u32, idx2: u32) -> Result<Option<MMFFVdWParams>> {
         let params = ffi::mmff_mol_properties_get_vdw_params(self.raw(), idx1, idx2)?;
-        Ok(term_params(params).map(|(_, v)| (v[0], v[1], v[2], v[3])))
+        Ok(term_params(params).map(|(_, v)| MMFFVdWParams {
+            r_ij_star_unscaled: v[0],
+            epsilon_unscaled: v[1],
+            r_ij_star: v[2],
+            epsilon: v[3],
+        }))
     }
 
     /// Sets the constant dielectric model. Mirrors

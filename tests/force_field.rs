@@ -473,18 +473,21 @@ fn mmff_properties() {
         Some((0, 0.173, 0.417))
     );
     assert_eq!(
-        props.get_mmff_torsion_params(&mol, 3, 0, 1, 2).unwrap(),
+        props
+            .get_mmff_torsion_params(&mol, 3, 0, 1, 2)
+            .unwrap()
+            .map(|t| (t.torsion_type, t.v1, t.v2, t.v3)),
         Some((0, -0.654, 1.072, 0.279))
     );
     assert_eq!(
         props.get_mmff_oop_bend_params(&mol, 0, 1, 2, 3).unwrap(),
         None
     );
-    let (r, eps, r_scaled, eps_scaled) = props.get_mmff_vdw_params(0, 2).unwrap().unwrap();
-    assert_close(r, 3.770659452485765);
-    assert_close(eps, 0.06793631574377197);
-    assert_close(r_scaled, 3.770659452485765);
-    assert_close(eps_scaled, 0.06793631574377197);
+    let vdw = props.get_mmff_vdw_params(0, 2).unwrap().unwrap();
+    assert_close(vdw.r_ij_star_unscaled, 3.770659452485765);
+    assert_close(vdw.epsilon_unscaled, 0.06793631574377197);
+    assert_close(vdw.r_ij_star, 3.770659452485765);
+    assert_close(vdw.epsilon, 0.06793631574377197);
 
     // An index past either the molecule or the properties.
     let small = mol_from_smiles("CC").unwrap();
