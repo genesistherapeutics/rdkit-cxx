@@ -19,6 +19,13 @@ when it loads with another.
 - Module paths follow Python's in Rust spelling:
   `rdkit.Chem.rdmolfiles.MolFromSmiles` is
   `rdkit_cxx::chem::rdmolfiles::mol_from_smiles`.
+- `rdkit.Chem.rdtrajectory`, which only the Boost.Python wrappers build:
+  `Trajectory` and `Snapshot` are Rust values (`ForceField`'s
+  `minimize_trajectory` returns these snapshots), and
+  `read_amber_trajectory` and `read_gromos_trajectory` bind RDKit's readers.
+  Snapshots with fewer coordinates than their trajectory's points, which
+  Python reads past, are refused, as are point counts that hang RDKit's
+  AMBER reader or overflow its array sizes.
 - Safe Rust cannot reach undefined behavior in the wrappers. Inputs RDKit
   trusts are checked before RDKit sees them, and process-wide state RDKit
   writes without a lock is locked. Readers of molecule pickles, of the
