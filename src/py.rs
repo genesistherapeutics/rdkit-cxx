@@ -282,6 +282,29 @@ pub(crate) fn np_std(a: &[f64]) -> f64 {
     ((0.0 + np_sum(&squares)) / n).sqrt()
 }
 
+/// Python's `math.exp`, which raises OverflowError where the result
+/// overflows: `Error::Value` then.
+pub(crate) fn py_exp(x: f64) -> Result<f64> {
+    let y = x.exp();
+    if y.is_infinite() && x.is_finite() {
+        return Err(Error::Value {
+            message: "math range error".to_owned(),
+        });
+    }
+    Ok(y)
+}
+
+/// Python's float division, which raises ZeroDivisionError for a zero
+/// divisor: `Error::Value` then.
+pub(crate) fn py_div(a: f64, b: f64) -> Result<f64> {
+    if b == 0.0 {
+        return Err(Error::Value {
+            message: "float division by zero".to_owned(),
+        });
+    }
+    Ok(a / b)
+}
+
 /// Python's `bisect.bisect_right`: the index after the last element of
 /// `bins` that is not greater than `x`, found by Python's binary search, so
 /// unsorted bins and NaN give Python's answers.
