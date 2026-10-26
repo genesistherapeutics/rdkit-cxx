@@ -103,6 +103,8 @@ const BRIDGES: &[&str] = &[
     "abbreviations",
     "enumerate_stereoisomers",
     "mol_enumerator",
+    "mol_processing",
+    "mol_interchange",
     "synthon_space_search",
 ];
 

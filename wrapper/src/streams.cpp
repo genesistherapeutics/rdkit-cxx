@@ -24,6 +24,12 @@ constexpr std::size_t kChunk = std::size_t{1} << 16;
 constexpr char kV30[] = "M  V30 ";
 constexpr char kStereoGroup[] = "MDLV30/STE";
 constexpr std::size_t kStereoGroupPrefix = sizeof(kStereoGroup) - 1;
+constexpr char kEndPoints[] = "ENDPTS=";
+constexpr std::size_t kEndPointsKey = sizeof(kEndPoints) - 1;
+const char *const kBadEndPoints =
+    "a V3000 ENDPTS value is empty, or starts with \"(\" but is not numbers "
+    "below 2^32 between spaces and a \")\" that ends the token; RWMol reads it "
+    "unchecked when it removes atoms";
 
 std::uint64_t rotl(std::uint64_t x, int b) {
   return (x << b) | (x >> (64 - b));
@@ -98,6 +104,76 @@ void InputScanner::confirm(char c) {
          " characters; RDKit matches it with a regex that recurses once per "
          "character");
   }
+  end_points(c);
+}
+
+// A byte of the logical V3000 line, for the ENDPTS values in it. Values are
+// checked wherever "ENDPTS=" appears (splitAssignToken upper-cases the
+// property's name), not only at the start of a bond line's token.
+void InputScanner::end_points(char c) {
+  switch (d_end_points) {
+    case EndPoints::kStart:
+      if (c == '(') {
+        d_end_points = EndPoints::kNumbers;
+        d_in_number = false;
+        d_number = 0;
+        d_numbers = 0;
+        return;
+      }
+      // A space or tab ends the token, and a quote may close a quoted one
+      // (tokenizeV3000Line), so the value is empty; so it is if only "\r"s,
+      // which RDKit strips, are left on the line.
+      if (c == ' ' || c == '\t' || c == '"') {
+        fail(kBadEndPoints);
+        return;
+      }
+      if (c == '\r') {
+        return;
+      }
+      // RWMol skips a value that does not start with "(".
+      d_end_points = EndPoints::kKey;
+      break;
+    case EndPoints::kNumbers:
+      if (c >= '0' && c <= '9') {
+        d_in_number = true;
+        d_number = d_number * 10 + static_cast<std::uint64_t>(c - '0');
+        if (d_number > UINT32_MAX) {
+          fail(kBadEndPoints);
+        }
+      } else if (c == ' ' || c == ')') {
+        if (d_in_number) {
+          ++d_numbers;
+          d_in_number = false;
+          d_number = 0;
+        }
+        if (c == ')') {
+          if (d_numbers == 0) {
+            fail(kBadEndPoints);
+          }
+          d_end_points = EndPoints::kClosed;
+        }
+      } else {
+        fail(kBadEndPoints);
+      }
+      return;
+    case EndPoints::kClosed:
+      if (c != ' ' && c != '\t') {
+        fail(kBadEndPoints);
+      }
+      d_end_points = EndPoints::kKey;
+      return;
+    case EndPoints::kKey:
+      break;
+  }
+  char upper = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+  if (upper == kEndPoints[d_key_matched]) {
+    if (++d_key_matched == kEndPointsKey) {
+      d_end_points = EndPoints::kStart;
+      d_key_matched = 0;
+    }
+  } else {
+    d_key_matched = upper == kEndPoints[0] ? 1 : 0;
+  }
 }
 
 // As getV3000Line in MolFileParser.cpp: strip one "\r"; a trailing "-"
@@ -121,8 +197,14 @@ void InputScanner::end_line() {
   d_pos = 0;
   d_continuing = continues;
   if (!continues) {
+    // A value that ends the line: one that is empty, or ends in ")" or not.
+    if (d_end_points == EndPoints::kStart) {
+      fail(kBadEndPoints);
+    }
     d_logical = 0;
     d_prefix.clear();
+    d_end_points = EndPoints::kKey;
+    d_key_matched = 0;
   }
 }
 

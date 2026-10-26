@@ -697,13 +697,13 @@ fn take_all<T>(
 }
 
 impl FingerprintGenerator64 {
-    pub(crate) fn as_ffi(&self) -> &ffi::FpGenerator {
-        &self.ptr
-    }
-
     fn from_ffi(ptr: UniquePtr<ffi::FpGenerator>) -> FingerprintGenerator64 {
         assert!(!ptr.is_null(), "RDKit returned a null generator");
         FingerprintGenerator64 { ptr }
+    }
+
+    pub(crate) fn as_ffi(&self) -> &ffi::FpGenerator {
+        self.ptr.as_ref().unwrap()
     }
 
     fingerprint_methods!(
