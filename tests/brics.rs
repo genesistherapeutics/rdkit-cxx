@@ -17,7 +17,7 @@ use rdkit_cxx::chem::{
     Mol, get_mol_frags_as_mols, mol_from_mol_block, mol_from_smiles, mol_to_smarts, mol_to_smiles,
     sanitize_mol,
 };
-use rdkit_cxx::py_random::Random;
+use rdkit_cxx::rd_random::Random;
 
 fn m(smiles: &str) -> Mol {
     mol_from_smiles(smiles).unwrap()

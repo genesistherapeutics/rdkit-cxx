@@ -119,6 +119,12 @@ fn main() {
         return;
     }
     let prefix = rdkit_prefix();
+    // rdkit_cxx::rd_paths finds RDKit's data under the prefix, as Python's
+    // RDPaths does under the one RDKit was installed to.
+    println!(
+        "cargo::rustc-env=RDKIT_CXX_RDKIT_PREFIX={}",
+        prefix.display()
+    );
     println!("cargo::rerun-if-changed=wrapper");
     println!("cargo::rerun-if-changed=src/ffi");
 

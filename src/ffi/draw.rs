@@ -324,6 +324,7 @@ pub(crate) mod ffi {
             mols: Pin<&mut BorrowedMols>,
             data: &DrawMoleculesData,
         ) -> Result<()>;
+        fn borrowed_mols_push_none(list: Pin<&mut BorrowedMols>) -> Result<()>;
         #[allow(clippy::too_many_arguments)]
         fn drawer_draw_reaction(
             d: Pin<&mut Drawer>,

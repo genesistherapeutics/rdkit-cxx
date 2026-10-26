@@ -336,7 +336,7 @@ fn fragment_matchers() -> Result<()> {
 fn randomized_atom_orders() -> Result<()> {
     use rdkit_cxx::chem::mol_to_mol_block;
     use rdkit_cxx::chem::randomize::{randomize_mol, randomize_mol_block};
-    use rdkit_cxx::py_random::Random;
+    use rdkit_cxx::rd_random::Random;
     let bonds = |m: &Mol| -> Vec<(u32, u32)> {
         m.get_bonds()
             .map(|b| (b.get_begin_atom_idx(), b.get_end_atom_idx()))

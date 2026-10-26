@@ -9,7 +9,7 @@
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::enumerate_stereoisomers::*;
 use rdkit_cxx::chem::{Mol, mol_from_smiles, mol_to_cx_smiles, mol_to_smiles};
-use rdkit_cxx::py_random::Random;
+use rdkit_cxx::rd_random::Random;
 
 fn sorted(isomers: Stereoisomers) -> Vec<String> {
     let mut smis: Vec<String> = isomers

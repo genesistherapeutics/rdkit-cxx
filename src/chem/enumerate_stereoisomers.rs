@@ -22,7 +22,7 @@ use crate::chem::{
     assign_stereochemistry_with_params, find_potential_stereo, mol_to_smiles_with_params,
     set_double_bond_neighbor_directions,
 };
-use crate::py_random::{Random, hash_tuple};
+use crate::rd_random::{Random, hash_tuple};
 use crate::{Error, Result};
 
 /// How stereoisomers are enumerated. Mirrors
@@ -189,7 +189,7 @@ enum BitSource {
     /// Combinations at random, each once, until all have been drawn.
     UniqueRandom {
         n: u32,
-        rand: Random,
+        rand: Box<Random>,
         already_seen: HashSet<Vec<u32>>,
     },
 }
@@ -215,7 +215,7 @@ impl BitSource {
                 if *n < 64 && already_seen.len() as u64 >= 1u64 << *n {
                     return None;
                 }
-                let bits = rand.getrandbits(*n);
+                let bits = rand.getrandbits_words(*n);
                 if already_seen.insert(bits.clone()) {
                     return Some(bits);
                 }
@@ -404,12 +404,12 @@ pub fn enumerate_stereoisomers_with_options(
                     .iter()
                     .map(|&(d, z)| hash_tuple(&[d, z]) as u64)
                     .collect();
-                Random::new(hash_tuple(&lanes).unsigned_abs())
+                Random::new(hash_tuple(&lanes))
             }
         };
         BitSource::UniqueRandom {
             n,
-            rand,
+            rand: Box::new(rand),
             already_seen: HashSet::new(),
         }
     });

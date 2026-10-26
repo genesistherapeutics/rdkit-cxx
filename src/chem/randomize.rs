@@ -13,7 +13,7 @@ use crate::Result;
 use crate::chem::{
     Mol, MolFromMolBlockParams, mol_from_mol_block_with_params, mol_to_mol_block, renumber_atoms,
 };
-use crate::py_random::Random;
+use crate::rd_random::Random;
 
 /// A copy of the molecule with its atoms in a random order, one that
 /// differs from theirs when it has two atoms or more. Mirrors

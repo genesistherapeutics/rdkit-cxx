@@ -25,7 +25,7 @@ use crate::chem::{
     Atom, EditableMol, Mol, fragment_on_brics_bonds, mol_from_smarts, mol_from_smiles,
     mol_to_smiles, sanitize_mol,
 };
-use crate::py_random::Random;
+use crate::rd_random::{Random, shuffle_with_random};
 use crate::{Error, Result};
 
 /// The BRICS environments, as SMARTS by label, in Python's order. `#L8` is
@@ -277,7 +277,7 @@ fn find_bonds(mol: &Mol, mut random: Option<&mut Random>) -> Result<Vec<BRICSBon
     let bond_matchers = bond_matchers();
     let mut indices: Vec<usize> = (0..bond_matchers.len()).collect();
     if let Some(random) = random.as_deref_mut() {
-        random.shuffle_with_random(&mut indices);
+        shuffle_with_random(&mut indices, || random.random()).expect("random() is in [0, 1)");
     }
     let mut env_matches = std::collections::HashMap::new();
     for (env, patt) in environ_matchers() {
@@ -288,7 +288,7 @@ fn find_bonds(mol: &Mol, mut random: Option<&mut Random>) -> Result<Vec<BRICSBon
     for gp_idx in indices {
         let mut compats: Vec<&(&str, &str, &str, Mol)> = bond_matchers[gp_idx].iter().collect();
         if let Some(random) = random.as_deref_mut() {
-            random.shuffle_with_random(&mut compats);
+            shuffle_with_random(&mut compats, || random.random()).expect("random() is in [0, 1)");
         }
         for (i1, i2, _b_type, patt) in compats {
             if !env_matches[&format!("L{i1}")] || !env_matches[&format!("L{i2}")] {
@@ -644,8 +644,10 @@ impl BRICSBuild<'_> {
         let mut seeds = seeds;
         let mut rxn_order: Vec<usize> = (0..self.reverse.len()).collect();
         if self.params.scramble_reagents {
-            self.random.shuffle_with_random(&mut seeds);
-            self.random.shuffle_with_random(&mut rxn_order);
+            shuffle_with_random(&mut seeds, || self.random.random())
+                .expect("random() is in [0, 1)");
+            shuffle_with_random(&mut rxn_order, || self.random.random())
+                .expect("random() is in [0, 1)");
         }
         Frame {
             seeds,

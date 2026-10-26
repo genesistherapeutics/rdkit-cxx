@@ -34,7 +34,7 @@ pub mod mol_key;
 pub mod mol_standardize;
 pub mod pharm_2d;
 mod py_compat;
-mod py_math;
+pub(crate) mod py_math;
 pub mod randomize;
 pub mod rd_abbreviations;
 pub mod rd_chem_draw;
