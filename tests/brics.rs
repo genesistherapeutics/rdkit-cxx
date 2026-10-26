@@ -23,7 +23,10 @@ fn m(smiles: &str) -> Mol {
     mol_from_smiles(smiles).unwrap()
 }
 
-fn bonds(found: &[BRICSBond]) -> Vec<((u32, u32), (&str, &str))> {
+/// A bond as Python prints it: its atoms and its environments' labels.
+type Bond<'a> = ((u32, u32), (&'a str, &'a str));
+
+fn bonds(found: &[BRICSBond]) -> Vec<Bond<'_>> {
     found
         .iter()
         .map(|((a, b), (x, y))| ((*a, *b), (x.as_str(), y.as_str())))

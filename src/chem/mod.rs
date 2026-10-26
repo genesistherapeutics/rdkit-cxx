@@ -74,6 +74,7 @@ pub mod registration_hash;
 pub mod salt_remover;
 pub mod satis;
 pub mod scaffolds;
+pub mod simple_enum;
 pub mod template_align;
 
 pub use init::*;

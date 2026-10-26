@@ -7,7 +7,7 @@
 # reason it has none. See CONVENTIONS.md I1-I3; inventory/check.py checks it.
 
 [modules]
-complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.BRICS", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FilterCatalog", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
+complete = ["rdkit", "rdkit.Avalon.pyAvalonTools", "rdkit.Chem", "rdkit.Chem.AllChem", "rdkit.Chem.BRICS", "rdkit.Chem.ChemicalFeatures", "rdkit.Chem.Draw.rdMolDraw2D", "rdkit.Chem.EnumerateStereoisomers", "rdkit.Chem.FastSDMolSupplier", "rdkit.Chem.FilterCatalog", "rdkit.Chem.FragmentMatcher", "rdkit.Chem.FunctionalGroups", "rdkit.Chem.Graphs", "rdkit.Chem.Lipinski", "rdkit.Chem.MolStandardize", "rdkit.Chem.MolStandardize.rdMolStandardize", "rdkit.Chem.Randomize", "rdkit.Chem.Recap", "rdkit.Chem.RegistrationHash", "rdkit.Chem.SATIS", "rdkit.Chem.SaltRemover", "rdkit.Chem.Scaffolds.MurckoScaffold", "rdkit.Chem.Scaffolds.rdScaffoldNetwork", "rdkit.Chem.SimpleEnum.Enumerator", "rdkit.Chem.Suppliers.MolSupplier", "rdkit.Chem.TemplateAlign", "rdkit.Chem.rdAbbreviations", "rdkit.Chem.rdCIPLabeler", "rdkit.Chem.rdChemDraw", "rdkit.Chem.rdChemReactions", "rdkit.Chem.rdChemicalFeatures", "rdkit.Chem.rdConformerParser", "rdkit.Chem.rdCoordGen", "rdkit.Chem.rdDepictor", "rdkit.Chem.rdDeprotect", "rdkit.Chem.rdDetermineBonds", "rdkit.Chem.rdDistGeom", "rdkit.Chem.rdEHTTools", "rdkit.Chem.rdEnumerateStereoisomers", "rdkit.Chem.rdFMCS", "rdkit.Chem.rdFingerprintGenerator", "rdkit.Chem.rdForceFieldHelpers", "rdkit.Chem.rdFreeSASA", "rdkit.Chem.rdGaussianShape", "rdkit.Chem.rdGeneralizedSubstruct", "rdkit.Chem.rdMHFPFingerprint", "rdkit.Chem.rdMIF", "rdkit.Chem.rdMMPA", "rdkit.Chem.rdMolAlign", "rdkit.Chem.rdMolCatalog", "rdkit.Chem.rdMolChemicalFeatures", "rdkit.Chem.rdMolDescriptors", "rdkit.Chem.rdMolEnumerator", "rdkit.Chem.rdMolHash", "rdkit.Chem.rdMolInterchange", "rdkit.Chem.rdMolProcessing", "rdkit.Chem.rdMolTransforms", "rdkit.Chem.rdPartialCharges", "rdkit.Chem.rdRGroupDecomposition", "rdkit.Chem.rdRascalMCES", "rdkit.Chem.rdReducedGraphs", "rdkit.Chem.rdSLNParse", "rdkit.Chem.rdShapeAlign", "rdkit.Chem.rdShapeHelpers", "rdkit.Chem.rdSubstructLibrary", "rdkit.Chem.rdSynthonSpaceSearch", "rdkit.Chem.rdTautomerQuery", "rdkit.Chem.rdchem", "rdkit.Chem.rdfiltercatalog", "rdkit.Chem.rdfragcatalog", "rdkit.Chem.rdinchi", "rdkit.Chem.rdmolfiles", "rdkit.Chem.rdmolops", "rdkit.Chem.rdqueries", "rdkit.DataManip.Metric.rdMetricMatrixCalc", "rdkit.DataStructs.cDataStructs", "rdkit.DistanceGeometry.DistGeom", "rdkit.ForceField.rdForceField", "rdkit.Geometry.rdGeometry", "rdkit.ML.Cluster.Clustering", "rdkit.ML.InfoTheory.rdInfoTheory", "rdkit.Numerics.rdAlignment", "rdkit.SimDivFilters.rdSimDivPickers", "rdkit.rdBase"]
 
 [modules.reasons]
 "rdkit.Chem.DSViewer" = "drives Discovery Studio Viewer through Windows COM"
@@ -1390,6 +1390,90 @@ rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::init"]
 [[entry]]
 python = "rdkit.Chem.FragmentMatcher.FragmentMatcher.__init__"
 rust = ["rdkit_cxx::chem::fragment_matcher::FragmentMatcher::default"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.BuildFuncGroupHierarchy"
+rust = ["rdkit_cxx::chem::functional_groups::build_func_group_hierarchy", "rdkit_cxx::chem::functional_groups::build_func_group_hierarchy_with_params"]
+overloads_note = "force, which only bypasses the module's cache of the last hierarchy, is not ported: each call builds a new hierarchy"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.CreateMolFingerprint"
+rust = ["rdkit_cxx::chem::functional_groups::create_mol_fingerprint"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.__init__"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::new", "rdkit_cxx::chem::functional_groups::FGHierarchyNode::new_with_params"]
+overloads_note = "parent is the parent's label, where Python takes the parent node"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.__len__"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::len"]
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.children"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::children"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.label"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::label"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.name"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::name"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.parent"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::parent"]
+rust_kind = "field"
+overloads_note = "the parent's label, where Python holds a weak reference to the parent node"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.pattern"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::pattern"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.removalReaction"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::removal_reaction"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.rxnSmarts"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::rxn_smarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FGHierarchyNode.smarts"
+rust = ["rdkit_cxx::chem::functional_groups::FGHierarchyNode::smarts"]
+rust_kind = "field"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.FuncGroupFileParseError"
+rust = ["rdkit_cxx::Error"]
+name_exception = "exceptions are Error variants (E4): Error::Value, as for the ValueError it subclasses"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.groupDefns"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.hierarchy"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.lastData"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
+
+[[entry]]
+python = "rdkit.Chem.FunctionalGroups.lastFilename"
+reason = "part of the module's cache of the last hierarchy BuildFuncGroupHierarchy built, which Python returns again unless forced; Rust builds a new hierarchy on each call"
 
 [[entry]]
 python = "rdkit.Chem.Graphs.CharacteristicPolynomial"
@@ -3328,6 +3412,15 @@ rust_kind = "field"
 [[entry]]
 python = "rdkit.Chem.Scaffolds.rdScaffoldNetwork.UpdateScaffoldNetwork"
 rust = ["rdkit_cxx::chem::scaffolds::rd_scaffold_network::update_scaffold_network"]
+
+[[entry]]
+python = "rdkit.Chem.SimpleEnum.Enumerator.EnumerateReaction"
+rust = ["rdkit_cxx::chem::simple_enum::enumerator::enumerate_reaction", "rdkit_cxx::chem::simple_enum::enumerator::enumerate_reaction_with_unique_products_only"]
+overloads_note = "funcGroupFilename and propName, which Python ignores (it preprocesses with the defaults), are not ported"
+
+[[entry]]
+python = "rdkit.Chem.SimpleEnum.Enumerator.PreprocessReaction"
+rust = ["rdkit_cxx::chem::simple_enum::enumerator::preprocess_reaction", "rdkit_cxx::chem::simple_enum::enumerator::preprocess_reaction_with_params"]
 
 [[entry]]
 python = "rdkit.Chem.SupplierFromFilename"

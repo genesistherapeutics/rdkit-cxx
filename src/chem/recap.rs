@@ -326,7 +326,7 @@ impl<'h> RecapHierarchyNode<'h> {
             res.insert(smi, *child);
             self.hierarchy.node(*child).gac_recurse(&mut res, false);
         }
-        self.into_nodes(res)
+        self.nodes_of(res)
     }
 
     /// The nodes below this one that break no further, by SMILES: the
@@ -341,11 +341,11 @@ impl<'h> RecapHierarchyNode<'h> {
                 child_node.gac_recurse(&mut res, true);
             }
         }
-        self.into_nodes(res)
+        self.nodes_of(res)
     }
 
     /// The nodes of a map, by their SMILES, which are its keys.
-    fn into_nodes(&self, map: NodeMap) -> RecapNodes<'h> {
+    fn nodes_of(&self, map: NodeMap) -> RecapNodes<'h> {
         map.0
             .into_iter()
             .map(|(_, idx)| {
