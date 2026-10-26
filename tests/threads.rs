@@ -38,6 +38,9 @@ use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::{
     FragmentRemover, MetalDisconnector, MolVSValidation, Normalizer, Pipeline, TautomerEnumerator,
     Uncharger, cleanup_in_place_mols,
 };
+use rdkit_cxx::chem::rd_abbreviations::{
+    AbbreviationDefinition, condense_mol_abbreviations, get_default_abbreviations,
+};
 use rdkit_cxx::chem::rd_chem_reactions::{
     ChemicalReaction, Compute2DCoordsForReactionParams, EnumerateLibrary,
     compute_2d_coords_for_reaction_with_params, reaction_from_smarts, reaction_to_rxn_block,
@@ -60,6 +63,9 @@ use rdkit_cxx::chem::rd_dist_geom::{
     embed_multiple_confs_with_params, get_experimental_torsions,
     get_molecule_bounds_matrix_with_params,
 };
+use rdkit_cxx::chem::rd_enumerate_stereoisomers::{
+    StereoEnumerationOptions, StereoisomerEnumerator,
+};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     FingerprintGenerator64, GetMorganGeneratorParams, get_morgan_feature_atom_inv_gen,
     get_morgan_generator_with_params,
@@ -69,14 +75,19 @@ use rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule;
 use rdkit_cxx::chem::rd_generalized_substruct::{
     self, ExtendedQueryMol, create_extended_query_mol,
 };
+use rdkit_cxx::chem::rd_mif::HBond;
 use rdkit_cxx::chem::rd_mmpa::fragment_mol;
 use rdkit_cxx::chem::rd_mol_align::{
     RandomTransformParams, align_mol, get_best_rms, random_transform, random_transform_with_params,
+};
+use rdkit_cxx::chem::rd_mol_chemical_features::{
+    MolChemicalFeatureFactory, build_feature_factory_from_string,
 };
 use rdkit_cxx::chem::rd_mol_descriptors::{
     DoubleCubicLatticeVolume, Properties, PythonPropertyFunctor, calc_crippen_descriptors,
     get_maccs_keys_fingerprint, get_usrcat,
 };
+use rdkit_cxx::chem::rd_mol_enumerator::enumerate;
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
 use rdkit_cxx::chem::rd_mol_processing::{
     GetFingerprintsForMolsInFileParams, SupplierOptions,
@@ -102,10 +113,13 @@ use rdkit_cxx::chem::{
     mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
     mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
 };
+use rdkit_cxx::chem::{rd_gaussian_shape, rd_shape_align};
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
 };
+use rdkit_cxx::ml::cluster::clustering::murtagh_cluster;
+use rdkit_cxx::sim_div_filters::rd_sim_div_pickers::{ClusterMethod, HierarchicalClusterPicker};
 
 const ASPIRIN: &str = "CC(=O)Oc1ccccc1C(=O)O";
 
@@ -171,6 +185,7 @@ fn main() {
     phase(unseeded_embedding(), random_smiles());
     phase(bounds_matrix_embedding(), random_smiles());
     phase(random_transforms(), random_smiles());
+    phase(embedded_stereoisomers(), random_smiles());
 
     // 2D depiction's settings: each writer against a reader, from every
     // module that reads them.
@@ -232,12 +247,22 @@ fn main() {
     phase(substruct_library_matches(), substruct_matches());
     phase(rgroups_decomposed(), substruct_matches());
     phase(scaffold_network(), substruct_matches());
+    phase(pubchem_shape_alignment(), substruct_matches());
+    phase(gaussian_shapes(), substruct_matches());
+    phase(mif_h_bonds(), substruct_matches());
+    phase(mol_features(), substruct_matches());
+    phase(condensed_abbreviations(), substruct_matches());
+    phase(enumerated_link_nodes(), substruct_matches());
+    phase(embedded_stereoisomers(), substruct_matches());
 
-    // The rest: the grid centroids' cache, the property registry, and
-    // DCLV's surface cache.
+    // The rest: the grid centroids' cache, the property registry, DCLV's
+    // surface cache, the shape modules' globals, and Murtagh's statics.
     phase(grid_centroids(), grid_centroids());
     phase(registered_property(), available_properties());
     phase(dclv_surfaces(), dclv_surfaces());
+    phase(pubchem_shape_alignment(), pubchem_shape_scores());
+    phase(gaussian_shapes(), gaussian_shapes());
+    phase(murtagh_clusters(), hierarchical_picks());
 
     std::fs::remove_file(templates()).unwrap();
     std::fs::remove_file(groups()).unwrap();
@@ -1198,6 +1223,127 @@ fn scaffold_network() -> Call<Vec<Mol>> {
             let network =
                 create_scaffold_network(&mols, &ScaffoldNetworkParams::default()).unwrap();
             assert!(!network.nodes.is_empty());
+        },
+    }
+}
+
+// PubChem's shape code sets its overlap cutoff in globals and fills a static
+// list of color patterns (pubchem_shape_mutex), whose matches construct
+// ControlCHandlers.
+fn pubchem_shape_alignment() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (embedded("CCO"), embedded("CCN")),
+        run: |(reference, mut probe)| {
+            let (shape, _) = rd_shape_align::align_mol(&reference, &mut probe).unwrap();
+            assert!(shape > 0.0);
+        },
+    }
+}
+
+fn pubchem_shape_scores() -> Call<(Mol, Mol)> {
+    Call {
+        make: |_| (embedded("CCO"), embedded("CCN")),
+        run: |(mol1, mol2)| {
+            let opts = rd_shape_align::ShapeInputOptions::default();
+            let (shape, _) = rd_shape_align::score_mol(&mol1, &mol2, &opts, &opts).unwrap();
+            assert!(shape > 0.0);
+        },
+    }
+}
+
+// The Gaussian shapes fill a static list of feature patterns
+// (gaussian_shape_mutex) and match them.
+fn gaussian_shapes() -> Call<Mol> {
+    Call {
+        make: |_| embedded("Oc1ccccc1"),
+        run: |mol| {
+            let shape = rd_gaussian_shape::ShapeInput::new(&mol).unwrap();
+            assert!(shape.num_features() > 0);
+        },
+    }
+}
+
+// An H-bond field finds its special atoms with a serine pattern.
+fn mif_h_bonds() -> Call<Mol> {
+    Call {
+        make: |_| embedded("NC(CO)C(=O)O"),
+        run: |mol| {
+            HBond::new(&mol).unwrap();
+        },
+    }
+}
+
+fn mol_features() -> Call<(MolChemicalFeatureFactory, Mol)> {
+    Call {
+        make: |_| {
+            let fdef =
+                "DefineFeature Carbonyl C=O\n  Family Acceptor\n  Weights 1.0,3.0\nEndFeature\n";
+            (
+                build_feature_factory_from_string(fdef).unwrap(),
+                mol(ASPIRIN),
+            )
+        },
+        run: |(factory, mol)| assert_eq!(factory.get_num_mol_features(&mol).unwrap(), 2),
+    }
+}
+
+// RDKit parses the default abbreviations into a function-local static,
+// whose thread-safe initialization DRD cannot see, so `make` reads them.
+fn condensed_abbreviations() -> Call<(Vec<AbbreviationDefinition>, Mol)> {
+    Call {
+        make: |_| (get_default_abbreviations(), mol("CCCCCCCCc1ccccc1C(F)(F)F")),
+        run: |(abbrevs, mol)| {
+            let condensed = condense_mol_abbreviations(&mol, &abbrevs).unwrap();
+            assert!(condensed.get_num_atoms() < mol.get_num_atoms());
+        },
+    }
+}
+
+// Link nodes are enumerated with reactions.
+fn enumerated_link_nodes() -> Call<Mol> {
+    Call {
+        make: |_| mol("COC |LN:1:1.3|"),
+        run: |mol| assert_eq!(enumerate(&mol).unwrap().size(), 3),
+    }
+}
+
+// Embedding each isomer draws from RDKit's generator, with a
+// ControlCHandler alive.
+fn embedded_stereoisomers() -> Call<Mol> {
+    Call {
+        make: |_| mol("CC1CC2CCC1C2"),
+        run: |mol| {
+            let options = StereoEnumerationOptions {
+                try_embedding: true,
+                ..Default::default()
+            };
+            let isomers = StereoisomerEnumerator::new_with_params(&mol, &options).unwrap();
+            assert_eq!(isomers.count(), 4);
+        },
+    }
+}
+
+// Murtagh's clustering keeps its state in statics (murtagh_mutex), which
+// HierarchicalClusterPicker's clustering shares.
+fn murtagh_clusters() -> Call<Vec<Vec<f64>>> {
+    Call {
+        make: |i| {
+            (0..6)
+                .map(|j| vec![f64::from(j), f64::from(i + j * j)])
+                .collect()
+        },
+        run: |data| {
+            murtagh_cluster(&data, 6, 2, 1).unwrap();
+        },
+    }
+}
+
+fn hierarchical_picks() -> Call<Vec<f64>> {
+    Call {
+        make: |i| (0..15).map(|j| f64::from(1 + (i + j) % 7)).collect(),
+        run: |dist_mat| {
+            let picker = HierarchicalClusterPicker::new(ClusterMethod::Ward);
+            assert_eq!(picker.pick(&dist_mat, 6, 3).unwrap().len(), 3);
         },
     }
 }
