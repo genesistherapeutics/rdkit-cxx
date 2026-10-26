@@ -8,8 +8,8 @@
 //! from RDKit's `Data/FragmentDescriptors.csv`.
 //!
 //! Python reads the file from RDKit's data directory on import and makes a
-//! function per pattern; the crate embeds the file (`src/chem/data`, whose
-//! README says where it comes from) and defines the same functions. Each
+//! function per pattern; the crate embeds the file (vendored in
+//! `wrapper/third_party/rdkit`) and defines the same functions. Each
 //! parses its pattern anew, since a `Mol` cannot be shared between threads
 //! (CONVENTIONS.md S1). Python's functions take the pattern as a defaulted
 //! argument; here each function is its pattern.
@@ -17,10 +17,10 @@
 use crate::Result;
 use crate::chem::{Mol, SubstructMatchParameters, mol_from_smarts};
 
-/// `Data/FragmentDescriptors.csv` from RDKit 2026.09.1, with trailing
-/// whitespace trimmed: a code, a description, a SMARTS pattern, and notes
-/// per tab-separated line.
-const FRAGMENT_DESCRIPTORS: &str = include_str!("data/FragmentDescriptors.csv");
+/// `Data/FragmentDescriptors.csv` from RDKit 2026.09.1: a code, a
+/// description, a SMARTS pattern, and notes per tab-separated line.
+const FRAGMENT_DESCRIPTORS: &str =
+    include_str!("../../wrapper/third_party/rdkit/Data/FragmentDescriptors.csv");
 
 /// The SMARTS of the pattern whose code is `code`, as Python's
 /// `_LoadPatterns` reads it.

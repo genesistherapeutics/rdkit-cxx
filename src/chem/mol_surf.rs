@@ -15,6 +15,7 @@
 //! its bin as a defaulted second argument; here each function is its bin.
 
 use crate::Result;
+use crate::chem::py_math::py_sum;
 use crate::chem::py_util::bisect_right;
 use crate::chem::rd_mol_descriptors as descriptors;
 use crate::chem::rd_partial_charges::compute_gasteiger_charges;
@@ -82,7 +83,7 @@ pub fn py_labute_asa(mol: &Mol) -> Result<f64> {
 /// Without implicit hydrogens unless `include_hs`. Mirrors
 /// `MolSurf.pyLabuteASA(mol, includeHs)`.
 pub fn py_labute_asa_with_include_hs(mol: &Mol, include_hs: bool) -> Result<f64> {
-    Ok(labute_helper(mol, include_hs)?.iter().sum())
+    Ok(py_sum(labute_helper(mol, include_hs)?))
 }
 
 /// The topological polar surface area, from nitrogens and oxygens (P. Ertl,

@@ -15,6 +15,7 @@
 use std::collections::BTreeMap;
 
 use crate::Result;
+use crate::chem::py_math::py_sum;
 use crate::chem::rd_mol_descriptors::{
     self as descriptors, NumRotatableBondsOptions, calc_num_hbd,
     calc_num_rotatable_bonds_with_strict,
@@ -492,8 +493,8 @@ pub fn qed_with_params(mol: &Mol, params: &QedParams) -> Result<f64> {
         .zip(ads_parameters_in_order())
         .map(|(&pi, p)| ads(pi, &p))
         .collect();
-    let t: f64 = w.iter().zip(&d).map(|(wi, di)| wi * di.ln()).sum();
-    Ok((t / w.iter().sum::<f64>()).exp())
+    let t = py_sum(w.iter().zip(&d).map(|(wi, di)| wi * di.ln()));
+    Ok((t / py_sum(w)).exp())
 }
 
 /// QED with [`weight_max`]. Mirrors `QED.weights_max`.

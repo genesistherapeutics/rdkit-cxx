@@ -20,6 +20,8 @@ mod init;
 pub mod lipinski;
 pub mod mol_standardize;
 pub mod mol_surf;
+#[allow(dead_code)] // np_std serves other ports (CONVENTIONS.md R2).
+mod py_math;
 mod py_util;
 pub mod qed;
 pub mod rd_abbreviations;

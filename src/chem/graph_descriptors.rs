@@ -19,6 +19,7 @@
 use std::collections::{BTreeMap, HashMap};
 use std::hash::Hash;
 
+use crate::chem::py_math::{np_sum, py_sum};
 use crate::chem::rd_mol_descriptors as descriptors;
 use crate::chem::{
     GetDistanceMatrixParams, Mol, get_adjacency_matrix, get_distance_matrix_with_params,
@@ -77,7 +78,8 @@ fn characteristic_polynomial(a: &[Vec<f64>]) -> Vec<f64> {
     res.push(1.0);
     let mut an: Vec<Vec<f64>> = a.to_vec();
     for k in 1..=n {
-        let trace: f64 = an.iter().enumerate().map(|(i, row)| row[i]).sum();
+        let diagonal: Vec<f64> = an.iter().enumerate().map(|(i, row)| row[i]).collect();
+        let trace = np_sum(&diagonal);
         let coefficient = 1.0 / k as f64 * trace;
         res.push(coefficient);
         let mut bn = an;
@@ -205,7 +207,7 @@ pub fn chi0(mol: &Mol) -> f64 {
         .map(|atom| atom.get_degree())
         .filter(|&degree| degree != 0)
         .map(|degree| (1.0 / f64::from(degree)).sqrt())
-        .sum()
+        .fold(0.0, |sum, x| sum + x)
 }
 
 /// The connectivity index of order 1, from the products of bonded atoms'
@@ -215,7 +217,7 @@ pub fn chi1(mol: &Mol) -> f64 {
         .map(|bond| bond.get_begin_atom().get_degree() * bond.get_end_atom().get_degree())
         .filter(|&product| product != 0)
         .map(|product| (1.0 / f64::from(product)).sqrt())
-        .sum()
+        .fold(0.0, |sum, x| sum + x)
 }
 
 /// Defines functions that call an `rdMolDescriptors` function of a
@@ -504,7 +506,7 @@ pub fn bertz_ct_with_params(mol: &Mol, params: &BertzCTParams) -> Result<f64> {
     };
 
     // Python's _CalculateEntropies.
-    let tot_connections: f64 = connection_list.iter().sum();
+    let tot_connections = py_sum(connection_list.iter().copied());
     if tot_connections <= 0.0 {
         return Err(Error::Value {
             message: "math domain error: the connections total 0 or less".to_owned(),
