@@ -14,6 +14,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/mhfp.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -28,7 +29,9 @@ MHFPEncoder &encoder_mut(const MHFPEncoder &encoder) {
 // CreateShingling(smiles) asserts that the SMILES parsed; a parse error here
 // is a ParseError instead (E2).
 std::unique_ptr<RWMol> parse(rust::Str smiles) {
-  std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(std::string(smiles)));
+  std::string text(smiles);
+  check_smiles_relevant_cycles(text, RDKit::SmilesParserParams());
+  std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(text));
   if (!mol) {
     throw RDKit::SmilesParse::SmilesParseException("could not parse SMILES '" +
                                                    std::string(smiles) + "'");

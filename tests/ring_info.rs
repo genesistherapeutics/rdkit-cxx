@@ -215,3 +215,88 @@ fn add_ring() {
     assert_eq!(info.num_rings().unwrap(), 1);
     assert!(rw.get_ring_info().is_atom_in_ring_of_size(2, 3).unwrap());
 }
+
+/// `diamonds(n)` as SMILES (`n` > 2), for the sanitizing parsers.
+fn diamonds_smiles(n: u32) -> String {
+    // The hubs' second paths close on the next hub through %12 and %13 in
+    // turn, and the last hub's paths on the first through %10 and %11.
+    let mut smiles = String::from("C%10%11(C%12)C");
+    for i in 1..n {
+        let (close, open) = if i % 2 == 1 { (12, 13) } else { (13, 12) };
+        if i == n - 1 {
+            smiles += &format!("C%{close}(C%10)C%11");
+        } else {
+            smiles += &format!("C%{close}(C%{open})C");
+        }
+    }
+    smiles
+}
+
+fn refused<T: std::fmt::Debug>(result: Result<T, Error>) -> bool {
+    matches!(result, Err(Error::Value { message }) if message.contains("relevant cycles"))
+}
+
+#[test]
+fn sanitization_refuses_relevant_cycles_beyond_i32() {
+    let mol = mol_from_smiles(&diamonds_smiles(10)).unwrap();
+    assert_eq!(mol.get_num_atoms(), 30);
+    assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034);
+    // 2^33 + 33 relevant cycles, for which RDKit reserves 8.6e9 rings; and
+    // 2^64 + 64, whose conversion to size_t is undefined. Python runs out of
+    // memory sanitizing either.
+    for n in [33, 64] {
+        assert!(refused(mol_from_smiles(&diamonds_smiles(n))));
+    }
+    let mut rw = diamonds(33);
+    assert!(refused(sanitize_mol(&mut rw)));
+    let params = SanitizeMolParams {
+        catch_errors: true,
+        ..Default::default()
+    };
+    assert!(refused(sanitize_mol_with_params(&mut rw, &params)));
+    // Without the steps that find rings, nothing enumerates them.
+    let params = SanitizeMolParams {
+        sanitize_ops: SanitizeFlags::SANITIZE_PROPERTIES,
+        ..Default::default()
+    };
+    assert_eq!(
+        sanitize_mol_with_params(&mut rw, &params).unwrap(),
+        SanitizeFlags::SANITIZE_NONE
+    );
+}
+
+#[test]
+fn symmetrizing_refuses_relevant_cycles_beyond_i32() {
+    let mut rw = diamonds(33);
+    assert!(refused(get_symm_sssr(&mut rw)));
+    // The legacy algorithm extends the SSSR instead, as in Python.
+    let legacy = GetSymmSSSRParams {
+        algorithm: SymmetrizeSSSRAlgorithm::Legacy,
+        ..Default::default()
+    };
+    assert_eq!(
+        get_symm_sssr_with_params(&mut rw, &legacy).unwrap().len(),
+        100
+    );
+    // Without recalc_sssr RDKit keeps the ring families it has.
+    let mut rw = diamonds(33);
+    find_ring_families(&mut rw).unwrap();
+    let kept = GetSymmSSSRParams {
+        recalc_sssr: false,
+        ..Default::default()
+    };
+    assert!(refused(get_symm_sssr_with_params(&mut rw, &kept)));
+    let mut rw = diamonds(33);
+    assert!(refused(rd_depictor::compute_2d_coords(&mut rw)));
+}
+
+#[test]
+fn many_rings_with_few_relevant_cycles() {
+    // 40 independent cycles, beyond the bound below which the wrappers skip
+    // counting relevant cycles, but only 40 relevant ones.
+    let smiles = ["c1ccccc1"; 40].join("-");
+    let mut mol = mol_from_smiles(&smiles).unwrap();
+    assert_eq!(mol.get_ring_info().num_rings().unwrap(), 40);
+    assert_eq!(get_symm_sssr(&mut mol).unwrap().len(), 40);
+    assert!(rd_depictor::compute_2d_coords(&mut mol).is_ok());
+}

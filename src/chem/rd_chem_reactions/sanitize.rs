@@ -66,7 +66,9 @@ impl Default for SanitizeRxnParams {
 /// Fixes the R groups and atom maps of a reaction drawn in a sketcher,
 /// aromatizes its reactant templates, and merges their hydrogens, returning
 /// `SANITIZE_NONE`. Atom maps that would overflow an `i32` are
-/// `Error::Value`. Mirrors `rdChemReactions.SanitizeRxn`.
+/// `Error::Value`, as are templates with more than `i32::MAX` relevant
+/// cycles, which adjusting them enumerates (`sanitize_mol`), even with
+/// `catch_errors`. Mirrors `rdChemReactions.SanitizeRxn`.
 pub fn sanitize_rxn(rxn: &mut ChemicalReaction) -> Result<SanitizeFlags> {
     sanitize_rxn_with_params(rxn, &SanitizeRxnParams::default())
 }
@@ -85,7 +87,8 @@ pub fn sanitize_rxn_with_params(
     )?))
 }
 
-/// Sanitizes each template as a molecule. Mirrors
+/// Sanitizes each template as a molecule, with `sanitize_mol`'s
+/// `Error::Value` for too many relevant cycles. Mirrors
 /// `rdChemReactions.SanitizeRxnAsMols`.
 pub fn sanitize_rxn_as_mols(rxn: &mut ChemicalReaction) -> Result<()> {
     sanitize_rxn_as_mols_with_sanitize_ops(rxn, MolSanitizeFlags::SANITIZE_ALL)

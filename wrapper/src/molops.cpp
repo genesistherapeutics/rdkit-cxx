@@ -18,9 +18,12 @@
 namespace rdkit_cxx {
 
 // As sanitizeMol in Code/GraphMol/Wrap/MolOps.cpp: with catch_errors, a
-// failure returns the operation that failed instead of throwing.
+// failure returns the operation that failed instead of throwing. Too many
+// relevant cycles throw either way, before RDKit converts their count
+// (check_sanitize_relevant_cycles).
 std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
                            bool catch_errors) {
+  check_sanitize_relevant_cycles(mol, sanitize_ops);
   unsigned int operation_that_failed = 0;
   if (catch_errors) {
     try {

@@ -85,7 +85,10 @@ impl Default for GetSymmSSSRParams {
 
 /// The symmetrized SSSR, as atom indices: the SSSR plus the rings that make
 /// it symmetric, as for cubane's sixth ring. Also stores them in the ring
-/// info. Mirrors `rdmolops.GetSymmSSSR`.
+/// info. Mirrors `rdmolops.GetSymmSSSR`. `Error::Value` for more than
+/// `i32::MAX` relevant cycles, which the default algorithm enumerates (RDKit
+/// converts their count to `size_t` unchecked); `Legacy` finds no relevant
+/// cycles.
 pub fn get_symm_sssr(mol: &mut Mol) -> Result<Vec<Vec<u32>>> {
     get_symm_sssr_with_params(mol, &GetSymmSSSRParams::default())
 }
