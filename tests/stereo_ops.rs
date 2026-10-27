@@ -235,8 +235,6 @@ fn param_defaults() {
         ],
         [1000, 10000, 100000, 1000000]
     );
-    let reapply = ReapplyMolBlockWedgingParams::default();
-    assert!(reapply.all_bond_types);
     let expand = ExpandAttachmentPointsParams::default();
     assert!(expand.add_as_queries && expand.add_coords);
 }

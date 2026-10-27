@@ -457,13 +457,7 @@ fn monomer_info_connect_the_dots_would_misread() {
     // end, whatever its type (U10); the call hides it, and puts it back.
     let mut mol = atoms(BRIDGE);
     for (i, name) in ["A", "B", "C"].into_iter().enumerate() {
-        let info = AtomMonomerInfo::new_with_params(
-            AtomMonomerType::Other,
-            &AtomMonomerInfoParams {
-                name: name.to_owned(),
-            },
-        )
-        .unwrap();
+        let info = AtomMonomerInfo::new_with_name(AtomMonomerType::Other, name).unwrap();
         mol.get_atom_with_idx_mut(i as u32)
             .unwrap()
             .set_monomer_info(&info);

@@ -266,13 +266,9 @@ fn pickles_check_monomer_types() {
     // RDKit 2025.03 reads the PDBRESIDUE type as PDB residue info, and
     // refuses types it does not know.
     let mut mol = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-        ..Default::default()
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type as a byte.
     let at = pkl

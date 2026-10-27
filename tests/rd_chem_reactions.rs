@@ -13,8 +13,8 @@ use std::path::PathBuf;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
 use rdkit_cxx::chem::{
-    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, ChiralType, Mol, PropValue,
-    PropertyPickleOptions, SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
+    AtomMonomerInfo, AtomMonomerType, ChiralType, Mol, PropValue, PropertyPickleOptions,
+    SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
 };
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
@@ -1274,13 +1274,10 @@ fn long_stereo_group_lines_are_refused() {
 /// its pickle, and where the info's type byte is in it.
 fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-        ..Default::default()
-    };
-    methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    methane
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
     rxn.add_agent_template(&methane);
     let pkl = rxn.to_binary();

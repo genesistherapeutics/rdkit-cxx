@@ -10,7 +10,7 @@ name: CI
 # (README.md, Releases).
 on:
   push:
-    branches: [main, rdkit-2026.03]
+    branches: [main, rdkit-2025.03]
   pull_request:
 
 permissions:
@@ -77,7 +77,7 @@ jobs:
           cargo build -p downstream --config "target.'cfg(target_os = \"linux\")'.linker = '/usr/bin/cc'"
           env -u LD_LIBRARY_PATH -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
             ./target/debug/downstream | tee downstream.out
-          grep "^RDKit 2026.03." downstream.out
+          grep "^RDKit 2025.03." downstream.out
       - name: Building outside an environment fails with one message
         run: |
           if env -u CONDA_PREFIX -u RDKIT_PREFIX cargo build > missing.out 2>&1; then
