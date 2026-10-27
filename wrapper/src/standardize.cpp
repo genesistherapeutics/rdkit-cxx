@@ -375,12 +375,18 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data,
 // normalization file itself, whose reactions this could not check. The file
 // is read once here and given to RDKit as data, the transformations its
 // reader would make of it (transformation_data). A file of no
-// transformations leaves the data empty, so RDKit reopens it.
+// transformations is refused: RDKit takes empty data to mean the file, and
+// would open it again unchecked.
 void read_normalizations(CleanupParameters &params) {
   if (params.normalizationData.empty() && !params.normalizations.empty()) {
     auto file = read_file(params.normalizations);
     check_transformation_lines(file);
     params.normalizationData = transformation_data(file);
+    if (params.normalizationData.empty()) {
+      throw ValueErrorException("the normalizations file " +
+                                params.normalizations +
+                                " holds no transformations");
+    }
   }
 }
 

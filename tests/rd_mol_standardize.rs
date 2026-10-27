@@ -384,6 +384,27 @@ fn only_normalizing_reads_the_normalizations_file() {
     assert_eq!(smiles(&parent(true).unwrap()), "CC(=O)[O-]");
     assert!(os(parent(false)));
     assert!(os(normalize_with_params(&m, &params)));
+    // A file of no transformations, which RDKit would open again.
+    let empty = std::env::temp_dir().join(format!(
+        "rdkit-cxx-empty-normalizations-{}.txt",
+        std::process::id()
+    ));
+    std::fs::write(&empty, "// only a comment\n").unwrap();
+    let params = CleanupParameters {
+        normalizations_file: empty.clone(),
+        ..Default::default()
+    };
+    let value = |r: rdkit_cxx::Result<Mol>| matches!(r, Err(Error::Value { .. }));
+    assert!(value(normalize_with_params(&m, &params)));
+    assert!(value(cleanup_with_params(&m, &params)));
+    assert!(matches!(
+        normalizer_from_params(&params),
+        Err(Error::Value { .. })
+    ));
+    reionize_with_params(&m, &params).unwrap();
+    // A Normalizer made from the file itself reads it as given.
+    Normalizer::new(&empty, 200).unwrap();
+    std::fs::remove_file(&empty).unwrap();
     assert!(os(charge_parent_with_params(
         &m,
         &ChargeParentParams {

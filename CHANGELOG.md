@@ -155,7 +155,10 @@ A program built against one release stops when it loads with another.
     breakers, and RASCAL's equivalent atoms. Files RDKit would open are read
     once by the wrapper, so RDKit never reads one that changed after the
     check; as in Python, only the calls that normalize read a
-    `CleanupParameters`' normalization file.
+    `CleanupParameters`' normalization file, and one that holds no
+    transformations is refused there (`Error::Value`), since RDKit would
+    open it again. Mol2 text without a BOND header, whose bond lines RDKit
+    2025.03 reads from the start of the text, is checked the same way.
   - Proximity bonding (`determine_connectivity` and the PDB reader)
     refuses a hydrogen it would bond to three or more atoms, for which
     RDKit 2025.03 reads past the hydrogen's neighbor list (#9444).
