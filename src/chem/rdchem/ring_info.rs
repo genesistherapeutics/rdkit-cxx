@@ -182,7 +182,10 @@ macro_rules! ring_info_getters {
                 Ok(ffi::ring_info_num_ring_families(self.mol().as_ffi())?)
             }
 
-            /// Needs the ring families. Mirrors `RingInfo.NumRelevantCycles`.
+            /// Needs the ring families. `Error::Value` for more relevant
+            /// cycles than `u32` holds (RDKit converts the count to
+            /// `unsigned int` unchecked; Python returns it truncated).
+            /// Mirrors `RingInfo.NumRelevantCycles`.
             pub fn num_relevant_cycles(&self) -> Result<u32> {
                 Ok(ffi::ring_info_num_relevant_cycles(self.mol().as_ffi())?)
             }
