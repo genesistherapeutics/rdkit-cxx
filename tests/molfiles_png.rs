@@ -24,12 +24,9 @@ fn smiles(s: &str) -> Mol {
     mol_from_smiles(s).unwrap()
 }
 
+/// The metadata's keys, sorted.
 fn keys(png: &[u8]) -> Vec<String> {
-    metadata_from_png_string_as_list(png)
-        .unwrap()
-        .into_iter()
-        .map(|(key, _)| key)
-        .collect()
+    metadata_from_png_string(png).unwrap().into_keys().collect()
 }
 
 fn to_smiles(mols: Vec<Option<Mol>>) -> Vec<String> {
@@ -64,7 +61,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string(&smiles("CO"), PNG).unwrap();
     assert_eq!(
         keys(&png),
-        ["rdkitPKL rdkit 2024.03.6", "SMILES rdkit 2024.03.6"]
+        ["SMILES rdkit 2024.03.6", "rdkitPKL rdkit 2024.03.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -94,7 +91,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string_with_params(&smiles("CO"), PNG, &mol_block).unwrap();
     assert_eq!(
         keys(&png),
-        ["SMILES rdkit 2024.03.6", "MOL rdkit 2024.03.6"]
+        ["MOL rdkit 2024.03.6", "SMILES rdkit 2024.03.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -132,10 +129,6 @@ fn metadata() {
     let entries = BTreeMap::from([("a".into(), "b".into()), ("c".into(), "d".into())]);
     let png = add_metadata_to_png_string(&entries, PNG).unwrap();
     assert_eq!(
-        metadata_from_png_string_as_list(&png).unwrap(),
-        [("a".into(), b"b".to_vec()), ("c".into(), b"d".to_vec())]
-    );
-    assert_eq!(
         metadata_from_png_string(&png).unwrap(),
         BTreeMap::from([("a".into(), b"b".to_vec()), ("c".into(), b"d".to_vec())])
     );
@@ -150,7 +143,6 @@ fn metadata() {
     let path = common::temp_path("metadata.png");
     std::fs::write(&path, &png).unwrap();
     assert_eq!(metadata_from_png_file(&path).unwrap().len(), 2);
-    assert_eq!(metadata_from_png_file_as_list(&path).unwrap().len(), 2);
     let more =
         add_metadata_to_png_file(&BTreeMap::from([("e".into(), "f".into())]), &path).unwrap();
     assert_eq!(metadata_from_png_string(&more).unwrap().len(), 3);

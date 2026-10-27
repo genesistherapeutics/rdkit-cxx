@@ -319,9 +319,8 @@ pub fn metadata_from_png_string(png: &[u8]) -> Result<BTreeMap<String, Vec<u8>>>
     Ok(metadata_from_png_string_as_list(png)?.into_iter().collect())
 }
 
-/// Every metadata entry, in file order. Mirrors
-/// `rdmolfiles.MetadataFromPNGString(png, asList=True)`.
-pub fn metadata_from_png_string_as_list(png: &[u8]) -> Result<Vec<(String, Vec<u8>)>> {
+/// Every metadata entry, in file order.
+fn metadata_from_png_string_as_list(png: &[u8]) -> Result<Vec<(String, Vec<u8>)>> {
     into_list(ffi::metadata_from_png_string(png)?)
 }
 
@@ -333,8 +332,8 @@ pub fn metadata_from_png_file(filename: impl AsRef<Path>) -> Result<BTreeMap<Str
         .collect())
 }
 
-/// Mirrors `rdmolfiles.MetadataFromPNGFile(filename, asList=True)`.
-pub fn metadata_from_png_file_as_list(
+/// Every metadata entry of a PNG file, in file order.
+fn metadata_from_png_file_as_list(
     filename: impl AsRef<Path>,
 ) -> Result<Vec<(String, Vec<u8>)>> {
     into_list(ffi::metadata_from_png_file(path_bytes(filename.as_ref()))?)

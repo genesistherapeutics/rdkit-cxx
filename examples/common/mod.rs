@@ -20,24 +20,21 @@ use std::path::PathBuf;
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::Mol;
-use rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDrawOptions;
-use rdkit_cxx::chem::draw::{MolToSVGParams, mol_to_svg_with_params};
+use rdkit_cxx::chem::draw::rd_mol_draw_2d::{MolDraw2DSVG, MolDrawOptions};
 
 /// The size Jupyter draws molecules at, unless a recipe sets it. Mirrors
 /// `IPythonConsole.molSize`.
 pub const MOL_SIZE: (i32, i32) = (450, 150);
 
-/// How Jupyter shows a molecule: `Draw.MolToSVG` at `size`, with the
-/// console's `drawOptions`. Mirrors `IPythonConsole._toSVG`.
+/// How Jupyter shows a molecule: an SVG at `size`, with the console's
+/// `drawOptions`, by RDKit 2024.03's `IPythonConsole._toSVG`, which draws it
+/// with `MolDraw2DSVG` (`Draw._moltoSVG`), letting the drawer prepare it.
 pub fn show(mol: &Mol, size: (i32, i32), options: &MolDrawOptions) -> Result<String> {
-    mol_to_svg_with_params(
-        mol,
-        &MolToSVGParams {
-            size,
-            draw_options: Some(options.clone()),
-            ..Default::default()
-        },
-    )
+    let mut drawer = MolDraw2DSVG::new(size.0, size.1)?;
+    drawer.set_draw_options(options)?;
+    drawer.draw_molecule(mol)?;
+    drawer.finish_drawing();
+    drawer.get_drawing_text()
 }
 
 /// Writes an image under `target/cookbook`, returning its path.

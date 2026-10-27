@@ -333,10 +333,6 @@ fn mols_matrix_to_grid_image_matches_python() {
             })
             .collect()
     };
-    assert_eq!(
-        sha1(&mols_matrix_to_grid_image_use_svg(&mm).unwrap()),
-        "09e474eaa2ad01224a58440b996007ceba17e07e"
-    );
     let all = MolsMatrixToGridImageParams {
         sub_img_size: (150, 150),
         legends_matrix: Some(legends.clone()),
@@ -344,18 +340,15 @@ fn mols_matrix_to_grid_image_matches_python() {
         highlight_bond_lists_matrix: Some(lists(1)),
         ..Default::default()
     };
-    assert_eq!(
-        sha1(&mols_matrix_to_grid_image_use_svg_with_params(&mm, &all).unwrap()),
-        "8a77f664da228c7a0a6d050d09e5e8906ec1bfb8"
-    );
     let opts = MolsMatrixToGridImageParams {
         legends_matrix: Some(legends.clone()),
         draw_options: Some(atom_indices()),
         ..Default::default()
     };
+    // RDKit 2024.03's MolsMatrixToGridImage draws only PNGs.
     assert_eq!(
-        sha1(&mols_matrix_to_grid_image_use_svg_with_params(&mm, &opts).unwrap()),
-        "7159698e5bbc891ea143f604091da6e0bf81d177"
+        png_size(&mols_matrix_to_grid_image_with_params(&mm, &opts).unwrap()),
+        (600, 600)
     );
     assert_eq!(
         png_size(&mols_matrix_to_grid_image(&mm).unwrap()),
@@ -370,8 +363,7 @@ fn mols_matrix_to_grid_image_matches_python() {
         legends_matrix: Some(legends[..1].to_vec()),
         ..Default::default()
     };
-    let Err(Error::Value { message }) = mols_matrix_to_grid_image_use_svg_with_params(&mm, &short)
-    else {
+    let Err(Error::Value { message }) = mols_matrix_to_grid_image_with_params(&mm, &short) else {
         panic!("a short legends matrix draws");
     };
     assert_eq!(
@@ -385,14 +377,14 @@ fn mols_matrix_to_grid_image_matches_python() {
         highlight_atom_lists_matrix: Some(short_row),
         ..Default::default()
     };
-    assert!(mols_matrix_to_grid_image_use_svg_with_params(&mm, &short_row).is_err());
-    assert!(mols_matrix_to_grid_image_use_svg(&[]).is_err());
-    assert!(mols_matrix_to_grid_image_use_svg(&[vec![]]).is_err());
+    assert!(mols_matrix_to_grid_image_with_params(&mm, &short_row).is_err());
+    assert!(mols_matrix_to_grid_image(&[]).is_err());
+    assert!(mols_matrix_to_grid_image(&[vec![]]).is_err());
     // A grid of gaps draws nothing.
     assert!(
-        mols_matrix_to_grid_image_use_svg(&[vec![None, None]])
+        mols_matrix_to_grid_image(&[vec![None, None]])
             .unwrap()
-            .contains("<svg")
+            .starts_with(b"\x89PNG")
     );
 }
 

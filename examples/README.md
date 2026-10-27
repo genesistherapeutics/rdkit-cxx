@@ -17,8 +17,8 @@ writes the PNG and checks its size.
 
 Where a recipe calls code RDKit offers only in Python, the example calls its port in
 the crate: `rdkit_cxx::chem::find_mol_chiral_centers`,
-`rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`,
-`mol_to_svg`, `mols_to_grid_image`, and `draw_mol_with_matches`.
+`rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`
+and `mols_to_grid_image`.
 
 | Recipe | ID | Example |
 | --- | --- | --- |
@@ -72,8 +72,7 @@ Some recipes differ from the cookbook's text on purpose:
   removals, so the example brackets them with `begin_batch_edit` and
   `commit_batch_edit`.
 - Highlight a Substructure in a Molecule: Jupyter highlights the matched
-  atoms, and the drawer the bonds between them; `mol_to_svg_with_params`
-  takes the bonds explicitly, so the example passes the bonds between the
-  atoms.
+  atoms, and the drawer the bonds between them; the example draws the same
+  way with `MolDraw2DSVG`.
 - On a Plot: the recipe puts the molecule on a matplotlib plot, which has no
   counterpart here; the example draws the image.

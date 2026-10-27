@@ -14,34 +14,31 @@
 //! (`IPythonConsole` keeps the matched atoms in `__sssAtoms` and passes no
 //! bond highlights, so the drawer highlights the bonds that join two
 //! highlighted atoms). The recipe then sets the atoms to highlight by hand.
-//! `mol_to_svg_with_params` takes the bonds explicitly, so these pass the
-//! bonds between the atoms too.
+//! Jupyter's display draws with `MolDraw2DSVG` (RDKit 2024.03's
+//! `Draw._moltoSVG`), as the example does.
 
 mod common;
 
 use common::{MOL_SIZE, write_image};
-use rdkit_cxx::chem::draw::{MolToSVGParams, mol_to_svg_with_params};
+use rdkit_cxx::chem::draw::rd_mol_draw_2d::{DrawMoleculeParams, MolDraw2DSVG};
 use rdkit_cxx::chem::{Mol, mol_from_smarts, mol_from_smiles};
 
 /// The highlight color, `MolDrawOptions::highlight_colour`'s default.
 const HIGHLIGHT: &str = "#FF7F7F";
 
-/// Draws `mol` as Jupyter does with `atoms` highlighted.
+/// Draws `mol` as Jupyter does with `atoms` highlighted: the drawer
+/// highlights the bonds between them.
 fn highlighted(mol: &Mol, atoms: Vec<u32>) -> rdkit_cxx::Result<String> {
-    let bonds = mol
-        .get_bonds()
-        .filter(|b| {
-            atoms.contains(&b.get_begin_atom_idx()) && atoms.contains(&b.get_end_atom_idx())
-        })
-        .map(|b| b.get_idx())
-        .collect();
-    let params = MolToSVGParams {
-        size: MOL_SIZE,
-        highlight_atoms: atoms,
-        highlight_bonds: bonds,
-        ..Default::default()
-    };
-    mol_to_svg_with_params(mol, &params)
+    let mut drawer = MolDraw2DSVG::new(MOL_SIZE.0, MOL_SIZE.1)?;
+    drawer.draw_molecule_with_params(
+        mol,
+        &DrawMoleculeParams {
+            highlight_atoms: atoms,
+            ..Default::default()
+        },
+    )?;
+    drawer.finish_drawing();
+    drawer.get_drawing_text()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
