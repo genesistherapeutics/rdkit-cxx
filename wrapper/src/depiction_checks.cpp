@@ -151,6 +151,8 @@ void check_rdkit_depictor_mol(const RDKit::ROMol &mol) {
   // The depictor removes collisions with RDKit's distance matrix
   // (MolOps::getDistanceMat), which it computes in int.
   check_matrix_size(mol);
+  // computeInitialCoords symmetrizes the SSSR with dative bonds.
+  check_relevant_cycles(mol, true);
   const std::int64_t n = mol.getNumAtoms();
   for (const auto atom : mol.atoms()) {
     // computeInitialCoords ranks each atom it starts a fragment from as

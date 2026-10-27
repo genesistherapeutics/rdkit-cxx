@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- Sanitization (`sanitize_mol`, `mol_from_smiles` and the other SMILES
+  parsers, `sanitize_rxn`, `sanitize_rxn_as_mols`, `validate_smiles`),
+  `get_symm_sssr`, 2D depiction with RDKit's depictor, and the wrappers that
+  symmetrize a molecule's rings themselves (drawing, abbreviations, tautomer
+  scores) are `Error::Value` for a molecule with more than `i32::MAX`
+  relevant cycles. RDKit's symmetrized SSSR reserves room for them all,
+  converting RingDecomposerLib's `double` count to `size_t` unchecked, which
+  is undefined from 2^64 (a ring of 64 diamonds, 192 atoms); Python runs out
+  of memory sanitizing a ring of 33. Molecules with at most 31 independent
+  cycles skip the count, so sanitization costs about 1-4% more. Other paths
+  to the conversion remain; see the README's "Known limitations".
+
 ## 2026.9.0
 
 The first release. It supports RDKit 2026.09.1 from conda-forge on Linux

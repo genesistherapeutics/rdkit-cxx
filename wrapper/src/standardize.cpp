@@ -391,6 +391,7 @@ void check_tautomer_score(const RDKit::ROMol &mol) {
   // anything to count.
   check_tautomer_score(mol, 0);
   RDKit::ROMol copy(mol);
+  check_relevant_cycles(copy);
   RDKit::MolOps::symmetrizeSSSR(copy);
   check_tautomer_score(mol, copy.getRingInfo()->numRings());
 }

@@ -91,6 +91,7 @@ void check_mol_element(const bpt::ptree &elem) {
   }
   auto smiles = elem.get<std::string>("smiles", "");
   if (!smiles.empty()) {
+    check_smiles_relevant_cycles(smiles, RDKit::SmilesParserParams());
     std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(smiles));
     if (!mol) {
       throw RDKit::SmilesParse::SmilesParseException(

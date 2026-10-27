@@ -204,6 +204,7 @@ void atom_list_push(AtomList &list, const Atom &atom) {
 // As validateSmiles in Validate.cpp, with MolVSValidation's charge check.
 std::unique_ptr<std::vector<std::string>> validate_smiles(rust::Str smiles) {
   std::string input(smiles);
+  check_smiles_relevant_cycles(input, RDKit::SmilesParserParams());
   std::unique_ptr<RWMol> mol(RDKit::SmilesToMol(input));
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +

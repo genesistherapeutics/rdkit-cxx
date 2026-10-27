@@ -301,6 +301,7 @@ std::unique_ptr<RWMol> condense_mol_abbreviations(
   check_apply_matches(*res, matches);
   A::applyMatches(*res, matches);
   if (sanitize && !res->getRingInfo()->isSymmSssr()) {
+    check_relevant_cycles(*res);
     RDKit::MolOps::symmetrizeSSSR(*res);
   }
   return res;

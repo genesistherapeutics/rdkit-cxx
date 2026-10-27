@@ -143,6 +143,7 @@ set(RDKIT_CXX_SOURCES
 set(RDKIT_CXX_RDKIT_TARGETS
   RDGeneral
   GraphMol
+  RingDecomposerLib
   SmilesParse
   FileParsers
   MarvinParser

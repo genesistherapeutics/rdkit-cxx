@@ -32,6 +32,13 @@ rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds,
                                    bool include_hydrogen_bonds,
                                    SymmetrizeSSSRAlgorithm algorithm,
                                    bool recalc_sssr) {
+  // RDL enumerates the relevant cycles (check_relevant_cycles).
+  if (algorithm == SymmetrizeSSSRAlgorithm::RDL ||
+      (algorithm == SymmetrizeSSSRAlgorithm::DEFAULT &&
+       !RDKit::MolOps::getUseLegacyRingFinding())) {
+    check_relevant_cycles(mol, include_dative_bonds, include_hydrogen_bonds,
+                          recalc_sssr);
+  }
   std::vector<std::vector<int>> rings;
   RDKit::MolOps::symmetrizeSSSR(mol, rings, algorithm, recalc_sssr,
                                 include_dative_bonds, include_hydrogen_bonds);

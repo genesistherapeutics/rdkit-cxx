@@ -80,6 +80,7 @@ boost::function<int(const RDKit::ROMol &)> scorer(const ScoreFunction &score) {
 void check_default_score(const RDKit::ROMol &mol) {
   check_tautomer_score(mol, 0);
   if (!mol.getRingInfo()->isSymmSssr()) {
+    check_relevant_cycles(mol);
     RDKit::MolOps::symmetrizeSSSR(const_cast<RDKit::ROMol &>(mol));
   }
   check_tautomer_score(mol, mol.getRingInfo()->numRings());
@@ -350,6 +351,7 @@ rust::Vec<std::uint32_t> tautomer_result_modified_bonds(
 // relevant cycles can be exponentially many.
 std::int32_t score_rings(const RWMol &mol) {
   if (!mol.getRingInfo()->isSymmSssr()) {
+    check_relevant_cycles(mol);
     RDKit::MolOps::symmetrizeSSSR(const_cast<RWMol &>(mol));
   }
   if (250 * static_cast<std::uint64_t>(mol.getRingInfo()->numRings()) >
