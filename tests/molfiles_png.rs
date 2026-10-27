@@ -241,6 +241,41 @@ fn recorded_text_is_checked() {
 }
 
 #[test]
+fn cx_substance_group_fields_in_metadata_are_checked() {
+    // Without strictCXSMILES, RDKit copies the extension past its end
+    // (check_smiles_cx in file_checks.h).
+    let loose = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let bad = BTreeMap::from([("SMILES".into(), "C |SgD:0:f:v::::(1".into())]);
+    let png = add_metadata_to_png_string(&bad, PNG).unwrap();
+    assert!(matches!(
+        // SAFETY: metadata with a SMILES and no pickle.
+        unsafe { mol_from_png_string_with_params(&png, &loose) },
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        // SAFETY: metadata with a SMILES and no pickle.
+        unsafe {
+            mols_from_png_string_with_params(
+                &png,
+                &MolsFromPNGStringParams {
+                    tag: "SMILES".into(),
+                    params: loose.clone(),
+                },
+            )
+        },
+        Err(Error::Value { .. })
+    ));
+    let good = BTreeMap::from([("SMILES".into(), "C |SgD:0:f:v::::(1)|".into())]);
+    let png = add_metadata_to_png_string(&good, PNG).unwrap();
+    // SAFETY: metadata with a SMILES and no pickle.
+    let mol = unsafe { mol_from_png_string_with_params(&png, &loose) }.unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+}
+
+#[test]
 fn depiction_refuses_what_the_depictor_would_mishandle() {
     // The mol block in the metadata depicts a molecule without a conformer,
     // and RDKit's depictor reads the first neighbor of a square-planar atom

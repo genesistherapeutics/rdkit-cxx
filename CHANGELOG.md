@@ -54,6 +54,14 @@
   RDKit's JSON writer leaves out. RDKit's reader left the point's
   `lvIdx` uninitialized, so a molecule written by `mol_to_json` read back
   an indeterminate leaving atom.
+- `mol_from_smiles_with_params`, `mol_from_smarts_with_params`, and the PNG
+  metadata readers are `Error::Value`, with `strict_cxsmiles` off, for a
+  CXSMILES data substance group (`SgD:`) whose field has no `:` after it or
+  whose coordinates have no `)`, and for a polymer group (`Sg:`) whose type
+  has no `:` after it. RDKit's CXSMILES parser stops past the end of the
+  extension there, and the non-strict parse then copies the text up to
+  that point, up to 2 bytes past its end. Strict parsing, the default,
+  rethrows RDKit's own parse error instead and is unchanged.
 
 ## 2026.9.0
 

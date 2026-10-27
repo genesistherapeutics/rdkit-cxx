@@ -170,7 +170,10 @@ its Boost.Python modules and its `.py` modules.
   never reads a file that changed after the check; PNG files are read and
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES and mol blocks) are trusted, except for the limits
-  U12 checks. RDKit fuzzes molecule pickles too, but only their parsing:
+  U12 checks and the CXSMILES substance-group fields that a parse without
+  `strictCXSMILES` copies past their end (`check_smiles_cx` in
+  `rdkit-cxx/file_checks.h`, which every SMILES or SMARTS parse a caller
+  can make non-strict calls first). RDKit fuzzes molecule pickles too, but only their parsing:
   MolPickler takes a query's class from its tag and its matching function
   from its description independently, as the JSON reader below does, and
   converts values it reads without range checks, so a pickle RDKit did not
