@@ -24,10 +24,10 @@ fingerprints, `Draw`, Butina clustering, and more) is ported to Rust on top of
 those bindings, and computes what Python computes: `rdkit.Chem.QED` is
 `rdkit_cxx::chem::qed`.
 
-Coverage: every name in RDKit 2026.03's Python interface, in its compiled
+Coverage: every name in RDKit 2025.09's Python interface, in its compiled
 modules and its Python modules, has a Rust counterpart or a recorded reason it
-has none ([Parity](#parity)). Of the 4,011 names the compiled modules expose,
-3,442 are bound. Of the 2,606 its Python modules define, 1,016 are ported; the
+has none ([Parity](#parity)). Of the 3,851 names the compiled modules expose,
+3,303 are bound. Of the 2,598 its Python modules define, 1,013 are ported; the
 rest are Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM), legacy
 code whose replacement is bound (the sping canvases, the Python MCS search),
 command-line plumbing, Python protocol hooks, or deprecated.
@@ -43,9 +43,9 @@ including the RDKit bugs it found, are in rdkit-logbook.
 
 ## Environment
 
-Each crate version supports one RDKit release series (2026.3.x supports RDKit
-2026.03), and within it the releases it has checked: 2026.3.0 supports RDKit
-2026.03.6, the series' last. The wrapper compiles against copies of a few
+Each crate version supports one RDKit release series (2025.9.x supports RDKit
+2025.09), and within it the releases it has checked: 2025.9.0 supports RDKit
+2025.09.6, the series' last. The wrapper compiles against copies of a few
 headers RDKit does not install, whose layouts can change between patch
 releases, so the build refuses any other release
 ([`wrapper/vendor/`](wrapper/vendor/README.md)), and a program built against
@@ -53,15 +53,15 @@ one stops when it loads with another, as after an update in place. It builds
 with Rust 1.88 or newer.
 
 RDKit's version scheme and the crate's differ: RDKit numbers each series by
-year and zero-padded month (2026.03), but crate versions are SemVer, which
-doesn't allow leading zeros, so they drop the zero (2026.3). The crate's patch
+year and zero-padded month (2025.09), but crate versions are SemVer, which
+doesn't allow leading zeros, so they drop the zero (2025.9). The crate's patch
 number is its own, not RDKit's.
 
 Install RDKit's development packages from conda-forge and activate the
 environment before building:
 
 ```sh
-mamba create -n rdkit-cxx -c conda-forge "librdkit-dev 2026.03.6" libboost-devel cxx-compiler "cmake>=3.22"
+mamba create -n rdkit-cxx -c conda-forge "librdkit-dev 2025.09.6" libboost-devel cxx-compiler "cmake>=3.22"
 conda activate rdkit-cxx
 ```
 
@@ -80,11 +80,11 @@ series:
 
 ```toml
 [dependencies]
-rdkit-cxx = "~2026.3"
+rdkit-cxx = "~2025.9"
 ```
 
-Cargo's default caret requirement can cross series: `"2026.3"` would also
-accept 2026.9, which needs another RDKit.
+Cargo's default caret requirement can cross series: `"2025.9"` would also
+accept 2026.3, which needs another RDKit.
 
 RDKit's shared libraries live in the conda environment, and conda does not set
 `LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
@@ -250,12 +250,13 @@ file's line count.
   call (U4):
   - **Random number generator:** `random_mutex()`.
   - **2D depiction settings and CoordGen templates:** `lock_depiction()`.
-  - **Ctrl-C handler:** every substructure match constructs a
-    `ControlCHandler`, which swaps the `SIGINT` handler through static
-    variables. Every wrapper that can match therefore holds
-    `control_c_mutex()`. RDKit 2026.03 leaves its handler installed after
-    a match, so the mutex restores the process's handler when it is
-    released.
+  - **Ctrl-C handler:** RDKit's `ControlCHandler` swaps the `SIGINT`
+    handler through static variables. In RDKit 2025.09 the embedder,
+    `DetermineBondOrders`, the CIP labeler, and the synthon search reset
+    it and leave RDKit's handler installed; substructure matches leave it
+    alone, but the wrappers that match hold `control_c_mutex()` too, as on
+    the newer series' lines. The mutex restores the process's handler when
+    it is released.
   - **Single modules:** some modules' statics have their own locks, such as
     BRICS, R-group decomposition, the shape modules, and Murtagh's
     clustering.
@@ -295,8 +296,8 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in one way. It does
-not corrupt memory on the supported platforms, and it needs a fix in RDKit:
+Safe Rust can still reach undefined behavior in RDKit in these ways. None
+corrupts memory on the supported platforms, and each needs a fix in RDKit:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
@@ -306,11 +307,21 @@ not corrupt memory on the supported platforms, and it needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
+- **Integer undefined behavior RDKit 2026.03 fixed.** Kekulizing an
+  aromatic system with more than 31 dummy atoms whose electrons it must
+  guess shifts an `unsigned int` by their number (`QuestionEnumerator`),
+  and the CIP labeler shifts by a negative amount once a ranking compares
+  more than 64 descriptors (`PairList`). Every sanitization can kekulize, so
+  the input cannot be checked before RDKit sees it. x86-64 and arm64 take
+  the shift count modulo the width, so the effect is a wrong (or, for
+  kekulization, very long) result, not a memory error. The AMBER and GROMOS
+  trajectory readers add each snapshot through `Trajectory::insertSnapshot`,
+  which subtracts an iterator its own `insert` may have invalidated; the
+  result is an index RDKit ignores.
 
 Other limits:
 
-- Substructure matching runs one call at a time across the process, since
-  every match swaps RDKit's `SIGINT` handler through static variables
+- Substructure matching runs one call at a time across the process
   (`control_c_mutex()`), so matching does not scale across threads.
 - Some inputs abort the process by overflowing the stack, which cannot
   corrupt memory: an SLN string with a `{` followed by about 100,000
@@ -319,7 +330,7 @@ Other limits:
 - Checks refuse some input Python accepts where RDKit would read it
   unsafely, such as substance-group parent chains that span molecules, or
   InChI options outside structure perception.
-- conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser, so on
+- conda-forge's macOS build of RDKit 2025.09.6 has no SLN parser, so on
   macOS the `rd_sln_parse` functions are `Error::Value`.
 - Windows is not supported yet.
 
@@ -327,8 +338,8 @@ Other limits:
 
 [`inventory/`](inventory) measures coverage of RDKit's compiled Python modules
 and of its Python (`.py`) modules, as conda-forge builds them.
-`inventory-2026.03.json` lists every class, function, method, property, and
-enum value the compiled modules expose, and `python-2026.03.json` what each
+`inventory-2025.09.json` lists every class, function, method, property, and
+enum value the compiled modules expose, and `python-2025.09.json` what each
 Python module defines; `manifest.toml`
 maps each to Rust paths or to the reason it has none, given for the name or,
 for Python-ecosystem glue and legacy code, for its whole module. CI runs:
@@ -350,10 +361,10 @@ places, and the crate follows Boost.Python's.) The inventories are
 regenerated once per RDKit release:
 
 ```sh
-micromamba create -y -n rdkit-py -c conda-forge rdkit=2026.03.6 python=3.12
+micromamba create -y -n rdkit-py -c conda-forge rdkit=2025.09.6 python=3.12
 site=$(micromamba run -n rdkit-py python -c 'import rdkit, pathlib; print(pathlib.Path(rdkit.__file__).parents[1])')
-micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --output inventory/inventory-2026.03.json
-micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --python --output inventory/python-2026.03.json
+micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --output inventory/inventory-2025.09.json
+micromamba run -n rdkit-py python -I inventory/inventory.py --rdkit-path "$site" --python --output inventory/python-2025.09.json
 ```
 
 ## Development
@@ -372,14 +383,14 @@ workflow run on `main`, which follows the newest RDKit series.
 
 ## Releases
 
-This is the crate's line for RDKit 2026.03, whose last release is 2026.03.6.
+This is the crate's line for RDKit 2025.09, whose last release is 2025.09.6.
 `main` follows the newest series; each earlier series is released from a
-branch of its own, `rdkit-2026.03` for this one, which can be deleted once its
-release is tagged, and made again from the tag (`v2026.3.0`) for a later patch.
+branch of its own, `rdkit-2025.09` for this one, which can be deleted once its
+release is tagged, and made again from the tag (`v2025.9.0`) for a later patch.
 
 Releases are cut by hand: run the
 [Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
-on `rdkit-2026.03` from the Actions tab, once CI has passed on the branch's
+on `rdkit-2025.09` from the Actions tab, once CI has passed on the branch's
 commit. Pushing to the branch publishes nothing.
 
 The workflow releases the version in `Cargo.toml` if no tag has it yet (the

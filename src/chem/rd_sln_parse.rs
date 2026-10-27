@@ -6,7 +6,7 @@
 //! Mirrors `rdkit.Chem.rdSLNParse`: molecules and queries from Sybyl line
 //! notation.
 //!
-//! conda-forge's macOS build of RDKit 2026.03.6 ships no SLN parser (nor
+//! conda-forge's macOS build of RDKit 2025.09.6 ships no SLN parser (nor
 //! Python's `rdSLNParse`); with it, every function here is `Error::Value`.
 //!
 //! The parser's macro expansion runs `std::regex`, whose recursion

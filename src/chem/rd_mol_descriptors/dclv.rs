@@ -211,7 +211,7 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Lattice points of each atom's probe sphere, buried or not, by atom.
-    /// Mirrors `GetSurfacePoints`. In RDKit 2026.03 they are the points the
+    /// Mirrors `GetSurfacePoints`. In RDKit 2025.09 they are the points the
     /// surface-area methods have tested, the sphere's 320 once for each time
     /// an atom's area was computed, or each sphere's once when no area has
     /// been.

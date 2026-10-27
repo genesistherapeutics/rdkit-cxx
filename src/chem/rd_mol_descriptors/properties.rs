@@ -77,7 +77,7 @@ impl PropertyFunctor {
 /// A set of registered properties to compute together. Mirrors
 /// `rdMolDescriptors.Properties`.
 ///
-/// RDKit 2026.03 registers `chi2v` and `chi2n` with the functions for
+/// RDKit 2025.09 registers `chi2v` and `chi2n` with the functions for
 /// `chi3v` and `chi3n`, so those two properties give the chi3 values, as
 /// they do in Python (RDKit #9643, fixed in 2026.09). `calc_chi2v` and
 /// `calc_chi2n` give the chi2 values.

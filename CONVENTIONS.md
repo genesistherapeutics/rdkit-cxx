@@ -181,7 +181,7 @@ its Boost.Python modules and its `.py` modules.
   extended-query pickles, extended-query JSON (which holds molecule
   pickles in base64), catalog pickles, PNG metadata, and
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
-  read later. MolPickler writes some counts, and in RDKit 2026.03 a small
+  read later. MolPickler writes some counts, and in RDKit 2025.09 a small
   molecule's bond indices, in one byte, and reads a larger value's pickle
   out of step, so every wrapper that hands RDKit a molecule to pickle
   (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
