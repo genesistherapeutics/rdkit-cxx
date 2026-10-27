@@ -586,3 +586,30 @@ fn molzip_coordinates_refuse_what_the_depictor_would_mishandle() {
     let zipped = molzip_fragments(&mut mols).unwrap().unwrap();
     assert_eq!(mol_to_smiles(&zipped).unwrap(), "CO.[Pt@SP]");
 }
+
+// RDKit 2025.03 merges every ABS stereo group into one when it combines
+// molecules (insertStereoGroups), so an atom in two of them is repeated in
+// the merged group, and removing it leaves the second copy dangling.
+#[test]
+fn atoms_in_two_abs_groups_are_refused() {
+    let mut rw = RWMol::from(smiles("[*:1]C"));
+    let group = create_stereo_group(StereoGroupType::StereoAbsolute, &rw, &[0]).unwrap();
+    rw.set_stereo_groups(&[group.clone(), group]).unwrap();
+    let twice = Mol::from(rw);
+    let partner = smiles("C[C@H](F)[*:1] |a:1|");
+    assert!(!partner.get_stereo_groups().is_empty());
+    assert!(matches!(molzip(&twice, &partner), Err(Error::Value { .. })));
+    assert!(matches!(
+        molzip_fragments(&mut [twice.clone(), partner.clone()]),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        replace_substructs(&twice, &mol_from_smarts("[#0]").unwrap(), &partner),
+        Err(Error::Value { .. })
+    ));
+    // One ABS group per atom zips.
+    let mut rw = RWMol::from(smiles("[*:1]C"));
+    let group = create_stereo_group(StereoGroupType::StereoAbsolute, &rw, &[1]).unwrap();
+    rw.set_stereo_groups(&[group]).unwrap();
+    assert!(molzip(&Mol::from(rw), &partner).unwrap().is_some());
+}

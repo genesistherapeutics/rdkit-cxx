@@ -158,8 +158,10 @@ constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
-// bonds from it (or a copy): check_bond_end_points and
-// check_substance_group_parents.
+// bonds from it (or a copy): check_bond_end_points,
+// check_substance_group_parents, and that no stereo group repeats an atom or
+// bond and no two ABS groups share one (which RDKit merges into a group that
+// repeats it when it combines molecules).
 void check_removals(const RDKit::ROMol &mol);
 
 // As check_removals, for an RDKit call that combines the molecules

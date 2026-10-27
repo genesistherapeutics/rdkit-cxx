@@ -465,9 +465,47 @@ void check_substance_group_parents(const RDKit::ROMol &mol) {
   }
 }
 
+// RDKit 2025.03's removeAtomFromGroups and removeBondFromGroups
+// (StereoGroup.cpp) erase the first copy of a removed atom or bond from each
+// group, so a second copy in one group dangles and is read after the atom or
+// bond is deleted. insertStereoGroups (RWMol.cpp), which insertMol and so
+// combineMols, molzip, and replaceSubstructs run, merges every ABS group into
+// one without removing duplicates, so an atom or bond in two ABS groups
+// becomes such a copy (RDKit 2026.03.2's constructor refuses it, #9258).
+void check_stereo_group_removals(const RDKit::ROMol &mol) {
+  std::unordered_set<const void *> abs_members;
+  const auto &groups = mol.getStereoGroups();
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    const auto &group = groups[g];
+    const bool abs =
+        group.getGroupType() == RDKit::StereoGroupType::STEREO_ABSOLUTE;
+    auto check = [&](const auto &members, const char *what) {
+      std::unordered_set<const void *> seen;
+      for (const auto *member : members) {
+        if (!seen.insert(member).second) {
+          throw ValueErrorException(
+              "stereo group " + std::to_string(g) + " repeats " + what + " " +
+              std::to_string(member->getIdx()) +
+              ", whose second copy RDKit 2025.03 leaves in the group when it "
+              "removes it, and reads after it is deleted");
+        }
+        if (abs && !abs_members.insert(member).second) {
+          throw ValueErrorException(
+              std::string(what) + " " + std::to_string(member->getIdx()) +
+              " is in two ABS stereo groups, which RDKit 2025.03 merges into "
+              "one group that repeats it when it combines molecules");
+        }
+      }
+    };
+    check(group.getAtoms(), "atom");
+    check(group.getBonds(), "bond");
+  }
+}
+
 void check_removals(const RDKit::ROMol &mol) {
   check_bond_end_points(mol);
   check_substance_group_parents(mol);
+  check_stereo_group_removals(mol);
 }
 
 // A depth-first search of the graph whose edges lead from each group to
