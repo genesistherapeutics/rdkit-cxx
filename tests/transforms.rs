@@ -101,6 +101,16 @@ fn replace_cores_and_sidechains() {
             Err(Error::Value { .. })
         ));
     }
+    // Two core atoms may match one molecule atom only with their neighbor
+    // in the match, which RDKit looks up past the end otherwise.
+    assert!(matches!(
+        replace_core(&smiles("CCO"), &smiles("CCC"), &[(0, 1), (2, 1)]),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        replace_core(&smiles("CCO"), &smiles("CC"), &[(0, 1), (1, 1)]),
+        Err(Error::Runtime { .. })
+    ));
     assert_eq!(
         ReplaceCoreQueryParams::default(),
         ReplaceCoreQueryParams {
@@ -271,6 +281,7 @@ fn fragment_bonds() {
         fragment_on_bonds(&mol, &[]),
         Err(Error::Value { .. })
     ));
+    // RDKit uses a repeated bond after removing it (Python crashes).
     assert!(matches!(
         fragment_on_bonds(&mol, &[1, 1]),
         Err(Error::Value { .. })
@@ -333,6 +344,24 @@ fn fragment_some_bonds() {
         fragment_on_some_bonds(&mol, &[9]),
         Err(Error::Index { .. })
     ));
+    // RDKit uses a repeated bond after removing it (Python crashes).
+    assert!(matches!(
+        fragment_on_some_bonds(&mol, &[0, 0]),
+        Err(Error::Value { .. })
+    ));
+    // More to break than there are bonds finds none, as RDKit does for up
+    // to 63; it shifts by numToBreak, which is undefined from 64.
+    for num_to_break in [3, 63, 64, u32::MAX] {
+        let params = FragmentOnSomeBondsParams {
+            num_to_break,
+            ..Default::default()
+        };
+        assert!(
+            fragment_on_some_bonds_with_params(&mol, &[0, 1], &params)
+                .unwrap()
+                .is_empty()
+        );
+    }
     assert_eq!(
         FragmentOnSomeBondsParams::default(),
         FragmentOnSomeBondsParams {
@@ -494,6 +523,44 @@ fn molzip_lists_that_rdkit_crashes_on() {
         ("R1".to_owned(), smiles("[*:1][*:2]")),
     ]);
     assert!(matches!(molzip_row(&mut row), Err(Error::Value { .. })));
+    // With coordinates, RDKit 2025.03 looks each input atom up in the zipped
+    // molecule, reading past its atoms for one it did not keep: a repeated
+    // fragment it drops, or anything after the first with FragmentOnBonds.
+    let dup = || {
+        vec![
+            smiles("O[*:1].O[*:2]"),
+            smiles("C([*:1])[*:2]"),
+            smiles("C([*:1])[*:2]"),
+        ]
+    };
+    assert_eq!(
+        to_smiles(&molzip_fragments(&mut dup()).unwrap().unwrap()),
+        "OCO"
+    );
+    assert!(matches!(
+        molzip_fragments_with_params(&mut dup(), &coords),
+        Err(Error::Value { .. })
+    ));
+    let fob = MolzipParams {
+        label: MolzipLabel::FragmentOnBonds,
+        generate_coordinates: true,
+        ..Default::default()
+    };
+    let cut = fragment_on_bonds(&smiles("CCO"), &[0]).unwrap();
+    let mut extra = vec![cut.clone(), smiles("N")];
+    assert!(matches!(
+        molzip_fragments_with_params(&mut extra, &fob),
+        Err(Error::Value { .. })
+    ));
+    let mut alone = vec![cut];
+    assert_eq!(
+        to_smiles(
+            &molzip_fragments_with_params(&mut alone, &fob)
+                .unwrap()
+                .unwrap()
+        ),
+        "CCO"
+    );
 }
 
 #[test]
