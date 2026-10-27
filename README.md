@@ -78,6 +78,25 @@ of a supported release, such as one built from RDKit's release tag, set
 
 ## Using the crate
 
+Choose the crate version that matches the RDKit you build against, which is
+not necessarily the newest crate. Each RDKit series has its own line of crate
+versions, and each builds only against its own series
+([Environment](#environment)). The newest version on crates.io supports only
+the newest series, and the lines for earlier series get patch releases of
+their own:
+
+| RDKit release | Crate requirement | Branch |
+| --- | --- | --- |
+| 2026.09.1 | `~2026.9` | `main` |
+| 2026.03.6 | `~2026.3` | `rdkit-2026.03` |
+| 2025.09.6 | `~2025.9` | `rdkit-2025.09` |
+| 2025.03.6 | `~2025.3` | `rdkit-2025.03` |
+| 2024.09.6 | `~2024.9` | `rdkit-2024.09` |
+| 2024.03.6 | `~2024.3` | `rdkit-2024.03` |
+
+A line binds what its RDKit release has, and its branch's CHANGELOG.md lists
+what it lacks compared with the newest line.
+
 Depend on the crate with a tilde requirement, which stays within one RDKit
 series:
 
@@ -86,8 +105,9 @@ series:
 rdkit-cxx = "~2024.3"
 ```
 
-Cargo's default caret requirement can cross series: `"2024.3"` would also
-accept 2024.9, which needs another RDKit.
+`cargo add rdkit-cxx` picks the newest version, so name the series:
+`cargo add rdkit-cxx@~2025.9`. Cargo's default caret requirement can cross
+series: `"2027.3"` would also accept 2027.9, which needs another RDKit.
 
 RDKit's shared libraries live in the conda environment, and conda does not set
 `LD_LIBRARY_PATH`. A binary that depends on this crate finds them through an
@@ -400,22 +420,61 @@ workflow run on `main`, which follows the newest RDKit series.
 
 This is the crate's line for RDKit 2024.03, whose last release is 2024.03.6.
 `main` follows the newest series; each earlier series is released from a
-branch of its own, `rdkit-2024.03` for this one, which can be deleted once its
-release is tagged, and made again from the tag (`v2024.3.0`) for a later patch.
+branch of its own, `rdkit-2024.03` for this one.
+
+Each RDKit series has a long-running branch, `rdkit-<series>`
+(`rdkit-2025.09` for RDKit 2025.09), from which its crate versions are
+released, and to which fixes for that series go, through pull requests as on
+`main`. `main` follows the newest series and releases it; the series gets its
+branch when `main` moves on to the next one. Pushing to a branch publishes
+nothing; CI runs on every push to `main` and the series' branches.
 
 Releases are cut by hand: run the
 [Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
-on `rdkit-2024.03` from the Actions tab, once CI has passed on the branch's
-commit. Pushing to the branch publishes nothing.
+from the Actions tab, from `main` (it always runs `main`'s copy), and choose
+the branch to release.
 
 The workflow releases the version in `Cargo.toml` if no tag has it yet (the
-first release of the series), and otherwise bumps the patch level with
+first release of an RDKit series), and otherwise bumps the patch level with
 [bump-my-version](https://github.com/callowayproject/bump-my-version). It
-checks that CI passed on the release commit, tests it, builds the packaged
-crate, publishes it to crates.io through trusted publishing, pushes the version
-bump (if any) to the branch and a `v<version>` tag, and creates a GitHub
-release from the version's section of [CHANGELOG.md](CHANGELOG.md), which it
-does not mark as the latest. Add the release's notable changes to the changelog
-before running it. A release that fails partway finishes when its failed jobs
-are re-run: each step skips what an earlier attempt finished, including the
-upload.
+checks that CI passed on the branch's head and that a series' branch has its
+series' version, tests the release commit, builds the packaged crate,
+publishes it to crates.io through trusted publishing, pushes the version bump
+(if any) to the branch and a `v<version>` tag, and creates a GitHub release,
+which it marks as the latest only for the newest version of all. The release's
+notes are its section of [CHANGELOG.md](CHANGELOG.md): for a patch release,
+the `## Unreleased` section, which the bump renames to the version, and for
+the first release of a series, the section for its version
+(`## 2027.3.0`). Write them before running it; the workflow stops before it
+publishes anything when they are missing. A release that fails partway
+finishes when its failed jobs are re-run: each step skips what an earlier
+attempt finished, including the upload.
+
+The patch level moves only through the workflow. A new RDKit series sets the
+major and minor levels by hand, in the pull request that updates
+`environment.yml`:
+
+```sh
+bump-my-version bump --new-version 2027.3.0
+```
+
+Before that pull request, create the old series' branch from `main`
+(`rdkit-2026.09`), which keeps the series and its releases from then on, and
+add it to the Release workflow's branch choices.
+
+The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
+conda-forge daily and opens an issue, assigned to the repository owner, with
+the steps, when it has a `librdkit-dev` release newer than the one `main`'s
+`environment.yml` pins: a new series, or a patch release of `main`'s. The
+series' branches need no such check, since RDKit stops patching a series once
+the next one is out. A new patch release of the series needs a patch release
+of the crate too: the build accepts it only once `wrapper/vendor/`
+holds its headers ([`wrapper/vendor/`](wrapper/vendor/README.md)).
+
+## License
+
+BSD-3-Clause, as RDKit. The package also carries files from other projects,
+each with its license: RDKit's headers (`wrapper/vendor/`), data files
+(`wrapper/third_party/rdkit/Data/`), and test data (`tests/data/`), under
+RDKit's BSD license (`wrapper/third_party/rdkit/LICENSE`), and coordgenlibs's
+files (`wrapper/third_party/coordgen/`), under its BSD license.
