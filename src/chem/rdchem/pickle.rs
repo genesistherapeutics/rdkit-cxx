@@ -110,8 +110,11 @@ impl Mol {
     /// children, in a molecule of any size, and, in a molecule of at most 255
     /// atoms and 255 bonds, more than 255 stereo groups, or a stereo group or
     /// substance group with more than 255 of any of its lists (atoms, parent
-    /// atoms, bonds, brackets, CStates, attachment points), counting repeats;
-    /// the molecules of recursive queries are pickled, and checked, as
+    /// atoms, bonds, brackets, CStates, attachment points), counting repeats.
+    /// RDKit also counts properties in two bytes, so the molecule, each
+    /// conformer, atom, and bond, and each substance group may have at most
+    /// 65535 properties, counting those the flags would not write. The
+    /// molecules of recursive queries are pickled, and checked, as
     /// molecules. Python writes such a pickle, which it then cannot read.
     pub fn to_binary(&self) -> Vec<u8> {
         picklable(ffi::mol_to_binary(self.as_ffi(), false, 0))

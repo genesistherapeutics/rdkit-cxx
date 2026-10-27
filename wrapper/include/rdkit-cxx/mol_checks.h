@@ -153,11 +153,13 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 //   parent atoms, bonds, brackets, CStates, and attachment points
 //   (_pickleSubstanceGroup), and the number of stereo groups and each one's
 //   numbers of atoms and bonds (_pickleStereo).
-// Throws ValueErrorException for a count past 255 in any of these, in the
-// molecule or in the molecules of its recursive queries, which MolPickler
-// pickles as molecules with their own one-byte rule. Every wrapper that hands
-// a molecule to MolPickler, alone or inside another format, calls it on the
-// molecules it will pickle (CONVENTIONS.md U2).
+// It also counts the properties of the molecule, each conformer, atom, bond,
+// and substance group in two bytes (streamWriteProps), wrapping past 65535.
+// Throws ValueErrorException for a count past 255 (or 65535) in any of these,
+// in the molecule or in the molecules of its recursive queries, which
+// MolPickler pickles as molecules with their own one-byte rule. Every wrapper
+// that hands a molecule to MolPickler, alone or inside another format, calls
+// it on the molecules it will pickle (CONVENTIONS.md U2).
 void check_picklable(const RDKit::ROMol &mol);
 
 // check_picklable on a reaction's reactant, product, and agent templates,

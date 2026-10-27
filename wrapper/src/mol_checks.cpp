@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <map>
@@ -482,6 +483,46 @@ void check_one_byte_groups(const RDKit::ROMol &mol, const std::string &where,
   check_one_byte(kept, where + "number of stereo groups");
 }
 
+// streamWriteProps (RDGeneral/StreamOps.h), as MolPickler calls it, counts
+// the properties it writes in a std::uint16_t: for the molecule, each
+// conformer, atom, and bond (with the property flags, or the default flags
+// for a recursive query's molecule), and each substance group (always).
+// Past 65535 the count wraps, and the reader takes the remaining property
+// bytes for the pickle's next fields: with 65536 properties every read
+// fails, at whatever tag those bytes make ("Bond index out of range"), and
+// 65535 user properties beside a computed one are silently dropped. This
+// counts every property, whether or not the flags write it, which is at
+// least as many. (As rdkit-2024.09's wrapper.)
+constexpr std::size_t kPickleCountMax = 65535;
+
+void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
+  auto count = props.getDict().size();
+  if (count > kPickleCountMax) {
+    throw ValueErrorException(
+        what + " has " + std::to_string(count) +
+        " properties, more than a molecule pickle counts (65535)");
+  }
+}
+
+void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
+  check_prop_count(mol, where + "molecule");
+  for (auto conf = mol.beginConformers(); conf != mol.endConformers(); ++conf) {
+    check_prop_count(**conf,
+                     where + "conformer " + std::to_string((*conf)->getId()));
+  }
+  for (const auto *atom : mol.atoms()) {
+    check_prop_count(*atom, where + "atom " + std::to_string(atom->getIdx()));
+  }
+  for (const auto *bond : mol.bonds()) {
+    check_prop_count(*bond, where + "bond " + std::to_string(bond->getIdx()));
+  }
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    check_prop_count(sgroups[i],
+                     where + "substance group " + std::to_string(i));
+  }
+}
+
 // What check_picklable checks of one molecule, apart from its atom queries.
 void check_picklable_mol(const RDKit::ROMol &mol, bool nested) {
   const std::string where = nested ? "a recursive query's molecule's " : "";
@@ -490,6 +531,7 @@ void check_picklable_mol(const RDKit::ROMol &mol, bool nested) {
                           [](std::size_t, std::size_t) { return true; });
   }
   check_bond_queries(mol, where);
+  check_prop_counts(mol, where);
 }
 
 void check_atom_query(const AtomQuery &query) {
@@ -518,6 +560,7 @@ void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
                      bonds <= max_part_bonds;
             });
         check_bond_queries(current, "");
+        check_prop_counts(current, "");
       },
       check_atom_query);
 }

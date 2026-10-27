@@ -62,6 +62,16 @@
   extension there, and the non-strict parse then copies the text up to
   that point, up to 2 bytes past its end. Strict parsing, the default,
   rethrows RDKit's own parse error instead and is unchanged.
+- Molecules with more than 65535 properties on the molecule, a conformer,
+  an atom, a bond, or a substance group are refused wherever a molecule is
+  pickled, as the one-byte counts above are (a panic from
+  `Mol::to_binary` and `ChemicalReaction::to_binary`). MolPickler counts
+  properties in a `u16`, which wraps, and its reader then takes the
+  remaining property bytes for the pickle's next fields: in Python, 65536
+  properties make every read fail ("Bond index out of range"), and 65535
+  user properties beside the computed ones are silently dropped. Every
+  property counts, whether or not the property flags write it; substance
+  groups' properties are always pickled.
 
 ## 2026.9.0
 

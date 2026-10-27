@@ -226,8 +226,9 @@ its Boost.Python modules and its `.py` modules.
   copy of the checked lines.
   MolPickler also writes pickles it cannot read: it writes some counts in
   one byte (query nodes' children; in a molecule of at most 255 atoms and
-  bonds, substance groups' lists and stereo groups) and truncates larger
-  ones, and the reader then parses the bytes after them unchecked. So every
+  bonds, substance groups' lists and stereo groups) and properties' counts
+  in two, and truncates larger ones, and the reader then parses the bytes
+  after them unchecked. So every
   wrapper that hands MolPickler a molecule, alone or inside another format
   (`git grep -l 'pickleMol\|MolPickler::pickle\|pickleReaction'` in
   RDKit's sources), first calls `check_picklable`
