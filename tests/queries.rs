@@ -230,3 +230,29 @@ fn atom_coords_matcher() {
     assert!(target.has_substruct_match(&moved).unwrap());
     assert_eq!(SubstructMatchParameters::default().extra_atom_check, None);
 }
+
+#[test]
+fn expand_bond_queries() {
+    let double = smarts("C=C");
+    let other = double.get_bond_with_idx(0).unwrap();
+    let mut query = smarts("C-C");
+    query
+        .get_bond_with_idx_mut(0)
+        .unwrap()
+        .expand_query_with_params(
+            &other,
+            &ExpandQueryParams {
+                how: CompositeQueryType::CompositeOr,
+                ..Default::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(mol_to_smarts(&query).unwrap(), "C-,=C");
+    // Both bonds must be query bonds; QueryBond::expandQuery also needs a
+    // query of its own, which every query bond safe Rust reaches has.
+    let mut plain = mol_from_smiles("CC").unwrap();
+    assert!(matches!(
+        plain.get_bond_with_idx_mut(0).unwrap().expand_query(&other),
+        Err(Error::Value { .. })
+    ));
+}

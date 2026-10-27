@@ -93,6 +93,9 @@ Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
   the pickle's next fields. Substance groups' properties are always
   pickled. In Python, `ToBinary` with 65,536 molecule properties writes a
   pickle that fails with "ENDPROPS tag not found".
+- A query bond's (and query atom's) `expand_query` is `Error::Value` for a
+  query bond or atom without a query of its own: RDKit's
+  `QueryBond::expandQuery` reads that query's description unchecked.
 
 ### Bindings
 
