@@ -63,7 +63,10 @@ void check_monomer_infos(const RWMol &mol) {
 // RDKit lists each atom's neighbors only for atoms with a nonzero radius,
 // but finds an atom's list at its atom index, so after an atom with radius
 // 0 every later atom reads another's list, and the last read past the end.
-// Atoms with radius 0 (or excluded as solvent) must therefore come last.
+// Atoms with radius 0 (or excluded as solvent) must therefore come last;
+// those reads return before they index the lists. (rdkit/rdkit#9685, after
+// 2026.09.1, gives such atoms empty lists, and leaves them out of the centre
+// of gravity, which they still shift here.)
 void check_zero_radii_last(const DoubleCubicLatticeVolume &dclv) {
   bool seen_zero = false;
   for (std::size_t i = 0; i < dclv.radii_.size(); ++i) {
@@ -74,6 +77,27 @@ void check_zero_radii_last(const DoubleCubicLatticeVolume &dclv) {
           "DoubleCubicLatticeVolume needs atoms with radius 0, and excluded "
           "atoms, after all the others; atom " +
           std::to_string(i) + " follows one");
+    }
+  }
+}
+
+// With includeHs, includeAsPolar asks whether each of a hydrogen's
+// neighbors is polar with includeHs still set, so two bonded hydrogens
+// recurse until the stack overflows (Python's GetPolarSurfaceArea on H2
+// crashes); only hydrogens recurse, so every cycle has an H-H bond.
+// rdkit/rdkit#9687, after 2026.09.1, stops at hydrogens.
+void check_polar_hs(const DoubleCubicLatticeVolume &dclv, bool include_hs) {
+  if (!include_hs) {
+    return;
+  }
+  for (const auto *bond : dclv.mol.bonds()) {
+    if (bond->getBeginAtom()->getAtomicNum() == 1 &&
+        bond->getEndAtom()->getAtomicNum() == 1) {
+      throw ValueErrorException(
+          "DoubleCubicLatticeVolume's polar descriptors with includeHs need a "
+          "molecule without H-H bonds; bond " +
+          std::to_string(bond->getIdx()) +
+          " joins two hydrogens, and RDKit recurses through them forever");
     }
   }
 }
@@ -145,6 +169,7 @@ double dclv_get_atom_surface_area(DoubleCubicLatticeVolume &dclv,
 
 double dclv_get_polar_surface_area(DoubleCubicLatticeVolume &dclv,
                                    bool include_s_and_p, bool include_hs) {
+  check_polar_hs(dclv, include_hs);
   std::lock_guard<std::mutex> lock(record_cache_mutex());
   return dclv.getPolarSurfaceArea(include_s_and_p, include_hs);
 }
@@ -180,6 +205,7 @@ double dclv_get_atom_volume(DoubleCubicLatticeVolume &dclv,
 
 double dclv_get_polar_volume(DoubleCubicLatticeVolume &dclv,
                              bool include_s_and_p, bool include_hs) {
+  check_polar_hs(dclv, include_hs);
   std::lock_guard<std::mutex> lock(record_cache_mutex());
   return dclv.getPolarVolume(include_s_and_p, include_hs);
 }

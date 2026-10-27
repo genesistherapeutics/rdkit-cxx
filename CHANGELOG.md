@@ -90,6 +90,12 @@
   the space's fingerprint type set, and the next fingerprint search
   dereferenced the missing fingerprints (a segfault, as in Python after a
   substructure search, a SIGINT, and `BuildSynthonFingerprints`).
+- `DoubleCubicLatticeVolume::get_polar_surface_area_with_params` and
+  `get_polar_volume_with_params` panic, with `include_hs`, for a molecule
+  with a bond between two hydrogens, instead of overflowing the stack:
+  RDKit 2026.09.1 recurses through the hydrogens forever (rdkit/rdkit#9687,
+  fixed after that release; Python segfaults on H2). They stay infallible,
+  as Python's raise for nothing else.
 
 ## 2026.9.0
 
