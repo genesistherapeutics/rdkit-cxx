@@ -540,12 +540,9 @@ rust::Vec<std::uint32_t> canonical_rank_atoms(const RWMol &mol, bool break_ties,
                                               bool include_atom_maps,
                                               bool include_chiral_presence) {
   std::vector<unsigned int> ranks(mol.getNumAtoms());
-  const bool includeStereoGroups = true;
-  const bool useNonStereoRanks = false;
   RDKit::Canon::rankMolAtoms(mol, ranks, break_ties, include_chirality,
                              include_isotopes, include_atom_maps,
-                             include_chiral_presence, includeStereoGroups,
-                             useNonStereoRanks);
+                             include_chiral_presence);
   return to_vec(ranks);
 }
 

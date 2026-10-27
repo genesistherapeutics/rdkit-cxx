@@ -322,19 +322,18 @@ void determine_connectivity(RWMol &mol, bool use_hueckel, std::int32_t charge,
 // sanitizes the molecule when it embeds chirality (U6).
 void determine_bond_orders(RWMol &mol, std::int32_t charge,
                            bool allow_charged_fragments, bool embed_chiral,
-                           bool use_atom_map, std::size_t max_iterations) {
+                           bool use_atom_map) {
   check_charges(mol, charge);
   MatrixCacheGuard guard(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::determineBondOrders(mol, charge, allow_charged_fragments, embed_chiral,
-                             use_atom_map, max_iterations);
+                             use_atom_map);
 }
 
 // As determineBonds, which leaves a molecule of one atom or none as it is.
 void determine_bonds(RWMol &mol, bool use_hueckel, std::int32_t charge,
                      double cov_factor, bool allow_charged_fragments,
-                     bool embed_chiral, bool use_atom_map, bool use_vdw,
-                     std::size_t max_iterations) {
+                     bool embed_chiral, bool use_atom_map, bool use_vdw) {
   if (mol.getNumAtoms() <= 1) {
     return;
   }
@@ -347,7 +346,7 @@ void determine_bonds(RWMol &mol, bool use_hueckel, std::int32_t charge,
   OtherMonomerInfoSetAside set_aside(mol);
   RDKit::determineBonds(mol, use_hueckel, charge, cov_factor,
                         allow_charged_fragments, embed_chiral, use_atom_map,
-                        use_vdw, max_iterations);
+                        use_vdw);
 }
 
 bool hueckel_enabled() {

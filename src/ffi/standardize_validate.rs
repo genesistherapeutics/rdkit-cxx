@@ -42,25 +42,6 @@ fn call_validation_callback(
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::MolStandardize::FeaturesValidation`'s fields.
-    struct FeaturesValidationData {
-        allow_enhanced_stereo: bool,
-        allow_aromatic_bond_type: bool,
-        allow_dative_bond_type: bool,
-        allow_queries: bool,
-        allow_dummies: bool,
-        allow_atom_aliases: bool,
-    }
-
-    /// `RDKit::MolStandardize::Layout2DValidation`'s fields.
-    struct Layout2DValidationData {
-        clash_limit: f64,
-        bond_length_limit: f64,
-        allow_long_bonds_in_rings: bool,
-        allow_atom_bond_clash_exemption: bool,
-        min_median_bond_length: f64,
-    }
-
     extern "Rust" {
         type ValidationCallback;
 
@@ -84,28 +65,17 @@ pub(crate) mod ffi {
         fn validation_rust(
             callback: Box<ValidationCallback>,
         ) -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_rdkit(
-            allow_empty_molecules: bool,
-        ) -> Result<UniquePtr<ValidationMethodHandle>>;
+        fn validation_rdkit() -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_no_atom() -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_fragment() -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_neutral() -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_isotope(strict: bool) -> Result<UniquePtr<ValidationMethodHandle>>;
+        fn validation_isotope() -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_mol_vs_default() -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_mol_vs(list: &ValidationList) -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_allowed_atoms(atoms: &AtomList) -> Result<UniquePtr<ValidationMethodHandle>>;
         fn validation_disallowed_atoms(
             atoms: &AtomList,
         ) -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_disallowed_radical() -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_features(
-            data: &FeaturesValidationData,
-        ) -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_is_2d(threshold: f64) -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_layout_2d(
-            data: &Layout2DValidationData,
-        ) -> Result<UniquePtr<ValidationMethodHandle>>;
-        fn validation_stereo() -> Result<UniquePtr<ValidationMethodHandle>>;
 
         fn validation_clone(
             handle: &ValidationMethodHandle,

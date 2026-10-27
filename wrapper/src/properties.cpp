@@ -79,6 +79,40 @@ class RustPropertyFunctor : public Desc::PropertyFunctor {
   rust::Box<PropertyCallback> d_callback;
 };
 
+// RDKit 2024.03's registerProperty takes a raw pointer and gives it a
+// shared_ptr of its own, and a second registration of the same name replaces
+// the entry with yet another, so a functor the wrapper already owns, or one
+// registered twice, would be deleted while still owned. The registry gets a
+// new forwarder each time instead, which shares the functor with its handles.
+class ForwardingPropertyFunctor : public Desc::PropertyFunctor {
+ public:
+  explicit ForwardingPropertyFunctor(
+      boost::shared_ptr<Desc::PropertyFunctor> target)
+      : Desc::PropertyFunctor(target->getName(), target->getVersion(),
+                              target->d_dataFunc),
+        d_target(std::move(target)) {}
+
+  double operator()(const RDKit::ROMol &mol) const override {
+    return (*d_target)(mol);
+  }
+
+  const boost::shared_ptr<Desc::PropertyFunctor> &target() const {
+    return d_target;
+  }
+
+ private:
+  boost::shared_ptr<Desc::PropertyFunctor> d_target;
+};
+
+// The functor a registry entry forwards to, or the entry itself.
+boost::shared_ptr<Desc::PropertyFunctor> unwrapped(
+    boost::shared_ptr<Desc::PropertyFunctor> ptr) {
+  if (auto *fwd = dynamic_cast<const ForwardingPropertyFunctor *>(ptr.get())) {
+    return fwd->target();
+  }
+  return ptr;
+}
+
 std::unique_ptr<std::vector<std::string>> strings(
     std::vector<std::string> values) {
   return std::make_unique<std::vector<std::string>>(std::move(values));
@@ -166,7 +200,7 @@ properties_get_available_properties() {
 std::unique_ptr<PropertyFunctorHandle> properties_get_property(rust::Str name) {
   auto handle = std::make_unique<PropertyFunctorHandle>();
   std::lock_guard<std::mutex> lock(registry_mutex());
-  handle->ptr = Properties::getProperty(std::string(name));
+  handle->ptr = unwrapped(Properties::getProperty(std::string(name)));
   return handle;
 }
 
@@ -184,7 +218,8 @@ std::int32_t properties_register_property(
       replaced = registered;
     }
   }
-  auto idx = Properties::registerProperty(functor.ptr);
+  auto idx = Properties::registerProperty(
+      new ForwardingPropertyFunctor(functor.ptr));
   return idx;
 }
 

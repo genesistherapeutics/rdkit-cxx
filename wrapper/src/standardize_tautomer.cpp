@@ -340,9 +340,10 @@ std::unique_ptr<RWMol> tautomer_result_kekulized(
   if (tautomer.kekulized) {
     return copy_mol(*tautomer.kekulized);
   }
-  // As Tautomer::getKekulized, whose cache would be written through const.
+  // RDKit 2024.03's enumeration kekulizes every tautomer it keeps, as this
+  // does: Kekulize's second argument is markAtomsBonds.
   auto kekulized = copy_mol(*tautomer.tautomer);
-  RDKit::MolOps::Kekulize(*kekulized, false, true);
+  RDKit::MolOps::Kekulize(*kekulized, false);
   return kekulized;
 }
 
@@ -366,68 +367,10 @@ rust::Vec<std::uint32_t> tautomer_result_modified_bonds(
   return indices(result.modifiedBonds());
 }
 
-// scoreRings adds 100 or 250 per ring in int, and the symmetrized SSSR's
-// relevant cycles can be exponentially many.
-std::int32_t score_rings(const RWMol &mol) {
-  if (!mol.getRingInfo()->isSymmSssr()) {
-    RDKit::MolOps::symmetrizeSSSR(const_cast<RWMol &>(mol));
-  }
-  if (250 * static_cast<std::uint64_t>(mol.getRingInfo()->numRings()) >
-      static_cast<std::uint64_t>(INT_MAX)) {
-    throw ValueErrorException(
-        "RDKit adds ring scores in int, which overflows for this many rings");
-  }
-  return TSF::scoreRings(mol);
-}
-
-// scoreHeteroHs subtracts unsigned counts, so its sum wraps but does not
-// overflow.
-std::int32_t score_hetero_hs(const RWMol &mol) {
-  return TSF::scoreHeteroHs(mol);
-}
-
-// The default terms' scores times their at most 1000 matches stay in int.
-std::int32_t score_substructs(const RWMol &mol) {
-  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  return TSF::scoreSubstructs(mol);
-}
-
-// scoreSubstructs adds each term's score times its match count (at most
-// SubstructMatchParameters' 1000) in int.
-std::int32_t score_substructs_with_terms(
-    const RWMol &mol, rust::Slice<const SubstructTermData> data) {
-  std::vector<TSF::SubstructTerm> terms;
-  std::int64_t bound = 0;
-  for (const auto &term : data) {
-    bound += 1000 * std::llabs(static_cast<long long>(term.score));
-    if (bound > INT_MAX) {
-      throw ValueErrorException(
-          "RDKit adds substructure scores times their match counts (up to "
-          "1000) in int, which overflows for these terms");
-    }
-    terms.emplace_back(to_std(rust::Slice<const std::uint8_t>(
-                           term.name.data(), term.name.size())),
-                       to_std(rust::Slice<const std::uint8_t>(
-                           term.smarts.data(), term.smarts.size())),
-                       term.score);
-  }
-  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  return TSF::scoreSubstructs(mol, terms);
-}
-
 std::int32_t score_tautomer(const RWMol &mol) {
   check_default_score(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return TSF::scoreTautomer(mol);
-}
-
-rust::Vec<SubstructTermData> default_tautomer_score_substructs() {
-  rust::Vec<SubstructTermData> result;
-  for (const auto &term : TSF::getDefaultTautomerScoreSubstructs()) {
-    result.push_back(SubstructTermData{to_bytes(term.name),
-                                       to_bytes(term.smarts), term.score});
-  }
-  return result;
 }
 
 std::unique_ptr<std::string> tautomer_score_version() {

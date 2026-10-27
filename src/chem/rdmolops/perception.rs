@@ -19,7 +19,6 @@ rdkit_enum! {
         AromaticityRdkit = AROMATICITY_RDKIT,
         AromaticitySimple = AROMATICITY_SIMPLE,
         AromaticityMdl = AROMATICITY_MDL,
-        AromaticityMmff94 = AROMATICITY_MMFF94,
         AromaticityCustom = AROMATICITY_CUSTOM,
     }
 }
@@ -29,8 +28,6 @@ rdkit_enum! {
 pub struct GetSSSRParams {
     /// Uses dative bonds in ring finding.
     pub include_dative_bonds: bool,
-    /// Uses hydrogen bonds in ring finding.
-    pub include_hydrogen_bonds: bool,
 }
 
 /// The smallest set of smallest rings, as atom indices; also stores them in
@@ -39,12 +36,11 @@ pub fn get_sssr(mol: &mut Mol) -> Result<Vec<Vec<u32>>> {
     get_sssr_with_params(mol, &GetSSSRParams::default())
 }
 
-/// Mirrors `rdmolops.GetSSSR(mol, includeDativeBonds, includeHydrogenBonds)`.
+/// Mirrors `rdmolops.GetSSSR(mol, includeDativeBonds)`.
 pub fn get_sssr_with_params(mol: &mut Mol, params: &GetSSSRParams) -> Result<Vec<Vec<u32>>> {
     Ok(IndexList::into_nested(ffi::get_sssr(
         mol.pin_mut(),
         params.include_dative_bonds,
-        params.include_hydrogen_bonds,
     )?))
 }
 
@@ -53,8 +49,6 @@ pub fn get_sssr_with_params(mol: &mut Mol, params: &GetSSSRParams) -> Result<Vec
 pub struct GetSymmSSSRParams {
     /// Uses dative bonds in ring finding.
     pub include_dative_bonds: bool,
-    /// Uses hydrogen bonds in ring finding.
-    pub include_hydrogen_bonds: bool,
 }
 
 /// The symmetrized SSSR, as atom indices: the SSSR plus the rings that make
@@ -64,8 +58,7 @@ pub fn get_symm_sssr(mol: &mut Mol) -> Result<Vec<Vec<u32>>> {
     get_symm_sssr_with_params(mol, &GetSymmSSSRParams::default())
 }
 
-/// Mirrors `rdmolops.GetSymmSSSR(mol, includeDativeBonds,
-/// includeHydrogenBonds)`.
+/// Mirrors `rdmolops.GetSymmSSSR(mol, includeDativeBonds)`.
 pub fn get_symm_sssr_with_params(
     mol: &mut Mol,
     params: &GetSymmSSSRParams,
@@ -73,7 +66,6 @@ pub fn get_symm_sssr_with_params(
     Ok(IndexList::into_nested(ffi::get_symm_sssr(
         mol.pin_mut(),
         params.include_dative_bonds,
-        params.include_hydrogen_bonds,
     )?))
 }
 
@@ -84,33 +76,10 @@ pub fn fast_find_rings(mol: &mut Mol) -> Result<()> {
     Ok(ffi::fast_find_rings(mol.pin_mut())?)
 }
 
-/// Parameters for `find_ring_families_with_params`, with Python's defaults
-/// (A2).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct FindRingFamiliesParams {
-    /// Uses dative bonds in ring finding.
-    pub include_dative_bonds: bool,
-    /// Uses hydrogen bonds in ring finding.
-    pub include_hydrogen_bonds: bool,
-}
-
 /// Finds the molecule's ring families and stores them in its ring info.
 /// Mirrors `rdmolops.FindRingFamilies`.
 pub fn find_ring_families(mol: &mut Mol) -> Result<()> {
-    find_ring_families_with_params(mol, &FindRingFamiliesParams::default())
-}
-
-/// Mirrors `rdmolops.FindRingFamilies(mol, includeDativeBonds,
-/// includeHydrogenBonds)`.
-pub fn find_ring_families_with_params(
-    mol: &mut Mol,
-    params: &FindRingFamiliesParams,
-) -> Result<()> {
-    Ok(ffi::find_ring_families(
-        mol.pin_mut(),
-        params.include_dative_bonds,
-        params.include_hydrogen_bonds,
-    )?)
+    Ok(ffi::find_ring_families(mol.pin_mut())?)
 }
 
 /// Removes common mistakes in drawn structures: charge-separated nitro
@@ -176,7 +145,7 @@ pub fn kekulize_if_possible(mol: &mut Mol) -> Result<()> {
     kekulize_if_possible_with_params(mol, &KekulizeIfPossibleParams::default())
 }
 
-/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags, canonical)`.
+/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags)`.
 pub fn kekulize_if_possible_with_params(
     mol: &mut Mol,
     params: &KekulizeIfPossibleParams,
@@ -184,7 +153,6 @@ pub fn kekulize_if_possible_with_params(
     Ok(ffi::kekulize_if_possible(
         mol.pin_mut(),
         params.clear_aromatic_flags,
-        params.canonical,
     )?)
 }
 

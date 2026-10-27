@@ -33,6 +33,5 @@ pub(crate) mod ffi {
         fn mol_to_inchi(mol: &RWMol, options: &str) -> Result<MolToInchiData>;
         fn mol_to_inchi_key(mol: &RWMol, options: &str) -> Result<UniquePtr<CxxString>>;
         fn inchi_to_inchi_key(inchi: &str) -> Result<UniquePtr<CxxString>>;
-        fn get_inchi_version() -> Result<UniquePtr<CxxString>>;
     }
 }

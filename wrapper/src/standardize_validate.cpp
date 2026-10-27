@@ -88,9 +88,8 @@ std::unique_ptr<ValidationMethodHandle> validation_rust(
       std::make_shared<rust::Box<ValidationCallback>>(std::move(callback))));
 }
 
-std::unique_ptr<ValidationMethodHandle> validation_rdkit(
-    bool allow_empty_molecules) {
-  return handle(std::make_shared<MS::RDKitValidation>(allow_empty_molecules));
+std::unique_ptr<ValidationMethodHandle> validation_rdkit() {
+  return handle(std::make_shared<MS::RDKitValidation>());
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_no_atom() {
@@ -105,8 +104,8 @@ std::unique_ptr<ValidationMethodHandle> validation_neutral() {
   return handle(std::make_shared<MS::NeutralValidation>(), true);
 }
 
-std::unique_ptr<ValidationMethodHandle> validation_isotope(bool strict) {
-  return handle(std::make_shared<MS::IsotopeValidation>(strict));
+std::unique_ptr<ValidationMethodHandle> validation_isotope() {
+  return handle(std::make_shared<MS::IsotopeValidation>());
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_mol_vs_default() {
@@ -132,33 +131,6 @@ std::unique_ptr<ValidationMethodHandle> validation_disallowed_atoms(
     const AtomList &list) {
   return handle(std::make_shared<MS::DisallowedAtomsValidation>(
       atoms(list, "disallowedAtoms")));
-}
-
-std::unique_ptr<ValidationMethodHandle> validation_disallowed_radical() {
-  return handle(std::make_shared<MS::DisallowedRadicalValidation>());
-}
-
-std::unique_ptr<ValidationMethodHandle> validation_features(
-    const FeaturesValidationData &data) {
-  return handle(std::make_shared<MS::FeaturesValidation>(
-      data.allow_enhanced_stereo, data.allow_aromatic_bond_type,
-      data.allow_dative_bond_type, data.allow_queries, data.allow_dummies,
-      data.allow_atom_aliases));
-}
-
-std::unique_ptr<ValidationMethodHandle> validation_is_2d(double threshold) {
-  return handle(std::make_shared<MS::Is2DValidation>(threshold));
-}
-
-std::unique_ptr<ValidationMethodHandle> validation_layout_2d(
-    const Layout2DValidationData &data) {
-  return handle(std::make_shared<MS::Layout2DValidation>(
-      data.clash_limit, data.bond_length_limit, data.allow_long_bonds_in_rings,
-      data.allow_atom_bond_clash_exemption, data.min_median_bond_length));
-}
-
-std::unique_ptr<ValidationMethodHandle> validation_stereo() {
-  return handle(std::make_shared<MS::StereoValidation>());
 }
 
 std::unique_ptr<ValidationMethodHandle> validation_clone(

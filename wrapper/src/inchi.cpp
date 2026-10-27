@@ -398,8 +398,4 @@ std::unique_ptr<std::string> inchi_to_inchi_key(rust::Str inchi) {
       RDKit::InchiToInchiKey(std::string(inchi)));
 }
 
-std::unique_ptr<std::string> get_inchi_version() {
-  return std::make_unique<std::string>(RDKit::getInchiVersion());
-}
-
 }  // namespace rdkit_cxx

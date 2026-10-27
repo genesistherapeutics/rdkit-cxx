@@ -27,7 +27,6 @@ namespace rdkit_cxx {
 // Defined by the bridges (src/ffi/standardize.rs and
 // src/ffi/standardize_tautomer.rs).
 struct CleanupParametersData;
-struct SubstructTermData;
 struct TautomerCallback;
 struct ScoreFunction;
 
@@ -125,16 +124,7 @@ rust::Vec<std::uint32_t> tautomer_result_modified_atoms(
 rust::Vec<std::uint32_t> tautomer_result_modified_bonds(
     const TautomerEnumeratorResult &result);
 
-// The scores. scoreRings and the default tautomer score are checked first
-// (check_tautomer_score), and so are custom terms: their scores times their
-// match counts (at most 1000) are summed in int.
-std::int32_t score_rings(const RWMol &mol);
-std::int32_t score_hetero_hs(const RWMol &mol);
-std::int32_t score_substructs(const RWMol &mol);
-std::int32_t score_substructs_with_terms(
-    const RWMol &mol, rust::Slice<const SubstructTermData> terms);
 std::int32_t score_tautomer(const RWMol &mol);
-rust::Vec<SubstructTermData> default_tautomer_score_substructs();
 std::unique_ptr<std::string> tautomer_score_version();
 
 }  // namespace rdkit_cxx

@@ -800,8 +800,8 @@ class ReactionLayout {
     return res;
   }
 
-  // drawReaction's height for a flexible canvas, calcReactionOffsets, and
-  // drawReactionPart's scales.
+  // drawReaction's height for a flexible canvas, and calcReactionOffsets.
+  // RDKit 2024.03's drawReactionPart draws each component at its scale.
   void offsets(const RDKit::MolDrawOptions &opts) {
     const auto &d = *d_drawer.drawer;
     d_canvas = {d.width(), d.height()};
@@ -885,16 +885,6 @@ class ReactionLayout {
                          arrow_mult, plus_width + 5);
     check_pixels(double(width_to_use) + d.offset().x);
     check_pixels(tot / (1 + 2.0 * opts.padding));
-    // drawReactionPart: each component's scale, less the component
-    // padding.
-    for (auto *dm : all()) {
-      const double wp = dm->width_ * opts.componentPadding;
-      const double hp = dm->height_ * opts.componentPadding;
-      const double scale = std::min((dm->width_ - 2 * wp) / dm->width_,
-                                    (dm->height_ - 2 * hp) / dm->height_) *
-                           dm->getScale();
-      checked_set_scale(*dm, scale, scale, true);
-    }
   }
 
   // The last component drawReaction draws, whose scale is the drawer's when

@@ -10,7 +10,6 @@ pub(crate) mod ffi {
         use_chirality: bool,
         use_enhanced_stereo: bool,
         aromatic_matches_conjugated: bool,
-        aromatic_matches_single_or_double: bool,
         use_generic_matchers: bool,
         use_query_query_matches: bool,
         recursion_possible: bool,
@@ -20,19 +19,6 @@ pub(crate) mod ffi {
         num_threads: i32,
         atom_properties: Vec<String>,
         bond_properties: Vec<String>,
-        specified_stereo_query_matches_unspecified: bool,
-        extra_atom_check_overrides_default_check: bool,
-        extra_bond_check_overrides_default_check: bool,
-        /// Whether `atom_coords_matcher` is the extra atom check.
-        has_atom_coords_matcher: bool,
-        atom_coords_matcher: AtomCoordsMatcherData,
-    }
-
-    /// `AtomCoordsMatchFunctor`.
-    struct AtomCoordsMatcherData {
-        ref_conf_id: i32,
-        query_conf_id: i32,
-        tol2: f64,
     }
 
     unsafe extern "C++" {
@@ -47,17 +33,6 @@ pub(crate) mod ffi {
         type Atom = crate::ffi::atom::ffi::Atom;
 
         fn substruct_match_parameters_default() -> Result<SubstructMatchParametersData>;
-        fn atom_coords_matcher_default() -> Result<AtomCoordsMatcherData>;
-        fn atom_coords_matcher_new(
-            ref_conf_id: i32,
-            query_conf_id: i32,
-            tol: f64,
-        ) -> Result<AtomCoordsMatcherData>;
-        fn atom_coords_matcher_call(
-            matcher: &AtomCoordsMatcherData,
-            query_atom: &Atom,
-            target_atom: &Atom,
-        ) -> Result<bool>;
         fn mol_has_substruct_match(
             target: &RWMol,
             query: &RWMol,

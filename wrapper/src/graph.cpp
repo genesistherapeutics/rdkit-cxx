@@ -109,26 +109,6 @@ std::unique_ptr<MolList> split_mol(const RWMol &mol,
   return result;
 }
 
-void set_options(RDKit::SubsetOptions &options, const SubsetOptionsData &data) {
-  options.sanitize = data.sanitize;
-  options.clearComputedProps = data.clear_computed_props;
-  options.copyAsQuery = data.copy_as_query;
-  options.copyCoordinates = data.copy_coordinates;
-  options.conformerIdx = static_cast<unsigned>(data.conformer_idx);
-  options.method = data.method;
-}
-
-void set_info(SubsetInfoData &data, const RDKit::SubsetInfo &info) {
-  data.atom_mapping.clear();
-  for (const auto &[from, to] : info.atomMapping) {
-    data.atom_mapping.push_back(IndexPair{from, to});
-  }
-  data.bond_mapping.clear();
-  for (const auto &[from, to] : info.bondMapping) {
-    data.bond_mapping.push_back(IndexPair{from, to});
-  }
-}
-
 }  // namespace
 
 // The matrices are copied out before the guard clears RDKit's cache (U6).

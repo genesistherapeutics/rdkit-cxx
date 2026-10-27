@@ -24,7 +24,6 @@ pub(crate) mod ffi {
             allow_charged_fragments: bool,
             embed_chiral: bool,
             use_atom_map: bool,
-            max_iterations: usize,
         ) -> Result<()>;
         #[allow(clippy::too_many_arguments)]
         fn determine_bonds(
@@ -36,7 +35,6 @@ pub(crate) mod ffi {
             embed_chiral: bool,
             use_atom_map: bool,
             use_vdw: bool,
-            max_iterations: usize,
         ) -> Result<()>;
         fn hueckel_enabled() -> Result<bool>;
     }

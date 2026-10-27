@@ -56,14 +56,6 @@ unsafe fn call_score_function(
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::MolStandardize::TautomerScoringFunctions::SubstructTerm`'s
-    /// fields, its strings as bytes.
-    struct SubstructTermData {
-        name: Vec<u8>,
-        smarts: Vec<u8>,
-        score: i32,
-    }
-
     /// `RDKit::MolStandardize::TautomerEnumeratorStatus`; cxx checks the
     /// values.
     #[repr(i32)]
@@ -211,12 +203,7 @@ pub(crate) mod ffi {
         fn tautomer_result_modified_atoms(result: &TautomerEnumeratorResult) -> Result<Vec<u32>>;
         fn tautomer_result_modified_bonds(result: &TautomerEnumeratorResult) -> Result<Vec<u32>>;
 
-        fn score_rings(mol: &RWMol) -> Result<i32>;
-        fn score_hetero_hs(mol: &RWMol) -> Result<i32>;
-        fn score_substructs(mol: &RWMol) -> Result<i32>;
-        fn score_substructs_with_terms(mol: &RWMol, terms: &[SubstructTermData]) -> Result<i32>;
         fn score_tautomer(mol: &RWMol) -> Result<i32>;
-        fn default_tautomer_score_substructs() -> Result<Vec<SubstructTermData>>;
         fn tautomer_score_version() -> Result<UniquePtr<CxxString>>;
     }
 }

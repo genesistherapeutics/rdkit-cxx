@@ -33,18 +33,8 @@ std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
   return operation_that_failed;
 }
 
-void kekulize(RWMol &mol, bool clear_aromatic_flags, bool canonical) {
-  RDKit::MolOps::Kekulize(mol, clear_aromatic_flags, canonical);
-}
-
-AddHsParametersData add_hs_parameters_default() {
-  RDKit::MolOps::AddHsParameters params;
-  return AddHsParametersData{params.explicitOnly,
-                             params.addCoords,
-                             params.addResidueInfo,
-                             params.skipQueries,
-                             false,
-                             {}};
+void kekulize(RWMol &mol, bool clear_aromatic_flags) {
+  RDKit::MolOps::Kekulize(mol, clear_aromatic_flags);
 }
 
 // As addHs2 in Code/GraphMol/Wrap/MolOps.cpp: a copy gains the hydrogens.
@@ -53,11 +43,6 @@ AddHsParametersData add_hs_parameters_default() {
 // adds none.
 std::unique_ptr<RWMol> add_hs(const RWMol &mol,
                               const AddHsParametersData &data) {
-  RDKit::MolOps::AddHsParameters params;
-  params.explicitOnly = data.explicit_only;
-  params.addCoords = data.add_coords;
-  params.addResidueInfo = data.add_residue_info;
-  params.skipQueries = data.skip_queries;
   std::vector<unsigned> only_on;
   if (data.has_only_on_atoms) {
     for (auto idx : data.only_on_atoms) {
@@ -66,8 +51,9 @@ std::unique_ptr<RWMol> add_hs(const RWMol &mol,
     }
   }
   auto res = std::make_unique<RWMol>(mol);
-  RDKit::MolOps::addHs(*res, params,
-                       data.has_only_on_atoms ? &only_on : nullptr);
+  RDKit::MolOps::addHs(*res, data.explicit_only, data.add_coords,
+                       data.has_only_on_atoms ? &only_on : nullptr,
+                       data.add_residue_info);
   return res;
 }
 

@@ -61,79 +61,124 @@ fn rows(values: &[f64]) -> Vec<Vec<f64>> {
     values.chunks(4).map(<[f64]>::to_vec).collect()
 }
 
-/// Parameters for the best-alignment functions. Mirrors
-/// `rdMolAlign.BestAlignmentParams`, plus the keyword arguments of
-/// `GetBestAlignmentTransform` (`prbCid`, `refCid`, `reflect`, `maxIters`)
-/// and `GetBestRMS` (`prbId` and `refId`, as `prb_cid` and `ref_cid`)
-/// (A3). The functions over all conformers read neither.
+/// The best-alignment functions' arguments, as the bridge takes them.
+fn best_alignment_data(
+    map: &[Vec<(u32, u32)>],
+    max_matches: i32,
+    symmetrize_conjugated_terminal_groups: bool,
+    weights: &[f64],
+    num_threads: i32,
+) -> ffi::BestAlignmentParamsData {
+    let mut data = expect_ok(ffi::best_alignment_params_default());
+    data.max_matches = max_matches;
+    data.symmetrize_conjugated_terminal_groups = symmetrize_conjugated_terminal_groups;
+    data.num_threads = num_threads;
+    data.map_pairs = map.iter().flat_map(|m| to_pairs(m)).collect();
+    data.map_counts = map
+        .iter()
+        .map(|m| u32::try_from(m.len()).expect("an atom map that long"))
+        .collect();
+    data.weights = weights.to_vec();
+    data
+}
+
+/// Parameters for `get_best_alignment_transform_with_params`, with Python's
+/// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
-pub struct BestAlignmentParams {
-    /// The most substructure matches to try when no map is given.
-    pub max_matches: i32,
-    /// Matches conjugated terminal groups (nitro, carboxylate) both ways.
-    pub symmetrize_conjugated_terminal_groups: bool,
-    /// Leaves the hydrogens out of the matches found (not of a given map).
-    pub ignore_hs: bool,
-    /// The threads to use; 0 or less counts back from the hardware's.
-    pub num_threads: i32,
-    /// The atom maps to try; empty finds them by substructure matching.
-    pub map: Vec<Vec<(u32, u32)>>,
-    /// A weight for each pair of a map; empty weighs them equally.
-    pub weights: Vec<f64>,
+pub struct GetBestAlignmentTransformParams {
     /// The probe's conformer; -1 for the first.
     pub prb_cid: i32,
     /// The reference's conformer; -1 for the first.
     pub ref_cid: i32,
+    /// The atom maps to try; empty finds them by substructure matching.
+    pub map: Vec<Vec<(u32, u32)>>,
+    /// The most substructure matches to try when no map is given.
+    pub max_matches: i32,
+    /// Matches conjugated terminal groups (nitro, carboxylate) both ways.
+    pub symmetrize_conjugated_terminal_groups: bool,
+    /// A weight for each pair of a map; empty weighs them equally.
+    pub weights: Vec<f64>,
     /// Reflects the probe.
     pub reflect: bool,
     /// The most iterations of the RMSD minimization.
     pub max_iters: u32,
+    /// The threads to use; 0 or less counts back from the hardware's.
+    pub num_threads: i32,
 }
 
-impl Default for BestAlignmentParams {
-    fn default() -> BestAlignmentParams {
-        let data = expect_ok(ffi::best_alignment_params_default());
-        BestAlignmentParams {
-            max_matches: data.max_matches,
-            symmetrize_conjugated_terminal_groups: data.symmetrize_conjugated_terminal_groups,
-            ignore_hs: data.ignore_hs,
-            num_threads: data.num_threads,
+impl Default for GetBestAlignmentTransformParams {
+    fn default() -> GetBestAlignmentTransformParams {
+        GetBestAlignmentTransformParams {
+            prb_cid: -1,
+            ref_cid: -1,
             map: Vec::new(),
+            max_matches: 1_000_000,
+            symmetrize_conjugated_terminal_groups: true,
             weights: Vec::new(),
-            prb_cid: data.prb_cid,
-            ref_cid: data.ref_cid,
-            reflect: data.reflect,
-            max_iters: data.max_iters,
+            reflect: false,
+            max_iters: 50,
+            num_threads: 1,
         }
     }
 }
 
-impl BestAlignmentParams {
-    fn to_ffi(&self) -> ffi::BestAlignmentParamsData {
-        ffi::BestAlignmentParamsData {
-            max_matches: self.max_matches,
-            symmetrize_conjugated_terminal_groups: self.symmetrize_conjugated_terminal_groups,
-            ignore_hs: self.ignore_hs,
-            num_threads: self.num_threads,
-            map_pairs: self.map.iter().flat_map(|m| to_pairs(m)).collect(),
-            map_counts: self
-                .map
-                .iter()
-                .map(|m| u32::try_from(m.len()).expect("an atom map that long"))
-                .collect(),
-            weights: self.weights.clone(),
-            prb_cid: self.prb_cid,
-            ref_cid: self.ref_cid,
-            reflect: self.reflect,
-            max_iters: self.max_iters,
+/// Parameters for `get_best_rms_with_params`, with Python's defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GetBestRMSParams {
+    /// The probe's conformer; -1 for the first.
+    pub prb_id: i32,
+    /// The reference's conformer; -1 for the first.
+    pub ref_id: i32,
+    /// The atom maps to try; empty finds them by substructure matching.
+    pub map: Vec<Vec<(u32, u32)>>,
+    /// The most substructure matches to try when no map is given.
+    pub max_matches: i32,
+    /// Matches conjugated terminal groups (nitro, carboxylate) both ways.
+    pub symmetrize_conjugated_terminal_groups: bool,
+    /// A weight for each pair of a map; empty weighs them equally.
+    pub weights: Vec<f64>,
+    /// The threads to use; 0 or less counts back from the hardware's.
+    pub num_threads: i32,
+}
+
+impl Default for GetBestRMSParams {
+    fn default() -> GetBestRMSParams {
+        GetBestRMSParams {
+            prb_id: -1,
+            ref_id: -1,
+            map: Vec::new(),
+            max_matches: 1_000_000,
+            symmetrize_conjugated_terminal_groups: true,
+            weights: Vec::new(),
+            num_threads: 1,
         }
     }
+}
 
-    /// The keyword forms' defaults, which keep the hydrogens.
-    fn keyword_defaults() -> BestAlignmentParams {
-        BestAlignmentParams {
-            ignore_hs: false,
-            ..Default::default()
+/// Parameters for `get_all_conformer_best_rms_with_params`, with Python's
+/// defaults (A2).
+#[derive(Clone, Debug, PartialEq)]
+pub struct GetAllConformerBestRMSParams {
+    /// The threads to use; 0 or less counts back from the hardware's.
+    pub num_threads: i32,
+    /// The atom maps to try; empty finds them by substructure matching.
+    pub map: Vec<Vec<(u32, u32)>>,
+    /// The most substructure matches to try when no map is given.
+    pub max_matches: i32,
+    /// Matches conjugated terminal groups (nitro, carboxylate) both ways.
+    pub symmetrize_conjugated_terminal_groups: bool,
+    /// A weight for each pair of a map; empty weighs them equally.
+    pub weights: Vec<f64>,
+}
+
+impl Default for GetAllConformerBestRMSParams {
+    fn default() -> GetAllConformerBestRMSParams {
+        GetAllConformerBestRMSParams {
+            num_threads: 1,
+            map: Vec::new(),
+            max_matches: 1_000_000,
+            symmetrize_conjugated_terminal_groups: true,
+            weights: Vec::new(),
         }
     }
 }
@@ -228,31 +273,38 @@ pub fn align_mol_with_params(
 
 /// The best alignment of the probe to the reference over their atom maps:
 /// the RMSD, the transform, and the map. Mirrors
-/// `rdMolAlign.GetBestAlignmentTransform`, whose keyword form keeps the
-/// hydrogens (`ignore_hs` false).
+/// `rdMolAlign.GetBestAlignmentTransform`.
 pub fn get_best_alignment_transform(prb_mol: &Mol, ref_mol: &Mol) -> Result<BestAlignment> {
-    get_best_alignment_transform_with_params(
-        prb_mol,
-        ref_mol,
-        &BestAlignmentParams::keyword_defaults(),
-    )
+    get_best_alignment_transform_with_params(prb_mol, ref_mol, &Default::default())
 }
 
-/// Mirrors `rdMolAlign.GetBestAlignmentTransform(prbMol, refMol, params,
-/// prbCid, refCid, reflect, maxIters)`, and its keyword form. A map's atom
-/// out of range is `Error::Index`, and weights other than one per pair of
-/// each map `Error::Value`; no substructure match is `Error::Runtime`.
+/// Mirrors `rdMolAlign.GetBestAlignmentTransform(prbMol, refMol, prbCid,
+/// refCid, map, maxMatches, symmetrizeConjugatedTerminalGroups, weights,
+/// reflect, maxIters, numThreads)`. A map's atom out of range is
+/// `Error::Index`, and weights other than one per pair of each map
+/// `Error::Value`; no substructure match is `Error::Runtime`.
 pub fn get_best_alignment_transform_with_params(
     prb_mol: &Mol,
     ref_mol: &Mol,
-    params: &BestAlignmentParams,
+    params: &GetBestAlignmentTransformParams,
 ) -> Result<BestAlignment> {
+    let mut data = best_alignment_data(
+        &params.map,
+        params.max_matches,
+        params.symmetrize_conjugated_terminal_groups,
+        &params.weights,
+        params.num_threads,
+    );
+    data.prb_cid = params.prb_cid;
+    data.ref_cid = params.ref_cid;
+    data.reflect = params.reflect;
+    data.max_iters = params.max_iters;
     let mut trans = Vec::new();
     let mut best_match = Vec::new();
     let rmsd = ffi::get_best_alignment_transform(
         prb_mol.as_ffi(),
         ref_mol.as_ffi(),
-        &params.to_ffi(),
+        &data,
         &mut trans,
         &mut best_match,
     )?;
@@ -260,21 +312,28 @@ pub fn get_best_alignment_transform_with_params(
 }
 
 /// Aligns the probe's first conformer to the reference's by its best atom
-/// map, and returns the RMSD. Mirrors `rdMolAlign.GetBestRMS`, whose
-/// keyword form keeps the hydrogens (`ignore_hs` false).
+/// map, and returns the RMSD. Mirrors `rdMolAlign.GetBestRMS`.
 pub fn get_best_rms(prb_mol: &mut Mol, ref_mol: &Mol) -> Result<f64> {
-    get_best_rms_with_params(prb_mol, ref_mol, &BestAlignmentParams::keyword_defaults())
+    get_best_rms_with_params(prb_mol, ref_mol, &Default::default())
 }
 
-/// Mirrors `rdMolAlign.GetBestRMS(prbMol, refMol, params, prbId, refId)`,
-/// and its keyword form, with the errors of
-/// `get_best_alignment_transform_with_params`.
+/// Mirrors `rdMolAlign.GetBestRMS(prbMol, refMol, prbId, refId, map,
+/// maxMatches, symmetrizeConjugatedTerminalGroups, weights, numThreads)`,
+/// with the errors of `get_best_alignment_transform_with_params`.
 pub fn get_best_rms_with_params(
     prb_mol: &mut Mol,
     ref_mol: &Mol,
-    params: &BestAlignmentParams,
+    params: &GetBestRMSParams,
 ) -> Result<f64> {
-    let data = params.to_ffi();
+    let mut data = best_alignment_data(
+        &params.map,
+        params.max_matches,
+        params.symmetrize_conjugated_terminal_groups,
+        &params.weights,
+        params.num_threads,
+    );
+    data.prb_cid = params.prb_id;
+    data.ref_cid = params.ref_id;
     Ok(ffi::get_best_rms(
         prb_mol.pin_mut(),
         ref_mol.as_ffi(),
@@ -289,16 +348,21 @@ pub fn get_all_conformer_best_rms(mol: &Mol) -> Result<Vec<f64>> {
     get_all_conformer_best_rms_with_params(mol, &Default::default())
 }
 
-/// Mirrors `rdMolAlign.GetAllConformerBestRMS(mol, params)`, and its keyword
-/// form, with the errors of `get_best_alignment_transform_with_params`.
+/// Mirrors `rdMolAlign.GetAllConformerBestRMS(mol, numThreads, map,
+/// maxMatches, symmetrizeConjugatedTerminalGroups, weights)`, with the
+/// errors of `get_best_alignment_transform_with_params`.
 pub fn get_all_conformer_best_rms_with_params(
     mol: &Mol,
-    params: &BestAlignmentParams,
+    params: &GetAllConformerBestRMSParams,
 ) -> Result<Vec<f64>> {
-    Ok(ffi::get_all_conformer_best_rms(
-        mol.as_ffi(),
-        &params.to_ffi(),
-    )?)
+    let data = best_alignment_data(
+        &params.map,
+        params.max_matches,
+        params.symmetrize_conjugated_terminal_groups,
+        &params.weights,
+        params.num_threads,
+    );
+    Ok(ffi::get_all_conformer_best_rms(mol.as_ffi(), &data)?)
 }
 
 /// Parameters for `calc_rms_with_params`, with Python's defaults (A2).
@@ -341,21 +405,16 @@ pub fn calc_rms(prb_mol: &Mol, ref_mol: &Mol) -> Result<f64> {
 /// maxMatches, symmetrizeConjugatedTerminalGroups, weights)`, with the
 /// errors of `get_best_alignment_transform_with_params`.
 pub fn calc_rms_with_params(prb_mol: &Mol, ref_mol: &Mol, params: &CalcRMSParams) -> Result<f64> {
-    let best = BestAlignmentParams {
-        max_matches: params.max_matches,
-        symmetrize_conjugated_terminal_groups: params.symmetrize_conjugated_terminal_groups,
-        map: params.map.clone(),
-        weights: params.weights.clone(),
-        prb_cid: params.prb_id,
-        ref_cid: params.ref_id,
-        num_threads: 1,
-        ..BestAlignmentParams::keyword_defaults()
-    };
-    Ok(ffi::calc_rms(
-        prb_mol.as_ffi(),
-        ref_mol.as_ffi(),
-        &best.to_ffi(),
-    )?)
+    let mut best = best_alignment_data(
+        &params.map,
+        params.max_matches,
+        params.symmetrize_conjugated_terminal_groups,
+        &params.weights,
+        1,
+    );
+    best.prb_cid = params.prb_id;
+    best.ref_cid = params.ref_id;
+    Ok(ffi::calc_rms(prb_mol.as_ffi(), ref_mol.as_ffi(), &best)?)
 }
 
 /// Parameters for `align_mol_conformers_with_params`, with Python's

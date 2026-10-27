@@ -64,19 +64,12 @@ lookups! {
     get_most_common_isotope, get_most_common_isotope_str, periodic_table_get_most_common_isotope -> i32;
     /// Mirrors `PeriodicTable.GetMostCommonIsotopeMass`.
     get_most_common_isotope_mass, get_most_common_isotope_mass_str, periodic_table_get_most_common_isotope_mass -> f64;
-    /// The row of the periodic table. Mirrors `PeriodicTable.GetRow`.
-    get_row, get_row_str, periodic_table_get_row -> u32;
 }
 
 impl PeriodicTable {
     /// Mirrors `PeriodicTable.GetAtomicNumber`.
     pub fn get_atomic_number(&self, element_symbol: &str) -> Result<u32> {
         Ok(ffi::periodic_table_get_atomic_number(element_symbol)?)
-    }
-
-    /// Mirrors `PeriodicTable.GetMaxAtomicNumber`.
-    pub fn get_max_atomic_number(&self) -> u32 {
-        expect_ok(ffi::periodic_table_get_max_atomic_number())
     }
 
     /// Mirrors `PeriodicTable.GetElementSymbol`.

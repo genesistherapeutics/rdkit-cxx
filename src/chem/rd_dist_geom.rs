@@ -38,10 +38,6 @@ rdkit_enum! {
         LinearDoubleBond = LINEAR_DOUBLE_BOND,
         BadDoubleBondStereo = BAD_DOUBLE_BOND_STEREO,
         CheckChiralCenters2 = CHECK_CHIRAL_CENTERS2,
-        ExceededTimeout = EXCEEDED_TIMEOUT,
-        Minimization = MINIMIZATION,
-        KtermViolation = KTERM_VIOLATION,
-        Clash = CLASH,
     }
 }
 
@@ -51,7 +47,7 @@ rdkit_enum! {
 ///
 /// Embedding updates the parameters as Python's do: the failure counts, and
 /// what RDKit changes while it works (a `max_iterations` of 0 becomes ten
-/// times the number of atoms, random coordinates set `basin_thresh`).
+/// times the number of atoms).
 #[derive(Clone, Debug, PartialEq)]
 pub struct EmbedParameters {
     /// The most attempts per conformer; 0 for ten times the atoms.
@@ -59,8 +55,6 @@ pub struct EmbedParameters {
     /// Accepted for parity: the embedding always runs on the calling thread
     /// (see the module documentation).
     pub num_threads: i32,
-    /// Seconds per fragment before giving up; 0 for no limit.
-    pub timeout: u32,
     /// The random seed; −1 leaves RDKit's generator unseeded.
     pub random_seed: i32,
     /// Removes the molecule's conformers first.
@@ -75,8 +69,6 @@ pub struct EmbedParameters {
     pub num_zero_fail: u32,
     /// The distance-geometry minimizer's force tolerance.
     pub optimizer_force_tol: f64,
-    /// The distance-geometry force field's basin threshold.
-    pub basin_thresh: f64,
     /// Embeds even when triangle smoothing fails.
     pub ignore_smoothing_failures: bool,
     /// Enforces the chiral centers.
@@ -101,8 +93,6 @@ pub struct EmbedParameters {
     pub use_macrocycle_torsions: bool,
     /// Uses the 1-4 distance bounds heuristics for macrocycles.
     pub use_macrocycle14config: bool,
-    /// Minimizes in stages rather than all at once.
-    pub use_legacy_implementation: bool,
     /// Scales the bounds-matrix restraints against the others.
     pub bounds_mat_force_scaling: f64,
     /// Uses the molecule's symmetry when pruning.
@@ -140,7 +130,6 @@ impl EmbedParameters {
         let mut params = EmbedParameters {
             max_iterations: 0,
             num_threads: 1,
-            timeout: 0,
             random_seed: -1,
             clear_confs: true,
             use_random_coords: false,
@@ -148,7 +137,6 @@ impl EmbedParameters {
             rand_neg_eig: true,
             num_zero_fail: 1,
             optimizer_force_tol: 1e-3,
-            basin_thresh: 5.0,
             ignore_smoothing_failures: false,
             enforce_chirality: true,
             use_exp_torsion_angle_prefs: false,
@@ -161,7 +149,6 @@ impl EmbedParameters {
             use_small_ring_torsions: false,
             use_macrocycle_torsions: false,
             use_macrocycle14config: false,
-            use_legacy_implementation: true,
             bounds_mat_force_scaling: 1.0,
             use_symmetry_for_pruning: true,
             force_trans_amides: true,
@@ -181,7 +168,6 @@ impl EmbedParameters {
     fn update(&mut self, data: &ffi::EmbedParametersData) {
         self.max_iterations = data.max_iterations;
         self.num_threads = data.num_threads;
-        self.timeout = data.timeout;
         self.random_seed = data.random_seed;
         self.clear_confs = data.clear_confs;
         self.use_random_coords = data.use_random_coords;
@@ -189,7 +175,6 @@ impl EmbedParameters {
         self.rand_neg_eig = data.rand_neg_eig;
         self.num_zero_fail = data.num_zero_fail;
         self.optimizer_force_tol = data.optimizer_force_tol;
-        self.basin_thresh = data.basin_thresh;
         self.ignore_smoothing_failures = data.ignore_smoothing_failures;
         self.enforce_chirality = data.enforce_chirality;
         self.use_exp_torsion_angle_prefs = data.use_exp_torsion_angle_prefs;
@@ -202,7 +187,6 @@ impl EmbedParameters {
         self.use_small_ring_torsions = data.use_small_ring_torsions;
         self.use_macrocycle_torsions = data.use_macrocycle_torsions;
         self.use_macrocycle14config = data.use_macrocycle14config;
-        self.use_legacy_implementation = data.use_legacy_implementation;
         self.bounds_mat_force_scaling = data.bounds_mat_force_scaling;
         self.use_symmetry_for_pruning = data.use_symmetry_for_pruning;
         self.force_trans_amides = data.force_trans_amides;
@@ -222,7 +206,6 @@ impl EmbedParameters {
         Ok(ffi::EmbedParametersData {
             max_iterations: self.max_iterations,
             num_threads: self.num_threads,
-            timeout: self.timeout,
             random_seed: self.random_seed,
             clear_confs: self.clear_confs,
             use_random_coords: self.use_random_coords,
@@ -230,7 +213,6 @@ impl EmbedParameters {
             rand_neg_eig: self.rand_neg_eig,
             num_zero_fail: self.num_zero_fail,
             optimizer_force_tol: self.optimizer_force_tol,
-            basin_thresh: self.basin_thresh,
             ignore_smoothing_failures: self.ignore_smoothing_failures,
             enforce_chirality: self.enforce_chirality,
             use_exp_torsion_angle_prefs: self.use_exp_torsion_angle_prefs,
@@ -243,7 +225,6 @@ impl EmbedParameters {
             use_small_ring_torsions: self.use_small_ring_torsions,
             use_macrocycle_torsions: self.use_macrocycle_torsions,
             use_macrocycle14config: self.use_macrocycle14config,
-            use_legacy_implementation: self.use_legacy_implementation,
             bounds_mat_force_scaling: self.bounds_mat_force_scaling,
             use_symmetry_for_pruning: self.use_symmetry_for_pruning,
             force_trans_amides: self.force_trans_amides,
@@ -341,15 +322,14 @@ presets! {
     etkdg_v3 = ETKDGv3, "ETKDGv3", "ETKDG, version 3, with macrocycle torsions";
     sr_etkdg_v3 = SrETKDGv3, "srETKDGv3", "ETKDG, version 3, with small-ring torsions";
     etdg = ETDG, "ETDG", "ETDG";
-    etdg_v2 = ETDGv2, "ETDGv2", "ETDG, version 2";
     kdg = KDG, "KDG", "KDG";
-    dg = DG, "DG", "plain distance geometry";
 }
 
-/// Python's keyword defaults for `EmbedMolecule`, which differ from
-/// `EmbedParameters`' own.
+/// Python's keyword defaults for `EmbedMolecule` and `EmbedMultipleConfs`,
+/// which differ from `EmbedParameters`' own.
 fn keyword_defaults() -> EmbedParameters {
     EmbedParameters {
+        only_heavy_atoms_for_rms: false,
         use_exp_torsion_angle_prefs: true,
         use_basic_knowledge: true,
         use_macrocycle_torsions: true,
@@ -358,17 +338,11 @@ fn keyword_defaults() -> EmbedParameters {
     }
 }
 
-/// The parameters as RDKit's JSON. Mirrors
-/// `rdDistGeom.EmbedParametersToJSON`.
-pub fn embed_parameters_to_json(embed_parameters: &EmbedParameters) -> Result<String> {
-    to_string(ffi::embed_parameters_to_json(&embed_parameters.to_ffi()?)?)
-}
-
 /// Embeds a conformer with Python's keyword defaults, returning its id or −1
 /// on failure. Mirrors `rdDistGeom.EmbedMolecule(mol)`, whose defaults are
 /// `EmbedParameters::default()` with `use_exp_torsion_angle_prefs`,
 /// `use_basic_knowledge`, `use_macrocycle_torsions`, and
-/// `use_macrocycle14config` set. A molecule without atoms is `Error::Value`.
+/// `use_macrocycle14config` set and `only_heavy_atoms_for_rms` unset. A molecule without atoms is `Error::Value`.
 pub fn embed_molecule(mol: &mut Mol) -> Result<i32> {
     embed_molecule_with_params(mol, &mut keyword_defaults())
 }
@@ -390,18 +364,13 @@ pub fn embed_molecule_with_params(mol: &mut Mol, params: &mut EmbedParameters) -
 
 /// Embeds ten conformers with Python's keyword defaults, returning their
 /// ids. Mirrors `rdDistGeom.EmbedMultipleConfs(mol)`, whose defaults are
-/// those of `embed_molecule` with `only_heavy_atoms_for_rms` unset.
+/// those of `embed_molecule`.
 pub fn embed_multiple_confs(mol: &mut Mol) -> Result<Vec<i32>> {
-    let mut params = EmbedParameters {
-        only_heavy_atoms_for_rms: false,
-        ..keyword_defaults()
-    };
-    embed_multiple_confs_with_params(mol, 10, &mut params)
+    embed_multiple_confs_with_params(mol, 10, &mut keyword_defaults())
 }
 
 /// Mirrors `rdDistGeom.EmbedMultipleConfs(mol, numConfs, params)`, and its
-/// keyword form, as `embed_molecule_with_params`; a timeout is a list
-/// ending in −1.
+/// keyword form, as `embed_molecule_with_params`.
 pub fn embed_multiple_confs_with_params(
     mol: &mut Mol,
     num_confs: u32,
@@ -425,12 +394,6 @@ pub struct GetMoleculeBoundsMatrixParams {
     pub do_triangle_smoothing: bool,
     /// Uses macrocycle heuristics for 1-4 bounds.
     pub use_macrocycle14config: bool,
-    /// Keeps amides trans.
-    pub force_trans_amides: bool,
-    /// Sets 1-4 bounds from the topology.
-    pub set14bounds: bool,
-    /// Sets 1-3 bounds from the topology.
-    pub set13bounds: bool,
 }
 
 impl Default for GetMoleculeBoundsMatrixParams {
@@ -440,37 +403,6 @@ impl Default for GetMoleculeBoundsMatrixParams {
             scale_vdw: false,
             do_triangle_smoothing: true,
             use_macrocycle14config: false,
-            force_trans_amides: true,
-            set14bounds: true,
-            set13bounds: true,
-        }
-    }
-}
-
-/// Parameters for `get_molecule_bounds_matrix_embed_parameters_with_params`,
-/// with Python's defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct GetMoleculeBoundsMatrixEmbedParametersParams {
-    /// Triangle-smooths the matrix.
-    pub do_triangle_smoothing: bool,
-    /// Scales the van der Waals lower bounds down.
-    pub scale_vdw: bool,
-    /// Sets 1-5 bounds from the topology.
-    pub set15bounds: bool,
-    /// Sets 1-4 bounds from the topology.
-    pub set14bounds: bool,
-    /// Sets 1-3 bounds from the topology.
-    pub set13bounds: bool,
-}
-
-impl Default for GetMoleculeBoundsMatrixEmbedParametersParams {
-    fn default() -> GetMoleculeBoundsMatrixEmbedParametersParams {
-        GetMoleculeBoundsMatrixEmbedParametersParams {
-            do_triangle_smoothing: true,
-            scale_vdw: false,
-            set15bounds: true,
-            set14bounds: true,
-            set13bounds: true,
         }
     }
 }
@@ -483,58 +415,17 @@ pub fn get_molecule_bounds_matrix(mol: &Mol) -> Result<Vec<Vec<f64>>> {
 }
 
 /// Mirrors `rdDistGeom.GetMoleculeBoundsMatrix(mol, set15bounds, scaleVDW,
-/// doTriangleSmoothing, useMacrocycle14config, forceTransAmides,
-/// set14bounds, set13bounds)`.
+/// doTriangleSmoothing, useMacrocycle14config)`.
 pub fn get_molecule_bounds_matrix_with_params(
     mol: &Mol,
     params: &GetMoleculeBoundsMatrixParams,
 ) -> Result<Vec<Vec<f64>>> {
-    let embed_parameters = EmbedParameters {
-        use_macrocycle14config: params.use_macrocycle14config,
-        force_trans_amides: params.force_trans_amides,
-        ..EmbedParameters::default()
-    };
-    get_molecule_bounds_matrix_embed_parameters_with_params(
-        mol,
-        &embed_parameters,
-        &GetMoleculeBoundsMatrixEmbedParametersParams {
-            do_triangle_smoothing: params.do_triangle_smoothing,
-            scale_vdw: params.scale_vdw,
-            set15bounds: params.set15bounds,
-            set14bounds: params.set14bounds,
-            set13bounds: params.set13bounds,
-        },
-    )
-}
-
-/// The molecule's distance bounds under `embed_parameters`. Mirrors
-/// `rdDistGeom.GetMoleculeBoundsMatrix(mol, embedParameters)` (A5).
-pub fn get_molecule_bounds_matrix_embed_parameters(
-    mol: &Mol,
-    embed_parameters: &EmbedParameters,
-) -> Result<Vec<Vec<f64>>> {
-    get_molecule_bounds_matrix_embed_parameters_with_params(
-        mol,
-        embed_parameters,
-        &GetMoleculeBoundsMatrixEmbedParametersParams::default(),
-    )
-}
-
-/// Mirrors `rdDistGeom.GetMoleculeBoundsMatrix(mol, embedParameters,
-/// doTriangleSmoothing, scaleVDW, set15bounds, set14bounds, set13bounds)`.
-pub fn get_molecule_bounds_matrix_embed_parameters_with_params(
-    mol: &Mol,
-    embed_parameters: &EmbedParameters,
-    params: &GetMoleculeBoundsMatrixEmbedParametersParams,
-) -> Result<Vec<Vec<f64>>> {
     let values = ffi::get_molecule_bounds_matrix(
         mol.as_ffi(),
-        &embed_parameters.to_ffi()?,
-        params.do_triangle_smoothing,
-        params.scale_vdw,
         params.set15bounds,
-        params.set14bounds,
-        params.set13bounds,
+        params.scale_vdw,
+        params.do_triangle_smoothing,
+        params.use_macrocycle14config,
     )?;
     Ok(rows(&values, mol.get_num_atoms() as usize))
 }
@@ -609,49 +500,4 @@ pub fn get_experimental_torsions_with_params(
             })
         })
         .collect()
-}
-
-/// The failure causes in the order RDKit checks them, with each one's index
-/// in the failure counts. Mirrors `rdDistGeom.OrderedEmbedFailureCauses()`.
-pub fn ordered_embed_failure_causes() -> Vec<(EmbedFailureCauses, usize)> {
-    ordered_embed_failure_causes_with_legacy_implementation(true)
-}
-
-/// Mirrors
-/// `rdDistGeom.OrderedEmbedFailureCauses(legacyImplementation)`; the
-/// all-in-one list, like Python's, gives `LinearDoubleBond` the index 9.
-pub fn ordered_embed_failure_causes_with_legacy_implementation(
-    legacy_implementation: bool,
-) -> Vec<(EmbedFailureCauses, usize)> {
-    use EmbedFailureCauses as E;
-    if legacy_implementation {
-        vec![
-            (E::InitialCoords, 0),
-            (E::FirstMinimization, 1),
-            (E::CheckTetrahedralCenters, 2),
-            (E::CheckChiralCenters, 3),
-            (E::MinimizeFourthDimension, 4),
-            (E::EtkMinimization, 5),
-            (E::LinearDoubleBond, 8),
-            (E::CheckChiralCenters2, 10),
-            (E::FinalChiralBounds, 6),
-            (E::FinalCenterInVolume, 7),
-            (E::BadDoubleBondStereo, 9),
-            (E::ExceededTimeout, 11),
-        ]
-    } else {
-        vec![
-            (E::InitialCoords, 0),
-            (E::Minimization, 12),
-            (E::KtermViolation, 13),
-            (E::CheckTetrahedralCenters, 2),
-            (E::CheckChiralCenters, 3),
-            (E::FinalChiralBounds, 6),
-            (E::FinalCenterInVolume, 7),
-            (E::BadDoubleBondStereo, 9),
-            (E::Clash, 14),
-            (E::LinearDoubleBond, 9),
-            (E::ExceededTimeout, 11),
-        ]
-    }
 }

@@ -19,10 +19,14 @@ const RDKit::PeriodicTable &table() {
   return *RDKit::PeriodicTable::getTable();
 }
 
+// RDKit 2024.03's table holds atomic numbers 0 to 118 (atomic_data.cpp),
+// and has no getter for its size.
+constexpr unsigned kMaxAtomicNumber = 118;
+
 // RDKit checks atomic numbers with PRECONDITION; this reports them as
 // IndexError, like other indices (CONVENTIONS.md E3).
 unsigned checked(unsigned atomic_number) {
-  check_index(atomic_number, table().getMaxAtomicNumber() + 1);
+  check_index(atomic_number, kMaxAtomicNumber + 1);
   return atomic_number;
 }
 
@@ -30,10 +34,6 @@ unsigned checked(unsigned atomic_number) {
 
 unsigned periodic_table_get_atomic_number(rust::Str element_symbol) {
   return table().getAtomicNumber(std::string(element_symbol));
-}
-
-unsigned periodic_table_get_max_atomic_number() {
-  return table().getMaxAtomicNumber();
 }
 
 std::unique_ptr<std::string> periodic_table_get_element_symbol(
@@ -87,10 +87,6 @@ int periodic_table_get_most_common_isotope(unsigned atomic_number) {
 
 double periodic_table_get_most_common_isotope_mass(unsigned atomic_number) {
   return table().getMostCommonIsotopeMass(checked(atomic_number));
-}
-
-unsigned periodic_table_get_row(unsigned atomic_number) {
-  return table().getRow(checked(atomic_number));
 }
 
 double periodic_table_get_mass_for_isotope(unsigned atomic_number,

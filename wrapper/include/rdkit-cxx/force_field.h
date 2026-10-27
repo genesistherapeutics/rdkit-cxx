@@ -69,7 +69,10 @@ class MMFFMolProperties {
                                                                  verbosity)),
         d_num_atoms(mol.getNumAtoms()) {}
   RDKit::MMFF::MMFFMolProperties &props() { return *d_props; }
-  const RDKit::MMFF::MMFFMolProperties &props() const { return *d_props; }
+  // RDKit 2024.03 declares the getters, and the parameter lookups, without
+  // const, though none of them changes the properties, so the shared form
+  // reaches them through a non-const reference.
+  RDKit::MMFF::MMFFMolProperties &props() const { return *d_props; }
   unsigned num_atoms() const { return d_num_atoms; }
 
  private:
@@ -159,20 +162,12 @@ TermParams mmff_mol_properties_get_vdw_params(const MMFFMolProperties &props,
                                               unsigned idx1, unsigned idx2);
 void mmff_mol_properties_set_dielectric_model(MMFFMolProperties &props,
                                               std::uint8_t model);
-std::uint8_t mmff_mol_properties_get_dielectric_model(
-    const MMFFMolProperties &props);
 void mmff_mol_properties_set_dielectric_constant(MMFFMolProperties &props,
                                                  double constant);
-double mmff_mol_properties_get_dielectric_constant(
-    const MMFFMolProperties &props);
 void mmff_mol_properties_set_term(MMFFMolProperties &props, MMFFTerm term,
                                   bool state);
-bool mmff_mol_properties_get_term(const MMFFMolProperties &props,
-                                  MMFFTerm term);
 void mmff_mol_properties_set_variant(MMFFMolProperties &props,
                                      rust::Str variant);
-std::unique_ptr<std::string> mmff_mol_properties_get_variant(
-    const MMFFMolProperties &props);
 void mmff_mol_properties_set_verbosity(MMFFMolProperties &props,
                                        MMFFVerbosity verbosity);
 

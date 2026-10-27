@@ -24,8 +24,6 @@ namespace rdkit_cxx {
 
 // Defined by the bridge (src/ffi/standardize_validate.rs).
 struct ValidationCallback;
-struct FeaturesValidationData;
-struct Layout2DValidationData;
 
 // A validation method, shared: copies of a handle share one, which RDKit
 // only reads. sums_charges says whether its validation sums the molecule's
@@ -49,12 +47,11 @@ struct AtomList {
 
 std::unique_ptr<ValidationMethodHandle> validation_rust(
     rust::Box<ValidationCallback> callback);
-std::unique_ptr<ValidationMethodHandle> validation_rdkit(
-    bool allow_empty_molecules);
+std::unique_ptr<ValidationMethodHandle> validation_rdkit();
 std::unique_ptr<ValidationMethodHandle> validation_no_atom();
 std::unique_ptr<ValidationMethodHandle> validation_fragment();
 std::unique_ptr<ValidationMethodHandle> validation_neutral();
-std::unique_ptr<ValidationMethodHandle> validation_isotope(bool strict);
+std::unique_ptr<ValidationMethodHandle> validation_isotope();
 std::unique_ptr<ValidationMethodHandle> validation_mol_vs_default();
 // Copies each method, as Python's MolVSValidation(validations) does; an
 // empty list is ValueErrorException, as there.
@@ -64,13 +61,6 @@ std::unique_ptr<ValidationMethodHandle> validation_allowed_atoms(
     const AtomList &atoms);
 std::unique_ptr<ValidationMethodHandle> validation_disallowed_atoms(
     const AtomList &atoms);
-std::unique_ptr<ValidationMethodHandle> validation_disallowed_radical();
-std::unique_ptr<ValidationMethodHandle> validation_features(
-    const FeaturesValidationData &data);
-std::unique_ptr<ValidationMethodHandle> validation_is_2d(double threshold);
-std::unique_ptr<ValidationMethodHandle> validation_layout_2d(
-    const Layout2DValidationData &data);
-std::unique_ptr<ValidationMethodHandle> validation_stereo();
 
 std::unique_ptr<ValidationMethodHandle> validation_clone(
     const ValidationMethodHandle &handle);

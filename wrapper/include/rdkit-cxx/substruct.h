@@ -20,7 +20,6 @@ namespace rdkit_cxx {
 
 // Shared structs, defined by the bridge (src/ffi/substruct.rs).
 struct SubstructMatchParametersData;
-struct AtomCoordsMatcherData;
 
 // Conversions for other areas' wrappers that hold the parameters.
 SubstructMatchParametersData substruct_params_to_data(
@@ -29,11 +28,6 @@ RDKit::SubstructMatchParameters substruct_params_from_data(
     const SubstructMatchParametersData &data);
 
 SubstructMatchParametersData substruct_match_parameters_default();
-AtomCoordsMatcherData atom_coords_matcher_default();
-AtomCoordsMatcherData atom_coords_matcher_new(int ref_conf_id,
-                                              int query_conf_id, double tol);
-bool atom_coords_matcher_call(const AtomCoordsMatcherData &matcher,
-                              const Atom &query_atom, const Atom &target_atom);
 
 // As helpHasSubstructMatch, helpGetSubstructMatch, and
 // helpGetSubstructMatches in Code/GraphMol/Wrap/substructmethods.h, for each

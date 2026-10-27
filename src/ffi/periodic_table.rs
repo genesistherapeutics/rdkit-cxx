@@ -10,7 +10,6 @@ pub(crate) mod ffi {
         include!("rdkit-cxx/periodic_table.h");
 
         fn periodic_table_get_atomic_number(element_symbol: &str) -> Result<u32>;
-        fn periodic_table_get_max_atomic_number() -> Result<u32>;
         fn periodic_table_get_element_symbol(atomic_number: u32) -> Result<UniquePtr<CxxString>>;
         fn periodic_table_get_element_name(atomic_number: u32) -> Result<UniquePtr<CxxString>>;
         fn periodic_table_get_atomic_weight(atomic_number: u32) -> Result<f64>;
@@ -22,7 +21,6 @@ pub(crate) mod ffi {
         fn periodic_table_get_n_outer_elecs(atomic_number: u32) -> Result<i32>;
         fn periodic_table_get_most_common_isotope(atomic_number: u32) -> Result<i32>;
         fn periodic_table_get_most_common_isotope_mass(atomic_number: u32) -> Result<f64>;
-        fn periodic_table_get_row(atomic_number: u32) -> Result<u32>;
         fn periodic_table_get_mass_for_isotope(atomic_number: u32, isotope: u32) -> Result<f64>;
         fn periodic_table_get_abundance_for_isotope(
             atomic_number: u32,

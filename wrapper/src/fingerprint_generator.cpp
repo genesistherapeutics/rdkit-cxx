@@ -22,8 +22,6 @@
 #include <GraphMol/Fingerprints/RDKitFPGenerator.h>
 #include <GraphMol/Fingerprints/TopologicalTorsionGenerator.h>
 #include <RDGeneral/Exceptions.h>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -75,21 +73,28 @@ void check_torsion_atom_count(std::uint32_t count, bool include_chirality) {
 }
 
 // What every fingerprint call trusts about the generator's options. They
-// are checked when a generator is made, loaded, or given new options.
-void check_options(const RDKit::FingerprintArguments &args) {
+// are checked when a generator is made or given new options.
+void check_option_values(std::uint32_t fp_size, bool count_simulation,
+                         bool no_count_bounds,
+                         std::uint32_t num_bits_per_feature) {
   // U3: the bit vectors hold fpSize bits, and their int arithmetic needs no
   // more than INT_MAX.
-  if (args.d_fpSize > static_cast<std::uint32_t>(INT_MAX)) {
+  if (fp_size > static_cast<std::uint32_t>(INT_MAX)) {
     throw ValueErrorException("fpSize must be at most 2^31 - 1");
   }
   // getSparseFingerprint divides by the number of count bounds.
-  if (args.df_countSimulation && args.d_countBounds.empty()) {
+  if (count_simulation && no_count_bounds) {
     throw ValueErrorException("count simulation needs count bounds");
   }
   // As FingerprintArguments' constructor asserts.
-  if (args.d_numBitsPerFeature == 0) {
+  if (num_bits_per_feature == 0) {
     throw ValueErrorException("numBitsPerFeature must be at least 1");
   }
+}
+
+void check_options(const RDKit::FingerprintArguments &args) {
+  check_option_values(args.d_fpSize, args.df_countSimulation,
+                      args.d_countBounds.empty(), args.d_numBitsPerFeature);
   if (auto *tt = dynamic_cast<const TopologicalTorsionArguments *>(&args)) {
     check_torsion_atom_count(tt->d_torsionAtomCount, tt->df_includeChirality);
   }
@@ -141,8 +146,8 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
                 const std::vector<std::uint32_t> *from_atoms,
                 const std::vector<std::uint32_t> *ignore_atoms,
                 const std::vector<std::uint32_t> *atom_invariants,
-                const std::vector<std::uint32_t> *bond_invariants, int conf_id,
-                bool atoms_per_bit) {
+                const std::vector<std::uint32_t> *bond_invariants,
+                int conf_id) {
   for (const auto *atoms : {from_atoms, ignore_atoms}) {
     if (atoms) {
       for (auto idx : *atoms) {
@@ -156,12 +161,8 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
   if (bond_invariants && bond_invariants->size() < mol.getNumBonds()) {
     throw ValueErrorException("customBondInvariants needs one per bond");
   }
-  // Atom pairs, and Morgan's atomsPerBit, read the n*n distance matrix.
-  bool atom_pairs =
-      dynamic_cast<const AtomPairArguments *>(gen.getOptions()) != nullptr;
-  bool morgan =
-      dynamic_cast<const MorganArguments *>(gen.getOptions()) != nullptr;
-  if (atom_pairs || (morgan && atoms_per_bit)) {
+  // Atom pairs read the n*n distance matrix.
+  if (dynamic_cast<const AtomPairArguments *>(gen.getOptions())) {
     check_matrix_size(mol);
   }
   if (uses_3d_distances(gen)) {
@@ -185,12 +186,8 @@ class Outputs {
     if (data.collect_atom_counts) {
       d_ao.allocateAtomCounts();
     }
-    if (data.collect_atoms_per_bit) {
-      d_ao.allocateAtomsPerBit();
-    }
     d_any = data.collect_atom_to_bits || data.collect_bit_info_map ||
-            data.collect_bit_paths || data.collect_atom_counts ||
-            data.collect_atoms_per_bit;
+            data.collect_bit_paths || data.collect_atom_counts;
   }
 
   RDKit::AdditionalOutput *get() { return d_any ? &d_ao : nullptr; }
@@ -216,8 +213,6 @@ class Outputs {
     if (d_ao.atomCounts) {
       data.atom_counts = to_vec(*d_ao.atomCounts);
     }
-    copy_lists(d_ao.atomsPerBit, data.atoms_per_bit_keys,
-               data.atoms_per_bit_counts, data.atoms_per_bit_values);
   }
 
  private:
@@ -258,8 +253,7 @@ auto with_args(const FpGenerator &gen, const RWMol &mol,
   auto bond_invariants = optional_list(data.has_custom_bond_invariants,
                                        data.custom_bond_invariants);
   check_call(gen, mol, from_atoms.get(), ignore_atoms.get(),
-             atom_invariants.get(), bond_invariants.get(), data.conf_id,
-             outputs.collect_atoms_per_bit);
+             atom_invariants.get(), bond_invariants.get(), data.conf_id);
   Outputs ao(outputs);
   RDKit::FingerprintFuncArguments args(
       from_atoms.get(), ignore_atoms.get(), data.conf_id, ao.get(),
@@ -317,7 +311,7 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
                                           int num_threads) {
   const auto &list = mols.mols();
   for (const auto &mol : list) {
-    check_call(gen, *mol, nullptr, nullptr, nullptr, nullptr, -1, false);
+    check_call(gen, *mol, nullptr, nullptr, nullptr, nullptr, -1);
   }
   auto result = std::make_unique<FingerprintList>();
   if (is_bits(output)) {
@@ -431,48 +425,6 @@ std::unique_ptr<FpGenerator> get_topological_torsion_generator(
           true));
 }
 
-// generatorFromJSON passes null for a part the JSON leaves out, and the
-// generator dereferences it: the constructor the environment generator, and
-// the atom-pair and torsion environments the atom invariants (Python
-// segfaults on "{}"). Each environment generator also dynamic_casts the
-// options to its own type without checking. So the JSON must name all three
-// parts, with matching options and environment.
-void check_generator_json(const std::string &json) {
-  std::istringstream ss(json);
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(ss, pt);
-  auto type = [&](const char *node) {
-    auto child = pt.get_child_optional(node);
-    auto typ = child ? child->get_optional<std::string>("type")
-                     : boost::optional<std::string>();
-    if (!typ) {
-      throw ValueErrorException(std::string("the generator JSON needs ") +
-                                node + " with a type");
-    }
-    return *typ;
-  };
-  auto args = type("fingerprintArguments");
-  auto env = type("atomEnvironmentGenerator");
-  type("atomInvariantsGenerator");
-  static const std::vector<std::pair<std::string, std::string>> pairs{
-      {"MorganArguments", "MorganEnvGenerator"},
-      {"RDKitFPArguments", "RDKitFPEnvGenerator"},
-      {"AtomPairArguments", "AtomPairEnvGenerator"},
-      {"TopologicalTorsionArguments", "TopologicalTorsionEnvGenerator"}};
-  if (std::find(pairs.begin(), pairs.end(), std::make_pair(args, env)) ==
-      pairs.end()) {
-    throw ValueErrorException("the generator JSON's " + args + " and " + env +
-                              " do not go together");
-  }
-}
-
-std::unique_ptr<FpGenerator> fingerprint_generator_from_json(rust::Str json) {
-  std::string text(json);
-  check_generator_json(text);
-  // The torsion length is checked before the generator reads it.
-  return checked(RDKit::generatorFromJSON(text).release());
-}
-
 std::unique_ptr<AtomInvGen> get_morgan_atom_inv_gen(
     bool include_ring_membership) {
   return std::make_unique<RDKit::MorganFingerprint::MorganAtomInvGenerator>(
@@ -562,70 +514,57 @@ FingerprintOptionsData fp_generator_get_options(const FpGenerator &gen) {
 }
 
 // Python's GetOptions returns the generator's own options to change in
-// place; here the new options are checked as a whole first.
+// place; here the new options are checked as a whole first. RDKit 2024.03's
+// FingerprintArguments cannot be copied, so the values are checked before
+// any is set.
 void fp_generator_set_options(FpGenerator &gen,
                               const FingerprintOptionsData &data) {
   auto *args = gen.getOptions();
-  auto set_common = [&](RDKit::FingerprintArguments &a) {
-    a.df_countSimulation = data.count_simulation;
-    a.df_includeChirality = data.include_chirality;
-    a.d_fpSize = data.fp_size;
-    a.d_numBitsPerFeature = data.num_bits_per_feature;
-    a.d_countBounds.assign(data.count_bounds.begin(), data.count_bounds.end());
-  };
-  auto apply = [&](auto *target, auto set) {
-    using Args = std::remove_pointer_t<decltype(target)>;
-    if (!target) {
-      throw ValueErrorException("the options are for another fingerprint");
-    }
-    Args candidate(*target);
-    set_common(candidate);
-    set(candidate);
-    check_options(candidate);
-    *target = candidate;
-  };
-  switch (data.kind) {
-    case FPType::MorganFP:
-      apply(dynamic_cast<MorganArguments *>(args), [&](MorganArguments &a) {
-        a.d_radius = data.radius;
-        a.df_onlyNonzeroInvariants = data.only_nonzero_invariants;
-        a.df_includeRedundantEnvironments = data.include_redundant_environments;
-      });
-      break;
-    case FPType::AtomPairFP:
-      apply(dynamic_cast<AtomPairArguments *>(args), [&](AtomPairArguments &a) {
-        a.d_minDistance = data.min_distance;
-        a.d_maxDistance = data.max_distance;
-        a.df_use2D = data.use_2d;
-      });
-      break;
-    case FPType::RDKitFP:
-      apply(dynamic_cast<RDKitFPArguments *>(args), [&](RDKitFPArguments &a) {
-        a.d_minPath = data.min_path;
-        a.d_maxPath = data.max_path;
-        a.df_useHs = data.use_hs;
-        a.df_branchedPaths = data.branched_paths;
-        a.df_useBondOrder = data.use_bond_order;
-      });
-      break;
-    case FPType::TopologicalTorsionFP:
-      apply(dynamic_cast<TopologicalTorsionArguments *>(args),
-            [&](TopologicalTorsionArguments &a) {
-              a.d_torsionAtomCount = data.torsion_atom_count;
-              a.df_onlyShortestPaths = data.only_shortest_paths;
-            });
-      break;
-    default:
-      throw ValueErrorException("unknown fingerprint type");
+  auto *morgan = dynamic_cast<MorganArguments *>(args);
+  auto *atom_pair = dynamic_cast<AtomPairArguments *>(args);
+  auto *rdkit_fp = dynamic_cast<RDKitFPArguments *>(args);
+  auto *torsion = dynamic_cast<TopologicalTorsionArguments *>(args);
+  bool matches = (data.kind == FPType::MorganFP && morgan) ||
+                 (data.kind == FPType::AtomPairFP && atom_pair) ||
+                 (data.kind == FPType::RDKitFP && rdkit_fp) ||
+                 (data.kind == FPType::TopologicalTorsionFP && torsion);
+  if (!matches) {
+    throw ValueErrorException("the options are for another fingerprint");
+  }
+  check_option_values(data.fp_size, data.count_simulation,
+                      data.count_bounds.empty(), data.num_bits_per_feature);
+  if (torsion) {
+    check_torsion_atom_count(data.torsion_atom_count, data.include_chirality);
+  }
+  args->df_countSimulation = data.count_simulation;
+  args->df_includeChirality = data.include_chirality;
+  args->d_fpSize = data.fp_size;
+  args->d_numBitsPerFeature = data.num_bits_per_feature;
+  args->d_countBounds.assign(data.count_bounds.begin(),
+                             data.count_bounds.end());
+  if (morgan) {
+    morgan->d_radius = data.radius;
+    morgan->df_onlyNonzeroInvariants = data.only_nonzero_invariants;
+    morgan->df_includeRedundantEnvironments =
+        data.include_redundant_environments;
+  } else if (atom_pair) {
+    atom_pair->d_minDistance = data.min_distance;
+    atom_pair->d_maxDistance = data.max_distance;
+    atom_pair->df_use2D = data.use_2d;
+  } else if (rdkit_fp) {
+    rdkit_fp->d_minPath = data.min_path;
+    rdkit_fp->d_maxPath = data.max_path;
+    rdkit_fp->df_useHs = data.use_hs;
+    rdkit_fp->df_branchedPaths = data.branched_paths;
+    rdkit_fp->df_useBondOrder = data.use_bond_order;
+  } else {
+    torsion->d_torsionAtomCount = data.torsion_atom_count;
+    torsion->df_onlyShortestPaths = data.only_shortest_paths;
   }
 }
 
 std::unique_ptr<std::string> fp_generator_info_string(const FpGenerator &gen) {
   return std::make_unique<std::string>(gen.infoString());
-}
-
-std::unique_ptr<std::string> fp_generator_to_json(const FpGenerator &gen) {
-  return std::make_unique<std::string>(RDKit::generatorToJSON(gen));
 }
 
 std::unique_ptr<BitVect> fp_generator_bits(const FpGenerator &gen,

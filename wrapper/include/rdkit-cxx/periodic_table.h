@@ -20,7 +20,6 @@
 namespace rdkit_cxx {
 
 unsigned periodic_table_get_atomic_number(rust::Str element_symbol);
-unsigned periodic_table_get_max_atomic_number();
 std::unique_ptr<std::string> periodic_table_get_element_symbol(
     unsigned atomic_number);
 std::unique_ptr<std::string> periodic_table_get_element_name(
@@ -34,7 +33,6 @@ rust::Vec<std::int32_t> periodic_table_get_valence_list(unsigned atomic_number);
 int periodic_table_get_n_outer_elecs(unsigned atomic_number);
 int periodic_table_get_most_common_isotope(unsigned atomic_number);
 double periodic_table_get_most_common_isotope_mass(unsigned atomic_number);
-unsigned periodic_table_get_row(unsigned atomic_number);
 double periodic_table_get_mass_for_isotope(unsigned atomic_number,
                                            unsigned isotope);
 double periodic_table_get_abundance_for_isotope(unsigned atomic_number,

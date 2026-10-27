@@ -11,7 +11,6 @@ pub(crate) mod ffi {
     struct BestAlignmentParamsData {
         max_matches: i32,
         symmetrize_conjugated_terminal_groups: bool,
-        ignore_hs: bool,
         num_threads: i32,
         map_pairs: Vec<IndexPair>,
         map_counts: Vec<u32>,

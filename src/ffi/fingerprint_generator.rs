@@ -118,7 +118,6 @@ pub(crate) mod ffi {
         collect_bit_info_map: bool,
         collect_bit_paths: bool,
         collect_atom_counts: bool,
-        collect_atoms_per_bit: bool,
         atom_to_bits: Vec<U64List>,
         bit_info_map_keys: Vec<u64>,
         bit_info_map_counts: Vec<u32>,
@@ -127,9 +126,6 @@ pub(crate) mod ffi {
         bit_paths_counts: Vec<u32>,
         bit_paths_values: Vec<IndexList>,
         atom_counts: Vec<u32>,
-        atoms_per_bit_keys: Vec<u64>,
-        atoms_per_bit_counts: Vec<u32>,
-        atoms_per_bit_values: Vec<IndexList>,
     }
 
     unsafe extern "C++" {
@@ -169,7 +165,6 @@ pub(crate) mod ffi {
             data: &TopologicalTorsionGeneratorData,
             atom_inv_gen: UniquePtr<AtomInvGen>,
         ) -> Result<UniquePtr<FpGenerator>>;
-        fn fingerprint_generator_from_json(json: &str) -> Result<UniquePtr<FpGenerator>>;
 
         fn get_morgan_atom_inv_gen(include_ring_membership: bool) -> Result<UniquePtr<AtomInvGen>>;
         fn get_morgan_feature_atom_inv_gen(
@@ -193,7 +188,6 @@ pub(crate) mod ffi {
             data: &FingerprintOptionsData,
         ) -> Result<()>;
         fn fp_generator_info_string(generator: &FpGenerator) -> Result<UniquePtr<CxxString>>;
-        fn fp_generator_to_json(generator: &FpGenerator) -> Result<UniquePtr<CxxString>>;
 
         fn fp_generator_bits(
             generator: &FpGenerator,
