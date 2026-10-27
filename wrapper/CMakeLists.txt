@@ -159,7 +159,6 @@ set(RDKIT_CXX_RDKIT_TARGETS
   CIPLabeler
   MolHash
   ReducedGraphs
-  SLNParse
   MMPA
   ChemReactions
   Deprotect
@@ -209,6 +208,14 @@ set(RDKIT_CXX_RDKIT_TARGETS
 # RDKit has when it was built with YAeHMOP.
 if(TARGET RDKit::EHTLib)
   list(APPEND RDKIT_CXX_RDKIT_TARGETS EHTLib)
+endif()
+
+# conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser; without
+# one, the SLN wrappers refuse every call (sln_parse.cpp).
+if(TARGET RDKit::SLNParse)
+  list(APPEND RDKIT_CXX_RDKIT_TARGETS SLNParse)
+  set_source_files_properties(src/sln_parse.cpp PROPERTIES
+    COMPILE_DEFINITIONS RDKIT_CXX_HAVE_SLN_PARSE)
 endif()
 
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})

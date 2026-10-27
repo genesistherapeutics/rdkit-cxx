@@ -319,6 +319,8 @@ Other limits:
 - Checks refuse some input Python accepts where RDKit would read it
   unsafely, such as substance-group parent chains that span molecules, or
   InChI options outside structure perception.
+- conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser, so on
+  macOS the `rd_sln_parse` functions are `Error::Value`.
 - Windows is not supported yet.
 
 ## Parity

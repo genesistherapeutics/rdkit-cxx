@@ -8,11 +8,15 @@
 #include <mutex>
 #include <string>
 
+#ifdef RDKIT_CXX_HAVE_SLN_PARSE
 #include <GraphMol/SLNParse/SLNParse.h>
+#endif
 
 #include "rdkit-cxx/errors.h"
 
 namespace rdkit_cxx {
+
+#ifdef RDKIT_CXX_HAVE_SLN_PARSE
 
 namespace {
 
@@ -37,5 +41,25 @@ std::unique_ptr<RWMol> mol_from_query_sln(rust::Str sln, bool merge_hs,
   std::lock_guard<std::mutex> lock(sln_mutex);
   return owned(RDKit::SLNQueryToMol(std::string(sln), merge_hs, debug_parser));
 }
+
+#else
+
+// RDKit built without its SLN parser, as conda-forge's macOS build of RDKit
+// 2026.03.6 is (CMakeLists.txt).
+namespace {
+
+[[noreturn]] void no_sln_parser() {
+  throw ValueErrorException("this RDKit has no SLN parser");
+}
+
+}  // namespace
+
+std::unique_ptr<RWMol> mol_from_sln(rust::Str, bool, bool) { no_sln_parser(); }
+
+std::unique_ptr<RWMol> mol_from_query_sln(rust::Str, bool, bool) {
+  no_sln_parser();
+}
+
+#endif
 
 }  // namespace rdkit_cxx

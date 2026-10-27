@@ -9,8 +9,24 @@ use rdkit_cxx::chem::*;
 
 // Expected values come from Python's rdSLNParse.
 
+/// conda-forge's macOS build of RDKit 2026.03.6 ships no SLN parser, and
+/// every SLN function is then `Error::Value`; its Linux builds have one.
+fn has_sln_parser() -> bool {
+    let has = match mol_from_sln("C") {
+        Ok(_) => true,
+        Err(Error::Value { message }) if message.contains("no SLN parser") => false,
+        other => panic!("{other:?}"),
+    };
+    assert!(has || !cfg!(target_os = "linux"));
+    has
+}
+
 #[test]
 fn molecules_and_queries() {
+    if !has_sln_parser() {
+        assert!(matches!(mol_from_query_sln("C"), Err(Error::Value { .. })));
+        return;
+    }
     let mol = mol_from_sln("CH3CH2OH").unwrap();
     assert_eq!(mol_to_smiles(&mol).unwrap(), "CCO");
     let raw = mol_from_sln_with_params(
@@ -48,6 +64,9 @@ fn molecules_and_queries() {
 
 #[test]
 fn parsing_from_threads() {
+    if !has_sln_parser() {
+        return;
+    }
     // The parser's debug flag is a global the wrapper guards (U4).
     std::thread::scope(|scope| {
         for _ in 0..4 {

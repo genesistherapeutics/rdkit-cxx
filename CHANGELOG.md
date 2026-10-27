@@ -12,6 +12,9 @@ A program built against one release stops when it loads with another.
 
 ### Compared with 2026.9.0
 
+- conda-forge's macOS build of RDKit 2026.03.6 ships no SLN parser (and no
+  `rdSLNParse` for Python), so on macOS `rd_sln_parse`'s functions are
+  `Error::Value`; its Linux builds have the parser.
 - What RDKit 2026.03 lacks is not bound: the embedder's initial-embedding
   modes, embedding force field, `onlyInitialEmbedding`, `ETKDGv4`, and
   Gaussian torsion terms; `GetSymmSSSR`'s `algorithm` and `recalcSSSR`, the
