@@ -27,6 +27,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/transforms.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -452,6 +453,18 @@ void check_zipped_depiction(const RDKit::MolzipParams &params, Zip zip) {
   }
 }
 
+// molzip of a list writes each fragment after the first with MolToSmiles
+// (MolZip.cpp), which perceives its stereochemistry.
+void check_zipped_fragments(const std::vector<const RDKit::ROMol *> &parts,
+                            const RDKit::MolzipParams &params) {
+  if (params.label == RDKit::MolzipLabel::FragmentOnBonds || parts.size() < 2) {
+    return;
+  }
+  for (std::size_t i = 1; i < parts.size(); ++i) {
+    check_stereo_relevant_cycles(*parts[i]);
+  }
+}
+
 }  // namespace
 
 // molzip returns null when it cannot zip. It combines the molecules and then
@@ -501,6 +514,7 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
     }
   }
   check_removals(parts);
+  check_zipped_fragments(parts, params);
   auto lock = lock_if_depicting(params);
   check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
     return RDKit::molzip(mols.mols(), probe);
@@ -533,6 +547,16 @@ std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
     }
   }
   check_removals(parts);
+  {
+    // As molzip(map), which zips the core first.
+    std::vector<const RDKit::ROMol *> ordered{map["Core"].get()};
+    for (const auto &[name, mol] : map) {
+      if (name != "Core") {
+        ordered.push_back(mol.get());
+      }
+    }
+    check_zipped_fragments(ordered, params);
+  }
   auto lock = lock_if_depicting(params);
   check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
     return RDKit::molzip(map, probe);
