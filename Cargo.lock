@@ -209,7 +209,7 @@ dependencies = [
 
 [[package]]
 name = "rdkit-cxx"
-version = "2026.3.0"
+version = "2024.9.0"
 dependencies = [
  "cmake",
  "cxx",

@@ -6,7 +6,7 @@
 # Builds the C++ half of the rdkit-cxx crate: the hand-written wrapper
 # functions and the C++ that cxx generates for each bridge. The crate's build
 # script passes:
-#   RDKIT_CXX_SUPPORTED_SERIES        RDKit release series, such as 2026.03
+#   RDKIT_CXX_SUPPORTED_SERIES        RDKit release series, such as 2024.09
 #   RDKIT_CXX_GENERATED_SOURCES       ;-separated generated .rs.cc files
 #   RDKIT_CXX_GENERATED_INCLUDE_DIR   directory holding rust/cxx.h and the
 #                                     generated bridge headers
