@@ -164,7 +164,8 @@ macro_rules! bond_setters {
             }
 
             /// Inverts atropisomer stereochemistry, returning whether there
-            /// was any. Mirrors `Bond.InvertChirality`.
+            /// was any: RDKit's `Bond::invertChirality`, which RDKit 2024.03's
+            /// Python does not bind.
             pub fn invert_chirality(&mut self) -> bool {
                 expect_ok(ffi::bond_invert_chirality(self.raw_mut()))
             }

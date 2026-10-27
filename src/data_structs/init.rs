@@ -166,29 +166,3 @@ pub fn fold_to_target_density_with_params<B: BitVect + Clone>(
     }
     Ok(fp)
 }
-
-/// The number of items `n` whose strict lower (or upper) triangular matrix
-/// has `matrix.len()` entries. Mirrors `DataStructs.getNForFlatMatrix`.
-pub fn get_n_for_flat_matrix<T>(matrix: &[T]) -> usize {
-    ((1 + 8 * matrix.len() as u64).isqrt() as usize).div_ceil(2)
-}
-
-/// Entry `(i, j)` of a symmetric matrix stored as its strict lower
-/// triangle, row by row, with zeros on the diagonal. Mirrors
-/// `DataStructs.getElementFromFlatMatrix`.
-///
-/// `Error::Index` for an entry past the matrix.
-pub fn get_element_from_flat_matrix(matrix: &[f64], i: usize, j: usize) -> Result<f64> {
-    if i == j {
-        return Ok(0.0);
-    }
-    let (i, j) = if i > j { (j, i) } else { (i, j) };
-    let idx = j
-        .checked_mul(j - 1)
-        .and_then(|x| (x / 2).checked_add(i))
-        .unwrap_or(usize::MAX);
-    matrix
-        .get(idx)
-        .copied()
-        .ok_or(Error::index(idx, matrix.len()))
-}

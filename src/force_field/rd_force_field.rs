@@ -25,7 +25,8 @@ use crate::ffi::force_field::ffi;
 use crate::geometry::Point3D;
 
 rdkit_enum! {
-    /// How much an MMFF setup prints. Mirrors `rdForceField.MMFFVerbosity`.
+    /// How much an MMFF setup prints: RDKit's `MMFF_VERBOSITY`, which RDKit
+    /// 2024.03's Python takes as an integer.
     MMFFVerbosity: ffi::MMFFVerbosity {
         MmffVerbosityNone = MMFF_VERBOSITY_NONE,
         MmffVerbosityLow = MMFF_VERBOSITY_LOW,

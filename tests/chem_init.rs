@@ -4,15 +4,13 @@
 // license that can be found in the LICENSE file.
 
 // The Python functions of rdkit/Chem/__init__.py (FindMolChiralCenters has
-// its own tests); values from Python's rdkit.Chem in RDKit 2024.03.6, but
-// MultiConfMolFromSDF's, which 2024.03 lacks, from RDKit 2026.03.6.
+// its own tests); values from Python's rdkit.Chem in RDKit 2024.03.6.
 
 mod common;
 
 use rdkit_cxx::chem::{
-    FileMolSupplier, SDMolSupplierParams, canon_smiles, canon_smiles_with_use_chiral,
-    mol_to_smiles, multi_conf_mol_from_sdf, multi_conf_mol_from_sdf_with_params,
-    quick_smarts_match, quick_smarts_match_with_unique, supplier_from_filename,
+    FileMolSupplier, canon_smiles, canon_smiles_with_use_chiral, mol_to_smiles, quick_smarts_match,
+    quick_smarts_match_with_unique, supplier_from_filename,
 };
 use rdkit_cxx::{Error, Result};
 
@@ -149,25 +147,5 @@ fn suppliers_from_filenames() -> Result<()> {
     for path in [csv, sdf, tdt] {
         std::fs::remove_file(path).unwrap();
     }
-    Ok(())
-}
-
-#[test]
-fn multi_conformer_molecules() -> Result<()> {
-    let sdf = common::temp_path("multi_conf.sdf");
-    std::fs::write(&sdf, ETHANOL_CONFS).unwrap();
-    let mol = multi_conf_mol_from_sdf(&sdf)?.unwrap();
-    assert_eq!(mol.get_num_atoms(), 3);
-    let ids: Vec<u32> = mol.get_conformers().map(|c| c.get_id()).collect();
-    assert_eq!(ids, [0, 1, 2]);
-    let p = mol.get_conformer_with_id(2)?.get_atom_position(0)?;
-    assert_eq!((p.x, p.y, p.z), (-0.8949, 0.2106, -0.0171));
-    let params = SDMolSupplierParams {
-        remove_hs: false,
-        ..Default::default()
-    };
-    let mol = multi_conf_mol_from_sdf_with_params(&sdf, &params)?.unwrap();
-    assert_eq!((mol.get_num_atoms(), mol.get_num_conformers()), (9, 3));
-    std::fs::remove_file(sdf).unwrap();
     Ok(())
 }

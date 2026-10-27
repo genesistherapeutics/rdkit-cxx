@@ -57,7 +57,8 @@ impl StereoGroup {
         &self.atoms
     }
 
-    /// The group's bond indices. Mirrors `StereoGroup.GetBonds`.
+    /// The group's bond indices: RDKit's `StereoGroup::getBonds`, which RDKit
+    /// 2024.03's Python does not bind.
     pub fn get_bonds(&self) -> &[u32] {
         &self.bonds
     }
