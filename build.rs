@@ -95,7 +95,6 @@ const BRIDGES: &[&str] = &[
     "free_sasa",
     "mif",
     "shape_align",
-    "gaussian_shape",
     "metric_matrix_calc",
     "cluster",
     "sim_div_pickers",

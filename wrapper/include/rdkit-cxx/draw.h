@@ -49,7 +49,6 @@ using ChemicalReaction = RDKit::ChemicalReaction;
 
 // Enums cxx checks against RDKit's (CONVENTIONS.md N6). DrawElement is a
 // plain enum unless USE_BETTER_ENUMS is defined, which the wrappers never do.
-using LegendPosition = RDKit::MolDrawOptions::LegendPosition;
 using MultiColourHighlightStyle = RDKit::MultiColourHighlightStyle;
 using DrawElement = RDKit::DrawElement;
 

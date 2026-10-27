@@ -194,7 +194,6 @@ std::unique_ptr<std::string> mol_to_fasta(const RWMol &mol);
 std::unique_ptr<std::string> mol_to_helm(const RWMol &mol);
 bool has_chem_draw_cdx_support();
 // Checks the coordinates RDKit converts to fixed point.
-rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
-                                           CDXMLFormat format);
+rust::Vec<std::uint8_t> mol_to_chem_draw_block(const RWMol &mol, bool cdx);
 
 }  // namespace rdkit_cxx

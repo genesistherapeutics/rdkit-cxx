@@ -18,7 +18,8 @@ writes the PNG and checks its size.
 Where a recipe calls code RDKit offers only in Python, the example calls its port in
 the crate: `rdkit_cxx::chem::find_mol_chiral_centers`,
 `rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`,
-`mol_to_svg`, `mols_to_grid_image`, and `draw_mol_with_matches`.
+`mols_to_grid_image`, and `draw_mol_with_matches`. RDKit 2025.09 has no
+`Draw.MolToSVG`, so `common::show` draws as Jupyter's `_moltoSVG` does.
 
 | Recipe | ID | Example |
 | --- | --- | --- |

@@ -364,15 +364,6 @@ fn legends() {
     }
     assert_value_error(d.draw_molecule_with_params(&m, &with_legend("a\n<sub>b")));
     assert_value_error(d.draw_molecule_with_params(&m, &with_legend(&"x".repeat(10_001))));
-    // Vertical legends are drawn a character at a time.
-    let opts = MolDrawOptions {
-        legend_position: LegendPosition::Left,
-        legend_vertical_text: true,
-        ..Default::default()
-    };
-    d.set_draw_options(&opts).unwrap();
-    d.draw_molecule_with_params(&m, &with_legend("<sub>2</sub>"))
-        .unwrap();
 
     // Without FreeType, RDKit indexes its width table by char.
     let params = MolDraw2DSVGParams {
@@ -454,7 +445,7 @@ fn atom_labels_and_notes() {
 #[test]
 fn stereo_annotations() {
     let mut d = svg();
-    let mut opts = MolDrawOptions {
+    let opts = MolDrawOptions {
         add_stereo_annotation: true,
         ..Default::default()
     };
@@ -465,13 +456,10 @@ fn stereo_annotations() {
         .set_prop("_CIPCode", "S");
     d.draw_molecule(&m).unwrap();
 
+    // RDKit 2025.09 labels stereo groups "abs", "or1", "and1", always.
     let grouped = mol("C[C@H](F)Cl |o1:1|");
-    opts.add_stereo_group_annotation = true;
-    opts.stereo_group_or_label = "<sub>".into();
-    d.set_draw_options(&opts).unwrap();
-    assert_value_error(d.draw_molecule(&grouped));
-    opts.stereo_group_or_label = "or".into();
-    d.set_draw_options(&opts).unwrap();
+    d.draw_molecule(&grouped).unwrap();
+    let grouped = mol("C[C@H](F)Cl |&1:1|");
     d.draw_molecule(&grouped).unwrap();
 }
 

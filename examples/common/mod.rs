@@ -18,26 +18,62 @@
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use rdkit_cxx::Result;
 use rdkit_cxx::chem::Mol;
-use rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDrawOptions;
-use rdkit_cxx::chem::draw::{MolToSVGParams, mol_to_svg_with_params};
+use rdkit_cxx::chem::draw::rd_mol_draw_2d::{
+    MolDraw2DSVG, MolDrawOptions, PrepareMolForDrawingParams, prepare_mol_for_drawing_with_params,
+};
+use rdkit_cxx::chem::draw::should_kekulize;
+use rdkit_cxx::rd_base::BlockLogs;
+use rdkit_cxx::{Error, Result};
 
 /// The size Jupyter draws molecules at, unless a recipe sets it. Mirrors
 /// `IPythonConsole.molSize`.
 pub const MOL_SIZE: (i32, i32) = (450, 150);
 
-/// How Jupyter shows a molecule: `Draw.MolToSVG` at `size`, with the
-/// console's `drawOptions`. Mirrors `IPythonConsole._toSVG`.
+/// How Jupyter shows a molecule: as `Draw._moltoSVG` draws it at `size`,
+/// with the console's `drawOptions`. Mirrors `IPythonConsole._toSVG`.
 pub fn show(mol: &Mol, size: (i32, i32), options: &MolDrawOptions) -> Result<String> {
-    mol_to_svg_with_params(
-        mol,
-        &MolToSVGParams {
-            size,
-            draw_options: Some(options.clone()),
-            ..Default::default()
-        },
-    )
+    let mut mol = mol.clone();
+    if mol.needs_update_property_cache() {
+        mol.update_property_cache_with_strict(false)?;
+    }
+    let kekulize = should_kekulize(&mol, true);
+    if options.prepare_mols_before_drawing {
+        let prepared = {
+            let _block = BlockLogs::default();
+            prepare_mol_for_drawing_with_params(
+                &mol,
+                &PrepareMolForDrawingParams {
+                    kekulize,
+                    ..Default::default()
+                },
+            )
+        };
+        mol = match prepared {
+            // Python draws a molecule that will not kekulize aromatic.
+            Err(
+                Error::Kekulize { .. }
+                | Error::AtomKekulize { .. }
+                | Error::MolSanitize { .. }
+                | Error::AtomValence { .. }
+                | Error::Value { .. },
+            ) => prepare_mol_for_drawing_with_params(
+                &mol,
+                &PrepareMolForDrawingParams {
+                    kekulize: false,
+                    ..Default::default()
+                },
+            )?,
+            prepared => prepared?,
+        };
+    }
+    let mut drawer = MolDraw2DSVG::new(size.0, size.1)?;
+    let mut options = options.clone();
+    options.prepare_mols_before_drawing = false;
+    drawer.set_draw_options(&options)?;
+    drawer.draw_molecule(&mol)?;
+    drawer.finish_drawing();
+    drawer.get_drawing_text()
 }
 
 /// Writes an image under `target/cookbook`, returning its path.

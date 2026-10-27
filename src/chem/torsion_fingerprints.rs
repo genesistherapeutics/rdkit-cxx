@@ -414,15 +414,16 @@ fn find_central_bond(mol: &Mol, distmat: &[Vec<f64>]) -> Result<(u32, u32)> {
 }
 
 /// The weights' beta, which gives half the largest distance from `aid1` to
-/// a bond between atoms with heavy neighbors a weight of 0.1.
+/// a bond whose end atom has more than one heavy neighbor a weight of 0.1.
 fn calculate_beta(mol: &Mol, distmat: &[Vec<f64>], aid1: u32) -> Result<f64> {
     let mut dmax = 0.0;
     for b in mol.get_bonds() {
         let begin = b.get_begin_atom();
         let end = b.get_end_atom();
-        if heavy_atom_neighbors(&begin, None).len() > 1
-            && heavy_atom_neighbors(&end, None).len() > 1
-        {
+        // RDKit 2025.09's Python tests the end atom's heavy neighbors twice,
+        // not the begin atom's (RDKit 2026.03 tests both), so a bond whose
+        // begin atom is terminal counts too.
+        if heavy_atom_neighbors(&end, None).len() > 1 {
             let row = &distmat[aid1 as usize];
             let d = f64::max(row[begin.get_idx() as usize], row[end.get_idx() as usize]);
             if d > dmax {

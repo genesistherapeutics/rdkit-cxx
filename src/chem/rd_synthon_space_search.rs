@@ -36,40 +36,35 @@
 //! that match substructures, depict, or take the shape modules' locks: they
 //! return `Error::Runtime`. The RASCAL search's closure can.
 //!
-//! The reads, the searches, and shape building remove atoms and bonds from
-//! the synthons, the products they combine, the query's fragments, and the
-//! molecules a conformer generator returns, so what RDKit would misread then
-//! is refused with `Error::Value`: a bond's `_MolFileBondEndPts`, or
+//! The reads and the searches remove atoms and bonds from the synthons, the
+//! products they combine, and the query's fragments, so what RDKit would
+//! misread then is refused with `Error::Value`: a bond's `_MolFileBondEndPts`, or
 //! substance groups whose `PARENT`s form a cycle (RDKit follows it forever).
 //! A reaction's synthons' chains are checked together, as a product carries
 //! them all.
 //!
-//! Shapes are built (`build_synthon_shapes`) for the database files, but
-//! the shape search and the progress bars are not bound (the manifest says
-//! why).
+//! RDKit 2025.09 has no shape search, and its `numRandomSweeps` is read
+//! nowhere (the manifest says so).
 
 use std::fmt;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::path::Path;
 
 use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::Mol;
-use crate::chem::rd_enumerate_stereoisomers::StereoEnumerationOptions;
 use crate::chem::rd_fingerprint_generator::FingerprintGenerator64;
 use crate::chem::rd_generalized_substruct::ExtendedQueryMol;
 use crate::chem::rd_rascal_mces::RascalOptions;
 use crate::chem::rdchem::SubstructMatchParameters;
 use crate::chem::rdmolops::mol_list_into_vec;
 use crate::error::{expect_ok, to_string};
-use crate::ffi::synthon_space_search::{ConformerCallback, ConformerFn, SearchCallback, ffi};
-use crate::util::{path_bytes, path_from_bytes};
+use crate::ffi::synthon_space_search::{SearchCallback, ffi};
+use crate::util::path_bytes;
 
 /// Parameters of the searches. Mirrors
 /// `rdSynthonSpaceSearch.SynthonSpaceSearchParams` (A3); `Default` reads
-/// RDKit's defaults. The shape search's fields are not bound (the manifest
-/// says why).
+/// RDKit's defaults.
 #[derive(Clone, Debug, PartialEq)]
 pub struct SynthonSpaceSearchParams {
     /// The most hits to return; -1 for no limit, and below -1 is
@@ -112,21 +107,13 @@ pub struct SynthonSpaceSearchParams {
     /// clock's range is `Error::Value`.
     pub time_out: u64,
     /// How many possible hits are built and checked at a time, and the
-    /// largest batch an incremental search hands its closure.
-    pub to_try_chunk_size: u64,
+    /// largest batch an incremental search hands its closure; 0 or less
+    /// for all at once (RDKit compares it as an unsigned size, which none
+    /// reaches).
+    pub to_try_chunk_size: i64,
     /// Not read: the search runs on the calling thread (see the module
     /// documentation).
     pub num_threads: i32,
-    /// A file the search writes its possible hits to, one line of synthon
-    /// SMILES and a name each, emptied first, for a later `*_lines` search;
-    /// `None` for none. RDKit opens the file itself and ignores a failed
-    /// write: a file that cannot be opened is `Error::Os` before the search,
-    /// and one that does not end with a complete line after it.
-    pub possible_hits_file: Option<PathBuf>,
-    /// The most lines written to `possible_hits_file`.
-    pub max_possible_hits_to_write: u64,
-    /// Writes `possible_hits_file` and stops, without building the hits.
-    pub write_possible_hits_and_stop: bool,
 }
 
 impl Default for SynthonSpaceSearchParams {
@@ -151,10 +138,6 @@ impl Default for SynthonSpaceSearchParams {
             time_out: d.time_out,
             to_try_chunk_size: d.to_try_chunk_size,
             num_threads: d.num_threads,
-            possible_hits_file: (!d.possible_hits_file.is_empty())
-                .then(|| path_from_bytes(d.possible_hits_file)),
-            max_possible_hits_to_write: d.max_possible_hits_to_write,
-            write_possible_hits_and_stop: d.write_possible_hits_and_stop,
         }
     }
 }
@@ -180,173 +163,7 @@ impl SynthonSpaceSearchParams {
             time_out: self.time_out,
             to_try_chunk_size: self.to_try_chunk_size,
             num_threads: self.num_threads,
-            possible_hits_file: self
-                .possible_hits_file
-                .as_deref()
-                .map(|path| path_bytes(path).to_vec())
-                .unwrap_or_default(),
-            max_possible_hits_to_write: self.max_possible_hits_to_write,
-            write_possible_hits_and_stop: self.write_possible_hits_and_stop,
         }
-    }
-}
-
-/// Parameters for building the synthons' shapes, Gaussian shapes of their
-/// conformers. Mirrors `rdSynthonSpaceSearch.ShapeBuildParams` (A3);
-/// `Default` reads RDKit's defaults.
-#[derive(Clone)]
-pub struct ShapeBuildParams {
-    /// The most conformers per synthon.
-    pub num_confs: u32,
-    /// The RMS threshold that prunes the conformers.
-    pub rms_threshold: f64,
-    /// The similarity below which a synthon's shapes must stay apart; NaN is
-    /// `Error::Value`.
-    pub shape_sim_threshold: f64,
-    /// Not read: shapes are built on the calling thread (see the module
-    /// documentation).
-    pub num_threads: i32,
-    /// The embedding's seed; -1 for a random one.
-    pub random_seed: i32,
-    /// How the stereoisomers whose shapes are built are enumerated. Its
-    /// `verbose` is not read: RDKit's enumerator logs nothing here.
-    pub stereo_enum_opts: StereoEnumerationOptions,
-    /// Builds shapes only for synthons of at most this many heavy atoms; 0
-    /// for all.
-    pub max_synthon_atoms: u32,
-    /// The most attempts at embedding a synthon.
-    pub max_embed_attempts: u32,
-    /// The most seconds an embedding takes.
-    pub time_out: u32,
-    /// A database file the build writes the space to as it goes, to restart
-    /// from; `None` for none. RDKit writes it itself and ignores a failed
-    /// write, so the last one is checked: `Error::Os` if it does not hold a
-    /// space.
-    pub interim_file: Option<PathBuf>,
-    /// How many shapes the build makes between writes of the interim file; 0
-    /// for no writes.
-    pub interim_writes: u64,
-    /// Generates the synthons' conformers instead of RDKit's embedder;
-    /// `set_user_conformer_generator` sets it.
-    pub user_conformer_generator: Option<UserConformerGenerator>,
-}
-
-/// A conformer generator for `ShapeBuildParams`, which clones share: it
-/// gets an isomer's SMILES and the most conformers to make, and returns a
-/// molecule with conformers, or `None` when it fails.
-/// `ShapeBuildParams::set_user_conformer_generator` says how the build calls
-/// it. The C++ counterpart is `SynthonSpaceSearch::UserConfGenerator`.
-/// A Rust addition, for the callable Python passes.
-#[derive(Clone)]
-pub struct UserConformerGenerator(Arc<ConformerFn>);
-
-impl UserConformerGenerator {
-    /// A generator that runs `func`.
-    pub fn new<F>(func: F) -> UserConformerGenerator
-    where
-        F: Fn(&str, u32) -> Result<Option<Mol>> + Send + Sync + 'static,
-    {
-        UserConformerGenerator(Arc::new(func))
-    }
-
-    /// Runs the generator.
-    pub fn call(&self, smiles: &str, num_conformers: u32) -> Result<Option<Mol>> {
-        (self.0)(smiles, num_conformers)
-    }
-}
-
-impl fmt::Debug for UserConformerGenerator {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("UserConformerGenerator")
-            .finish_non_exhaustive()
-    }
-}
-
-impl fmt::Debug for ShapeBuildParams {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("ShapeBuildParams")
-            .field("num_confs", &self.num_confs)
-            .field("rms_threshold", &self.rms_threshold)
-            .field("shape_sim_threshold", &self.shape_sim_threshold)
-            .field("random_seed", &self.random_seed)
-            .field("stereo_enum_opts", &self.stereo_enum_opts)
-            .field("interim_file", &self.interim_file)
-            .field("user_conformer_generator", &self.user_conformer_generator)
-            .finish_non_exhaustive()
-    }
-}
-
-impl Default for ShapeBuildParams {
-    fn default() -> ShapeBuildParams {
-        let d = expect_ok(ffi::shape_build_params_default());
-        ShapeBuildParams {
-            num_confs: d.num_confs,
-            rms_threshold: d.rms_threshold,
-            shape_sim_threshold: d.shape_sim_threshold,
-            num_threads: d.num_threads,
-            random_seed: d.random_seed,
-            stereo_enum_opts: StereoEnumerationOptions {
-                try_embedding: d.stereo_try_embedding,
-                only_unassigned: d.stereo_only_unassigned,
-                only_stereo_groups: d.stereo_only_stereo_groups,
-                unique: d.stereo_unique,
-                max_isomers: d.stereo_max_isomers,
-                random_seed: d.stereo_random_seed,
-                verbose: false,
-            },
-            max_synthon_atoms: d.max_synthon_atoms,
-            max_embed_attempts: d.max_embed_attempts,
-            time_out: d.time_out,
-            interim_file: (!d.interim_file.is_empty()).then(|| path_from_bytes(d.interim_file)),
-            interim_writes: d.interim_writes,
-            user_conformer_generator: None,
-        }
-    }
-}
-
-impl ShapeBuildParams {
-    fn to_ffi(&self) -> ffi::ShapeBuildParamsData {
-        ffi::ShapeBuildParamsData {
-            num_confs: self.num_confs,
-            rms_threshold: self.rms_threshold,
-            shape_sim_threshold: self.shape_sim_threshold,
-            num_threads: self.num_threads,
-            random_seed: self.random_seed,
-            stereo_try_embedding: self.stereo_enum_opts.try_embedding,
-            stereo_only_unassigned: self.stereo_enum_opts.only_unassigned,
-            stereo_only_stereo_groups: self.stereo_enum_opts.only_stereo_groups,
-            stereo_unique: self.stereo_enum_opts.unique,
-            stereo_max_isomers: self.stereo_enum_opts.max_isomers,
-            stereo_random_seed: self.stereo_enum_opts.random_seed,
-            max_synthon_atoms: self.max_synthon_atoms,
-            max_embed_attempts: self.max_embed_attempts,
-            time_out: self.time_out,
-            interim_file: self
-                .interim_file
-                .as_deref()
-                .map(|path| path_bytes(path).to_vec())
-                .unwrap_or_default(),
-            interim_writes: self.interim_writes,
-            has_user_conformer_generator: self.user_conformer_generator.is_some(),
-        }
-    }
-
-    /// Generates the synthons' conformers with `func` instead of RDKit's
-    /// embedder: it gets an isomer's SMILES and the most conformers to make,
-    /// and returns a molecule with conformers, or `None` when it fails, which
-    /// drops the isomer as a failed embedding does (Python's returns null,
-    /// which RDKit dereferences). RDKit maps the molecule onto the isomer by
-    /// a substructure match. `func` runs on the calling thread, with the
-    /// build's locks released, so it may embed, match, or build shapes
-    /// itself; its error, or a panic in it (as `Error::Runtime`), ends the
-    /// build, which returns it, and coordinates that are not finite or lie
-    /// beyond 1e8 are `Error::Value`. Clones of the parameters share it.
-    /// Mirrors `ShapeBuildParams.setUserConformerGenerator`.
-    pub fn set_user_conformer_generator<F>(&mut self, func: F)
-    where
-        F: Fn(&str, u32) -> Result<Option<Mol>> + Send + Sync + 'static,
-    {
-        self.user_conformer_generator = Some(UserConformerGenerator::new(func));
     }
 }
 
@@ -356,8 +173,6 @@ impl ShapeBuildParams {
 pub struct ConvertTextToDBFileParams<'a> {
     /// Fingerprints the synthons with this generator.
     pub fp_gen: Option<&'a FingerprintGenerator64>,
-    /// Builds the synthons' shapes with these parameters.
-    pub py_shape_params: Option<ShapeBuildParams>,
 }
 
 /// Parameters for `SynthonSpace::substructure_search_with_params` and the
@@ -426,14 +241,6 @@ impl SubstructureResult {
     pub fn get_cancelled(&self) -> bool {
         expect_ok(ffi::substructure_result_get_cancelled(&self.ptr))
     }
-
-    /// The most similar molecule a similarity search built, even below the
-    /// cutoff; `None` for a substructure search or when nothing came close.
-    /// Mirrors `SubstructureResult.GetBestHit`.
-    pub fn get_best_hit(&self) -> Option<Mol> {
-        let ptr = expect_ok(ffi::substructure_result_get_best_hit(&self.ptr));
-        (!ptr.is_null()).then(|| Mol::from_ffi(ptr))
-    }
 }
 
 /// A synthon space: reactions, each a list of synthon sets, whose products
@@ -460,7 +267,6 @@ impl fmt::Debug for SynthonSpace {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("SynthonSpace")
             .field("num_reactions", &self.get_num_reactions())
-            .field("num_synthons", &self.get_num_synthons())
             .field("num_products", &self.get_num_products())
             .finish()
     }
@@ -514,7 +320,7 @@ impl SynthonSpace {
 
     /// Replaces the space with the one in a database file `write_db_file`
     /// wrote. The header must give at least one reaction, a format version
-    /// from 3.0 to 3.2 (those this RDKit reads), and record offsets that
+    /// from 3.0 to 3.1 (those this RDKit reads), and record offsets that
     /// ascend through the file, and the space read must hold reactions of 1
     /// to 4 synthon sets with their molecules; anything else is
     /// `Error::Value`, and a file that cannot be opened (RDKit opens it for
@@ -528,8 +334,8 @@ impl SynthonSpace {
     /// `write_db_file`, or Python's or C++'s `WriteDBFile` or
     /// `ConvertTextToDBFile` with this RDKit or an earlier one), and must not
     /// change while it is read: RDKit maps it into memory and reads its
-    /// records' molecule and bit-vector pickles, Boost archives of shapes,
-    /// counts, and bools without validating them.
+    /// records' molecule and bit-vector pickles, counts, and bools without
+    /// validating them.
     pub unsafe fn read_db_file<P: AsRef<Path>>(&mut self, in_file: P) -> Result<()> {
         Ok(ffi::synthon_space_read_db_file(
             self.ptr.pin_mut(),
@@ -571,28 +377,10 @@ impl SynthonSpace {
         expect_ok(ffi::synthon_space_get_num_products(&self.ptr))
     }
 
-    /// The number of distinct synthons, some of which several reactions use.
-    /// Mirrors `SynthonSpace.GetNumSynthons`.
-    pub fn get_num_synthons(&self) -> u64 {
-        expect_ok(ffi::synthon_space_get_num_synthons(&self.ptr))
-    }
-
-    /// The number of synthons with shapes. Mirrors
-    /// `SynthonSpace.GetNumSynthonsWithShapes`.
-    pub fn get_num_synthons_with_shapes(&self) -> u64 {
-        expect_ok(ffi::synthon_space_get_num_synthons_with_shapes(&self.ptr))
-    }
-
     /// Writes a summary of the space to standard output (C++'s
     /// `std::cout`). Mirrors `SynthonSpace.Summarise`.
     pub fn summarise(&self) {
         expect_ok(ffi::synthon_space_summarise(&self.ptr));
-    }
-
-    /// Writes how many reactions the synthons are used in to standard
-    /// output (C++'s `std::cout`). Mirrors `SynthonSpace.ReportSynthonUsage`.
-    pub fn report_synthon_usage(&self) {
-        expect_ok(ffi::synthon_space_report_synthon_usage(&self.ptr));
     }
 
     /// The info string of the generator the synthons' fingerprints were made
@@ -608,8 +396,7 @@ impl SynthonSpace {
     /// Fingerprints the synthons with the generator, as the first
     /// fingerprint search does, unless they already have its fingerprints.
     /// For atom pairs, a space whose products can pass 46340 atoms is
-    /// `Error::Value` (U3). Python's `progressBarWidth` is not bound (the
-    /// manifest says why). Mirrors `SynthonSpace.BuildSynthonFingerprints`.
+    /// `Error::Value` (U3). Mirrors `SynthonSpace.BuildSynthonFingerprints`.
     pub fn build_synthon_fingerprints(
         &mut self,
         fingerprint_generator: &FingerprintGenerator64,
@@ -618,45 +405,6 @@ impl SynthonSpace {
             self.ptr.pin_mut(),
             fingerprint_generator.as_ffi(),
         )?)
-    }
-
-    /// Builds the shapes of the synthons that have none, with RDKit's
-    /// defaults: each synthon's conformers in a sample product, for each of
-    /// up to 3 stereoisomers, by ETKDGv3. Mirrors
-    /// `SynthonSpace.BuildSynthonShapes`.
-    pub fn build_synthon_shapes(&mut self) -> Result<()> {
-        self.build_synthon_shapes_with_py_params(&ShapeBuildParams::default())
-    }
-
-    /// Mirrors `SynthonSpace.BuildSynthonShapes(py_params)`. Every synthon
-    /// needs a heavy atom and a connector, and the products at most 613
-    /// atoms (so that, with their hydrogens, the embedder takes them), or the
-    /// build is `Error::Value`: RDKit sorts samples by their first, and its
-    /// shapes need volume. A space already built with `num_confs` conformers
-    /// is left as it is. Optimizers may land in other local optima on other
-    /// platforms, so the shapes may differ there.
-    /// `Error::Value`, with interim writes, for a synthon a pickle cannot hold
-    /// (`Mol::to_binary`).
-    pub fn build_synthon_shapes_with_py_params(
-        &mut self,
-        py_params: &ShapeBuildParams,
-    ) -> Result<()> {
-        let data = py_params.to_ffi();
-        let mut callback = ConformerCallback {
-            generator: py_params
-                .user_conformer_generator
-                .as_ref()
-                .map(|generator| &*generator.0),
-            error: None,
-        };
-        // SAFETY: the generator is lent for this call only.
-        let result = unsafe {
-            ffi::synthon_space_build_synthon_shapes(self.ptr.pin_mut(), &data, &mut callback)
-        };
-        if let Some(error) = callback.error.take() {
-            return Err(error);
-        }
-        Ok(result?)
     }
 
     /// The products that have the query as a substructure. A query without
@@ -709,89 +457,6 @@ impl SynthonSpace {
                 query.as_ffi(),
                 &params.substruct_match_params.to_ffi(),
                 &params.params.to_ffi(),
-            )?,
-        ))
-    }
-
-    /// Builds the possible hits from lines `start_line` (from 0) up to
-    /// `finish_line` of the params' `possible_hits_file`, which an earlier
-    /// search wrote, and returns those that match. RDKit dereferences null
-    /// for a line whose SMILES does not parse, which is `Error::Value` here,
-    /// so the lines are checked and RDKit reads a copy of them; with no
-    /// file the result is empty, and with a file that cannot be opened it
-    /// is empty too, after RDKit's error message. `start_line` not below
-    /// `finish_line` is `Error::Runtime`. Mirrors
-    /// `SynthonSpace.SubstructureSearch(query, substructMatchParams, params,
-    /// startLine, finishLine)`.
-    pub fn substructure_search_lines(
-        &mut self,
-        query: &Mol,
-        start_line: u64,
-        finish_line: u64,
-    ) -> Result<SubstructureResult> {
-        self.substructure_search_lines_with_params(
-            query,
-            start_line,
-            finish_line,
-            &SubstructureSearchParams::default(),
-        )
-    }
-
-    /// Mirrors `SynthonSpace.SubstructureSearch(query, substructMatchParams,
-    /// params, startLine, finishLine)`.
-    pub fn substructure_search_lines_with_params(
-        &mut self,
-        query: &Mol,
-        start_line: u64,
-        finish_line: u64,
-        params: &SubstructureSearchParams,
-    ) -> Result<SubstructureResult> {
-        Ok(SubstructureResult::from_ffi(
-            ffi::synthon_space_substructure_search_lines(
-                self.ptr.pin_mut(),
-                query.as_ffi(),
-                &params.substruct_match_params.to_ffi(),
-                &params.params.to_ffi(),
-                start_line,
-                finish_line,
-            )?,
-        ))
-    }
-
-    /// As `substructure_search_lines`, for an extended query. Mirrors
-    /// `SynthonSpace.SubstructureSearch(query: ExtendedQueryMol,
-    /// substructMatchParams, params, startLine, finishLine)`.
-    pub fn substructure_search_extended_query_mol_lines(
-        &mut self,
-        query: &ExtendedQueryMol,
-        start_line: u64,
-        finish_line: u64,
-    ) -> Result<SubstructureResult> {
-        self.substructure_search_extended_query_mol_lines_with_params(
-            query,
-            start_line,
-            finish_line,
-            &SubstructureSearchParams::default(),
-        )
-    }
-
-    /// Mirrors `SynthonSpace.SubstructureSearch(query: ExtendedQueryMol,
-    /// substructMatchParams, params, startLine, finishLine)`.
-    pub fn substructure_search_extended_query_mol_lines_with_params(
-        &mut self,
-        query: &ExtendedQueryMol,
-        start_line: u64,
-        finish_line: u64,
-        params: &SubstructureSearchParams,
-    ) -> Result<SubstructureResult> {
-        Ok(SubstructureResult::from_ffi(
-            ffi::synthon_space_substructure_search_extended_lines(
-                self.ptr.pin_mut(),
-                query.as_ffi(),
-                &params.substruct_match_params.to_ffi(),
-                &params.params.to_ffi(),
-                start_line,
-                finish_line,
             )?,
         ))
     }
@@ -873,30 +538,6 @@ impl SynthonSpace {
                 query.as_ffi(),
                 fingerprint_generator.as_ffi(),
                 &params.to_ffi(),
-            )?,
-        ))
-    }
-
-    /// As `substructure_search_lines`, by fingerprint similarity; for atom
-    /// pairs, a line of more than 46340 atoms is `Error::Value`. Mirrors
-    /// `SynthonSpace.FingerprintSearch(query, fingerprintGenerator, params,
-    /// startLine, finishLine)`.
-    pub fn fingerprint_search_lines(
-        &mut self,
-        query: &Mol,
-        fingerprint_generator: &FingerprintGenerator64,
-        params: &SynthonSpaceSearchParams,
-        start_line: u64,
-        finish_line: u64,
-    ) -> Result<SubstructureResult> {
-        Ok(SubstructureResult::from_ffi(
-            ffi::synthon_space_fingerprint_search_lines(
-                self.ptr.pin_mut(),
-                query.as_ffi(),
-                fingerprint_generator.as_ffi(),
-                &params.to_ffi(),
-                start_line,
-                finish_line,
             )?,
         ))
     }
@@ -983,31 +624,6 @@ impl SynthonSpace {
         ))
     }
 
-    /// As `substructure_search_lines`, by RASCAL similarity; a line of more
-    /// than 46340 atoms is `Error::Value`, and so is `start_line` above
-    /// `finish_line`, which RDKit refuses with `Error::Runtime`. Mirrors
-    /// `SynthonSpace.RascalSearch(query, rascalOptions, params, startLine,
-    /// finishLine)`.
-    pub fn rascal_search_lines(
-        &mut self,
-        query: &Mol,
-        rascal_options: &RascalOptions,
-        params: &SynthonSpaceSearchParams,
-        start_line: u64,
-        finish_line: u64,
-    ) -> Result<SubstructureResult> {
-        Ok(SubstructureResult::from_ffi(
-            ffi::synthon_space_rascal_search_lines(
-                self.ptr.pin_mut(),
-                query.as_ffi(),
-                &rascal_options.to_ffi(),
-                &params.to_ffi(),
-                start_line,
-                finish_line,
-            )?,
-        ))
-    }
-
     /// As `rascal_search`, with RDKit's default options for `None`, handing
     /// the hits to `callback` (see the module documentation). Mirrors
     /// `SynthonSpace.RascalSearchIncremental`.
@@ -1074,10 +690,9 @@ pub fn convert_text_to_db_file(
 }
 
 /// As `convert_text_to_db_file`, with the synthons fingerprinted, as
-/// `SynthonSpace::build_synthon_fingerprints` does, and their shapes built,
-/// as `SynthonSpace::build_synthon_shapes_with_py_params` does, before the
-/// file is written. Mirrors `rdSynthonSpaceSearch.ConvertTextToDBFile(
-/// inFilename, outFilename, fpGen, py_shapeParams)`.
+/// `SynthonSpace::build_synthon_fingerprints` does, before the file is
+/// written. Mirrors `rdSynthonSpaceSearch.ConvertTextToDBFile(inFilename,
+/// outFilename, fpGen)`.
 pub fn convert_text_to_db_file_with_params(
     in_filename: impl AsRef<Path>,
     out_filename: impl AsRef<Path>,
@@ -1087,9 +702,6 @@ pub fn convert_text_to_db_file_with_params(
     space.read_text_file(in_filename)?;
     if let Some(fp_gen) = params.fp_gen {
         space.build_synthon_fingerprints(fp_gen)?;
-    }
-    if let Some(shape_params) = &params.py_shape_params {
-        space.build_synthon_shapes_with_py_params(shape_params)?;
     }
     space.write_db_file(out_filename)
 }

@@ -1,5 +1,5 @@
 {
- "rdkit_version": "2026.03.6",
+ "rdkit_version": "2025.09.6",
  "entries": [
   {
    "python": "rdkit.Chem.AllChem.AssignBondOrdersFromTemplate",
@@ -1652,13 +1652,6 @@
    "kind": "module_function",
    "overloads": [
     "def MolToImage(mol, size=(300, 300), kekulize=True, wedgeBonds=True, fitImage=False, options=None, **kwargs)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Draw.MolToSVG",
-   "kind": "module_function",
-   "overloads": [
-    "def MolToSVG(mol, size=(300, 300), kekulize=True, wedgeBonds=True, drawOptions=None, **kwargs)"
    ]
   },
   {
@@ -5273,13 +5266,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.MultiConfMolFromSDF",
-   "kind": "module_function",
-   "overloads": [
-    "def MultiConfMolFromSDF(sdf, sanitize=True, removeHs=True, strictParsing=True)"
-   ]
-  },
-  {
    "python": "rdkit.Chem.PandasPatcher.InteractiveRenderer",
    "kind": "module_attribute",
    "overloads": []
@@ -5489,7 +5475,7 @@
    "python": "rdkit.Chem.PandasTools.LoadSDF",
    "kind": "module_function",
    "overloads": [
-    "def LoadSDF(filename, idName='ID', molColName='ROMol', includeFingerprints=False, isomericSmiles=True, smilesName=None, embedProps=False, removeHs=True, strictParsing=True, sanitize=True, autoConvertStrings=False)"
+    "def LoadSDF(filename, idName='ID', molColName='ROMol', includeFingerprints=False, isomericSmiles=True, smilesName=None, embedProps=False, removeHs=True, strictParsing=True, sanitize=True)"
    ]
   },
   {
@@ -8823,13 +8809,6 @@
    "kind": "module_function",
    "overloads": [
     "def MolFromInchi(inchi, sanitize=True, removeHs=True, logLevel=None, treatWarningAsError=False)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.inchi.MolFromInchiAndAuxInfo",
-   "kind": "module_function",
-   "overloads": [
-    "def MolFromInchiAndAuxInfo(inchi, auxinfo, sanitize=True, removeHs=True, logLevel=None, treatWarningAsError=False)"
    ]
   },
   {
@@ -15851,140 +15830,105 @@
    "python": "rdkit.sping.stringformat.StringFormatter.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self)"
+    "def __init__(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_b",
    "kind": "method",
    "overloads": [
-    "def end_b(self)"
+    "def end_b(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_greek",
    "kind": "method",
    "overloads": [
-    "def end_greek(self)"
+    "def end_greek(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_i",
    "kind": "method",
    "overloads": [
-    "def end_i(self)"
+    "def end_i(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_sub",
    "kind": "method",
    "overloads": [
-    "def end_sub(self)"
+    "def end_sub(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_super",
    "kind": "method",
    "overloads": [
-    "def end_super(self)"
+    "def end_super(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_u",
    "kind": "method",
    "overloads": [
-    "def end_u(self)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_charref",
-   "kind": "method",
-   "overloads": [
-    "def handle_charref(self, name)"
+    "def end_u(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.handle_data",
    "kind": "method",
    "overloads": [
-    "def handle_data(self, data)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_endtag",
-   "kind": "method",
-   "overloads": [
-    "def handle_endtag(self, tag)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_entityref",
-   "kind": "method",
-   "overloads": [
-    "def handle_entityref(self, name)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_startendtag",
-   "kind": "method",
-   "overloads": [
-    "def handle_startendtag(self, tag, attributes)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_starttag",
-   "kind": "method",
-   "overloads": [
-    "def handle_starttag(self, tag, attributes)"
+    "def handle_data(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.parseSegments",
    "kind": "method",
    "overloads": [
-    "def parseSegments(self, s)"
+    "def parseSegments(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_b",
    "kind": "method",
    "overloads": [
-    "def start_b(self, attributes)"
+    "def start_b(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_greek",
    "kind": "method",
    "overloads": [
-    "def start_greek(self, attributes, letter)"
+    "def start_greek(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_i",
    "kind": "method",
    "overloads": [
-    "def start_i(self, attributes)"
+    "def start_i(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_sub",
    "kind": "method",
    "overloads": [
-    "def start_sub(self, attributes)"
+    "def start_sub(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_super",
    "kind": "method",
    "overloads": [
-    "def start_super(self, attributes)"
+    "def start_super(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_u",
    "kind": "method",
    "overloads": [
-    "def start_u(self, attributes)"
+    "def start_u(...)"
    ]
   },
   {
@@ -15996,63 +15940,63 @@
    "python": "rdkit.sping.stringformat.StringSegment.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self)"
+    "def __init__(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringSegment.calcNewFont",
    "kind": "method",
    "overloads": [
-    "def calcNewFont(self, font)"
+    "def calcNewFont(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringSegment.calcNewY",
    "kind": "method",
    "overloads": [
-    "def calcNewY(self, font, y)"
+    "def calcNewY(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringSegment.dump",
    "kind": "method",
    "overloads": [
-    "def dump(self)"
+    "def dump(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.allTagCombos",
    "kind": "module_function",
    "overloads": [
-    "def allTagCombos(canvas, x, y, font=None, color=None, angle=0)"
+    "def allTagCombos(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.drawString",
    "kind": "module_function",
    "overloads": [
-    "def drawString(canvas, s, x, y, font=None, color=None, angle=0)"
+    "def drawString(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.fontAscent",
    "kind": "module_function",
    "overloads": [
-    "def fontAscent(canvas, font=None)"
+    "def fontAscent(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.fontDescent",
    "kind": "module_function",
    "overloads": [
-    "def fontDescent(canvas, font=None)"
+    "def fontDescent(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.fontHeight",
    "kind": "module_function",
    "overloads": [
-    "def fontHeight(canvas, font=None)"
+    "def fontHeight(...)"
    ]
   },
   {
@@ -16064,7 +16008,7 @@
    "python": "rdkit.sping.stringformat.rotateXY",
    "kind": "module_function",
    "overloads": [
-    "def rotateXY(x, y, theta)"
+    "def rotateXY(...)"
    ]
   },
   {
@@ -16076,14 +16020,14 @@
    "python": "rdkit.sping.stringformat.stringWidth",
    "kind": "module_function",
    "overloads": [
-    "def stringWidth(canvas, s, font=None)"
+    "def stringWidth(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.stringformatTest",
    "kind": "module_function",
    "overloads": [
-    "def stringformatTest()"
+    "def stringformatTest(...)"
    ]
   },
   {
@@ -16100,14 +16044,14 @@
    "python": "rdkit.sping.stringformat.test1",
    "kind": "module_function",
    "overloads": [
-    "def test1()"
+    "def test1(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.test2",
    "kind": "module_function",
    "overloads": [
-    "def test2()"
+    "def test2(...)"
    ]
   },
   {

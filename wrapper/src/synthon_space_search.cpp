@@ -7,8 +7,6 @@
 
 #include <chrono>
 #include <cmath>
-#include <cstdio>
-#include <filesystem>
 #include <fstream>
 #include <limits>
 #include <map>
@@ -32,8 +30,6 @@
 #include <RDGeneral/RDLog.h>
 #include <RDGeneral/StreamOps.h>
 #include <boost/algorithm/string.hpp>
-#include <stdlib.h>
-#include <unistd.h>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -41,7 +37,6 @@
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/ffi/synthon_space_search.rs.h"
 #include "rdkit-cxx/file_checks.h"
-#include "rdkit-cxx/gaussian_shape.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/rascal_mces.h"
@@ -81,9 +76,6 @@ SynthonSpaceSearchParamsData to_data(const SSS::SynthonSpaceSearchParams &p) {
   d.time_out = p.timeOut;
   d.to_try_chunk_size = p.toTryChunkSize;
   d.num_threads = p.numThreads;
-  d.possible_hits_file = to_bytes(p.possibleHitsFile);
-  d.max_possible_hits_to_write = p.maxPossibleHitsToWrite;
-  d.write_possible_hits_and_stop = p.writePossibleHitsAndStop;
   return d;
 }
 
@@ -113,7 +105,6 @@ void check_time_out(std::uint64_t seconds) {
 // of their substructure matches at once, which control_c_mutex cannot order
 // (control_c_lock.h), and call std::terminate on an exception, so the search
 // runs on the calling thread: the hits do not depend on the thread count.
-// useProgressBar is not bound (the manifest says why) and stays 0.
 SSS::SynthonSpaceSearchParams params_from(
     const SynthonSpaceSearchParamsData &d) {
   SSS::SynthonSpaceSearchParams p;
@@ -134,12 +125,7 @@ SSS::SynthonSpaceSearchParams params_from(
   p.maxHitChiralAtoms = d.max_hit_chiral_atoms;
   p.timeOut = d.time_out;
   p.toTryChunkSize = d.to_try_chunk_size;
-  p.possibleHitsFile = to_path(rust::Slice<const std::uint8_t>(
-      d.possible_hits_file.data(), d.possible_hits_file.size()));
-  p.maxPossibleHitsToWrite = d.max_possible_hits_to_write;
-  p.writePossibleHitsAndStop = d.write_possible_hits_and_stop;
   p.numThreads = 1;
-  p.useProgressBar = 0;
 
   if (p.maxHits < -1) {
     throw ValueErrorException(
@@ -173,7 +159,7 @@ void for_each_reaction(SSS::SynthonSpace &space, F &&f) {
 
 // RWMol's removals of atoms and bonds follow each substance group's PARENT
 // to the group with that "index" (check_substance_group_parents), and the
-// reader, the searches, and shape building remove atoms and bonds from
+// reader and the searches remove atoms and bonds from
 // products that combineMols builds from a synthon of each of a reaction's
 // sets, keeping every group's properties, so a chain can run from one
 // synthon's groups to another's. Every chain of a reaction's products runs
@@ -293,7 +279,7 @@ class ParentChains {
 //   (front() of an empty vector);
 // - every synthon has the molecules and pattern fingerprint the readers
 //   make, which the searches and the writer dereference;
-// - the searches and shape building remove atoms and bonds from the
+// - the searches remove atoms and bonds from the
 //   synthons' molecules and their products (check_removals, ParentChains).
 // A text file passes these by check_synthon_text; a database file, whatever
 // RDKit wrote, is checked too.
@@ -332,8 +318,7 @@ void check_space(SSS::SynthonSpace &space) {
 
 // writeDBFile pickles each synthon's molecules and connector regions and
 // each reaction's connector regions (Synthon.cpp, SynthonSet.cpp), so a
-// space it writes, to a database file or to buildSynthonShapes's interim
-// file, holds only molecules a pickle holds (check_picklable).
+// space it writes holds only molecules a pickle holds (check_picklable).
 void check_space_picklable(SSS::SynthonSpace &space) {
   for_each_reaction(
       space, [](const std::string &, const SSS::SynthonSet &reaction) {
@@ -667,15 +652,14 @@ void read_text(SynthonSpace &space, const std::string &name,
 // with no check against the file's size, and it reads the first reaction's
 // offset even when there are no reactions (the file of an empty space; a
 // segfault in Python). The records hold molecule and bit-vector pickles,
-// Boost archives of shapes, counts, and bools RDKit trusts, which is why the
-// reader is unsafe in Rust. This reads the header and offsets as RDKit does
+// counts, and bools RDKit trusts, which is why the reader is unsafe in Rust. This reads the header and offsets as RDKit does
 // and refuses a file whose offsets do not ascend through it, which also tells
 // a complete file from one the writer, which ignores a failed stream, left
 // short: it writes zeros for the offsets first and the real ones last.
 
 constexpr std::int32_t kEndianId = 0xa100f;
 constexpr std::int32_t kVersionMajor = 3;
-constexpr std::int32_t kVersionMinor = 2;
+constexpr std::int32_t kVersionMinor = 1;
 
 struct DbCounts {
   std::uint64_t synthons = 0;
@@ -753,9 +737,8 @@ DbCounts check_db_file(const std::string &name, bool reading) {
   // library, U2).
   if (major != kVersionMajor || minor < 0 || minor > kVersionMinor) {
     r.fail("has format version " + std::to_string(major) + "." +
-           std::to_string(minor) + "; this RDKit reads 3.0 to 3.2");
+           std::to_string(minor) + "; this RDKit reads 3.0 to 3.1");
   }
-  std::int32_t version = 1000 * major + 10 * minor;
   // A bool RDKit reads byte for byte: any value but 0 or 1 is undefined.
   auto has_fps = r.read<std::uint8_t>();
   if (has_fps > 1) {
@@ -763,9 +746,6 @@ DbCounts check_db_file(const std::string &name, bool reading) {
   }
   if (has_fps) {
     r.skip(r.read<std::uint32_t>());
-  }
-  if (version > 3010) {
-    r.read<std::uint32_t>();
   }
   DbCounts counts;
   counts.synthons = r.read<std::uint64_t>();
@@ -800,7 +780,23 @@ DbCounts check_db_file(const std::string &name, bool reading) {
 // writeDBFile opens the file itself, writes zeros for the offsets, the
 // records, and then the offsets: the file is truncated first, so a write that
 // fails leaves a file check_db_file refuses, not an older one.
-void write_db(const SSS::SynthonSpace &space, const std::string &name) {
+// The synthons writeDBFile writes, one record for each in the space's pool,
+// which is keyed on their SMILES and holds those of every reaction's sets.
+// RDKit 2025.09 has no getNumSynthons.
+std::uint64_t count_synthons(SSS::SynthonSpace &space) {
+  std::set<std::string> smiles;
+  for_each_reaction(space,
+                    [&](const std::string &, const SSS::SynthonSet &reaction) {
+                      for (const auto &set : reaction.getSynthons()) {
+                        for (const auto &[id, synthon] : set) {
+                          smiles.insert(synthon->getSmiles());
+                        }
+                      }
+                    });
+  return smiles.size();
+}
+
+void write_db(SSS::SynthonSpace &space, const std::string &name) {
   {
     std::ofstream out(name, std::ios::binary | std::ios::trunc);
     if (!out) {
@@ -810,188 +806,13 @@ void write_db(const SSS::SynthonSpace &space, const std::string &name) {
   space.writeDBFile(name);
   try {
     auto counts = check_db_file(name, false);
-    if (counts.synthons != space.getNumSynthons() ||
+    if (counts.synthons != count_synthons(space) ||
         counts.reactions != space.getNumReactions()) {
       throw ValueErrorException("does not hold the space");
     }
   } catch (const ValueErrorException &e) {
     throw RDKit::BadFileException("could not write " + name + ": " + e.what());
   }
-}
-
-// The searches open params.possibleHitsFile themselves, emptying it and then
-// appending each batch of possible hits, and ignore a failed write. The
-// wrapper checks that it can open the file for appending before the search,
-// which creates it, and that the file ends with a complete line after it, so
-// a write cut short by a full disk is Error::Os unless it ended at a line's
-// end.
-class PossibleHitsOutput {
- public:
-  explicit PossibleHitsOutput(const std::string &name) : d_name(name) {
-    if (d_name.empty()) {
-      return;
-    }
-    std::ofstream out(d_name, std::ios::app);
-    if (!out) {
-      throw RDKit::BadFileException("Bad output file " + d_name);
-    }
-  }
-
-  void check() const {
-    if (d_name.empty()) {
-      return;
-    }
-    std::ifstream in(d_name, std::ios::binary | std::ios::ate);
-    if (!in) {
-      throw RDKit::BadFileException("could not write " + d_name);
-    }
-    auto size = in.tellg();
-    if (size > 0) {
-      in.seekg(-1, std::ios::end);
-      char last = 0;
-      if (!in.get(last) || last != '\n') {
-        throw RDKit::BadFileException("could not write " + d_name);
-      }
-    }
-  }
-
- private:
-  std::string d_name;
-};
-
-// The lines of params.possibleHitsFile from startLine to finishLine, which
-// checkPossibleHits (SynthonSpaceSearcher.cpp) reads, by name, and builds:
-// it parses each line's SMILES and zips the molecule it dereferences, null
-// for SMILES that do not parse (a segfault in Python); split at spaces, the
-// SMILES have no CXSMILES extensions, so no substance groups or properties
-// for its removals (check_removals). This reads the lines as
-// readPossHitsLines does, checks each line's SMILES with the same parse, and
-// writes the lines RDKit would keep, in order, to a file of its own, which
-// RDKit then reads from its first line to its last: RDKit reads only
-// lines that were checked, even when the original file changes. A search
-// that computes its hits' n * n matrices in int (atom-pair fingerprints,
-// RASCAL) passes max_atoms, 46340 (U3), which each line's molecule, whose
-// zipped hit has no more atoms, may not pass.
-class CheckedPossibleHits {
- public:
-  CheckedPossibleHits(const std::string &name, std::uint64_t start_line,
-                      std::uint64_t finish_line, unsigned max_atoms) {
-    auto dir = std::filesystem::temp_directory_path().string();
-    std::string templ = dir + "/rdkit-cxx-possible-hits-XXXXXX";
-    std::vector<char> buf(templ.begin(), templ.end());
-    buf.push_back('\0');
-    int fd = mkstemp(buf.data());
-    if (fd < 0) {
-      throw RDKit::BadFileException("could not make a temporary file in " +
-                                    dir);
-    }
-    d_path = buf.data();
-    std::FILE *out = fdopen(fd, "w");
-    if (!out) {
-      close(fd);
-      std::remove(d_path.c_str());
-      throw RDKit::BadFileException("could not write " + d_path);
-    }
-    try {
-      copy_lines(name, start_line, finish_line, max_atoms, out);
-    } catch (...) {
-      std::fclose(out);
-      std::remove(d_path.c_str());
-      throw;
-    }
-    bool failed = std::fflush(out) != 0 || std::ferror(out);
-    failed = std::fclose(out) != 0 || failed;
-    if (failed) {
-      std::remove(d_path.c_str());
-      throw RDKit::BadFileException("could not write " + d_path);
-    }
-  }
-  ~CheckedPossibleHits() { std::remove(d_path.c_str()); }
-  CheckedPossibleHits(const CheckedPossibleHits &) = delete;
-  CheckedPossibleHits &operator=(const CheckedPossibleHits &) = delete;
-
-  const std::string &path() const { return d_path; }
-  // The lines RDKit reads, at least 1: it requires startLine < finishLine.
-  std::uint64_t finish_line() const {
-    return std::max<std::uint64_t>(d_count, 1);
-  }
-
- private:
-  void copy_lines(const std::string &name, std::uint64_t start_line,
-                  std::uint64_t finish_line, unsigned max_atoms,
-                  std::FILE *out) {
-    std::ifstream in(name.c_str());
-    if (!in) {
-      // As readPossHitsLines, which then returns no lines.
-      BOOST_LOG(rdErrorLog)
-          << "Possible hits file " << name
-          << " not found, so no results generated." << std::endl;
-      return;
-    }
-    std::string line;
-    for (std::uint64_t i = 0; i < start_line; ++i) {
-      if (!std::getline(in, line)) {
-        return;
-      }
-    }
-    for (std::uint64_t i = start_line; i < finish_line; ++i) {
-      if (!std::getline(in, line)) {
-        break;
-      }
-      if (line.empty()) {
-        continue;
-      }
-      std::vector<std::string> bits;
-      boost::split(bits, line, boost::is_any_of("\t "),
-                   boost::token_compress_on);
-      if (bits.empty()) {
-        continue;
-      }
-      auto mol = RDKit::v2::SmilesParse::MolFromSmiles(bits[0]);
-      auto where =
-          "line " + std::to_string(i) + " of the possible hits file " + name;
-      if (!mol) {
-        throw ValueErrorException(where +
-                                  " has SMILES RDKit cannot parse: " + bits[0]);
-      }
-      if (mol->getNumAtoms() > max_atoms) {
-        throw ValueErrorException(
-            where + " has more than " + std::to_string(max_atoms) +
-            " atoms, whose n * n matrices RDKit computes in int");
-      }
-      line += '\n';
-      if (std::fwrite(line.data(), 1, line.size(), out) != line.size()) {
-        throw RDKit::BadFileException("could not write " + d_path);
-      }
-      ++d_count;
-    }
-  }
-
-  std::string d_path;
-  std::uint64_t d_count = 0;
-};
-
-// Runs RDKit's search of the possible hits from start_line to finish_line:
-// with the checked copy of the lines when there is a file to read (with no
-// file RDKit reads nothing), and with the given lines when RDKit refuses them
-// before it reads any (an empty range, which its preconditions refuse, or
-// for RASCAL, which has none, the length_error of a reversed range).
-constexpr unsigned kAnyAtoms = std::numeric_limits<unsigned>::max();
-constexpr unsigned kMatrixAtoms = 46340;
-
-template <class Search>
-SSS::SearchResults search_lines(const SSS::SynthonSpaceSearchParams &params,
-                                std::uint64_t start_line,
-                                std::uint64_t finish_line, unsigned max_atoms,
-                                Search &&search) {
-  if (params.possibleHitsFile.empty() || start_line >= finish_line) {
-    return search(params, start_line, finish_line);
-  }
-  CheckedPossibleHits lines(params.possibleHitsFile, start_line, finish_line,
-                            max_atoms);
-  auto checked = params;
-  checked.possibleHitsFile = lines.path();
-  return search(checked, 0, lines.finish_line());
 }
 
 // ---------------------------------------------------------------------------
@@ -1176,223 +997,6 @@ void check_rascal_search(SSS::SynthonSpace *space, const RWMol &query,
   }
 }
 
-// ---------------------------------------------------------------------------
-// Shapes (buildSynthonShapes in SynthonSpace.cpp and makeShapesFromMols in
-// SynthonSpaceSearch_details.cpp).
-
-ShapeBuildParamsData to_data(const SSS::ShapeBuildParams &p) {
-  ShapeBuildParamsData d{};
-  d.num_confs = p.numConfs;
-  d.rms_threshold = p.rmsThreshold;
-  d.shape_sim_threshold = p.shapeSimThreshold;
-  d.num_threads = p.numThreads;
-  d.random_seed = p.randomSeed;
-  d.stereo_try_embedding = p.stereoEnumOpts.tryEmbedding;
-  d.stereo_only_unassigned = p.stereoEnumOpts.onlyUnassigned;
-  d.stereo_only_stereo_groups = p.stereoEnumOpts.onlyStereoGroups;
-  d.stereo_unique = p.stereoEnumOpts.unique;
-  d.stereo_max_isomers = p.stereoEnumOpts.maxIsomers;
-  d.stereo_random_seed = p.stereoEnumOpts.randomSeed;
-  d.max_synthon_atoms = p.maxSynthonAtoms;
-  d.max_embed_attempts = p.maxEmbedAttempts;
-  d.time_out = p.timeOut;
-  d.interim_file = to_bytes(p.interimFile);
-  d.interim_writes = p.interimWrites;
-  d.has_user_conformer_generator = false;
-  return d;
-}
-
-// The parameters RDKit builds shapes with. pruneShapes picks shapes with
-// RDKit's LeaderPicker at 1 - shapeSimThreshold, which a NaN threshold
-// reaches past ShapeInput's own check. RDKit's threads (numThreads) would
-// embed and match at once (control_c_lock.h) and call std::terminate on an
-// exception; the shapes do not depend on the thread count, as each
-// embedding's seed is its own. useProgressBar is not bound and stays 0.
-SSS::ShapeBuildParams shape_params_from(const ShapeBuildParamsData &d) {
-  SSS::ShapeBuildParams p;
-  p.numConfs = d.num_confs;
-  p.rmsThreshold = d.rms_threshold;
-  p.shapeSimThreshold = d.shape_sim_threshold;
-  p.randomSeed = d.random_seed;
-  p.stereoEnumOpts.tryEmbedding = d.stereo_try_embedding;
-  p.stereoEnumOpts.onlyUnassigned = d.stereo_only_unassigned;
-  p.stereoEnumOpts.onlyStereoGroups = d.stereo_only_stereo_groups;
-  p.stereoEnumOpts.unique = d.stereo_unique;
-  p.stereoEnumOpts.maxIsomers = d.stereo_max_isomers;
-  p.stereoEnumOpts.randomSeed = d.stereo_random_seed;
-  p.maxSynthonAtoms = d.max_synthon_atoms;
-  p.maxEmbedAttempts = d.max_embed_attempts;
-  p.timeOut = d.time_out;
-  p.interimFile = to_path(rust::Slice<const std::uint8_t>(
-      d.interim_file.data(), d.interim_file.size()));
-  p.interimWrites = d.interim_writes;
-  p.numThreads = 1;
-  p.useProgressBar = 0;
-  if (std::isnan(p.shapeSimThreshold)) {
-    throw ValueErrorException("shapeSimThreshold is NaN");
-  }
-  return p;
-}
-
-// What building shapes trusts about the space:
-// - buildSynthonShapes sorts each synthon's sample molecules by the heavy
-//   atoms of the first, reading front() of an empty list for a synthon whose
-//   samples all have none;
-// - each shape needs volume (gaussian_shape.cpp's checked_mol), which a
-//   synthon's connector, a dummy of the shape, gives it;
-// - the embedder casts the sum of the squared starting distances, which it
-//   bounds by 1000 Angstroms, to int (check_initial_coords_cast), so the
-//   molecules it embeds, a product with its hydrogens, need at most 4295
-//   atoms (largest_product_with_hs).
-// As details::countConnections: a dummy atom with an isotope from 1 to
-// MAX_CONNECTOR_NUM.
-bool has_connector(const SSS::Synthon &synthon) {
-  for (const auto *atom : synthon.getOrigMol()->atoms()) {
-    if (!atom->getAtomicNum() && atom->getIsotope() >= 1 &&
-        atom->getIsotope() <= SSS::MAX_CONNECTOR_NUM) {
-      return true;
-    }
-  }
-  return false;
-}
-
-// The most atoms a product of the space can have with the hydrogens addHs
-// gives it: each reaction's largest synthon from each set, counting each
-// atom's explicit hydrogens and, for an atom that can have implicit ones
-// (one written without brackets), at most 4, a lone carbon's, as RDKit's
-// default valences of those elements allow.
-std::uint64_t largest_product_with_hs(SSS::SynthonSpace &space) {
-  std::uint64_t largest = 0;
-  for_each_reaction(
-      space, [&](const std::string &, const SSS::SynthonSet &reaction) {
-        std::uint64_t atoms = 0;
-        for (const auto &set : reaction.getSynthons()) {
-          std::uint64_t most = 0;
-          for (const auto &[id, synthon] : set) {
-            std::uint64_t count = 0;
-            for (const auto *atom : synthon->getOrigMol()->atoms()) {
-              count += 1 + std::uint64_t{atom->getNumExplicitHs()} +
-                       (atom->getNoImplicit() ? 0 : 4);
-            }
-            most = std::max(most, count);
-          }
-          atoms += most;
-        }
-        largest = std::max(largest, atoms);
-      });
-  return largest;
-}
-
-void check_space_for_shapes(SSS::SynthonSpace &space) {
-  for_each_reaction(
-      space, [](const std::string &name, const SSS::SynthonSet &reaction) {
-        for (const auto &set : reaction.getSynthons()) {
-          for (const auto &[id, synthon] : set) {
-            if (!synthon->getNumHeavyAtoms() || !has_connector(*synthon)) {
-              throw ValueErrorException(
-                  "synthon " + id + " of reaction " + name +
-                  " needs a heavy atom and a connector ([1*] to [4*]) for its "
-                  "shape");
-            }
-          }
-        }
-      });
-  if (largest_product_with_hs(space) > 4295) {
-    throw ValueErrorException(
-        "the space's products can have more than 4295 atoms with their "
-        "hydrogens, the most the embedder takes");
-  }
-}
-
-// The locks building shapes holds, in U4's order: the shape modules'
-// pharmacophore patterns (gaussian_shape_mutex), the ControlCHandlers of
-// the embedder and the matches, the embedder's pruning
-// (symmetrize_mutex), and the random generator, which the stereoisomer
-// enumerator's embeddings draw from with no seed.
-class ShapeLocks {
- public:
-  ShapeLocks()
-      : d_gaussian(gaussian_shape_mutex()),
-        d_control_c(std::in_place),
-        d_symmetrize(symmetrize_mutex()),
-        d_random(random_mutex()) {}
-
-  // Releases them all, in reverse, for a Rust closure, which may call
-  // wrappers that take them; RDKit calls the conformer generator between
-  // embeddings and matches, with no ControlCHandler alive. Takes them back
-  // in order, even when the closure throws.
-  class Released {
-   public:
-    explicit Released(ShapeLocks &locks) : d_locks(locks) {
-      d_locks.d_random.unlock();
-      d_locks.d_symmetrize.unlock();
-      d_control_c.emplace();
-      d_locks.d_gaussian.unlock();
-    }
-    ~Released() {
-      d_locks.d_gaussian.lock();
-      d_control_c.reset();
-      d_locks.d_symmetrize.lock();
-      d_locks.d_random.lock();
-    }
-    Released(const Released &) = delete;
-    Released &operator=(const Released &) = delete;
-
-   private:
-    ShapeLocks &d_locks;
-    std::optional<ReleaseControlC> d_control_c;
-  };
-
- private:
-  std::unique_lock<std::mutex> d_gaussian;
-  std::optional<HoldControlC> d_control_c;
-  std::unique_lock<std::mutex> d_symmetrize;
-  std::unique_lock<std::mutex> d_random;
-};
-
-// Python's setUserConformerGenerator adapter, which RDKit calls with an
-// isomer's SMILES and the number of conformers, on this thread. RDKit maps
-// the molecule it returns onto the isomer by a substructure match,
-// dereferencing a null one (a segfault in Python), and builds shapes from
-// its conformers: None becomes an empty molecule, which matches nothing, so
-// RDKit drops the isomer as it does when its own embedding fails, and
-// conformers are checked as ShapeInput needs them. RDKit then removes bonds
-// from the molecule (check_removals). The closure's error is the rust::Error
-// it throws, which RDKit, on this thread, lets through.
-SSS::UserConfGenerator rust_conformer_generator(ConformerCallback &callback,
-                                                ShapeLocks &locks) {
-  return [&callback, &locks](
-             const std::string &smiles,
-             unsigned int num_conformers) -> std::unique_ptr<RDKit::RWMol> {
-    std::unique_ptr<RWMol> mol;
-    {
-      ShapeLocks::Released released(locks);
-      mol = call_conformer_generator(callback, smiles, num_conformers);
-    }
-    if (!mol) {
-      return std::make_unique<RWMol>();
-    }
-    check_shape_coordinates(*mol);
-    check_removals(*mol);
-    return mol;
-  };
-}
-
-// buildSynthonShapes writes its interim file with writeDBFile, which ignores
-// a failed stream, and moves it into place: the last one is checked as
-// write_db_file checks its file.
-void check_interim_file(const SSS::ShapeBuildParams &params) {
-  if (params.interimFile.empty() || !params.interimWrites ||
-      !std::filesystem::exists(params.interimFile)) {
-    return;
-  }
-  try {
-    check_db_file(params.interimFile, false);
-  } catch (const ValueErrorException &e) {
-    throw RDKit::BadFileException("could not write " + params.interimFile +
-                                  ": " + e.what());
-  }
-}
 }  // namespace
 
 SynthonSpace::SynthonSpace()
@@ -1400,10 +1004,6 @@ SynthonSpace::SynthonSpace()
 
 SynthonSpaceSearchParamsData synthon_space_search_params_default() {
   return to_data(SSS::SynthonSpaceSearchParams());
-}
-
-ShapeBuildParamsData shape_build_params_default() {
-  return to_data(SSS::ShapeBuildParams());
 }
 
 std::unique_ptr<SynthonSpace> synthon_space_new() {
@@ -1460,21 +1060,8 @@ std::uint64_t synthon_space_get_num_products(const SynthonSpace &space) {
   return space.space->getNumProducts();
 }
 
-std::uint64_t synthon_space_get_num_synthons(const SynthonSpace &space) {
-  return space.space->getNumSynthons();
-}
-
-std::uint64_t synthon_space_get_num_synthons_with_shapes(
-    const SynthonSpace &space) {
-  return space.space->getNumSynthonsWithShapes();
-}
-
 void synthon_space_summarise(const SynthonSpace &space) {
   space.space->summarise(std::cout);
-}
-
-void synthon_space_report_synthon_usage(const SynthonSpace &space) {
-  space.space->reportSynthonUsage(std::cout);
 }
 
 std::unique_ptr<std::string> synthon_space_get_synthon_fingerprint_type(
@@ -1484,8 +1071,7 @@ std::unique_ptr<std::string> synthon_space_get_synthon_fingerprint_type(
 }
 
 // buildSynthonFingerprints reads the Ctrl-C flag, and the generator may
-// match patterns or run the CIP labeler (control_c_lock.h). Its
-// progressBarWidth is not bound (the manifest says why).
+// match patterns or run the CIP labeler (control_c_lock.h).
 void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
                                               const FpGenerator &gen) {
   if (fingerprint_reads_distance_matrix(gen)) {
@@ -1493,30 +1079,7 @@ void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
   }
   SpaceMatrixCacheGuard guard(*space.space);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  space.space->buildSynthonFingerprints(gen, 0);
-}
-
-void synthon_space_build_synthon_shapes(SynthonSpace &space,
-                                        const ShapeBuildParamsData &data,
-                                        ConformerCallback &generator) {
-  auto params = shape_params_from(data);
-  check_space_for_shapes(*space.space);
-  if (!params.interimFile.empty() && params.interimWrites) {
-    check_space_picklable(*space.space);
-  }
-  bool cancelled = false;
-  {
-    ShapeLocks locks;
-    if (data.has_user_conformer_generator) {
-      params.userConformerGenerator =
-          rust_conformer_generator(generator, locks);
-    }
-    space.space->buildSynthonShapes(cancelled, params);
-  }
-  check_interim_file(params);
-  if (cancelled) {
-    throw std::runtime_error("Shape building canceled");
-  }
+  space.space->buildSynthonFingerprints(gen);
 }
 
 // The substructure searches construct a ControlCHandler, and match.
@@ -1528,13 +1091,11 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search(
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
   check_query(query);
-  PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->substructureSearch(query, match, params);
   }
-  output.check();
   return finish(std::move(results), "SubstructureSearch");
 }
 
@@ -1545,51 +1106,14 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended(
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
   check_query(query);
-  PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->substructureSearch(query, match, params);
   }
-  output.check();
   return finish(std::move(results), "SubstructureSearch");
 }
 
-std::unique_ptr<SearchResults> synthon_space_substructure_search_lines(
-    SynthonSpace &space, const RWMol &query,
-    const SubstructMatchParametersData &match_params,
-    const SynthonSpaceSearchParamsData &data, std::uint64_t start_line,
-    std::uint64_t finish_line) {
-  auto params = params_from(data);
-  auto match = substruct_params_from_data(match_params);
-  check_query(query);
-  auto results = search_lines(
-      params, start_line, finish_line, kAnyAtoms,
-      [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
-          std::uint64_t finish) {
-        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-        return space.space->substructureSearch(query, match, p, start, finish);
-      });
-  return finish(std::move(results), "SubstructureSearch");
-}
-
-std::unique_ptr<SearchResults> synthon_space_substructure_search_extended_lines(
-    SynthonSpace &space, const ExtendedQueryMol &query,
-    const SubstructMatchParametersData &match_params,
-    const SynthonSpaceSearchParamsData &data, std::uint64_t start_line,
-    std::uint64_t finish_line) {
-  auto params = params_from(data);
-  auto match = substruct_params_from_data(match_params);
-  check_query(query);
-  auto results = search_lines(
-      params, start_line, finish_line, kAnyAtoms,
-      [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
-          std::uint64_t finish) {
-        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-        return space.space->substructureSearch(query, match, p, start, finish);
-      });
-  return finish(std::move(results), "SubstructureSearch");
-}
 
 void synthon_space_substructure_search_incremental(
     SynthonSpace &space, const RWMol &query, SearchCallback &callback,
@@ -1598,13 +1122,11 @@ void synthon_space_substructure_search_incremental(
   auto params = params_from(data);
   auto match = substruct_params_from_data(match_params);
   check_query(query);
-  PossibleHitsOutput output(params.possibleHitsFile);
   {
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     space.space->substructureSearch(query, held_callback(callback), match,
                                     params);
   }
-  output.check();
 }
 
 // The fingerprint searches construct a ControlCHandler, read the Ctrl-C
@@ -1616,7 +1138,6 @@ std::unique_ptr<SearchResults> synthon_space_fingerprint_search(
     const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
   check_fingerprint_search(space.space.get(), query, gen, params);
-  PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
     MatrixCacheGuard query_guard(query);
@@ -1624,27 +1145,6 @@ std::unique_ptr<SearchResults> synthon_space_fingerprint_search(
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->fingerprintSearch(query, gen, params);
   }
-  output.check();
-  return finish(std::move(results), "FingerprintSearch");
-}
-
-// RDKit searches these lines without the space, whose synthons it does not
-// read.
-std::unique_ptr<SearchResults> synthon_space_fingerprint_search_lines(
-    SynthonSpace &space, const RWMol &query, const FpGenerator &gen,
-    const SynthonSpaceSearchParamsData &data, std::uint64_t start_line,
-    std::uint64_t finish_line) {
-  auto params = params_from(data);
-  check_fingerprint_search(nullptr, query, gen, params);
-  auto results = search_lines(
-      params, start_line, finish_line,
-      fingerprint_reads_distance_matrix(gen) ? kMatrixAtoms : kAnyAtoms,
-      [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
-          std::uint64_t finish) {
-        MatrixCacheGuard query_guard(query);
-        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-        return space.space->fingerprintSearch(query, gen, p, start, finish);
-      });
   return finish(std::move(results), "FingerprintSearch");
 }
 
@@ -1653,14 +1153,12 @@ void synthon_space_fingerprint_search_incremental(
     SearchCallback &callback, const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
   check_fingerprint_search(space.space.get(), query, gen, params);
-  PossibleHitsOutput output(params.possibleHitsFile);
   {
     MatrixCacheGuard query_guard(query);
     SpaceMatrixCacheGuard space_guard(*space.space);
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     space.space->fingerprintSearch(query, gen, held_callback(callback), params);
   }
-  output.check();
 }
 
 // The RASCAL searches match substructures (deltaYExchangePossible in
@@ -1673,33 +1171,12 @@ std::unique_ptr<SearchResults> synthon_space_rascal_search(
   auto params = params_from(data);
   auto options = rascal_options_from(rascal_options);
   check_rascal_search(space.space.get(), query, options, params);
-  PossibleHitsOutput output(params.possibleHitsFile);
   SSS::SearchResults results;
   {
     SpaceMatrixCacheGuard space_guard(*space.space);
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
     results = space.space->rascalSearch(query, options, params);
   }
-  output.check();
-  return finish(std::move(results), "RascalSearch");
-}
-
-std::unique_ptr<SearchResults> synthon_space_rascal_search_lines(
-    SynthonSpace &space, const RWMol &query,
-    const RascalOptionsData &rascal_options,
-    const SynthonSpaceSearchParamsData &data, std::uint64_t start_line,
-    std::uint64_t finish_line) {
-  auto params = params_from(data);
-  auto options = rascal_options_from(rascal_options);
-  check_rascal_search(nullptr, query, options, params);
-  auto results = search_lines(
-      params, start_line, finish_line, kMatrixAtoms,
-      [&](const SSS::SynthonSpaceSearchParams &p, std::uint64_t start,
-          std::uint64_t finish) {
-        SpaceMatrixCacheGuard space_guard(*space.space);
-        std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-        return space.space->rascalSearch(query, options, p, start, finish);
-      });
   return finish(std::move(results), "RascalSearch");
 }
 
@@ -1710,14 +1187,12 @@ void synthon_space_rascal_search_incremental(
   auto params = params_from(data);
   auto options = rascal_options_from(rascal_options);
   check_rascal_search(space.space.get(), query, options, params);
-  PossibleHitsOutput output(params.possibleHitsFile);
   {
     SpaceMatrixCacheGuard space_guard(*space.space);
     HoldControlC control_c;
     space.space->rascalSearch(query, options, released_callback(callback),
                               params);
   }
-  output.check();
 }
 
 std::unique_ptr<MolList> substructure_result_get_hit_molecules(
@@ -1740,12 +1215,6 @@ bool substructure_result_get_timed_out(const SearchResults &results) {
 
 bool substructure_result_get_cancelled(const SearchResults &results) {
   return results.getCancelled();
-}
-
-std::unique_ptr<RWMol> substructure_result_get_best_hit(
-    const SearchResults &results) {
-  const auto &best = results.getBestHit();
-  return best ? copy_hit(*best) : nullptr;
 }
 
 std::unique_ptr<std::string> formatted_integer_string(std::int64_t value) {

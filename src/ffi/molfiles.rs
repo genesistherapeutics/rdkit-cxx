@@ -366,6 +366,6 @@ pub(crate) mod ffi {
         fn mol_to_fasta(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
         fn mol_to_helm(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
         fn has_chem_draw_cdx_support() -> Result<bool>;
-        fn mol_to_cdxml_block(mol: &RWMol, format: CDXMLFormat) -> Result<Vec<u8>>;
+        fn mol_to_chem_draw_block(mol: &RWMol, cdx: bool) -> Result<Vec<u8>>;
     }
 }

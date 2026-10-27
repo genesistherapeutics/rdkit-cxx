@@ -373,19 +373,9 @@ void mmff_mol_properties_set_dielectric_model(MMFFMolProperties &props,
   props.props().setMMFFDielectricModel(model);
 }
 
-std::uint8_t mmff_mol_properties_get_dielectric_model(
-    const MMFFMolProperties &props) {
-  return props.props().getMMFFDielectricModel();
-}
-
 void mmff_mol_properties_set_dielectric_constant(MMFFMolProperties &props,
                                                  double constant) {
   props.props().setMMFFDielectricConstant(constant);
-}
-
-double mmff_mol_properties_get_dielectric_constant(
-    const MMFFMolProperties &props) {
-  return props.props().getMMFFDielectricConstant();
 }
 
 void mmff_mol_properties_set_term(MMFFMolProperties &props, MMFFTerm term,
@@ -416,36 +406,9 @@ void mmff_mol_properties_set_term(MMFFMolProperties &props, MMFFTerm term,
   }
 }
 
-bool mmff_mol_properties_get_term(const MMFFMolProperties &props,
-                                  MMFFTerm term) {
-  const auto &p = props.props();
-  switch (term) {
-    case MMFFTerm::Bond:
-      return p.getMMFFBondTerm();
-    case MMFFTerm::Angle:
-      return p.getMMFFAngleTerm();
-    case MMFFTerm::StretchBend:
-      return p.getMMFFStretchBendTerm();
-    case MMFFTerm::Oop:
-      return p.getMMFFOopTerm();
-    case MMFFTerm::Torsion:
-      return p.getMMFFTorsionTerm();
-    case MMFFTerm::VdW:
-      return p.getMMFFVdWTerm();
-    case MMFFTerm::Ele:
-      return p.getMMFFEleTerm();
-  }
-  return false;
-}
-
 void mmff_mol_properties_set_variant(MMFFMolProperties &props,
                                      rust::Str variant) {
   props.props().setMMFFVariant(std::string(variant));
-}
-
-std::unique_ptr<std::string> mmff_mol_properties_get_variant(
-    const MMFFMolProperties &props) {
-  return std::make_unique<std::string>(props.props().getMMFFVariant());
 }
 
 void mmff_mol_properties_set_verbosity(MMFFMolProperties &props,

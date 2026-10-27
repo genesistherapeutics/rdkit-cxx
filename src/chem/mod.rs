@@ -59,7 +59,6 @@ pub mod rd_fingerprint_generator;
 pub mod rd_fmcs;
 pub mod rd_force_field_helpers;
 pub mod rd_free_sasa;
-pub mod rd_gaussian_shape;
 pub mod rd_generalized_substruct;
 pub mod rd_mhfp_fingerprint;
 pub mod rd_mif;
@@ -105,8 +104,7 @@ pub mod torsion_fingerprints;
 
 pub use inchi::{
     InchiLogLevel, MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key,
-    mol_from_inchi, mol_from_inchi_and_aux_info, mol_from_inchi_and_aux_info_with_params,
-    mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
+    mol_from_inchi, mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
     mol_to_inchi_and_aux_info_with_params, mol_to_inchi_key, mol_to_inchi_key_with_options,
     mol_to_inchi_with_params,
 };

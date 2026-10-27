@@ -42,6 +42,7 @@ use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::{
 use rdkit_cxx::chem::rd_abbreviations::{
     AbbreviationDefinition, condense_mol_abbreviations, get_default_abbreviations,
 };
+use rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block;
 use rdkit_cxx::chem::rd_chem_reactions::{
     ChemicalReaction, Compute2DCoordsForReactionParams, EnumerateLibrary,
     compute_2d_coords_for_reaction_with_params, reaction_from_smarts, reaction_to_rxn_block,
@@ -97,8 +98,9 @@ use rdkit_cxx::chem::rd_mol_processing::{
 use rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecomposition;
 use rdkit_cxx::chem::rd_rascal_mces::{find_mces, rascal_cluster};
 use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
+use rdkit_cxx::chem::rd_shape_align;
 use rdkit_cxx::chem::rd_substruct_library::{MolHolder, SubstructLibrary};
-use rdkit_cxx::chem::rd_synthon_space_search::{ShapeBuildParams, SynthonSpace};
+use rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace;
 use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
 use rdkit_cxx::chem::rdfiltercatalog::{FilterCatalog, FilterCatalogEntry, SmartsMatcher};
 use rdkit_cxx::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog};
@@ -113,11 +115,9 @@ use rdkit_cxx::chem::{
     fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
     mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cdxml_block, mol_to_cx_smiles_with_params, mol_to_mol_block,
-    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
-    molzip_fragments_with_params, pattern_fingerprint,
+    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
+    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
 };
-use rdkit_cxx::chem::{rd_gaussian_shape, rd_shape_align};
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
@@ -196,7 +196,6 @@ fn main() {
     phase(bounds_matrix_embedding(), random_smiles());
     phase(random_transforms(), random_smiles());
     phase(embedded_stereoisomers(), random_smiles());
-    phase(synthon_shapes(), random_smiles());
     // Comic-mode drawing draws its lines with std::rand, under the same
     // lock.
     phase(comic_drawing(), comic_drawing());
@@ -263,7 +262,6 @@ fn main() {
     phase(rgroups_decomposed(), substruct_matches());
     phase(scaffold_network(), substruct_matches());
     phase(pubchem_shape_alignment(), substruct_matches());
-    phase(gaussian_shapes(), substruct_matches());
     phase(mif_h_bonds(), substruct_matches());
     phase(mol_features(), substruct_matches());
     phase(condensed_abbreviations(), substruct_matches());
@@ -271,7 +269,6 @@ fn main() {
     phase(embedded_stereoisomers(), substruct_matches());
     phase(synthon_substructure_search(), substruct_matches());
     phase(synthon_rascal_search(), substruct_matches());
-    phase(synthon_shapes(), substruct_matches());
     phase(inchi_written(), substruct_matches());
     phase(inchi_read(), substruct_matches());
 
@@ -281,8 +278,6 @@ fn main() {
     phase(registered_property(), available_properties());
     phase(dclv_surfaces(), dclv_surfaces());
     phase(pubchem_shape_alignment(), pubchem_shape_scores());
-    phase(gaussian_shapes(), gaussian_shapes());
-    phase(synthon_shapes(), gaussian_shapes());
     phase(murtagh_clusters(), hierarchical_picks());
     phase(cdxml_blocks(), cdxml_blocks());
 
@@ -1303,18 +1298,6 @@ fn pubchem_shape_scores() -> Call<(Mol, Mol)> {
     }
 }
 
-// The Gaussian shapes fill a static list of feature patterns
-// (gaussian_shape_mutex) and match them.
-fn gaussian_shapes() -> Call<Mol> {
-    Call {
-        make: |_| embedded("Oc1ccccc1"),
-        run: |mol| {
-            let shape = rd_gaussian_shape::ShapeInput::new(&mol).unwrap();
-            assert!(shape.num_features() > 0);
-        },
-    }
-}
-
 // An H-bond field finds its special atoms with a serine pattern.
 fn mif_h_bonds() -> Call<Mol> {
     Call {
@@ -1397,12 +1380,11 @@ fn inchi_read() -> Call<String> {
 fn cdxml_blocks() -> Call<Mol> {
     Call {
         make: |_| depicted("CCO"),
-        run: |mol| assert!(mol_to_cdxml_block(&mol).unwrap().contains("BondLength")),
+        run: |mol| assert!(mol_to_chem_draw_block(&mol).unwrap().contains("BondLength")),
     }
 }
 
-/// A synthon space of benzamides, written by `main`. The second amine's
-/// unassigned stereocenter makes shape building enumerate its isomers.
+/// A synthon space of benzamides, written by `main`.
 const SYNTHONS: &str = "SMILES\tsynton_id\tsynton#\treaction_id
 c1ccccc1C(=O)[1*]\t1-1\t1\tamide
 [1*]N1CCCC1\t2-1\t2\tamide
@@ -1454,27 +1436,6 @@ fn synthon_rascal_search() -> Call<(SynthonSpace, Mol, Mol)> {
                 })
                 .unwrap();
             assert!(hits > 0);
-        },
-    }
-}
-
-// Shape building embeds each sample product's stereoisomers without a seed
-// (from RDKit's generator) and its conformers, and fills and matches the
-// shapes' feature patterns (gaussian_shape_mutex).
-fn synthon_shapes() -> Call<SynthonSpace> {
-    Call {
-        make: |_| {
-            let mut space = SynthonSpace::default();
-            space.read_text_file(synthons()).unwrap();
-            space
-        },
-        run: |mut space| {
-            let params = ShapeBuildParams {
-                num_confs: 2,
-                ..Default::default()
-            };
-            space.build_synthon_shapes_with_py_params(&params).unwrap();
-            assert_eq!(space.get_num_synthons_with_shapes(), 3);
         },
     }
 }

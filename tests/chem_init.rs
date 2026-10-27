@@ -9,9 +9,8 @@
 mod common;
 
 use rdkit_cxx::chem::{
-    FileMolSupplier, SDMolSupplierParams, canon_smiles, canon_smiles_with_use_chiral,
-    mol_to_smiles, multi_conf_mol_from_sdf, multi_conf_mol_from_sdf_with_params,
-    quick_smarts_match, quick_smarts_match_with_unique, supplier_from_filename,
+    FileMolSupplier, canon_smiles, canon_smiles_with_use_chiral, mol_to_smiles, quick_smarts_match,
+    quick_smarts_match_with_unique, supplier_from_filename,
 };
 use rdkit_cxx::{Error, Result};
 
@@ -122,7 +121,10 @@ fn suppliers_from_filenames() -> Result<()> {
     let mols: Vec<_> = suppl.mols().collect::<Result<_>>()?;
     let smiles: Vec<String> = mols.iter().map(mol_to_smiles).collect::<Result<_>>()?;
     assert_eq!(smiles, ["CCO", "c1ccccc1"]);
-    let names: Vec<String> = mols.iter().map(|m| m.get_name()).collect::<Result<_>>()?;
+    let names: Vec<String> = mols
+        .iter()
+        .map(|m| m.get_prop("_Name"))
+        .collect::<Result<_>>()?;
     assert_eq!(names, ["ethanol", "benzene"]);
 
     let sdf = common::temp_path("supplier.SDF");
@@ -145,25 +147,5 @@ fn suppliers_from_filenames() -> Result<()> {
     for path in [csv, sdf, tdt] {
         std::fs::remove_file(path).unwrap();
     }
-    Ok(())
-}
-
-#[test]
-fn multi_conformer_molecules() -> Result<()> {
-    let sdf = common::temp_path("multi_conf.sdf");
-    std::fs::write(&sdf, ETHANOL_CONFS).unwrap();
-    let mol = multi_conf_mol_from_sdf(&sdf)?.unwrap();
-    assert_eq!(mol.get_num_atoms(), 3);
-    let ids: Vec<u32> = mol.get_conformers().map(|c| c.get_id()).collect();
-    assert_eq!(ids, [0, 1, 2]);
-    let p = mol.get_conformer_with_id(2)?.get_atom_position(0)?;
-    assert_eq!((p.x, p.y, p.z), (-0.8949, 0.2106, -0.0171));
-    let params = SDMolSupplierParams {
-        remove_hs: false,
-        ..Default::default()
-    };
-    let mol = multi_conf_mol_from_sdf_with_params(&sdf, &params)?.unwrap();
-    assert_eq!((mol.get_num_atoms(), mol.get_num_conformers()), (9, 3));
-    std::fs::remove_file(sdf).unwrap();
     Ok(())
 }

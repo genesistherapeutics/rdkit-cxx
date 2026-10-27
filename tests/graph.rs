@@ -353,8 +353,7 @@ fn split_by_pdb_with_other_monomer_types() {
         .unwrap()
         .set_pdb_residue_info(&info);
     let mut plain = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
-    plain.set_residue_name("ALA");
-    plain.set_chain_id("A");
+    plain.set_name(" C2 ");
     mol.get_atom_with_idx_mut(1)
         .unwrap()
         .set_monomer_info(&plain);

@@ -389,7 +389,9 @@ fn assign_symmetry_classes(bd_mat: &[Vec<f64>], num_atoms: usize, cutoff: i32) -
         .iter()
         .map(|row| {
             let mut sorted = row.clone();
-            // NumPy sorts NaN last.
+            // NaN sorts last. RDKit 2025.09's Python sorts each row as a
+            // list, in which NaN compares false with everything, so for a
+            // given matrix with NaN its order follows the sort's steps.
             sorted.sort_by(|a, b| match (a.is_nan(), b.is_nan()) {
                 (false, false) => a.partial_cmp(b).expect("neither is NaN"),
                 (a_nan, b_nan) => a_nan.cmp(&b_nan),
@@ -413,7 +415,7 @@ fn assign_symmetry_classes(bd_mat: &[Vec<f64>], num_atoms: usize, cutoff: i32) -
 /// Bertz's complexity index (S. H. Bertz, J. Am. Chem. Soc. 103,
 /// 3599-3601 (1981)), from the connections between bonds and the
 /// distribution of elements, with aromatic bonds of order 1.5 and the others
-/// of their `BondType`'s number, as RDKit 2026.03's Python takes them (so a
+/// of their `BondType`'s number, as RDKit 2025.09's Python takes them (so a
 /// dative bond is of order 17). 0 for fewer than two atoms. Mirrors
 /// `GraphDescriptors.BertzCT`.
 pub fn bertz_ct(mol: &Mol) -> Result<f64> {

@@ -20,15 +20,6 @@ pub(crate) mod ffi {
         pub a: f64,
     }
 
-    /// `RDKit::MolDrawOptions::LegendPosition`; cxx checks the values.
-    #[repr(i32)]
-    enum LegendPosition {
-        Bottom,
-        Top,
-        Left,
-        Right,
-    }
-
     /// `RDKit::MultiColourHighlightStyle`; cxx checks the values.
     #[repr(i32)]
     #[allow(clippy::upper_case_acronyms)]
@@ -81,8 +72,6 @@ pub(crate) mod ffi {
         annotation_font_scale: f64,
         font_file: Vec<u8>,
         legend_colour: DrawColour,
-        legend_position: LegendPosition,
-        legend_vertical_text: bool,
         multiple_bond_offset: f64,
         padding: f64,
         reagent_padding: f64,
@@ -124,13 +113,8 @@ pub(crate) mod ffi {
         variable_attachment_colour: DrawColour,
         include_chiral_flag_label: bool,
         simplified_stereo_group_label: bool,
-        stereo_group_and_label: Vec<u8>,
-        stereo_group_or_label: Vec<u8>,
-        stereo_group_abs_label: Vec<u8>,
-        add_stereo_group_annotation: bool,
         unspecified_stereo_is_unknown: bool,
         single_colour_wedge_bonds: bool,
-        single_colour_bonds: bool,
         use_mol_block_wedging: bool,
         scaling_factor: f64,
         base_font_size: f64,
@@ -244,7 +228,6 @@ pub(crate) mod ffi {
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type BorrowedMols = crate::ffi::molops::ffi::BorrowedMols;
         type ChemicalReaction = crate::ffi::chem_reactions::ffi::ChemicalReaction;
-        type LegendPosition;
         type MultiColourHighlightStyle;
         type DrawElement;
 

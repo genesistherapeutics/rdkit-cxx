@@ -24,6 +24,7 @@
 #include <GraphMol/SmilesParse/SmartsWrite.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
+#include <GraphMol/chemdraw.h>
 #include <GraphMol/new_canon.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
@@ -1119,7 +1120,7 @@ bool has_chem_draw_cdx_support() {
 
 namespace {
 
-// The ChemDraw library under RDKit's CDXML writer fills its attribute-name
+// The ChemDraw library under RDKit's ChemDraw writer fills its attribute-name
 // maps on first use behind a check made outside its lock
 // (InitAttributeMapsIfNeeded in chemdraw/CDXObject.cpp), so a thread can read
 // a map another thread is still filling, and it keeps the names of unknown
@@ -1166,11 +1167,10 @@ void check_cdx_coordinates(const RDKit::ROMol &mol) {
 
 }  // namespace
 
-// As MolToCDXMLBlockHelper in Code/GraphMol/Wrap/rdmolfiles.cpp. The copy
-// is kekulized and given coordinates as MolToChemDrawBlock does, then checked
+// As rdChemDraw's MolToChemDrawBlock (External/ChemDraw/Wrap). The copy is
+// kekulized and given coordinates as MolToChemDrawBlock does, then checked
 // and written; RDKit's own copy of it then needs neither.
-rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
-                                           CDXMLFormat format) {
+rust::Vec<std::uint8_t> mol_to_chem_draw_block(const RWMol &mol, bool cdx) {
   RDKit::RWMol copy(mol);
   RDKit::MolOps::Kekulize(copy);
   if (!copy.getNumConformers()) {
@@ -1180,7 +1180,8 @@ rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
   }
   check_cdx_coordinates(copy);
   std::lock_guard<std::mutex> chemdraw(chemdraw_mutex());
-  return to_bytes(RDKit::v2::CDXMLParser::MolToCDXMLBlock(copy, format));
+  return to_bytes(RDKit::v2::MolToChemDrawBlock(
+      copy, cdx ? RDKit::v2::CDXFormat::CDX : RDKit::v2::CDXFormat::CDXML));
 }
 
 }  // namespace rdkit_cxx

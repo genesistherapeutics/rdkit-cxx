@@ -60,17 +60,6 @@ impl From<(f64, f64, f64, f64)> for DrawColour {
 }
 
 rdkit_enum! {
-    /// Where a molecule's legend goes. Mirrors
-    /// `rdMolDraw2D.LegendPosition`.
-    LegendPosition: ffi::LegendPosition {
-        Bottom = Bottom,
-        Top = Top,
-        Left = Left,
-        Right = Right,
-    }
-}
-
-rdkit_enum! {
     /// How `draw_molecule_with_highlights` draws several colors on one
     /// atom or bond. Mirrors `rdMolDraw2D.MultiColourHighlightStyle`.
     MultiColourHighlightStyle: ffi::MultiColourHighlightStyle {
@@ -127,8 +116,6 @@ pub struct MolDrawOptions {
     pub add_bond_indices: bool,
     /// Adds R/S and E/Z labels to drawings.
     pub add_stereo_annotation: bool,
-    /// Adds the enhanced stereo group labels.
-    pub add_stereo_group_annotation: bool,
     /// Additional padding around atom labels, as a fraction of the font
     /// size.
     pub additional_atom_label_padding: f64,
@@ -217,10 +204,6 @@ pub struct MolDrawOptions {
     pub legend_font_size: i32,
     /// The fraction of a panel the legend takes.
     pub legend_fraction: f64,
-    /// Where the legend goes.
-    pub legend_position: LegendPosition,
-    /// Draws a legend on the left or right one character per line.
-    pub legend_vertical_text: bool,
     /// The largest font size, in pixels; -1 for no limit.
     pub max_font_size: i32,
     /// The smallest font size, in pixels; -1 for no limit.
@@ -256,20 +239,12 @@ pub struct MolDrawOptions {
     /// Shows one molecule-level label when every stereocenter is in one
     /// stereo group.
     pub simplified_stereo_group_label: bool,
-    /// Draws every bond in the symbol color.
-    pub single_colour_bonds: bool,
     /// Draws wedged and dashed bonds in the symbol color.
     pub single_colour_wedge_bonds: bool,
     /// Splits bonds into a segment per atom.
     pub split_bonds: bool,
     /// Draws highlighted heteroatoms in their usual colors.
     pub standard_colours_for_highlighted_atoms: bool,
-    /// The label of ABS stereo groups.
-    pub stereo_group_abs_label: String,
-    /// The label of AND stereo groups.
-    pub stereo_group_and_label: String,
-    /// The label of OR stereo groups.
-    pub stereo_group_or_label: String,
     /// The color of symbols and arrows in reactions.
     pub symbol_colour: DrawColour,
     /// Draws double bonds with unspecified stereo crossed and possible
@@ -408,7 +383,6 @@ impl MolDrawOptions {
             add_atom_indices: data.add_atom_indices,
             add_bond_indices: data.add_bond_indices,
             add_stereo_annotation: data.add_stereo_annotation,
-            add_stereo_group_annotation: data.add_stereo_group_annotation,
             additional_atom_label_padding: data.additional_atom_label_padding,
             annotation_colour: data.annotation_colour,
             annotation_font_scale: data.annotation_font_scale,
@@ -449,8 +423,6 @@ impl MolDrawOptions {
             legend_colour: data.legend_colour,
             legend_font_size: data.legend_font_size,
             legend_fraction: data.legend_fraction,
-            legend_position: LegendPosition::from_ffi(data.legend_position),
-            legend_vertical_text: data.legend_vertical_text,
             max_font_size: data.max_font_size,
             min_font_size: data.min_font_size,
             multi_colour_highlight_style: MultiColourHighlightStyle::from_ffi(
@@ -468,13 +440,9 @@ impl MolDrawOptions {
             scaling_factor: data.scaling_factor,
             show_all_cip_codes: data.show_all_cip_codes,
             simplified_stereo_group_label: data.simplified_stereo_group_label,
-            single_colour_bonds: data.single_colour_bonds,
             single_colour_wedge_bonds: data.single_colour_wedge_bonds,
             split_bonds: data.split_bonds,
             standard_colours_for_highlighted_atoms: data.standard_colours_for_highlighted_atoms,
-            stereo_group_abs_label: text(data.stereo_group_abs_label, "stereoGroupAbsLabel")?,
-            stereo_group_and_label: text(data.stereo_group_and_label, "stereoGroupAndLabel")?,
-            stereo_group_or_label: text(data.stereo_group_or_label, "stereoGroupOrLabel")?,
             symbol_colour: data.symbol_colour,
             unspecified_stereo_is_unknown: data.unspecified_stereo_is_unknown,
             use_complex_query_atom_symbols: data.use_complex_query_atom_symbols,
@@ -513,8 +481,6 @@ impl MolDrawOptions {
             annotation_font_scale: self.annotation_font_scale,
             font_file: self.font_file.as_bytes().to_vec(),
             legend_colour: self.legend_colour,
-            legend_position: self.legend_position.to_ffi(),
-            legend_vertical_text: self.legend_vertical_text,
             multiple_bond_offset: self.multiple_bond_offset,
             padding: self.padding,
             reagent_padding: self.reagent_padding,
@@ -566,13 +532,8 @@ impl MolDrawOptions {
             variable_attachment_colour: self.variable_attachment_colour,
             include_chiral_flag_label: self.include_chiral_flag_label,
             simplified_stereo_group_label: self.simplified_stereo_group_label,
-            stereo_group_and_label: self.stereo_group_and_label.as_bytes().to_vec(),
-            stereo_group_or_label: self.stereo_group_or_label.as_bytes().to_vec(),
-            stereo_group_abs_label: self.stereo_group_abs_label.as_bytes().to_vec(),
-            add_stereo_group_annotation: self.add_stereo_group_annotation,
             unspecified_stereo_is_unknown: self.unspecified_stereo_is_unknown,
             single_colour_wedge_bonds: self.single_colour_wedge_bonds,
-            single_colour_bonds: self.single_colour_bonds,
             use_mol_block_wedging: self.use_mol_block_wedging,
             scaling_factor: self.scaling_factor,
             base_font_size: self.base_font_size,

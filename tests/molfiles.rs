@@ -201,7 +201,7 @@ fn mol_block_depiction_refuses_what_the_depictor_would_mishandle() {
     for result in [
         mol_to_v3k_mol_block(&mol),
         mol_to_mrv_block(&mol),
-        mol_to_cdxml_block(&mol),
+        rd_chem_draw::mol_to_chem_draw_block(&mol),
         SDWriter::get_text(&mol),
     ] {
         assert!(matches!(

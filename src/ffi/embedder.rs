@@ -21,10 +21,7 @@ pub(crate) mod ffi {
         BAD_DOUBLE_BOND_STEREO = 9,
         CHECK_CHIRAL_CENTERS2 = 10,
         EXCEEDED_TIMEOUT = 11,
-        MINIMIZATION = 12,
-        KTERM_VIOLATION = 13,
-        CLASH = 14,
-        END_OF_ENUM = 15,
+        END_OF_ENUM = 12,
     }
 
     /// A default `EmbedParameters`, or one of RDKit's presets.
@@ -39,7 +36,6 @@ pub(crate) mod ffi {
         ETDG,
         ETDGv2,
         KDG,
-        DG,
     }
 
     /// `RDKit::DGeomHelpers::EmbedParameters`, with its coordinate map and
@@ -68,7 +64,6 @@ pub(crate) mod ffi {
         use_small_ring_torsions: bool,
         use_macrocycle_torsions: bool,
         use_macrocycle14config: bool,
-        use_legacy_implementation: bool,
         bounds_mat_force_scaling: f64,
         use_symmetry_for_pruning: bool,
         force_trans_amides: bool,
@@ -115,12 +110,10 @@ pub(crate) mod ffi {
         fn embed_parameters_to_json(params: &EmbedParametersData) -> Result<UniquePtr<CxxString>>;
         fn get_molecule_bounds_matrix(
             mol: &RWMol,
-            params: &EmbedParametersData,
-            do_triangle_smoothing: bool,
-            scale_vdw: bool,
             set15bounds: bool,
-            set14bounds: bool,
-            set13bounds: bool,
+            scale_vdw: bool,
+            do_triangle_smoothing: bool,
+            use_macrocycle14config: bool,
         ) -> Result<Vec<f64>>;
         #[allow(clippy::too_many_arguments)]
         fn get_experimental_torsions(

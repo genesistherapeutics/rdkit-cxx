@@ -175,57 +175,28 @@ pub fn mol_to_image_with_params(mol: &Mol, params: &MolToImageParams) -> Result<
     drawer.get_drawing_text()
 }
 
-/// Parameters for `mol_to_svg_with_params`, with Python's defaults (A2).
-/// Python's `wedgeBonds` is not ported: its `MolToSVG` ignores it, and
-/// always wedges.
-#[derive(Clone, Debug, PartialEq)]
-pub struct MolToSVGParams {
-    /// The image's width and height, in pixels.
-    pub size: (i32, i32),
-    /// Kekulizes the molecule before drawing.
-    pub kekulize: bool,
-    /// The drawing options; `None` for the defaults.
-    pub draw_options: Option<MolDrawOptions>,
-    /// Atoms to highlight.
-    pub highlight_atoms: Vec<u32>,
-    /// Bonds to highlight.
-    pub highlight_bonds: Vec<u32>,
-    /// Text drawn under (or by) the molecule.
-    pub legend: String,
+/// What Python's `_moltoSVG` draws `MolToFile`'s SVG with.
+struct SvgParams<'a> {
+    size: (i32, i32),
+    kekulize: bool,
+    draw_options: Option<&'a MolDrawOptions>,
+    highlight_atoms: &'a [u32],
+    highlight_bonds: &'a [u32],
+    legend: &'a str,
 }
 
-impl Default for MolToSVGParams {
-    fn default() -> MolToSVGParams {
-        MolToSVGParams {
-            size: (300, 300),
-            kekulize: true,
-            draw_options: None,
-            highlight_atoms: Vec::new(),
-            highlight_bonds: Vec::new(),
-            legend: String::new(),
-        }
-    }
-}
-
-/// An SVG drawing of the molecule. Mirrors `Draw.MolToSVG`. (Jupyter's
-/// display of molecules, `IPythonConsole`, draws them this way, at its
-/// `molSize`, with its `drawOptions`.)
-pub fn mol_to_svg(mol: &Mol) -> Result<String> {
-    mol_to_svg_with_params(mol, &MolToSVGParams::default())
-}
-
-/// Mirrors `Draw.MolToSVG(mol, size, kekulize, wedgeBonds, drawOptions,
-/// highlightAtoms=..., highlightBonds=..., legend=...)`.
-pub fn mol_to_svg_with_params(mol: &Mol, params: &MolToSVGParams) -> Result<String> {
-    let mol = prepare_mol(mol, params.draw_options.as_ref(), params.kekulize, true)?;
+/// An SVG drawing of the molecule, as Python's `_moltoSVG` makes it. It
+/// ignores `wedgeBonds`, and always wedges.
+fn molto_svg(mol: &Mol, params: &SvgParams<'_>) -> Result<String> {
+    let mol = prepare_mol(mol, params.draw_options, params.kekulize, true)?;
     let mut drawer = MolDraw2DSVG::new(params.size.0, params.size.1)?;
-    set_options(&mut drawer, params.draw_options.as_ref(), None)?;
+    set_options(&mut drawer, params.draw_options, None)?;
     drawer.draw_molecule_with_params(
         &mol,
         &DrawMoleculeParams {
-            highlight_atoms: params.highlight_atoms.clone(),
-            highlight_bonds: Some(params.highlight_bonds.clone()),
-            legend: params.legend.clone(),
+            highlight_atoms: params.highlight_atoms.to_vec(),
+            highlight_bonds: Some(params.highlight_bonds.to_vec()),
+            legend: params.legend.to_owned(),
             ..Default::default()
         },
     )?;
@@ -607,15 +578,15 @@ pub fn mol_to_file_with_params(
                 legend: params.legend.clone(),
             },
         )?,
-        "svg" => mol_to_svg_with_params(
+        "svg" => molto_svg(
             mol,
-            &MolToSVGParams {
+            &SvgParams {
                 size: params.size,
                 kekulize: params.kekulize,
-                draw_options: params.options.clone(),
-                highlight_atoms: params.highlight_atoms.clone(),
-                highlight_bonds: params.highlight_bonds.clone(),
-                legend: params.legend.clone(),
+                draw_options: params.options.as_ref(),
+                highlight_atoms: &params.highlight_atoms,
+                highlight_bonds: &params.highlight_bonds,
+                legend: &params.legend,
             },
         )?
         .into_bytes(),

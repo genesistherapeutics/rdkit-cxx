@@ -423,7 +423,6 @@ fn mmff_force_fields() {
         },
     )
     .unwrap();
-    assert_eq!(props.get_mmff_variant(), "MMFF94s");
     let ff = mmff_get_molecule_force_field_with_params(
         &mut mol,
         &props,
@@ -506,67 +505,62 @@ fn mmff_properties() {
         Err(Error::Index { index: 9, len: 9 })
     );
 
-    assert_eq!(props.get_mmff_dielectric_model(), 1);
-    assert_eq!(props.get_mmff_dielectric_constant(), 1.0);
-    assert_eq!(props.get_mmff_variant(), "MMFF94");
-    assert!(props.get_mmff_bond_term() && props.get_mmff_ele_term());
+    // RDKit 2025.09's Python has no getters for the settings, so the
+    // setters are seen in the force field's energy.
+    let energy = |mol: &mut Mol, props: &MMFFMolProperties| {
+        mmff_get_molecule_force_field(mol, props)
+            .unwrap()
+            .calc_energy()
+            .unwrap()
+    };
+    let e0 = energy(&mut mol, &props);
     props.set_mmff_dielectric_model_with_diel_model(2);
     props
         .set_mmff_dielectric_constant_with_diel_const(4.0)
         .unwrap();
     props.set_mmff_variant_with_mmff_variant("MMFF94s").unwrap();
-    props.set_mmff_ele_term_with_state(false);
     props.set_mmff_verbosity_with_verbosity(MMFFVerbosity::MmffVerbosityLow);
-    assert_eq!(props.get_mmff_dielectric_model(), 2);
-    assert_eq!(props.get_mmff_dielectric_constant(), 4.0);
-    assert_eq!(props.get_mmff_variant(), "MMFF94s");
-    assert!(!props.get_mmff_ele_term());
+    assert_ne!(energy(&mut mol, &props), e0);
     props.set_mmff_dielectric_model();
     props.set_mmff_dielectric_constant();
     props.set_mmff_variant();
-    props.set_mmff_ele_term();
     props.set_mmff_verbosity();
-    assert_eq!(props.get_mmff_dielectric_model(), 1);
-    assert_eq!(props.get_mmff_dielectric_constant(), 1.0);
-    assert_eq!(props.get_mmff_variant(), "MMFF94");
-    assert!(props.get_mmff_ele_term());
-    for (get, set_off, set_on) in [
+    assert_eq!(energy(&mut mol, &props), e0);
+    for (set_off, set_on) in [
         (
-            MMFFMolProperties::get_mmff_angle_term as fn(&MMFFMolProperties) -> bool,
             MMFFMolProperties::set_mmff_angle_term_with_state as fn(&mut MMFFMolProperties, bool),
             MMFFMolProperties::set_mmff_angle_term as fn(&mut MMFFMolProperties),
         ),
         (
-            MMFFMolProperties::get_mmff_bond_term,
             MMFFMolProperties::set_mmff_bond_term_with_state,
             MMFFMolProperties::set_mmff_bond_term,
         ),
         (
-            MMFFMolProperties::get_mmff_stretch_bend_term,
             MMFFMolProperties::set_mmff_stretch_bend_term_with_state,
             MMFFMolProperties::set_mmff_stretch_bend_term,
         ),
         (
-            MMFFMolProperties::get_mmff_oop_term,
-            MMFFMolProperties::set_mmff_oop_term_with_state,
-            MMFFMolProperties::set_mmff_oop_term,
-        ),
-        (
-            MMFFMolProperties::get_mmff_torsion_term,
             MMFFMolProperties::set_mmff_torsion_term_with_state,
             MMFFMolProperties::set_mmff_torsion_term,
         ),
         (
-            MMFFMolProperties::get_mmff_vdw_term,
             MMFFMolProperties::set_mmff_vdw_term_with_state,
             MMFFMolProperties::set_mmff_vdw_term,
         ),
+        (
+            MMFFMolProperties::set_mmff_ele_term_with_state,
+            MMFFMolProperties::set_mmff_ele_term,
+        ),
     ] {
         set_off(&mut props, false);
-        assert!(!get(&props));
+        assert_ne!(energy(&mut mol, &props), e0);
         set_on(&mut props);
-        assert!(get(&props));
+        assert_eq!(energy(&mut mol, &props), e0);
     }
+    // Ethanol has no out-of-plane terms.
+    props.set_mmff_oop_term_with_state(false);
+    assert_eq!(energy(&mut mol, &props), e0);
+    props.set_mmff_oop_term();
     assert!(matches!(
         props.set_mmff_variant_with_mmff_variant("foo"),
         Err(Error::Runtime { .. })

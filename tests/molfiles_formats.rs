@@ -10,6 +10,9 @@
 mod common;
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_chem_draw::{
+    CDXFormat, mol_to_chem_draw_block, mol_to_chem_draw_block_format,
+};
 use rdkit_cxx::chem::*;
 use rdkit_cxx::geometry::Point3D;
 
@@ -660,20 +663,20 @@ fn sequences() {
 #[test]
 fn chem_draw() {
     assert!(has_chem_draw_cdx_support());
-    let cdxml = mol_to_cdxml_block(&smiles("CO")).unwrap();
+    let cdxml = mol_to_chem_draw_block(&smiles("CO")).unwrap();
     assert!(cdxml.starts_with("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"));
-    let cdx = mol_to_cdxml_block_format(&smiles("CO"), CDXMLFormat::Cdx).unwrap();
+    let cdx = mol_to_chem_draw_block_format(&smiles("CO"), CDXFormat::Cdx).unwrap();
     assert!(cdx.starts_with(b"VjCD0100"));
     // RDKit scales 2D coordinates by the mean bond length, which a molecule
     // without bonds lacks, and casts them to 32-bit fixed point.
-    assert!(is_value(mol_to_cdxml_block(&smiles("C"))));
+    assert!(is_value(mol_to_chem_draw_block(&smiles("C"))));
     let mut far = methanol_3d();
     far.get_conformer_mut()
         .unwrap()
         .set_atom_position(0, Point3D::new(1e6, 0.0, 0.0))
         .unwrap();
-    assert!(is_value(mol_to_cdxml_block(&far)));
-    assert!(mol_to_cdxml_block(&methanol_3d()).is_ok());
+    assert!(is_value(mol_to_chem_draw_block(&far)));
+    assert!(mol_to_chem_draw_block(&methanol_3d()).is_ok());
 }
 
 #[test]
@@ -700,7 +703,7 @@ fn depicting_writers_run_on_many_threads() {
         mol_to_v2k_mol_block(&mol).unwrap(),
         mol_to_v3k_mol_block(&mol).unwrap(),
         mol_to_mrv_block(&mol).unwrap(),
-        mol_to_cdxml_block(&mol).unwrap(),
+        mol_to_chem_draw_block(&mol).unwrap(),
     );
     std::thread::scope(|scope| {
         for _ in 0..4 {
@@ -710,7 +713,7 @@ fn depicting_writers_run_on_many_threads() {
                     assert_eq!(mol_to_v2k_mol_block(&mol).unwrap(), expected.0);
                     assert_eq!(mol_to_v3k_mol_block(&mol).unwrap(), expected.1);
                     assert_eq!(mol_to_mrv_block(&mol).unwrap(), expected.2);
-                    assert_eq!(mol_to_cdxml_block(&mol).unwrap(), expected.3);
+                    assert_eq!(mol_to_chem_draw_block(&mol).unwrap(), expected.3);
                 }
             });
         }

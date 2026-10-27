@@ -238,8 +238,8 @@ its Boost.Python modules and its `.py` modules.
   registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
   decomposition's random number singleton and fingerprint-variance scoring
   static, under `rgroup_mutex()`, and the shape modules' pharmacophore
-  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
-  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
+  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`,
+  and the static work variables of Murtagh's
   hierarchical clustering, under `murtagh_mutex()`, and the ChemDraw
   library's attribute-name maps, which it fills behind an unlocked check,
   under `chemdraw_mutex()`). State RDKit makes once,

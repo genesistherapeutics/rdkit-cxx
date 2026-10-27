@@ -443,7 +443,7 @@ constexpr std::size_t kMaxMaeProp = 1000;
 void check_mae_props(const RDKit::RDProps &obj, const RDKit::STR_VECT &props) {
   RDKit::STR_VECT computed;
   obj.getPropIfPresent(RDKit::detail::computedPropName, computed);
-  for (const auto &item : obj.getDict()) {
+  for (const auto &item : obj.getDict().getData()) {
     if (item.key.size() <= kMaxMaeProp ||
         item.key == RDKit::detail::computedPropName ||
         std::find(computed.begin(), computed.end(), item.key) !=

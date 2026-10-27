@@ -5,7 +5,7 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::MMFF`'s `MMFF_VERBOSITY` values, which RDKit 2026.03 declares
+    /// `RDKit::MMFF`'s `MMFF_VERBOSITY` values, which RDKit 2025.09 declares
     /// in an unnamed enum and takes as `std::uint8_t`.
     #[repr(u8)]
     #[allow(clippy::enum_variant_names)]
@@ -187,25 +187,19 @@ pub(crate) mod ffi {
             props: Pin<&mut MMFFMolProperties>,
             model: u8,
         ) -> Result<()>;
-        fn mmff_mol_properties_get_dielectric_model(props: &MMFFMolProperties) -> Result<u8>;
         fn mmff_mol_properties_set_dielectric_constant(
             props: Pin<&mut MMFFMolProperties>,
             constant: f64,
         ) -> Result<()>;
-        fn mmff_mol_properties_get_dielectric_constant(props: &MMFFMolProperties) -> Result<f64>;
         fn mmff_mol_properties_set_term(
             props: Pin<&mut MMFFMolProperties>,
             term: MMFFTerm,
             state: bool,
         ) -> Result<()>;
-        fn mmff_mol_properties_get_term(props: &MMFFMolProperties, term: MMFFTerm) -> Result<bool>;
         fn mmff_mol_properties_set_variant(
             props: Pin<&mut MMFFMolProperties>,
             variant: &str,
         ) -> Result<()>;
-        fn mmff_mol_properties_get_variant(
-            props: &MMFFMolProperties,
-        ) -> Result<UniquePtr<CxxString>>;
         fn mmff_mol_properties_set_verbosity(
             props: Pin<&mut MMFFMolProperties>,
             verbosity: MMFFVerbosity,

@@ -460,8 +460,7 @@ fn monomer_info_connect_the_dots_would_misread() {
         let info = AtomMonomerInfo::new_with_params(
             AtomMonomerType::Other,
             &AtomMonomerInfoParams {
-                res_num: residue,
-                ..Default::default()
+                name: format!("R{residue}"),
             },
         )
         .unwrap();
@@ -477,7 +476,7 @@ fn monomer_info_connect_the_dots_would_misread() {
             .unwrap()
             .get_monomer_info()
             .unwrap();
-        assert_eq!(info.get_residue_number(), residue);
+        assert_eq!(info.get_name().unwrap(), format!("R{residue}"));
         assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
     }
 }

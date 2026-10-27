@@ -186,9 +186,8 @@ fn mol_details() {
             .collect::<Vec<_>>(),
         [0, 1, 2, 3, 4, 5]
     );
-    assert_eq!(mol.get_name().unwrap(), "");
-    mol.set_name("benzyl alcohol");
-    assert_eq!(mol.get_name().unwrap(), "benzyl alcohol");
+    assert!(!mol.has_prop("_Name"));
+    mol.set_prop("_Name", "benzyl alcohol");
     assert_eq!(mol.get_prop("_Name").unwrap(), "benzyl alcohol");
     assert!(!mol.needs_update_property_cache());
     mol.clear_property_cache();

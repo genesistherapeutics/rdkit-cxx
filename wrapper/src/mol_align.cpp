@@ -318,7 +318,8 @@ const RDKit::MMFF::MMFFMolProperties *mmff_props(
     owned = std::make_unique<RDKit::MMFF::MMFFMolProperties>(copy);
     props = owned.get();
   }
-  if (!props->isValid()) {
+  // RDKit 2025.09's isValid is not const, though it only reads.
+  if (!const_cast<RDKit::MMFF::MMFFMolProperties *>(props)->isValid()) {
     throw ValueErrorException(std::string("missing MMFF94 parameters for ") +
                               which + " molecule");
   }

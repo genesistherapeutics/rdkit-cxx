@@ -51,31 +51,34 @@ fn grid_mols() -> Vec<Mol> {
         .collect()
 }
 
+// RDKit 2025.09 has no Draw.MolToSVG; MolToFile draws SVG as it would.
 #[test]
-fn mol_to_svg_matches_python() {
+fn mol_to_file_svg_matches_python() {
+    let dir = std::env::temp_dir().join(format!("rdkit-cxx-svg-file-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let svg = dir.join("m.svg");
     let m = aspirin();
-    assert_eq!(
-        sha1(&mol_to_svg(&m).unwrap()),
-        "91e470f6aa690aeb25fe9ae4b9ad737d50e9cd22"
-    );
-    let highlighted = MolToSVGParams {
+    let highlighted = MolToFileParams {
         size: (250, 200),
         highlight_atoms: vec![3, 4, 5],
         legend: "aspirin".to_owned(),
         ..Default::default()
     };
+    mol_to_file_with_params(&m, &svg, &highlighted).unwrap();
     assert_eq!(
-        sha1(&mol_to_svg_with_params(&m, &highlighted).unwrap()),
+        sha1(&std::fs::read_to_string(&svg).unwrap()),
         "552df835bbac8dd19b158b5d3e7a7eae2250b41c"
     );
-    let with_options = MolToSVGParams {
-        draw_options: Some(atom_indices()),
+    let with_options = MolToFileParams {
+        options: Some(atom_indices()),
         ..Default::default()
     };
+    mol_to_file_with_params(&m, &svg, &with_options).unwrap();
     assert_eq!(
-        sha1(&mol_to_svg_with_params(&m, &with_options).unwrap()),
+        sha1(&std::fs::read_to_string(&svg).unwrap()),
         "cd33dc765de68029fa82cafb3836e1ec2d07cdc3"
     );
+    std::fs::remove_dir_all(&dir).unwrap();
 }
 
 #[test]
@@ -514,15 +517,11 @@ fn set_comic_mode_sets_the_comic_font() {
         opts.font_file
     );
     // RDKit draws with the font.
-    let svg = mol_to_svg_with_params(
-        &aspirin(),
-        &MolToSVGParams {
-            draw_options: Some(opts),
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    assert!(svg.contains("<svg"));
+    let mut drawer = MolDraw2DSVG::new(300, 300).unwrap();
+    drawer.set_draw_options(&opts).unwrap();
+    drawer.draw_molecule(&aspirin()).unwrap();
+    drawer.finish_drawing();
+    assert!(drawer.get_drawing_text().unwrap().contains("<svg"));
 }
 
 #[test]

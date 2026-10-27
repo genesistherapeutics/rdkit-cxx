@@ -30,7 +30,6 @@ fn assert_colour(actual: DrawColour, expected: (f64, f64, f64, f64)) {
 fn defaults_match_python() {
     let o = MolDrawOptions::default();
     assert!(!o.add_atom_indices);
-    assert!(o.add_stereo_group_annotation);
     assert_eq!(o.annotation_font_scale, 0.5);
     assert_colour(o.background_colour, (1.0, 1.0, 1.0, 1.0));
     assert_eq!(o.base_font_size, -1.0);
@@ -51,8 +50,6 @@ fn defaults_match_python() {
     assert!(o.include_metadata);
     assert_eq!(o.legend_font_size, 16);
     assert_eq!(o.legend_fraction, 0.1);
-    assert_eq!(o.legend_position, LegendPosition::Bottom);
-    assert!(o.legend_vertical_text);
     assert_eq!(o.max_font_size, 40);
     assert_eq!(o.min_font_size, 6);
     assert_eq!(
@@ -66,9 +63,6 @@ fn defaults_match_python() {
     assert_eq!(o.reagent_padding, 0.0);
     assert!(o.scale_highlight_bond_width);
     assert_eq!(o.scaling_factor, 20.0);
-    assert_eq!(o.stereo_group_abs_label, "abs");
-    assert_eq!(o.stereo_group_and_label, "and");
-    assert_eq!(o.stereo_group_or_label, "or");
     assert!(o.use_complex_query_atom_symbols);
     assert_eq!(o.variable_atom_radius, 0.4);
     assert_colour(o.variable_attachment_colour, (0.8, 0.8, 0.8, 1.0));
@@ -182,7 +176,7 @@ fn update_from_json() {
         &mut o,
         r#"{"padding": 0.2, "legendFontSize": 20, "atomLabels": {"0": "X", "3": "Y"},
             "highlightColour": [0.1, 0.2, 0.3], "atomColourPalette": {"6": [0.5, 0.5, 0.5, 0.5]},
-            "legendPosition": "Top", "multiColourHighlightStyle": "Lasso",
+            "multiColourHighlightStyle": "Lasso",
             "drawingExtentsInclude": {"BONDS": true, "ATOMLABELS": true},
             "colourScheme": "dark", "fontFile": "foo", "padding_bad": 1, "rotate": "abc"}"#,
     )
@@ -195,10 +189,9 @@ fn update_from_json() {
     );
     assert_colour(o.highlight_colour, (0.1, 0.2, 0.3, 1.0));
     assert_colour(o.get_atom_palette()[&6], (0.5, 0.5, 0.5, 0.5));
-    // RDKit 2026.03 reads no colourScheme, so it is ignored like any unknown
+    // RDKit 2025.09 reads no colourScheme, so it is ignored like any unknown
     // key.
     assert_colour(o.get_atom_palette()[&7], (0.0, 0.0, 1.0, 1.0));
-    assert_eq!(o.legend_position, LegendPosition::Top);
     assert_eq!(
         o.multi_colour_highlight_style,
         MultiColourHighlightStyle::Lasso
