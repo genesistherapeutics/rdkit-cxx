@@ -446,3 +446,33 @@ fn normalization_files_are_read_and_checked_once() {
     std::fs::write(&path, "// nothing\n").unwrap();
     assert!(is_value(normalize_with_params(&smiles("CCO"), &params)));
 }
+
+// A ring of one carbon and `dummies` aromatic dummy atoms.
+fn dummy_ring(dummies: usize) -> String {
+    format!("c1{}:1", ":*".repeat(dummies))
+}
+
+#[test]
+fn kekulizing_refuses_32_question_atoms() {
+    // RDKit 2024.09 enumerates the dummies' subsets in an unsigned int.
+    assert!(is_value(mol_from_smiles(&dummy_ring(32))));
+    assert!(is_value(mol_from_smiles(&dummy_ring(40))));
+    let params = SmilesParserParams {
+        sanitize: false,
+        ..Default::default()
+    };
+    let unsanitized = mol_from_smiles_with_params(&dummy_ring(32), &params).unwrap();
+    let mut mol = unsanitized.clone();
+    assert!(is_value(sanitize_mol(&mut mol)));
+    let mut mol = unsanitized.clone();
+    assert!(is_value(kekulize(&mut mol)));
+    let mut mol = unsanitized;
+    assert!(is_value(kekulize_if_possible(&mut mol)));
+    // Fewer dummies, or as many outside one ring system, are kekulized.
+    let mol = mol_from_smiles(&dummy_ring(30)).unwrap();
+    assert_eq!(mol.get_num_atoms(), 31);
+    let apart = format!("{}.{}", dummy_ring(20), dummy_ring(20));
+    mol_from_smiles(&apart).unwrap();
+    let chain = format!("c1ccccc1{}", "*".repeat(40));
+    mol_from_smiles(&chain).unwrap();
+}

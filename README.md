@@ -326,11 +326,17 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **Shifts.** RDKit 2024.09's kekulization shifts 1 by the number of
-  ambiguous atoms in a fused system that ordinary kekulization fails
-  (aromatic dummy atoms), undefined from 32, and FMCS by a seed's new bonds,
-  undefined at 64 (a search that would first run 2^63 steps). Neither result
-  reaches memory.
+- **Kekulizing 32 or more dummy atoms in one ring system.** RDKit 2024.09's
+  kekulization enumerates a fused ring system's dummy "question" atoms with
+  `1u << count`, undefined from 32. `mol_from_smiles`, `sanitize_mol`,
+  `kekulize`, and `kekulize_if_possible` refuse such molecules, but RDKit's
+  other parsers and the calls that sanitize inside RDKit are not checked:
+  the shift is masked on the supported CPUs, so kekulization gives up on
+  such a system rather than overrunning memory.
+- **FMCS seeds of 64 new bonds.** RDKit 2024.09's FMCS shifts 1 by a seed's
+  new bonds, undefined at 64 (a search that would first run 2^63 steps); a
+  refusal would reject ordinary molecules, and the result does not reach
+  memory.
 - **CIP labels in fused ring systems.** RDKit 2024.09's CIP labeler shifts by
   63 less the number of stereo descriptors it compares. The wrapper refuses
   more than 64 stereo configurations, but in fused ring systems one atom can

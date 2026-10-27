@@ -152,6 +152,10 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     transformations is `Error::Value` for `CleanupParameters`.
   - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
     would read past or loop on.
+  - `mol_from_smiles`, `sanitize_mol`, `kekulize`, and
+    `kekulize_if_possible` refuse a fused ring system of 32 or more
+    aromatic dummy atoms, whose subsets RDKit 2024.09's kekulization
+    enumerates in an `unsigned int`.
   - The `ExtendedMurcko` hash refuses more than 4000 atoms: RDKit 2024.09
     takes a byte of stack per atom with `alloca`, which past a page can
     step over the stack's guard page.
