@@ -414,7 +414,8 @@ impl EnumerateLibrary {
     }
 
     /// The library as bytes, position included. Mirrors
-    /// `EnumerateLibraryBase.Serialize`.
+    /// `EnumerateLibraryBase.Serialize`. `Error::Value` for a reaction
+    /// template or building block `Mol::to_binary` refuses.
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::enumerate_library_serialize(self.raw())?)
     }

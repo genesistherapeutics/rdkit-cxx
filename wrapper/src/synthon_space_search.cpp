@@ -330,6 +330,27 @@ void check_space(SSS::SynthonSpace &space) {
       });
 }
 
+// writeDBFile pickles each synthon's molecules and connector regions
+// (Synthon::writeToDBStream; its pool holds the reactions' synthons) and each
+// reaction's connector regions (SynthonSet::writeToDBStream).
+void check_picklable_space(SSS::SynthonSpace &space) {
+  for_each_reaction(
+      space, [](const std::string &, const SSS::SynthonSet &reaction) {
+        for (const auto &region : reaction.getConnectorRegions()) {
+          check_picklable(*region);
+        }
+        for (const auto &set : reaction.getSynthons()) {
+          for (const auto &[id, synthon] : set) {
+            check_picklable(*synthon->getOrigMol());
+            check_picklable(*synthon->getSearchMol());
+            for (const auto &region : synthon->getConnRegions()) {
+              check_picklable(*region);
+            }
+          }
+        }
+      });
+}
+
 // The most atoms a product of the space can have: each reaction's largest
 // synthon from each set, joined.
 std::uint64_t largest_product(SSS::SynthonSpace &space) {
@@ -1407,6 +1428,7 @@ void synthon_space_read_db_file(SynthonSpace &space,
 
 void synthon_space_write_db_file(const SynthonSpace &space,
                                  rust::Slice<const std::uint8_t> path) {
+  check_picklable_space(*space.space);
   write_db(*space.space, to_path(path));
 }
 
@@ -1478,6 +1500,9 @@ void synthon_space_build_synthon_shapes(SynthonSpace &space,
                                         ConformerCallback &generator) {
   auto params = shape_params_from(data);
   check_space_for_shapes(*space.space);
+  if (params.interimWrites && !params.interimFile.empty()) {
+    check_picklable_space(*space.space);
+  }
   bool cancelled = false;
   {
     ShapeLocks locks;

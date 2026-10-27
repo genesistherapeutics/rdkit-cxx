@@ -258,10 +258,14 @@ rust::Vec<std::uint32_t> frag_catalog_get_entry_down_ids(
 }
 
 // The generators match the functional groups, and every substructure match
-// constructs a ControlCHandler (control_c_lock.h, U4).
+// constructs a ControlCHandler (control_c_lock.h, U4). The catalog's entries
+// hold parts of the molecule, which serializing it pickles; the parameters
+// are written as text.
 std::uint32_t frag_cat_generator_add_frags_from_mol(const RWMol &mol,
                                                     FragCatalog &fcat) {
-  check_num_bonds(mol, params_of(fcat));
+  const auto &params = params_of(fcat);
+  check_num_bonds(mol, params);
+  check_picklable_parts(mol, params.getUpperFragLength());
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::FragCatGenerator().addFragsFromMol(mol, &fcat);
 }

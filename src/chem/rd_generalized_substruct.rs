@@ -126,13 +126,15 @@ impl ExtendedQueryMol {
     /// A binary pickle of the query. Bundles and tautomer queries need RDKit
     /// built with Boost.Serialization (`Error::Runtime` otherwise). RDKit
     /// writes a tautomer bundle's size in 16 bits, so one of more than 65535
-    /// queries is `Error::Value`. Mirrors `ExtendedQueryMol.ToBinary`.
+    /// queries is `Error::Value`, as is a molecule `Mol::to_binary` refuses.
+    /// Mirrors `ExtendedQueryMol.ToBinary`.
     pub fn to_binary(&self) -> Result<Vec<u8>> {
         Ok(ffi::extended_query_mol_to_binary(self.as_ffi())?)
     }
 
     /// The query as JSON: each molecule's pickle in base64, with its SMILES
-    /// or SMARTS. Mirrors `ExtendedQueryMol.ToJSON`.
+    /// or SMARTS. `Error::Value` for a molecule `Mol::to_binary` refuses.
+    /// Mirrors `ExtendedQueryMol.ToJSON`.
     pub fn to_json(&self) -> Result<String> {
         to_string(ffi::extended_query_mol_to_json(self.as_ffi())?)
     }

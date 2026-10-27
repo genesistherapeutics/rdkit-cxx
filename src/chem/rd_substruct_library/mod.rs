@@ -479,7 +479,8 @@ impl SubstructLibrary {
 
     /// Adds a molecule to each holder and returns its index. Holders whose
     /// sizes differ are `Error::Runtime` after the molecule holder has the
-    /// molecule, as in RDKit, and full ones `Error::Value`. Mirrors
+    /// molecule, as in RDKit, and full ones `Error::Value`, as is a molecule
+    /// a `CachedMolHolder` refuses (`MolHolderBase::add_mol`). Mirrors
     /// `SubstructLibrary.AddMol`.
     pub fn add_mol(&mut self, mol: &Mol) -> Result<u32> {
         let mut view = self.view(false)?;
@@ -565,7 +566,8 @@ impl SubstructLibrary {
 
     /// The library as RDKit pickles it, a Boost.Serialization text archive;
     /// `Error::Value` if RDKit was built without Boost.Serialization
-    /// (`substruct_library_can_serialize`). Mirrors
+    /// (`substruct_library_can_serialize`), or when a `MolHolder` holds a
+    /// molecule `Mol::to_binary` refuses. Mirrors
     /// `SubstructLibrary.Serialize`.
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let view = self.view(true)?;

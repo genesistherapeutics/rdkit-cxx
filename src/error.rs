@@ -176,6 +176,15 @@ pub(crate) fn expect_ok<T>(result: std::result::Result<T, cxx::Exception>) -> T 
     }
 }
 
+/// Unwraps a pickle of a molecule or reaction, whose bridge call refuses only
+/// what RDKit's pickler would write but could not read back (CONVENTIONS.md
+/// U2). Python's `ToBinary` raises for none of it, so the Rust functions
+/// return the pickle and panic with the wrapper's message (E1, as U3's
+/// constructors do).
+pub(crate) fn picklable(result: std::result::Result<Vec<u8>, cxx::Exception>) -> Vec<u8> {
+    result.unwrap_or_else(|err| panic!("{}", Error::from(err)))
+}
+
 /// Unwraps an operator's result; operators panic where Python raises.
 pub(crate) fn op<T>(result: std::result::Result<T, cxx::Exception>) -> T {
     result.unwrap_or_else(|err| panic!("{}", Error::from(err)))

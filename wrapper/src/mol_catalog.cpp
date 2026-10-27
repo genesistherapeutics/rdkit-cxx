@@ -28,9 +28,13 @@ void check_entry(std::istream &ss, std::size_t size) {
   check_entry_text(ss, size);
 }
 
-// MolCatalogEntry::toStream writes a description's length as an int32, which
-// a length of INT_MAX or more overflows, and the readers refuse INT_MAX.
-void check_description_length(const MolCatalogEntry &entry) {
+// MolCatalogEntry::toStream pickles the entry's molecule (check_picklable)
+// and writes its description's length as an int32, which a length of INT_MAX
+// or more overflows, and the readers refuse INT_MAX.
+void check_picklable_entry(const MolCatalogEntry &entry) {
+  if (const auto *mol = entry.getMol()) {
+    check_picklable(*mol);
+  }
   if (entry.getDescription().size() >= static_cast<std::size_t>(INT_MAX)) {
     throw ValueErrorException(
         "a catalog entry's description is too long to pickle");
@@ -71,7 +75,7 @@ std::uint32_t mol_catalog_get_fp_length(const MolCatalog &catalog) {
 
 rust::Vec<std::uint8_t> mol_catalog_serialize(const MolCatalog &catalog) {
   for (unsigned i = 0; i < catalog.getNumEntries(); ++i) {
-    check_description_length(*catalog.getEntryWithIdx(i));
+    check_picklable_entry(*catalog.getEntryWithIdx(i));
   }
   return to_bytes(catalog.Serialize());
 }
@@ -175,7 +179,7 @@ void mol_catalog_entry_set_order(MolCatalogEntry &entry, std::uint32_t order) {
 
 rust::Vec<std::uint8_t> mol_catalog_entry_serialize(
     const MolCatalogEntry &entry) {
-  check_description_length(entry);
+  check_picklable_entry(entry);
   return to_bytes(entry.Serialize());
 }
 

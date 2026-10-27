@@ -19,6 +19,26 @@
   of memory sanitizing a ring of 33. Molecules with at most 31 independent
   cycles skip the count, so sanitization costs about 1-4% more. Other paths
   to the conversion remain; see the README's "Known limitations".
+- Molecules RDKit's pickler would write but could not read back are
+  refused wherever a molecule is pickled: `Error::Value`, or a panic from
+  `Mol::to_binary` and `ChemicalReaction::to_binary`, which stay
+  infallible since Python's `ToBinary` raises for none of them. MolPickler
+  writes some counts in one byte and truncates larger ones: each query
+  node's number of children, and, in a molecule of at most 255 atoms and
+  255 bonds, each substance group's numbers of atoms, parent atoms, bonds,
+  brackets, CStates, and attachment points, and the number of stereo
+  groups. The reader then takes the rest of the list (bracket coordinates,
+  say) for the pickle's next fields and parses them unchecked, which safe
+  Rust reached through `CachedMolHolder`, whose getters read back the
+  pickles its `add_mol` writes. In Python, 256 brackets on a substance
+  group make `Chem.Mol(m.ToBinary())` fail with "ENDMOL tag not found". The
+  check covers molecule, reaction, bundle, tautomer-query, and extended-query
+  pickles (and extended-query JSON), the substructure library's holders and
+  archives, the molecule and filter catalogs, the fragment catalog's
+  generator (whose fragments are pickled with one-byte counts whatever the
+  molecule's size), `EnumerateLibrary` archives, synthon-space database
+  files, and PNG metadata, from the metadata functions and from Cairo
+  drawers with `include_metadata`.
 
 ## 2026.9.0
 

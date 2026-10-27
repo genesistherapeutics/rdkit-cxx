@@ -88,7 +88,9 @@ impl MolHolderBase {
 
     /// Adds a molecule (a copy, a pickle, or SMILES, by the holder's class)
     /// and returns its index. A holder of `i32::MAX` molecules is full
-    /// (`Error::Value`): RDKit counts a library's matches in `int`. Mirrors
+    /// (`Error::Value`): RDKit counts a library's matches in `int`. A
+    /// `CachedMolHolder` refuses a molecule `Mol::to_binary` refuses
+    /// (`Error::Value`), whose pickle it could not read back. Mirrors
     /// `MolHolderBase.AddMol`.
     pub fn add_mol(&mut self, m: &Mol) -> Result<u32> {
         Ok(ffi::mol_holder_add_mol(self.raw_mut(), m.as_ffi())?)

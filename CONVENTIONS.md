@@ -220,6 +220,15 @@ its Boost.Python modules and its `.py` modules.
   memory, so RDKit parses the bytes that were checked; where RDKit reads a
   file only by name (a synthon search's possible hits), it reads a private
   copy of the checked lines.
+  MolPickler also writes pickles it cannot read: it writes some counts in
+  one byte (query nodes' children; in a molecule of at most 255 atoms and
+  bonds, substance groups' lists and stereo groups) and truncates larger
+  ones, and the reader then parses the bytes after them unchecked. So every
+  wrapper that hands MolPickler a molecule, alone or inside another format
+  (`git grep -l 'pickleMol\|MolPickler::pickle\|pickleReaction'` in
+  RDKit's sources), first calls `check_picklable`
+  (`rdkit-cxx/mol_checks.h`) on the molecules it will pickle, or one of the
+  variants beside it.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones

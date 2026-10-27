@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rdfragcatalog::*;
 use rdkit_cxx::chem::*;
+use rdkit_cxx::geometry::Point3D;
 
 // Expected values come from Python's rdfragcatalog.
 
@@ -408,4 +409,53 @@ fn molecules_are_checked() {
     assert!(is_value(unsafe {
         FragCatalog::from_pickle(&splice(&marked))
     }));
+}
+
+/// `smiles` with a substance group of `atoms` and their bonds, with `n`
+/// brackets.
+fn with_brackets(smiles: &str, atoms: u32, n: usize) -> Mol {
+    let mut mol = mol(smiles);
+    let mut sgroup = create_mol_substance_group(&mut mol, "GEN");
+    for idx in 0..atoms {
+        sgroup.add_atom_with_idx(idx).unwrap();
+    }
+    for idx in 0..atoms - 1 {
+        sgroup.add_bond_with_idx(idx).unwrap();
+    }
+    let bracket = [Point3D::default(), Point3D::new(1.0, 0.0, 0.0)];
+    for _ in 0..n {
+        sgroup.add_bracket(&bracket).unwrap();
+    }
+    mol
+}
+
+// The entries' fragments are pickled with one-byte counts when small, however
+// large the molecule, so a group a fragment can hold is checked as one in a
+// small molecule's pickle; one larger than every fragment is left out of them.
+#[test]
+fn fragments_are_picklable() {
+    let chain = "C".repeat(300);
+    let generator = FragCatGenerator;
+    let large = with_brackets(&chain, 2, 256);
+    large.to_binary();
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let Err(Error::Value { message }) = generator.add_frags_from_mol(&large, &mut catalog) else {
+        panic!("a fragment's pickle would truncate its brackets");
+    };
+    assert!(message.contains("number of brackets"), "{message}");
+    assert_eq!(catalog.get_num_entries(), 0);
+
+    // Five atoms and four bonds fit in no fragment of at most three bonds.
+    assert!(
+        generator
+            .add_frags_from_mol(&with_brackets(&chain, 5, 256), &mut catalog)
+            .is_ok()
+    );
+
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let small = with_brackets("CCCC", 2, 255);
+    assert!(generator.add_frags_from_mol(&small, &mut catalog).unwrap() > 0);
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
+    assert_eq!(read.get_num_entries(), catalog.get_num_entries());
 }
