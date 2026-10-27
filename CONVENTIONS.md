@@ -394,10 +394,11 @@ its Boost.Python modules and its `.py` modules.
   leading number and two more tokens (or a block with fewer lines than its
   `COUNTS` line names), whose ids it then reads uninitialized; V3000
   enhanced-stereo collections that list an atom twice, or fewer atoms than
-  their count, whose first index it leaves unset; and in the `M  MRV SMA`
-  lines and SMARTSQ data it parses as CXSMILES SMARTS, the CXSMILES fields
-  it reads past the end of, found by replaying RDKit's reads
-  (`rdkit-cxx/file_checks.h`). A cut line is read as if it
+  their count, whose first index it leaves unset; and the CXSMILES fields
+  it reads past the end of in the mol-block SMARTS it parses with
+  CXSMILES on (`rdkit-cxx/file_checks.h`): in `M  MRV SMA` lines, found by
+  replaying RDKit's reads, and in SMARTSQ data, which a stream cannot tell
+  from other S-group data, by the fields' names. A cut line is read as if it
   were whole, so a checked stream holds back the bytes of such a value or
   line until the next chunk shows it complete (at most 1 MiB), and refuses
   from its start. A checked stream stops delivering bytes before the
