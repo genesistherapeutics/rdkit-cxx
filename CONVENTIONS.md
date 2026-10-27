@@ -240,21 +240,19 @@ its Boost.Python modules and its `.py` modules.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
-  registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
-  decomposition's random number singleton and fingerprint-variance scoring
-  static, under `rgroup_mutex()`, and the shape modules' pharmacophore
-  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
-  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
-  hierarchical clustering, under `murtagh_mutex()`, and the ChemDraw
-  library's attribute-name maps, which it fills behind an unlocked check,
-  under `chemdraw_mutex()`). State RDKit makes once,
+  registry in `Property.cpp`, and R-group decomposition's random number
+  singleton and fingerprint-variance scoring static, under
+  `rgroup_mutex()`, and the shape module's pharmacophore patterns and
+  PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`, and the
+  static work variables of Murtagh's hierarchical clustering, under
+  `murtagh_mutex()`). State RDKit makes once,
   on first use, is
   made under `std::call_once` before any other call (the MACCS patterns in
   `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
-  mol-block (V2000 and V3000), Marvin, ChemDraw, PNG, SD, and Maestro
+  mol-block (V2000 and V3000), Marvin, PNG, SD, and Maestro
   writers for a molecule without a conformer, and the V2000 rxn-block
   writer built on them (also in reaction PNG metadata) for a reaction with
   such a template; and `molzip` with

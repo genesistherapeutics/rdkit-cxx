@@ -345,6 +345,13 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   stand for several of the labeler's digraph nodes, and a bound that covers
   that would refuse common molecules. A shift past 63 needs more than 64
   descriptors in one comparison.
+- **Trajectory snapshots.** RDKit 2024.09's `Trajectory::insertSnapshot`,
+  which `read_amber_trajectory` and `read_gromos_trajectory` reach for each
+  snapshot (`addSnapshot`), subtracts the vector's `begin()` from the
+  iterator `insert` returns in one expression, whose operands C++ may
+  evaluate in either order; evaluated first, `begin()` is invalidated by the
+  insert. The readers discard the result, and the subtraction reads no
+  memory.
 - **R-group decomposition** with `include_target_mol_in_results` inserts a
   range of a vector into itself when an R group has several fragments
   (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies from storage
