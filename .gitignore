@@ -1,3 +1,7 @@
 /target
 __pycache__/
 .pytest_cache/
+# RDKit 2024.03's Hueckel bond perception (DetermineBonds with useHueckel)
+# leaves YAeHMOP's output in the directory it runs in, here the tests'.
+/nul
+/run.out

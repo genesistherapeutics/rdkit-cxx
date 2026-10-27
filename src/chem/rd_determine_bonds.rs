@@ -30,7 +30,10 @@
 //! refuse it. YAeHMOP exits the process for input it cannot handle, and the
 //! functions check that input first: no dummy atoms, parameters for every
 //! element, at least one electron and at most two per orbital, at most 46340
-//! orbitals, and a parameter file it reads safely.
+//! orbitals, and a parameter file it reads safely. RDKit 2024.03 has
+//! YAeHMOP write its output to the files `nul` and `run.out` in the current
+//! directory, and leaves them there; where they cannot be opened for
+//! writing, the Hückel method is `Error::Runtime`.
 //!
 //! Finding bond orders holds the crate's matching lock (CONVENTIONS.md U4),
 //! so one such call runs at a time in the process.

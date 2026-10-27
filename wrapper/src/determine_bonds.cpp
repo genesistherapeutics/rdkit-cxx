@@ -10,12 +10,14 @@
 #include <climits>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <memory>
 #include <mutex>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <utility>
 #include <vector>
@@ -246,12 +248,30 @@ EhtElement eht_element(const std::vector<std::string> &lines, bool ends,
 // special parameters from its input file, which is null. check_for_errors
 // exits the process unless there are some electrons and at most two per
 // orbital, and YAeHMOP sizes its matrices as int(orbitals * orbitals).
+// RDKit 2024.03's runMol (External/YAeHMOP/EHTTools.cpp) opens "nul" and
+// "run.out" in the current directory for YAeHMOP's output and writes through
+// the FILE pointers without checking them, so a directory it cannot write
+// in would have YAeHMOP write through null. The files are opened here as it
+// opens them (which also leaves them behind, as RDKit does).
+void check_yaehmop_output_files() {
+  for (const auto &[name, mode] : {std::pair{"nul", "w"}, {"run.out", "w+"}}) {
+    std::FILE *file = std::fopen(name, mode);
+    if (!file) {
+      throw std::runtime_error(
+          std::string("RDKit 2024.03's Hueckel method writes the file ") +
+          name + " in the current directory, which cannot be opened");
+    }
+    std::fclose(file);
+  }
+}
+
 void check_hueckel(const RWMol &mol, std::int32_t charge) {
   check_charges(mol, charge);
   check_matrix_size(mol);
   if (!mol.getNumAtoms()) {
     return;  // connectivityHueckel throws on its own.
   }
+  check_yaehmop_output_files();
   auto [lines, ends] = eht_parameter_lines();
   std::int64_t valence = 0;
   std::int64_t orbitals = 0;
