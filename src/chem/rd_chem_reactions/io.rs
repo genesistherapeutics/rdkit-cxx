@@ -159,7 +159,9 @@ fn reactions(
 
 /// Parses reaction SMARTS: `reactants>agents>products`, with atom maps
 /// linking reactant and product atoms. Unparsable SMARTS is `Error::Parse`.
-/// Mirrors `rdChemReactions.ReactionFromSmarts`.
+/// A CXSMILES extension (from the first `|`) is checked as
+/// `mol_from_smiles_with_params` checks one: past those limits it is
+/// `Error::Value`. Mirrors `rdChemReactions.ReactionFromSmarts`.
 pub fn reaction_from_smarts(smarts: &str) -> Result<ChemicalReaction> {
     reaction_from_smarts_with_params(smarts, &ReactionFromSmartsParams::default())
 }
@@ -224,7 +226,9 @@ pub fn reaction_to_smiles_with_params(
 
 /// Parses an MDL rxn block (V2000 or V3000). Its templates are mol blocks,
 /// checked as `mol_from_mol_block` checks one: past those limits it is
-/// `Error::Value` (CONVENTIONS.md U12). Mirrors
+/// `Error::Value` (CONVENTIONS.md U12). A V3000 rxn with agents (a nonzero
+/// third count on its `COUNTS` line) is `Error::Value` too: RDKit 2024.03
+/// reads an uninitialized chirality flag for each agent. Mirrors
 /// `rdChemReactions.ReactionFromRxnBlock`.
 pub fn reaction_from_rxn_block(rxnblock: &str) -> Result<ChemicalReaction> {
     reaction_from_rxn_block_with_params(rxnblock, &ReactionFromRxnBlockParams::default())
@@ -244,8 +248,9 @@ pub fn reaction_from_rxn_block_with_params(
     ))
 }
 
-/// Reads an MDL rxn file. A file that cannot be opened is `Error::Os`, and
-/// an empty one `Error::Parse`. Mirrors `rdChemReactions.ReactionFromRxnFile`,
+/// Reads an MDL rxn file, checked as `reaction_from_rxn_block` checks a
+/// block. A file that cannot be opened is `Error::Os`, and an empty one
+/// `Error::Parse`. Mirrors `rdChemReactions.ReactionFromRxnFile`,
 /// which returns `None` for both.
 pub fn reaction_from_rxn_file(filename: impl AsRef<Path>) -> Result<ChemicalReaction> {
     reaction_from_rxn_file_with_params(filename, &ReactionFromRxnFileParams::default())

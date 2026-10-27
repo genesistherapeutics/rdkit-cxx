@@ -120,9 +120,7 @@ class SgroupValue {
   void reset() { *this = SgroupValue(); }
 
  private:
-  enum class Kind : std::uint8_t {
-    kNone, kCState, kSap, kScalar, kArray
-  };
+  enum class Kind : std::uint8_t { kNone, kCState, kSap, kScalar, kArray };
   bool fail(const char *why);
   void close();
   Kind d_kind = Kind::kNone;

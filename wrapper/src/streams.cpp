@@ -370,9 +370,14 @@ bool InputScanner::fail(std::string why) {
   return false;
 }
 
+// A refusal from `start`, the start of the value or field refused, or of a
+// value still open before it, but not before what was delivered.
 bool InputScanner::fail_at(std::string why, std::uint64_t start) {
   if (d_error.empty()) {
     d_error = std::move(why);
+    if (d_checks.value.open()) {
+      start = std::min(start, d_checks.value.start());
+    }
     d_cut = std::max(d_safe, start);
   }
   return false;
@@ -771,14 +776,15 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
       refuse(d_scanner.error(), d_scanner.cut());
     }
   }
-  if (d_scanned < d_limit) {
+  if (!d_scanner.error().empty()) {
+    d_hold = UINT64_MAX;  // the refusal's cut is safe to deliver up to
+  } else if (d_scanned < d_limit) {
     // Once the source has ended and passed, nothing is held.
     d_hold = d_finished ? UINT64_MAX : d_scanner.hold();
     if (d_hold != UINT64_MAX && d_scanned - d_hold > kMaxHold) {
-      refuse(
-          "the input holds a value or CXSMILES field longer than the " +
-              std::to_string(kMaxHold) + " bytes the scanner holds back",
-          d_hold);
+      refuse("the input holds a value or CXSMILES field longer than the " +
+                 std::to_string(kMaxHold) + " bytes the scanner holds back",
+             d_hold);
     }
   }
   return true;

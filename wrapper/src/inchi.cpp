@@ -297,7 +297,8 @@ void check_inchi_input(const RWMol &mol) {
          atom->hasProp("molParity")) &&
         atom->getDegree() > 4) {
       throw ValueErrorException(
-          "atom " + std::to_string(idx) + " has a chiral tag or molParity and " +
+          "atom " + std::to_string(idx) +
+          " has a chiral tag or molParity and " +
           std::to_string(atom->getDegree()) +
           " neighbors; RDKit 2024.03's InChI writer takes at most 4");
     }

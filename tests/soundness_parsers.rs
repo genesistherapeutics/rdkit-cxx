@@ -43,7 +43,10 @@ fn cx_fields_that_run_past_the_end_are_refused() {
             strict_cxsmiles: false,
             ..Default::default()
         };
-        assert!(is_value_error(mol_from_smiles_with_params(smiles, &lenient)), "{smiles}");
+        assert!(
+            is_value_error(mol_from_smiles_with_params(smiles, &lenient)),
+            "{smiles}"
+        );
         assert!(is_value_error(mol_from_smarts(smiles)), "{smiles}");
     }
     // Without CXSMILES the text is a name.
@@ -75,9 +78,15 @@ fn valid_cx_fields_still_parse() {
         assert_eq!(mol_to_cx_smiles(&mol).unwrap(), cx, "{smiles}");
     }
     let mol = mol_from_smiles("CO |atomProp:0.p.v:1.q.w|").unwrap();
-    assert_eq!(mol.get_atom_with_idx(1).unwrap().get_prop("q").unwrap(), "w");
+    assert_eq!(
+        mol.get_atom_with_idx(1).unwrap().get_prop("q").unwrap(),
+        "w"
+    );
     let query = mol_from_smarts("[#6] |atomProp:0.p.v|").unwrap();
-    assert_eq!(query.get_atom_with_idx(0).unwrap().get_prop("p").unwrap(), "v");
+    assert_eq!(
+        query.get_atom_with_idx(0).unwrap().get_prop("p").unwrap(),
+        "v"
+    );
 }
 
 #[test]
@@ -118,7 +127,8 @@ fn suppliers_parse_smiles_without_cx_extensions() {
         assert!(matches!(suppl.get(0), Err(Error::Parse { .. })), "{text:?}");
     }
     let mut tdt = TDTMolSupplier::default();
-    tdt.set_data("$SMI<C |atomProp:0.p.v>\nCAS<1>\n|\n").unwrap();
+    tdt.set_data("$SMI<C |atomProp:0.p.v>\nCAS<1>\n|\n")
+        .unwrap();
     assert!(matches!(tdt.get(0), Err(Error::Parse { .. })));
 }
 
@@ -256,7 +266,11 @@ fn sgroup_values_are_checked_across_chunks() {
         let read: Result<Vec<_>, _> = forward.mols().collect();
         assert!(is_value_error(read), "{split}");
         let mut forward = ForwardSDMolSupplier::from_fileobj(bad.as_bytes()).unwrap();
-        assert_eq!(forward.mols().take_while(|m| m.is_ok()).count(), good, "{split}");
+        assert_eq!(
+            forward.mols().take_while(|m| m.is_ok()).count(),
+            good,
+            "{split}"
+        );
     }
     std::fs::remove_file(&path).unwrap();
 }
@@ -276,6 +290,17 @@ M  END
     assert!(is_value_error(mol_from_mol_block(v2000)));
     let fine = v2000.replace(" |atomProp:0.p.v", "");
     assert!(mol_from_mol_block(&fine).is_ok());
+    // Data S-group fields, joined across SCD and SED lines as RDKit joins
+    // them, and V3000 FIELDDATA.
+    let split = v2000.replace(
+        "M  MRV SMA   1 [#6] |atomProp:0.p.v\n",
+        "M  SCD   1 [#6] |atomPr\nM  SED   1 op:0.p.v\n",
+    );
+    assert!(is_value_error(mol_from_mol_block(&split)));
+    let v3000 = with_sgroup_line(
+        "M  V30 1 DAT 1 ATOMS=(1 1) FIELDNAME=SMARTSQ FIELDDATA=\"[#6] |SgD:0:x\"",
+    );
+    assert!(is_value_error(mol_from_mol_block(&v3000)));
 }
 
 // V3000 rxn blocks with agents.
@@ -291,7 +316,10 @@ fn v3000_rxn_agents_are_refused() {
     let agent = "M  V30 BEGIN AGENT\nM  V30 BEGIN CTAB\nM  V30 COUNTS 1 0 0 0 0\nM  V30 BEGIN ATOM\nM  V30 1 O 0.000000 0.000000 0.000000 0\nM  V30 END ATOM\nM  V30 END CTAB\nM  V30 END AGENT\n";
     let with_agent = RXN_NO_AGENTS
         .replace("M  V30 COUNTS 1 1\n", "M  V30 COUNTS 1 1 1\n")
-        .replace("M  V30 END PRODUCT\n", &format!("M  V30 END PRODUCT\n{agent}"));
+        .replace(
+            "M  V30 END PRODUCT\n",
+            &format!("M  V30 END PRODUCT\n{agent}"),
+        );
     assert!(is_value_error(reaction_from_rxn_block(&with_agent)));
     let path = tmp_path("agents.rxn");
     std::fs::write(&path, &with_agent).unwrap();
