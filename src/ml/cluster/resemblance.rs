@@ -22,7 +22,7 @@ pub type Metric = fn(&[Vec<f64>]) -> Result<Vec<f64>>;
 /// The Euclidean distances between the points, as a metric matrix. Mirrors
 /// `Resemblance.EuclideanDistance`.
 ///
-/// Python's raises `TypeError` in RDKit 2026.03.6 (it sizes its array with
+/// Python's raises `TypeError` in RDKit 2025.03.6 (it sizes its array with
 /// a float); this computes what it means to, summing the squared
 /// differences of each pair as Python's `sum` does.
 ///
@@ -52,7 +52,7 @@ pub fn euclidean_distance(in_data: &[Vec<f64>]) -> Result<Vec<f64>> {
 /// The metric matrix of the clusters' positions. Mirrors
 /// `Resemblance.CalcMetricMatrix`.
 ///
-/// Python's raises `TypeError` in RDKit 2026.03.6 (it hands the metric a
+/// Python's raises `TypeError` in RDKit 2025.03.6 (it hands the metric a
 /// `map` object, which has no length); this hands it the positions.
 pub fn calc_metric_matrix(
     in_data: &[Cluster],
@@ -123,6 +123,10 @@ pub fn find_min_val_in_list_with_min_idx(
 /// The metric matrix as a table, each value `%10.6f` above the diagonal and
 /// `   ---    ` on and below it, one line per row. Mirrors
 /// `Resemblance.ShowMetricMat`, which prints the text this returns.
+///
+/// Python's raises `TypeError` in RDKit 2025.03.6 for two or more objects
+/// (it indexes the matrix with the float `(col * (col - 1)) / 2 + row`);
+/// this prints what it means to.
 ///
 /// `Error::Value` as [`find_min_val_in_list`].
 pub fn show_metric_mat(metric_mat: &[f64], n_objs: usize) -> Result<String> {
