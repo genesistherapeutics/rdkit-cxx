@@ -130,14 +130,6 @@ std::string encode_current_exception() {
     return encode("Runtime", "", e.toUserString());
   } catch (const std::exception &e) {
     return encode("Runtime", "", e.what());
-  } catch (const char *) {
-    // RDKit 2024.03 throws C strings for input it cannot handle: a bond query
-    // SMARTS cannot write (SmartsWrite.cpp, which throws the buffer of a
-    // destroyed temporary, so the pointer is never read here) and a malformed
-    // Daylight fingerprint string (DataStructs/Utils.cpp).
-    return encode("Value", "",
-                  "RDKit cannot handle this input (a bond query SMARTS "
-                  "cannot write, or a malformed Daylight fingerprint)");
   } catch (...) {
     return encode("Runtime", "", "unknown C++ exception");
   }

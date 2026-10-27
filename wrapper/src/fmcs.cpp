@@ -29,9 +29,6 @@ namespace rdkit_cxx {
 
 namespace {
 
-// The bonds below which a molecule is safe as the MCS query (find_mcs).
-constexpr unsigned int kMaxMcsQueryBonds = 64;
-
 MCSAtomCompareParametersData atom_params_to_data(
     const RDKit::MCSAtomCompareParameters &p) {
   MCSAtomCompareParametersData data{};
@@ -428,39 +425,17 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   }
   // RDKit 2024.03's Seed::grow (Seed.cpp) refuses a seed with more than 64
   // new bonds but then computes 1uLL << NewBonds.size() (Composition2N::
-  // compute2N), which is undefined for exactly 64 (2026.03 refuses it too).
-  // Seeds grow in the query molecule, and a seed's new bonds are query
-  // bonds not in it, so a query of fewer than 64 bonds never has 64. find
-  // sorts the molecules by bond count (std::stable_sort,
-  // molPtr_NumBondLess) and tries the first size - ThresholdCount as the
-  // query, so the largest of those must have fewer than 64 bonds.
-  if (mols.mols().size() >= 2 && params.Threshold <= 1.0) {
-    const int n = static_cast<int>(mols.mols().size());
-    const int threshold_count = std::min(
-        n - 1, std::max(1, static_cast<int>(std::ceil(static_cast<double>(n) *
-                                                      params.Threshold)) -
-                               1));
-    std::vector<unsigned int> num_bonds;
-    for (const auto &mol : mols.mols()) {
-      num_bonds.push_back(mol->getNumBonds());
-    }
-    std::sort(num_bonds.begin(), num_bonds.end());
-    const unsigned int largest_query = num_bonds[n - threshold_count - 1];
-    if (largest_query >= kMaxMcsQueryBonds) {
-      throw ValueErrorException(
-          "RDKit 2024.03's MCS search shifts by the number of a seed's new "
-          "bonds, which is undefined at 64, so a molecule it may take as the "
-          "query must have fewer than " +
-          std::to_string(kMaxMcsQueryBonds) + " bonds; this one has " +
-          std::to_string(largest_query));
-    }
-  }
+  // compute2N), which is undefined for exactly 64. On the supported CPUs the
+  // shift is masked, so the seed is not grown and the MCS may be smaller; no
+  // memory is read or written amiss. Refusing every query of 64 bonds would
+  // refuse ordinary large molecules, so this is left as a known limitation
+  // (README).
   // makeInitialSeeds dereferences SmartsToMol's result without a check, so
   // a seed that does not parse would be a null dereference (Python
   // crashes); it is parsed here first, the same way.
   if (!params.InitialSeed.empty()) {
     // SmartsToMol reads CX extensions (file_checks.h).
-    check_smiles_cx(params.InitialSeed);
+    check_smiles_cx(params.InitialSeed, true, true);
     std::unique_ptr<RDKit::RWMol> seed(RDKit::SmartsToMol(params.InitialSeed));
     if (!seed) {
       throw RDKit::SmilesParse::SmilesParseException(

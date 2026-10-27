@@ -519,6 +519,11 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 // RDKit trusts the options (RascalMCES.cpp):
 // - makeModularProduct computes the bond distance matrices only for a
 //   maxFragSeparation above -1 but reads them for any value but -1.
+// - RDKit 2024.03's RascalResult::applyMaxFragSep, which runs for any
+//   maxFragSeparation but -1, drops a fragment of the MCES and goes on to
+//   measure distances from it, through the null it left (RDKit 2026.03 checks
+//   it, rdkit/rdkit#9424). Whether it does depends on the MCES found, so no
+//   other value is accepted.
 // - calcLowerBound casts a product with similarityThreshold to unsigned
 //   int; a NaN threshold passes every comparison before it.
 // - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
@@ -549,8 +554,10 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
         "timeout must be -1: RDKit 2024.03 reads past an empty vector when a "
         "search times out");
   }
-  if (o.maxFragSeparation < -1) {
-    throw ValueErrorException("maxFragSeparation must be -1 or more");
+  if (o.maxFragSeparation != -1) {
+    throw ValueErrorException(
+        "maxFragSeparation must be -1: RDKit 2024.03 reads a fragment it "
+        "dropped, through a null pointer, when it applies another value");
   }
   if (std::isnan(o.similarityThreshold)) {
     throw ValueErrorException("similarityThreshold is NaN");
@@ -565,7 +572,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
         continue;
       }
       // MolFromSmarts reads CX extensions, which a tab can start.
-      check_smiles_cx(smarts);
+      check_smiles_cx(smarts, true, true);
       if (!RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
         throw RDKit::SmilesParse::SmilesParseException(
             "could not parse the equivalentAtoms SMARTS '" + smarts + "'");

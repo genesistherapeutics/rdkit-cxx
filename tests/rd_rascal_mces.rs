@@ -171,18 +171,35 @@ fn options() {
     assert_eq!(results[0].smarts_string(), "C(-C)-C");
     assert_eq!(results[11].smarts_string(), "CCC");
 
+    // RDKit 2024.03 reads a fragment it dropped through a null pointer when
+    // it applies a maximum fragment separation, so only -1 is accepted.
     let opts = RascalOptions {
         similarity_threshold: 0.1,
         max_frag_separation: 2,
         ..Default::default()
     };
-    let results = find_mces_with_opts(
-        &smiles("c1ccccc1CCCCC(=O)O"),
-        &smiles("c1ccccc1CC(=O)O"),
-        &opts,
-    )
-    .unwrap();
-    assert_eq!(results[0].smarts_string(), "c1:c:c:c:c:c:1-CC");
+    assert!(matches!(
+        find_mces_with_opts(
+            &smiles("c1ccccc1CCCCC(=O)O"),
+            &smiles("c1ccccc1CC(=O)O"),
+            &opts,
+        ),
+        Err(Error::Value { .. })
+    ));
+    // Python 2024.03 crashes on these with a separation of 2.
+    let opts = RascalOptions {
+        similarity_threshold: 0.0,
+        max_frag_separation: 2,
+        ..Default::default()
+    };
+    assert!(matches!(
+        find_mces_with_opts(
+            &smiles("C1CC1CCCCCCCCCc1ccccc1CCCCCCCCCc1ccccc1"),
+            &smiles("C1CC1OCOCOCOCOc1ccccc1OCOCOCOCOc1ccccc1"),
+            &opts,
+        ),
+        Err(Error::Value { .. })
+    ));
 
     let opts = RascalOptions {
         similarity_threshold: 0.5,
