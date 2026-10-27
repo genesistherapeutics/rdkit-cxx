@@ -147,7 +147,13 @@ A program built against one release stops when it loads with another.
     `ChemicalReaction::to_binary` panic). So are a substance group or stereo
     group list of more than 255 entries, more than 255 stereo groups, and a
     query of more than 255 children, which RDKit 2026.09 pickles truncated
-    too: RDKit writes these pickles and cannot read them back.
+    too, and a molecule, conformer, atom, bond, or substance group of more
+    than 65535 properties, whose count RDKit writes in two bytes: RDKit
+    writes these pickles and cannot read them back. The fragment catalog's
+    generator checks the groups a fragment of the molecule can hold as a
+    small molecule's pickle writes them, whatever the molecule's size,
+    counting every stereo group, since a fragment keeps each one that shares
+    an atom with it.
   - A multithreaded supplier's queues hold at most 2^20 records: RDKit
     2025.09 dereferences null when it cannot allocate one.
   - Drawing refuses an atom of two bonds with a neighbor at its position,
