@@ -148,7 +148,7 @@ void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
   // SMILES in RDKit 2025.09 (as SMARTS in 2026.03) and stops at the first it
   // cannot parse.
   while (std::getline(lines, line)) {
-    check_cx_atom_props(line);
+    check_smiles_cx(line, true, true);
     std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(line));
     if (!mol) {
       break;

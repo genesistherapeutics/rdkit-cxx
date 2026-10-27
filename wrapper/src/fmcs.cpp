@@ -417,7 +417,7 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   // a seed that does not parse would be a null dereference (Python
   // crashes); it is parsed here first, the same way.
   if (!params.InitialSeed.empty()) {
-    check_cx_atom_props(params.InitialSeed);
+    check_smiles_cx(params.InitialSeed, true, true);
     std::unique_ptr<RDKit::RWMol> seed(RDKit::SmartsToMol(params.InitialSeed));
     if (!seed) {
       throw RDKit::SmilesParse::SmilesParseException(

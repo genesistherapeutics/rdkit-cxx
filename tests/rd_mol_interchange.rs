@@ -546,3 +546,18 @@ fn queries_rdkit_does_not_make_are_refused() {
         ["[#6]~[#6]=[#6]-[#6]"]
     );
 }
+
+#[test]
+fn stereo_groups_hold_each_atom_once() {
+    // RDKit 2025.09.6's JSON for `C[C@H](F)Cl |&1:1|`, with the stereo group's
+    // atoms `atoms`.
+    let json = |atoms: &str| {
+        format!(
+            r#"{{"rdkitjson":{{"version":12}},"defaults":{{"atom":{{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"}},"bond":{{"bo":1,"stereo":"unspecified"}}}},"molecules":[{{"atoms":[{{"impHs":3}},{{"impHs":1,"stereo":"ccw"}},{{"z":9}},{{"z":17}}],"bonds":[{{"atoms":[0,1]}},{{"atoms":[1,2]}},{{"atoms":[1,3]}}],"stereoGroups":[{{"type":"and","id":0,"atoms":{atoms}}}],"extensions":[{{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.09.6","cipRanks":[0,1,2,3],"cipCodes":[[1,"R"]]}}]}}]}}"#
+        )
+    };
+    let mols = json_to_mols(&json("[1]")).unwrap();
+    assert_eq!(mols[0].get_stereo_groups().len(), 1);
+    // RDKit 2025.09 keeps an atom listed twice, which dangles once removed.
+    assert!(is_value(json_to_mols(&json("[1,1]"))));
+}

@@ -258,16 +258,31 @@ class DocumentChecker {
         return;
       }
       for (const auto &group : *list) {
-        if (const auto *ids = member(group, "bonds")) {
+        // RDKit 2025.09's StereoGroup keeps an atom or bond listed twice,
+        // which dangles once removed (check_stereo_group_duplicates in
+        // mol_checks.h).
+        for (const char *what : {"atoms", "bonds"}) {
+          const auto *ids = member(group, what);
+          if (!ids) {
+            continue;
+          }
           const auto *id_list = ids->if_array();
           if (!id_list) {
             return;
           }
+          std::set<std::int64_t> seen;
           for (const auto &id : *id_list) {
             if (!id.is_int64()) {
               return;
             }
-            group_bonds.insert(static_cast<unsigned>(id.as_int64()));
+            if (!seen.insert(id.as_int64()).second) {
+              refuse(std::string("gives a stereo group ") + what +
+                     " that list one twice, which RDKit 2025.09 keeps, "
+                     "leaving it to dangle once removed");
+            }
+            if (std::string_view(what) == "bonds") {
+              group_bonds.insert(static_cast<unsigned>(id.as_int64()));
+            }
           }
         }
       }

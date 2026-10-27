@@ -516,7 +516,7 @@ std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
                                                  std::uint64_t line_num) {
   RDKit::v2::SmilesParse::SmilesParserParams params;
   params.sanitize = false;
-  check_cx_atom_props(smiles);
+  check_smiles_cx(smiles, true, true);
   auto mol = RDKit::v2::SmilesParse::MolFromSmiles(smiles, params);
   if (!mol) {
     return std::nullopt;

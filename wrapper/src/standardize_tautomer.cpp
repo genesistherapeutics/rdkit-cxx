@@ -19,6 +19,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_tautomer.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -142,7 +143,7 @@ std::unique_ptr<TautomerEnumerator> tautomer_enumerator_default() {
 
 std::unique_ptr<TautomerEnumerator> tautomer_enumerator_new(
     const CleanupParametersData &params) {
-  return checked_enumerator(to_cleanup_parameters(params));
+  return checked_enumerator(to_cleanup_parameters(params, false));
 }
 
 std::unique_ptr<TautomerEnumerator> tautomer_enumerator_v1() {
@@ -405,11 +406,14 @@ std::int32_t score_substructs_with_terms(
           "RDKit adds substructure scores times their match counts (up to "
           "1000) in int, which overflows for these terms");
     }
+    // SubstructTerm parses its SMARTS with its CXSMILES extension
+    // (file_checks.h).
+    auto smarts = to_std(rust::Slice<const std::uint8_t>(term.smarts.data(),
+                                                         term.smarts.size()));
+    check_smiles_cx(smarts, true, true);
     terms.emplace_back(to_std(rust::Slice<const std::uint8_t>(
                            term.name.data(), term.name.size())),
-                       to_std(rust::Slice<const std::uint8_t>(
-                           term.smarts.data(), term.smarts.size())),
-                       term.score);
+                       smarts, term.score);
   }
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return TSF::scoreSubstructs(mol, terms);

@@ -564,7 +564,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
                boost::token_compress_on);
   if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
     for (const auto &smarts : classes) {
-      check_cx_atom_props(smarts);
+      check_smiles_cx(smarts, true, true);
       if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
         throw RDKit::SmilesParse::SmilesParseException(
             "could not parse the equivalentAtoms SMARTS '" + smarts + "'");

@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_normalize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -55,19 +56,31 @@ std::unique_ptr<Normalizer> normalizer_default() {
   return std::make_unique<Normalizer>();
 }
 
+// RDKit reads the file's reactions with their CXSMILES extensions
+// (file_checks.h): the wrapper reads it once, checks it, and hands RDKit the
+// text, so RDKit never reads a file that changed after the check. (An empty
+// name is RDKit's default normalizations, which it reads from no file.)
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
-  return std::make_unique<Normalizer>(to_path(normalize_filename),
-                                      max_restarts);
+  auto name = to_path(normalize_filename);
+  if (name.empty()) {
+    return std::make_unique<Normalizer>(name, max_restarts);
+  }
+  auto text = read_file(name);
+  check_transformation_lines(text);
+  std::istringstream in{text};
+  return std::make_unique<Normalizer>(in, max_restarts);
 }
 
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
-  std::istringstream in{std::string(param_data)};
+  std::string text(param_data);
+  check_transformation_lines(text);
+  std::istringstream in{text};
   return std::make_unique<Normalizer>(
-      in, to_cleanup_parameters(params).maxRestarts);
+      in, to_cleanup_parameters(params, false).maxRestarts);
 }
 
 std::unique_ptr<Normalizer> normalizer_from_params(

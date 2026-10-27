@@ -9,6 +9,7 @@
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
@@ -31,6 +32,9 @@ std::unique_ptr<DeprotectData> deprotect_data_new(rust::Str deprotection_class,
                                                   rust::Str reaction_smarts,
                                                   rust::Str abbreviation,
                                                   rust::Str full_name) {
+  // DeprotectData parses the reaction SMARTS with its CXSMILES extension
+  // (file_checks.h).
+  check_reaction_cx(std::string(reaction_smarts), true);
   return std::make_unique<DeprotectData>(
       std::string(deprotection_class), std::string(reaction_smarts),
       std::string(abbreviation), std::string(full_name));

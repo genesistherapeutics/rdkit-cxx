@@ -17,6 +17,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/scaffold_network.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
@@ -77,6 +78,8 @@ std::unique_ptr<ScaffoldNetworkParams> scaffold_network_params_from_smarts(
   std::vector<std::string> list;
   for (auto s : smarts) {
     list.emplace_back(s);
+    // Each is parsed as reaction SMARTS (file_checks.h).
+    check_reaction_cx(list.back(), true);
   }
   return std::make_unique<ScaffoldNetworkParams>(list);
 }

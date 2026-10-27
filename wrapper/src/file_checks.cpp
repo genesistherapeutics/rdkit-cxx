@@ -5,13 +5,18 @@
 
 #include "rdkit-cxx/file_checks.h"
 
+#include <algorithm>
+#include <climits>
 #include <cstdint>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <set>
 #include <sstream>
 #include <string_view>
 #include <vector>
 
+#include <GraphMol/ROMol.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
@@ -59,98 +64,224 @@ void check_debug_parse(int debug_parse) {
 
 namespace {
 
-// What parse_atom_props reads from `first`, an index into `s`, which RDKit
-// reads to and including its end (as the terminating character): true if
-// the loop runs past the end. A read RDKit throws for stops it, safely.
-bool atom_props_overrun(const std::string &s, std::size_t first) {
-  const std::size_t last = s.size();
-  auto at = [&](std::size_t i) { return i < last ? s[i] : '\0'; };
-  auto digit = [&](std::size_t i) { return at(i) >= '0' && at(i) <= '9'; };
-  // read_int: false for no digits; a number lexical_cast<unsigned int>
-  // refuses sets `throws`.
-  bool throws = false;
-  auto read_int = [&](std::size_t &f) {
-    const std::size_t start = f;
-    while (f <= last && digit(f)) {
-      ++f;
-    }
-    if (f == start) {
-      return false;
-    }
-    std::uint64_t v = 0;
-    for (std::size_t i = start; i < f && !throws; ++i) {
-      v = v * 10 + static_cast<std::uint64_t>(s[i] - '0');
-      throws = v > UINT32_MAX;
-    }
-    return true;
-  };
-  // read_text_to; whether it read anything.
-  auto read_text_to = [&](std::size_t &f, std::string_view delims) {
-    bool read = false;
-    while (f <= last && (at(f) == '\0' || delims.find(at(f)) == delims.npos)) {
-      if (at(f) == '&' && last - f > 2 && at(f + 1) == '#') {
-        std::size_t next = f + 2;
-        while (next != last && digit(next)) {
-          ++next;
-        }
-        if (next == last || at(next) != ';') {
-          throws = true;
-          return read;
-        }
-        read = read || next > f + 2;
-        f = next + 1;
-      } else {
-        read = true;
-        ++f;
-      }
-    }
-    return read;
-  };
-  if (first >= last) {
+// Where read_text_to (CXSmilesOps.cpp) stops reading `cx` from `i`: at the
+// first of `delims`, or one past the end, having read the null there. Its
+// "&#N;" escapes hold none of the delimiters it is given here.
+std::size_t text_to(std::string_view cx, std::size_t i, const char *delims) {
+  auto k = cx.find_first_of(delims, i);
+  return k == std::string_view::npos ? cx.size() + 1 : k;
+}
+
+bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+// parse_atom_props from `i`, just after "atomProp:": whether it reads past
+// the null at the end. At the end it reads the null, which ends nothing.
+bool atom_props_overrun(std::string_view cx, std::size_t i) {
+  const std::size_t n = cx.size();
+  if (i >= n) {
     return false;
   }
-  while (first <= last && at(first) != '|' && at(first) != ',') {
-    if (read_int(first)) {
-      if (throws || first >= last || at(first) != '.') {
+  auto stop = [&](std::size_t j) {
+    return j < n && (cx[j] == '|' || cx[j] == ',');
+  };
+  while (i <= n && !stop(i)) {
+    std::size_t j = i;
+    while (j < n && is_digit(cx[j])) {
+      ++j;
+    }
+    if (j > i) {
+      i = j;
+      if (i >= n || cx[i] != '.') {
         return false;
       }
-      ++first;
-      const bool name = read_text_to(first, ".");
-      if (throws) {
-        return false;
-      }
-      if (name) {
-        if (first >= last || at(first) != '.') {
+      auto k = text_to(cx, ++i, ".");
+      bool has_name = k != i;
+      i = k;
+      if (has_name) {
+        if (i >= n || cx[i] != '.') {
           return false;
         }
-        ++first;
-        read_text_to(first, ":|,");
-        if (throws) {
-          return false;
-        }
+        i = text_to(cx, i + 1, ":|,");
       }
     }
-    if (first <= last && at(first) != '|' && at(first) != ',') {
-      ++first;
+    if (i <= n && !stop(i)) {
+      ++i;
     }
   }
-  return first > last;
+  // RDKit returns false at the null and reads the byte after it past it.
+  return i > n;
+}
+
+// parse_data_sgroup from `p`, at "SgD:": whether a field or its coordinates
+// run past the end, after which RDKit steps once more.
+bool data_sgroup_overrun(std::string_view cx, std::size_t p) {
+  const std::size_t n = cx.size();
+  if (p + 3 >= n || cx[p + 3] != ':') {
+    return false;
+  }
+  std::size_t i = p + 4;
+  while (true) {
+    while (i < n && is_digit(cx[i])) {
+      ++i;
+    }
+    if (i >= n || cx[i] != ',') {
+      break;
+    }
+    ++i;
+  }
+  ++i;
+  for (int field = 0; field < 5; ++field) {
+    if (i >= n) {
+      return false;  // parse_data_sgroup_attr's precondition throws
+    }
+    if (cx[i] != '|') {
+      i = text_to(cx, i, ":");
+      if (i > n) {
+        return true;
+      }
+      ++i;
+    }
+  }
+  return i < n && cx[i] == '(' && text_to(cx, i, ")") > n;
+}
+
+// RDKit 2025.09's parse_enhanced_stereo adds each atom index listed after
+// "a:", "o<n>:", or "&<n>:" to the group the type and number name, merging
+// sections by 10 * number + type, so a group can list an atom twice, which
+// dangles once the atom is removed (check_stereo_group_duplicates in
+// mol_checks.h): the parser removes the hydrogens itself, and
+// cleanupStereoGroups then reads the freed atom. Every place a section may
+// start is read as one, which may refuse a few extensions where such text is
+// inside another section. (As rdkit-2025.03's check.)
+void check_cx_stereo_groups(std::string_view ext) {
+  std::map<unsigned int, std::set<unsigned long long>> groups;
+  for (std::size_t p = 0; p < ext.size(); ++p) {
+    unsigned int type;
+    if (ext[p] == 'a') {
+      type = 0;
+    } else if (ext[p] == 'o') {
+      type = 1;
+    } else if (ext[p] == '&' && p + 1 < ext.size() && ext[p + 1] != '#') {
+      type = 2;
+    } else {
+      continue;
+    }
+    std::size_t q = p + 1;
+    unsigned int id = 0;
+    if (type != 0) {
+      for (; q < ext.size() && is_digit(ext[q]); ++q) {
+        id = id * 10 + static_cast<unsigned int>(ext[q] - '0');
+      }
+    }
+    if (q >= ext.size() || ext[q] != ':') {
+      continue;
+    }
+    auto &atoms = groups[10 * id + type];
+    for (++q; q < ext.size() && is_digit(ext[q]);) {
+      unsigned long long index = 0;
+      for (; q < ext.size() && is_digit(ext[q]); ++q) {
+        index = std::min(index * 10 + static_cast<unsigned>(ext[q] - '0'),
+                         static_cast<unsigned long long>(UINT_MAX) + 1);
+      }
+      if (!atoms.insert(index).second) {
+        throw ValueErrorException(
+            "a CXSMILES stereo group lists an atom twice, which RDKit 2025.09 "
+            "keeps, leaving it to dangle once the atom is removed");
+      }
+      if (q < ext.size() && ext[q] == ',') {
+        ++q;
+      }
+    }
+  }
 }
 
 }  // namespace
 
-void check_cx_atom_props(const std::string &text) {
-  constexpr std::string_view key = "atomProp:";
-  if (text.find(key) == std::string::npos) {
+void check_cx_extensions(std::string_view cx, bool strict) {
+  check_cx_stereo_groups(cx);
+  for (auto p = cx.find("atomProp:"); p != std::string_view::npos;
+       p = cx.find("atomProp:", p + 1)) {
+    // parse_it takes it for an "atomProp:" block only with more after it.
+    if (cx.size() - p > 9 && atom_props_overrun(cx, p + 9)) {
+      throw ValueErrorException(
+          "a CXSMILES atomProp block must end with '|' or ',': RDKit 2025.09 "
+          "reads past the end of the text otherwise");
+    }
+  }
+  if (strict) {
     return;
   }
-  const auto trimmed = boost::trim_right_copy(text);
-  for (auto at = trimmed.find(key); at != std::string::npos;
-       at = trimmed.find(key, at + 1)) {
-    if (atom_props_overrun(trimmed, at + key.size())) {
+  for (auto p = cx.find("Sg"); p != std::string_view::npos;
+       p = cx.find("Sg", p + 1)) {
+    bool overrun = false;
+    if (p + 2 < cx.size() && cx[p + 2] == 'D') {
+      overrun = data_sgroup_overrun(cx, p);
+    } else if (p + 2 < cx.size() && cx[p + 2] == ':') {
+      overrun = text_to(cx, p + 3, ":") > cx.size();
+    }
+    if (overrun) {
       throw ValueErrorException(
-          "a CXSMILES atomProp block runs to the end of the text, which RDKit "
-          "2025.09 reads past");
+          "a CXSMILES substance group's fields must each end with ':' (and "
+          "its coordinates with ')') when strictCXSMILES is off: RDKit 2025.09 "
+          "copies the text past its end otherwise");
+    }
+  }
+}
+
+void check_smiles_cx(const std::string &text, bool allow_cx, bool strict) {
+  if (!allow_cx) {
+    return;
+  }
+  auto sidx = text.find_first_of(" \t");
+  if (sidx == std::string::npos || sidx == 0) {
+    return;
+  }
+  auto cx = boost::trim_copy(text.substr(sidx));
+  if (!cx.empty() && cx[0] == '|') {
+    check_cx_extensions(cx, strict);
+  }
+}
+
+void check_reaction_cx(const std::string &text, bool allow_cx) {
+  if (!allow_cx) {
+    return;
+  }
+  auto sidx = text.find_first_of('|');
+  if (sidx == std::string::npos || sidx == 0) {
+    return;
+  }
+  check_cx_extensions(boost::trim_copy(text.substr(sidx)), true);
+}
+
+void check_query_props(const RDKit::ROMol &mol, const std::string &prop) {
+  for (const auto *atom : mol.atoms()) {
+    std::string value;
+    try {
+      if (!atom->getPropIfPresent(prop, value)) {
+        continue;
+      }
+    } catch (const std::exception &) {
+      continue;  // not a string, which RDKit refuses
+    }
+    check_smiles_cx(value, true, true);
+  }
+}
+
+void check_transformation_lines(const std::string &text) {
+  std::istringstream in(text);
+  char line[512];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, sizeof(line), '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    std::vector<std::string> fields;
+    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
+    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
+    if (fields.size() >= 2) {
+      boost::erase_all(fields[1], " ");
+      check_reaction_cx(fields[1], true);
     }
   }
 }
@@ -179,6 +310,42 @@ void check_bond_refs(const boost::property_tree::ptree &tree) {
   }
 }
 
+// RDKit 2025.09's Marvin reader puts each atom with an mrvStereoGroup into
+// its group by the index of the first atom with its id (getAtomIndex), so two
+// atoms with one id list an atom twice, which dangles once removed
+// (check_stereo_group_duplicates in mol_checks.h): say, when the reader
+// removes the hydrogens. Ids in an atom array must therefore differ. (As
+// rdkit-2025.03's check.)
+void check_atom_ids(const boost::property_tree::ptree &tree) {
+  for (const auto &[key, child] : tree) {
+    if (key == "atomArray") {
+      std::set<std::string> ids;
+      auto add = [&](const std::string &id) {
+        if (!ids.insert(id).second) {
+          throw RDKit::FileParseException(
+              "atom id " + id +
+              " appears twice in an atom array of the MRV file");
+        }
+      };
+      std::vector<std::string> compact;
+      boost::algorithm::split(
+          compact, child.get<std::string>("<xmlattr>.atomID", ""),
+          boost::algorithm::is_space(), boost::algorithm::token_compress_on);
+      for (const auto &id : compact) {
+        if (!id.empty()) {
+          add(id);
+        }
+      }
+      for (const auto &[akey, atom] : child) {
+        if (akey == "atom") {
+          add(atom.get<std::string>("<xmlattr>.id", ""));
+        }
+      }
+    }
+    check_atom_ids(child);
+  }
+}
+
 }  // namespace
 
 void check_mrv(const std::string &text) {
@@ -186,6 +353,7 @@ void check_mrv(const std::string &text) {
   boost::property_tree::ptree tree;
   boost::property_tree::read_xml(in, tree);
   check_bond_refs(tree);
+  check_atom_ids(tree);
 }
 
 }  // namespace rdkit_cxx
