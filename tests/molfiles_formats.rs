@@ -762,6 +762,15 @@ fn mol2_bond_atoms_in_range() {
         assert!(is_value(mol_from_mol2_file(&path)), "{atom}");
         std::fs::remove_file(&path).unwrap();
     }
+    // Without a BOND header RDKit 2025.09 reads the bond lines from the start
+    // of the data (valgrind: invalid reads, for this block's first line).
+    let headless = format!(
+        "# 1 99 1\n{}",
+        MOL2_ETHANOL
+            .replace("END", "3")
+            .replace("@<TRIPOS>BOND\n", "")
+    );
+    assert!(is_value(mol_from_mol2_block(&headless)));
 }
 
 /// A V3000 block for `CO` with a superatom SGroup over the O whose line ends

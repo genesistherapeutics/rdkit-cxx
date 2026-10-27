@@ -98,7 +98,8 @@ A program built against one release stops when it loads with another.
   - The CML writer refuses a tetrahedral atom of fewer than four explicit
     neighbors, whose parity RDKit 2025.09 reads past them for.
   - The Mol2 readers refuse a bond whose atom number is outside the
-    molecule's atoms.
+    molecule's atoms, including the lines RDKit 2025.09 reads as bonds from
+    the start of the data when there is no `@<TRIPOS>BOND` header.
   - Drawing refuses an atom label whose first colon is the last character
     drawn (`C:` segfaults in RDKit 2025.09's Python), and a legend of only
     newlines, which RDKit 2025.09 lays out with no lines.
