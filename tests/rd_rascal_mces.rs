@@ -7,8 +7,8 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_rascal_mces::*;
 use rdkit_cxx::chem::*;
 
-// Expected values come from Python's rdRascalMCES. Searches use the default
-// 60-second timeout, which none of these comes near.
+// Expected values come from Python's rdRascalMCES, whose searches have a
+// 60-second timeout, which none of these comes near; here they have none.
 
 fn smiles(text: &str) -> Mol {
     mol_from_smiles(text).unwrap()
@@ -39,7 +39,8 @@ fn defaults() {
     assert_eq!(opts.max_frag_separation, -1);
     assert!(!opts.all_best_mcess);
     assert_eq!(opts.max_best_mcess, 10000);
-    assert_eq!(opts.timeout, 60);
+    // Python's is 60, which RDKit 2025.03 cannot apply soundly.
+    assert_eq!(opts.timeout, -1);
     assert!(!opts.return_empty_mces);
     assert_eq!(opts.max_bond_match_pairs, 1000);
     assert_eq!(opts.equivalent_atoms, "");
@@ -162,19 +163,6 @@ fn options() {
     assert_eq!(results[11].smarts_string(), "CCC");
 
     let opts = RascalOptions {
-        similarity_threshold: 0.1,
-        max_frag_separation: 2,
-        ..Default::default()
-    };
-    let results = find_mces_with_opts(
-        &smiles("c1ccccc1CCCCC(=O)O"),
-        &smiles("c1ccccc1CC(=O)O"),
-        &opts,
-    )
-    .unwrap();
-    assert_eq!(results[0].smarts_string(), "c1:c:c:c:c:c:1-CC");
-
-    let opts = RascalOptions {
         similarity_threshold: 0.5,
         ignore_bond_orders: true,
         ..Default::default()
@@ -206,15 +194,29 @@ fn checked_options() {
     let (a, b) = (smiles("c1ccccc1CC(=O)O"), smiles("c1ccccc1CCC(=O)O"));
     let find = |opts: RascalOptions| find_mces_with_opts(&a, &b, &opts);
     // RDKit computes the distance matrices only for -1 and up, and reads
-    // them for anything but -1.
-    assert!(matches!(
-        find(RascalOptions {
-            max_frag_separation: -2,
-            similarity_threshold: 0.1,
-            ..Default::default()
-        }),
-        Err(Error::Value { .. })
-    ));
+    // them for anything but -1; RDKit 2025.03 also compares fragments it has
+    // dropped for anything but -1, and reads an emptied list when it times
+    // out.
+    for max_frag_separation in [-2, 0, 2] {
+        assert!(matches!(
+            find(RascalOptions {
+                max_frag_separation,
+                similarity_threshold: 0.1,
+                ..Default::default()
+            }),
+            Err(Error::Value { .. })
+        ));
+    }
+    for timeout in [0, 60] {
+        assert!(matches!(
+            find(RascalOptions {
+                timeout,
+                similarity_threshold: 0.1,
+                ..Default::default()
+            }),
+            Err(Error::Value { .. })
+        ));
+    }
     // RDKit casts a NaN threshold to unsigned int.
     assert!(matches!(
         find(RascalOptions {

@@ -391,6 +391,21 @@ fn whim_and_getaway() {
     let values = calc_getaway_with_params(&apap_with_q(), &custom).unwrap();
     assert_eq!(values.len(), 45);
     assert_all_close(&values[..6], &[34.054, 0.895, 4.019, 11.411, 4.659, 1.022]);
+    // RDKit 2025.03 reads terms past the molecule's largest topological
+    // distance uninitialized, so a molecule needs two atoms 8 bonds apart.
+    let mut short = mol_from_smiles("OCCO").unwrap();
+    rdkit_cxx::chem::rd_dist_geom::embed_molecule(&mut short).unwrap();
+    for idx in 0..short.get_num_atoms() {
+        short
+            .get_atom_with_idx_mut(idx)
+            .unwrap()
+            .set_double_prop("q", 0.1);
+    }
+    assert!(matches!(
+        calc_getaway_with_params(&short, &custom),
+        Err(Error::Value { .. })
+    ));
+    assert_eq!(calc_getaway(&short).unwrap().len(), 273);
 }
 
 #[test]

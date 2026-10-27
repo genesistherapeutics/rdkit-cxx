@@ -210,11 +210,41 @@ rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
                           });
 }
 
+namespace {
+
+// Whether two atoms are at least `limit` bonds apart, or not connected.
+bool has_topological_distance(const RWMol &mol, unsigned limit) {
+  const unsigned n = mol.getNumAtoms();
+  for (unsigned start = 0; start < n; ++start) {
+    std::vector<unsigned> dist(n, n);
+    std::vector<unsigned> queue{start};
+    dist[start] = 0;
+    for (std::size_t head = 0; head < queue.size(); ++head) {
+      const auto atom = queue[head];
+      for (const auto nbr : mol.atomNeighbors(mol.getAtomWithIdx(atom))) {
+        if (dist[nbr->getIdx()] == n) {
+          dist[nbr->getIdx()] = dist[atom] + 1;
+          queue.push_back(nbr->getIdx());
+        }
+      }
+    }
+    if (queue.size() < n || dist[queue.back()] >= limit) {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
 // GETAWAY converts the precision to unsigned int, which is undefined for a
 // negative, huge, or NaN value, and prints each leverage with that many
 // digits into a 32-byte buffer, which 25 or more overflow. It sorts the
 // atoms' leverages with std::sort, which is undefined for NaN, and divides
-// by the atoms' distances (coordinate_checks.h).
+// by the atoms' distances (coordinate_checks.h). With a custom property,
+// RDKit 2025.03 fills its HATS, H, R, and R+ terms (getGETAWAYDescCustom)
+// only up to the molecule's largest topological distance, and reads all
+// eight or nine of them, uninitialized past that; RDKit 2026.03 zeroes them.
 rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
                                double precision,
                                rust::Str custom_atom_property) {
@@ -222,6 +252,13 @@ rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
     throw ValueErrorException("GETAWAY's precision must be in [0, 25)");
   }
   std::string custom(custom_atom_property);
+  if (!custom.empty() && mol.getNumAtoms() > 0 &&
+      !has_topological_distance(mol, 8)) {
+    throw ValueErrorException(
+        "RDKit 2025.03's GETAWAY with a custom atom property reads "
+        "uninitialized terms for a molecule whose atoms are all fewer than 8 "
+        "bonds apart");
+  }
   if (has_conformers(mol)) {
     const auto &conf = mol.getConformer(conf_id);
     check_finite_coordinates(conf, "GETAWAY");

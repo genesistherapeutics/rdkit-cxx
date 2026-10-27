@@ -165,6 +165,9 @@ ProxGraph build_proximity_graph(const std::vector<const RDKit::ROMol *> &mols,
   std::vector<std::pair<unsigned int, unsigned int>> toDo;
   Rascal::RascalOptions opts;
   opts.similarityThreshold = clusOpts.similarityCutoff;
+  // RDKit 2025.03 reads an emptied list when a search times out
+  // (rascal_options_from), so the pairs run without RDKit's 60 seconds.
+  opts.timeout = -1;
   for (unsigned int i = 0; i < mols.size() - 1; ++i) {
     for (unsigned int j = i + 1; j < mols.size(); ++j) {
       toDo.emplace_back(i, j);
@@ -512,7 +515,15 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 
 // RDKit trusts the options (RascalMCES.cpp):
 // - makeModularProduct computes the bond distance matrices only for a
-//   maxFragSeparation above -1 but reads them for any value but -1.
+//   maxFragSeparation above -1 but reads them for any value but -1, and
+//   RDKit 2025.03's RascalResult::applyMaxFragSep, which runs for any value
+//   but -1, keeps comparing a fragment it has just dropped (a null pointer)
+//   when the MCES has three fragments or more, which only the search shows;
+//   so only -1 is taken (RDKit 2026.03 checks the pointer).
+// - RDKit 2025.03's checkTimeout, which runs for any timeout but -1, reads
+//   the front of the best cliques just after clearing them when the search
+//   times out on a larger clique; so only -1 is taken, and the default is
+//   -1 (RDKit 2026.03 checks for that).
 // - calcLowerBound casts a product with similarityThreshold to unsigned
 //   int; a NaN threshold passes every comparison before it.
 // - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
@@ -541,8 +552,15 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   o.ignoreAtomAromaticity = d.ignore_atom_aromaticity;
   o.minCliqueSize = d.min_clique_size;
 
-  if (o.maxFragSeparation < -1) {
-    throw ValueErrorException("maxFragSeparation must be -1 or more");
+  if (o.maxFragSeparation != -1) {
+    throw ValueErrorException(
+        "maxFragSeparation must be -1: RDKit 2025.03 dereferences a dropped "
+        "fragment when it applies one");
+  }
+  if (o.timeout != -1) {
+    throw ValueErrorException(
+        "timeout must be -1: RDKit 2025.03 reads an emptied list of cliques "
+        "when a search times out");
   }
   if (std::isnan(o.similarityThreshold)) {
     throw ValueErrorException("similarityThreshold is NaN");
@@ -583,8 +601,11 @@ void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols) {
   }
 }
 
+// RDKit's default timeout is 60 seconds, which rascal_options_from refuses.
 RascalOptionsData rascal_options_default() {
-  return to_data(Rascal::RascalOptions());
+  auto data = to_data(Rascal::RascalOptions());
+  data.timeout = -1;
+  return data;
 }
 
 RascalClusterOptionsData rascal_cluster_options_default() {
