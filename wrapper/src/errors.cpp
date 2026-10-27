@@ -15,7 +15,9 @@
 #include <GraphMol/ChemReactions/ReactionParser.h>
 #include <GraphMol/Conformer.h>
 #include <GraphMol/Depictor/RDDepictor.h>
+#ifdef RDKIT_CXX_HAVE_SLN_PARSE
 #include <GraphMol/SLNParse/SLNParse.h>
+#endif
 #include <GraphMol/SanitException.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/BadFileException.h>
@@ -117,8 +119,10 @@ std::string encode_current_exception() {
     return encode("Parse", "", e.what());
   } catch (const RDKit::FileParseException &e) {
     return encode("Parse", "", e.what());
+#ifdef RDKIT_CXX_HAVE_SLN_PARSE
   } catch (const RDKit::SLNParseException &e) {
     return encode("Parse", "", e.what());
+#endif
   } catch (const RDKit::ChemicalReactionParserException &e) {
     return encode("Parse", "", e.what());
   } catch (const Invar::Invariant &e) {
@@ -160,7 +164,12 @@ void raise_for_tests(rust::Str kind_str) {
   } else if (kind == "smiles_parse") {
     throw RDKit::SmilesParse::SmilesParseException(message);
   } else if (kind == "sln_parse") {
+#ifdef RDKIT_CXX_HAVE_SLN_PARSE
     throw RDKit::SLNParseException(message);
+#else
+    // As every SLN wrapper without the parser (sln_parse.cpp).
+    throw ValueErrorException("this RDKit has no SLN parser");
+#endif
   } else if (kind == "reaction") {
     throw RDKit::ChemicalReactionException(message);
   } else if (kind == "reaction_parse") {

@@ -210,19 +210,19 @@ if(TARGET RDKit::EHTLib)
   list(APPEND RDKIT_CXX_RDKIT_TARGETS EHTLib)
 endif()
 
-# conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser; without
-# one, the SLN wrappers refuse every call (sln_parse.cpp).
-if(TARGET RDKit::SLNParse)
-  list(APPEND RDKIT_CXX_RDKIT_TARGETS SLNParse)
-  set_source_files_properties(src/sln_parse.cpp PROPERTIES
-    COMPILE_DEFINITIONS RDKIT_CXX_HAVE_SLN_PARSE)
-endif()
-
 add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
 # The release the wrapper compiles against, which errors.cpp compares with the
 # one loaded. Only that file needs it, so the others' flags stay the same.
 set_source_files_properties(src/errors.cpp PROPERTIES
   COMPILE_DEFINITIONS RDKIT_CXX_RDKIT_VERSION="${rdkit_VERSION}")
+# conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser; without
+# one, the SLN wrappers refuse every call (sln_parse.cpp), and nothing
+# throws the parser's exception (errors.cpp).
+if(TARGET RDKit::SLNParse)
+  list(APPEND RDKIT_CXX_RDKIT_TARGETS SLNParse)
+  set_property(SOURCE src/sln_parse.cpp src/errors.cpp APPEND PROPERTY
+    COMPILE_DEFINITIONS RDKIT_CXX_HAVE_SLN_PARSE)
+endif()
 # GraphMol/CoordGen.h includes coordgen's headers, which RDKit's packages
 # do not install; third_party/coordgen holds the version RDKit builds in.
 target_include_directories(rdkitcxx PRIVATE
