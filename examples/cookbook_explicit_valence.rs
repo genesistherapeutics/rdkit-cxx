@@ -15,11 +15,11 @@
 //! is "explicit" as far as `get_num_explicit_hs` is concerned.
 
 use rdkit_cxx::Result;
-use rdkit_cxx::chem::{ValenceType, mol_from_smiles};
+use rdkit_cxx::chem::mol_from_smiles;
 
 /// An atom's symbol, explicit valence, implicit, explicit, and total
 /// hydrogens.
-type Row = (String, u32, u32, u32, u32);
+type Row = (String, i32, u32, u32, u32);
 
 /// A row for each atom.
 fn hydrogens(smiles: &str) -> Result<Vec<Row>> {
@@ -28,7 +28,7 @@ fn hydrogens(smiles: &str) -> Result<Vec<Row>> {
     for atom in mol.get_atoms() {
         let row = (
             atom.get_symbol()?,
-            atom.get_valence(ValenceType::Explicit)?,
+            atom.get_explicit_valence()?,
             atom.get_num_implicit_hs()?,
             atom.get_num_explicit_hs(),
             atom.get_total_num_hs()?,

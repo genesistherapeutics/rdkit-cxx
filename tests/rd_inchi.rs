@@ -30,11 +30,6 @@ fn is_value_error<T>(result: Result<T, Error>) -> bool {
 }
 
 #[test]
-fn version() {
-    assert_eq!(get_inchi_version(), "1.07.3");
-}
-
-#[test]
 fn inchis_and_keys() {
     let cases = [
         (

@@ -885,22 +885,24 @@ pub fn count_results_with_params(
     Ok(counts)
 }
 
-/// Replaces the results of a data set with random values between their
-/// smallest and largest. Mirrors `DataUtils.RandomizeActivities(dataSet)`.
+/// Mirrors `DataUtils.RandomizeActivities(dataSet)`, which RDKit 2024.09
+/// leaves unfinished ("This part of the code isn't working"): it raises
+/// `NameError` for its undefined `examples`, so this is `Error::Value`
+/// and leaves the data set as it was.
 ///
 /// Errors as [`randomize_activities_with_shuffle`].
 pub fn randomize_activities(data_set: &mut MLDataSet) -> Result<()> {
     randomize_activities_with_shuffle(data_set, false)
 }
 
-/// As [`randomize_activities`]; with `shuffle`, shuffles the results
-/// instead, which keeps the number of each. Mirrors
+/// As [`randomize_activities`]; with `shuffle`, shuffles the results,
+/// which keeps the number of each. Mirrors
 /// `DataUtils.RandomizeActivities(dataSet, shuffle)`, whose `runDetails`
 /// argument, a composite model's run record, is only marked.
 ///
-/// `Error::Value` for a data set with more than one result column, or,
-/// without `shuffle`, no points or a result that is not a number;
-/// `Error::Index` when the data set has fewer rows than points.
+/// `Error::Value` for a data set with more than one result column, or
+/// without `shuffle` (see [`randomize_activities`]); `Error::Index` when
+/// the data set has fewer rows than points.
 pub fn randomize_activities_with_shuffle(data_set: &mut MLDataSet, shuffle: bool) -> Result<()> {
     if data_set.get_n_results() > 1 {
         return Err(Error::Value {
@@ -913,27 +915,12 @@ pub fn randomize_activities_with_shuffle(data_set: &mut MLDataSet, shuffle: bool
         .into_iter()
         .filter_map(|r| r.into_iter().next_back())
         .collect();
-    if shuffle {
-        rd_random::shuffle_with_random(&mut acts, rd_random::random)?;
-    } else {
-        let nums = acts
-            .iter()
-            .map(|a| {
-                a.as_f64().ok_or_else(|| Error::Value {
-                    message: "the results must be numbers".to_owned(),
-                })
-            })
-            .collect::<Result<Vec<f64>>>()?;
-        let empty = || Error::Value {
-            message: "the data set has no results".to_owned(),
-        };
-        let max = nums.iter().copied().reduce(f64::max).ok_or_else(empty)?;
-        let min = nums.iter().copied().reduce(f64::min).ok_or_else(empty)?;
-        let rng = max - min;
-        acts = (0..n_pts)
-            .map(|_| Value::Float(min + rd_random::random() * rng))
-            .collect();
+    if !shuffle {
+        return Err(Error::Value {
+            message: "name 'examples' is not defined".to_owned(),
+        });
     }
+    rd_random::shuffle_with_random(&mut acts, rd_random::random)?;
     for (i, act) in acts.into_iter().enumerate().take(n_pts) {
         let mut tmp = data_set.get(i)?;
         let last = tmp.len() - 1;

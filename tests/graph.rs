@@ -299,11 +299,11 @@ fn path_to_submol() {
     let (submol, outputs) = path_to_submol_with_outputs(&mol, &[1, 2], false).unwrap();
     assert_eq!(mol_to_smiles(&submol).unwrap(), "CCC");
     assert_eq!(outputs.atom_map, BTreeMap::from([(1, 0), (2, 1), (3, 2)]));
-    // Bond indices past the end are skipped.
-    assert_eq!(
-        mol_to_smiles(&rdkit_cxx::chem::path_to_submol(&mol, &[0, 99]).unwrap()).unwrap(),
-        "CC"
-    );
+    // Bond indices past the end are RDKit's range error, as in Python.
+    assert!(matches!(
+        rdkit_cxx::chem::path_to_submol(&mol, &[0, 99]),
+        Err(Error::Runtime { .. })
+    ));
     let query = path_to_submol_with_use_query(&mol, &[0], true).unwrap();
     assert!(query.has_query());
 }
@@ -352,9 +352,7 @@ fn split_by_pdb_with_other_monomer_types() {
     mol.get_atom_with_idx_mut(0)
         .unwrap()
         .set_pdb_residue_info(&info);
-    let mut plain = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
-    plain.set_residue_name("ALA");
-    plain.set_chain_id("A");
+    let plain = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
     mol.get_atom_with_idx_mut(1)
         .unwrap()
         .set_monomer_info(&plain);
@@ -386,60 +384,4 @@ fn renumber() {
             Err(Error::Value { .. })
         ));
     }
-}
-
-#[test]
-fn subsets() {
-    let mol = smiles("CC(=O)O");
-    let (subset, info) =
-        copy_mol_subset_with_outputs(&mol, &[0, 1, 2], &SubsetOptions::default()).unwrap();
-    assert_eq!(mol_to_smiles(&subset).unwrap(), "CC=O");
-    assert_eq!(info.atom_mapping, BTreeMap::from([(0, 0), (1, 1), (2, 2)]));
-    assert_eq!(info.bond_mapping, BTreeMap::from([(0, 0), (1, 1)]));
-    // The path form skips indices past the end.
-    assert_eq!(
-        mol_to_smiles(&copy_mol_subset(&mol, &[0, 1, 99]).unwrap()).unwrap(),
-        "CC"
-    );
-    let bonds = SubsetOptions {
-        method: SubsetMethod::Bonds,
-        ..Default::default()
-    };
-    assert_eq!(
-        mol_to_smiles(&copy_mol_subset_with_params(&mol, &[0], &bonds).unwrap()).unwrap(),
-        "CC"
-    );
-    assert_eq!(
-        mol_to_smiles(&copy_mol_subset_atoms_bonds(&mol, &[0, 1, 3], &[0]).unwrap()).unwrap(),
-        "CC.O"
-    );
-    let (_, info) =
-        copy_mol_subset_atoms_bonds_with_outputs(&mol, &[0, 1], &[0], &SubsetOptions::default())
-            .unwrap();
-    assert_eq!(info.bond_mapping, BTreeMap::from([(0, 0)]));
-    assert!(matches!(
-        copy_mol_subset_atoms_bonds(&mol, &[0, 9], &[]),
-        Err(Error::Index { .. })
-    ));
-    assert!(matches!(
-        copy_mol_subset_atoms_bonds_with_params(&mol, &[0], &[9], &SubsetOptions::default()),
-        Err(Error::Index { .. })
-    ));
-}
-
-#[test]
-fn subset_options_defaults() {
-    // Python's conformerIdx default reads 4294967295, which is -1u.
-    assert_eq!(
-        SubsetOptions::default(),
-        SubsetOptions {
-            sanitize: false,
-            clear_computed_props: false,
-            copy_as_query: false,
-            copy_coordinates: true,
-            conformer_idx: -1,
-            method: SubsetMethod::BondsBetweenAtoms,
-        }
-    );
-    assert_eq!(SubsetInfo::default().atom_mapping, BTreeMap::new());
 }

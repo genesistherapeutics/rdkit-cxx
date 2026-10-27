@@ -420,11 +420,13 @@ fn libraries_and_strategies_move_between_threads() {
     assert_eq!(strategy.type_(), "EvenSamplePairsStrategy");
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo; a
-/// library's reaction and building blocks are molecule pickles, which RDKit
-/// writes with such a type for a plain info Python gave it (U10).
+/// A library's reaction and building blocks are molecule pickles, whose
+/// monomer infos of type PDBRESIDUE RDKit 2024.09's pickler reads as
+/// AtomPDBResidueInfo, with its residue fields, so they cannot give plain
+/// info that type (U10): the building block's info comes back as PDB residue
+/// info, as Python's InitFromString gives it.
 #[test]
-fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
+fn loaded_libraries_read_the_pdb_type_as_pdb_residue_info() {
     let mut amine = smiles("CN");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
@@ -449,7 +451,11 @@ fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
     changed[at] = 1;
     let mut loaded = EnumerateLibrary::default();
     // SAFETY: serialize's bytes with one byte changed inside a molecule
-    // pickle, as RDKit writes them for a molecule whose plain info has the
-    // PDB type; Boost's framing is serialize's.
-    assert!(is_value(unsafe { loaded.init_from_string(&changed) }));
+    // pickle, which RDKit reads with its own checks; Boost's framing is
+    // serialize's.
+    unsafe { loaded.init_from_string(&changed) }.unwrap();
+    let reagents = loaded.get_reagents();
+    let atom = reagents[1][0].get_atom_with_idx(0).unwrap();
+    let info = atom.get_pdb_residue_info().unwrap().unwrap();
+    assert_eq!(info.get_name().unwrap(), "MARK");
 }

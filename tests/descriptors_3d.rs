@@ -6,7 +6,7 @@
 // Ports testGet3DMolDescriptors of RDKit's rdkit/Chem/UnitTestDescriptors.py,
 // with its reference file tests/data/descriptors_multiconf.sdf
 // (rdkit/Chem/test_data), and pins values from Python's
-// rdkit.Chem.Descriptors3D in RDKit 2026.03.6.
+// rdkit.Chem.Descriptors3D in RDKit 2024.09.6.
 
 use std::collections::BTreeMap;
 
@@ -25,8 +25,8 @@ fn assert_close(actual: f64, expected: f64, what: &str) {
     );
 }
 
-/// Python's `Chem.MultiConfMolFromSDF(..., removeHs=False)`: the first
-/// record, with every record's conformer.
+/// The first record, with every record's conformer, as later RDKit's
+/// `Chem.MultiConfMolFromSDF(..., removeHs=False)` reads it.
 fn multi_conf_mol() -> Mol {
     let params = MolFromMolBlockParams {
         remove_hs: false,
@@ -116,14 +116,17 @@ fn calc_mol_descriptors_3d_matches_python() {
     assert_eq!(mol.get_num_conformers(), 10);
     let descs: BTreeMap<&str, f64> = calc_mol_descriptors_3d(&mol).unwrap().into_iter().collect();
     assert!((descs["PMI1"] - 20.9595).abs() <= 1e-4);
+    // RDKit 2024.09's CalcMolDescriptors3D does not pass confId on: every
+    // value is of the default conformer.
     let descs2: BTreeMap<&str, f64> = calc_mol_descriptors_3d_with_conf_id(&mol, 2)
         .unwrap()
         .into_iter()
         .collect();
     for ((name, expected), (_, expected2)) in MULTICONF_DEFAULT.iter().zip(MULTICONF_2) {
         assert_close(descs[*name], *expected, name);
-        assert_close(descs2[*name], expected2, name);
-        assert_ne!(descs[*name], descs2[*name]);
+        assert_eq!(descs2[*name], descs[*name], "{name}");
+        let function = desc_list().into_iter().find(|(n, _)| n == name).unwrap().1;
+        assert_close(function(&mol, 2).unwrap(), expected2, name);
     }
 }
 

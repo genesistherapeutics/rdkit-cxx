@@ -95,7 +95,6 @@ fn params_defaults() {
             allow_charged_fragments: true,
             embed_chiral: true,
             use_atom_map: false,
-            max_iterations: 0,
         }
     );
     assert_eq!(
@@ -108,7 +107,6 @@ fn params_defaults() {
             embed_chiral: true,
             use_atom_map: false,
             use_vdw: false,
-            max_iterations: 0,
         }
     );
 }
@@ -235,17 +233,6 @@ fn bonds_from_coordinates() {
         let mut mol = atoms(ACRYLATE);
         determine_bonds_with_params(&mut mol, &params).unwrap();
         assert_eq!(mol_to_smiles(&mol).unwrap(), "[H]C([H])=C([H])C(=O)[O-]");
-    }
-    // Python raises MaxFindBondOrdersItersExceeded, a RuntimeError.
-    for max_iterations in [1, 2] {
-        let params = DetermineBondsParams {
-            max_iterations,
-            ..anion.clone()
-        };
-        assert!(matches!(
-            determine_bonds_with_params(&mut atoms(ACRYLATE), &params),
-            Err(Error::Runtime { .. })
-        ));
     }
     // A molecule of one atom or none is left as it is.
     let mut one = mol_from_smiles("[Rf]").unwrap();
@@ -456,12 +443,11 @@ fn monomer_info_connect_the_dots_would_misread() {
     // RDKit would read other monomer info as PDB residue info, past its
     // end, whatever its type (U10); the call hides it, and puts it back.
     let mut mol = atoms(BRIDGE);
-    for (i, residue) in [1, 2, 2].into_iter().enumerate() {
+    for i in 0..3 {
         let info = AtomMonomerInfo::new_with_params(
             AtomMonomerType::Other,
             &AtomMonomerInfoParams {
-                res_num: residue,
-                ..Default::default()
+                name: format!("A{i}"),
             },
         )
         .unwrap();
@@ -471,13 +457,13 @@ fn monomer_info_connect_the_dots_would_misread() {
     }
     determine_connectivity(&mut mol).unwrap();
     assert_eq!(bonds(&mol), vec![(0, 1)]);
-    for (i, residue) in [1, 2, 2].into_iter().enumerate() {
+    for i in 0..3 {
         let info = mol
             .get_atom_with_idx(i as u32)
             .unwrap()
             .get_monomer_info()
             .unwrap();
-        assert_eq!(info.get_residue_number(), residue);
+        assert_eq!(info.get_name().unwrap(), format!("A{i}"));
         assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
     }
 }

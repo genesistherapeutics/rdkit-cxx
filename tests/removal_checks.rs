@@ -16,7 +16,6 @@ use rdkit_cxx::chem::rd_depictor::*;
 use rdkit_cxx::chem::rd_deprotect::deprotect_in_place;
 use rdkit_cxx::chem::rd_determine_bonds::determine_connectivity;
 use rdkit_cxx::chem::rd_dist_geom::embed_molecule;
-use rdkit_cxx::chem::rd_enumerate_stereoisomers::StereoisomerEnumerator;
 use rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule;
 use rdkit_cxx::chem::rd_generalized_substruct::create_extended_query_mol;
 use rdkit_cxx::chem::rd_mmpa::fragment_mol;
@@ -290,10 +289,6 @@ fn other_modules_refuse() {
         );
         assert_refused("create_extended_query_mol", create_extended_query_mol(&mol));
         assert_refused("TautomerQuery::new", TautomerQuery::new(&mol));
-        assert_refused(
-            "StereoisomerEnumerator::new",
-            StereoisomerEnumerator::new(&mol),
-        );
         assert_refused(
             "r_group_decompose",
             r_group_decompose(&[smiles("c1ccccc1[*:1]")], std::slice::from_ref(&mol)),

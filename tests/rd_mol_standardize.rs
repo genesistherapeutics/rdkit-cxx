@@ -64,10 +64,10 @@ const CASES: [(&str, [&str; 11]); 9] = [
         "[Na]OC(=O)c1ccccc1",
         [
             "O=C([O-])c1ccccc1.[Na+]",
-            "O=C([O][Na])c1ccccc1",
-            "O=C([O][Na])c1ccccc1",
-            "O=C([O][Na])c1ccccc1",
-            "O=C([O][Na])c1ccccc1",
+            "O=C(O[Na])c1ccccc1",
+            "O=C(O[Na])c1ccccc1",
+            "O=C(O[Na])c1ccccc1",
+            "O=C(O[Na])c1ccccc1",
             "O=C([O-])c1ccccc1.[Na+]",
             "O=C([O-])c1ccccc1",
             "O=C([O-])c1ccccc1.[Na+]",
@@ -266,9 +266,9 @@ fn skipping_the_cleanup() {
     let m = mol("[Na]OC(=O)c1ccccc1");
     let skipped = [
         "O=C([O-])c1ccccc1.[Na+]",
-        "O=C([O][Na])c1ccccc1",
-        "O=C([O][Na])c1ccccc1",
-        "O=C([O][Na])c1ccccc1",
+        "O=C(O[Na])c1ccccc1",
+        "O=C(O[Na])c1ccccc1",
+        "O=C(O[Na])c1ccccc1",
         "O=C([O-])c1ccccc1.[Na+]",
         "O=C([O-])c1ccccc1.[Na+]",
     ];
@@ -1062,10 +1062,10 @@ fn metal_disconnector() {
         (
             "c1ccccc1[Mg]Br",
             [
-                "[Br][Mg][c]1ccccc1",
+                "Br[Mg]c1ccccc1",
                 "Br.[Mg].c1ccccc1",
                 "Br.[Mg].c1ccccc1",
-                "[Br][Mg][c]1ccccc1",
+                "Br[Mg]c1ccccc1",
             ],
         ),
         (
@@ -1105,10 +1105,10 @@ fn metal_disconnector() {
     }
     let mut m = mol("CC[Hg]Cl");
     disconnect_organometallics_in_place(&mut m).unwrap();
-    assert_eq!(smiles(&m), "C[CH2][Hg][Cl]");
+    assert_eq!(smiles(&m), "CC[Hg]Cl");
     let mut m = mol("c1ccccc1[Mg]Br");
     disconnect_organometallics_in_place_with_params(&mut m, &options).unwrap();
-    assert_eq!(smiles(&m), "[Br][Mg][c]1ccccc1");
+    assert_eq!(smiles(&m), "Br[Mg]c1ccccc1");
 
     let mut custom = MetalDisconnector::new();
     custom
@@ -1127,7 +1127,7 @@ fn metal_disconnector() {
     );
     assert_eq!(
         smiles(&default.disconnect(&mol("CC[Hg]Cl")).unwrap()),
-        "C[CH2][Hg][Cl]"
+        "CC[Hg]Cl"
     );
     // A query with no atoms disconnects nothing; one from SMILES works.
     custom.set_metal_nof(&mol_from_smarts("").unwrap()).unwrap();
@@ -1135,7 +1135,7 @@ fn metal_disconnector() {
     let salt = mol("[Na]OC(=O)c1ccccc1");
     assert_eq!(
         smiles(&custom.disconnect(&salt).unwrap()),
-        "O=C([O][Na])c1ccccc1"
+        "O=C(O[Na])c1ccccc1"
     );
     custom.set_metal_nof(&mol("[Na]O")).unwrap();
     assert_eq!(custom.metal_nof().unwrap(), "[Na]-[#8]");
@@ -1219,6 +1219,6 @@ M  END
     );
     assert_eq!(
         smiles(&MetalDisconnector::default().disconnect(&m).unwrap()),
-        "C1=CCC=C1.[*]->[Fe+].[CH2-]CCCC"
+        "*->[Fe+].C1=CCC=C1.[CH2-]CCCC"
     );
 }

@@ -32,13 +32,11 @@ fn defaults() {
     assert_eq!(opts.similarity_threshold, 0.7);
     assert!(opts.complete_aromatic_rings);
     assert!(!opts.ring_matches_ring_only);
-    assert!(!opts.complete_smallest_rings);
     assert!(!opts.exact_connections_match);
     assert!(!opts.single_largest_frag);
     assert_eq!(opts.min_frag_size, -1);
     assert_eq!(opts.max_frag_separation, -1);
     assert!(!opts.all_best_mcess);
-    assert_eq!(opts.max_best_mcess, 10000);
     assert_eq!(opts.timeout, 60);
     assert!(!opts.return_empty_mces);
     assert_eq!(opts.max_bond_match_pairs, 1000);
@@ -110,7 +108,7 @@ fn options() {
     let results = find_mces_with_opts(&ad1, &ad2, &opts).unwrap();
     assert_eq!(
         results[0].smarts_string(),
-        "CNc1:c:c:c(-CC(=O)-NCCCCCCCCCC):c:c:1"
+        "CCCCCCCCCCNC12CC3CC(-C1)-CC(-C2)-C3"
     );
 
     let mut opts = RascalOptions {
@@ -181,24 +179,6 @@ fn options() {
     };
     let results = find_mces_with_opts(&smiles("CC=CC"), &smiles("CCCC"), &opts).unwrap();
     assert_eq!(results[0].smarts_string(), "C~C~C~C");
-}
-
-#[test]
-fn complete_smallest_rings() {
-    // complete_smallest_rings implies complete_aromatic_rings: RDKit reads
-    // ring SMILES only the latter makes, past the end of an empty list.
-    let (a, b) = (smiles("c1ccc2ccccc2c1"), smiles("c1ccccc1.c1ccccc1"));
-    for complete_aromatic_rings in [true, false] {
-        let opts = RascalOptions {
-            similarity_threshold: 0.1,
-            complete_smallest_rings: true,
-            complete_aromatic_rings,
-            ..Default::default()
-        };
-        let results = find_mces_with_opts(&a, &b, &opts).unwrap();
-        assert_eq!(results[0].smarts_string(), "c1:c:c:c:c:c:1.c:c:c:c");
-        assert!(close(results[0].similarity(), 0.71627));
-    }
 }
 
 #[test]

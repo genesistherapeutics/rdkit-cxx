@@ -85,7 +85,8 @@ fn shapes_and_text() {
     };
     d.draw_wavy_line_with_params(&p(10.0, 280.0), &p(200.0, 280.0), BLUE, GREEN, &raw_wavy)
         .unwrap();
-    // The text takes the current color, which the wavy line left blue.
+    // RDKit 2024.09 draws the text black, not in the color the wavy line
+    // left current (blue).
     d.draw_string_with_raw_coords("CH<sub>3</sub>", &p(250.0, 30.0), true)
         .unwrap();
     d.draw_string_aligned_with_raw_coords("label", &p(250.0, 60.0), 1, true)
@@ -100,7 +101,7 @@ fn shapes_and_text() {
             text.matches("#FF0000").count(),
             text.matches("#0000FF").count()
         ),
-        (18, 1, 3, 9)
+        (19, 1, 3, 1)
     );
     assert!(text.contains("d='M 10.0,10.0 L 100.0,100.0'"));
     assert!(text.contains("<path d='M10,280 C10,279.95 21.875,279.95 21.875,280 C21.875"));

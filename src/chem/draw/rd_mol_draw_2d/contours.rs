@@ -34,10 +34,10 @@ pub struct ContourParams {
     /// Extra space around the gaussians' grid, in the molecule's frame.
     pub extra_grid_padding: f64,
     /// The contours' color.
-    pub(crate) contour_colour: DrawColour,
+    pub contour_colour: DrawColour,
     /// The fill's colors: two, from the lowest value to the highest, or
     /// three, for negative values, zero, and positive values.
-    pub(crate) colour_map: Vec<DrawColour>,
+    pub colour_map: Vec<DrawColour>,
     /// Draws the contours as continuous lines rather than segments.
     pub draw_as_lines: bool,
     /// The scale by which RDKit rounds coordinates to join segments into

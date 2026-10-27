@@ -309,15 +309,18 @@ fn writers() {
         reaction_to_smiles_with_params(&rxn, &non_canonical).unwrap(),
         "[C:1](=[O:2])O.[NH3:3]>>[C:1](=[O:2])[N:3]"
     );
-    assert_eq!(reaction_to_cx_smarts(&rxn).unwrap(), AMIDE);
+    assert_eq!(
+        reaction_to_cx_smarts(&rxn).unwrap(),
+        "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3] |atomProp:0.molAtomMapNumber.1:1.molAtomMapNumber.2:3.molAtomMapNumber.3:4.molAtomMapNumber.1:5.molAtomMapNumber.2:6.molAtomMapNumber.3|"
+    );
     assert_eq!(
         reaction_to_cx_smiles(&rxn).unwrap(),
-        "O[C:1]=[O:2].[NH3:3]>>[C:1](=[O:2])[N:3]"
+        "O[C:1]=[O:2].[NH3:3]>>[C:1](=[O:2])[N:3] |atomProp:1.molAtomMapNumber.1:2.molAtomMapNumber.2:3.molAtomMapNumber.3:4.molAtomMapNumber.1:5.molAtomMapNumber.2:6.molAtomMapNumber.3|"
     );
     let labeled = reaction_from_smarts("[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;$|").unwrap();
     assert_eq!(
         reaction_to_cx_smiles(&labeled).unwrap(),
-        "[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;;;$|"
+        "[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;;;$,atomProp:0.molAtomMapNumber.1:1.molAtomMapNumber.2:2.molAtomMapNumber.1:3.molAtomMapNumber.2|"
     );
     assert_eq!(
         reaction_to_smarts(&labeled).unwrap(),
@@ -1281,10 +1284,13 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     (rxn, pkl, name + 8)
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo,
-/// and a reaction pickle's templates are molecule pickles (U10).
+/// RDKit 2024.09's pickler reads a monomer info of type PDBRESIDUE as
+/// AtomPDBResidueInfo, with its residue fields, so a reaction pickle's
+/// templates (molecule pickles) cannot give plain info that type (U10): the
+/// agent's info comes back as PDB residue info, as Python's
+/// ChemicalReaction gives it.
 #[test]
-fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
+fn reaction_pickles_read_the_pdb_type_as_pdb_residue_info() {
     let (_, pkl, at) = marked_reaction_pickle();
     // SAFETY: a pickle RDKit wrote.
     unsafe { ChemicalReaction::from_bin_str(&pkl) }.unwrap();
@@ -1292,14 +1298,16 @@ fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
     unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)) }.unwrap();
     let mut changed = pkl.clone();
     changed[at] = 1;
-    assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
-        unsafe { ChemicalReaction::from_bin_str(&changed) },
-        Err(Error::Value { .. })
-    ));
-    assert!(matches!(
+    for rxn in [
+        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which
+        // RDKit reads with its own checks.
+        unsafe { ChemicalReaction::from_bin_str(&changed) }.unwrap(),
         // SAFETY: as above.
-        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) },
-        Err(Error::Value { .. })
-    ));
+        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) }.unwrap(),
+    ] {
+        let agent = rxn.get_agent_template(0).unwrap();
+        let atom = agent.get_atom_with_idx(0).unwrap();
+        let info = atom.get_pdb_residue_info().unwrap().unwrap();
+        assert_eq!(info.get_name().unwrap(), "MARK");
+    }
 }

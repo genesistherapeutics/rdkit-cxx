@@ -50,8 +50,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     write_image("stereo_annotations_legacy.svg", &svg)?;
     assert_eq!(cip_codes(&m1)?, label(&[(3, "R")]));
     assert_eq!(cip_codes(&m2)?, label(&[]));
-    // One CIP_Code element for each character of "(R)".
-    assert_eq!(count_class(&svg, "CIP_Code"), 3);
+    // One note element for each character of "(R)": RDKit 2024.09 draws
+    // CIP labels as atom notes.
+    assert_eq!(count_class(&svg, "note"), 3);
 
     // The new stereochemistry code (2020.09) gives more accurate labels.
     assign_cip_labels(&mut m1)?;
@@ -62,6 +63,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(cip_codes(&m1)?, label(&[(3, "S")]));
     assert_eq!(cip_codes(&m2)?, label(&[(1, "r"), (4, "r")]));
     // "(S)", "(r)", and "(r)".
-    assert_eq!(count_class(&svg, "CIP_Code"), 9);
+    assert_eq!(count_class(&svg, "note"), 9);
     Ok(())
 }

@@ -76,6 +76,10 @@ pub fn get_nodes_down_to_centroids(cluster: &mut Cluster) -> Vec<&Cluster> {
 /// reaches 1e24. Each point's data is its index into `dists`. Mirrors
 /// `ClusterUtils.FindClusterCentroidFromDists`.
 ///
+/// Python's raises `TypeError` in RDKit 2024.09.6 for a cluster of more
+/// than one point (it indexes `dists` with a float); this computes what it
+/// means to.
+///
 /// `Error::Value` for a point whose data is not a whole number from zero up
 /// (Python indexes from the end for negative numbers, and fails for others);
 /// `Error::Index` for a point past the end of `dists`.

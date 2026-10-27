@@ -131,7 +131,7 @@ fn tanimoto_guards() {
     // needed.
     assert_eq!(
         get_tanimoto_sim_mat(&[ebv(0, &[]), ebv(0, &[])]).unwrap(),
-        [0.0]
+        [1.0]
     );
     // Folding an unfolded fingerprint (2^32 - 1 bits) computes its size in
     // int; comparing two of them folds nothing.

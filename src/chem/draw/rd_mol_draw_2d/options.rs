@@ -87,7 +87,7 @@ pub struct MolDrawOptions {
     /// size.
     pub additional_atom_label_padding: f64,
     /// The color of annotations.
-    pub(crate) annotation_colour: DrawColour,
+    pub annotation_colour: DrawColour,
     /// The size of annotation fonts relative to atom labels.
     pub annotation_font_scale: f64,
     /// Always highlights atoms with circles rather than ellipses around
@@ -98,17 +98,17 @@ pub struct MolDrawOptions {
     /// Replacement labels for atoms, by index.
     pub atom_labels: BTreeMap<u32, String>,
     /// The color of atom indices and notes.
-    pub(crate) atom_note_colour: DrawColour,
+    pub atom_note_colour: DrawColour,
     /// Groups of atoms to outline.
     pub atom_regions: Vec<Vec<u32>>,
     /// The background color.
-    pub(crate) background_colour: DrawColour,
+    pub background_colour: DrawColour,
     /// The relative size of fonts; nonpositive uses RDKit's 0.6.
     pub base_font_size: f64,
     /// The line width for bonds, in pixels.
     pub bond_line_width: f64,
     /// The color of bond indices and notes.
-    pub(crate) bond_note_colour: DrawColour,
+    pub bond_note_colour: DrawColour,
     /// Puts brackets around atom lists in query atoms.
     pub brackets_around_atom_lists: bool,
     /// Moves each molecule's center to the origin before drawing.
@@ -148,7 +148,7 @@ pub struct MolDrawOptions {
     /// What the default bond line width is multiplied by for highlights.
     pub highlight_bond_width_multiplier: i32,
     /// The default highlight color.
-    pub(crate) highlight_colour: DrawColour,
+    pub highlight_colour: DrawColour,
     /// The default radius of highlight circles, in molecule coordinates.
     pub highlight_radius: f64,
     /// Includes atom tags in the output.
@@ -164,7 +164,7 @@ pub struct MolDrawOptions {
     /// Adds isotope labels to atoms that are not dummies.
     pub isotope_labels: bool,
     /// The color of legends.
-    pub(crate) legend_colour: DrawColour,
+    pub legend_colour: DrawColour,
     /// The legend's font size, in pixels.
     pub legend_font_size: i32,
     /// The fraction of a panel the legend takes.
@@ -186,7 +186,7 @@ pub struct MolDrawOptions {
     /// before drawing them.
     pub prepare_mols_before_drawing: bool,
     /// The color of query bonds.
-    pub(crate) query_colour: DrawColour,
+    pub query_colour: DrawColour,
     /// The fraction of empty space around each component of a reaction
     /// (`componentPadding` in C++).
     pub reagent_padding: f64,
@@ -209,7 +209,7 @@ pub struct MolDrawOptions {
     /// Draws highlighted heteroatoms in their usual colors.
     pub standard_colours_for_highlighted_atoms: bool,
     /// The color of symbols and arrows in reactions.
-    pub(crate) symbol_colour: DrawColour,
+    pub symbol_colour: DrawColour,
     /// Draws double bonds with unspecified stereo crossed and possible
     /// stereocenters with unspecified stereo with wavy bonds.
     pub unspecified_stereo_is_unknown: bool,
@@ -221,13 +221,13 @@ pub struct MolDrawOptions {
     /// The radius of atoms in variable attachment points.
     pub variable_atom_radius: f64,
     /// The color of variable attachment points.
-    pub(crate) variable_attachment_colour: DrawColour,
+    pub variable_attachment_colour: DrawColour,
     /// What the bond width is multiplied by for variable attachment points.
     pub variable_bond_width_multiplier: i32,
     /// The colors of atoms and bonds by atomic number, -1 for the default
     /// (`atomColourPalette` in C++; Python writes it with `setAtomPalette`
-    /// and `updateAtomPalette`, and RDKit 2024.09 has no getter).
-    pub(crate) atom_colour_palette: BTreeMap<i32, DrawColour>,
+    /// and `updateAtomPalette`, and RDKit 2024.09's has no getter).
+    pub atom_colour_palette: BTreeMap<i32, DrawColour>,
 }
 
 /// The defaults of a new C++ `MolDrawOptions` (A7).
@@ -248,12 +248,12 @@ macro_rules! colour_accessors {
     ($($field:ident, $get:ident, $set:ident, $python:literal;)*) => {
         impl MolDrawOptions {
             $(
-                #[doc = concat!("Mirrors `MolDrawOptions.get", $python, "`.")]
+                #[doc = concat!("The `", stringify!($field), "` field. Mirrors `MolDrawOptions.get", $python, "`.")]
                 pub fn $get(&self) -> DrawColour {
                     self.$field
                 }
 
-                #[doc = concat!("Mirrors `MolDrawOptions.set", $python, "`; `Error::Value` unless every component is from 0 to 1.")]
+                #[doc = concat!("Sets the `", stringify!($field), "` field. Mirrors `MolDrawOptions.set", $python, "`; `Error::Value` unless every component is from 0 to 1.")]
                 pub fn $set(&mut self, tpl: DrawColour) -> Result<()> {
                     tpl.check()?;
                     self.$field = tpl;

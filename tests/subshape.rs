@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Subshape in RDKit 2026.03.6 (built with
+// Values from Python's rdkit.Chem.Subshape in RDKit 2024.09.6 (built with
 // Eigen3, as conda-forge's is), and the tests of UnitTestSubshape.py. The
 // alignments' counts are UnitTestSubshape.py's; the shapes' points, moments,
 // and distances come from embedding and eigenvectors, so they are compared
@@ -15,7 +15,7 @@ use rdkit_cxx::chem::subshape::builder_utils::*;
 use rdkit_cxx::chem::subshape::subshape_aligner::*;
 use rdkit_cxx::chem::subshape::subshape_builder::*;
 use rdkit_cxx::chem::subshape::subshape_objects::*;
-use rdkit_cxx::chem::{AddHsParameters, Mol, SDMolSupplier, add_hs_with_params};
+use rdkit_cxx::chem::{AddHsParams, Mol, SDMolSupplier, add_hs_with_params};
 use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 fn molecules() -> Vec<Mol> {
@@ -25,7 +25,7 @@ fn molecules() -> Vec<Mol> {
     );
     let mut suppl = SDMolSupplier::new(path).unwrap();
     let n = suppl.len().unwrap();
-    let params = AddHsParameters {
+    let params = AddHsParams {
         add_coords: true,
         ..Default::default()
     };

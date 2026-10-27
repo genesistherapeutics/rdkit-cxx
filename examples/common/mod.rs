@@ -8,36 +8,100 @@
 //!
 //! Jupyter shows a molecule as a PNG or an SVG, by a display setting
 //! (`IPythonConsole.ipython_useSVG`). The examples draw SVGs, whose content
-//! they can check: each atom and bond index or atom note is a
-//! `class='note'` element for each character, each CIP label character a
-//! `class='CIP_Code'` element, and each atom label character a
-//! `class='atom-N'` element.
+//! they can check: each atom and bond index, atom note, or CIP label (which
+//! RDKit 2024.09 draws as a note) is a `class='note'` element for each
+//! character, and each atom label character a `class='atom-N'` element.
 
 #![allow(dead_code)]
 
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
-use rdkit_cxx::Result;
 use rdkit_cxx::chem::Mol;
-use rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDrawOptions;
-use rdkit_cxx::chem::draw::{MolToSVGParams, mol_to_svg_with_params};
+use rdkit_cxx::chem::draw::rd_mol_draw_2d::{
+    DrawMoleculeParams, MolDraw2DSVG, MolDrawOptions, PrepareMolForDrawingParams,
+    prepare_mol_for_drawing_with_params,
+};
+use rdkit_cxx::chem::draw::should_kekulize;
+use rdkit_cxx::rd_base::BlockLogs;
+use rdkit_cxx::{Error, Result};
 
 /// The size Jupyter draws molecules at, unless a recipe sets it. Mirrors
 /// `IPythonConsole.molSize`.
 pub const MOL_SIZE: (i32, i32) = (450, 150);
 
-/// How Jupyter shows a molecule: `Draw.MolToSVG` at `size`, with the
+/// How Jupyter shows a molecule: `Draw._moltoSVG` at `size`, with the
 /// console's `drawOptions`. Mirrors `IPythonConsole._toSVG`.
 pub fn show(mol: &Mol, size: (i32, i32), options: &MolDrawOptions) -> Result<String> {
-    mol_to_svg_with_params(
-        mol,
-        &MolToSVGParams {
-            size,
-            draw_options: Some(options.clone()),
+    show_with_highlights(mol, size, options, &[])
+}
+
+/// `show` with the atoms the console highlights (`mol.__sssAtoms`, which
+/// RDKit 2024.09's console fills with the atoms of every substructure
+/// match), and the bonds between them, as `_toSVG` draws them: RDKit
+/// 2024.09's `Draw._moltoSVG`, at the rdMolDraw2D level.
+pub fn show_with_highlights(
+    mol: &Mol,
+    size: (i32, i32),
+    options: &MolDrawOptions,
+    highlight_atoms: &[u32],
+) -> Result<String> {
+    // Python updates the caller's molecule's property cache when atom 0 has
+    // no explicit valence; this updates a copy.
+    let mut mol = mol.clone();
+    let computed = {
+        let _block = BlockLogs::default();
+        mol.get_atom_with_idx(0)
+            .and_then(|atom| atom.get_explicit_valence())
+            .is_ok()
+    };
+    if !computed {
+        mol.update_property_cache_with_strict(false)?;
+    }
+    let kekulize = should_kekulize(&mol, true);
+    if options.prepare_mols_before_drawing {
+        let prepared = {
+            let _block = BlockLogs::default();
+            prepare_mol_for_drawing_with_params(
+                &mol,
+                &PrepareMolForDrawingParams {
+                    kekulize,
+                    ..Default::default()
+                },
+            )
+        };
+        mol = match prepared {
+            // Python catches the ValueError of a molecule that will not
+            // kekulize, and draws it aromatic.
+            Err(
+                Error::Kekulize { .. }
+                | Error::AtomKekulize { .. }
+                | Error::MolSanitize { .. }
+                | Error::AtomValence { .. }
+                | Error::Value { .. },
+            ) => prepare_mol_for_drawing_with_params(
+                &mol,
+                &PrepareMolForDrawingParams {
+                    kekulize: false,
+                    ..Default::default()
+                },
+            )?,
+            prepared => prepared?,
+        };
+    }
+    let mut drawer = MolDraw2DSVG::new(size.0, size.1)?;
+    let mut options = options.clone();
+    options.prepare_mols_before_drawing = false;
+    drawer.set_draw_options(&options)?;
+    drawer.draw_molecule_with_params(
+        &mol,
+        &DrawMoleculeParams {
+            highlight_atoms: highlight_atoms.to_vec(),
             ..Default::default()
         },
-    )
+    )?;
+    drawer.finish_drawing();
+    drawer.get_drawing_text()
 }
 
 /// Writes an image under `target/cookbook`, returning its path.

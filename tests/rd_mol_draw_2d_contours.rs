@@ -95,17 +95,15 @@ fn phenol() -> (Mol, Vec<Point2D>, Vec<f64>, Vec<f64>) {
 fn contour_params_defaults_match_python() {
     let ps = ContourParams::default();
     assert!(ps.set_scale && ps.dash_negative && !ps.fill_grid && ps.draw_as_lines);
-    assert!(!ps.use_fill_threshold && ps.fill_threshold_is_fraction);
     assert_eq!(
         (
             ps.grid_resolution,
             ps.contour_width,
             ps.extra_grid_padding,
             ps.coord_scale_for_quantization,
-            ps.isoval_scale_for_quantization,
-            ps.fill_threshold
+            ps.isoval_scale_for_quantization
         ),
-        (0.15, 1.0, 0.0, 1000.0, 1e6, 0.01)
+        (0.15, 1.0, 0.0, 1000.0, 1e6)
     );
     assert_eq!(ps.contour_colour, DrawColour::rgba(0.5, 0.5, 0.5, 0.5));
     // RDKit's defaults are doubles, which Python reads as they are; only

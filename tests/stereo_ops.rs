@@ -200,7 +200,6 @@ fn enhanced_stereo() {
     let groups = flagged.get_stereo_groups();
     assert_eq!(groups.len(), 1);
     assert_eq!(groups[0].get_group_type(), StereoGroupType::StereoAnd);
-    cleanup_stereo_groups(&mut flagged).unwrap();
 }
 
 #[test]
@@ -216,7 +215,6 @@ fn param_defaults() {
         canon.output_absolute_groups,
         StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist
     );
-    assert_eq!(canon.max_stereo_groups, 12);
     let labels = AddStereoAnnotationsParams::default();
     assert_eq!(labels.abs_label, "abs ({cip})");
     assert_eq!(labels.or_label, "or{id}");
@@ -236,7 +234,7 @@ fn param_defaults() {
         [1000, 10000, 100000, 1000000]
     );
     let reapply = ReapplyMolBlockWedgingParams::default();
-    assert!(reapply.all_bond_types && !reapply.verify);
+    assert!(reapply.all_bond_types);
     let expand = ExpandAttachmentPointsParams::default();
     assert!(expand.add_as_queries && expand.add_coords);
 }

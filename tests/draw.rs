@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The ported rdkit.Chem.Draw functions against Python's in RDKit 2026.03.6,
+// The ported rdkit.Chem.Draw functions against Python's in RDKit 2024.09.6,
 // whose SVGs they reproduce byte for byte (by SHA-1). PNGs come from Cairo
 // and zlib, whose bytes vary by build, so only their sizes are checked.
 
@@ -16,8 +16,7 @@ use rdkit_cxx::chem::rd_fingerprint_generator::{
     get_morgan_generator_with_params,
 };
 use rdkit_cxx::chem::{
-    Mol, RDKFingerprintParams, mol_from_png_string, mol_from_smarts, mol_from_smiles,
-    rdk_fingerprint_with_outputs,
+    Mol, RDKFingerprintParams, mol_from_png_string, mol_from_smiles, rdk_fingerprint_with_outputs,
 };
 
 fn sha1(text: &str) -> String {
@@ -52,38 +51,11 @@ fn grid_mols() -> Vec<Mol> {
 }
 
 #[test]
-fn mol_to_svg_matches_python() {
-    let m = aspirin();
-    assert_eq!(
-        sha1(&mol_to_svg(&m).unwrap()),
-        "91e470f6aa690aeb25fe9ae4b9ad737d50e9cd22"
-    );
-    let highlighted = MolToSVGParams {
-        size: (250, 200),
-        highlight_atoms: vec![3, 4, 5],
-        legend: "aspirin".to_owned(),
-        ..Default::default()
-    };
-    assert_eq!(
-        sha1(&mol_to_svg_with_params(&m, &highlighted).unwrap()),
-        "552df835bbac8dd19b158b5d3e7a7eae2250b41c"
-    );
-    let with_options = MolToSVGParams {
-        draw_options: Some(atom_indices()),
-        ..Default::default()
-    };
-    assert_eq!(
-        sha1(&mol_to_svg_with_params(&m, &with_options).unwrap()),
-        "cd33dc765de68029fa82cafb3836e1ec2d07cdc3"
-    );
-}
-
-#[test]
 fn mols_to_grid_image_matches_python() {
     let ms = grid_mols();
     assert_eq!(
         sha1(&mols_to_grid_image_use_svg(&ms).unwrap()),
-        "545d04dce8891ad8de975efb5a6a30e624942157"
+        "d85ed4bdd288c70f883952fcc720ec9c83c801f1"
     );
     // A legend too many is cut, as in Python.
     let params = MolsToGridImageParams {
@@ -96,7 +68,7 @@ fn mols_to_grid_image_matches_python() {
     };
     assert_eq!(
         sha1(&mols_to_grid_image_use_svg_with_params(&ms, &params).unwrap()),
-        "473bd83698759e9613f19f200889447fab63b833"
+        "03ed0569a3151354ee29a31200e0dcd52ed46658"
     );
     assert_eq!(png_size(&mols_to_grid_image(&ms).unwrap()), (600, 400));
     let no_rows = MolsToGridImageParams {
@@ -104,36 +76,6 @@ fn mols_to_grid_image_matches_python() {
         ..Default::default()
     };
     assert!(mols_to_grid_image_use_svg_with_params(&ms, &no_rows).is_err());
-}
-
-#[test]
-fn draw_mol_with_matches_matches_python() {
-    let m = aspirin();
-    let q = mol_from_smarts("C(=O)O").unwrap();
-    let matches = m.get_substruct_matches(&q).unwrap();
-    assert_eq!(matches, [[3, 4, 5], [8, 9, 7]]);
-    assert_eq!(
-        sha1(&draw_mol_with_matches_as_svg(&m, &matches).unwrap()),
-        "8e90eb551fce647f35ebed7bd00bd49f39a70bf4"
-    );
-    let params = DrawMolWithMatchesParams {
-        qry: Some(q),
-        colors: Some(vec![
-            DrawColour::new(1.0, 0.0, 0.0),
-            DrawColour::new(0.0, 0.0, 1.0),
-        ]),
-        ..Default::default()
-    };
-    assert_eq!(
-        sha1(&draw_mol_with_matches_as_svg_with_params(&m, &matches, &params).unwrap()),
-        "eb6bac7a96db96112c1c3837312afc669552d322"
-    );
-    let no_colors = DrawMolWithMatchesParams {
-        colors: Some(Vec::new()),
-        ..Default::default()
-    };
-    assert!(draw_mol_with_matches_as_svg_with_params(&m, &matches, &no_colors).is_err());
-    assert!(draw_mol_with_matches_as_svg_with_params(&m, &[], &no_colors).is_ok());
 }
 
 #[test]
@@ -184,7 +126,7 @@ fn draw_morgan_matches_python() {
     assert_eq!(bi[&872], [(6, 2)]);
     let svg1 = draw_morgan_bit(&m, 872, &bi).unwrap();
     assert_eq!(svg1, draw_morgan_env(&m, 6, 2).unwrap());
-    assert_eq!(sha1(&svg1), "4c91713afb5df53a558a983fab1336f2d739318b");
+    assert_eq!(sha1(&svg1), "dbbbe7cb4907b1fe4cd89c9acd5d7617bf489e38");
     for colour in ["#CCCCCC", "#E5E533", "#9999E5"] {
         assert!(svg1.contains(&format!("style='fill:{colour};")));
     }
@@ -200,7 +142,7 @@ fn draw_morgan_matches_python() {
         svg1,
         draw_morgan_env_with_params(&m, 6, 2, &no_center.env).unwrap()
     );
-    assert_eq!(sha1(&svg1), "7b55f4c2546f49ec5670b7d87e6c19abf5b2cd93");
+    assert_eq!(sha1(&svg1), "7337584a1a8d6aef37e43fdebef906dc660b06d0");
     assert!(!svg1.contains("style='fill:#9999E5;"));
     assert!(matches!(
         draw_morgan_bit(&m, 32, &bi),
@@ -216,7 +158,7 @@ fn draw_morgan_matches_python() {
     ));
     assert_eq!(
         sha1(&draw_morgan_env(&m, 0, 0).unwrap()),
-        "369e0a9ccff3c67d97e7e757a2fe0d5b6eb53a78"
+        "45c4e7817755409dfd3a59286f5a8729ee6434ac"
     );
     // An environment of no bonds is drawn from its SMILES.
     let salt = mol_from_smiles("[Na+].[Cl-]").unwrap();
@@ -234,11 +176,11 @@ fn draw_morgan_matches_python() {
             &draw_morgan_envs_with_params(&[(&m, 0, 0), (&m, 6, 2), (&m, 7, 1)], &envs_params)
                 .unwrap()
         ),
-        "ff74b0bcc2d1240207e1b9d836bee170369c66cf"
+        "b179f389c1f29a6729a5455746ae91822e895418"
     );
     assert_eq!(
         sha1(&draw_morgan_bits(&[(&m, 872, &bi, 0), (&m, 872, &bi, 0)]).unwrap()),
-        "89208c3abbcb8214bf9c90f834fb9e2babb04e88"
+        "fc02204f5c56753b48b714f3fe8ca3f3d6f86d97"
     );
     // Github #3796: the PNG carries no molecule metadata.
     let png = draw_morgan_bit_as_png(&m, 872, &bi).unwrap();
@@ -259,7 +201,7 @@ fn draw_rdkit_matches_python() {
     assert_eq!(bi[&1553], [vec![0, 1, 9, 5, 4], vec![2, 3, 4, 9, 5]]);
     let svg1 = draw_rdkit_bit(&m, 1553, &bi).unwrap();
     assert_eq!(svg1, draw_rdkit_env(&m, &bi[&1553][0]).unwrap());
-    assert_eq!(sha1(&svg1), "e7d08f5214ef9855a5bd7296651860d020ca6543");
+    assert_eq!(sha1(&svg1), "302aa63aeba987936cffd3dea00657ed455e2ef4");
     assert!(svg1.contains("style='fill:#E5E533;"));
     assert!(!svg1.contains("style='fill:#CCCCCC;"));
     assert!(!svg1.contains("style='fill:#9999E5;"));
@@ -273,7 +215,7 @@ fn draw_rdkit_matches_python() {
     };
     assert_eq!(
         sha1(&draw_rdkit_env_with_params(&m, &[5, 6, 7], &non_aromatic).unwrap()),
-        "392bab8cfa6710e8ba0006c2cb80aecac187df44"
+        "9d97f001eed0ce3fe8ea9558667b05edd82516d7"
     );
     let legends = DrawRDKitEnvsParams {
         legends: Some(["x", "y"].map(str::to_owned).to_vec()),
@@ -283,11 +225,11 @@ fn draw_rdkit_matches_python() {
         sha1(
             &draw_rdkit_envs_with_params(&[(&m, &bi[&1553][0]), (&m, &[5, 6])], &legends).unwrap()
         ),
-        "c221de23347abe4f2ca8d3980bc1478d4efb69f2"
+        "4149d925295e9108c253200e30b7bc13c3d3f832"
     );
     assert_eq!(
         sha1(&draw_rdkit_bits(&[(&m, 1553, &bi, 0)]).unwrap()),
-        "d71a63e31d9f82d07d240c6bf5586d67f8546c33"
+        "3dd67401417ee68f1f2b258349ee59c8ab157b05"
     );
     let png = draw_rdkit_bit_as_png(&m, 1553, &bi).unwrap();
     assert_eq!(png_size(&png), (150, 150));
@@ -300,7 +242,7 @@ fn debug_draw_matches_python() {
     let m = aspirin();
     assert_eq!(
         sha1(&debug_draw(&m).unwrap()),
-        "7e8cbe59c15a6de6d001225dc4f15652ce75e746"
+        "ae913444745c99203b8e438e0b2b72b886566ea9"
     );
     let params = DebugDrawParams {
         size: (300, 250),
@@ -311,7 +253,7 @@ fn debug_draw_matches_python() {
     };
     assert_eq!(
         sha1(&debug_draw_with_params(&m, &params).unwrap()),
-        "0337fde4bd0dcb70b4531d11a2de6b8cac48ce67"
+        "8084fbbd150035ec9c1f4f64621c7f60c2d7bbda"
     );
     // The caller's molecule gets no notes.
     assert!(!m.get_atom_with_idx(0).unwrap().has_prop("atomNote"));
@@ -321,7 +263,7 @@ fn debug_draw_matches_python() {
     drawer.finish_drawing();
     assert_eq!(
         sha1(&drawer.get_drawing_text().unwrap()),
-        "7e8cbe59c15a6de6d001225dc4f15652ce75e746"
+        "ae913444745c99203b8e438e0b2b72b886566ea9"
     );
 }
 
@@ -331,7 +273,7 @@ fn reaction_to_image_matches_python() {
     let rxn = reaction_from_smarts("[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]").unwrap();
     assert_eq!(
         sha1(&reaction_to_image_use_svg(&rxn).unwrap()),
-        "2e9a0591896d3f927c8761191f17f73f42718091"
+        "e731a35aea0c11aac29c493096937eb8e344c4a3"
     );
     let params = ReactionToImageParams {
         sub_img_size: (150, 120),
@@ -340,7 +282,7 @@ fn reaction_to_image_matches_python() {
     };
     assert_eq!(
         sha1(&reaction_to_image_use_svg_with_params(&rxn, &params).unwrap()),
-        "43325d1a274254a3055f4bd485e201855f0e7a90"
+        "bccea2d1667bd5ee9ee823f9b9a2d5fbe1762d12"
     );
     assert_eq!(png_size(&reaction_to_image(&rxn).unwrap()), (800, 200));
     let big = reaction_from_smarts(
@@ -393,7 +335,7 @@ fn mols_matrix_to_grid_image_matches_python() {
     };
     assert_eq!(
         sha1(&mols_matrix_to_grid_image_use_svg(&mm).unwrap()),
-        "cefbc52fbf428de88f5c9829155b44cdcb2da104"
+        "de0b052ff7307e3b5e955612f939286074b1e703"
     );
     let all = MolsMatrixToGridImageParams {
         sub_img_size: (150, 150),
@@ -404,7 +346,7 @@ fn mols_matrix_to_grid_image_matches_python() {
     };
     assert_eq!(
         sha1(&mols_matrix_to_grid_image_use_svg_with_params(&mm, &all).unwrap()),
-        "56ba9ff273e9d53c57f92167b18643d233b797a8"
+        "f366110973a109dd6ea10bbe8ec882d98a380b11"
     );
     let opts = MolsMatrixToGridImageParams {
         legends_matrix: Some(legends.clone()),
@@ -413,7 +355,7 @@ fn mols_matrix_to_grid_image_matches_python() {
     };
     assert_eq!(
         sha1(&mols_matrix_to_grid_image_use_svg_with_params(&mm, &opts).unwrap()),
-        "3418c9c8c778602e3b9202d02570912635ff2c01"
+        "b71d8ff5df0cfd1ec4cd1c7f9f1827ab750fa8b3"
     );
     assert_eq!(
         png_size(&mols_matrix_to_grid_image(&mm).unwrap()),
@@ -464,7 +406,7 @@ fn mol_to_file_matches_python() {
     mol_to_file(&m, &svg).unwrap();
     assert_eq!(
         sha1(&std::fs::read_to_string(&svg).unwrap()),
-        "91e470f6aa690aeb25fe9ae4b9ad737d50e9cd22"
+        "e3b4e7d0a39afd68e78398925c285cd36b73ee2f"
     );
     let params = MolToFileParams {
         size: (200, 180),
@@ -475,7 +417,7 @@ fn mol_to_file_matches_python() {
     mol_to_file_with_params(&m, &svg, &params).unwrap();
     assert_eq!(
         sha1(&std::fs::read_to_string(&svg).unwrap()),
-        "6349cd5e23c7515e9f4c04cfac3b093b5efc22f4"
+        "0a9a12767d45d5a36eac4bed9bde8af45df35116"
     );
     let png = dir.join("m.png");
     mol_to_file(&m, &png).unwrap();
@@ -514,15 +456,11 @@ fn set_comic_mode_sets_the_comic_font() {
         opts.font_file
     );
     // RDKit draws with the font.
-    let svg = mol_to_svg_with_params(
-        &aspirin(),
-        &MolToSVGParams {
-            draw_options: Some(opts),
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    assert!(svg.contains("<svg"));
+    let mut drawer = MolDraw2DSVG::new(300, 300).unwrap();
+    drawer.set_draw_options(&opts).unwrap();
+    drawer.draw_molecule(&aspirin()).unwrap();
+    drawer.finish_drawing();
+    assert!(drawer.get_drawing_text().unwrap().contains("<svg"));
 }
 
 #[test]

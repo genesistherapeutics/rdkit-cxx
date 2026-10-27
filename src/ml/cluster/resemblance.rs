@@ -124,6 +124,9 @@ pub fn find_min_val_in_list_with_min_idx(
 /// `   ---    ` on and below it, one line per row. Mirrors
 /// `Resemblance.ShowMetricMat`, which prints the text this returns.
 ///
+/// Python's raises `TypeError` in RDKit 2024.09.6 for more than one object
+/// (it indexes the matrix with a float); this computes what it means to.
+///
 /// `Error::Value` as [`find_min_val_in_list`].
 pub fn show_metric_mat(metric_mat: &[f64], n_objs: usize) -> Result<String> {
     check_length(metric_mat, n_objs)?;

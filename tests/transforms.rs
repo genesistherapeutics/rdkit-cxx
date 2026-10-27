@@ -273,7 +273,7 @@ fn fragment_bonds() {
     ));
     assert!(matches!(
         fragment_on_bonds(&mol, &[1, 1]),
-        Err(Error::Value { .. })
+        Err(Error::Runtime { .. })
     ));
     assert!(matches!(
         fragment_on_bonds(&mol, &[3]),
@@ -391,10 +391,12 @@ fn molzip_pairs() {
         ),
         "CN"
     );
-    let linker = molzip(&smiles("[*:1][*:2]"), &smiles("C[*:1].N[*:2]"))
-        .unwrap()
-        .unwrap();
-    assert_eq!(to_smiles(&linker), "CN");
+    // RDKit 2024.09 cannot zip a linker of dummies alone: Python raises
+    // RDKit's precondition ("no owner").
+    assert!(matches!(
+        molzip(&smiles("[*:1][*:2]"), &smiles("C[*:1].N[*:2]")),
+        Err(Error::Runtime { .. })
+    ));
     assert_eq!(
         MolzipParams::default(),
         MolzipParams {
@@ -402,7 +404,6 @@ fn molzip_pairs() {
             atom_symbols: vec![],
             enforce_valence_rules: true,
             generate_coordinates: false,
-            align_coordinates: false,
         }
     );
 }

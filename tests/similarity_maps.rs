@@ -4,17 +4,12 @@
 // license that can be found in the LICENSE file.
 
 // The ported rdkit.Chem.Draw.SimilarityMaps against Python's in RDKit
-// 2026.03.6, whose SVGs it reproduces byte for byte (by SHA-1), after
-// UnitTestSimilarityMaps.py. Python's tests of the atom-pair, torsion, and
-// Morgan fingerprint functions, which are not ported, are ported with the
-// RDKit fingerprint and a Morgan generator.
+// 2024.09.6, whose SVGs it reproduces byte for byte (by SHA-1), after
+// UnitTestSimilarityMaps.py.
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::draw::rd_mol_draw_2d::{DrawColour, MolDraw2DSVG};
 use rdkit_cxx::chem::draw::similarity_maps::*;
-use rdkit_cxx::chem::rd_fingerprint_generator::{
-    FingerprintGenerator64, GetMorganGeneratorParams, get_morgan_generator_with_params,
-};
 use rdkit_cxx::chem::{Mol, mol_from_smiles};
 use rdkit_cxx::data_structs::{
     ExplicitBitVect, dice_similarity, dice_similarity_sparse_int_vect, tanimoto_similarity,
@@ -66,14 +61,6 @@ fn rdk(m: &Mol, atom_id: Option<u32>) -> rdkit_cxx::Result<ExplicitBitVect> {
     )
 }
 
-fn morgan2() -> FingerprintGenerator64 {
-    get_morgan_generator_with_params(&GetMorganGeneratorParams {
-        radius: 2,
-        ..Default::default()
-    })
-    .unwrap()
-}
-
 fn assert_close(actual: &[f64], expected: &[f64]) {
     assert_eq!(actual.len(), expected.len());
     for (a, e) in actual.iter().zip(expected) {
@@ -106,37 +93,6 @@ fn atomic_weights_for_fingerprint_match_python() {
         rdk(&benzene(), None).unwrap(),
         get_rdk_fingerprint(&benzene()).unwrap()
     );
-}
-
-#[test]
-fn atomic_weights_for_fingerprint_generator_match_python() {
-    let fpg = morgan2();
-    let weights =
-        get_atomic_weights_for_fingerprint_generator(&benzene(), &pyridine(), &fpg).unwrap();
-    assert_close(&weights, &[0.5, 0.5, 0.5, -0.5, 0.5, 0.5]);
-    let weights =
-        get_atomic_weights_for_fingerprint_generator_use_counts(&benzene(), &pyridine(), &fpg)
-            .unwrap();
-    assert_close(
-        &weights,
-        &[
-            0.20370370370370372,
-            0.12962962962962965,
-            0.05555555555555558,
-            -0.16666666666666663,
-            0.05555555555555558,
-            0.12962962962962965,
-        ],
-    );
-    let weights = get_atomic_weights_for_fingerprint_generator_with_metric(
-        &benzene(),
-        &pyridine(),
-        &fpg,
-        tanimoto_similarity,
-    )
-    .unwrap();
-    let (a, b) = (1.0 / 3.0, -0.6666666666666667);
-    assert_close(&weights, &[a, a, a, b, a, a]);
 }
 
 #[test]
@@ -174,26 +130,25 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.18541345659989728);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "1b1601ab2912b00eb0816da7cbd659b9424cdafe",
+        "e11cb77f3005e65eb035eda26f8c073eb56079b2",
         &probe(),
     );
     assert!(!d.draw_options().clear_background);
 
-    let fpg = morgan2();
-    let mut d = MolDraw2DSVG::new(400, 400).unwrap();
-    let max_weight =
-        get_similarity_map_for_fingerprint_generator(&refmol(), &probe(), &fpg, &mut d).unwrap();
-    d.finish_drawing();
-    assert_eq!(max_weight, 0.12255947497949138);
-    assert_map(
-        &d.get_drawing_text().unwrap(),
-        "975f39c5a5f04cff58915d50ab794051cbbab92b",
-        &probe(),
-    );
-
     // Github #2904: a color map of three colors.
     let mut d = MolDraw2DSVG::new(400, 400).unwrap();
-    let params = GetSimilarityMapForFingerprintGeneratorParams {
+    d.clear_drawing().unwrap();
+    let morgan = |m: &Mol, i| {
+        get_morgan_fingerprint_with_params(
+            m,
+            &GetMorganFingerprintParams {
+                atom_id: i,
+                radius: 2,
+                ..Default::default()
+            },
+        )
+    };
+    let params = GetSimilarityMapForFingerprintParams {
         map: GetSimilarityMapFromWeightsParams {
             color_map: Some([
                 DrawColour {
@@ -210,25 +165,23 @@ fn similarity_maps_match_python() {
                     a: 0.5,
                 },
             ]),
-            contour_lines: 5,
-            sigma: Some(0.4),
             ..Default::default()
         },
         ..Default::default()
     };
-    let max_weight = get_similarity_map_for_fingerprint_generator_use_counts_with_params(
+    let max_weight = get_similarity_map_for_fingerprint_with_params(
         &refmol(),
         &probe(),
-        &fpg,
+        morgan,
         &mut d,
         &params,
     )
     .unwrap();
     d.finish_drawing();
-    assert_eq!(max_weight, 0.08955961037179305);
+    assert_eq!(max_weight, 0.12255947497949138);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "57b43737e5b18813d2cf7901907c108049a82813",
+        "6412019d0116b39e6e7019086846d0a33cd135bd",
         &probe(),
     );
 }
@@ -236,23 +189,12 @@ fn similarity_maps_match_python() {
 #[test]
 fn similarity_map_from_weights_matches_python() {
     let mut d = MolDraw2DSVG::new(300, 300).unwrap();
-    let params = GetSimilarityMapFromWeightsParams {
-        use_fill_threshold: true,
-        grid_resolution: 0.05,
-        extra_grid_padding: 1.0,
-        ..Default::default()
-    };
-    get_similarity_map_from_weights_with_params(
-        &pyridine(),
-        &[0.1, -0.2, 0.3, -0.4, 0.5, -0.6],
-        &mut d,
-        &params,
-    )
-    .unwrap();
+    get_similarity_map_from_weights(&pyridine(), &[0.1, -0.2, 0.3, -0.4, 0.5, -0.6], &mut d)
+        .unwrap();
     d.finish_drawing();
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "df576ca36bedf7dbc5bb5604c1514de6682373f7",
+        "027ab56f50ebd5fa512381a116df761f54055f97",
         &pyridine(),
     );
     let mut d = MolDraw2DSVG::new(300, 300).unwrap();
@@ -285,7 +227,7 @@ fn similarity_map_for_model_matches_python() {
     assert_eq!(max_weight, 0.29);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "9359ca173f49f7ca273e5bcb5b5c3d73308ab0bf",
+        "1bbcd82a33ad0c03d7a4ed04c591e0ca6da6a7bc",
         &pyridine(),
     );
 }
@@ -296,11 +238,6 @@ fn similarity_map_params_defaults_match_python() {
     assert_eq!(map.color_map, None);
     assert_eq!(map.sigma, None);
     assert_eq!(map.contour_lines, 10);
-    assert_eq!(map.grid_resolution, 0.1);
-    assert_eq!(map.extra_grid_padding, 0.5);
-    assert!(!map.use_fill_threshold);
-    assert_eq!(map.fill_threshold, 0.01);
-    assert!(map.fill_threshold_is_fraction);
     let rdk = GetRDKFingerprintParams::default();
     assert_eq!(
         (
@@ -631,7 +568,7 @@ fn morgan_similarity_map_matches_python() {
     assert_eq!(max_weight, 0.12255947497949138);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "f560ccf41475bf4ce2fa7afbc6aed41c07feb361",
+        "84f7b579db46216b4fa54b30bd93c72f53e0e9d3",
         &probe(),
     );
 }

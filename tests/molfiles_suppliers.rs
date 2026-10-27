@@ -416,12 +416,18 @@ fn multithreaded_sd_supplier() {
     let path = write("threaded.sdf", &three_sd());
     let mut suppl = MultithreadedSDMolSupplier::new(&path).unwrap();
     assert_eq!(suppl.get_last_record_id(), 0);
-    let mut got = names(suppl.mols());
+    // RDKit 2024.09 also reads the empty text after the last record, which
+    // Python gives as None.
+    let (mols, failed): (Vec<_>, Vec<_>) = suppl.mols().partition(Result::is_ok);
+    let mut got = names(mols.into_iter());
     got.sort();
     assert_eq!(got, ["ethane", "methanol", "ring"]);
+    assert_eq!(failed.len(), 1);
+    assert!(matches!(failed[0], Err(Error::Parse { .. })));
     assert!(suppl.at_end());
-    assert!((1..=3).contains(&suppl.get_last_record_id()));
-    assert!(suppl.get_last_item_text().unwrap().contains("$$$$"));
+    // The empty text is the last item, the fourth, as in Python.
+    assert_eq!(suppl.get_last_record_id(), 4);
+    assert_eq!(suppl.get_last_item_text().unwrap(), "\n");
     // RDKit's threads read the setting without a lock.
     assert!(matches!(
         suppl.set_process_property_lists(false),
@@ -436,7 +442,7 @@ fn multithreaded_sd_supplier() {
     let mut threaded = MultithreadedSDMolSupplier::new_with_params(&path, &params).unwrap();
     threaded.set_process_property_lists(false).unwrap();
     assert!(!threaded.get_process_property_lists());
-    assert_eq!(threaded.mols().count(), 3);
+    assert_eq!(threaded.mols().filter(Result::is_ok).count(), 3);
     // Dropping a supplier mid-read stops its threads.
     let mut early = MultithreadedSDMolSupplier::new(&path).unwrap();
     early.mols().next().unwrap().unwrap();

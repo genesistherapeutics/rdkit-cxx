@@ -95,7 +95,7 @@ const VALUES: [f64; 43] = [
     42.41050000000002,
     6.164862962722325,
     3.2490981480278296,
-    // RDKit 2026.03 computes chi2v and chi2n as chi3v and chi3n (#9643).
+    // RDKit 2024.09 computes chi2v and chi2n as chi3v and chi3n (#9643).
     1.1876733148984595,
     1.1876733148984595,
     0.7480265991539318,

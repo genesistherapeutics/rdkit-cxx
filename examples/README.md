@@ -17,8 +17,10 @@ writes the PNG and checks its size.
 
 Where a recipe calls code RDKit offers only in Python, the example calls its port in
 the crate: `rdkit_cxx::chem::find_mol_chiral_centers`,
-`rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`,
-`mol_to_svg`, `mols_to_grid_image`, and `draw_mol_with_matches`.
+`rdkit_cxx::chem::lipinski`, and `rdkit_cxx::chem::draw`'s `mol_to_image`
+and `mols_to_grid_image`. Jupyter's SVG of a molecule (RDKit 2024.09's
+`IPythonConsole._toSVG`, which calls the private `Draw._moltoSVG`) is drawn
+as `_moltoSVG` draws it, with `rd_mol_draw_2d` (`examples/common`).
 
 | Recipe | ID | Example |
 | --- | --- | --- |
@@ -71,10 +73,5 @@ Some recipes differ from the cookbook's text on purpose:
 - Create Fragments: Python's `with Chem.RWMol(mol)` batches the bond
   removals, so the example brackets them with `begin_batch_edit` and
   `commit_batch_edit`.
-- Highlight a Substructure in a Molecule: after a substructure search,
-  Jupyter keeps the query, and when the recipe then sets the atoms to
-  highlight by hand, drawing them fails in RDKit 2026.03, since they do not
-  fit the query. The example shows the failure, then draws the atoms without
-  the query, as the recipe intends.
 - On a Plot: the recipe puts the molecule on a matplotlib plot, which has no
   counterpart here; the example draws the image.

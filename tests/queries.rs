@@ -5,7 +5,6 @@
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::*;
-use rdkit_cxx::geometry::Point3D;
 
 fn smarts(text: &str) -> Mol {
     mol_from_smarts(text).unwrap()
@@ -168,65 +167,4 @@ fn expand_and_set_queries() {
             .set_query(&ethane.get_bond_with_idx(0).unwrap()),
         Err(Error::Value { .. })
     ));
-}
-
-#[test]
-fn atom_coords_matcher() {
-    let default = AtomCoordsMatcher::default();
-    assert_eq!(
-        default,
-        AtomCoordsMatcher {
-            ref_conf_id: -1,
-            query_conf_id: -1,
-            tol2: 1e-8
-        }
-    );
-    assert_eq!(
-        AtomCoordsMatcher::new_with_params(&AtomCoordsMatcherParams::default()),
-        default
-    );
-    let custom = AtomCoordsMatcher::new_with_params(&AtomCoordsMatcherParams {
-        ref_conf_id: 1,
-        query_conf_id: 2,
-        tol: 0.1,
-    });
-    assert_eq!((custom.ref_conf_id, custom.query_conf_id), (1, 2));
-    assert!((custom.tol2 - 0.01).abs() < 1e-12);
-
-    let block = mol_to_mol_block(&mol_from_smiles("CO").unwrap()).unwrap();
-    let target = mol_from_mol_block(&block).unwrap();
-    let query = mol_from_mol_block(&block).unwrap();
-    let mut moved = query.clone();
-    moved
-        .get_conformer_mut()
-        .unwrap()
-        .set_atom_position(0, Point3D::new(5.0, 5.0, 0.0))
-        .unwrap();
-
-    fn atom(mol: &Mol) -> AtomRef<'_> {
-        mol.get_atom_with_idx(0).unwrap()
-    }
-    assert!(default.call(&atom(&query), &atom(&target)).unwrap());
-    assert!(!default.call(&atom(&moved), &atom(&target)).unwrap());
-    assert!(matches!(
-        custom.call(&atom(&query), &atom(&target)),
-        Err(Error::Value { .. })
-    ));
-
-    let params = SubstructMatchParameters {
-        extra_atom_check: Some(default),
-        ..Default::default()
-    };
-    assert!(
-        target
-            .has_substruct_match_with_params(&query, &params)
-            .unwrap()
-    );
-    assert!(
-        !target
-            .has_substruct_match_with_params(&moved, &params)
-            .unwrap()
-    );
-    assert!(target.has_substruct_match(&moved).unwrap());
-    assert_eq!(SubstructMatchParameters::default().extra_atom_check, None);
 }

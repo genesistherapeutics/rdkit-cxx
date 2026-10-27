@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/Chem/UnitTestRegistrationHash.py, with exact layers
-// and hashes from Python's RegistrationHash in RDKit 2026.03.6.
+// and hashes from Python's RegistrationHash in RDKit 2024.09.6.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -867,9 +867,18 @@ fn github_8654() {
         cxflag: CXSmilesFields::CX_NONE,
         ..Default::default()
     };
+    // RDKit 2024.09 predates the fix for rdkit/rdkit#8654: as in its
+    // Python, the two canonicalize the cyclopropane's stereo differently.
+    let layers1 = get_mol_layers_with_params(&m1, &no_extensions).unwrap();
+    let layers2 = get_mol_layers_with_params(&m2, &no_extensions).unwrap();
+    assert_ne!(layers1, layers2);
     assert_eq!(
-        get_mol_layers_with_params(&m1, &no_extensions).unwrap(),
-        get_mol_layers_with_params(&m2, &no_extensions).unwrap()
+        layers1[&HashLayer::CanonicalSmiles],
+        "O=C(N[C@H]1C[C@@H](C(=O)O)[C@@H]2C[C@H]12)C1CC(=O)N(Cc2ccccn2)C1"
+    );
+    assert_eq!(
+        layers2[&HashLayer::CanonicalSmiles],
+        "O=C(N[C@H]1C[C@@H](C(=O)O)[C@@H]2C[C@@H]21)C1CC(=O)N(Cc2ccccn2)C1"
     );
 }
 

@@ -87,7 +87,7 @@ fn is_value_error(result: Result<impl std::fmt::Debug, Error>, needle: &str) -> 
 fn defaults_match_python() {
     let p = ConstrainedDepictionParams::default();
     assert!(!p.accept_failure && !p.force_rdkit && !p.allow_r_groups && !p.align_only);
-    assert!(p.adjust_mol_block_wedging && !p.use_ring_templates);
+    assert!(p.adjust_mol_block_wedging);
     assert_eq!((p.existing_conf_id, p.conf_id), (-1, -1));
     assert!(p.ref_patt.is_none());
 

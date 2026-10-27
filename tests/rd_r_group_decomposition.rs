@@ -56,7 +56,6 @@ fn params_defaults() {
     assert!(p.remove_hydrogens_post_match);
     assert!(!p.allow_non_terminal_r_groups);
     assert!(!p.allow_multiple_r_groups_on_unlabelled);
-    assert!(!p.allow_multiple_cores_in_same_mol);
     assert!(!p.do_tautomers);
     assert!(!p.do_enumeration);
     assert!(!p.include_target_mol_in_results);

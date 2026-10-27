@@ -40,22 +40,13 @@ fn param_defaults() {
     assert_eq!(
         GetSSSRParams::default(),
         GetSSSRParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false
+            include_dative_bonds: false
         }
     );
     assert_eq!(
         GetSymmSSSRParams::default(),
         GetSymmSSSRParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false
-        }
-    );
-    assert_eq!(
-        FindRingFamiliesParams::default(),
-        FindRingFamiliesParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false
+            include_dative_bonds: false
         }
     );
     let kekulize = KekulizeIfPossibleParams::default();
@@ -84,7 +75,7 @@ fn sanitization_steps() {
     kekulize_if_possible(&mut kekule).unwrap();
     assert_eq!(
         kekule.get_bond_with_idx(0).unwrap().get_bond_type(),
-        BondType::Single
+        BondType::Double
     );
 
     let mut methyl = unsanitized("[CH3]");

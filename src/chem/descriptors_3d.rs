@@ -217,11 +217,12 @@ pub fn calc_mol_descriptors_3d(mol: &Mol) -> Result<Vec<(&'static str, f64)>> {
     calc_mol_descriptors_3d_with_conf_id(mol, -1)
 }
 
-/// Of the conformer `conf_id`. Mirrors
-/// `Descriptors3D.CalcMolDescriptors3D(mol, confId)`.
+/// Mirrors `Descriptors3D.CalcMolDescriptors3D(mol, confId)`, which in
+/// RDKit 2024.09 does not pass `confId` on: every descriptor is of the
+/// default conformer, whatever `conf_id` is.
 pub fn calc_mol_descriptors_3d_with_conf_id(
     mol: &Mol,
-    conf_id: i32,
+    _conf_id: i32,
 ) -> Result<Vec<(&'static str, f64)>> {
     if mol.get_num_conformers() == 0 {
         return Err(Error::Value {
@@ -231,6 +232,6 @@ pub fn calc_mol_descriptors_3d_with_conf_id(
     }
     desc_list()
         .into_iter()
-        .map(|(name, function)| Ok((name, function(mol, conf_id)?)))
+        .map(|(name, function)| Ok((name, function(mol, -1)?)))
         .collect()
 }

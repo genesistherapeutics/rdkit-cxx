@@ -185,18 +185,39 @@ fn value<T>(result: rdkit_cxx::Result<T>) -> bool {
 #[test]
 fn params_defaults() {
     assert_eq!(
-        BestAlignmentParams::default(),
-        BestAlignmentParams {
-            max_matches: 1_000_000,
-            symmetrize_conjugated_terminal_groups: true,
-            ignore_hs: true,
-            num_threads: 1,
-            map: Vec::new(),
-            weights: Vec::new(),
+        GetBestAlignmentTransformParams::default(),
+        GetBestAlignmentTransformParams {
             prb_cid: -1,
             ref_cid: -1,
+            map: Vec::new(),
+            max_matches: 1_000_000,
+            symmetrize_conjugated_terminal_groups: true,
+            weights: Vec::new(),
             reflect: false,
             max_iters: 50,
+            num_threads: 1,
+        }
+    );
+    assert_eq!(
+        GetBestRMSParams::default(),
+        GetBestRMSParams {
+            prb_id: -1,
+            ref_id: -1,
+            map: Vec::new(),
+            max_matches: 1_000_000,
+            symmetrize_conjugated_terminal_groups: true,
+            weights: Vec::new(),
+            num_threads: 1,
+        }
+    );
+    assert_eq!(
+        GetAllConformerBestRMSParams::default(),
+        GetAllConformerBestRMSParams {
+            num_threads: 1,
+            map: Vec::new(),
+            max_matches: 1_000_000,
+            symmetrize_conjugated_terminal_groups: true,
+            weights: Vec::new(),
         }
     );
     assert_eq!(
@@ -399,17 +420,16 @@ fn best_alignments() {
             0.005121690707780779,
         ],
     );
-    // The class's defaults leave the hydrogens out; four threads give the
-    // same alignment.
+    // Four threads give the same alignment.
     for num_threads in [1, 4, 0, i32::MIN] {
-        let params = BestAlignmentParams {
+        let params = GetBestAlignmentTransformParams {
             num_threads,
             ..Default::default()
         };
         let (rmsd, _, matched) =
             get_best_alignment_transform_with_params(&probe(1), &reference(), &params).unwrap();
-        assert_close(rmsd, 0.6937072271379565);
-        assert_eq!(matched.len(), 10);
+        assert_close(rmsd, 0.8029821548022692);
+        assert_eq!(matched.len(), 19);
     }
 
     let mut prb = probe(1);
@@ -424,22 +444,20 @@ fn best_alignments() {
     let mut prb = probe(1);
     assert_close(
         get_best_rms_with_params(&mut prb, &reference(), &Default::default()).unwrap(),
-        0.6937072271379565,
+        0.8029821548022692,
     );
-    let mapped = BestAlignmentParams {
+    let mapped = GetBestRMSParams {
         map: vec![heavy_map()],
         weights: vec![1.0; 10],
-        ignore_hs: false,
         ..Default::default()
     };
     assert_close(
         get_best_rms_with_params(&mut probe(1), &reference(), &mapped).unwrap(),
         0.6937072271379565,
     );
-    let plain = BestAlignmentParams {
+    let plain = GetBestRMSParams {
         symmetrize_conjugated_terminal_groups: false,
         max_matches: 10,
-        ignore_hs: false,
         ..Default::default()
     };
     assert_close(
@@ -467,9 +485,9 @@ fn best_alignments() {
 #[test]
 fn all_conformers() {
     let mol = acetanilide();
-    let expected = [0.6937072271379565, 0.09168170803172553, 0.6904040682915917];
+    let expected = [0.8029821548022692, 0.35494074979983326, 0.7825745565387795];
     for num_threads in [1, 2] {
-        let params = BestAlignmentParams {
+        let params = GetAllConformerBestRMSParams {
             num_threads,
             ..Default::default()
         };
@@ -555,7 +573,7 @@ fn reference_without_conformer() -> Mol {
 fn best_alignment_inputs_rdkit_trusts() {
     // On RDKit's threads, Python calls std::terminate for these.
     for num_threads in [1, 2] {
-        let far = BestAlignmentParams {
+        let far = GetBestRMSParams {
             map: vec![vec![(0, 100)]],
             num_threads,
             ..Default::default()
@@ -567,7 +585,7 @@ fn best_alignment_inputs_rdkit_trusts() {
                 len: 19
             })
         );
-        let short = BestAlignmentParams {
+        let short = GetAllConformerBestRMSParams {
             weights: vec![1.0],
             num_threads,
             ..Default::default()
@@ -576,6 +594,11 @@ fn best_alignment_inputs_rdkit_trusts() {
             &acetanilide(),
             &short
         )));
+        let short = GetBestAlignmentTransformParams {
+            weights: vec![1.0],
+            num_threads,
+            ..Default::default()
+        };
         assert!(value(get_best_alignment_transform_with_params(
             &probe(1),
             &reference(),
@@ -809,7 +832,7 @@ fn concurrent_alignments() {
                     assert_close(
                         get_best_rms_with_params(&mut prb, &reference(), &Default::default())
                             .unwrap(),
-                        0.6937072271379565,
+                        0.8029821548022692,
                     );
                     let mut mol = probe(1);
                     random_transform(&mut mol).unwrap();

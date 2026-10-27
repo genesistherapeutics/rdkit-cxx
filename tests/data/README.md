@@ -8,8 +8,6 @@ From RDKit's source tree, under RDKit's BSD license:
 - `reaction1.no_metadata.png`: `Code/GraphMol/ChemReactions/testData`
 - `rxn1.cdxml`: `Code/GraphMol/test_data/CDXML`
 - `AlexRxn.mrv`: `Code/GraphMol/MarvinParse/test_data`
-- `RiboseFullname.mol`: `Code/GraphMol/FileParsers/test_data/macromols`, with
-  trailing whitespace trimmed
 - `cip_max_iterations.mol`: the mol block of the "Test early termination of
   CIP calculation" test in `Code/GraphMol/CIPLabeler/catch_tests.cpp`
 - `Pharm2D_BaseFeatures.fdef`, `Pharm2D_orderBug.sdf`: `BaseFeatures.fdef` and
@@ -45,5 +43,5 @@ Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
   pickled in `rdkit/Chem/Pharm3D/test_data/cdk2-syn-clip100.pkl.gz`, written by
   `Chem.MolToSmiles`; each SMILES reads back to the same SMILES and atom count
 - `calc_mol_descriptors.tsv`: `Descriptors.CalcMolDescriptors` of a set of
-  molecules in RDKit 2026.03.6, one row each, with the `repr` of each value as
+  molecules in RDKit 2024.09.6, one row each, with the `repr` of each value as
   a float and `None` where a descriptor failed (`tests/descriptors.rs`)

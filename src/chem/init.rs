@@ -12,12 +12,11 @@
 use std::path::Path;
 
 use crate::chem::{
-    AssignCIPLabelsParams, AssignStereochemistryParams, Conformer, Mol, SDMolSupplier,
-    SDMolSupplierParams, SmilesMolSupplier, SmilesMolSupplierParams, SmilesWriteParams,
-    StereoDescriptor, StereoSpecified, StereoType, SubstructMatchParameters, TDTMolSupplier,
-    TDTMolSupplierParams, assign_cip_labels_with_params, assign_stereochemistry_with_params,
-    find_potential_stereo, get_use_legacy_stereo_perception, mol_from_smarts, mol_from_smiles,
-    mol_to_smiles_with_params,
+    AssignCIPLabelsParams, AssignStereochemistryParams, Mol, SDMolSupplier, SDMolSupplierParams,
+    SmilesMolSupplier, SmilesMolSupplierParams, SmilesWriteParams, StereoDescriptor,
+    StereoSpecified, StereoType, SubstructMatchParameters, TDTMolSupplier, TDTMolSupplierParams,
+    assign_cip_labels_with_params, assign_stereochemistry_with_params, find_potential_stereo,
+    get_use_legacy_stereo_perception, mol_from_smarts, mol_from_smiles, mol_to_smiles_with_params,
 };
 use crate::{Error, Result};
 
@@ -155,37 +154,6 @@ pub fn supplier_from_filename_with_params(
     }
 }
 
-/// One molecule with a conformer for each record of an SD file, all of
-/// which are taken to be the same molecule: the first record, with the
-/// others' conformers added under new ids. `None` for a file without
-/// records, as in Python; the first record that does not parse is its error.
-/// Mirrors `Chem.MultiConfMolFromSDF(sdf)`.
-pub fn multi_conf_mol_from_sdf(sdf: impl AsRef<Path>) -> Result<Option<Mol>> {
-    multi_conf_mol_from_sdf_with_params(sdf, &SDMolSupplierParams::default())
-}
-
-/// As [`multi_conf_mol_from_sdf`], with the supplier's `sanitize`,
-/// `remove_hs`, and `strict_parsing`. Mirrors
-/// `Chem.MultiConfMolFromSDF(sdf, sanitize, removeHs, strictParsing)`.
-pub fn multi_conf_mol_from_sdf_with_params(
-    sdf: impl AsRef<Path>,
-    params: &SDMolSupplierParams,
-) -> Result<Option<Mol>> {
-    let mut suppl = SDMolSupplier::new_with_params(sdf, params)?;
-    let mut return_mol: Option<Mol> = None;
-    for mol in suppl.mols() {
-        let mol = mol?;
-        match &mut return_mol {
-            None => return_mol = Some(mol),
-            Some(return_mol) => {
-                return_mol
-                    .add_conformer_with_assign_id(&Conformer::from(mol.get_conformer()?), true)?;
-            }
-        }
-    }
-    Ok(return_mol)
-}
-
 /// Parameters for `find_mol_chiral_centers_with_params`, with Python's
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -253,14 +221,10 @@ fn legacy_chiral_centers(
     mol: &mut Mol,
     params: &FindMolChiralCentersParams,
 ) -> Result<Vec<(u32, String)>> {
-    for idx in 0..mol.get_num_atoms() {
-        mol.get_atom_with_idx_mut(idx)?
-            .clear_prop("_ChiralityPossible");
-    }
     assign_stereochemistry_with_params(
         mol,
         &AssignStereochemistryParams {
-            clean_it: true,
+            clean_it: false,
             force: params.force,
             flag_possible_stereo_centers: params.include_unassigned,
         },
