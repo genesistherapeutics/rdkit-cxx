@@ -79,7 +79,6 @@ pub(crate) mod ffi {
         type AdjustQueryParametersData = crate::ffi::adjust_query::ffi::AdjustQueryParametersData;
         type ChemicalReaction;
         type ProductSets;
-        type ReactionList;
         type FingerprintType;
         type SanitizeRxnFlags;
 
@@ -90,11 +89,6 @@ pub(crate) mod ffi {
             i: usize,
             j: usize,
         ) -> Result<UniquePtr<RWMol>>;
-        fn reaction_list_size(list: &ReactionList) -> Result<usize>;
-        fn reaction_list_take(
-            list: Pin<&mut ReactionList>,
-            i: usize,
-        ) -> Result<UniquePtr<ChemicalReaction>>;
 
         fn chemical_reaction_new() -> Result<UniquePtr<ChemicalReaction>>;
         fn chemical_reaction_clone(rxn: &ChemicalReaction) -> Result<UniquePtr<ChemicalReaction>>;
@@ -210,16 +204,6 @@ pub(crate) mod ffi {
         ) -> Result<UniquePtr<ChemicalReaction>>;
         fn mrv_block_is_reaction(mrv: &str) -> Result<bool>;
         fn mrv_file_is_reaction(path: &[u8]) -> Result<bool>;
-        fn reactions_from_cdxml_block(
-            cdxml: &str,
-            sanitize: bool,
-            remove_hs: bool,
-        ) -> Result<UniquePtr<ReactionList>>;
-        fn reactions_from_cdxml_file(
-            path: &[u8],
-            sanitize: bool,
-            remove_hs: bool,
-        ) -> Result<UniquePtr<ReactionList>>;
         fn reaction_to_rxn_block(
             rxn: &ChemicalReaction,
             separate_agents: bool,
