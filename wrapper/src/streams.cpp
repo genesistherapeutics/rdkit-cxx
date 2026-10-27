@@ -11,8 +11,10 @@
 #include <fstream>
 #include <random>
 #include <sstream>
+#include <string_view>
 #include <utility>
 
+#include <GraphMol/FileParsers/FileParserUtils.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 
@@ -26,6 +28,25 @@ constexpr char kStereoGroup[] = "MDLV30/STE";
 constexpr std::size_t kStereoGroupPrefix = sizeof(kStereoGroup) - 1;
 constexpr char kEndPoints[] = "ENDPTS=";
 constexpr std::size_t kEndPointsKey = sizeof(kEndPoints) - 1;
+const char *const kBadCompno =
+    "a V3000 line ends after a COMPNO label or \"COMPNO=\"; RDKit reads its "
+    "value with an extraction that writes nothing there, and compares the "
+    "unset value";
+const char *const kBadStereoCollection =
+    "a V3000 enhanced-stereo collection has fewer atoms than its count, so "
+    "RDKit would read an atom number no extraction wrote";
+// A key "COMPNO" or its "=", as the last token of a logical line.
+constexpr std::string_view kCompno = "COMPNO=";
+
+bool is_space(char c) {
+  return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' ||
+         c == '\r';
+}
+
+char upper(char c) {
+  return static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+}
+
 const char *const kBadEndPoints =
     "a V3000 ENDPTS value is empty, or starts with \"(\" but is not numbers "
     "below 2^32 between spaces and a \")\" that ends the token; RWMol reads it "
@@ -82,29 +103,171 @@ std::uint64_t siphash(const std::uint64_t key[2], const char *data,
   return v0 ^ v1 ^ v2 ^ v3;
 }
 
+// RDKit matches an enhanced-stereo collection line (parseEnhancedStereo in
+// MolFileParser.cpp, on the upper-cased line) with
+//   MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *
+// which this matches by hand, as rdkit-2025.03's wrapper does: std::regex's
+// lazily built tables are not ordered between threads where DRD (the races
+// job) can see it.
+bool match_stereo_collection(const std::string &line, std::string &type,
+                             std::string &count, std::string &atoms) {
+  static constexpr std::string_view prefix = "MDLV30/STE";
+  auto digit = [](char c) { return c >= '0' && c <= '9'; };
+  if (line.compare(0, prefix.size(), prefix) != 0 ||
+      line.size() < prefix.size() + 3) {
+    return false;
+  }
+  std::size_t pos = prefix.size();
+  type = line.substr(pos, 3);
+  pos += 3;
+  while (pos < line.size() && digit(line[pos])) {
+    ++pos;
+  }
+  const auto spaces = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  static constexpr std::string_view atoms_tag = "ATOMS=(";
+  if (pos == spaces || line.compare(pos, atoms_tag.size(), atoms_tag) != 0) {
+    return false;
+  }
+  pos += atoms_tag.size();
+  const auto count_start = pos;
+  while (pos < line.size() && digit(line[pos])) {
+    ++pos;
+  }
+  if (pos == count_start) {
+    return false;
+  }
+  count = line.substr(count_start, pos - count_start);
+  const auto count_end = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  if (pos == count_end) {
+    return false;
+  }
+  auto end = line.find_last_not_of(' ');
+  if (end == std::string::npos || end < pos || line[end] != ')') {
+    return false;
+  }
+  atoms = line.substr(pos, end - pos);
+  return true;
+}
+
+// Whether RDKit 2026.09 would read an enhanced-stereo collection's first
+// atom number unset: `ss >> index` writes nothing when only whitespace is
+// left, so a count above 0 with no atoms (ATOMS=(1 )) reads an
+// uninitialized index. A shorter list that has a first atom repeats it,
+// which RDKit 2026.09 refuses as a duplicate.
+bool stereo_collection_unset(const std::string &line) {
+  std::string type;
+  std::string count_text;
+  std::string atoms;
+  if (!match_stereo_collection(line, type, count_text, atoms) ||
+      (type != "ABS" && type != "REL" && type != "RAC")) {
+    return false;
+  }
+  unsigned int count;
+  try {
+    count = RDKit::FileParserUtils::toUnsigned(count_text, true);
+  } catch (const std::exception &) {
+    return false;  // RDKit throws
+  }
+  return count > 0 && std::all_of(atoms.begin(), atoms.end(),
+                                  [](char c) { return is_space(c); });
+}
+
 }  // namespace
 
-bool InputScanner::fail(std::string why) {
+bool InputScanner::fail(std::string why, std::uint64_t at) {
   if (d_error.empty()) {
     d_error = std::move(why);
+    d_refuse_at = at;
   }
   return false;
 }
 
+std::uint64_t InputScanner::held_from() const {
+  std::uint64_t held = UINT64_MAX;
+  if (d_logical > 0 && d_prefix == kStereoGroup) {
+    held = d_logical_at;
+  }
+  if (d_token && d_token_spaced && !d_token_long &&
+      kCompno.substr(0, d_token_text.size()) == d_token_text) {
+    held = std::min(held, d_token_at);
+  }
+  return held;
+}
+
+std::uint64_t InputScanner::safe_end() const {
+  return std::min(d_fed, held_from());
+}
+
+// A byte of the logical V3000 line, for COMPNO (streams.h): the line's last
+// token, the whitespace before it, and whether a space is the last of that
+// whitespace (the separator RDKit requires before a label). A COMPNO label
+// is "COMPNO" or "COMPNO=" then, followed only by whitespace.
+void InputScanner::compno(char c, std::uint64_t at) {
+  if (is_space(c)) {
+    d_in_space = true;
+    d_space = c;
+    d_space_at = at;
+    return;
+  }
+  if (d_in_space || !d_token) {
+    d_token = true;
+    d_token_spaced = d_in_space && d_space == ' ';
+    d_token_at = d_token_spaced ? d_space_at : at;
+    d_token_long = false;
+    d_token_text.clear();
+    d_in_space = false;
+  }
+  if (d_token_text.size() < kCompno.size()) {
+    d_token_text += upper(c);
+  } else {
+    d_token_long = true;
+  }
+}
+
+// The end of a logical V3000 line: a COMPNO label may not end it, nor may
+// an enhanced-stereo collection RDKit reads an unset atom number from.
+void InputScanner::end_fields() {
+  if (d_token && d_token_spaced && !d_token_long &&
+      (d_token_text == kCompno ||
+       d_token_text == kCompno.substr(0, kCompno.size() - 1))) {
+    fail(kBadCompno, d_token_at);
+  }
+  if (d_logical > 0 && d_prefix == kStereoGroup &&
+      stereo_collection_unset(d_stereo_line)) {
+    fail(kBadStereoCollection, d_logical_at);
+  }
+  d_token = false;
+  d_in_space = false;
+  d_stereo_line.clear();
+}
+
 // A byte of the logical V3000 line, known not to be the line's trailing "\r"
 // or continuation "-". RDKit upper-cases the joined line before matching it.
-void InputScanner::confirm(char c) {
-  ++d_logical;
+void InputScanner::confirm(char c, std::uint64_t at) {
+  if (d_logical++ == 0) {
+    d_logical_at = at;
+  }
   if (d_prefix.size() < kStereoGroupPrefix) {
-    d_prefix += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+    d_prefix += upper(c);
   }
   if (d_logical > kMaxStereoGroupLine && d_prefix == kStereoGroup) {
     fail("a V3000 enhanced-stereo line is longer than " +
-         std::to_string(kMaxStereoGroupLine) +
-         " characters; RDKit matches it with a regex that recurses once per "
-         "character");
+             std::to_string(kMaxStereoGroupLine) +
+             " characters; RDKit matches it with a regex that recurses once "
+             "per character",
+         d_logical_at);
+  }
+  if (std::string_view(kStereoGroup).substr(0, d_prefix.size()) == d_prefix) {
+    d_stereo_line += upper(c);
   }
   end_points(c);
+  compno(c, at);
 }
 
 // A byte of the logical V3000 line, for the ENDPTS values in it. Values are
@@ -190,7 +353,7 @@ void InputScanner::end_line() {
       continues = true;
     }
     for (int i = 0; i < d_pending; ++i) {
-      confirm(d_pend[i]);
+      confirm(d_pend[i], d_pend_at[i]);
     }
   }
   d_pending = 0;
@@ -201,6 +364,7 @@ void InputScanner::end_line() {
     if (d_end_points == EndPoints::kStart) {
       fail(kBadEndPoints);
     }
+    end_fields();
     d_logical = 0;
     d_prefix.clear();
     d_end_points = EndPoints::kKey;
@@ -221,6 +385,7 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
              " lines; RDKit counts lines in int");
       }
       if (!d_error.empty()) {
+        d_fed += i;
         return i;
       }
       continue;
@@ -230,24 +395,47 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
     } else if (std::memcmp(d_head, kV30, 7) == 0) {
       // Content of a V3000 line; the last two bytes may yet be stripped.
       if (d_pending == 2) {
-        confirm(d_pend[0]);
+        confirm(d_pend[0], d_pend_at[0]);
         d_pend[0] = d_pend[1];
+        d_pend_at[0] = d_pend_at[1];
         d_pend[1] = c;
+        d_pend_at[1] = d_fed + i;
       } else {
+        d_pend_at[d_pending] = d_fed + i;
         d_pend[d_pending++] = c;
       }
+      // A held field is delivered only once it is read past, so it may not
+      // grow without bound.
+      const auto held = held_from();
+      if (held != UINT64_MAX && d_fed + i - held > kMaxHeld) {
+        fail("a V3000 COMPNO field or enhanced-stereo line spans more than " +
+                 std::to_string(kMaxHeld) +
+                 " bytes, which the checked stream holds back whole",
+             held);
+      }
       if (!d_error.empty()) {
+        d_fed += i;
         return i;
       }
     }
     ++d_pos;
   }
+  d_fed += n;
   return n;
+}
+
+// RDKit reads a last line without its "\n" as it reads any other.
+bool InputScanner::finish() {
+  if (d_error.empty() && d_pos > 0) {
+    end_line();
+  }
+  return d_error.empty();
 }
 
 void check_input_text(std::string_view text) {
   InputScanner scanner;
-  if (scanner.feed(text.data(), text.size()) < text.size()) {
+  if (scanner.feed(text.data(), text.size()) < text.size() ||
+      !scanner.finish()) {
     throw ValueErrorException(scanner.error());
   }
 }
@@ -300,6 +488,19 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
   if (d_loaded != chunk) {
     d_loaded = chunk;
     d_have = 0;
+    // Chunks read ahead before this one are read from the source again, if
+    // ever, and checked against their hashes.
+    d_ahead.erase(d_ahead.begin(), d_ahead.lower_bound(chunk));
+  }
+  auto ahead = d_ahead.find(chunk);
+  if (ahead != d_ahead.end()) {
+    // Bytes read_ahead scanned, which a source that cannot seek back would
+    // not give again.
+    if (d_have == 0) {
+      std::memcpy(d_buffer.get(), ahead->second.data(), ahead->second.size());
+      d_have = ahead->second.size();
+    }
+    d_ahead.erase(ahead);
   }
   if (d_have == kChunk) {
     return true;
@@ -345,7 +546,7 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
     auto ok = d_scanner.feed(d_buffer.get() + seen, fresh);
     d_scanned += ok;
     if (ok < fresh) {
-      refuse(d_scanner.error(), d_scanned);
+      refuse(d_scanner.error(), std::min(d_scanned, d_scanner.refuse_at()));
     }
     if (d_scanned == base + kChunk) {
       d_hashes.push_back(siphash(d_key, d_buffer.get(), kChunk));
@@ -354,7 +555,69 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
                             static_cast<std::size_t>(d_scanned - base));
     }
   }
+  if (d_have < kChunk && d_scanned == base + d_have) {
+    finish();
+  }
   return true;
+}
+
+// The source ends at d_scanned: RDKit reads the unfinished line whole.
+void CheckedStreambuf::finish() {
+  if (!d_finished && d_scanned < d_limit) {
+    d_finished = true;
+    if (!d_scanner.finish()) {
+      refuse(d_scanner.error(), std::min(d_scanned, d_scanner.refuse_at()));
+    }
+  }
+}
+
+// Scans chunk `chunk`, the one after the last scanned, into d_ahead, leaving
+// the buffer as it is. False if the source changed.
+bool CheckedStreambuf::read_ahead(std::uint64_t chunk) {
+  using off = std::streambuf::off_type;
+  const std::uint64_t base = chunk * kChunk;
+  if (d_source_pos != base) {
+    if (d_source->pubseekpos(static_cast<off>(base), std::ios_base::in) ==
+        pos_type(off(-1))) {
+      d_source_pos = UINT64_MAX;
+      return true;  // nothing more to read
+    }
+    d_source_pos = base;
+  }
+  std::string bytes(kChunk, '\0');
+  std::size_t have = 0;
+  auto n = d_source->sgetn(bytes.data(), static_cast<std::streamsize>(kChunk));
+  if (n > 0) {
+    d_source_pos += static_cast<std::uint64_t>(n);
+    have = static_cast<std::size_t>(n);
+  }
+  bytes.resize(have);
+  if (have < kChunk && base + have < d_least_end) {
+    return false;  // it ends sooner than it did
+  }
+  d_least_end = std::max(d_least_end, base + have);
+  auto ok = d_scanner.feed(bytes.data(), have);
+  d_scanned += ok;
+  if (ok < have) {
+    refuse(d_scanner.error(), std::min(d_scanned, d_scanner.refuse_at()));
+  }
+  if (d_scanned == base + kChunk) {
+    d_hashes.push_back(siphash(d_key, bytes.data(), kChunk));
+  } else {
+    d_tail_hash = siphash(d_key, bytes.data(),
+                          static_cast<std::size_t>(d_scanned - base));
+  }
+  if (have < kChunk && d_scanned == base + have) {
+    finish();
+  }
+  d_ahead[chunk] = std::move(bytes);
+  return true;
+}
+
+// The first byte that may not be delivered yet: past the limit, or in a
+// field the scanner has not read past (until the input is known to end).
+std::uint64_t CheckedStreambuf::deliverable() const {
+  return d_finished ? d_limit : std::min(d_limit, d_scanner.safe_end());
 }
 
 CheckedStreambuf::int_type CheckedStreambuf::underflow() {
@@ -388,9 +651,25 @@ CheckedStreambuf::int_type CheckedStreambuf::underflow() {
     return traits_type::eof();
   }
   const std::uint64_t base = chunk * kChunk;
-  const std::uint64_t end = std::min(base + d_have, d_limit);
+  std::uint64_t end = std::min(base + d_have, deliverable());
+  const bool held = pos >= end && pos < base + d_have;
+  if (held) {
+    // Scan ahead until the field the bytes from `pos` are in is read past,
+    // the input ends, or it is refused.
+    for (std::uint64_t c = d_scanned / kChunk;
+         !d_finished && pos >= deliverable() && d_scanned == c * kChunk &&
+         d_scanned < d_limit;
+         ++c) {
+      if (!read_ahead(c)) {
+        changed();
+        return traits_type::eof();
+      }
+    }
+    end = std::min(base + d_have, deliverable());
+  }
   if (pos >= end) {
-    return pos >= d_limit ? hit() : traits_type::eof();
+    // Bytes still held were refused past them.
+    return pos >= d_limit || held ? hit() : traits_type::eof();
   }
   d_offset = base;
   setg(d_buffer.get(), d_buffer.get() + (pos - base),
@@ -409,7 +688,7 @@ CheckedStreambuf::pos_type CheckedStreambuf::moved(pos_type pos) {
   d_source_pos = to;
   if (d_loaded != UINT64_MAX && !failed()) {
     const std::uint64_t base = d_loaded * kChunk;
-    const std::uint64_t end = std::min(base + d_have, d_limit);
+    const std::uint64_t end = std::min(base + d_have, deliverable());
     if (to >= base && to < end) {
       d_offset = base;
       setg(d_buffer.get(), d_buffer.get() + (to - base),

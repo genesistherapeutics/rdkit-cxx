@@ -39,6 +39,17 @@
   molecule's size), `EnumerateLibrary` archives, synthon-space database
   files, and PNG metadata, from the metadata functions and from Cairo
   drawers with `include_metadata`.
+- V3000 mol blocks, and the SD, mol-file, and rxn readers that read them,
+  are `Error::Value` for an SGroup line (or its `DEFAULT` line) that ends
+  after `COMPNO=` or a bare `COMPNO` label, and for an enhanced-stereo
+  collection that lists no atoms for a nonzero count (`ATOMS=(1 )`). RDKit
+  reads both values with extractions that write nothing there and then
+  uses the unset variable; Valgrind reports a conditional jump on an
+  uninitialized value in Python. Since RDKit parses a line cut off by a
+  refusal or the end of the input as a whole one, a checked stream now
+  holds back a COMPNO field or an enhanced-stereo line until it has read
+  past it, reading ahead without seeking, and refuses one that spans more
+  than 1 MiB.
 
 ## 2026.9.0
 

@@ -352,6 +352,101 @@ fn long_stereo_group_lines_are_refused() {
     assert!(mol_from_mol_block(&format!("{title}{}", block.split_once('\n').unwrap().1)).is_ok());
 }
 
+#[test]
+fn stereo_collections_with_too_few_atoms_are_refused() {
+    let block = stereo_group_block(0, false);
+    // RDKit 2026.09 reads a first atom number no extraction wrote
+    // (parseEnhancedStereo).
+    for atoms in ["(1 )", "(2 )", "(1    )", "(1 ) "] {
+        let bad = block.replace(
+            "MDLV30/STERAC1 ATOMS=(1 2)",
+            &format!("MDLV30/STERAC1 ATOMS={atoms}"),
+        );
+        assert!(is_value(mol_from_mol_block(&bad)), "{atoms:?}");
+        let lax = MolFromMolBlockParams {
+            strict_parsing: false,
+            ..Default::default()
+        };
+        assert!(
+            is_value(mol_from_mol_block_with_params(&bad, &lax)),
+            "{atoms:?}"
+        );
+    }
+    // A shorter list with a first atom repeats it, which RDKit takes for a
+    // duplicate; a full one is read.
+    let full = block.replace("ATOMS=(1 2)", "ATOMS=(2 1 2)");
+    assert!(mol_from_mol_block(&full).is_ok());
+    let empty = block.replace("ATOMS=(1 2)", "ATOMS=(0 )");
+    assert!(mol_from_mol_block(&empty).is_ok());
+}
+
+/// A V3000 block for `CO` whose SGroup block is `lines`, with one SGroup.
+fn compno_block(lines: &str) -> String {
+    format!(
+        "\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 2 1 1 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 O 1 0 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 END BOND\n\
+         M  V30 BEGIN SGROUP\n{lines}M  V30 END SGROUP\nM  V30 END CTAB\nM  END\n"
+    )
+}
+
+#[test]
+fn sgroup_compno_values_are_checked() {
+    let lax = MolFromMolBlockParams {
+        strict_parsing: false,
+        ..Default::default()
+    };
+    // As in Python.
+    for (lines, compno) in [
+        ("M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=5\n", 5),
+        ("M  V30 1 SRU 0 ATOMS=(1 1) COMPNO= 5\n", 5),
+        ("M  V30 1 SRU 0 COMPNO=7 ATOMS=(1 1)\n", 7),
+        ("M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=-\nM  V30 6\n", 6),
+        ("M  V30 DEFAULT COMPNO=4\nM  V30 1 SRU 0 ATOMS=(1 1)\n", 4),
+    ] {
+        let mol = mol_from_mol_block(&compno_block(lines)).unwrap();
+        let groups = get_mol_substance_groups(&mol);
+        assert_eq!(
+            groups[0].get_unsigned_prop("COMPNO").unwrap(),
+            compno,
+            "{lines:?}"
+        );
+    }
+    // RDKit 2026.09 compares a COMPNO no extraction wrote with 256
+    // (ParseV3000ParseLabel).
+    for lines in [
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=\n",
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=  \t\n",
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO\n",
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO \n",
+        "M  V30 1 SRU 0 ATOMS=(1 1) compno=\n",
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO= -\nM  V30  \n",
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=\r\n",
+        "M  V30 DEFAULT COMPNO=\nM  V30 1 SRU 0 ATOMS=(1 1)\n",
+    ] {
+        let block = compno_block(lines);
+        assert!(is_value(mol_from_mol_block(&block)), "{lines:?}");
+        assert!(
+            is_value(mol_from_mol_block_with_params(&block, &lax)),
+            "{lines:?}"
+        );
+    }
+    // A held field is bounded (streams.h, kMaxHeld).
+    let long = format!(
+        "M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=-\n{}M  V30 5\n",
+        "M  V30 -\n".repeat(150_000)
+    );
+    assert!(is_value(mol_from_mol_block(&compno_block(&long))));
+    // The end of the input ends the line.
+    let block = compno_block("M  V30 1 SRU 0 ATOMS=(1 1) COMPNO=5\n");
+    let cut = &block[..block.find("COMPNO=").unwrap() + "COMPNO=".len()];
+    assert!(is_value(mol_from_mol_block_with_params(cut, &lax)));
+    let path = common::temp_path("compno.mol");
+    std::fs::write(&path, cut).unwrap();
+    assert!(is_value(mol_from_mol_file(&path)));
+}
+
 /// A V3000 block for `*CC` with an explicit hydrogen, whose `*` bond has the
 /// properties `props`.
 fn end_points_block(props: &str) -> String {

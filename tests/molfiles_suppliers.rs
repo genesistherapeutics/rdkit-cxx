@@ -535,3 +535,87 @@ fn long_stereo_group_lines_are_refused() {
     text.set_data(&sd).unwrap();
     assert!(matches!(text.len(), Err(Error::Value { .. })));
 }
+
+/// A V3000 record for `CO` with an SRU SGroup whose line ends with `field`.
+fn compno_record(field: &str) -> String {
+    format!(
+        "\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 2 1 1 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 O 1 0 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 END BOND\n\
+         M  V30 BEGIN SGROUP\nM  V30 1 SRU 0 ATOMS=(1 1) {field}\n\
+         M  V30 END SGROUP\nM  V30 END CTAB\nM  END\n$$$$\n"
+    )
+}
+
+/// An SD file whose second record's COMPNO field starts `before` bytes
+/// before the first 64 KiB boundary (the chunk a checked stream reads in),
+/// after a first record padded with a data field.
+fn straddling_compno_sd(field: &str, before: usize) -> String {
+    let second = compno_record(field);
+    let first = compno_record("COMPNO=1");
+    let head = &first[..first.len() - "$$$$\n".len()];
+    let head = format!("{head}>  <pad>\n");
+    let tail = "\n\n$$$$\n";
+    let offset = second.find(" COMPNO").unwrap();
+    let pad = (1 << 16) - before - offset - head.len() - tail.len();
+    format!("{head}{}{tail}{second}", "x".repeat(pad))
+}
+
+#[test]
+fn compno_fields_across_chunks() {
+    // RDKit parses the line a refusal cuts off whole, so a COMPNO field is
+    // held back until the scanner reads past it, and refused where it starts.
+    for before in [1, 4, 7, 8, 9, 12] {
+        let sd = straddling_compno_sd("COMPNO=2", before);
+        assert_eq!(&sd[(1 << 16) - before..(1 << 16) - before + 7], " COMPNO");
+        let path = write(&format!("compno-{before}.sdf"), &sd);
+        let mut forward = ForwardSDMolSupplier::new(&path).unwrap();
+        let mols: Vec<Mol> = forward.mols().map(|m| m.unwrap()).collect();
+        assert_eq!(mols.len(), 2);
+        let groups = get_mol_substance_groups(&mols[1]);
+        assert_eq!(groups[0].get_unsigned_prop("COMPNO").unwrap(), 2);
+        let mut suppl = SDMolSupplier::new(&path).unwrap();
+        assert_eq!(suppl.len().unwrap(), 2);
+        assert!(suppl.get(1).is_ok());
+        let mut reader = ForwardSDMolSupplier::from_fileobj(Cursor::new(sd)).unwrap();
+        assert!(reader.mols().all(|m| m.is_ok()));
+
+        let sd = straddling_compno_sd("COMPNO=", before);
+        let path = write(&format!("compno-{before}.sdf"), &sd);
+        let mut forward = ForwardSDMolSupplier::new(&path).unwrap();
+        let results: Vec<_> = forward.mols().collect();
+        assert!(results[0].is_ok(), "{before}");
+        assert!(
+            results
+                .iter()
+                .any(|r| matches!(r, Err(Error::Value { .. }))),
+            "{before}"
+        );
+        let mut suppl = SDMolSupplier::new(&path).unwrap();
+        assert!(suppl.get(0).is_ok(), "{before}");
+        assert!(matches!(suppl.get(1), Err(Error::Value { .. })), "{before}");
+        let mut reader = ForwardSDMolSupplier::from_fileobj(Cursor::new(sd)).unwrap();
+        let results: Vec<_> = reader.mols().collect();
+        assert!(results[0].is_ok(), "{before}");
+        assert!(
+            results
+                .iter()
+                .any(|r| matches!(r, Err(Error::Value { .. }))),
+            "{before}"
+        );
+        std::fs::remove_file(&path).unwrap();
+    }
+    // A file that ends in the field.
+    let sd = compno_record("COMPNO=2");
+    let cut = &sd[..sd.find("COMPNO=").unwrap() + "COMPNO=".len()];
+    let path = write("compno-end.sdf", cut);
+    let mut forward = ForwardSDMolSupplier::new(&path).unwrap();
+    assert!(
+        forward
+            .mols()
+            .any(|r| matches!(r, Err(Error::Value { .. })))
+    );
+    let mut reader = ForwardSDMolSupplier::from_fileobj(Cursor::new(cut.to_string())).unwrap();
+    assert!(reader.mols().any(|r| matches!(r, Err(Error::Value { .. }))));
+}

@@ -27,6 +27,24 @@
 //   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
 //   RDKit reads an END BOND line after it, so input that ends (or is cut
 //   off) before a value is checked is never parsed as a molecule.
+// - RDKit parses each V3000 SGroup line as it reads it (ParseV3000ParseLabel
+//   in MolSGroupParsing.cpp), and reads a COMPNO value with an extraction
+//   it does not check: on a line that ends (trailing whitespace trimmed)
+//   after "COMPNO=", or after a "COMPNO" label with no "=", the extraction
+//   writes nothing and RDKit compares the unset variable with 256. A word
+//   "COMPNO" (in any case) after a space must not end the logical line, nor
+//   be followed by "=" and only whitespace.
+// - RDKit reads an enhanced-stereo collection's atom numbers with
+//   extractions it does not check (parseEnhancedStereo), so a collection
+//   whose list ends before its count's first number (ATOMS=(1 )) has RDKit
+//   read an unset index. Such a line is refused; RDKit 2026.09 itself
+//   refuses an atom listed twice, which a shorter list repeats.
+// Because RDKit parses a line cut off by the end of the input (or by a
+// refusal) as it does a whole one, input is never delivered, nor refused,
+// inside a COMPNO field (or a word that may begin one) or an
+// enhanced-stereo line: delivery waits there until the scanner has read
+// past it, and a refusal takes effect where it begins. Such a held field may
+// span at most kMaxHeld bytes.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
@@ -40,6 +58,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <istream>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <streambuf>
@@ -53,6 +72,8 @@ namespace rdkit_cxx {
 constexpr std::uint64_t kMaxInputLines = (std::uint64_t{1} << 31) - (1 << 20);
 // The longest V3000 enhanced-stereo line, in characters after "M  V30 ".
 constexpr std::uint64_t kMaxStereoGroupLine = 4000;
+// The most bytes a held field (above) may span, continuations included.
+constexpr std::uint64_t kMaxHeld = std::uint64_t{1} << 20;
 
 // Scans text in order, one byte at a time across calls.
 class InputScanner {
@@ -61,13 +82,25 @@ class InputScanner {
   // the bytes before the first that breaks one, after which error() says
   // why).
   std::size_t feed(const char *bytes, std::size_t n);
+  // The input ends after the bytes fed; false if it ends inside a field
+  // checked above (or failed before).
+  bool finish();
   const std::string &error() const { return d_error; }
+  // The offset (from the first byte fed) before which the input may be cut
+  // off: a cut at or after it may leave RDKit a field it misreads.
+  std::uint64_t safe_end() const;
+  // Where the refusal of a failed input takes effect: the start of the field
+  // that broke a limit, or UINT64_MAX for the byte that failed.
+  std::uint64_t refuse_at() const { return d_refuse_at; }
 
  private:
   void end_line();
-  void confirm(char c);
+  void end_fields();
+  void confirm(char c, std::uint64_t at);
   void end_points(char c);
-  bool fail(std::string why);
+  void compno(char c, std::uint64_t at);
+  std::uint64_t held_from() const;
+  bool fail(std::string why, std::uint64_t at = UINT64_MAX);
 
   std::string d_error;
   std::uint64_t d_lines = 0;
@@ -77,10 +110,17 @@ class InputScanner {
   char d_head[7] = {};
   int d_pending = 0;
   char d_pend[2] = {};
-  // The logical V3000 line, joined across continuations.
+  std::uint64_t d_pend_at[2] = {};
+  // The bytes fed, and where a refusal takes effect.
+  std::uint64_t d_fed = 0;
+  std::uint64_t d_refuse_at = UINT64_MAX;
+  // The logical V3000 line, joined across continuations: where its first
+  // character is, and, for an enhanced-stereo line, the line upper-cased.
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
+  std::uint64_t d_logical_at = 0;
   std::string d_prefix;
+  std::string d_stereo_line;
   // In the logical line: how much of "ENDPTS=" has matched, and then the
   // value after it, with the number being read and how many were read.
   enum class EndPoints : std::uint8_t { kKey, kStart, kNumbers, kClosed };
@@ -89,6 +129,18 @@ class InputScanner {
   bool d_in_number = false;
   std::uint64_t d_number = 0;
   std::uint64_t d_numbers = 0;
+  // In the logical line, for COMPNO: its last token (upper-cased, up to
+  // seven characters; longer is no key), where it starts (at the space
+  // before it, when a space ends the whitespace before it), and the
+  // whitespace after the last token, with its last character.
+  bool d_token = false;
+  bool d_token_spaced = false;
+  bool d_token_long = false;
+  std::uint64_t d_token_at = 0;
+  std::string d_token_text;
+  bool d_in_space = false;
+  char d_space = 0;
+  std::uint64_t d_space_at = 0;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.
@@ -121,6 +173,9 @@ class CheckedStreambuf : public std::streambuf {
 
  private:
   bool fill(std::uint64_t chunk);
+  bool read_ahead(std::uint64_t chunk);
+  void finish();
+  std::uint64_t deliverable() const;
   void refuse(const std::string &why, std::uint64_t at);
   int_type hit();
   void changed();
@@ -146,7 +201,12 @@ class CheckedStreambuf : public std::streambuf {
   std::vector<std::uint64_t> d_hashes;
   std::uint64_t d_tail_hash = 0;
   std::uint64_t d_key[2] = {};
+  // Chunks scanned ahead of the one in the buffer, past a held field, kept
+  // until it is their turn, since the source may not seek back.
+  std::map<std::uint64_t, std::string> d_ahead;
   InputScanner d_scanner;
+  // Whether the source's end has been scanned (and the scanner finished).
+  bool d_finished = false;
   std::atomic<bool> d_failed{false};
   mutable std::mutex d_error_mutex;
   std::string d_error;

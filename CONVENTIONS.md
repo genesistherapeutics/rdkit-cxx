@@ -390,7 +390,13 @@ its Boost.Python modules and its `.py` modules.
   past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
   run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
   value that is empty, or in parentheses holds anything but numbers below
-  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
+  2^32 between spaces, is refused too. So are a COMPNO label that ends its
+  line and an enhanced-stereo collection with no atoms for a nonzero count,
+  whose values RDKit reads with extractions that write nothing; since RDKit
+  parses a line a refusal cuts off as a whole one, a checked stream holds
+  such a field back until it has read past it (reading ahead without
+  seeking, at most 1 MiB), and a refusal there takes effect where the field
+  begins. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record
