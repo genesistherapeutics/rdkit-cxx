@@ -327,14 +327,28 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **Oversized shifts.** RDKit 2025.03 shifts a 32-bit one by the number of
-  questionable dummy atoms a kekulization enumerates (`Kekulize.cpp`), and
-  FMCS a 64-bit one by a seed's new external bonds when there are exactly
-  64; both are undefined at those counts. Sanitization runs the first
-  during every parse, so the crate cannot refuse it narrowly; on x86-64 and
-  arm64 the shift wraps and kekulization fails instead (at 31 such atoms it
-  already takes about 2^31 tries). Such molecules are far outside normal
-  chemistry.
+- **Oversized shifts.** RDKit 2025.03's kekulization shifts a 32-bit one by
+  the number of dummy "question" atoms in a ring system (`Kekulize.cpp`),
+  undefined from 32; its CIP labeler shifts a 64-bit one by the number of
+  descriptors a `PairList` holds, undefined past 64; and FMCS shifts a
+  64-bit one by a seed's new external bonds, undefined at exactly 64 (a
+  search that would first run 2^63 steps). `mol_from_smiles`,
+  `sanitize_mol`, `kekulize`, and `kekulize_if_possible` refuse 32 or more
+  such atoms in one ring system, and `assign_cip_labels` refuses more than
+  64 stereo atoms and bonds. Not checked are RDKit's other parsers, the
+  calls that sanitize inside RDKit, and fused ring systems in which one
+  stereo atom is several nodes of a branch of the CIP digraph (a sound bound
+  would refuse common polycycles). x86-64 and arm64 take the shift count
+  modulo the width, so the result is wrong (or, for kekulization, very
+  long), not a memory error.
+- **Trajectory readers.** The AMBER and GROMOS trajectory readers add each
+  snapshot through `Trajectory::insertSnapshot`, which subtracts an iterator
+  its own `insert` may have invalidated (the two operands' order is
+  unspecified); the result is an index RDKit ignores.
+- **R-group decomposition** with `include_target_mol_in_results` inserts a
+  range of a vector into itself when an R group has several fragments
+  (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies from storage
+  the insert leaves in place.
 - **SMARTS in parameter files.** RDKit parses the SMARTS in fragment-catalog
   parameter files, standardizer parameter files, and deprotection data
   itself; a CXSMARTS `atomProp:` list there can read a byte past the
