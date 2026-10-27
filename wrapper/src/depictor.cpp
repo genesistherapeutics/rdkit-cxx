@@ -47,7 +47,6 @@ RDDepict::ConstrainedDepictionParams to_params(
   params.alignOnly = data.align_only;
   params.adjustMolBlockWedging = data.adjust_mol_block_wedging;
   params.existingConfId = data.existing_conf_id;
-  params.useRingTemplates = data.use_ring_templates;
   return params;
 }
 
@@ -220,10 +219,10 @@ void load_default_ring_system_templates() {
 ConstrainedDepictionParamsData constrained_depiction_params_default() {
   RDDepict::ConstrainedDepictionParams p;
   return ConstrainedDepictionParamsData{
-      p.acceptFailure,         p.forceRDKit,
-      p.allowRGroups,          p.alignOnly,
+      p.acceptFailure, p.forceRDKit,
+      p.allowRGroups,  p.alignOnly,
       p.adjustMolBlockWedging, p.existingConfId,
-      p.useRingTemplates,      -1,
+      -1,
   };
 }
 

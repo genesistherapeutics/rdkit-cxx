@@ -34,10 +34,10 @@ pub struct ContourParams {
     /// Extra space around the gaussians' grid, in the molecule's frame.
     pub extra_grid_padding: f64,
     /// The contours' color.
-    pub contour_colour: DrawColour,
+    pub(crate) contour_colour: DrawColour,
     /// The fill's colors: two, from the lowest value to the highest, or
     /// three, for negative values, zero, and positive values.
-    pub colour_map: Vec<DrawColour>,
+    pub(crate) colour_map: Vec<DrawColour>,
     /// Draws the contours as continuous lines rather than segments.
     pub draw_as_lines: bool,
     /// The scale by which RDKit rounds coordinates to join segments into
@@ -45,12 +45,6 @@ pub struct ContourParams {
     pub coord_scale_for_quantization: f64,
     /// The scale by which RDKit rounds levels to join segments into lines.
     pub isoval_scale_for_quantization: f64,
-    /// Fills only boxes whose value's magnitude reaches `fill_threshold`.
-    pub use_fill_threshold: bool,
-    /// The magnitude a box's value must reach to be filled.
-    pub fill_threshold: f64,
-    /// Takes `fill_threshold` as a fraction of the data's range.
-    pub fill_threshold_is_fraction: bool,
 }
 
 impl Default for ContourParams {
@@ -83,9 +77,6 @@ impl ContourParams {
             draw_as_lines: data.draw_as_lines,
             coord_scale_for_quantization: data.coord_scale_for_quantization,
             isoval_scale_for_quantization: data.isoval_scale_for_quantization,
-            use_fill_threshold: data.use_fill_threshold,
-            fill_threshold: data.fill_threshold,
-            fill_threshold_is_fraction: data.fill_threshold_is_fraction,
         }
     }
 
@@ -102,9 +93,6 @@ impl ContourParams {
             draw_as_lines: self.draw_as_lines,
             coord_scale_for_quantization: self.coord_scale_for_quantization,
             isoval_scale_for_quantization: self.isoval_scale_for_quantization,
-            use_fill_threshold: self.use_fill_threshold,
-            fill_threshold: self.fill_threshold,
-            fill_threshold_is_fraction: self.fill_threshold_is_fraction,
         }
     }
 }

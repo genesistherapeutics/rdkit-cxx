@@ -20,9 +20,8 @@ namespace rdkit_cxx {
 using Atom = RDKit::Atom;
 using HybridizationType = RDKit::Atom::HybridizationType;
 using ChiralType = RDKit::Atom::ChiralType;
-using ValenceType = RDKit::Atom::ValenceType;
 
-unsigned atom_noatom();
+unsigned stereo_info_noatom();
 
 std::unique_ptr<Atom> atom_new(rust::Str what);
 std::unique_ptr<Atom> atom_from_num(unsigned num);
@@ -45,7 +44,8 @@ unsigned atom_get_num_radical_electrons(const Atom &atom);
 bool atom_has_owning_mol(const Atom &atom);
 bool atom_has_query(const Atom &atom);
 bool atom_needs_update_property_cache(const Atom &atom);
-unsigned atom_get_valence(const Atom &atom, ValenceType which);
+int atom_get_explicit_valence(const Atom &atom);
+int atom_get_implicit_valence(const Atom &atom);
 // As AtomGetSmarts in Code/GraphMol/Wrap/Atom.cpp.
 std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,
                                              bool all_hs_explicit,
@@ -62,7 +62,6 @@ void atom_set_hybridization(Atom &atom, HybridizationType what);
 void atom_set_chiral_tag(Atom &atom, ChiralType what);
 void atom_set_atom_map_num(Atom &atom, int mapno, bool strict);
 void atom_set_num_radical_electrons(Atom &atom, unsigned num);
-void atom_clear_property_cache(Atom &atom);
 bool atom_invert_chirality(Atom &atom);
 
 // Getters that need the owning molecule (CONVENTIONS.md W4).

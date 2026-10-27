@@ -125,21 +125,11 @@ void mol_update_property_cache(RWMol &mol, bool strict) {
   mol.updatePropertyCache(strict);
 }
 
-void mol_clear_property_cache(RWMol &mol) { mol.clearPropertyCache(); }
-
 bool mol_needs_update_property_cache(const RWMol &mol) {
   return mol.needsUpdatePropertyCache();
 }
 
 bool mol_has_query(const RWMol &mol) { return mol.hasQuery(); }
-
-std::unique_ptr<std::string> mol_get_name(const RWMol &mol) {
-  return std::make_unique<std::string>(mol.getName());
-}
-
-void mol_set_name(RWMol &mol, rust::Str name) {
-  mol.setName(std::string(name));
-}
 
 void mol_debug(const RWMol &mol, bool use_stdout) {
   mol.debugMol(use_stdout ? std::cout : std::cerr);

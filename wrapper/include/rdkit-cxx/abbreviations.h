@@ -33,12 +33,10 @@ class AbbreviationList {
 
 std::unique_ptr<AbbreviationList> abbreviation_list_new();
 void abbreviation_list_push(AbbreviationList &list, rust::Str label,
-                            rust::Str display_label, rust::Str display_label_w,
-                            bool includes_x_bonds);
+                            rust::Str display_label, rust::Str display_label_w);
 void abbreviation_list_push_with_mol(AbbreviationList &list, rust::Str label,
                                      rust::Str display_label,
-                                     rust::Str display_label_w,
-                                     bool includes_x_bonds, const RWMol &mol);
+                                     rust::Str display_label_w, const RWMol &mol);
 
 // A default-constructed definition, without a molecule.
 AbbreviationDefinitionData abbreviation_definition_default();

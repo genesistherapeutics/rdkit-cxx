@@ -14,29 +14,12 @@ pub(crate) mod ffi {
         type Atom = crate::ffi::atom::ffi::Atom;
 
         fn monomer_info_new() -> Result<UniquePtr<AtomMonomerInfo>>;
-        fn monomer_info_with(
-            monomer_type: i32,
-            name: &str,
-            residue_name: &str,
-            res_num: i32,
-            chain_id: &str,
-            monomer_class: &str,
-        ) -> Result<UniquePtr<AtomMonomerInfo>>;
+        fn monomer_info_with(monomer_type: i32, name: &str) -> Result<UniquePtr<AtomMonomerInfo>>;
         fn monomer_info_clone(info: &AtomMonomerInfo) -> Result<UniquePtr<AtomMonomerInfo>>;
         fn monomer_info_get_name(info: &AtomMonomerInfo) -> Result<UniquePtr<CxxString>>;
         fn monomer_info_get_monomer_type(info: &AtomMonomerInfo) -> Result<i32>;
-        fn monomer_info_get_residue_name(info: &AtomMonomerInfo) -> Result<UniquePtr<CxxString>>;
-        fn monomer_info_get_residue_number(info: &AtomMonomerInfo) -> Result<i32>;
-        fn monomer_info_get_chain_id(info: &AtomMonomerInfo) -> Result<UniquePtr<CxxString>>;
-        fn monomer_info_get_monomer_class(info: &AtomMonomerInfo) -> Result<UniquePtr<CxxString>>;
         fn monomer_info_set_name(info: Pin<&mut AtomMonomerInfo>, nm: &str) -> Result<()>;
         fn monomer_info_set_monomer_type(info: Pin<&mut AtomMonomerInfo>, typ: i32) -> Result<()>;
-        fn monomer_info_set_residue_name(info: Pin<&mut AtomMonomerInfo>, val: &str) -> Result<()>;
-        fn monomer_info_set_residue_number(info: Pin<&mut AtomMonomerInfo>, val: i32)
-        -> Result<()>;
-        fn monomer_info_set_chain_id(info: Pin<&mut AtomMonomerInfo>, val: &str) -> Result<()>;
-        fn monomer_info_set_monomer_class(info: Pin<&mut AtomMonomerInfo>, val: &str)
-        -> Result<()>;
 
         fn pdb_residue_info_new() -> Result<UniquePtr<AtomPDBResidueInfo>>;
         #[allow(clippy::too_many_arguments)]
@@ -53,7 +36,6 @@ pub(crate) mod ffi {
             is_hetero_atom: bool,
             secondary_structure: u32,
             segment_number: u32,
-            monomer_class: &str,
         ) -> Result<UniquePtr<AtomPDBResidueInfo>>;
         fn pdb_residue_info_clone(
             info: &AtomPDBResidueInfo,
@@ -63,6 +45,21 @@ pub(crate) mod ffi {
             info: Pin<&mut AtomPDBResidueInfo>,
         ) -> Result<Pin<&mut AtomMonomerInfo>>;
         fn pdb_residue_info_get_serial_number(info: &AtomPDBResidueInfo) -> Result<i32>;
+        fn pdb_residue_info_get_residue_name(
+            info: &AtomPDBResidueInfo,
+        ) -> Result<UniquePtr<CxxString>>;
+        fn pdb_residue_info_get_residue_number(info: &AtomPDBResidueInfo) -> Result<i32>;
+        fn pdb_residue_info_get_chain_id(info: &AtomPDBResidueInfo) -> Result<UniquePtr<CxxString>>;
+        fn pdb_residue_info_set_residue_name(
+            info: Pin<&mut AtomPDBResidueInfo>,
+            val: &str,
+        ) -> Result<()>;
+        fn pdb_residue_info_set_residue_number(
+            info: Pin<&mut AtomPDBResidueInfo>,
+            val: i32,
+        ) -> Result<()>;
+        fn pdb_residue_info_set_chain_id(info: Pin<&mut AtomPDBResidueInfo>, val: &str)
+        -> Result<()>;
         fn pdb_residue_info_get_alt_loc(info: &AtomPDBResidueInfo) -> Result<UniquePtr<CxxString>>;
         fn pdb_residue_info_get_insertion_code(
             info: &AtomPDBResidueInfo,

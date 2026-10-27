@@ -280,15 +280,12 @@ pub fn find_meso_centers_with_params(
 pub struct CanonicalizeStereoGroupsParams {
     /// Whether the result gets an absolute group.
     pub output_absolute_groups: StereoGroupAbsOptions,
-    /// The most stereo groups to canonicalize; more is `Error::Runtime`.
-    pub max_stereo_groups: u32,
 }
 
 impl Default for CanonicalizeStereoGroupsParams {
     fn default() -> CanonicalizeStereoGroupsParams {
         CanonicalizeStereoGroupsParams {
             output_absolute_groups: StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist,
-            max_stereo_groups: 12,
         }
     }
 }
@@ -299,8 +296,7 @@ pub fn canonicalize_stereo_groups(mol: &Mol) -> Result<Mol> {
     canonicalize_stereo_groups_with_params(mol, &CanonicalizeStereoGroupsParams::default())
 }
 
-/// Mirrors `rdmolops.CanonicalizeStereoGroups(mol, outputAbsoluteGroups,
-/// maxStereoGroups)`.
+/// Mirrors `rdmolops.CanonicalizeStereoGroups(mol, outputAbsoluteGroups)`.
 pub fn canonicalize_stereo_groups_with_params(
     mol: &Mol,
     params: &CanonicalizeStereoGroupsParams,
@@ -308,14 +304,7 @@ pub fn canonicalize_stereo_groups_with_params(
     Ok(Mol::from_ffi(ffi::canonicalize_stereo_groups(
         mol.as_ffi(),
         params.output_absolute_groups.to_ffi(),
-        params.max_stereo_groups,
     )?))
-}
-
-/// Removes atoms without specified chirality from the stereo groups. Mirrors
-/// `rdmolops.CleanupStereoGroups`.
-pub fn cleanup_stereo_groups(mol: &mut Mol) -> Result<()> {
-    Ok(ffi::cleanup_stereo_groups(mol.pin_mut())?)
 }
 
 /// When every specified stereocenter is in one AND or OR group, notes the
@@ -520,16 +509,12 @@ pub fn wedge_mol_bonds_with_params(
 pub struct ReapplyMolBlockWedgingParams {
     /// Reapplies wedges to bonds other than single and aromatic ones too.
     pub all_bond_types: bool,
-    /// Reapplies wedges only where they make sense: single bonds to chiral
-    /// centers, or atropisomer bonds.
-    pub verify: bool,
 }
 
 impl Default for ReapplyMolBlockWedgingParams {
     fn default() -> ReapplyMolBlockWedgingParams {
         ReapplyMolBlockWedgingParams {
             all_bond_types: true,
-            verify: false,
         }
     }
 }
@@ -540,7 +525,7 @@ pub fn reapply_mol_block_wedging(mol: &mut Mol) -> Result<()> {
     reapply_mol_block_wedging_with_params(mol, &ReapplyMolBlockWedgingParams::default())
 }
 
-/// Mirrors `rdmolops.ReapplyMolBlockWedging(mol, allBondTypes, verify)`.
+/// Mirrors `rdmolops.ReapplyMolBlockWedging(mol, allBondTypes)`.
 pub fn reapply_mol_block_wedging_with_params(
     mol: &mut Mol,
     params: &ReapplyMolBlockWedgingParams,
@@ -548,7 +533,6 @@ pub fn reapply_mol_block_wedging_with_params(
     Ok(ffi::reapply_mol_block_wedging(
         mol.pin_mut(),
         params.all_bond_types,
-        params.verify,
     )?)
 }
 

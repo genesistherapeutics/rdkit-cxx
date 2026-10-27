@@ -17,7 +17,6 @@
 #include <string>
 #include <vector>
 
-#include <GraphMol/FileParsers/CDXMLParser.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
@@ -32,23 +31,18 @@ namespace rdkit_cxx {
 // RDKit's enums, by the names the bridge gives them.
 using CXSmilesFields = RDKit::SmilesWrite::CXSmilesFields;
 using RestoreBondDirOption = RDKit::RestoreBondDirOption;
-using SCSRTemplateNames = RDKit::v2::FileParsers::SCSRTemplateNames;
-using SCSRBaseHbondOptions = RDKit::v2::FileParsers::SCSRBaseHbondOptions;
-using CDXMLFormat = RDKit::v2::CDXMLParser::CDXMLFormat;
 
 // Shared structs, defined by the bridge (src/ffi/molfiles.rs).
 struct SmilesParserParamsData;
 struct SmartsParserParamsData;
 struct SmilesWriteParamsData;
 struct MolWriterParamsData;
-struct MolFromSCSRParamsData;
 
 // Each returns the C++ class's defaults (CONVENTIONS.md A3).
 SmilesParserParamsData smiles_parser_params_default();
 SmartsParserParamsData smarts_parser_params_default();
 SmilesWriteParamsData smiles_write_params_default();
 MolWriterParamsData mol_writer_params_default();
-MolFromSCSRParamsData mol_from_scsr_params_default();
 
 // Conversions the other rdmolfiles bridges share.
 RDKit::SmilesWriteParams write_params(const SmilesWriteParamsData &data);
@@ -104,7 +98,7 @@ rust::Vec<std::int32_t> canonical_rank_atoms_in_fragment(
     bool break_ties, bool include_chirality, bool include_isotopes,
     bool include_atom_maps, bool include_chiral_presence);
 void canonicalize_enhanced_stereo(RWMol &mol);
-void create_property_list(RWMol &mol, bool bonds, std::uint8_t kind,
+void create_property_list(RWMol &mol, std::uint8_t kind,
                           rust::Str prop_name, rust::Str missing_value_marker,
                           std::uint32_t line_size);
 
@@ -123,12 +117,6 @@ std::unique_ptr<std::string> mol_to_v3k_mol_block(
     const RWMol &mol, const MolWriterParamsData &params);
 void mol_to_v3k_mol_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                          const MolWriterParamsData &params);
-std::unique_ptr<RWMol> mol_from_scsr_block(rust::Str mol_block, bool sanitize,
-                                           bool remove_hs,
-                                           const MolFromSCSRParamsData &params);
-std::unique_ptr<RWMol> mol_from_scsr_file(rust::Slice<const std::uint8_t> path,
-                                          bool sanitize, bool remove_hs,
-                                          const MolFromSCSRParamsData &params);
 
 std::unique_ptr<RWMol> mol_from_tpl_block(rust::Str tpl_block, bool sanitize,
                                           bool skip_first_conf);
@@ -192,9 +180,5 @@ std::unique_ptr<RWMol> mol_from_helm(rust::Str text, bool sanitize);
 std::unique_ptr<std::string> mol_to_sequence(const RWMol &mol);
 std::unique_ptr<std::string> mol_to_fasta(const RWMol &mol);
 std::unique_ptr<std::string> mol_to_helm(const RWMol &mol);
-bool has_chem_draw_cdx_support();
-// Checks the coordinates RDKit converts to fixed point.
-rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
-                                           CDXMLFormat format);
 
 }  // namespace rdkit_cxx

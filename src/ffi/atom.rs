@@ -37,14 +37,6 @@ pub(crate) mod ffi {
         CHI_OCTAHEDRAL,
     }
 
-    /// `RDKit::Atom::ValenceType`; cxx checks the values.
-    #[repr(u8)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum ValenceType {
-        IMPLICIT = 0,
-        EXPLICIT,
-    }
-
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/atom.h");
@@ -52,11 +44,10 @@ pub(crate) mod ffi {
         type Atom;
         type HybridizationType;
         type ChiralType;
-        type ValenceType;
 
         // Only the crate's unit tests call this.
         #[allow(dead_code)]
-        fn atom_noatom() -> Result<u32>;
+        fn stereo_info_noatom() -> Result<u32>;
 
         fn atom_new(what: &str) -> Result<UniquePtr<Atom>>;
         fn atom_from_num(num: u32) -> Result<UniquePtr<Atom>>;
@@ -78,7 +69,8 @@ pub(crate) mod ffi {
         fn atom_has_owning_mol(atom: &Atom) -> Result<bool>;
         fn atom_has_query(atom: &Atom) -> Result<bool>;
         fn atom_needs_update_property_cache(atom: &Atom) -> Result<bool>;
-        fn atom_get_valence(atom: &Atom, which: ValenceType) -> Result<u32>;
+        fn atom_get_explicit_valence(atom: &Atom) -> Result<i32>;
+        fn atom_get_implicit_valence(atom: &Atom) -> Result<i32>;
         fn atom_get_smarts(
             atom: &Atom,
             do_kekule: bool,
@@ -96,7 +88,6 @@ pub(crate) mod ffi {
         fn atom_set_chiral_tag(atom: Pin<&mut Atom>, what: ChiralType) -> Result<()>;
         fn atom_set_atom_map_num(atom: Pin<&mut Atom>, mapno: i32, strict: bool) -> Result<()>;
         fn atom_set_num_radical_electrons(atom: Pin<&mut Atom>, num: u32) -> Result<()>;
-        fn atom_clear_property_cache(atom: Pin<&mut Atom>) -> Result<()>;
         fn atom_invert_chirality(atom: Pin<&mut Atom>) -> Result<bool>;
 
         fn atom_get_degree(atom: &Atom) -> Result<u32>;

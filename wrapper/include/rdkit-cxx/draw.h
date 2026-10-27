@@ -47,11 +47,8 @@ struct Point2D;
 using RDKit::RWMol;
 using ChemicalReaction = RDKit::ChemicalReaction;
 
-// Enums cxx checks against RDKit's (CONVENTIONS.md N6). DrawElement is a
-// plain enum unless USE_BETTER_ENUMS is defined, which the wrappers never do.
-using LegendPosition = RDKit::MolDrawOptions::LegendPosition;
+// Enums cxx checks against RDKit's (CONVENTIONS.md N6).
 using MultiColourHighlightStyle = RDKit::MultiColourHighlightStyle;
-using DrawElement = RDKit::DrawElement;
 
 // The access a drawer's RDKit subclass gives to its text drawer
 // (draw_drawer.cpp).

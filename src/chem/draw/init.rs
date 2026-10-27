@@ -40,9 +40,9 @@ pub fn should_kekulize(mol: &Mol, kekulize: bool) -> bool {
             .any(|bond| bond.get_is_aromatic() && bond.has_query())
 }
 
-/// The molecule as Python's `_prepareMol` leaves it for drawing: prepared
-/// (kekulized where it can be, wedged, with coordinates) unless the options
-/// say molecules are drawn as they are.
+/// The molecule as Python's `_moltoimg` and `_moltoSVG` leave it for
+/// drawing: prepared (kekulized where it can be, wedged, with coordinates)
+/// unless the options say molecules are drawn as they are.
 fn prepare_mol(
     mol: &Mol,
     draw_options: Option<&MolDrawOptions>,
@@ -51,7 +51,16 @@ fn prepare_mol(
 ) -> Result<Mol> {
     // Python updates the caller's molecule; this updates a copy.
     let mut mol = mol.clone();
-    if mol.needs_update_property_cache() {
+    // Python asks atom 0 for its explicit valence, with logs blocked, and
+    // updates the cache on the RuntimeError of an atom without one, or of a
+    // molecule without atoms.
+    let computed = {
+        let _block = BlockLogs::default();
+        mol.get_atom_with_idx(0)
+            .and_then(|atom| atom.get_explicit_valence())
+            .is_ok()
+    };
+    if !computed {
         mol.update_property_cache_with_strict(false)?;
     }
     let kekulize = should_kekulize(&mol, kekulize);
@@ -175,48 +184,19 @@ pub fn mol_to_image_with_params(mol: &Mol, params: &MolToImageParams) -> Result<
     drawer.get_drawing_text()
 }
 
-/// Parameters for `mol_to_svg_with_params`, with Python's defaults (A2).
-/// Python's `wedgeBonds` is not ported: its `MolToSVG` ignores it, and
-/// always wedges.
-#[derive(Clone, Debug, PartialEq)]
-pub struct MolToSVGParams {
-    /// The image's width and height, in pixels.
-    pub size: (i32, i32),
-    /// Kekulizes the molecule before drawing.
-    pub kekulize: bool,
-    /// The drawing options; `None` for the defaults.
-    pub draw_options: Option<MolDrawOptions>,
-    /// Atoms to highlight.
-    pub highlight_atoms: Vec<u32>,
-    /// Bonds to highlight.
-    pub highlight_bonds: Vec<u32>,
-    /// Text drawn under (or by) the molecule.
-    pub legend: String,
+/// What `mol_to_file_with_params` draws an SVG with: the arguments of
+/// Python's `_moltoSVG`, whose `wedgeBonds` it ignores, always wedging.
+struct MolToSVGParams {
+    size: (i32, i32),
+    kekulize: bool,
+    draw_options: Option<MolDrawOptions>,
+    highlight_atoms: Vec<u32>,
+    highlight_bonds: Vec<u32>,
+    legend: String,
 }
 
-impl Default for MolToSVGParams {
-    fn default() -> MolToSVGParams {
-        MolToSVGParams {
-            size: (300, 300),
-            kekulize: true,
-            draw_options: None,
-            highlight_atoms: Vec::new(),
-            highlight_bonds: Vec::new(),
-            legend: String::new(),
-        }
-    }
-}
-
-/// An SVG drawing of the molecule. Mirrors `Draw.MolToSVG`. (Jupyter's
-/// display of molecules, `IPythonConsole`, draws them this way, at its
-/// `molSize`, with its `drawOptions`.)
-pub fn mol_to_svg(mol: &Mol) -> Result<String> {
-    mol_to_svg_with_params(mol, &MolToSVGParams::default())
-}
-
-/// Mirrors `Draw.MolToSVG(mol, size, kekulize, wedgeBonds, drawOptions,
-/// highlightAtoms=..., highlightBonds=..., legend=...)`.
-pub fn mol_to_svg_with_params(mol: &Mol, params: &MolToSVGParams) -> Result<String> {
+/// Mirrors `Draw._moltoSVG`, which RDKit 2024.09 does not export.
+fn mol_to_svg_with_params(mol: &Mol, params: &MolToSVGParams) -> Result<String> {
     let mol = prepare_mol(mol, params.draw_options.as_ref(), params.kekulize, true)?;
     let mut drawer = MolDraw2DSVG::new(params.size.0, params.size.1)?;
     set_options(&mut drawer, params.draw_options.as_ref(), None)?;
@@ -371,158 +351,6 @@ fn draw_grid(
             highlight_bonds: truncated(&params.highlight_bond_lists, mols.len()),
             ..Default::default()
         },
-    )
-}
-
-/// Parameters for `draw_mol_with_matches_with_params`, with Python's
-/// defaults (A2).
-#[derive(Clone, Debug)]
-pub struct DrawMolWithMatchesParams {
-    /// The image's width and height, in pixels.
-    pub mol_size: (i32, i32),
-    /// The query that matched; with it, the bonds it matched are
-    /// highlighted too.
-    pub qry: Option<Mol>,
-    /// Text drawn under the molecule.
-    pub label: String,
-    /// The drawing options.
-    pub options: MolDrawOptions,
-    /// A color for each match, in turn; `None` for the options' highlight
-    /// color.
-    pub colors: Option<Vec<DrawColour>>,
-    /// Kekulizes the molecule before drawing.
-    pub kekulize: bool,
-    /// The conformer to draw; -1 for the first.
-    pub conf_id: i32,
-}
-
-impl Default for DrawMolWithMatchesParams {
-    fn default() -> DrawMolWithMatchesParams {
-        DrawMolWithMatchesParams {
-            mol_size: (350, 300),
-            qry: None,
-            label: String::new(),
-            options: MolDrawOptions::default(),
-            colors: None,
-            kekulize: true,
-            conf_id: -1,
-        }
-    }
-}
-
-/// A PNG drawing of the molecule with each substructure match (a list of
-/// atom indices) highlighted. Mirrors `Draw.DrawMolWithMatches`. (Jupyter's
-/// display of molecules draws a molecule that holds the matches of its last
-/// substructure search this way.)
-pub fn draw_mol_with_matches(mol: &Mol, matches: &[Vec<u32>]) -> Result<Vec<u8>> {
-    draw_mol_with_matches_with_params(mol, matches, &DrawMolWithMatchesParams::default())
-}
-
-/// Mirrors `Draw.DrawMolWithMatches(mol, matches, molSize, qry, label,
-/// options, colors, kekulize=..., confId=...)`. `Error::Value` for an empty
-/// `colors` (Python divides by zero) or a match that does not fit the query.
-pub fn draw_mol_with_matches_with_params(
-    mol: &Mol,
-    matches: &[Vec<u32>],
-    params: &DrawMolWithMatchesParams,
-) -> Result<Vec<u8>> {
-    let mut drawer = MolDraw2DCairo::new(params.mol_size.0, params.mol_size.1)?;
-    draw_with_matches(&mut drawer, mol, matches, params)?;
-    drawer.finish_drawing();
-    drawer.get_drawing_text()
-}
-
-/// An SVG drawing of the molecule with each match highlighted. Mirrors
-/// `Draw.DrawMolWithMatches(mol, matches, doPNG=False)`.
-pub fn draw_mol_with_matches_as_svg(mol: &Mol, matches: &[Vec<u32>]) -> Result<String> {
-    draw_mol_with_matches_as_svg_with_params(mol, matches, &DrawMolWithMatchesParams::default())
-}
-
-/// Mirrors `Draw.DrawMolWithMatches(mol, matches, ..., doPNG=False)`, with
-/// the errors of `draw_mol_with_matches_with_params`.
-pub fn draw_mol_with_matches_as_svg_with_params(
-    mol: &Mol,
-    matches: &[Vec<u32>],
-    params: &DrawMolWithMatchesParams,
-) -> Result<String> {
-    let mut drawer = MolDraw2DSVG::new(params.mol_size.0, params.mol_size.1)?;
-    draw_with_matches(&mut drawer, mol, matches, params)?;
-    drawer.finish_drawing();
-    drawer.get_drawing_text()
-}
-
-/// Adds `colour` to each element's colors, once.
-fn add_colors_to_map(els: &[u32], cols: &mut BTreeMap<u32, Vec<DrawColour>>, colour: DrawColour) {
-    for &el in els {
-        let colours = cols.entry(el).or_default();
-        if !colours.contains(&colour) {
-            colours.push(colour);
-        }
-    }
-}
-
-fn draw_with_matches(
-    drawer: &mut MolDraw2D,
-    mol: &Mol,
-    matches: &[Vec<u32>],
-    params: &DrawMolWithMatchesParams,
-) -> Result<()> {
-    let options = &params.options;
-    let mol = prepare_mol(mol, Some(options), params.kekulize, true)?;
-    let mut acols = BTreeMap::new();
-    let mut bcols = BTreeMap::new();
-    let mut h_rads = BTreeMap::new();
-    let mut h_lw_mult = BTreeMap::new();
-    for (i, alist) in matches.iter().enumerate() {
-        let mut blist = Vec::new();
-        if let Some(qry) = &params.qry {
-            for bnd in qry.get_bonds() {
-                let atom = |idx: u32| {
-                    alist
-                        .get(idx as usize)
-                        .copied()
-                        .ok_or(Error::index(idx, alist.len()))
-                };
-                let b = mol
-                    .get_bond_between_atoms(
-                        atom(bnd.get_begin_atom_idx())?,
-                        atom(bnd.get_end_atom_idx())?,
-                    )?
-                    .ok_or_else(|| Error::Value {
-                        message: "a match lacks a bond of the query".to_owned(),
-                    })?;
-                blist.push(b.get_idx());
-            }
-        }
-        for &ai in alist {
-            h_rads.insert(ai, options.highlight_radius);
-        }
-        for &bi in &blist {
-            h_lw_mult.insert(bi, options.highlight_bond_width_multiplier);
-        }
-        let colour = match &params.colors {
-            Some(colors) if colors.is_empty() => {
-                return Err(Error::Value {
-                    message: "colors must not be empty".to_owned(),
-                });
-            }
-            Some(colors) => colors[i % colors.len()],
-            None => options.get_highlight_colour(),
-        };
-        add_colors_to_map(alist, &mut acols, colour);
-        add_colors_to_map(&blist, &mut bcols, colour);
-    }
-    let mut options = options.clone();
-    options.prepare_mols_before_drawing = false;
-    drawer.set_draw_options(&options)?;
-    drawer.draw_molecule_with_highlights_with_conf_id(
-        &mol,
-        &params.label,
-        &acols,
-        &bcols,
-        &h_rads,
-        &h_lw_mult,
-        params.conf_id,
     )
 }
 

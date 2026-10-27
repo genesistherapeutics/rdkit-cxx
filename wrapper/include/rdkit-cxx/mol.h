@@ -46,11 +46,8 @@ std::int64_t mol_get_bond_between_atoms(const RWMol &mol, unsigned idx1,
 Atom &mol_get_atom_with_idx_mut(RWMol &mol, unsigned idx);
 Bond &mol_get_bond_with_idx_mut(RWMol &mol, unsigned idx);
 void mol_update_property_cache(RWMol &mol, bool strict);
-void mol_clear_property_cache(RWMol &mol);
 bool mol_needs_update_property_cache(const RWMol &mol);
 bool mol_has_query(const RWMol &mol);
-std::unique_ptr<std::string> mol_get_name(const RWMol &mol);
-void mol_set_name(RWMol &mol, rust::Str name);
 void mol_debug(const RWMol &mol, bool use_stdout);
 rust::Vec<std::uint32_t> mol_get_aromatic_atoms(const RWMol &mol);
 

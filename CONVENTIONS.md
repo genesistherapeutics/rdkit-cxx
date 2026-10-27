@@ -204,10 +204,7 @@ its Boost.Python modules and its `.py` modules.
   contract is bytes RDKit wrote, and the wrappers check only what such
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
-  monomer infos). Synthon-space database files
-  (`SynthonSpace::read_db_file`), records of molecule and bit-vector
-  pickles and Boost archives of shapes at offsets RDKit trusts, are read by
-  an `unsafe fn` too, whose wrapper checks the header and offsets first.
+  monomer infos).
   RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
   no fuzzer covers, trusts the indices, counts, and query trees it reads,
   so `json_to_mols` parses the document first, with the same boost::json
@@ -222,9 +219,7 @@ its Boost.Python modules and its `.py` modules.
   RDKit's own bond matcher and SMARTS writer cast. Text a wrapper checks
   before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
-  memory, so RDKit parses the bytes that were checked; where RDKit reads a
-  file only by name (a synthon search's possible hits), it reads a private
-  copy of the checked lines.
+  memory, so RDKit parses the bytes that were checked.
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -436,7 +431,7 @@ its Boost.Python modules and its `.py` modules.
   molecule of several fragments, and what writes SMILES: hashes, tautomer
   enumeration, SMILES holders), the standardizer, and the embedder. Where
   RDKit combines molecules before it removes from them (`molzip`,
-  `replaceSubstructs`, a synthon space's products), their chains are
+  `replaceSubstructs`), their chains are
   checked together, since RDKit does not renumber the groups' indices.
   The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
   and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.

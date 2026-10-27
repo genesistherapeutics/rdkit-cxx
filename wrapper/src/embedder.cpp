@@ -70,7 +70,6 @@ void set_fields(EmbedParametersData &d, const DG::EmbedParameters &p) {
   d.use_small_ring_torsions = p.useSmallRingTorsions;
   d.use_macrocycle_torsions = p.useMacrocycleTorsions;
   d.use_macrocycle14config = p.useMacrocycle14config;
-  d.use_legacy_implementation = p.useLegacyImplementation;
   d.bounds_mat_force_scaling = p.boundsMatForceScaling;
   d.use_symmetry_for_pruning = p.useSymmetryForPruning;
   d.force_trans_amides = p.forceTransAmides;
@@ -116,7 +115,6 @@ std::unique_ptr<NativeParams> to_native(const EmbedParametersData &d) {
   p.useSmallRingTorsions = d.use_small_ring_torsions;
   p.useMacrocycleTorsions = d.use_macrocycle_torsions;
   p.useMacrocycle14config = d.use_macrocycle14config;
-  p.useLegacyImplementation = d.use_legacy_implementation;
   p.boundsMatForceScaling = d.bounds_mat_force_scaling;
   p.useSymmetryForPruning = d.use_symmetry_for_pruning;
   p.forceTransAmides = d.force_trans_amides;
@@ -294,14 +292,8 @@ EmbedParametersData embed_parameters_preset(EmbedPreset preset) {
     case EmbedPreset::ETDG:
       params = &DG::ETDG;
       break;
-    case EmbedPreset::ETDGv2:
-      params = &DG::ETDGv2;
-      break;
     case EmbedPreset::KDG:
       params = &DG::KDG;
-      break;
-    case EmbedPreset::DG:
-      params = &DG::DG;
       break;
   }
   EmbedParametersData data{};
@@ -350,29 +342,18 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
   return ids;
 }
 
-std::unique_ptr<std::string> embed_parameters_to_json(
-    const EmbedParametersData &data) {
-  auto native = to_native(data);
-  return std::make_unique<std::string>(
-      DG::embedParametersToJSON(native->params));
-}
-
-// As getMolBoundsMatrix2 in rdDistGeom.cpp, which sizes its copy in unsigned
+// As getMolBoundsMatrix in rdDistGeom.cpp, which sizes its copy in unsigned
 // int. setTopolBounds reads the distance matrix (U6).
 rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
-                                             const EmbedParametersData &data,
+                                             bool set15bounds, bool scale_vdw,
                                              bool do_triangle_smoothing,
-                                             bool scale_vdw, bool set15bounds,
-                                             bool set14bounds,
-                                             bool set13bounds) {
-  auto native = to_native(data);
+                                             bool use_macrocycle14config) {
   check_matrix_size(mol);
   MatrixCacheGuard guard(mol);
   unsigned n = mol.getNumAtoms();
   DistGeom::BoundsMatPtr mat(new DistGeom::BoundsMatrix(n));
-  DG::initBoundsMat(mat, 0.0, MAX_TOPOLOGICAL_BOUND);
-  DG::setTopolBounds(mol, mat, native->params, scale_vdw, set15bounds,
-                     set14bounds, set13bounds);
+  DG::initBoundsMat(mat);
+  DG::setTopolBounds(mol, mat, set15bounds, scale_vdw, use_macrocycle14config);
   if (do_triangle_smoothing) {
     DistGeom::triangleSmoothBounds(mat);
   }

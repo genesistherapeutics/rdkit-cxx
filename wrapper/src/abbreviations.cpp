@@ -33,7 +33,6 @@ AbbreviationDefinitionData to_data(const A::AbbreviationDefinition &def) {
   data.label = std::make_unique<std::string>(def.label);
   data.display_label = std::make_unique<std::string>(def.displayLabel);
   data.display_label_w = std::make_unique<std::string>(def.displayLabelW);
-  data.includes_x_bonds = def.includesXBonds;
   if (def.mol) {
     auto copy = std::make_unique<RWMol>(*def.mol);
     clear_matrix_caches(*copy);
@@ -52,13 +51,11 @@ rust::Vec<AbbreviationDefinitionData> to_data(
 }
 
 A::AbbreviationDefinition definition(rust::Str label, rust::Str display_label,
-                                     rust::Str display_label_w,
-                                     bool includes_x_bonds) {
+                                     rust::Str display_label_w) {
   A::AbbreviationDefinition def;
   def.label = std::string(label);
   def.displayLabel = std::string(display_label);
   def.displayLabelW = std::string(display_label_w);
-  def.includesXBonds = includes_x_bonds;
   return def;
 }
 
@@ -121,7 +118,8 @@ void check_apply_matches(const RDKit::ROMol &mol,
   };
   for (const auto &amatch : matches) {
     const auto &match = amatch.match;
-    unsigned which = amatch.abbrev.includesXBonds ? 1 : 0;
+    // RDKit 2024.09 reads the connecting atom at match position 1.
+    const unsigned which = 1;
     if (match.size() <= which || !in_range(match[which].second)) {
       return;  // match.at() or getAtomWithIdx throws
     }
@@ -200,7 +198,6 @@ std::vector<A::AbbreviationMatch> sup_matches(const RDKit::ROMol &mol) {
     A::AbbreviationMatch amatch;
     auto ats = sg.getAtoms();
     const auto &bnds = sg.getBonds();
-    amatch.abbrev.includesXBonds = !bnds.empty();
     bool first_attach_found = false;
     for (auto bidx : bnds) {
       const auto *bnd = mol.getBondWithIdx(bidx);
@@ -243,18 +240,18 @@ std::unique_ptr<AbbreviationList> abbreviation_list_new() {
 }
 
 void abbreviation_list_push(AbbreviationList &list, rust::Str label,
-                            rust::Str display_label, rust::Str display_label_w,
-                            bool includes_x_bonds) {
+                            rust::Str display_label,
+                            rust::Str display_label_w) {
   list.defs.push_back(
-      definition(label, display_label, display_label_w, includes_x_bonds));
+      definition(label, display_label, display_label_w));
 }
 
 void abbreviation_list_push_with_mol(AbbreviationList &list, rust::Str label,
                                      rust::Str display_label,
                                      rust::Str display_label_w,
-                                     bool includes_x_bonds, const RWMol &mol) {
+                                     const RWMol &mol) {
   auto def =
-      definition(label, display_label, display_label_w, includes_x_bonds);
+      definition(label, display_label, display_label_w);
   // RDKit only reads the definitions' molecules (and records recursive
   // queries' matches in them, under their own locks).
   def.mol.reset(const_cast<RWMol *>(&mol), [](RDKit::ROMol *) {});

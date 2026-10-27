@@ -11,7 +11,6 @@ pub(crate) mod ffi {
         label: UniquePtr<CxxString>,
         display_label: UniquePtr<CxxString>,
         display_label_w: UniquePtr<CxxString>,
-        includes_x_bonds: bool,
         mol: UniquePtr<RWMol>,
     }
 
@@ -28,14 +27,12 @@ pub(crate) mod ffi {
             label: &str,
             display_label: &str,
             display_label_w: &str,
-            includes_x_bonds: bool,
         ) -> Result<()>;
         fn abbreviation_list_push_with_mol(
             list: Pin<&mut AbbreviationList>,
             label: &str,
             display_label: &str,
             display_label_w: &str,
-            includes_x_bonds: bool,
             mol: &RWMol,
         ) -> Result<()>;
 

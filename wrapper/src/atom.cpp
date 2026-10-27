@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/atom.h"
 
+#include <GraphMol/Chirality.h>
 #include <GraphMol/MolOps.h>
 #include <GraphMol/QueryAtom.h>
 #include <GraphMol/ROMol.h>
@@ -76,7 +77,9 @@ void atom_set_chiral_tag(Atom &atom, ChiralType what) {
   atom.setChiralTag(what);
 }
 
-unsigned atom_noatom() { return Atom::NOATOM; }
+unsigned stereo_info_noatom() {
+  return RDKit::Chirality::StereoInfo::NOATOM;
+}
 
 int atom_get_atom_map_num(const Atom &atom) { return atom.getAtomMapNum(); }
 
@@ -96,8 +99,12 @@ bool atom_needs_update_property_cache(const Atom &atom) {
   return atom.needsUpdatePropertyCache();
 }
 
-unsigned atom_get_valence(const Atom &atom, ValenceType which) {
-  return atom.getValence(which);
+int atom_get_explicit_valence(const Atom &atom) {
+  return atom.getExplicitValence();
+}
+
+int atom_get_implicit_valence(const Atom &atom) {
+  return atom.getImplicitValence();
 }
 
 std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,
@@ -118,8 +125,6 @@ void atom_set_atom_map_num(Atom &atom, int mapno, bool strict) {
 void atom_set_num_radical_electrons(Atom &atom, unsigned num) {
   atom.setNumRadicalElectrons(num);
 }
-
-void atom_clear_property_cache(Atom &atom) { atom.clearPropertyCache(); }
 
 bool atom_invert_chirality(Atom &atom) { return atom.invertChirality(); }
 

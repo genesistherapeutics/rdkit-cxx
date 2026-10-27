@@ -56,7 +56,7 @@ pub use conformer::{AsConformer, AsConformerMut, Conformer, ConformerMut, Confor
 pub use editable_mol::EditableMol;
 pub use enums::{
     BondDir, BondStereo, BondType, ChiralType, HybridizationType, StereoDescriptor,
-    StereoGroupType, StereoSpecified, StereoType, ValenceType,
+    StereoGroupType, StereoSpecified, StereoType,
 };
 pub use mol::{Atoms, Bonds, Conformers, Mol};
 pub use mol_bundle::{FixedMolSizeMolBundle, MolBundle, mol_bundle_can_serialize};
@@ -86,4 +86,4 @@ pub use substance_group::{
     create_mol_substance_group, get_mol_substance_group_with_idx,
     get_mol_substance_group_with_idx_mut, get_mol_substance_groups,
 };
-pub use substruct::{AtomCoordsMatcher, AtomCoordsMatcherParams, SubstructMatchParameters};
+pub use substruct::SubstructMatchParameters;

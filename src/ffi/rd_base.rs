@@ -10,7 +10,6 @@ pub(crate) mod ffi {
         include!("rdkit-cxx/rd_base.h");
 
         type BlockLogs;
-        type CaptureErrorLog;
 
         fn rdkit_version() -> Result<UniquePtr<CxxString>>;
         fn boost_version() -> Result<UniquePtr<CxxString>>;
@@ -27,7 +26,5 @@ pub(crate) mod ffi {
         fn seed_random_number_generator(seed: u32) -> Result<()>;
 
         fn block_logs_new() -> Result<UniquePtr<BlockLogs>>;
-        fn capture_error_log_new() -> Result<UniquePtr<CaptureErrorLog>>;
-        fn capture_error_log_messages(capture: &CaptureErrorLog) -> Result<UniquePtr<CxxString>>;
     }
 }

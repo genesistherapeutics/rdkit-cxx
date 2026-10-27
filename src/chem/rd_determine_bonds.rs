@@ -104,8 +104,6 @@ pub struct DetermineBondOrdersParams {
     pub embed_chiral: bool,
     /// Numbers the atoms' map numbers from 1.
     pub use_atom_map: bool,
-    /// The most combinations of valences to try; 0 for no limit.
-    pub max_iterations: usize,
 }
 
 impl Default for DetermineBondOrdersParams {
@@ -115,7 +113,6 @@ impl Default for DetermineBondOrdersParams {
             allow_charged_fragments: true,
             embed_chiral: true,
             use_atom_map: false,
-            max_iterations: 0,
         }
     }
 }
@@ -127,9 +124,8 @@ pub fn determine_bond_orders(mol: &mut Mol) -> Result<()> {
 }
 
 /// Mirrors `rdDetermineBonds.DetermineBondOrders(mol, charge,
-/// allowChargedFragments, embedChiral, useAtomMap, maxIterations)`. No
-/// ordering that gives the charge is `Error::Value`; running out of
-/// iterations is `Error::Runtime`, as Python's `RuntimeError`.
+/// allowChargedFragments, embedChiral, useAtomMap)`. No ordering that
+/// gives the charge is `Error::Value`.
 pub fn determine_bond_orders_with_params(
     mol: &mut Mol,
     params: &DetermineBondOrdersParams,
@@ -140,7 +136,6 @@ pub fn determine_bond_orders_with_params(
         params.allow_charged_fragments,
         params.embed_chiral,
         params.use_atom_map,
-        params.max_iterations,
     )?)
 }
 
@@ -164,8 +159,6 @@ pub struct DetermineBondsParams {
     pub use_atom_map: bool,
     /// Uses the van der Waals method instead of connect-the-dots.
     pub use_vdw: bool,
-    /// The most combinations of valences to try; 0 for no limit.
-    pub max_iterations: usize,
 }
 
 impl Default for DetermineBondsParams {
@@ -178,7 +171,6 @@ impl Default for DetermineBondsParams {
             embed_chiral: true,
             use_atom_map: false,
             use_vdw: false,
-            max_iterations: 0,
         }
     }
 }
@@ -191,9 +183,9 @@ pub fn determine_bonds(mol: &mut Mol) -> Result<()> {
 }
 
 /// Mirrors `rdDetermineBonds.DetermineBonds(mol, useHueckel, charge,
-/// covFactor, allowChargedFragments, embedChiral, useAtomMap, useVdw,
-/// maxIterations)`, with the errors of `determine_connectivity_with_params`
-/// and `determine_bond_orders_with_params`.
+/// covFactor, allowChargedFragments, embedChiral, useAtomMap, useVdw)`,
+/// with the errors of `determine_connectivity_with_params` and
+/// `determine_bond_orders_with_params`.
 pub fn determine_bonds_with_params(mol: &mut Mol, params: &DetermineBondsParams) -> Result<()> {
     Ok(ffi::determine_bonds(
         mol.pin_mut(),
@@ -204,7 +196,6 @@ pub fn determine_bonds_with_params(mol: &mut Mol, params: &DetermineBondsParams)
         params.embed_chiral,
         params.use_atom_map,
         params.use_vdw,
-        params.max_iterations,
     )?)
 }
 

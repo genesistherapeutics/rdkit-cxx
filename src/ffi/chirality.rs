@@ -80,9 +80,7 @@ pub(crate) mod ffi {
         fn canonicalize_stereo_groups(
             mol: &RWMol,
             output_absolute_groups: StereoGroupAbsOptions,
-            max_stereo_groups: u32,
         ) -> Result<UniquePtr<RWMol>>;
-        fn cleanup_stereo_groups(mol: Pin<&mut RWMol>) -> Result<()>;
         fn simplify_enhanced_stereo(
             mol: Pin<&mut RWMol>,
             remove_affected_stereo_groups: bool,
@@ -115,7 +113,6 @@ pub(crate) mod ffi {
         fn reapply_mol_block_wedging(
             mol: Pin<&mut RWMol>,
             all_bond_types: bool,
-            verify: bool,
         ) -> Result<()>;
 
         fn set_allow_nontetrahedral_chirality(val: bool) -> Result<()>;

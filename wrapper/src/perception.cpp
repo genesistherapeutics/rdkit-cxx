@@ -20,29 +20,21 @@
 
 namespace rdkit_cxx {
 
-rust::Vec<IndexList> get_sssr(RWMol &mol, bool include_dative_bonds,
-                              bool include_hydrogen_bonds) {
+rust::Vec<IndexList> get_sssr(RWMol &mol, bool include_dative_bonds) {
   std::vector<std::vector<int>> rings;
-  RDKit::MolOps::findSSSR(mol, rings, include_dative_bonds,
-                          include_hydrogen_bonds);
+  RDKit::MolOps::findSSSR(mol, rings, include_dative_bonds);
   return to_index_lists(rings);
 }
 
-rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds,
-                                   bool include_hydrogen_bonds) {
+rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds) {
   std::vector<std::vector<int>> rings;
-  RDKit::MolOps::symmetrizeSSSR(mol, rings, include_dative_bonds,
-                                include_hydrogen_bonds);
+  RDKit::MolOps::symmetrizeSSSR(mol, rings, include_dative_bonds);
   return to_index_lists(rings);
 }
 
 void fast_find_rings(RWMol &mol) { RDKit::MolOps::fastFindRings(mol); }
 
-void find_ring_families(RWMol &mol, bool include_dative_bonds,
-                        bool include_hydrogen_bonds) {
-  RDKit::MolOps::findRingFamilies(mol, include_dative_bonds,
-                                  include_hydrogen_bonds);
-}
+void find_ring_families(RWMol &mol) { RDKit::MolOps::findRingFamilies(mol); }
 
 void cleanup(RWMol &mol) { RDKit::MolOps::cleanUp(mol); }
 

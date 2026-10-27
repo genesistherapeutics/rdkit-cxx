@@ -120,21 +120,18 @@ set(RDKIT_CXX_SOURCES
   src/free_sasa.cpp
   src/mif.cpp
   src/shape_align.cpp
-  src/gaussian_shape.cpp
   src/metric_matrix_calc.cpp
   src/murtagh_checks.cpp
   src/cluster.cpp
   src/sim_div_pickers.cpp
   src/info_theory.cpp
   src/abbreviations.cpp
-  src/enumerate_stereoisomers.cpp
   src/mol_enumerator.cpp
   src/mol_processing.cpp
   src/mol_interchange.cpp
   src/draw.cpp
   src/draw_checks.cpp
   src/draw_drawer.cpp
-  src/synthon_space_search.cpp
   src/inchi.cpp
   src/trajectory.cpp
 )
@@ -192,15 +189,13 @@ set(RDKIT_CXX_RDKIT_TARGETS
   FreeSASALib
   MolInteractionFields
   PubChemShape
-  GaussianShape
+  pubchem_align3d
   hc
   SimDivPickers
   InfoTheory
   Abbreviations
-  EnumerateStereoisomers
   MolEnumerator
   MolInterchange
-  SynthonSpaceSearch
   RDInchiLib
 )
 
@@ -230,22 +225,19 @@ target_include_directories(rdkitcxx PRIVATE
   third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
-  # Declarations RDKit's installed headers need (compat/maeparser), and
-  # names they include that RDKit installs elsewhere
-  # (compat/GraphMol/GaussianShape).
+  # Declarations RDKit's installed headers need (compat/maeparser).
   compat
   # RDKit's own copies, from the release found (vendor/<release>), of
-  # headers its packages do not install. conda-forge's librdkit-dev 2026.03
+  # headers its packages do not install. conda-forge's librdkit-dev 2024.09
   # installs none of ML/InfoTheory's headers (RDKit::InfoTheory's); an
-  # install that has them finds its own first, earlier on the path. Nor does
-  # it install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
-  # SynthonSpace.h and Synthon.h include. GraphMol/MolDraw2D holds the
+  # install that has them finds its own first, earlier on the path.
+  # GraphMol/MolDraw2D holds the
   # drawing code's internal headers (DrawText.h, DrawMol.h, and those they
   # include, and MolDraw2DDetails.h), which no package installs
   # (draw_drawer.cpp).
   vendor/${rdkit_VERSION}
 )
-# RDKit 2026.03's headers test macros that RDConfig.h defines without
+# RDKit 2024.09's headers test macros that RDConfig.h defines without
 # including it: RingInfo.h declares its ring-family members only under
 # RDK_USE_URF. Every source reads RDConfig.h first, so it compiles against
 # the classes the library was built with.

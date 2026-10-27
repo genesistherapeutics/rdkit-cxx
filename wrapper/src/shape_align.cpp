@@ -24,15 +24,28 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/shape_align.rs.h"
 
+// pubchem-align3d does not install its header (shape_functions.hpp); these
+// are its declarations at the commit RDKit 2024.09 builds (daefab3), whose
+// library exports them.
+namespace Align3D {
+void setUseCutOff(bool useCutOff);
+double ComputeShapeOverlap(const float *ref_coord,
+                           const std::vector<double> &alpha_ref_vector,
+                           const std::vector<unsigned> &ref_volume_atom_index,
+                           const float *fit_coord,
+                           const std::vector<double> &alpha_fit_vector,
+                           const std::vector<unsigned> &fit_volume_atom_index);
+}  // namespace Align3D
+
 namespace rdkit_cxx {
 
 namespace {
 
 // PubChemShape.cpp and pubchem-align3d keep state in globals they write
-// without a lock: PrepareConformer and AlignMolecule call
-// Align3D::setUseCutOff(true), which assigns the dCutOff and d2CutOff that
-// every overlap reads (shape_functions2.cpp), and PrepareConformer fills
-// getPh4Patterns' static list of patterns on first use. Every call into them
+// without a lock: AlignMolecule calls Align3D::setUseCutOff(true), which
+// assigns the dCutOff and d2CutOff that every overlap reads
+// (shape_functions2.cpp), and PrepareConformer fills getPh4Patterns' static
+// list of patterns on first use. Every call into them
 // holds this mutex (CONVENTIONS.md U4), before control_c_mutex(), so a
 // closure that holds that one must not wait for it.
 std::mutex &pubchem_shape_mutex() {
@@ -42,34 +55,6 @@ std::mutex &pubchem_shape_mutex() {
 }
 
 constexpr const char *kFeaturesProp = "PUBCHEM_PHARMACOPHORE_FEATURES";
-
-ShapeInputOptions to_options(const ShapeInputOptionsData &data) {
-  if (data.atom_radii_atoms.size() != data.atom_radii_values.size() ||
-      data.custom_feature_types.size() !=
-          data.custom_feature_positions.size() ||
-      data.custom_feature_types.size() != data.custom_feature_radii.size()) {
-    throw ValueErrorException("mismatched ShapeInputOptions vectors");
-  }
-  ShapeInputOptions opts;
-  opts.useColors = data.use_colors;
-  opts.includeDummies = data.include_dummies;
-  opts.dummyRadius = data.dummy_radius;
-  opts.atomSubset.assign(data.atom_subset.begin(), data.atom_subset.end());
-  opts.notColorAtoms.assign(data.not_color_atoms.begin(),
-                            data.not_color_atoms.end());
-  for (std::size_t i = 0; i < data.atom_radii_atoms.size(); ++i) {
-    opts.atomRadii.emplace_back(data.atom_radii_atoms[i],
-                                data.atom_radii_values[i]);
-  }
-  for (std::size_t i = 0; i < data.custom_feature_types.size(); ++i) {
-    const auto &p = data.custom_feature_positions[i];
-    opts.customFeatures.emplace_back(data.custom_feature_types[i],
-                                     RDGeom::Point3D(p.x, p.y, p.z),
-                                     data.custom_feature_radii[i]);
-  }
-  opts.normalize = data.normalize;
-  return opts;
-}
 
 void check_coordinate(double v) {
   // PrepareConformer stores the coordinates as float; a double beyond
@@ -131,9 +116,29 @@ void check_features(const RDKit::ROMol &mol) {
   }
 }
 
+// PrepareConformer writes each heavy atom's coordinates at the atom's own
+// index in an array sized for the heavy atoms and the features, so a heavy
+// atom after a hydrogen or a dummy atom writes past the heavy atoms (onto a
+// feature, or past the array's end).
+void check_heavy_atoms_first(const RDKit::ROMol &mol) {
+  const unsigned heavy = mol.getNumHeavyAtoms();
+  for (const auto *atom : mol.atoms()) {
+    if (atom->getAtomicNum() > 1 && atom->getIdx() >= heavy) {
+      throw ValueErrorException(
+          "PrepareConformer needs the heavy atoms before any hydrogen or "
+          "dummy atom; atom " +
+          std::to_string(atom->getIdx()) + " follows one");
+    }
+  }
+}
+
+// What PrepareConformer trusts, checked. RDKit 2024.09's PrepareConformer
+// computes the self overlaps under whatever cutoff the last alignment left
+// (none before the first); the wrapper sets the alignment's first, so a
+// shape is the same before and after other alignments, as AlignMol makes it.
 PubChemShapeInput prepare(const RDKit::ROMol &mol, int conf_id,
-                          const ShapeInputOptions &opts) {
-  if (opts.useColors) {
+                          bool use_colors) {
+  if (use_colors) {
     check_features(mol);
   }
   for (const auto &pos : mol.getConformer(conf_id).getPositions()) {
@@ -141,16 +146,12 @@ PubChemShapeInput prepare(const RDKit::ROMol &mol, int conf_id,
     check_coordinate(pos.y);
     check_coordinate(pos.z);
   }
-  for (const auto &feature : opts.customFeatures) {
-    const auto &pos = std::get<1>(feature);
-    check_coordinate(pos.x);
-    check_coordinate(pos.y);
-    check_coordinate(pos.z);
-  }
+  check_heavy_atoms_first(mol);
   std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
+  Align3D::setUseCutOff(true);
   // The color features come from substructure matches (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  return PrepareConformer(mol, conf_id, opts);
+  return PrepareConformer(mol, conf_id, use_colors);
 }
 
 void check_shape(const PubChemShapeInput &shape) {
@@ -185,9 +186,12 @@ void check_shape(const PubChemShapeInput &shape) {
 // (0, 100] (so each overlap term lies in (0, 1]), the color weight opt_param
 // in (0, 1], and the overlap of two shapes below the sum of their self
 // overlaps, as Gaussians keep it, one of those four poses scoring above 0
-// makes some pose score above 0 at the end. ScoreShape computes those
-// scores with the same overlaps, exactly, since the flips only negate
-// coordinates.
+// makes some pose score above 0 at the end. A pose's score is opt_param
+// times its shape Tanimoto plus the rest times its color Tanimoto, which is
+// not negative, so a positive shape overlap in one of the four poses is
+// enough; ComputeShapeOverlap computes it with the same terms, exactly,
+// since the flips only negate coordinates, under the cutoff the alignment
+// sets.
 void check_alignable(const PubChemShapeInput &ref, const PubChemShapeInput &fit,
                      double opt_param) {
   check_shape(ref);
@@ -214,11 +218,10 @@ void check_alignable(const PubChemShapeInput &ref, const PubChemShapeInput &fit,
     for (std::size_t i = 0; i < posed.coord.size(); ++i) {
       posed.coord[i] *= flip[i % 3];
     }
-    auto [shape, color] = ScoreShape(ref, posed, colors);
-    double fst = positive(shape);
-    double fct = positive(color);
-    double score = colors ? opt_param * (fst - fct) + fct : fst;
-    if (score > 0.0) {
+    double overlap = Align3D::ComputeShapeOverlap(
+        ref.coord.data(), ref.alpha_vector, ref.volumeAtomIndexVector,
+        posed.coord.data(), posed.alpha_vector, posed.volumeAtomIndexVector);
+    if (positive(overlap) > 0.0) {
       return;
     }
   }
@@ -226,57 +229,21 @@ void check_alignable(const PubChemShapeInput &ref, const PubChemShapeInput &fit,
       "shape alignment needs shapes that overlap in a starting pose");
 }
 
-// AlignShape, on a copy of the probe that replaces it only on success.
-std::pair<double, double> align(const PubChemShapeInput &ref,
-                                PubChemShapeInput &fit,
-                                std::vector<float> &matrix, double opt_param,
-                                unsigned max_preiters, unsigned max_postiters) {
+// As AlignMolecule(refShape, fit, ...) in PubChemShape.cpp, after the
+// checks: the fit's shape is prepared first, as AlignMolecule prepares it,
+// and checked against the reference's.
+std::pair<double, double> align_molecule(const PubChemShapeInput &ref_shape,
+                                         RWMol &fit, int fit_conf_id,
+                                         bool use_colors, double opt_param,
+                                         unsigned max_preiters,
+                                         unsigned max_postiters) {
+  auto fit_shape = prepare(fit, fit_conf_id, use_colors);
   std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  check_alignable(ref, fit, opt_param);
-  auto posed = fit;
-  auto scores =
-      AlignShape(ref, posed, matrix, opt_param, max_preiters, max_postiters);
-  // Unreachable after check_alignable, short of an overlap above the sum of
-  // the self overlaps: no pose scored, and the matrix is not one.
-  if (scores.first == 0.0 && scores.second == 0.0) {
-    throw ValueErrorException("shape alignment found no overlapping pose");
-  }
-  fit = std::move(posed);
-  return scores;
-}
-
-void check_size(std::size_t size, std::size_t expected, const char *what) {
-  if (size != expected) {
-    throw ValueErrorException(std::string("The ") + what + " must have " +
-                              std::to_string(expected) + " values.  It had " +
-                              std::to_string(size) + ".");
-  }
-}
-
-// As AlignMolecule(refShape, fit, ...) in PubChemShape.cpp, step by step,
-// with the checks above between the steps.
-std::pair<double, double> align_molecule(
-    const PubChemShapeInput &ref_shape, RWMol &fit,
-    const ShapeInputOptions &opts, int fit_conf_id, double opt_param,
-    unsigned max_preiters, unsigned max_postiters, bool apply_ref_shift) {
-  auto fit_shape = prepare(fit, fit_conf_id, opts);
+  check_alignable(ref_shape, fit_shape, opt_param);
   std::vector<float> matrix(12, 0.0f);
-  auto scores = align(ref_shape, fit_shape, matrix, opt_param, max_preiters,
-                      max_postiters);
-  auto &conf = fit.getConformer(fit_conf_id);
-  std::vector<double> final_trans{0.0, 0.0, 0.0};
-  std::vector<double> final_rot{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
-  if (apply_ref_shift) {
-    const auto &rot = ref_shape.inertialRot;
-    final_trans = {-ref_shape.shift[0], -ref_shape.shift[1],
-                   -ref_shape.shift[2]};
-    final_rot = {rot[0], rot[3], rot[6], rot[1], rot[4],
-                 rot[7], rot[2], rot[5], rot[8]};
-  }
-  TransformConformer(final_trans, final_rot, matrix, fit_shape, conf);
-  fit.setProp("shape_align_shape_tanimoto", scores.first);
-  fit.setProp("shape_align_color_tanimoto", scores.second);
-  return scores;
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  return AlignMolecule(ref_shape, fit, matrix, fit_conf_id, use_colors,
+                       opt_param, max_preiters, max_postiters);
 }
 
 rust::Vec<double> pair_vec(const std::pair<double, double> &scores) {
@@ -298,20 +265,10 @@ rust::Vec<T> copy_vec(const std::vector<U> &v) {
 
 }  // namespace
 
-ShapeInputOptionsData pubchem_shape_input_options_default() {
-  ShapeInputOptions opts;
-  ShapeInputOptionsData data;
-  data.use_colors = opts.useColors;
-  data.include_dummies = opts.includeDummies;
-  data.dummy_radius = opts.dummyRadius;
-  data.normalize = opts.normalize;
-  return data;
-}
-
 std::unique_ptr<PubChemShapeInput> pubchem_prepare_conformer(
-    const RWMol &mol, std::int32_t conf_id, const ShapeInputOptionsData &opts) {
+    const RWMol &mol, std::int32_t conf_id, bool use_colors) {
   return std::make_unique<PubChemShapeInput>(
-      prepare(mol, conf_id, to_options(opts)));
+      prepare(mol, conf_id, use_colors));
 }
 
 std::unique_ptr<PubChemShapeInput> pubchem_shape_input_clone(
@@ -342,11 +299,6 @@ rust::Vec<double> pubchem_shape_input_shift(const PubChemShapeInput &shape) {
   return copy_vec<double>(shape.shift);
 }
 
-rust::Vec<double> pubchem_shape_input_inertial_rot(
-    const PubChemShapeInput &shape) {
-  return copy_vec<double>(shape.inertialRot);
-}
-
 double pubchem_shape_input_sov(const PubChemShapeInput &shape) {
   return shape.sov;
 }
@@ -355,109 +307,25 @@ double pubchem_shape_input_sof(const PubChemShapeInput &shape) {
   return shape.sof;
 }
 
-// As AlignMolecule(ref, fit, matrix, refShapeOpts, fitShapeOpts, ...).
-rust::Vec<double> pubchem_align_mol(
-    const RWMol &ref, RWMol &probe, const ShapeInputOptionsData &ref_opts,
-    const ShapeInputOptionsData &probe_opts, std::int32_t ref_conf_id,
-    std::int32_t probe_conf_id, double opt_param, std::uint32_t max_preiters,
-    std::uint32_t max_postiters) {
-  auto ref_options = to_options(ref_opts);
-  auto probe_options = to_options(probe_opts);
-  if (ref_options.useColors != probe_options.useColors) {
-    BOOST_LOG(rdWarningLog)
-        << "useColor values inconsistent between the reference and fit "
-           "molecules. Colors will not be used in the alignment."
-        << std::endl;
-  }
-  auto ref_shape = prepare(ref, ref_conf_id, ref_options);
-  return pair_vec(align_molecule(ref_shape, probe, probe_options, probe_conf_id,
-                                 opt_param, max_preiters, max_postiters, true));
+// As AlignMolecule(ref, fit, ...), which prepares the reference's shape and
+// aligns the fit to it.
+rust::Vec<double> pubchem_align_mol(const RWMol &ref, RWMol &probe,
+                                    std::int32_t ref_conf_id,
+                                    std::int32_t probe_conf_id,
+                                    bool use_colors, double opt_param,
+                                    std::uint32_t max_preiters,
+                                    std::uint32_t max_postiters) {
+  auto ref_shape = prepare(ref, ref_conf_id, use_colors);
+  return pair_vec(align_molecule(ref_shape, probe, probe_conf_id, use_colors,
+                                 opt_param, max_preiters, max_postiters));
 }
 
 rust::Vec<double> pubchem_align_mol_shape_input(
     const PubChemShapeInput &ref_shape, RWMol &probe,
     std::int32_t probe_conf_id, bool use_colors, double opt_param,
-    std::uint32_t max_preiters, std::uint32_t max_postiters,
-    bool apply_ref_shift) {
-  ShapeInputOptions opts;
-  opts.useColors = use_colors;
-  return pair_vec(align_molecule(ref_shape, probe, opts, probe_conf_id,
-                                 opt_param, max_preiters, max_postiters,
-                                 apply_ref_shift));
-}
-
-rust::Vec<double> pubchem_align_shapes(const PubChemShapeInput &ref_shape,
-                                       PubChemShapeInput &probe_shape,
-                                       double opt_param,
-                                       std::uint32_t max_preiters,
-                                       std::uint32_t max_postiters) {
-  std::vector<float> matrix(12, 0.0f);
-  auto result = pair_vec(align(ref_shape, probe_shape, matrix, opt_param,
-                               max_preiters, max_postiters));
-  for (float v : matrix) {
-    result.push_back(v);
-  }
-  return result;
-}
-
-void pubchem_transform_conformer_to_shape(rust::Slice<const double> final_trans,
-                                          rust::Slice<const double> final_rot,
-                                          rust::Slice<const double> matrix,
-                                          const PubChemShapeInput &probe_shape,
-                                          Conformer &probe_conformer) {
-  // As Python's TransformConformer, which checks the sizes RDKit indexes.
-  check_size(matrix.size(), 12, "transformation matrix");
-  check_size(final_trans.size(), 3, "final translation vector");
-  check_size(final_rot.size(), 9, "final rotation vector");
-  std::vector<float> values;
-  for (double v : matrix) {
-    // A finite double beyond float's range does not convert.
-    if (std::isfinite(v) && std::abs(v) > FLT_MAX) {
-      throw ValueErrorException(
-          "The transformation matrix's values must fit in float.");
-    }
-    values.push_back(static_cast<float>(v));
-  }
-  TransformConformer(
-      std::vector<double>(final_trans.begin(), final_trans.end()),
-      std::vector<double>(final_rot.begin(), final_rot.end()), values,
-      probe_shape, probe_conformer);
-}
-
-// As ScoreMolecule(mol1, mol2, ...): shapes left where they are.
-rust::Vec<double> pubchem_score_mol(const RWMol &mol1, const RWMol &mol2,
-                                    const ShapeInputOptionsData &mol1_opts,
-                                    const ShapeInputOptionsData &mol2_opts,
-                                    std::int32_t mol1_conf_id,
-                                    std::int32_t mol2_conf_id) {
-  auto opts1 = to_options(mol1_opts);
-  auto opts2 = to_options(mol2_opts);
-  bool use_colors = opts1.useColors && opts2.useColors;
-  opts1.normalize = false;
-  opts2.normalize = false;
-  auto shape1 = prepare(mol1, mol1_conf_id, opts1);
-  auto shape2 = prepare(mol2, mol2_conf_id, opts2);
-  std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  return pair_vec(ScoreShape(shape1, shape2, use_colors));
-}
-
-// As ScoreMolecule(shape, mol, ...).
-rust::Vec<double> pubchem_score_mol_shape_input(
-    const PubChemShapeInput &shape, const RWMol &mol,
-    const ShapeInputOptionsData &mol_opts, std::int32_t mol_conf_id) {
-  auto opts = to_options(mol_opts);
-  opts.normalize = false;
-  auto shape2 = prepare(mol, mol_conf_id, opts);
-  std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  return pair_vec(ScoreShape(shape, shape2, opts.useColors));
-}
-
-rust::Vec<double> pubchem_score_shape(const PubChemShapeInput &shape1,
-                                      const PubChemShapeInput &shape2,
-                                      bool use_colors) {
-  auto copy = shape2;  // ScoreShape takes it by non-const reference
-  std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  return pair_vec(ScoreShape(shape1, copy, use_colors));
+    std::uint32_t max_preiters, std::uint32_t max_postiters) {
+  return pair_vec(align_molecule(ref_shape, probe, probe_conf_id, use_colors,
+                                 opt_param, max_preiters, max_postiters));
 }
 
 }  // namespace rdkit_cxx

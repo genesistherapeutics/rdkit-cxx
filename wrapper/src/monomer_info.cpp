@@ -43,16 +43,10 @@ std::unique_ptr<AtomMonomerInfo> monomer_info_new() {
   return std::make_unique<AtomMonomerInfo>();
 }
 
-std::unique_ptr<AtomMonomerInfo> monomer_info_with(int type, rust::Str name,
-                                                   rust::Str residue_name,
-                                                   int res_num,
-                                                   rust::Str chain_id,
-                                                   rust::Str monomer_class) {
+std::unique_ptr<AtomMonomerInfo> monomer_info_with(int type, rust::Str name) {
   auto typ = monomer_type(type);
   check_not_pdb(typ);
-  return std::make_unique<AtomMonomerInfo>(
-      typ, std::string(name), std::string(residue_name), res_num,
-      std::string(chain_id), std::string(monomer_class));
+  return std::make_unique<AtomMonomerInfo>(typ, std::string(name));
 }
 
 std::unique_ptr<AtomMonomerInfo> monomer_info_clone(
@@ -69,24 +63,9 @@ int monomer_info_get_monomer_type(const AtomMonomerInfo &info) {
   return info.getMonomerType();
 }
 
-std::unique_ptr<std::string> monomer_info_get_residue_name(
-    const AtomMonomerInfo &info) {
-  return str(info.getResidueName());
-}
 
-int monomer_info_get_residue_number(const AtomMonomerInfo &info) {
-  return info.getResidueNumber();
-}
 
-std::unique_ptr<std::string> monomer_info_get_chain_id(
-    const AtomMonomerInfo &info) {
-  return str(info.getChainId());
-}
 
-std::unique_ptr<std::string> monomer_info_get_monomer_class(
-    const AtomMonomerInfo &info) {
-  return str(info.getMonomerClass());
-}
 
 void monomer_info_set_name(AtomMonomerInfo &info, rust::Str nm) {
   info.setName(std::string(nm));
@@ -101,21 +80,9 @@ void monomer_info_set_monomer_type(AtomMonomerInfo &info, int typ) {
   info.setMonomerType(type);
 }
 
-void monomer_info_set_residue_name(AtomMonomerInfo &info, rust::Str val) {
-  info.setResidueName(std::string(val));
-}
 
-void monomer_info_set_residue_number(AtomMonomerInfo &info, int val) {
-  info.setResidueNumber(val);
-}
 
-void monomer_info_set_chain_id(AtomMonomerInfo &info, rust::Str val) {
-  info.setChainId(std::string(val));
-}
 
-void monomer_info_set_monomer_class(AtomMonomerInfo &info, rust::Str val) {
-  info.setMonomerClass(std::string(val));
-}
 
 std::unique_ptr<AtomPDBResidueInfo> pdb_residue_info_new() {
   return std::make_unique<AtomPDBResidueInfo>();
@@ -125,13 +92,13 @@ std::unique_ptr<AtomPDBResidueInfo> pdb_residue_info_with(
     rust::Str atom_name, int serial_number, rust::Str alt_loc,
     rust::Str residue_name, int residue_number, rust::Str chain_id,
     rust::Str insertion_code, double occupancy, double temp_factor,
-    bool is_hetero_atom, unsigned secondary_structure, unsigned segment_number,
-    rust::Str monomer_class) {
+    bool is_hetero_atom, unsigned secondary_structure,
+    unsigned segment_number) {
   return std::make_unique<AtomPDBResidueInfo>(
       std::string(atom_name), serial_number, std::string(alt_loc),
       std::string(residue_name), residue_number, std::string(chain_id),
       std::string(insertion_code), occupancy, temp_factor, is_hetero_atom,
-      secondary_structure, segment_number, std::string(monomer_class));
+      secondary_structure, segment_number);
 }
 
 std::unique_ptr<AtomPDBResidueInfo> pdb_residue_info_clone(
@@ -147,6 +114,33 @@ const AtomMonomerInfo &pdb_residue_info_as_monomer_info(
 AtomMonomerInfo &pdb_residue_info_as_monomer_info_mut(
     AtomPDBResidueInfo &info) {
   return info;
+}
+
+std::unique_ptr<std::string> pdb_residue_info_get_residue_name(
+    const AtomPDBResidueInfo &info) {
+  return str(info.getResidueName());
+}
+
+int pdb_residue_info_get_residue_number(const AtomPDBResidueInfo &info) {
+  return info.getResidueNumber();
+}
+
+std::unique_ptr<std::string> pdb_residue_info_get_chain_id(
+    const AtomPDBResidueInfo &info) {
+  return str(info.getChainId());
+}
+
+void pdb_residue_info_set_residue_name(AtomPDBResidueInfo &info,
+                                       rust::Str val) {
+  info.setResidueName(std::string(val));
+}
+
+void pdb_residue_info_set_residue_number(AtomPDBResidueInfo &info, int val) {
+  info.setResidueNumber(val);
+}
+
+void pdb_residue_info_set_chain_id(AtomPDBResidueInfo &info, rust::Str val) {
+  info.setChainId(std::string(val));
 }
 
 int pdb_residue_info_get_serial_number(const AtomPDBResidueInfo &info) {

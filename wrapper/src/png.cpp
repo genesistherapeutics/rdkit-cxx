@@ -147,35 +147,23 @@ std::unique_ptr<MolList> png_to_mols(const std::string &png,
 rust::Vec<std::uint8_t> mol_to_png(const RWMol &mol, const std::string &png,
                                    const PNGMetadataParamsData &data) {
   check_png(png);
-  RDKit::PNGMetadataParams params;
-  params.includePkl = data.include_pkl;
-  params.includeSmiles = data.include_smiles;
-  params.includeMol = data.include_mol;
-  params.propertyFlags = data.property_flags;
-  params.smilesWriteParams = write_params(data.smiles_write_params);
-  params.cxSmilesFlags = data.cx_smiles_flags;
-  params.restoreBondDirs = data.restore_bond_dirs;
-  if (params.includePkl) {
+  if (data.include_pkl) {
     check_picklable(mol);
   }
-  if (params.includeSmiles) {
+  if (data.include_smiles) {
     // The SMILES writer removes atoms from copies (mol_to_smiles).
     check_removals(mol);
   }
   // The mol block computes 2D coordinates for a molecule without a
   // conformer, with compute2DCoords, which trusts the molecule
-  // (depiction_checks.h), and randomized SMILES advance RDKit's global
-  // generator (U4).
+  // (depiction_checks.h).
   std::unique_lock<std::mutex> depicting;
-  if (params.includeMol && mol.getNumConformers() == 0) {
+  if (data.include_mol && mol.getNumConformers() == 0) {
     depicting = lock_depiction();
     check_compute_2d_coords_mol(mol, false);
   }
-  std::unique_lock<std::mutex> lock;
-  if (params.includeSmiles && params.smilesWriteParams.doRandom) {
-    lock = std::unique_lock<std::mutex>(random_mutex());
-  }
-  return to_bytes(RDKit::addMolToPNGString(mol, png, params));
+  return to_bytes(RDKit::addMolToPNGString(
+      mol, png, data.include_pkl, data.include_smiles, data.include_mol));
 }
 
 rust::Vec<std::uint8_t> add_metadata(const rust::Vec<rust::String> &keys,
@@ -197,22 +185,6 @@ std::unique_ptr<PNGMetadata> metadata(const std::string &png) {
 }
 
 }  // namespace
-
-PNGMetadataParamsData png_metadata_params_default() {
-  RDKit::PNGMetadataParams params;
-  const auto &w = params.smilesWriteParams;
-  return PNGMetadataParamsData{
-      params.includePkl,
-      params.includeSmiles,
-      params.includeMol,
-      params.propertyFlags,
-      SmilesWriteParamsData{w.doIsomericSmiles, w.doKekule, w.canonical,
-                            w.cleanStereo, w.allBondsExplicit, w.allHsExplicit,
-                            w.doRandom, w.rootedAtAtom, w.includeDativeBonds,
-                            w.ignoreAtomMapNumbers},
-      params.cxSmilesFlags,
-      params.restoreBondDirs};
-}
 
 std::unique_ptr<RWMol> mol_from_png_string(
     rust::Slice<const std::uint8_t> png, const SmilesParserParamsData &params) {

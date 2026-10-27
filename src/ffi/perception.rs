@@ -30,19 +30,13 @@ pub(crate) mod ffi {
         fn get_sssr(
             mol: Pin<&mut RWMol>,
             include_dative_bonds: bool,
-            include_hydrogen_bonds: bool,
         ) -> Result<Vec<IndexList>>;
         fn get_symm_sssr(
             mol: Pin<&mut RWMol>,
             include_dative_bonds: bool,
-            include_hydrogen_bonds: bool,
         ) -> Result<Vec<IndexList>>;
         fn fast_find_rings(mol: Pin<&mut RWMol>) -> Result<()>;
-        fn find_ring_families(
-            mol: Pin<&mut RWMol>,
-            include_dative_bonds: bool,
-            include_hydrogen_bonds: bool,
-        ) -> Result<()>;
+        fn find_ring_families(mol: Pin<&mut RWMol>) -> Result<()>;
 
         fn cleanup(mol: Pin<&mut RWMol>) -> Result<()>;
         fn cleanup_chirality(mol: Pin<&mut RWMol>) -> Result<()>;

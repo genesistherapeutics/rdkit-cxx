@@ -44,7 +44,6 @@ pub mod pharm_3d;
 pub mod qed;
 pub mod randomize;
 pub mod rd_abbreviations;
-pub mod rd_chem_draw;
 pub mod rd_chem_reactions;
 pub mod rd_chemical_features;
 pub mod rd_cip_labeler;
@@ -54,12 +53,10 @@ pub mod rd_depictor;
 pub mod rd_deprotect;
 pub mod rd_determine_bonds;
 pub mod rd_dist_geom;
-pub mod rd_enumerate_stereoisomers;
 pub mod rd_fingerprint_generator;
 pub mod rd_fmcs;
 pub mod rd_force_field_helpers;
 pub mod rd_free_sasa;
-pub mod rd_gaussian_shape;
 pub mod rd_generalized_substruct;
 pub mod rd_mhfp_fingerprint;
 pub mod rd_mif;
@@ -81,7 +78,6 @@ pub mod rd_shape_align;
 pub mod rd_shape_helpers;
 pub mod rd_sln_parse;
 pub mod rd_substruct_library;
-pub mod rd_synthon_space_search;
 pub mod rd_tautomer_query;
 pub mod rdchem;
 pub mod rdfiltercatalog;
@@ -105,8 +101,7 @@ pub mod torsion_fingerprints;
 
 pub use inchi::{
     InchiLogLevel, MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key,
-    mol_from_inchi, mol_from_inchi_and_aux_info, mol_from_inchi_and_aux_info_with_params,
-    mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
+    mol_from_inchi, mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
     mol_to_inchi_and_aux_info_with_params, mol_to_inchi_key, mol_to_inchi_key_with_options,
     mol_to_inchi_with_params,
 };

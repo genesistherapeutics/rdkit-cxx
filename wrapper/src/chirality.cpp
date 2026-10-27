@@ -126,16 +126,10 @@ rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
 // As canonicalizeStereoGroupsHelper in Code/GraphMol/Wrap/MolOps.cpp: a
 // copy gets the canonical groups.
 std::unique_ptr<RWMol> canonicalize_stereo_groups(
-    const RWMol &mol, StereoGroupAbsOptions output_absolute_groups,
-    std::uint32_t max_stereo_groups) {
+    const RWMol &mol, StereoGroupAbsOptions output_absolute_groups) {
   auto copy = std::make_unique<RDKit::ROMol>(mol);
-  RDKit::canonicalizeStereoGroups(copy, output_absolute_groups,
-                                  max_stereo_groups);
+  RDKit::canonicalizeStereoGroups(copy, output_absolute_groups);
   return std::make_unique<RWMol>(*copy);
-}
-
-void cleanup_stereo_groups(RWMol &mol) {
-  RDKit::Chirality::cleanupStereoGroups(mol);
 }
 
 void simplify_enhanced_stereo(RWMol &mol, bool remove_affected_stereo_groups) {
@@ -188,8 +182,8 @@ void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
   RDKit::Chirality::wedgeMolBonds(mol, &mol.getConformer(id), &params);
 }
 
-void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify) {
-  RDKit::Chirality::reapplyMolBlockWedging(mol, all_bond_types, verify);
+void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types) {
+  RDKit::Chirality::reapplyMolBlockWedging(mol, all_bond_types);
 }
 
 void set_allow_nontetrahedral_chirality(bool val) {

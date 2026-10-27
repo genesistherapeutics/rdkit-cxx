@@ -29,6 +29,5 @@ MolToInchiData mol_to_inchi(const RWMol &mol, rust::Str options);
 std::unique_ptr<std::string> mol_to_inchi_key(const RWMol &mol,
                                               rust::Str options);
 std::unique_ptr<std::string> inchi_to_inchi_key(rust::Str inchi);
-std::unique_ptr<std::string> get_inchi_version();
 
 }  // namespace rdkit_cxx

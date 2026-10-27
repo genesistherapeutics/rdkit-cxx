@@ -105,14 +105,6 @@ rdkit_enum! {
 }
 
 rdkit_enum! {
-    /// Which valence `get_valence` returns. Mirrors `rdchem.ValenceType`.
-    ValenceType: atom::ffi::ValenceType {
-        Implicit = IMPLICIT,
-        Explicit = EXPLICIT,
-    }
-}
-
-rdkit_enum! {
     /// A bond's drawing direction, for stereochemistry. Mirrors
     /// `rdchem.BondDir`.
     BondDir: bond::ffi::BondDir {

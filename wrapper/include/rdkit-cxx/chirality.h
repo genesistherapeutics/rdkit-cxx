@@ -54,9 +54,7 @@ rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
                                        bool include_atom_maps);
 
 std::unique_ptr<RWMol> canonicalize_stereo_groups(
-    const RWMol &mol, StereoGroupAbsOptions output_absolute_groups,
-    std::uint32_t max_stereo_groups);
-void cleanup_stereo_groups(RWMol &mol);
+    const RWMol &mol, StereoGroupAbsOptions output_absolute_groups);
 void simplify_enhanced_stereo(RWMol &mol, bool remove_affected_stereo_groups);
 void translate_chiral_flag_to_stereo_groups(
     RWMol &mol, StereoGroupType zero_flag_group_type);
@@ -71,7 +69,7 @@ void wedge_bond(Bond &bond, std::uint32_t from_atom_idx, std::int32_t conf_id);
 BondWedgingParametersData bond_wedging_parameters_default();
 void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
                      const BondWedgingParametersData &params);
-void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify);
+void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types);
 
 // These settings live in environment variables, which RDKit sets with
 // setenv; the Rust setters are unsafe for that reason (CONVENTIONS.md U5).

@@ -122,43 +122,26 @@ impl Default for KekulizeParams {
     }
 }
 
-/// Parameters for `add_hs_with_params`. Mirrors `rdmolops.AddHsParameters`,
-/// plus `AddHs`'s `onlyOnAtoms` (A3).
-#[derive(Clone, Debug, PartialEq)]
-pub struct AddHsParameters {
+/// Parameters for `add_hs_with_params`, with Python's defaults (A2).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct AddHsParams {
     /// Adds only the explicit hydrogens.
     pub explicit_only: bool,
     /// Gives the hydrogens coordinates.
     pub add_coords: bool,
-    /// Gives the hydrogens PDB residue information.
-    pub add_residue_info: bool,
-    /// Skips query atoms and atoms with query bonds.
-    pub skip_queries: bool,
     /// The atoms to add hydrogens to; `None` for all, and an empty list for
     /// none (Python treats an empty list as `None`).
     pub only_on_atoms: Option<Vec<u32>>,
+    /// Gives the hydrogens PDB residue information.
+    pub add_residue_info: bool,
 }
 
-impl Default for AddHsParameters {
-    fn default() -> AddHsParameters {
-        let data = expect_ok(ffi::add_hs_parameters_default());
-        AddHsParameters {
-            explicit_only: data.explicit_only,
-            add_coords: data.add_coords,
-            add_residue_info: data.add_residue_info,
-            skip_queries: data.skip_queries,
-            only_on_atoms: None,
-        }
-    }
-}
-
-impl AddHsParameters {
+impl AddHsParams {
     fn to_ffi(&self) -> ffi::AddHsParametersData {
         ffi::AddHsParametersData {
             explicit_only: self.explicit_only,
             add_coords: self.add_coords,
             add_residue_info: self.add_residue_info,
-            skip_queries: self.skip_queries,
             has_only_on_atoms: self.only_on_atoms.is_some(),
             only_on_atoms: self.only_on_atoms.clone().unwrap_or_default(),
         }
@@ -203,11 +186,12 @@ pub fn kekulize_with_params(mol: &mut Mol, params: &KekulizeParams) -> Result<()
 /// A copy of a molecule with its hydrogens made explicit. Mirrors
 /// `rdmolops.AddHs`.
 pub fn add_hs(mol: &Mol) -> Result<Mol> {
-    add_hs_with_params(mol, &AddHsParameters::default())
+    add_hs_with_params(mol, &AddHsParams::default())
 }
 
-/// Mirrors `rdmolops.AddHs(mol, params, onlyOnAtoms)` and its keyword form.
-pub fn add_hs_with_params(mol: &Mol, params: &AddHsParameters) -> Result<Mol> {
+/// Mirrors `rdmolops.AddHs(mol, explicitOnly, addCoords, onlyOnAtoms,
+/// addResidueInfo)`.
+pub fn add_hs_with_params(mol: &Mol, params: &AddHsParams) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::add_hs(mol.as_ffi(), &params.to_ffi())?))
 }
 

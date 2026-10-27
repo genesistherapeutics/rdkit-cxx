@@ -394,7 +394,6 @@ pub struct AdditionalOutput {
     bit_info_map: Option<BTreeMap<u64, Vec<(u32, u32)>>>,
     bit_paths: Option<BTreeMap<u64, Vec<Vec<u32>>>>,
     atom_counts: Option<Vec<u32>>,
-    atoms_per_bit: Option<BTreeMap<u64, Vec<Vec<u32>>>>,
 }
 
 impl AdditionalOutput {
@@ -422,12 +421,6 @@ impl AdditionalOutput {
         self.atom_counts = Some(Vec::new());
     }
 
-    /// Collects the atoms involved in setting each bit. Mirrors
-    /// `AdditionalOutput.CollectAtomsPerBit`.
-    pub fn collect_atoms_per_bit(&mut self) {
-        self.atoms_per_bit = Some(BTreeMap::new());
-    }
-
     /// Mirrors `AdditionalOutput.AllocateAtomToBits`, a synonym of
     /// `collect_atom_to_bits`.
     pub fn allocate_atom_to_bits(&mut self) {
@@ -450,12 +443,6 @@ impl AdditionalOutput {
     /// `collect_atom_counts`.
     pub fn allocate_atom_counts(&mut self) {
         self.collect_atom_counts();
-    }
-
-    /// Mirrors `AdditionalOutput.AllocateAtomsPerBit`, a synonym of
-    /// `collect_atoms_per_bit`.
-    pub fn allocate_atoms_per_bit(&mut self) {
-        self.collect_atoms_per_bit();
     }
 
     /// The bits each atom set, if collected. Mirrors
@@ -481,19 +468,12 @@ impl AdditionalOutput {
         self.atom_counts.as_deref()
     }
 
-    /// The atoms behind each bit, if collected. Mirrors
-    /// `AdditionalOutput.GetAtomsPerBit`.
-    pub fn get_atoms_per_bit(&self) -> Option<&BTreeMap<u64, Vec<Vec<u32>>>> {
-        self.atoms_per_bit.as_ref()
-    }
-
     fn ffi(&self) -> ffi::AdditionalOutputData {
         ffi::AdditionalOutputData {
             collect_atom_to_bits: self.atom_to_bits.is_some(),
             collect_bit_info_map: self.bit_info_map.is_some(),
             collect_bit_paths: self.bit_paths.is_some(),
             collect_atom_counts: self.atom_counts.is_some(),
-            collect_atoms_per_bit: self.atoms_per_bit.is_some(),
             atom_to_bits: Vec::new(),
             bit_info_map_keys: Vec::new(),
             bit_info_map_counts: Vec::new(),
@@ -502,9 +482,6 @@ impl AdditionalOutput {
             bit_paths_counts: Vec::new(),
             bit_paths_values: Vec::new(),
             atom_counts: Vec::new(),
-            atoms_per_bit_keys: Vec::new(),
-            atoms_per_bit_counts: Vec::new(),
-            atoms_per_bit_values: Vec::new(),
         }
     }
 
@@ -543,13 +520,6 @@ impl AdditionalOutput {
                 )
             }),
             atom_counts: data.collect_atom_counts.then_some(data.atom_counts),
-            atoms_per_bit: data.collect_atoms_per_bit.then(|| {
-                lists(
-                    data.atoms_per_bit_keys,
-                    data.atoms_per_bit_counts,
-                    data.atoms_per_bit_values,
-                )
-            }),
         }
     }
 }
@@ -825,23 +795,6 @@ impl FingerprintGenerator64 {
         )?)
     }
 
-    /// The generator as JSON. Mirrors `FingerprintGenerator64.ToJSON`.
-    pub fn to_json(&self) -> Result<String> {
-        to_string(ffi::fp_generator_to_json(&self.ptr)?)
-    }
-}
-
-/// A generator from `FingerprintGenerator64::to_json`'s JSON. Mirrors
-/// `rdFingerprintGenerator.FingerprintGeneratorFromJSON`. `Error::Value` for
-/// JSON that leaves out the fingerprint arguments, the environment
-/// generator, or the atom-invariants generator, or whose arguments and
-/// environment generator are of different kinds (RDKit would dereference
-/// null), and for options the generator could not use safely;
-/// `Error::Runtime` for text that is not JSON.
-pub fn fingerprint_generator_from_json(json_string: &str) -> Result<FingerprintGenerator64> {
-    Ok(FingerprintGenerator64::from_ffi(
-        ffi::fingerprint_generator_from_json(json_string)?,
-    ))
 }
 
 fn count_bounds_ffi(bounds: &Option<Vec<u32>>) -> (bool, Vec<u32>) {

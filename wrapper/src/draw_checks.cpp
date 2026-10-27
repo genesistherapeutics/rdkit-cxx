@@ -694,9 +694,6 @@ void check_draw_options(const RDKit::MolDrawOptions &opts) {
   if (opts.fontFile.find('\0') != std::string::npos) {
     refuse("fontFile must not contain a NUL character");
   }
-  check_text_size(opts.stereoGroupAbsLabel, "stereoGroupAbsLabel");
-  check_text_size(opts.stereoGroupOrLabel, "stereoGroupOrLabel");
-  check_text_size(opts.stereoGroupAndLabel, "stereoGroupAndLabel");
   for (const auto &[idx, label] : opts.atomLabels) {
     check_text_size(label, "atomLabels");
   }
@@ -846,18 +843,6 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
     return;
   }
   check_text_size(legend, "legend");
-  using Position = RDKit::MolDrawOptions::LegendPosition;
-  const bool vertical = (opts.legendPosition == Position::Left ||
-                         opts.legendPosition == Position::Right) &&
-                        opts.legendVerticalText;
-  if (vertical) {
-    for (char c : legend) {
-      if (c != '\n') {
-        check_run(std::string(1, c), freetype, "legend");
-      }
-    }
-    return;
-  }
   std::vector<std::string> lines;
   boost::split(lines, legend, boost::is_any_of("\n"));
   for (const auto &line : lines) {
@@ -950,26 +935,24 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
   if (string_prop(mol, RDKit::common_properties::molNote, mol_note)) {
     check_note(mol_note, freetype, "molecule note (molNote)");
   }
-  if (opts.addStereoGroupAnnotation) {
-    // DrawMol labels each atom of a stereo group with the group's label, and
-    // numbers the OR and AND groups.
+  if (!opts.addStereoAnnotation) {
+    // DrawMol labels each atom of a stereo group with the group's type, and
+    // numbers the OR and AND groups (extractStereoGroups).
     for (const auto &group : mol.getStereoGroups()) {
       switch (group.getGroupType()) {
         case RDKit::StereoGroupType::STEREO_ABSOLUTE:
-          check_annotation(opts.stereoGroupAbsLabel, freetype,
-                           "stereoGroupAbsLabel");
+          check_annotation("abs", freetype, "stereo group label");
           break;
         case RDKit::StereoGroupType::STEREO_OR:
-          check_annotation(opts.stereoGroupOrLabel + "1", freetype,
-                           "stereoGroupOrLabel");
+          check_annotation("or1", freetype, "stereo group label");
           break;
         case RDKit::StereoGroupType::STEREO_AND:
-          check_annotation(opts.stereoGroupAndLabel + "1", freetype,
-                           "stereoGroupAndLabel");
+          check_annotation("and1", freetype, "stereo group label");
           break;
       }
     }
   }
+
   for (const auto &sg : RDKit::getSubstanceGroups(mol)) {
     check_sgroup_brackets(sg, freetype, annotations);
     std::string type;

@@ -17,7 +17,6 @@
 namespace rdkit_cxx {
 
 using BlockLogs = RDLog::LogStateSetter;
-using CaptureErrorLog = RDLog::CaptureErrorLog;
 
 std::unique_ptr<std::string> rdkit_version();
 std::unique_ptr<std::string> boost_version();
@@ -34,8 +33,5 @@ void log_message(rust::Str spec, rust::Str msg);
 void seed_random_number_generator(unsigned seed);
 
 std::unique_ptr<BlockLogs> block_logs_new();
-std::unique_ptr<CaptureErrorLog> capture_error_log_new();
-std::unique_ptr<std::string> capture_error_log_messages(
-    const CaptureErrorLog &capture);
 
 }  // namespace rdkit_cxx

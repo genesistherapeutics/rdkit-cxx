@@ -2285,9 +2285,6 @@ utils::ContourParams contour_params_from_data(const ContourParamsData &data) {
   ps.drawAsLines = data.draw_as_lines;
   ps.coordScaleForQuantization = data.coord_scale_for_quantization;
   ps.isovalScaleForQuantization = data.isoval_scale_for_quantization;
-  ps.useFillThreshold = data.use_fill_threshold;
-  ps.fillThreshold = data.fill_threshold;
-  ps.fillThresholdIsFraction = data.fill_threshold_is_fraction;
   return ps;
 }
 
@@ -2318,12 +2315,12 @@ void check_contour_params(const Drawer &d, const utils::ContourParams &ps) {
   auto opts = d.drawer->drawOptions();
   opts.bondLineWidth = ps.contourWidth;
   check_draw_options(opts);
-  for (double v : {ps.coordScaleForQuantization, ps.isovalScaleForQuantization,
-                   ps.fillThreshold}) {
+  for (double v :
+       {ps.coordScaleForQuantization, ps.isovalScaleForQuantization}) {
     if (!std::isfinite(v)) {
       throw ValueErrorException(
           "the contour parameters must be finite (coordScaleForQuantization, "
-          "isovalScaleForQuantization, fillThreshold)");
+          "isovalScaleForQuantization)");
     }
   }
 }
@@ -2421,9 +2418,6 @@ ContourParamsData contour_params_default() {
   data.draw_as_lines = ps.drawAsLines;
   data.coord_scale_for_quantization = ps.coordScaleForQuantization;
   data.isoval_scale_for_quantization = ps.isovalScaleForQuantization;
-  data.use_fill_threshold = ps.useFillThreshold;
-  data.fill_threshold = ps.fillThreshold;
-  data.fill_threshold_is_fraction = ps.fillThresholdIsFraction;
   return data;
 }
 

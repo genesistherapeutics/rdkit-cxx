@@ -12,9 +12,6 @@ From RDKit's source tree, under RDKit's BSD license:
   trailing whitespace trimmed
 - `cip_max_iterations.mol`: the mol block of the "Test early termination of
   CIP calculation" test in `Code/GraphMol/CIPLabeler/catch_tests.cpp`
-- `amide_space.txt`, `amide_space_error.txt`, `triazole_space.txt`,
-  `extended_query.csv`, `doebner_miller_space.txt`:
-  `Code/GraphMol/SynthonSpaceSearch/data`
 - `Pharm2D_BaseFeatures.fdef`, `Pharm2D_orderBug.sdf`: `BaseFeatures.fdef` and
   `orderBug.sdf` in `rdkit/Chem/Pharm2D/test_data`, with a final newline added
   and trailing whitespace trimmed

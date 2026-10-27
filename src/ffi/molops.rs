@@ -25,13 +25,12 @@ pub(crate) mod ffi {
         SANITIZE_ALL = 0xFFFFFFF,
     }
 
-    /// `AddHsParameters`, plus `AddHs`'s `onlyOnAtoms` (`None` when
-    /// `has_only_on_atoms` is false).
+    /// `AddHs`' arguments, its `onlyOnAtoms` `None` when `has_only_on_atoms`
+    /// is false.
     struct AddHsParametersData {
         explicit_only: bool,
         add_coords: bool,
         add_residue_info: bool,
-        skip_queries: bool,
         has_only_on_atoms: bool,
         only_on_atoms: Vec<u32>,
     }
@@ -75,7 +74,6 @@ pub(crate) mod ffi {
             clear_aromatic_flags: bool,
             canonical: bool,
         ) -> Result<()>;
-        fn add_hs_parameters_default() -> Result<AddHsParametersData>;
         fn add_hs(mol: &RWMol, params: &AddHsParametersData) -> Result<UniquePtr<RWMol>>;
         fn get_mol_frags(mol: &RWMol) -> Result<Vec<IndexList>>;
         fn get_mol_frags_as_mols(mol: &RWMol, sanitize_frags: bool) -> Result<UniquePtr<MolList>>;

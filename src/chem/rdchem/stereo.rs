@@ -5,7 +5,7 @@
 
 use crate::Result;
 use crate::chem::rdchem::{
-    Atom, Mol, RWMol, StereoDescriptor, StereoGroupType, StereoSpecified, StereoType,
+    Mol, RWMol, StereoDescriptor, StereoGroupType, StereoSpecified, StereoType,
 };
 use crate::error::expect_ok;
 use crate::ffi::stereo::ffi;
@@ -180,8 +180,8 @@ impl Default for StereoInfo {
 }
 
 impl StereoInfo {
-    /// The marker for unset indices, `Atom::NOATOM`.
-    pub const NOATOM: u32 = Atom::NOATOM;
+    /// The marker for unset indices. Mirrors `StereoInfo.NOATOM`.
+    pub const NOATOM: u32 = u32::MAX;
 
     pub(crate) fn from_ffi(data: ffi::StereoInfoData) -> StereoInfo {
         StereoInfo {

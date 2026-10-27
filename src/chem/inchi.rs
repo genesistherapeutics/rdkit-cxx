@@ -14,8 +14,7 @@
 //! molecule or InChI made despite the warning, which `rdinchi` returns.
 
 use crate::chem::rdinchi::{self, InchiToMolParams};
-use crate::chem::{Conformer, Mol, renumber_atoms};
-use crate::geometry::rd_geometry::Point3D;
+use crate::chem::Mol;
 use crate::rd_base::log_message;
 use crate::{Error, Result};
 
@@ -77,8 +76,8 @@ fn read_write_error(message: String) -> Error {
     Error::Value { message }
 }
 
-/// Parameters for `mol_from_inchi_with_params` and
-/// `mol_from_inchi_and_aux_info_with_params`, with Python's defaults (A2).
+/// Parameters for `mol_from_inchi_with_params`, with Python's defaults
+/// (A2).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct MolFromInchiParams {
     /// Sanitizes the molecule.
@@ -138,157 +137,6 @@ pub fn mol_from_inchi_with_params(inchi: &str, params: &MolFromInchiParams) -> R
         return Err(read_write_error(result.message));
     }
     Ok(result.mol)
-}
-
-/// The coordinates of an AuxInfo's `/rC:` layer, in the input's atom order,
-/// and whether any is 3D; `None` when there are none, all are zero, or one
-/// does not parse.
-fn parse_auxinfo_coordinates(auxinfo: &str) -> Option<(Vec<Point3D>, bool)> {
-    let layer = layer(auxinfo, "/rC:")?;
-    let mut entries: Vec<&str> = layer.split(';').collect();
-    while entries.last().is_some_and(|e| e.trim().is_empty()) {
-        entries.pop();
-    }
-    let mut coords = Vec::new();
-    for entry in entries {
-        let entry = entry.trim();
-        if entry.is_empty() {
-            return None;
-        }
-        let parts: Vec<&str> = entry.split(',').collect();
-        let value = |i: usize| -> Option<f64> {
-            match parts.get(i) {
-                Some(p) if !p.is_empty() => p.trim().parse().ok(),
-                _ => Some(0.0),
-            }
-        };
-        coords.push(Point3D::new(value(0)?, value(1)?, value(2)?));
-    }
-    if coords.is_empty()
-        || coords
-            .iter()
-            .all(|p| p.x == 0.0 && p.y == 0.0 && p.z == 0.0)
-    {
-        return None;
-    }
-    let is_3d = coords.iter().any(|p| p.z != 0.0);
-    Some((coords, is_3d))
-}
-
-/// The text of the first `tag` layer (`re.search(tag + '([^/]+)')`).
-fn layer<'a>(auxinfo: &'a str, tag: &str) -> Option<&'a str> {
-    let mut rest = auxinfo;
-    while let Some(i) = rest.find(tag) {
-        let after = &rest[i + tag.len()..];
-        let end = after.find('/').unwrap_or(after.len());
-        if end > 0 {
-            return Some(&after[..end]);
-        }
-        rest = &rest[i + 1..];
-    }
-    None
-}
-
-/// The AuxInfo's `/N:` layer: for each InChI atom, the input's atom index
-/// (from 0, so a 0 in the layer is -1).
-fn parse_auxinfo_atom_order(auxinfo: &str) -> Option<Vec<i64>> {
-    layer(auxinfo, "/N:")?
-        .replace(';', ",")
-        .split(',')
-        .map(|t| t.trim().parse::<i64>().ok().map(|i| i - 1))
-        .collect()
-}
-
-fn attach_conformer(mut mol: Mol, coords: &Option<(Vec<Point3D>, bool)>) -> Result<Mol> {
-    if let Some((coords, is_3d)) = coords
-        && coords.len() == mol.get_num_atoms() as usize
-    {
-        let mut conf = Conformer::new(mol.get_num_atoms());
-        conf.set_3d(*is_3d);
-        for (i, p) in coords.iter().enumerate() {
-            conf.set_atom_position(i as u32, *p)?;
-        }
-        mol.add_conformer_with_assign_id(&conf, true)?;
-    }
-    Ok(mol)
-}
-
-/// The inverse of `atom_order`, for `renumber_atoms`; `None` for an index
-/// past `size`. A negative index counts from the end, as a Python list
-/// index does, and one before the start is `Error::Index`, as Python's
-/// `IndexError`.
-fn build_inverse_permutation(atom_order: &[i64], size: usize) -> Result<Option<Vec<u32>>> {
-    let mut new_order = vec![0u32; size];
-    for (inchi_idx, &orig_idx) in atom_order.iter().enumerate() {
-        if orig_idx >= size as i64 {
-            return Ok(None);
-        }
-        let pos = if orig_idx < 0 {
-            orig_idx + size as i64
-        } else {
-            orig_idx
-        };
-        if pos < 0 {
-            return Err(Error::index(orig_idx, size));
-        }
-        new_order[pos as usize] = inchi_idx as u32;
-    }
-    Ok(Some(new_order))
-}
-
-/// The molecule an InChI describes, with its atoms in the order, and with
-/// the coordinates, of the AuxInfo the InChI came with; as
-/// `mol_from_inchi` where the AuxInfo gives no order that fits. Mirrors
-/// `inchi.MolFromInchiAndAuxInfo(inchi, auxinfo)`.
-pub fn mol_from_inchi_and_aux_info(inchi: &str, auxinfo: &str) -> Result<Option<Mol>> {
-    mol_from_inchi_and_aux_info_with_params(inchi, auxinfo, &MolFromInchiParams::default())
-}
-
-/// As [`mol_from_inchi_and_aux_info`]. Mirrors
-/// `inchi.MolFromInchiAndAuxInfo(inchi, auxinfo, sanitize, removeHs,
-/// logLevel, treatWarningAsError)`.
-pub fn mol_from_inchi_and_aux_info_with_params(
-    inchi: &str,
-    auxinfo: &str,
-    params: &MolFromInchiParams,
-) -> Result<Option<Mol>> {
-    let Some(mol) = mol_from_inchi_with_params(inchi, params)? else {
-        return Ok(None);
-    };
-    let coords = parse_auxinfo_coordinates(auxinfo);
-    let Some(atom_order) = parse_auxinfo_atom_order(auxinfo) else {
-        return attach_conformer(mol, &coords).map(Some);
-    };
-    let num_mol_atoms = mol.get_num_atoms() as usize;
-    if params.remove_hs || atom_order.len() == num_mol_atoms {
-        if atom_order.len() != num_mol_atoms {
-            return Ok(Some(mol));
-        }
-        let Some(new_order) = build_inverse_permutation(&atom_order, num_mol_atoms)? else {
-            return Ok(Some(mol));
-        };
-        return attach_conformer(renumber_atoms(&mol, &new_order)?, &coords).map(Some);
-    }
-    if atom_order.len() > num_mol_atoms {
-        return Ok(Some(mol));
-    }
-    // The layer numbers the heavy atoms; the hydrogens follow them.
-    let num_heavy = atom_order.len();
-    let Some(mut new_order) = build_inverse_permutation(&atom_order, num_heavy)? else {
-        return Ok(Some(mol));
-    };
-    new_order.resize(num_mol_atoms, 0);
-    let mut h_slot = num_heavy;
-    for i in 0..num_mol_atoms {
-        if !atom_order.contains(&(i as i64)) {
-            if h_slot >= num_mol_atoms {
-                return Ok(Some(mol));
-            }
-            new_order[h_slot] = i as u32;
-            h_slot += 1;
-        }
-    }
-    attach_conformer(renumber_atoms(&mol, &new_order)?, &coords).map(Some)
 }
 
 /// Parameters for `mol_to_inchi_with_params` and

@@ -34,11 +34,8 @@ pub(crate) mod ffi {
         fn mol_get_atom_with_idx_mut(mol: Pin<&mut RWMol>, idx: u32) -> Result<Pin<&mut Atom>>;
         fn mol_get_bond_with_idx_mut(mol: Pin<&mut RWMol>, idx: u32) -> Result<Pin<&mut Bond>>;
         fn mol_update_property_cache(mol: Pin<&mut RWMol>, strict: bool) -> Result<()>;
-        fn mol_clear_property_cache(mol: Pin<&mut RWMol>) -> Result<()>;
         fn mol_needs_update_property_cache(mol: &RWMol) -> Result<bool>;
         fn mol_has_query(mol: &RWMol) -> Result<bool>;
-        fn mol_get_name(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
-        fn mol_set_name(mol: Pin<&mut RWMol>, name: &str) -> Result<()>;
         fn mol_debug(mol: &RWMol, use_stdout: bool) -> Result<()>;
         fn mol_get_aromatic_atoms(mol: &RWMol) -> Result<Vec<u32>>;
 
