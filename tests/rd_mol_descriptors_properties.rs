@@ -195,8 +195,11 @@ fn rust_property_functors() {
     assert_eq!(heavy.get_name(), "rustHeavyAtoms");
     assert_eq!(heavy.get_version(), "1.0.0");
     assert_eq!(heavy.call(&apap()).unwrap(), 11.0);
-    let idx = Properties::register_property(&heavy);
-    assert!(idx >= 43);
+    // RDKit 2024.03 returns the registry's new size for a new name, and the
+    // index of the entry it replaces for a known one.
+    let size = Properties::register_property(&heavy);
+    assert!(size > 43);
+    let idx = size - 1;
     assert_eq!(Properties::register_property(&heavy), idx);
     let available = Properties::get_available_properties();
     assert_eq!(available[idx as usize], "rustHeavyAtoms");

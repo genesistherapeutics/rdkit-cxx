@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // AllChem's helpers, with its doctests; values from Python's AllChem in
-// RDKit 2026.03.6, run on these same mol blocks. Alignment and
+// RDKit 2024.03.6, run on these same mol blocks. Alignment and
 // optimization are compared with tolerances, since their floating point can
 // differ across platforms.
 
@@ -272,7 +272,7 @@ fn volumes() -> Result<()> {
         ..Default::default()
     };
     for (block, volume, wide_volume) in [
-        (METHANE, 28.60000000000001, 28.376999999999995),
+        (METHANE, 28.552000000000007, 28.349999999999994),
         (WATER, 19.928000000000004, 20.060999999999996),
         (ETHANOL, 54.064000000000014, 54.13499999999999),
     ] {

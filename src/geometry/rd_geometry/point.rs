@@ -88,8 +88,8 @@ impl Point2D {
         Point2D { x, y }
     }
 
-    /// Scales the point to length 1; a zero vector is `Error::Runtime`.
-    /// Mirrors `Point2D.Normalize`.
+    /// Scales the point to length 1; a zero vector becomes NaN, as in RDKit
+    /// 2024.03. Mirrors `Point2D.Normalize`.
     pub fn normalize(&mut self) -> Result<()> {
         *self = ffi::point2d_normalize(self)?;
         Ok(())
@@ -110,20 +110,20 @@ impl Point2D {
         expect_ok(ffi::point2d_dot_product(self, other))
     }
 
-    /// The angle between the two vectors, from 0 to π; a zero vector is
-    /// `Error::Runtime`. Mirrors `Point2D.AngleTo`.
+    /// The angle between the two vectors, from 0 to π, or NaN for a zero
+    /// vector. Mirrors `Point2D.AngleTo`.
     pub fn angle_to(&self, other: &Point2D) -> Result<f64> {
         Ok(ffi::point2d_angle_to(self, other)?)
     }
 
-    /// The angle from this vector to the other, from 0 to 2π; a zero vector
-    /// is `Error::Runtime`. Mirrors `Point2D.SignedAngleTo`.
+    /// The angle from this vector to the other, from 0 to 2π, or NaN for a
+    /// zero vector. Mirrors `Point2D.SignedAngleTo`.
     pub fn signed_angle_to(&self, other: &Point2D) -> Result<f64> {
         Ok(ffi::point2d_signed_angle_to(self, other)?)
     }
 
-    /// The unit vector from this point to the other; the same point is
-    /// `Error::Runtime`. Mirrors `Point2D.DirectionVector`.
+    /// The unit vector from this point to the other; NaN for the same point.
+    /// Mirrors `Point2D.DirectionVector`.
     pub fn direction_vector(&self, other: &Point2D) -> Result<Point2D> {
         Ok(ffi::point2d_direction_vector(self, other)?)
     }
@@ -142,8 +142,8 @@ impl Point3D {
         Point3D { x, y, z }
     }
 
-    /// Scales the point to length 1; a zero vector is `Error::Runtime`.
-    /// Mirrors `Point3D.Normalize`.
+    /// Scales the point to length 1; a zero vector becomes NaN, as in RDKit
+    /// 2024.03. Mirrors `Point3D.Normalize`.
     pub fn normalize(&mut self) -> Result<()> {
         *self = ffi::point3d_normalize(self)?;
         Ok(())
@@ -181,8 +181,8 @@ impl Point3D {
         expect_ok(ffi::point3d_signed_angle_to(self, other))
     }
 
-    /// The unit vector from this point to the other; the same point is
-    /// `Error::Runtime`. Mirrors `Point3D.DirectionVector`.
+    /// The unit vector from this point to the other; NaN for the same point.
+    /// Mirrors `Point3D.DirectionVector`.
     pub fn direction_vector(&self, other: &Point3D) -> Result<Point3D> {
         Ok(ffi::point3d_direction_vector(self, other)?)
     }
@@ -267,7 +267,8 @@ impl PointND {
         Ok(())
     }
 
-    /// Scales the point to length 1. Mirrors `PointND.Normalize`.
+    /// Scales the point to length 1; a zero vector becomes NaN. Mirrors
+    /// `PointND.Normalize`.
     pub fn normalize(&mut self) -> Result<()> {
         self.coords = ffi::point_nd_normalize(&self.coords)?;
         Ok(())
@@ -288,14 +289,14 @@ impl PointND {
         Ok(ffi::point_nd_dot_product(&self.coords, &other.coords)?)
     }
 
-    /// The angle between the two vectors, from 0 to π. Mirrors
-    /// `PointND.AngleTo`.
+    /// The angle between the two vectors, from 0 to π, or NaN for a zero
+    /// vector. Mirrors `PointND.AngleTo`.
     pub fn angle_to(&self, other: &PointND) -> Result<f64> {
         Ok(ffi::point_nd_angle_to(&self.coords, &other.coords)?)
     }
 
-    /// The unit vector from this point to the other. Mirrors
-    /// `PointND.DirectionVector`.
+    /// The unit vector from this point to the other; NaN for the same point.
+    /// Mirrors `PointND.DirectionVector`.
     pub fn direction_vector(&self, other: &PointND) -> Result<PointND> {
         Ok(PointND {
             coords: ffi::point_nd_direction_vector(&self.coords, &other.coords)?,

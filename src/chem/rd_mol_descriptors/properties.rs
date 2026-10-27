@@ -77,7 +77,7 @@ impl PropertyFunctor {
 /// A set of registered properties to compute together. Mirrors
 /// `rdMolDescriptors.Properties`.
 ///
-/// RDKit 2026.03 registers `chi2v` and `chi2n` with the functions for
+/// RDKit 2024.03 registers `chi2v` and `chi2n` with the functions for
 /// `chi3v` and `chi3n`, so those two properties give the chi3 values, as
 /// they do in Python (RDKit #9643, fixed in 2026.09). `calc_chi2v` and
 /// `calc_chi2n` give the chi2 values.
@@ -170,8 +170,10 @@ impl Properties {
         })
     }
 
-    /// Registers a property, in place of any of the same name, and returns
-    /// its index in the registry. `Properties` made before keep the ones
+    /// Registers a property, in place of any of the same name. Returns the
+    /// replaced property's index in the registry, or for a new name the
+    /// registry's size after it (one past the new property's index), as
+    /// RDKit 2024.03 does. `Properties` made before keep the ones
     /// they had. Mirrors `Properties.RegisterProperty`.
     pub fn register_property(property_functor: &PropertyFunctor) -> i32 {
         expect_ok(ffi::properties_register_property(property_functor.raw()))

@@ -50,3 +50,9 @@ Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
 - `calc_mol_descriptors.tsv`: `Descriptors.CalcMolDescriptors` of a set of
   molecules in RDKit 2024.03.6, one row each, with the `repr` of each value as
   a float and `None` where a descriptor failed (`tests/descriptors.rs`)
+- `butina_reordering.tsv`: `Butina.ClusterData(dists, n, t, isDistData=True,
+  reordering=True)` in RDKit 2024.03.6 for 60 random flat distance sets
+  (Python's `random.Random(2403)`; 10 to 40 points, distances in tenths from 0
+  to 1, thresholds from 0.1 to 0.5), one per line: `n`, `t`, the distances
+  times 10, and the clusters, `;`-separated lists of `,`-separated indices
+  (`tests/ml_cluster.rs`)

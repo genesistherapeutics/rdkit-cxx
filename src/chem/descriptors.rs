@@ -1515,7 +1515,7 @@ pub(crate) static DESCRIPTORS: [DescriptorEntry; 402] = [
 
 /// The number of descriptors in `descList` before
 /// `setup_autocorr_descriptors`.
-const NUM_DESC_LIST: usize = 217;
+const NUM_DESC_LIST: usize = 210;
 
 /// The index of `AvgIpc`, from which Python's `setupAUTOCorrDescriptors`
 /// lists the descriptors of the modules it gathers a second time.

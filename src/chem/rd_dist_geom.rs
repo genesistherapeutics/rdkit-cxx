@@ -334,6 +334,8 @@ fn keyword_defaults() -> EmbedParameters {
         use_basic_knowledge: true,
         use_macrocycle_torsions: true,
         use_macrocycle14config: true,
+        // RDKit 2024.03's C++ default is 1; Python's keyword is 2.
+        et_version: 2,
         ..EmbedParameters::default()
     }
 }
@@ -342,7 +344,8 @@ fn keyword_defaults() -> EmbedParameters {
 /// on failure. Mirrors `rdDistGeom.EmbedMolecule(mol)`, whose defaults are
 /// `EmbedParameters::default()` with `use_exp_torsion_angle_prefs`,
 /// `use_basic_knowledge`, `use_macrocycle_torsions`, and
-/// `use_macrocycle14config` set and `only_heavy_atoms_for_rms` unset. A molecule without atoms is `Error::Value`.
+/// `use_macrocycle14config` set, `only_heavy_atoms_for_rms` unset, and
+/// `et_version` 2. A molecule without atoms is `Error::Value`.
 pub fn embed_molecule(mol: &mut Mol) -> Result<i32> {
     embed_molecule_with_params(mol, &mut keyword_defaults())
 }

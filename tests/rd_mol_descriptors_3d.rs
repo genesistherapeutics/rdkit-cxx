@@ -856,7 +856,13 @@ fn double_cubic_lattice_volume() {
     };
     assert_values(
         DoubleCubicLatticeVolume::new_with_params(&mol, &protein).unwrap(),
-        [0.0, 503.6006013573, 147.5474438172982, 0.0, 0.29298504294798217],
+        [
+            0.0,
+            503.6006013573,
+            147.5474438172982,
+            0.0,
+            0.29298504294798217,
+        ],
     );
     assert_eq!(
         DoubleCubicLatticeVolumeParams::default(),
@@ -904,7 +910,9 @@ fn double_cubic_lattice_volume_checks() {
         dot_density: 1,
         ..Default::default()
     };
-    assert!(value(DoubleCubicLatticeVolume::new_with_params(&mol, &dots)));
+    assert!(value(DoubleCubicLatticeVolume::new_with_params(
+        &mol, &dots
+    )));
     // Python's RuntimeError.
     let deep = DoubleCubicLatticeVolumeParams {
         depth: 9,

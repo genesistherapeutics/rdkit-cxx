@@ -580,10 +580,7 @@ fn mmff_properties() {
         ),
     ] {
         set_off(&mut props, false);
-        assert_eq!(
-            (energy(&mut mol, &props) - full).abs() > 1e-9,
-            contributes
-        );
+        assert_eq!((energy(&mut mol, &props) - full).abs() > 1e-9, contributes);
         set_on(&mut props);
         assert_close(energy(&mut mol, &props), full);
     }

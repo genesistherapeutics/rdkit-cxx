@@ -565,8 +565,10 @@ fn atom_pairs_parameters() {
     assert_eq!(AtomPairsParameters::code_size(), 9);
     assert_eq!(AtomPairsParameters::num_path_bits(), 5);
     assert_eq!(AtomPairsParameters::num_atom_pair_fingerprint_bits(), 23);
+    // RDKit 2024.03 lists technetium (43) where later releases have
+    // iodine (53).
     assert_eq!(
         AtomPairsParameters::atom_types(),
-        vec![5, 6, 7, 8, 9, 14, 15, 16, 17, 33, 34, 35, 51, 52, 53, 0]
+        vec![5, 6, 7, 8, 9, 14, 15, 16, 17, 33, 34, 35, 51, 52, 43, 0]
     );
 }
