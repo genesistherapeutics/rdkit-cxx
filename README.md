@@ -325,26 +325,39 @@ corrupts memory on the supported platforms, and both need a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **Relevant-cycle counts.** RDKit's symmetrized SSSR (`symmetrizeSSSR` with
-  its default algorithm) reserves room for every relevant cycle, converting
-  RingDecomposerLib's `double` count to `size_t` unchecked: undefined from
-  2^64 cycles, which a ring of 64 "diamonds" (192 atoms) has. Sanitization
-  reaches it, as do aromaticity and stereo perception on a molecule whose
-  rings are not yet symmetrized (one edited or parsed without sanitizing),
-  the depictor, drawing, and standardization: about 150 wrappers in the
-  tests alone. The checks (`check_relevant_cycles` in `mol_checks.h`)
-  return `Error::Value` above `i32::MAX` relevant cycles in sanitization
-  (`sanitize_mol`, reactions' sanitization, the SMILES parsers),
-  `get_symm_sssr`, RDKit's depictor, and the wrappers that symmetrize a
-  molecule's rings themselves (drawing, abbreviations, tautomer scores).
-  The other parsers (mol blocks and the other file formats, the suppliers,
-  InChI) and the other calls that perceive rings are not checked: each
-  would need its own, and a parser's would mean parsing twice. On x86-64
+- **Relevant cycles of old molecule pickles.** RDKit's symmetrized SSSR
+  (`symmetrizeSSSR` with its default algorithm) reserves room for every
+  relevant cycle, converting RingDecomposerLib's `double` count to `size_t`
+  unchecked: undefined from 2^64 cycles, which a ring of 64 "diamonds"
+  (192 atoms) has. Sanitization, the parsers, stereo and aromaticity
+  perception, the writers, the depictor and much else reach it; every
+  wrapper that can checks first (`relevant_cycles.h`) and returns
+  `Error::Value` above `i32::MAX` relevant cycles. One path is left: a
+  molecule pickle in a format older than 4.0, which RDKit's reader gives
+  stereochemistry while it reads it (`Mol::from_binary`, and the catalogs,
+  substructure libraries, and queries that hold pickles); no wrapper can
+  see its bonds before RDKit perceives them. Pickles the crate writes, and
+  any RDKit's since format 4.0, are not affected. On x86-64
   RDKit converts such a count to a small number and enumerates cycles
   until memory runs out; on arm64 the conversion saturates and `reserve`
   throws.
 
 Other limits:
+
+- The relevant-cycle checks never refuse a molecule RDKit can enumerate,
+  but some calls build molecules they cannot predict, and refuse when
+  those could have more than 31 independent cycles (whose relevant cycles
+  could then be too many) instead of counting them: R-group decomposition
+  of such a core or molecule; scaffold networks for such a molecule, or
+  with bond breakers that bond atoms anew; synthon space searches for such
+  a query, or in a space whose reactions could make such products; the
+  standardizer for such a molecule with bonds to metals, zero-order, dative
+  or hydrogen bonds, or with normalizations that change rings, and with
+  normalizations that bond atoms anew for any molecule; the tautomer hashes
+  for such a molecule with zero-order, dative or hydrogen bonds; query SLN
+  with more than 31 ring closures; InChI, SCSR mol blocks, and CDXML read
+  with sanitization whose structures have bonds to metals; binary CDX; and
+  a streamed record held back for its count past 1 MiB.
 
 - Substructure matching runs one call at a time across the process, since
   every match swaps RDKit's `SIGINT` handler through static variables
