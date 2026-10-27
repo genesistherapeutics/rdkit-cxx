@@ -198,8 +198,9 @@ fn pickles_with_unknown_enum_values_are_refused() {
 
 // MolPickler writes these values in one byte, and its reader takes the rest
 // of a longer list for the pickle's next fields: Python's ToBinary writes
-// pickles it cannot read back ("Bad pickle format"). RDKit 2026.03 also
-// writes bond indices in one byte for a molecule of at most 255 atoms.
+// pickles it cannot read back ("Bad pickle format"). RDKit 2025.09 also
+// writes bond indices in one byte for a molecule of at most 255 atoms,
+// whatever its number of bonds.
 
 fn brackets(n: usize) -> Mol {
     let mut mol = mol_from_smiles("CCO").unwrap();

@@ -215,7 +215,7 @@ add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
 # one loaded. Only that file needs it, so the others' flags stay the same.
 set_source_files_properties(src/errors.cpp PROPERTIES
   COMPILE_DEFINITIONS RDKIT_CXX_RDKIT_VERSION="${rdkit_VERSION}")
-# conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser; without
+# conda-forge's macOS build of RDKit 2025.09.6 has no SLN parser; without
 # one, the SLN wrappers refuse every call (sln_parse.cpp), and nothing
 # throws the parser's exception (errors.cpp).
 if(TARGET RDKit::SLNParse)
@@ -243,7 +243,7 @@ target_include_directories(rdkitcxx PRIVATE
   # (draw_drawer.cpp).
   vendor/${rdkit_VERSION}
 )
-# RDKit 2026.03's headers test macros that RDConfig.h defines without
+# RDKit 2025.09's headers test macros that RDConfig.h defines without
 # including it: RingInfo.h declares its ring-family members only under
 # RDK_USE_URF. Every source reads RDConfig.h first, so it compiles against
 # the classes the library was built with.

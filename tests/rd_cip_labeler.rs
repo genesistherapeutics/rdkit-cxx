@@ -119,7 +119,7 @@ fn indices_that_rdkit_trusts() {
     }
 }
 
-// RDKit 2026.03 reads past an empty vector for these bonds, and Python
+// RDKit 2025.09 reads past an empty vector for these bonds, and Python
 // crashes; RDKit 2026.09 leaves them unlabeled, as here.
 #[test]
 fn bonds_without_carriers() {
