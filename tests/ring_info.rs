@@ -176,6 +176,23 @@ fn diamonds(n: u32) -> RWMol {
 }
 
 #[test]
+fn relevant_cycles_beyond_u32_are_an_error() {
+    let mut rw = diamonds(10);
+    assert!(matches!(rw.get_ring_info().num_relevant_cycles(),
+                     Err(Error::Runtime { message }) if message.contains("Ring families not initialized")));
+    find_ring_families(&mut rw).unwrap();
+    assert_eq!(rw.get_ring_info().num_relevant_cycles().unwrap(), 1034);
+    // 2^33 + 33, which RDKit converts to unsigned int unchecked: Python
+    // returns 33.
+    let mut rw = diamonds(33);
+    find_ring_families(&mut rw).unwrap();
+    assert!(matches!(
+        rw.get_ring_info().num_relevant_cycles(),
+        Err(Error::Value { .. })
+    ));
+}
+
+#[test]
 fn add_ring() {
     let mut rw = RWMol::default();
     for _ in 0..3 {

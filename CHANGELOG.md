@@ -4,6 +4,10 @@
 
 ### Fixes
 
+- `RingInfo.num_relevant_cycles` is `Error::Value` for more relevant cycles
+  than `u32` holds. RDKit converts RingDecomposerLib's count, a `double`, to
+  `unsigned int` without a check, which is undefined out of range; Python
+  returns 33 for a ring of 33 diamonds, which has 2^33 + 33.
 - Sanitization (`sanitize_mol`, `mol_from_smiles` and the other SMILES
   parsers, `sanitize_rxn`, `sanitize_rxn_as_mols`, `validate_smiles`),
   `get_symm_sssr`, 2D depiction with RDKit's depictor, and the wrappers that
