@@ -299,8 +299,9 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in one way. It does
-not corrupt memory on the supported platforms, and it needs a fix in RDKit:
+Safe Rust can still reach undefined behavior in RDKit in these ways. They
+do not corrupt memory on the supported platforms, and they need fixes in
+RDKit:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
@@ -310,6 +311,21 @@ not corrupt memory on the supported platforms, and it needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
+- **MMPA's hash of an anion.** RDKit 2024.03's MMPA (`computeMorganCodeHash`)
+  shifts an atom's formal charge left by 16, which C++17, the standard it is
+  built with, leaves undefined for a negative charge. GCC and Clang define it
+  as the two's-complement shift, which is what RDKit means.
+- **CIP labels in fused ring systems.** RDKit 2024.03's CIP labeler shifts by
+  31 less the number of stereo descriptors it compares. The wrapper refuses
+  more than 32 stereo configurations, but in fused ring systems one atom can
+  stand for several of the labeler's digraph nodes, and a bound that covers
+  that would refuse common molecules (cholesterol, taxol). A shift past 31
+  needs more than 32 descriptors in one comparison.
+- **A multithreaded supplier whose threads cannot all start.** RDKit 2024.03's
+  multithreaded suppliers start their threads in the constructor. When the
+  system refuses a thread, the constructor throws and the base class's
+  destructor joins the threads already started, which still use the
+  half-made supplier. Only exhausting the system's threads reaches it.
 
 Other limits:
 
