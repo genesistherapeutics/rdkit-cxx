@@ -5,10 +5,24 @@
 
 name: Release
 
-# Run by hand from the Actions tab, on rdkit-2026.03 (README.md, Releases).
-# crates.io's trusted publisher for rdkit-cxx names this file.
+# Run by hand from the Actions tab, from main, choosing the branch to release
+# (README.md, Releases): main, or the branch of an earlier RDKit series. The
+# workflow always runs main's copy of this file, so every branch is released
+# the same way. crates.io's trusted publisher for rdkit-cxx names this file.
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: Branch to release
+        type: choice
+        default: main
+        options:
+          - main
+          - rdkit-2026.03
+          - rdkit-2025.09
+          - rdkit-2025.03
+          - rdkit-2024.09
+          - rdkit-2024.03
 
 permissions:
   contents: read
@@ -17,12 +31,19 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+env:
+  # Prints the section of CHANGELOG.md under the heading `## <version>`.
+  NOTES_AWK: |
+    $0 == heading { found = 1; next }
+    found && /^## / { exit }
+    found { print }
+
 jobs:
   # Bumps the version, tests the release commit, and builds the packaged crate,
   # with read-only permissions: the bump commit reaches the publish job as a
   # patch, and nothing is pushed until crates.io has the crate.
   build:
-    if: github.repository == 'skearnes/rdkit-cxx' && github.ref == 'refs/heads/rdkit-2026.03'
+    if: github.repository == 'skearnes/rdkit-cxx'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -30,27 +51,45 @@ jobs:
     defaults:
       run:
         shell: bash -leo pipefail {0}
+    env:
+      BRANCH: ${{ inputs.branch }}
     outputs:
+      base: ${{ steps.base.outputs.base }}
       version: ${{ steps.bump.outputs.version }}
       commit: ${{ steps.bump.outputs.commit }}
       patch: ${{ steps.bump.outputs.patch }}
     steps:
+      # A branch's own copy of this file may be older than main's.
+      - name: Run from main
+        run: |
+          if [ "${GITHUB_REF}" != refs/heads/main ]; then
+            echo "Run this workflow from main, and choose the branch to release with its branch input." >&2
+            exit 1
+          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.branch }}
+      # The branch's head when the build started, which the publish job
+      # checks out, so a push during the build changes nothing it releases.
+      - name: Record the release commit
+        id: base
+        run: echo "base=$(git rev-parse HEAD)" >> "${GITHUB_OUTPUT}"
       # This workflow tests only on Linux x86-64, so it releases a commit only
       # once the branch's CI (every platform, the race check, the inventory)
       # passed on it.
       - name: CI passed on the release commit
         env:
           GH_TOKEN: ${{ github.token }}
+          BASE: ${{ steps.base.outputs.base }}
         run: |
           state="$(gh run list --repo "${GITHUB_REPOSITORY}" --workflow ci.yml \
-            --commit "${GITHUB_SHA}" --event push --limit 1 \
+            --commit "${BASE}" --event push --limit 1 \
             --json status,conclusion --jq '.[] | "\(.status) \(.conclusion)"')"
           if [ "${state}" != "completed success" ]; then
-            echo "CI on ${GITHUB_SHA} is ${state:-not run}, not completed success." >&2
-            echo "Release a commit of ${GITHUB_REF_NAME} whose CI passed." >&2
+            echo "CI on ${BASE} is ${state:-not run}, not completed success." >&2
+            echo "Release a commit of ${BRANCH} whose CI passed." >&2
             exit 1
           fi
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Built from scratch, as in CI, so nothing cached can make the build pass.
       - uses: mamba-org/setup-micromamba@f457c30a868e4760d3a6fcea5f25dc655b8edf39 # v3.2.1
         with:
@@ -65,14 +104,27 @@ jobs:
       - name: Bump the version
         id: bump
         # Releases the version in Cargo.toml if no tag has it yet (the first
-        # release of an RDKit series), and otherwise the next patch. The major
-        # and minor levels name the RDKit series, so they never bump here.
+        # release of an RDKit series), and otherwise the next patch, whose
+        # notes are CHANGELOG.md's Unreleased section. The major and minor
+        # levels name the RDKit series, so they never bump here.
         run: |
           pipx install bump-my-version==1.5.1
           version="$(bump-my-version show current_version)"
+          # A series' branch releases only its series: rdkit-2025.09 is 2025.9.x.
+          if [[ "${BRANCH}" == rdkit-* ]]; then
+            series="${BRANCH#rdkit-}"
+            if [[ "${version}" != "${series%.*}.$((10#${series#*.}))."* ]]; then
+              echo "${BRANCH} has version ${version}, which is not RDKit ${series}'s" >&2
+              exit 1
+            fi
+          fi
           status=0
           git ls-remote --exit-code --tags origin "refs/tags/v${version}" > /dev/null || status=$?
           if [ "${status}" -eq 0 ]; then
+            if [ "$(grep -cx '## Unreleased' CHANGELOG.md)" != 1 ]; then
+              echo "CHANGELOG.md needs one '## Unreleased' section, the release's notes" >&2
+              exit 1
+            fi
             git config user.name github-actions
             git config user.email github-actions@github.com
             # Dated as its parent, so every run from one commit makes the same
@@ -80,10 +132,18 @@ jobs:
             GIT_AUTHOR_DATE="$(git log -1 --format=%cI)"
             GIT_COMMITTER_DATE="${GIT_AUTHOR_DATE}"
             export GIT_AUTHOR_DATE GIT_COMMITTER_DATE
-            bump-my-version bump patch --commit --no-tag \
-              --message 'Bump version: {current_version} → {new_version} [skip actions]'
+            bump-my-version bump patch --no-commit --no-tag
+            previous="${version}"
             version="$(bump-my-version show current_version)"
+            sed -i "s/^## Unreleased\$/## ${version}/" CHANGELOG.md
+            git commit -qam "Bump version: ${previous} → ${version} [skip actions]"
             echo "patch=$(git format-patch -1 --stdout | base64 -w0)" >> "${GITHUB_OUTPUT}"
+            # Another branch of the series may have released this version.
+            tagged="$(git ls-remote --tags origin "refs/tags/v${version}^{}" | cut -f1)"
+            if [ -n "${tagged}" ] && [ "${tagged}" != "$(git rev-parse HEAD)" ]; then
+              echo "v${version} tags ${tagged}, which ${BRANCH} does not have; merge it first" >&2
+              exit 1
+            fi
           elif [ "${status}" -ne 2 ]; then
             exit "${status}"
           fi
@@ -91,6 +151,10 @@ jobs:
             | jq -r '.packages[] | select(.name == "rdkit-cxx") | .version')"
           if [ "${cargo_version}" != "${version}" ]; then
             echo "Cargo.toml has ${cargo_version}, but .bumpversion.toml has ${version}" >&2
+            exit 1
+          fi
+          if [ -z "$(awk -v heading="## ${version}" "${NOTES_AWK}" CHANGELOG.md | tr -d '[:space:]')" ]; then
+            echo "CHANGELOG.md has no notes for ${version}" >&2
             exit 1
           fi
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
@@ -116,6 +180,7 @@ jobs:
     # Each step after the bump skips what an earlier attempt finished, so
     # re-running the failed jobs of a release completes it.
     env:
+      BRANCH: ${{ inputs.branch }}
       VERSION: ${{ needs.build.outputs.version }}
       COMMIT: ${{ needs.build.outputs.commit }}
       PATCH: ${{ needs.build.outputs.patch }}
@@ -123,6 +188,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.build.outputs.base }}
           token: ${{ secrets.ACTIONS_PUSH }}
       - name: Apply the version bump
         run: |
@@ -193,7 +259,8 @@ jobs:
       - name: Push the tag and version bump
         # The branch may have moved on during the build. The tag marks the
         # published commit either way, and the bump, which changes only
-        # version lines, is rebased onto the branch when it has.
+        # version lines and the changelog's heading, is rebased onto the
+        # branch when it has.
         run: |
           tagged="$(git ls-remote --tags origin "refs/tags/v${VERSION}^{}" | cut -f1)"
           if [ -z "${tagged}" ]; then
@@ -203,27 +270,34 @@ jobs:
             echo "v${VERSION} already tags ${tagged}, not ${COMMIT}" >&2
             exit 1
           fi
-          if [ -n "${PATCH}" ] && ! git push origin "HEAD:${GITHUB_REF_NAME}"; then
-            git pull --rebase origin "${GITHUB_REF_NAME}"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+          if [ -n "${PATCH}" ] && ! git push origin "HEAD:refs/heads/${BRANCH}"; then
+            git fetch origin "${BRANCH}"
+            git rebase FETCH_HEAD
+            git push origin "HEAD:refs/heads/${BRANCH}"
           fi
-      # main's releases are the newest series, so this one is not marked the
-      # latest. Its notes are its section of CHANGELOG.md: generated notes
-      # would list main's pull requests since main's last release.
+      # The notes are the version's section of CHANGELOG.md, with a link to
+      # the changes since the series' previous release. Only the newest
+      # version of all is marked the latest release: a patch to an earlier
+      # series is not.
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if ! gh release view "v${VERSION}" > /dev/null 2>&1; then
-            awk -v heading="## ${VERSION}" '
-              $0 == heading { found = 1; next }
-              found && /^## / { exit }
-              found { print }
-            ' CHANGELOG.md > notes.md
-            if [ ! -s notes.md ]; then
-              echo "CHANGELOG.md has no section for ${VERSION}" >&2
-              exit 1
+            awk -v heading="## ${VERSION}" "${NOTES_AWK}" CHANGELOG.md > notes.md
+            tags="$(git ls-remote --tags --refs origin 'refs/tags/v*' \
+              | sed 's#.*refs/tags/##' | sort -V)"
+            previous="$(awk -v series="v${VERSION%.*}." -v version="v${VERSION}" '
+              index($0, series) == 1 { if ($0 == version) { print prev; exit } prev = $0 }
+            ' <<< "${tags}")"
+            if [ -n "${previous}" ]; then
+              printf '\n**Changes**: %s/%s/compare/%s...v%s\n' "${GITHUB_SERVER_URL}" \
+                "${GITHUB_REPOSITORY}" "${previous}" "${VERSION}" >> notes.md
             fi
-            gh release create "v${VERSION}" --verify-tag --latest=false \
+            latest=false
+            if [ "$(tail -n 1 <<< "${tags}")" = "v${VERSION}" ]; then
+              latest=true
+            fi
+            gh release create "v${VERSION}" --verify-tag --latest="${latest}" \
               --title "v${VERSION}" --notes-file notes.md
           fi

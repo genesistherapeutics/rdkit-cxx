@@ -241,6 +241,29 @@ fn recorded_text_is_checked() {
 }
 
 #[test]
+fn recorded_cxsmiles_is_checked() {
+    // RDKit 2026.03 copies a non-strict CXSMILES past its end when a
+    // substance group's field runs to it.
+    let loose = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let png = |smiles: &str| {
+        add_metadata_to_png_string(&BTreeMap::from([("SMILES".into(), smiles.into())]), PNG)
+            .unwrap()
+    };
+    assert!(matches!(
+        // SAFETY: metadata with a SMILES and no pickle.
+        unsafe { mol_from_png_string_with_params(&png("C |SgD:0:f:v::::(1"), &loose) },
+        Err(Error::Value { .. })
+    ));
+    let mol =
+        // SAFETY: metadata with a SMILES and no pickle.
+        unsafe { mol_from_png_string_with_params(&png("C |SgD:0:f:v::::|"), &loose) }.unwrap();
+    assert_eq!(mol.get_num_atoms(), 1);
+}
+
+#[test]
 fn depiction_refuses_what_the_depictor_would_mishandle() {
     // The mol block in the metadata depicts a molecule without a conformer,
     // and RDKit's depictor reads the first neighbor of a square-planar atom

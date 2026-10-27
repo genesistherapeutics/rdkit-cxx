@@ -81,6 +81,88 @@ void check_bond_refs(const boost::property_tree::ptree &tree) {
 
 }  // namespace
 
+namespace {
+
+// Where read_text_to (CXSmilesOps.cpp) stops reading `cx` from `i`: at the
+// first of `delims`, or one past the end, having read the null there. Its
+// "&#N;" escapes hold none of the delimiters it is given here.
+std::size_t text_to(std::string_view cx, std::size_t i, const char *delims) {
+  auto k = cx.find_first_of(delims, i);
+  return k == std::string_view::npos ? cx.size() + 1 : k;
+}
+
+bool is_digit(char c) { return c >= '0' && c <= '9'; }
+
+// parse_data_sgroup from `p`, at "SgD:": whether a field or its coordinates
+// run past the end, after which RDKit steps once more.
+bool data_sgroup_overrun(std::string_view cx, std::size_t p) {
+  const std::size_t n = cx.size();
+  if (p + 3 >= n || cx[p + 3] != ':') {
+    return false;
+  }
+  std::size_t i = p + 4;
+  while (true) {
+    while (i < n && is_digit(cx[i])) {
+      ++i;
+    }
+    if (i >= n || cx[i] != ',') {
+      break;
+    }
+    ++i;
+  }
+  ++i;
+  for (int field = 0; field < 5; ++field) {
+    if (i >= n) {
+      return false;  // parse_data_sgroup_attr's precondition throws
+    }
+    if (cx[i] != '|') {
+      i = text_to(cx, i, ":");
+      if (i > n) {
+        return true;
+      }
+      ++i;
+    }
+  }
+  return i < n && cx[i] == '(' && text_to(cx, i, ")") > n;
+}
+
+}  // namespace
+
+void check_cx_extensions(std::string_view cx, bool strict) {
+  if (strict) {
+    return;
+  }
+  for (auto p = cx.find("Sg"); p != std::string_view::npos;
+       p = cx.find("Sg", p + 1)) {
+    bool overrun = false;
+    if (p + 2 < cx.size() && cx[p + 2] == 'D') {
+      overrun = data_sgroup_overrun(cx, p);
+    } else if (p + 2 < cx.size() && cx[p + 2] == ':') {
+      overrun = text_to(cx, p + 3, ":") > cx.size();
+    }
+    if (overrun) {
+      throw ValueErrorException(
+          "a CXSMILES substance group's fields must each end with ':' (and "
+          "its coordinates with ')') when strictCXSMILES is off: RDKit 2026.03 "
+          "copies the text past its end otherwise");
+    }
+  }
+}
+
+void check_smiles_cx(const std::string &text, bool allow_cx, bool strict) {
+  if (!allow_cx || strict) {
+    return;
+  }
+  auto sidx = text.find_first_of(" \t");
+  if (sidx == std::string::npos || sidx == 0) {
+    return;
+  }
+  auto cx = boost::trim_copy(text.substr(sidx));
+  if (!cx.empty() && cx[0] == '|') {
+    check_cx_extensions(cx, strict);
+  }
+}
+
 void check_mrv(const std::string &text) {
   std::istringstream in(text);
   boost::property_tree::ptree tree;

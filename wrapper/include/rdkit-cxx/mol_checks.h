@@ -101,7 +101,9 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 // the sizes of their atom and bond lists, and the bonds both name. A
 // truncated size leaves MolPickler's reader taking the rest of the list for
 // the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
-// writes a pickle it cannot read. Throws ValueErrorException for any of
+// writes a pickle it cannot read. Likewise it counts the properties of the
+// molecule, each conformer, atom, bond and substance group in two bytes, so
+// none may have more than 65535. Throws ValueErrorException for any of
 // these, in the molecule or in the molecules of its recursive queries, which
 // RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
 // inside another format, calls it on the molecules it pickles.
@@ -112,8 +114,12 @@ void check_picklable(const RDKit::ROMol &mol);
 // stereo groups within them and the atoms' and bonds' queries
 // (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
 // them, and, for parts of more than 256 bonds, whose bonds may be numbered
-// past 255, no group that names a bond. For the fragment catalog, whose
-// fragments no wrapper can reach.
+// past 255, no group that names a bond. A part keeps a substance group only
+// when it holds all the group's atoms, parent atoms, and bonds, so groups
+// with more distinct ones than a part of max_part_bonds bonds has room for
+// are skipped; it keeps a stereo group that shares an atom with it, so every
+// stereo group counts. For the fragment catalog, whose fragments no wrapper
+// can reach.
 void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
 
 // check_picklable for each template of a reaction, which ReactionPickler

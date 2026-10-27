@@ -190,6 +190,12 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Mirrors `GetPolarSurfaceArea(includeSandP, includeHs)`.
+    ///
+    /// # Panics
+    ///
+    /// With `include_hs`, for a hydrogen bonded to a hydrogen: RDKit 2026.03
+    /// recurses between them until the stack overflows (rdkit/rdkit#9687;
+    /// Python crashes).
     pub fn get_polar_surface_area_with_params(
         &mut self,
         params: &GetPolarSurfaceAreaParams,
@@ -257,6 +263,10 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Mirrors `GetPolarVolume(includeSandP, includeHs)`.
+    ///
+    /// # Panics
+    ///
+    /// As `get_polar_surface_area_with_params`.
     pub fn get_polar_volume_with_params(&mut self, params: &GetPolarVolumeParams) -> f64 {
         expect_ok(ffi::dclv_get_polar_volume(
             self.raw(),

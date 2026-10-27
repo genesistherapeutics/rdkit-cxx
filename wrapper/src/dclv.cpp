@@ -78,6 +78,28 @@ void check_zero_radii_last(const DoubleCubicLatticeVolume &dclv) {
   }
 }
 
+// RDKit 2026.03's includeAsPolar (DCLV.cpp), with includeHs, asks whether
+// each of a hydrogen's neighbors is polar by calling itself with includeHs,
+// so two bonded hydrogens recurse until the stack overflows (a segfault in
+// Python for H2; rdkit/rdkit#9687, fixed after 2026.09.1). A hydrogen
+// bonded to a hydrogen is refused for the polar descriptors with hydrogens.
+void check_polar_hydrogens(const DoubleCubicLatticeVolume &dclv,
+                           bool include_hs) {
+  if (!include_hs) {
+    return;
+  }
+  for (const auto *bond : dclv.mol.bonds()) {
+    if (bond->getBeginAtom()->getAtomicNum() == 1 &&
+        bond->getEndAtom()->getAtomicNum() == 1) {
+      throw ValueErrorException(
+          "with includeHs, DoubleCubicLatticeVolume's polar descriptors need "
+          "no hydrogen bonded to a hydrogen, which RDKit 2026.03 follows "
+          "back and forth until the stack overflows; bond " +
+          std::to_string(bond->getIdx()) + " joins two");
+    }
+  }
+}
+
 boost::dynamic_bitset<> atom_set(const DoubleCubicLatticeVolume &dclv,
                                  rust::Slice<const std::uint32_t> indices) {
   boost::dynamic_bitset<> atoms(dclv.mol.getNumAtoms());
@@ -145,6 +167,7 @@ double dclv_get_atom_surface_area(DoubleCubicLatticeVolume &dclv,
 
 double dclv_get_polar_surface_area(DoubleCubicLatticeVolume &dclv,
                                    bool include_s_and_p, bool include_hs) {
+  check_polar_hydrogens(dclv, include_hs);
   std::lock_guard<std::mutex> lock(record_cache_mutex());
   return dclv.getPolarSurfaceArea(include_s_and_p, include_hs);
 }
@@ -180,6 +203,7 @@ double dclv_get_atom_volume(DoubleCubicLatticeVolume &dclv,
 
 double dclv_get_polar_volume(DoubleCubicLatticeVolume &dclv,
                              bool include_s_and_p, bool include_hs) {
+  check_polar_hydrogens(dclv, include_hs);
   std::lock_guard<std::mutex> lock(record_cache_mutex());
   return dclv.getPolarVolume(include_s_and_p, include_hs);
 }

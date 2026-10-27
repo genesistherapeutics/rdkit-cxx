@@ -53,7 +53,11 @@ A program built against one release stops when it loads with another.
     `ChemicalReaction::to_binary` panic). So are a substance group or stereo
     group list of more than 255 entries, more than 255 stereo groups, and a
     query of more than 255 children, which RDKit 2026.09 pickles truncated
-    too: RDKit writes these pickles and cannot read them back.
+    too: RDKit writes these pickles and cannot read them back. The fragment
+    catalog's generator, whose fragments are pickled with one-byte counts
+    whatever the molecule's size, checks the substance groups a fragment
+    can hold, and every stereo group, which RDKit 2026.03 keeps in any
+    fragment that shares one of its atoms.
   - A multithreaded supplier's queues hold at most 2^20 records: RDKit
     2026.03 dereferences null when it cannot allocate one.
   - Drawing refuses an atom of two bonds with a neighbor at its position,
@@ -61,6 +65,51 @@ A program built against one release stops when it loads with another.
   - RDKit 2026.03's substructure matches, embedder, CIP labeler,
     `DetermineBondOrders`, and synthon search leave RDKit's `SIGINT` handler
     installed; the wrappers restore the process's after each call.
+
+### Fixes beyond 2026.9.0
+
+Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
+2026.09.1 too, and `main` gets those in its next release:
+
+- The V3000 readers (mol blocks and files, the SD suppliers, and every other
+  reader of V3000 text) refuse an SGroup's `COMPNO=` with no value, and an
+  enhanced-stereo collection with fewer atoms than its count (`ATOMS=(2 )`),
+  with `Error::Value`: RDKit reads each with a stream extraction it does not
+  check, into an uninitialized `unsigned int`. A refused line is cut before
+  any of it reaches RDKit, wherever it falls in a stream's 64 KiB chunks.
+- `json_to_mols` gives an attachment point without an `lvIdx` the -1 RDKit's
+  writer leaves out: RDKit's reader leaves the field uninitialized, so a
+  plain round trip of a molecule with a substance group read it.
+- Without `strict_cxsmiles`, `mol_from_smiles`, `mol_from_smarts`, and the
+  PNG readers refuse a CXSMILES data substance group (`SgD:`) whose field
+  runs to the end of the text without its `:` (or its coordinates without
+  their `)`), and a polymer group (`Sg:`) whose type does: RDKit's parser
+  reads through the text's end, and then copies up to 2 bytes past it into
+  the `_CXSMILES_Data` property.
+- Wherever a molecule is pickled, a molecule, conformer, atom, bond, or
+  substance group with more than 65,535 properties is refused
+  (`Error::Value`; `Mol::to_binary` and `ChemicalReaction::to_binary`
+  panic): RDKit counts them in two bytes, and the reader takes the rest for
+  the pickle's next fields. Substance groups' properties are always
+  pickled. In Python, `ToBinary` with 65,536 molecule properties writes a
+  pickle that fails with "ENDPROPS tag not found".
+- A query bond's (and query atom's) `expand_query` is `Error::Value` for a
+  query bond or atom without a query of its own: RDKit's
+  `QueryBond::expandQuery` reads that query's description unchecked.
+- The synthon space's fingerprint build is no longer cut short by a Ctrl-C
+  an earlier call left in RDKit's flag, after which the next fingerprint
+  search dereferenced the synthons' missing fingerprints (a segfault): RDKit
+  2026.03's fingerprint searches leave a SIGINT they take in the flag, and
+  the build records the fingerprint type before it reads the flag. Each
+  synthon wrapper clears the flag around RDKit's call, the fingerprint
+  searches build missing fingerprints first, and a space whose fingerprints
+  are incomplete is `Error::Value` for the build, the fingerprint searches,
+  and the database writers.
+- `DoubleCubicLatticeVolume`'s polar surface area and volume with
+  `include_hs` panic for a hydrogen bonded to a hydrogen, which RDKit
+  follows back and forth until the stack overflows, as in Python
+  (rdkit/rdkit#9687, fixed after RDKit 2026.09.1). They stay infallible,
+  as Python's raise nothing.
 
 ### Bindings
 

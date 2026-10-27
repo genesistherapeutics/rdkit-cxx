@@ -65,6 +65,11 @@ void atom_expand_query(Atom &atom, const Atom &other, int how,
   auto &self = as_query<RDKit::QueryAtom>(atom, "atom");
   const auto &query = as_query<const RDKit::QueryAtom>(other, "atom");
   auto how_ = composite(how);
+  // QueryAtom::expandQuery checks its own query with a PRECONDITION; this
+  // refuses it as bond_expand_query does.
+  if (!self.hasQuery()) {
+    throw ValueErrorException("the atom has no query to expand");
+  }
   if (query.hasQuery()) {
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }
@@ -91,6 +96,12 @@ void bond_expand_query(Bond &bond, const Bond &other, int how,
   auto &self = as_query<RDKit::QueryBond>(bond, "bond");
   const auto &query = as_query<const RDKit::QueryBond>(other, "bond");
   auto how_ = composite(how);
+  // QueryBond::expandQuery reads its own query's description without
+  // checking that it has one (QueryBond.cpp, in every release through
+  // 2026.09.1), and a default-constructed QueryBond has none.
+  if (!self.hasQuery()) {
+    throw ValueErrorException("the bond has no query to expand");
+  }
   if (query.hasQuery()) {
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }

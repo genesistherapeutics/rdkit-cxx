@@ -405,6 +405,7 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
   std::string text(smiles);
   std::map<std::string, std::string> repl;
   auto params = smiles_parser_params(data, repl);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   return parsed(RDKit::SmilesToMol(text, params), "SMILES", text);
 }
 
@@ -431,6 +432,7 @@ std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
   params.strictCXSMILES = data.strict_cxsmiles;
   params.mergeHs = data.merge_hs;
   params.replacements = &repl;
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   return parsed(RDKit::SmartsToMol(text, params), "SMARTS", text);
 }
 

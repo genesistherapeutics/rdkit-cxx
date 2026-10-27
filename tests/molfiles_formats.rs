@@ -91,6 +91,50 @@ fn cx_smiles_and_smarts() {
     );
 }
 
+/// RDKit 2026.03's CXSMILES parser, without strictCXSMILES, copies the
+/// text past its end when a substance group's field runs to it (found with
+/// valgrind under Python).
+#[test]
+fn cxsmiles_substance_groups_that_run_to_the_end() {
+    let loose = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let loose_smarts = SmartsParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let long = format!("C |SgD:0:{}", "x".repeat(40));
+    for smiles in [
+        "C |SgD:0:f:v::::(1",
+        "C |SgD:0:name:data|",
+        "C |SgD:0:abc",
+        "C |Sg:n",
+        &long,
+    ] {
+        assert!(
+            is_value(mol_from_smiles_with_params(smiles, &loose)),
+            "{smiles}"
+        );
+        assert!(
+            is_value(mol_from_smarts_with_params(smiles, &loose_smarts)),
+            "{smiles}"
+        );
+        // Strict, RDKit's own parse error.
+        assert!(mol_from_smiles(smiles).is_err(), "{smiles}");
+    }
+    mol_from_smiles_with_params("C |SgD:0:name:data::::|", &loose).unwrap();
+    mol_from_smiles_with_params("C |SgD:0:f:v::::(1.,1.)|", &loose).unwrap();
+    // Without allowCXSMILES the text after the space is the name.
+    let plain = SmilesParserParams {
+        allow_cxsmiles: false,
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let mol = mol_from_smiles_with_params("C |Sg:n", &plain).unwrap();
+    assert_eq!(mol.get_prop("_Name").unwrap(), "|Sg:n");
+}
+
 #[test]
 fn fragments() {
     let mol = smiles("OCCN");
@@ -352,6 +396,18 @@ fn long_stereo_group_lines_are_refused() {
     assert!(mol_from_mol_block(&format!("{title}{}", block.split_once('\n').unwrap().1)).is_ok());
 }
 
+#[test]
+fn short_stereo_collections_are_refused() {
+    let block = mol_to_v3k_mol_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    let with = |line: &str| block.replace("MDLV30/STERAC1 ATOMS=(1 2)", line);
+    let mol = mol_from_mol_block(&with("MDLV30/STERAC1 ATOMS=(2 1 2)")).unwrap();
+    assert_eq!(mol.get_stereo_groups().len(), 1);
+    // RDKit 2026.03 would read an atom number no extraction wrote.
+    for line in ["MDLV30/STERAC1 ATOMS=(1 )", "MDLV30/STERAC1 ATOMS=(2 )"] {
+        assert!(is_value(mol_from_mol_block(&with(line))), "{line}");
+    }
+}
+
 /// A V3000 block for `*CC` with an explicit hydrogen, whose `*` bond has the
 /// properties `props`.
 fn end_points_block(props: &str) -> String {
@@ -578,6 +634,70 @@ fn mrv_bonds_need_two_atoms() {
     let path = common::temp_path("bad.mrv");
     std::fs::write(&path, bad).unwrap();
     assert!(is_parse(mol_from_mrv_file(&path)));
+}
+
+/// A V3000 block for ethanol with `count` SGroups in its COUNTS line and
+/// `lines` in its SGroup block.
+fn sgroup_block(count: u32, lines: &[&str]) -> String {
+    let lines: String = lines
+        .iter()
+        .map(|line| format!("M  V30 {line}\n"))
+        .collect();
+    format!(
+        "\n  Mrv\n\n  0  0  0     0  0            999 V3000\nM  V30 BEGIN CTAB\n\
+         M  V30 COUNTS 3 2 {count} 0 0\nM  V30 BEGIN ATOM\nM  V30 1 C 0 0 0 0\n\
+         M  V30 2 C 1.5 0 0 0\nM  V30 3 O 2 1 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 2 1 2 3\nM  V30 END BOND\n\
+         M  V30 BEGIN SGROUP\n{lines}M  V30 END SGROUP\nM  V30 END CTAB\nM  END\n"
+    )
+}
+
+#[test]
+fn sgroup_compno_values_are_checked() {
+    let lax = MolFromMolBlockParams {
+        strict_parsing: false,
+        ..Default::default()
+    };
+    // As in Python.
+    for lines in [
+        &["1 SRU 0 ATOMS=(1 1) COMPNO=3"][..],
+        &["DEFAULT COMPNO=3", "1 SRU 0 ATOMS=(1 1)"],
+        &["1 DAT 0 ATOMS=(1 1) FIELDNAME=\"a COMPNO=\""],
+        &["1 SRU 0 ATOMS=(1 1) COMPNO=3 -\nM  V30 CONNECT=HT"],
+    ] {
+        let mol = mol_from_mol_block(&sgroup_block(1, lines)).unwrap();
+        assert_eq!(get_mol_substance_groups(&mol).len(), 1, "{lines:?}");
+    }
+    // Without strict parsing, RDKit reads SGroups until a header does not
+    // parse when COUNTS gives none.
+    let mol =
+        mol_from_mol_block_with_params(&sgroup_block(0, &["1 SRU 0 ATOMS=(1 1) COMPNO=3"]), &lax)
+            .unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+    // RDKit 2026.03 would read a COMPNO no extraction wrote.
+    for (count, lines) in [
+        (1, &["1 SRU 0 ATOMS=(1 1) COMPNO="][..]),
+        (1, &["1 SRU 0 ATOMS=(1 1) COMPNO= -\nM  V30 "]),
+        (1, &["DEFAULT COMPNO=", "1 SRU 0 ATOMS=(1 1)"]),
+        (2, &["1 SRU 0 ATOMS=(1 1)", "2 DAT 0 COMPNO="]),
+        (0, &["1 SRU 0 ATOMS=(1 1)", "2 DAT 0 COMPNO="]),
+    ] {
+        let block = sgroup_block(count, lines);
+        assert!(
+            is_value(mol_from_mol_block_with_params(&block, &lax)),
+            "{lines:?}"
+        );
+        if count > 0 {
+            assert!(is_value(mol_from_mol_block(&block)), "{lines:?}");
+        }
+    }
+    // A block that ends in such a line is read whole.
+    let block = sgroup_block(1, &["1 SRU 0 ATOMS=(1 1) COMPNO="]);
+    let cut = &block[..block.find("\nM  V30 END SGROUP").unwrap()];
+    assert!(is_value(mol_from_mol_block_with_params(cut, &lax)));
+    let path = common::temp_path("compno.mol");
+    std::fs::write(&path, cut).unwrap();
+    assert!(is_value(mol_from_mol_file(&path)));
 }
 
 #[test]

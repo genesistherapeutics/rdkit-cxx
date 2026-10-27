@@ -535,3 +535,81 @@ fn long_stereo_group_lines_are_refused() {
     text.set_data(&sd).unwrap();
     assert!(matches!(text.len(), Err(Error::Value { .. })));
 }
+
+/// A V3000 SD record for ethanol with one SGroup, `sgroup`.
+fn sgroup_record(sgroup: &str) -> String {
+    format!(
+        "ethanol\n  Mrv\n\n  0  0  0     0  0            999 V3000\nM  V30 BEGIN CTAB\n\
+         M  V30 COUNTS 3 2 1 0 0\nM  V30 BEGIN ATOM\nM  V30 1 C 0 0 0 0\n\
+         M  V30 2 C 1.5 0 0 0\nM  V30 3 O 2 1 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 2 1 2 3\nM  V30 END BOND\n\
+         M  V30 BEGIN SGROUP\nM  V30 {sgroup}\nM  V30 END SGROUP\n\
+         M  V30 END CTAB\nM  END\n$$$$\n"
+    )
+}
+
+/// Two records, the second's SGroup line `sgroup` starting 10 bytes before
+/// the 64 KiB boundary at which checked streams read their input.
+fn straddling_sd(sgroup: &str) -> String {
+    let first = sgroup_record("1 SRU 0 ATOMS=(1 1) COMPNO=3");
+    let second = sgroup_record(sgroup);
+    let line = second.find(sgroup).unwrap() - "M  V30 ".len();
+    let tail = "\n\n$$$$\n";
+    let head = first.replace("M  END\n$$$$\n", "M  END\n> <pad>\n");
+    let pad = (1 << 16) - 10 - head.len() - tail.len() - line;
+    format!("{head}{}{tail}{second}", "x".repeat(pad))
+}
+
+#[test]
+fn sgroup_compno_values_are_checked_as_streamed() {
+    let good = "1 SRU 0 ATOMS=(1 1) COMPNO=3";
+    // RDKit 2026.03 reads an uninitialized COMPNO; a line refused is cut
+    // before any of it reaches RDKit, which would read the part it got as a
+    // whole line.
+    let bad = "1 SRU 0 ATOMS=(1 1) COMPNO=";
+    let lax = SDMolSupplierParams {
+        strict_parsing: false,
+        ..Default::default()
+    };
+    for (sgroup, ok) in [(good, true), (bad, false)] {
+        let sd = straddling_sd(sgroup);
+        assert_eq!(&sd[(1 << 16) - 10..(1 << 16) - 3], "M  V30 ");
+        let path = write("straddle.sdf", &sd);
+        for params in [SDMolSupplierParams::default(), lax.clone()] {
+            let mut suppl = SDMolSupplier::new_with_params(&path, &params).unwrap();
+            assert!(suppl.get(0).is_ok());
+            let second = suppl.get(1);
+            if ok {
+                assert!(second.is_ok(), "{second:?}");
+            } else {
+                assert!(matches!(second, Err(Error::Value { .. })), "{second:?}");
+            }
+        }
+        let mut forward = ForwardSDMolSupplier::from_fileobj(Cursor::new(sd.clone())).unwrap();
+        let mols: Vec<_> = forward.mols().collect();
+        assert!(mols[0].is_ok());
+        if ok {
+            assert!(mols[1].is_ok());
+        } else {
+            assert!(matches!(mols[1], Err(Error::Value { .. })));
+        }
+        let mut threaded = MultithreadedSDMolSupplier::new(&path).unwrap();
+        let mols: Vec<_> = threaded.mols().collect();
+        assert_eq!(
+            mols.iter()
+                .any(|mol| matches!(mol, Err(Error::Value { .. }))),
+            !ok
+        );
+    }
+    // Input that ends in such a line, which RDKit reads whole.
+    let sd = straddling_sd(bad);
+    let cut = &sd[..sd.rfind("\nM  V30 END SGROUP").unwrap()];
+    let path = write("cut.sdf", cut);
+    let mut suppl = SDMolSupplier::new_with_params(&path, &lax).unwrap();
+    assert!(suppl.get(0).is_ok());
+    assert!(matches!(suppl.get(1), Err(Error::Value { .. })));
+    let mut forward = ForwardSDMolSupplier::from_fileobj(Cursor::new(cut.to_owned())).unwrap();
+    let mols: Vec<_> = forward.mols().collect();
+    assert!(mols[0].is_ok());
+    assert!(matches!(mols[1], Err(Error::Value { .. })));
+}
