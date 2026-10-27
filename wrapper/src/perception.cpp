@@ -34,9 +34,7 @@ rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds) {
 
 void fast_find_rings(RWMol &mol) { RDKit::MolOps::fastFindRings(mol); }
 
-void find_ring_families(RWMol &mol) {
-  RDKit::MolOps::findRingFamilies(mol);
-}
+void find_ring_families(RWMol &mol) { RDKit::MolOps::findRingFamilies(mol); }
 
 void cleanup(RWMol &mol) { RDKit::MolOps::cleanUp(mol); }
 

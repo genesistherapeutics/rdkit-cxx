@@ -181,7 +181,7 @@ its Boost.Python modules and its `.py` modules.
   extended-query pickles, extended-query JSON (which holds molecule
   pickles in base64), catalog pickles, PNG metadata, and
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
-  read later. MolPickler writes some counts, and in RDKit 2026.03 a small
+  read later. MolPickler writes some counts, and in RDKit 2025.03 a small
   molecule's bond indices, in one byte, and reads a larger value's pickle
   out of step, so every wrapper that hands RDKit a molecule to pickle
   (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
@@ -235,11 +235,11 @@ its Boost.Python modules and its `.py` modules.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
-  registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
+  registry in `Property.cpp`, and R-group
   decomposition's random number singleton and fingerprint-variance scoring
   static, under `rgroup_mutex()`, and the shape modules' pharmacophore
-  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
-  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
+  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`,
+  and the static work variables of Murtagh's
   hierarchical clustering, under `murtagh_mutex()`, and the ChemDraw
   library's attribute-name maps, which it fills behind an unlocked check,
   under `chemdraw_mutex()`). State RDKit makes once,
@@ -268,9 +268,9 @@ its Boost.Python modules and its `.py` modules.
   and MolAlign's `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
   the SIGINT handler through static variables) has its own lock,
   `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
-  by every wrapper whose RDKit call constructs one. Every substructure match
-  does (`Substruct/vf2.hpp`), so that is the match methods and every wrapper
-  whose RDKit call matches patterns: the transforms that match, reactions,
+  by every wrapper whose RDKit call can reach it, and, though RDKit 2025.03's
+  matches do not touch SIGINT (later releases' do), by the match methods and
+  every wrapper whose RDKit call matches patterns: the transforms that match, reactions,
   alignment, the force-field builders, Crippen and the other descriptors and
   fingerprints that type atoms by SMARTS, depiction with templates,
   standardization, the catalogs, MCS, SubstructLibrary, R-group

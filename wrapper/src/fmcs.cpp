@@ -173,7 +173,7 @@ const FmcsState &state_of(const void *user_data) {
   return *static_cast<const FmcsState *>(user_data);
 }
 
-// Calls a closure RDKit calls with no ControlCHandler alive (the typers,
+// Calls a closure RDKit calls between its matches (the typers,
 // from MaximumCommonSubgraph::init; the progress callback, between seeds;
 // the acceptance check, after its matches), with control_c_mutex released
 // (ReleaseControlC) so the closure may call wrappers that take it.

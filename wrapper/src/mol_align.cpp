@@ -484,8 +484,8 @@ std::unique_ptr<O3AList> get_mmff_o3a(RWMol &prb_mol, const RWMol &ref_mol,
   std::unique_ptr<RDKit::MMFF::MMFFMolProperties> prb_owned, ref_owned;
   auto *prb = mmff_props(prb_mol, prb_props, prb_owned, "probe");
   auto *ref = mmff_props(ref_mol, ref_props, ref_owned, "reference");
-  return run_o3a(prb_mol, ref_mol, prb, ref,
-                 MolAlign::O3A::MMFF94, for_probe_confs, options, constraints);
+  return run_o3a(prb_mol, ref_mol, prb, ref, MolAlign::O3A::MMFF94,
+                 for_probe_confs, options, constraints);
 }
 
 std::unique_ptr<O3AList> get_crippen_o3a(RWMol &prb_mol, const RWMol &ref_mol,

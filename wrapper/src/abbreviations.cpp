@@ -249,8 +249,7 @@ void abbreviation_list_push_with_mol(AbbreviationList &list, rust::Str label,
                                      rust::Str display_label,
                                      rust::Str display_label_w,
                                      const RWMol &mol) {
-  auto def =
-      definition(label, display_label, display_label_w);
+  auto def = definition(label, display_label, display_label_w);
   // RDKit only reads the definitions' molecules (and records recursive
   // queries' matches in them, under their own locks).
   def.mol.reset(const_cast<RWMol *>(&mol), [](RDKit::ROMol *) {});
@@ -280,8 +279,8 @@ rust::Vec<AbbreviationDefinitionData> parse_abbreviations(
 }
 
 // As condenseMolAbbreviations, which finds the matches and applies them, with
-// the matches checked in between. Finding them matches substructures, and
-// every match constructs a ControlCHandler (control_c_lock.h); applying them
+// the matches checked in between. Finding them matches substructures, which
+// the wrapper does under control_c_mutex (control_c_lock.h); applying them
 // removes atoms (check_removals).
 std::unique_ptr<RWMol> condense_mol_abbreviations(
     const RWMol &mol, const AbbreviationList &abbrevs, double max_coverage,

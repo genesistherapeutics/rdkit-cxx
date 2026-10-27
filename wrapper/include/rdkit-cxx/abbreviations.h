@@ -33,8 +33,7 @@ class AbbreviationList {
 
 std::unique_ptr<AbbreviationList> abbreviation_list_new();
 void abbreviation_list_push(AbbreviationList &list, rust::Str label,
-                            rust::Str display_label,
-                            rust::Str display_label_w);
+                            rust::Str display_label, rust::Str display_label_w);
 void abbreviation_list_push_with_mol(AbbreviationList &list, rust::Str label,
                                      rust::Str display_label,
                                      rust::Str display_label_w,

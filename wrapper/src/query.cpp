@@ -115,7 +115,7 @@ rust::Vec<std::uint32_t> mol_get_atoms_matching_query(const RWMol &mol,
   RDKit::SubstructMatchParameters params;
   params.maxMatches = std::max(1u, mol.getNumAtoms());
   std::vector<std::uint32_t> indices;
-  // Every match constructs a ControlCHandler (control_c_lock.h).
+  // Matches run under control_c_mutex (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   for (const auto &match : RDKit::SubstructMatch(mol, query_mol, params)) {
     indices.push_back(match[0].second);

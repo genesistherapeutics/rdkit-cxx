@@ -15,7 +15,6 @@
 #include <GraphMol/Canon.h>
 #include <GraphMol/Depictor/RDDepictor.h>
 #include <GraphMol/FileParsers/CDXMLParser.h>
-#include <GraphMol/chemdraw.h>
 #include <GraphMol/FileParsers/FileParserUtils.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/FileParsers/FileWriters.h>
@@ -25,6 +24,7 @@
 #include <GraphMol/SmilesParse/SmartsWrite.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
+#include <GraphMol/chemdraw.h>
 #include <GraphMol/new_canon.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>

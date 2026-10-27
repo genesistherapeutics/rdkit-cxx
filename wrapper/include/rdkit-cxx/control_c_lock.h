@@ -5,32 +5,33 @@
  * license that can be found in the LICENSE file.
  */
 
-// RDKit::ControlCHandler (RDGeneral/ControlCHandler.h) swaps the process's
-// SIGINT handler and keeps the previous one, and its flag, in plain static
-// variables, so two calls that construct one at once race, and can leave
-// RDKit's handler installed after both. Every substructure match constructs one
-// (boost::vf2 and vf2_all in Substruct/vf2.hpp), so it is reached from the
-// match methods and the transforms that match, from descriptors and
-// fingerprints that type atoms by patterns (Crippen, the SMARTS counts, MACCS,
-// pattern fingerprints, feature invariants), from reactions, alignment,
-// force-field builders, depiction with templates, standardization, the
-// catalogs, and MCS; the embedder, DetermineBondOrders, and the CIP labeler
-// construct one directly, and so does the fingerprint code that runs the CIP
-// labeler for chirality. Every wrapper call that can construct one holds this
-// mutex for the whole RDKit call, and runs RDKit's own threads, which the mutex
-// cannot order, on the calling thread instead (CONVENTIONS.md U4). A wrapper
-// that also needs random_mutex() (global_state.h) takes this one first.
+// RDKit::ControlCHandler (RDGeneral/ControlCHandler.h) keeps its flag, and
+// the SIGINT handler it replaced, in plain static variables. In RDKit
+// 2025.03 the embedder, DetermineBondOrders, the CIP labeler (which the
+// Morgan and other fingerprint code runs for chirality), and the synthon
+// search call the static ControlCHandler::reset(), which clears the flag
+// and installs RDKit's handler, keeping nothing to restore; RDKit's handler
+// sets the flag on the next SIGINT and installs whatever handler a
+// ControlCHandler last saved. Two such calls at once race on those
+// variables, and one can see the other's flag. Every wrapper call that can
+// reach one holds this mutex for the whole RDKit call, and runs RDKit's own
+// threads, which the mutex cannot order, on the calling thread instead
+// (CONVENTIONS.md U4). A wrapper that also needs random_mutex()
+// (global_state.h) takes this one first.
 //
-// In RDKit 2026.03 the matches, the embedder, DetermineBondOrders, the CIP
-// labeler, and the synthon search do not construct one but call the static
-// ControlCHandler::reset(), which installs RDKit's handler and keeps nothing
-// to restore; RDKit's handler swallows the next SIGINT and installs whatever
-// handler a ControlCHandler last saved. The mutex therefore saves SIGINT's
-// disposition when it is taken and restores it when it is released, so the
-// process's own handler is back after every call that holds it, as a scoped
-// ControlCHandler (RDKit 2026.09, rdkit/rdkit#9393) leaves it. A handler
-// another thread installs while such a call runs is replaced by the one
-// before.
+// Substructure matching does not touch SIGINT in RDKit 2025.03 (later
+// releases call reset() from every match), but the wrapper still holds the
+// mutex around matches and the calls built on them (descriptors and
+// fingerprints that type atoms by patterns, reactions, alignment,
+// force-field builders, depiction with templates, standardization, the
+// catalogs, and MCS), so the lock order and the closure checks below are the
+// same for every call that matches.
+//
+// The mutex saves SIGINT's disposition when it is taken and restores it when
+// it is released, so the process's own handler is back after every call that
+// holds it, as a scoped ControlCHandler (RDKit 2026.09, rdkit/rdkit#9393)
+// leaves it. A handler another thread installs while such a call runs is
+// replaced by the one before.
 
 #pragma once
 

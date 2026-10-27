@@ -19,8 +19,8 @@ namespace rdkit_cxx {
 
 struct DclvResults;
 
-DclvResults dclv_compute(const RWMol &mol, bool is_protein,
-                         bool include_ligand, double probe_radius,
-                         std::int32_t depth, std::int32_t dot_density);
+DclvResults dclv_compute(const RWMol &mol, bool is_protein, bool include_ligand,
+                         double probe_radius, std::int32_t depth,
+                         std::int32_t dot_density);
 
 }  // namespace rdkit_cxx

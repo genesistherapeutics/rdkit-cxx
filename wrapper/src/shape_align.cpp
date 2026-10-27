@@ -35,13 +35,14 @@ double ComputeShapeOverlap(
     const std::vector<unsigned> &ref_volume_atom_index_vector,
     const float *fit_coord, const std::vector<double> &alpha_fit_vector,
     const std::vector<unsigned> &fit_volume_atom_index_vector);
-double ComputeFeatureOverlap(
-    const float *ref_coord, const std::vector<double> &alpha_ref_vector,
-    const std::map<unsigned, std::vector<unsigned>>
-        &ref_atom_type_to_index_vector_map,
-    const float *fit_coord, const std::vector<double> &alpha_fit_vector,
-    const std::map<unsigned, std::vector<unsigned>>
-        &fit_atom_type_to_index_vector_map);
+double ComputeFeatureOverlap(const float *ref_coord,
+                             const std::vector<double> &alpha_ref_vector,
+                             const std::map<unsigned, std::vector<unsigned>>
+                                 &ref_atom_type_to_index_vector_map,
+                             const float *fit_coord,
+                             const std::vector<double> &alpha_fit_vector,
+                             const std::map<unsigned, std::vector<unsigned>>
+                                 &fit_atom_type_to_index_vector_map);
 void getJointColorTypeSet(const unsigned *ref_atom_types,
                           const unsigned ref_natom,
                           const unsigned *fit_atom_types,

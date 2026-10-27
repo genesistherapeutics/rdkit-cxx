@@ -58,7 +58,7 @@ rust::Vec<std::uint32_t> convert_match(const RDKit::MatchVectType &match) {
 
 // As helpHasSubstructMatch, helpGetSubstructMatch, and
 // helpGetSubstructMatches, for a molecule or bundle and a molecule or bundle.
-// Every match constructs a ControlCHandler (control_c_lock.h).
+// Matches run under control_c_mutex (control_c_lock.h).
 template <class Target, class Query>
 bool has_match(const Target &target, const Query &query,
                const SubstructMatchParametersData &data) {
@@ -103,21 +103,20 @@ SubstructMatchParametersData substruct_params_to_data(
   for (const auto &prop : p.bondProperties) {
     bond_properties.push_back(prop);
   }
-  return SubstructMatchParametersData{
-      p.useChirality,
-      p.useEnhancedStereo,
-      p.aromaticMatchesConjugated,
-      p.aromaticMatchesSingleOrDouble,
-      p.useGenericMatchers,
-      p.useQueryQueryMatches,
-      p.recursionPossible,
-      p.uniquify,
-      p.maxMatches,
-      p.maxRecursiveMatches,
-      p.numThreads,
-      std::move(atom_properties),
-      std::move(bond_properties),
-      p.specifiedStereoQueryMatchesUnspecified};
+  return SubstructMatchParametersData{p.useChirality,
+                                      p.useEnhancedStereo,
+                                      p.aromaticMatchesConjugated,
+                                      p.aromaticMatchesSingleOrDouble,
+                                      p.useGenericMatchers,
+                                      p.useQueryQueryMatches,
+                                      p.recursionPossible,
+                                      p.uniquify,
+                                      p.maxMatches,
+                                      p.maxRecursiveMatches,
+                                      p.numThreads,
+                                      std::move(atom_properties),
+                                      std::move(bond_properties),
+                                      p.specifiedStereoQueryMatchesUnspecified};
 }
 
 RDKit::SubstructMatchParameters substruct_params_from_data(

@@ -65,5 +65,4 @@ std::unique_ptr<MolList> split_mol_by_pdb_chain_id(
 std::unique_ptr<RWMol> renumber_atoms(
     const RWMol &mol, rust::Slice<const std::uint32_t> new_order);
 
-
 }  // namespace rdkit_cxx
