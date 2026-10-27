@@ -44,3 +44,173 @@ updates:
     groups:
       pre-commit:
         patterns: ["*"]
+
+  # Each RDKit series' branch (README.md, Releases) gets the same updates as
+  # main, in pull requests against it: Dependabot reads this file only from
+  # main, so a branch's own copy configures nothing. A new series' branch
+  # needs its three entries here when it is made.
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: rdkit-2026.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /
+    target-branch: rdkit-2026.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase-if-necessary
+    groups:
+      cxx:
+        patterns: ["cxx", "cxx-gen"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    target-branch: rdkit-2026.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pre-commit:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: rdkit-2025.09
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /
+    target-branch: rdkit-2025.09
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase-if-necessary
+    groups:
+      cxx:
+        patterns: ["cxx", "cxx-gen"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    target-branch: rdkit-2025.09
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pre-commit:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: rdkit-2025.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /
+    target-branch: rdkit-2025.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase-if-necessary
+    groups:
+      cxx:
+        patterns: ["cxx", "cxx-gen"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    target-branch: rdkit-2025.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pre-commit:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: rdkit-2024.09
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /
+    target-branch: rdkit-2024.09
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase-if-necessary
+    groups:
+      cxx:
+        patterns: ["cxx", "cxx-gen"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    target-branch: rdkit-2024.09
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pre-commit:
+        patterns: ["*"]
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: rdkit-2024.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /
+    target-branch: rdkit-2024.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    versioning-strategy: increase-if-necessary
+    groups:
+      cxx:
+        patterns: ["cxx", "cxx-gen"]
+
+  - package-ecosystem: pre-commit
+    directory: /
+    target-branch: rdkit-2024.03
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      pre-commit:
+        patterns: ["*"]
