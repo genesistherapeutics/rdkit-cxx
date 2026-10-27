@@ -733,9 +733,9 @@ fn loading_checks_matchers() {
     let cycle = unsafe { FilterCatalog::from_pickle(&hex(CYCLE_ARCHIVE)) };
     assert!(is_value(cycle));
 
-    // A pattern whose atom has plain monomer info of type PDBRESIDUE, which
-    // RDKit's pickler would read as PDB residue info (U10). Python's
-    // Serialize reads past the info.
+    // A pattern whose atom has plain monomer info, whose pickled type RDKit
+    // 2024.03 reads into info of that type, as Python does: PDBRESIDUE gives
+    // PDB residue info, and an unknown type is RDKit's error.
     let mut pattern = mol_from_smarts("[#6]").unwrap();
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
@@ -749,15 +749,19 @@ fn loading_checks_matchers() {
     catalog.add_entry(&FilterCatalogEntry::new("marked", &matcher).unwrap());
     let mut archive = catalog.serialize().unwrap();
     let at = archive
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
-        .unwrap();
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
+        .unwrap()
+        + 8;
     // SAFETY: bytes serialize wrote.
     assert!(unsafe { FilterCatalog::from_pickle(&archive) }.is_ok());
-    archive[at + 8] = 1;
-    // SAFETY: bytes serialize wrote, but for the type byte of a molecule
-    // pickle inside, which RDKit's pickler reads as it reads any.
-    assert!(is_value(unsafe { FilterCatalog::from_pickle(&archive) }));
+    archive[at] = 1;
+    // SAFETY: bytes serialize wrote, but for the type of a molecule pickle
+    // inside, which RDKit 2024.03 reads into info of that type.
+    assert!(unsafe { FilterCatalog::from_pickle(&archive) }.is_ok());
+    archive[at] = 7;
+    // SAFETY: as above; RDKit refuses the type.
+    assert!(unsafe { FilterCatalog::from_pickle(&archive) }.is_err());
 }
 
 /// Matches molecules with oxygen by calling functions that match: a
@@ -787,7 +791,7 @@ impl CustomFilterMatcher for Reentrant {
     }
 }
 
-// Matching holds control_c_mutex, for RDKit's SIGINT handler, and releases
+// Matching holds control_c_mutex, the crate's matching lock, and releases
 // it while a Rust matcher runs, which may match itself. SubstructMatch writes
 // a recursive query's matches into the query under its lock; copies of a
 // pattern that others match are made under the same locks, after

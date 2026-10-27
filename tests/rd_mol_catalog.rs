@@ -7,13 +7,13 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_mol_catalog::*;
 use rdkit_cxx::chem::*;
 
-// Expected values come from Python's rdMolCatalog.
+// Expected values come from Python's rdMolCatalog in RDKit 2024.03.6.
 
 /// Python's pickle of `catalog()`.
-const CATALOG_PICKLE: &str = "efbeadde0100000000000000000000000300000003000000efbeadde00000000100000000300000000000000030000000200000080010600600000000103060060000000020208006000000001010b000100010200420000000017040000000000000016000000000100000007000000657468616e6f6cefbeadde00000000100000000300000000000000040000000300000080010600600000000103060028000000030408002800000003020800680000000301010b0001000102280201032042000000001704000000000000001601000000020000000b0000006163657469632061636964efbeadde00000000100000000300000000000000060000000600000080010640680000000303010640680000000303010640680000000303010640680000000303010640680000000303010640680000000303010b0001680c0102680c0203680c0304680c0405680c0500680c4201000000060005040302011704000000000000001602000000020000000700000062656e7a656e650200000001000000020000000000000000000000";
+const CATALOG_PICKLE: &str = "efbeadde0100000000000000000000000300000003000000efbeadde00000000100000000100000000000000030000000200000080010600600000000103060060000000020208006000000001010b000100010200420000000017040000000000000016000000000100000007000000657468616e6f6cefbeadde00000000100000000100000000000000040000000300000080010600600000000103060028000000030408002800000003020800680000000301010b0001000102280201032042000000001704000000000000001601000000020000000b0000006163657469632061636964efbeadde00000000100000000100000000000000060000000600000080010640680000000303010640680000000303010640680000000303010640680000000303010640680000000303010640680000000303010b0001680c0102680c0203680c0304680c0405680c0500680c4201000000060005040302011704000000000000001602000000020000000700000062656e7a656e650200000001000000020000000000000000000000";
 
 /// Python's pickle of `ethanol()`.
-const ENTRY_PICKLE: &str = "efbeadde00000000100000000300000000000000030000000200000080010600600000000103060060000000020208006000000001010b000100010200420000000017040000000000000016ffffffff0300000007000000657468616e6f6c";
+const ENTRY_PICKLE: &str = "efbeadde00000000100000000100000000000000030000000200000080010600600000000103060060000000020208006000000001010b000100010200420000000017040000000000000016ffffffff0300000007000000657468616e6f6c";
 
 fn hex(text: &str) -> Vec<u8> {
     (0..text.len())
@@ -230,8 +230,8 @@ fn bits_without_entries() {
 }
 
 /// An entry pickle whose molecule's atom has plain monomer info of type
-/// PDBRESIDUE, which RDKit's pickler would read as PDB residue info (U10).
-fn pdb_typed_entry_pickle() -> Vec<u8> {
+/// OTHER, and the offset of the type, which RDKit 2024.03 writes as a u32.
+fn monomer_entry_pickle() -> (Vec<u8>, usize) {
     let mut mol = mol_from_smiles("C").unwrap();
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
@@ -242,28 +242,49 @@ fn pdb_typed_entry_pickle() -> Vec<u8> {
     );
     let mut entry = MolCatalogEntry::default();
     entry.set_mol(&mol);
-    let mut pickle = entry.serialize().unwrap();
+    let pickle = entry.serialize().unwrap();
     // The info's name (a u32 length, then its bytes), then its type.
     let at = pickle
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
-        .unwrap();
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
+        .unwrap()
+        + 8;
     // SAFETY: a pickle RDKit wrote.
     assert!(unsafe { MolCatalogEntry::from_pickle(&pickle) }.is_ok());
-    pickle[at + 8] = 1;
-    pickle
+    (pickle, at)
 }
 
+fn monomer_type(entry: &MolCatalogEntry) -> AtomMonomerType {
+    entry
+        .get_mol()
+        .unwrap()
+        .get_atom_with_idx(0)
+        .unwrap()
+        .get_monomer_info()
+        .unwrap()
+        .get_monomer_type()
+}
+
+// RDKit 2024.03 reads the pickled monomer type into info of that type, as
+// Python does: PDBRESIDUE gives PDB residue info, and an unknown type is
+// RDKit's error.
 #[test]
-fn molecules_are_checked() {
-    let pickle = pdb_typed_entry_pickle();
-    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
-    assert!(is_value(unsafe { MolCatalogEntry::from_pickle(&pickle) }));
+fn pickled_monomer_types() {
+    let (mut pickle, at) = monomer_entry_pickle();
+    pickle[at] = 1;
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which RDKit
+    // 2024.03 reads into info of that type.
+    let entry = unsafe { MolCatalogEntry::from_pickle(&pickle) }.unwrap();
+    assert_eq!(monomer_type(&entry), AtomMonomerType::Pdbresidue);
     // A catalog of one such entry, with no edges.
     let mut catalog = create_mol_catalog().serialize().unwrap();
     catalog[20..24].copy_from_slice(&1u32.to_le_bytes());
     catalog.extend(&pickle);
     catalog.extend(0u32.to_le_bytes());
-    // SAFETY: a pickle RDKit wrote.
-    assert!(is_value(unsafe { MolCatalog::from_pickle(&catalog) }));
+    // SAFETY: as above.
+    let catalog = unsafe { MolCatalog::from_pickle(&catalog) }.unwrap();
+    assert_eq!(catalog.get_num_entries(), 1);
+    pickle[at] = 7;
+    // SAFETY: as above; RDKit refuses the type.
+    assert!(unsafe { MolCatalogEntry::from_pickle(&pickle) }.is_err());
 }

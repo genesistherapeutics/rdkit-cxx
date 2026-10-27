@@ -128,10 +128,10 @@ fn tanimoto_guards() {
         ));
     }
     // Vectors of no bits compare as RDKit compares them when no folding is
-    // needed.
+    // needed: RDKit 2024.03's Tanimoto similarity of two empty vectors is 1.
     assert_eq!(
         get_tanimoto_sim_mat(&[ebv(0, &[]), ebv(0, &[])]).unwrap(),
-        [0.0]
+        [1.0]
     );
     // Folding an unfolded fingerprint (2^32 - 1 bits) computes its size in
     // int; comparing two of them folds nothing.
