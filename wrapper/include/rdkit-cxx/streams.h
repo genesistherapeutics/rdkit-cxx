@@ -27,23 +27,23 @@
 //   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
 //   RDKit reads an END BOND line after it, so input that ends (or is cut
 //   off) before a value is checked is never parsed as a molecule.
-// - RDKit 2025.09 parses each V3000 SGroup line as it reads it, with stream
-//   extractions it does not check (MolSGroupParsing.cpp; RDKit 2026.03
-//   checks them). An SAP value takes a character and then two numbers and
-//   two words, and the second word's last character is popped without
-//   checking that there is one; a CSTATE value takes a character and then
-//   two numbers; and an array value (ATOMS, PATOMS, CBONDS, XBONDS, XBHEAD,
-//   XBCORR, BRKXYZ) takes a character, a count, and that many numbers into
-//   a variable that is never set if the line ends after the count. Where
-//   " SAP=" or " CSTATE=" (in any case) appears, the value must be a
-//   character, numbers below 2^32 for the numbers, and whitespace-separated
-//   words for the words; where an array's key appears, a count must not end
-//   the line; and "SAP" or "CSTATE" after a space must not end it either
-//   (the line reads as that key with an empty value). Because RDKit parses
-//   a line cut off by the end of the input (or by a refusal) as it does a
-//   whole one, input is never delivered, nor refused, inside such a field
-//   or a word that may begin one: delivery waits there until the scanner
-//   has read past it, and a refusal takes effect where it begins.
+// - RDKit 2025.09 reads a V3000 SGroup line with stream extractions it does
+//   not check (ParseV3000SGroupsBlock and the label parsers in
+//   MolSGroupParsing.cpp): it reads the index, external index, CSTATE count
+//   and bond, COMPNO, and the first value of an array that an extraction
+//   left unwritten when the line ran out, and pops the last character of an
+//   empty SAP identifier. Each line it would read as an SGroup (as many as
+//   the COUNTS line gives, after BEGIN SGROUP and a DEFAULT line) is
+//   replayed as RDKit consumes it, going on where RDKit would stop at a
+//   missing bookmark or a value it refuses, and refused where RDKit would
+//   read such a value. When COUNTS gives no SGroups, RDKit throws when it
+//   parses strictly, and otherwise reads SGroup lines until one's header
+//   does not read, which the replay follows. (rdkit-2025.03's replay
+//   refuses that case, where RDKit 2025.03 loops forever.)
+// - RDKit reads a V3000 enhanced-stereo collection's atom numbers with
+//   unchecked extractions, so the first is unset when the collection has
+//   fewer than its count, and keeps an atom listed twice, which dangles once
+//   the reader removes the atom; both are refused.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
@@ -57,6 +57,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <istream>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <streambuf>
@@ -78,24 +79,25 @@ class InputScanner {
   // the bytes before the first that breaks one, after which error() says
   // why).
   std::size_t feed(const char *bytes, std::size_t n);
-  // The input ends after the bytes fed; false if it ends inside a field
-  // checked above (or failed before).
-  bool finish();
+  // The input ends here: checks the unfinished line as RDKit would read it.
+  // Scanning may go on if the input turns out to go on.
+  void finish();
   const std::string &error() const { return d_error; }
-  // The offset (from the first byte fed) before which the input may be cut
-  // off: a cut at or after it may leave RDKit a field it misreads.
-  std::uint64_t safe_end() const;
-  // Where the refusal of a failed input takes effect: the start of the field
-  // that broke a limit, or UINT64_MAX for the byte that failed.
-  std::uint64_t refuse_at() const { return d_refuse_at; }
+  // The offset of the first byte that may not be delivered: the start of a
+  // refused SGroup line, which RDKit must not read any of, or else the byte
+  // that broke a limit. UINT64_MAX while nothing is refused.
+  std::uint64_t refused_at() const { return d_refused_at; }
+  // Whether a line of a V3000 CTAB is unfinished, so that it must be
+  // scanned to its end before any of it is delivered.
+  bool mid_ctab_line() const {
+    return d_ctab != Ctab::kNone && (d_pos > 0 || d_continuing);
+  }
 
  private:
   void end_line();
-  void end_fields();
-  void confirm(char c, std::uint64_t at);
+  void confirm(char c);
   void end_points(char c);
-  void sgroup_fields(char c, std::uint64_t at);
-  bool fail(std::string why, std::uint64_t at = UINT64_MAX);
+  bool fail(std::string why);
 
   std::string d_error;
   std::uint64_t d_lines = 0;
@@ -105,10 +107,6 @@ class InputScanner {
   char d_head[7] = {};
   int d_pending = 0;
   char d_pend[2] = {};
-  std::uint64_t d_pend_at[2] = {};
-  // The bytes fed, and where a refusal takes effect.
-  std::uint64_t d_fed = 0;
-  std::uint64_t d_refuse_at = UINT64_MAX;
   // The logical V3000 line, joined across continuations.
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
@@ -121,21 +119,31 @@ class InputScanner {
   bool d_in_number = false;
   std::uint64_t d_number = 0;
   std::uint64_t d_numbers = 0;
-  // In the logical line: the word after the last space (upper-cased, up to
-  // eight characters; longer is no key) and where that space is, and then a
-  // checked SGroup field's value: the character it skips, the token being
-  // read and whether one is, and the number in it.
-  bool d_word = false;
-  bool d_word_long = false;
-  std::uint64_t d_word_at = 0;
-  std::string d_word_text;
-  enum class Field : std::uint8_t { kNone, kSap, kCState, kArray };
-  Field d_field = Field::kNone;
-  std::uint64_t d_field_at = 0;
-  bool d_field_skipped = false;
-  int d_field_token = 0;
-  bool d_field_in_token = false;
-  std::uint64_t d_field_number = 0;
+  // The logical V3000 line, and where it is in a CTAB: right after BEGIN
+  // CTAB, after its COUNTS line (with the atom, bond, and SGroup counts),
+  // right after BEGIN SGROUP, or among the SGroup lines, of which
+  // `d_sgroups_left` are left, with the DEFAULT line's labels. `d_line_start`
+  // is the offset of the logical line's first byte, of `d_fed` bytes fed before
+  // this call.
+  bool v3000_line(const std::string &line, bool advance);
+  std::string d_line;
+  std::uint64_t d_fed = 0;
+  std::uint64_t d_line_start = 0;
+  std::uint64_t d_refused_at = UINT64_MAX;
+  enum class Ctab : std::uint8_t {
+    kNone,
+    kCtabStart,
+    kCounted,
+    kSGroupStart,
+    kSGroups
+  };
+  Ctab d_ctab = Ctab::kNone;
+  unsigned int d_atoms = 0;
+  unsigned int d_bonds = 0;
+  unsigned int d_sgroups = 0;
+  unsigned int d_sgroups_left = 0;
+  bool d_sgroups_until_fail = false;
+  std::string d_defaults;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.
@@ -168,7 +176,7 @@ class CheckedStreambuf : public std::streambuf {
 
  private:
   bool fill(std::uint64_t chunk);
-  std::uint64_t deliverable() const;
+  bool read_ahead(std::uint64_t chunk);
   void refuse(const std::string &why, std::uint64_t at);
   int_type hit();
   void changed();
@@ -194,9 +202,10 @@ class CheckedStreambuf : public std::streambuf {
   std::vector<std::uint64_t> d_hashes;
   std::uint64_t d_tail_hash = 0;
   std::uint64_t d_key[2] = {};
+  // Chunks scanned ahead of the one in the buffer, kept until it is their
+  // turn, since the source may not seek back.
+  std::map<std::uint64_t, std::string> d_ahead;
   InputScanner d_scanner;
-  // Whether the source's end has been scanned (and the scanner finished).
-  bool d_finished = false;
   std::atomic<bool> d_failed{false};
   mutable std::mutex d_error_mutex;
   std::string d_error;

@@ -804,6 +804,9 @@ fn sgroup_fields_are_checked() {
         let (a, lv, id) = expected;
         assert_eq!(attach_points(&mol), [(a, lv, id.to_string())], "{fields}");
     }
+    // RDKit matches labels case-sensitively, so this is a string property.
+    let mol = mol_from_mol_block_with_params(&sgroup_block("sap=(3 2 1)"), &UNSANITIZED).unwrap();
+    assert!(attach_points(&mol).is_empty());
     // RDKit 2025.09 pops the last character of an empty SAP id, and reads
     // CSTATE numbers and an array's first value that were never read; its
     // Python returns None for these, the string's length having been
@@ -814,17 +817,16 @@ fn sgroup_fields_are_checked() {
         "SAP=(",
         "SAP=",
         "SAP",
-        "sap=(3 2 1)",
         "SAP=(3x 2 1 1)",
-        "SAP=(3 2x 1 1)",
         "SAP=(3 4294967296 1 1)",
         "SAP=(3 2 -\nM  V30 1)",
         "CSTATE=(4",
         "CSTATE=(4 ",
-        "CSTATE=(x 1)",
         "CSTATE",
-        "XBCORR=(2",
-        "XBCORR=(2 ",
+        "XBCORR=(1",
+        "XBCORR=(1 ",
+        "COMPNO=",
+        "COMPNO= ",
     ] {
         let block = sgroup_block(fields);
         assert!(
@@ -833,21 +835,33 @@ fn sgroup_fields_are_checked() {
         );
         assert!(is_value(mol_from_mol_block(&block)), "{fields:?}");
     }
+    // Values RDKit reads all of, or refuses before it reads the unset part:
+    // the SAP id is "1"; a CSTATE count that does not read is 0, which RDKit
+    // refuses for a superatom; an array whose count exceeds the bonds is
+    // skipped.
+    for fields in ["SAP=(3 2x 1 1)", "CSTATE=(x 1)", "XBCORR=(2", "COMPNO=3"] {
+        let block = sgroup_block(fields);
+        assert!(
+            !is_value(mol_from_mol_block_with_params(&block, &UNSANITIZED)),
+            "{fields:?}"
+        );
+    }
     // The end of the input is the end of a line.
     let block = sgroup_block("SAP=(3 2 1 1)");
     let cut = &block[..block.find("1 1)").unwrap() + 1];
     assert!(is_value(mol_from_mol_block_with_params(cut, &UNSANITIZED)));
 }
 
-/// An SD file whose second record's SAP field starts `before` bytes before
+/// An SD file whose second record's `field` starts `before` bytes before
 /// the first 64 KiB boundary (the chunk a checked stream reads in), after a
 /// first record padded with a data field.
-fn straddling_sd_file(sap: &str, before: usize) -> String {
-    let second = format!("{}$$$$\n", sgroup_block(sap));
+fn straddling_sd_file(field: &str, before: usize) -> String {
+    let second = format!("{}$$$$\n", sgroup_block(field));
     let head = format!("{}>  <pad>\n", sgroup_block("SAP=(3 2 1 1)"));
     let tail = "\n\n$$$$\n";
     let at = 1 << 16;
-    let offset = second.find(" SAP=").unwrap();
+    let key = &field[..field.find('=').unwrap()];
+    let offset = second.find(&format!(" {key}=")).unwrap();
     let pad = at - before - offset - head.len() - tail.len();
     format!("{head}{}{tail}{second}", "x".repeat(pad))
 }
@@ -884,6 +898,17 @@ fn sgroup_fields_across_chunks() {
                 .any(|r| matches!(r, Err(Error::Value { .. }))),
             "{before}"
         );
+        // A COMPNO with no value, which RDKit reads unset.
+        std::fs::write(&path, straddling_sd_file("COMPNO=", before)).unwrap();
+        let mut suppl = ForwardSDMolSupplier::new(&path).unwrap();
+        let results: Vec<_> = suppl.mols().collect();
+        assert!(results[0].is_ok());
+        assert!(
+            results
+                .iter()
+                .any(|r| matches!(r, Err(Error::Value { .. }))),
+            "{before}"
+        );
         std::fs::remove_file(&path).unwrap();
     }
     // A file that ends in the field.
@@ -893,4 +918,80 @@ fn sgroup_fields_across_chunks() {
     let mut suppl = ForwardSDMolSupplier::new(&path).unwrap();
     assert!(suppl.mols().any(|r| matches!(r, Err(Error::Value { .. }))));
     std::fs::remove_file(&path).unwrap();
+}
+
+#[test]
+fn sgroup_headers_are_checked() {
+    let lax = MolFromMolBlockParams {
+        sanitize: false,
+        strict_parsing: false,
+        ..Default::default()
+    };
+    let block = sgroup_block("");
+    let header = "M  V30 1 SUP 0 ATOMS=(1 2) XBONDS=(1 1) LABEL=OH \n";
+    assert!(block.contains(header));
+    // RDKit 2025.09 reads the external index, or the type and external
+    // index, of a header missing them without checking that it read them
+    // (rdkit#9417 initializes them in 2026.03.5).
+    for line in [
+        "M  V30 1\n",
+        "M  V30 1 SUP\n",
+        "M  V30 1 SUP \n",
+        "M  V30 \n",
+    ] {
+        let short = block.replace(header, line);
+        assert!(
+            is_value(mol_from_mol_block_with_params(&short, &lax)),
+            "{line:?}"
+        );
+        // The SCSR reader always parses without strict parsing.
+        let scsr = short.replace(
+            "M  V30 END CTAB\n",
+            "M  V30 END CTAB\nM  V30 BEGIN TEMPLATE\nM  V30 END TEMPLATE\n",
+        );
+        assert!(is_value(mol_from_scsr_block(&scsr)), "{line:?}");
+    }
+    // Python's value: RDKit 2025.09 reads the group without strict parsing.
+    let mol = mol_from_mol_block_with_params(&block, &lax).unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+    // A COUNTS line without SGroups: RDKit reads SGroup lines until a header
+    // does not read, which the END SGROUP line ends.
+    let uncounted = block.replace("COUNTS 2 1 1 0 0", "COUNTS 2 1 0 0 0");
+    assert!(mol_from_mol_block(&uncounted).is_err());
+    let mol = mol_from_mol_block_with_params(&uncounted, &lax).unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+}
+
+/// A V3000 block for `CC` with the enhanced-stereo collection line `line`.
+fn collection_block(line: &str) -> String {
+    format!(
+        "\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 2 1 0 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 C 1 0 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 END BOND\n\
+         M  V30 BEGIN COLLECTION\nM  V30 {line}\nM  V30 END COLLECTION\n\
+         M  V30 END CTAB\nM  END\n"
+    )
+}
+
+#[test]
+fn stereo_collections_are_checked() {
+    // Python's value: the collection reads, and its group goes, as neither
+    // atom is a stereocenter.
+    let mol = mol_from_mol_block(&collection_block("MDLV30/STERAC1 ATOMS=(2 1 2)")).unwrap();
+    assert_eq!(mol.get_stereo_groups().len(), 0);
+    // RDKit 2025.09 reads the first atom number unset for a collection
+    // shorter than its count, and keeps an atom listed twice, which dangles
+    // once removed (valgrind: an invalid read).
+    for line in [
+        "MDLV30/STERAC1 ATOMS=(1 )",
+        "MDLV30/STERAC1 ATOMS=(2 )",
+        "MDLV30/STERAC1 ATOMS=(3 1 1 2)",
+        "MDLV30/STEABS ATOMS=(2 1 1)",
+    ] {
+        assert!(
+            is_value(mol_from_mol_block(&collection_block(line))),
+            "{line}"
+        );
+    }
 }

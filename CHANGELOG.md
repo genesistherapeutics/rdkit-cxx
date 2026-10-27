@@ -73,8 +73,12 @@ A program built against one release stops when it loads with another.
     returns no fragments for more bonds to break than it has, where RDKit
     shifts past a word.
   - Stereo groups may not hold an atom or bond twice: RDKit 2025.09's
-    constructor accepts duplicates (from `create_stereo_group`, CXSMILES, or
-    V3000), and removing such an atom leaves a dangling pointer.
+    constructor accepts duplicates, and removing such an atom leaves a
+    dangling pointer. They are refused where they are made
+    (`create_stereo_group`, `from_data`), before the wrappers' removals, and
+    in the inputs whose readers remove hydrogens themselves before any check
+    could run: CXSMILES enhanced stereo, V3000 collections, Marvin files
+    (whose stereo groups take an atom by id, so ids must differ), and JSON.
   - `replace_core` with matches checks that each core atom's neighbors are
     matched; `molzip` with depiction refuses fragment lists RDKit 2025.09
     reads past.
@@ -88,12 +92,27 @@ A program built against one release stops when it loads with another.
   - Drawing refuses an atom label whose first colon is the last character
     drawn (`C:` segfaults in RDKit 2025.09's Python), and a legend of only
     newlines, which RDKit 2025.09 lays out with no lines.
-  - V3000 `SAP`, `CSTATE`, and SGroup array values are checked as RDKit
-    2025.09 reads them unchecked, in mol blocks and as streams deliver
-    them: a stream holds back such a field until it has read past it.
-  - A CXSMILES `atomProp` block that runs to the end of the text, which
-    RDKit 2025.09 reads past, is refused in SMILES, SMARTS, reactions, PNG
-    metadata, and the wrappers' other SMILES and SMARTS inputs.
+  - Each V3000 SGroup line is replayed as RDKit 2025.09 consumes it, as on
+    the rdkit-2025.03 line, and refused where RDKit would read a value no
+    extraction wrote: a header without its type or external index, a
+    `CSTATE` count or bond, a `COMPNO`, an array's first value, or an empty
+    `SAP` identifier, whose last character RDKit pops. So is an
+    enhanced-stereo collection shorter than its count. A CTAB line is
+    scanned to its end before any of it is delivered from a stream, so a
+    refused line is cut before its first byte.
+  - CXSMILES extensions are checked as RDKit 2025.09 reads them, as on the
+    rdkit-2024.09 line: an `atomProp` block that runs to the end of the
+    text, which RDKit reads past, and, without `strict_cxsmiles`, a data or
+    polymer substance group's field without its `:`, which RDKit copies
+    past the end. They are checked in SMILES, SMARTS, reactions, PNG
+    metadata, deprotections, normalizations (from data, files, and cleanup
+    parameters), cleanup parameters' other SMARTS, query definitions,
+    recursive-query properties, tautomer score terms, `SmartsMatcher`
+    patterns (a refused one leaves the matcher without a pattern, as one
+    that does not parse), SMILES mol holders, scaffold-network bond
+    breakers, and the wrappers' other SMILES and SMARTS inputs. RDKit opens
+    normalization and query-definition files itself; the wrappers read them
+    once, check them, and hand RDKit the text.
   - `path_to_submol` and `copy_mol_subset` clear a double bond's CIS or
     TRANS (or an atropisomer's) whose stereo atoms they left out, which
     RDKit 2025.09 keeps and `MolToSmiles` then reads past.
