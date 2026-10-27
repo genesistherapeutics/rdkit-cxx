@@ -568,10 +568,20 @@ class DocumentChecker {
           uint_of(id, "a stereo group an id");
         }
       }
+      // RDKit 2024.03's StereoGroup keeps an atom listed twice, whose second
+      // copy a removal leaves dangling (check_stereo_group_removals in
+      // mol_checks.h); groups are refused one wherever they come in.
+      std::set<std::uint64_t> seen;
       for (const auto &atom : array_of(*atoms, "a stereo group atoms")) {
         // getAtomWithIdx checks the atom.
-        if (uint_of(&atom, "a stereo group an atom") >= num_atoms) {
+        auto index = uint_of(&atom, "a stereo group an atom");
+        if (index >= num_atoms) {
           rdkit_throws();
+        }
+        if (!seen.insert(index).second) {
+          refuse(
+              "gives a stereo group an atom twice, which RDKit 2024.03 keeps, "
+              "leaving it to dangle once removed");
         }
       }
     }

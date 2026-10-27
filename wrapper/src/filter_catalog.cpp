@@ -880,7 +880,7 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
   texts.reserve(smiles.size());
   for (auto text : smiles) {
     texts.emplace_back(text);
-    check_smiles_cx(texts.back());
+    check_smiles_cx(texts.back(), true, true);
   }
   std::vector<std::vector<FilterCatalog::CONST_SENTRY>> results(texts.size());
   // More threads than SMILES would have nothing to do.

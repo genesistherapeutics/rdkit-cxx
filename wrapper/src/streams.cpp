@@ -10,10 +10,13 @@
 #include <cstring>
 #include <fstream>
 #include <random>
+#include <set>
 #include <sstream>
+#include <string_view>
 #include <utility>
 #include <vector>
 
+#include <GraphMol/FileParsers/FileParserUtils.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 #include <boost/algorithm/string.hpp>
@@ -36,9 +39,12 @@ const char *const kBadEndPoints =
     "unchecked when it removes atoms";
 
 const char *const kCxField =
-    "a mol block's \"M  \" line holds a CXSMILES field (SgD:, atomProp:, or "
-    "Sg:) that RDKit 2024.03 would read past the end of if it ended the "
-    "SMARTS it parses there";
+    "a mol block's \"M  \" line holds a CXSMILES field (SgD: or atomProp:) "
+    "that RDKit 2024.03 would read past the end of if it ended the SMARTS it "
+    "parses there";
+const char *const kLongMrvLine =
+    "a mol block's \"M  MRV SMA\" line holding a CXSMILES field (SgD: or "
+    "atomProp:) is longer than the scanner holds while it checks it";
 constexpr std::uint64_t kNone = UINT64_MAX;
 
 bool is_space(char c) {
@@ -108,7 +114,7 @@ bool CxTokenMatcher::push(char c, std::uint64_t pos) {
   d_tail[d_size] = c;
   d_pos[d_size] = pos;
   ++d_size;
-  for (std::string_view name : {"SgD:", "atomProp:", "Sg:"}) {
+  for (std::string_view name : {"SgD:", "atomProp:"}) {
     if (d_size >= name.size() &&
         std::string_view(d_tail + d_size - name.size(), name.size()) == name) {
       d_start = d_pos[d_size - name.size()];
@@ -121,7 +127,7 @@ bool CxTokenMatcher::push(char c, std::uint64_t pos) {
 std::uint64_t CxTokenMatcher::partial() const {
   for (std::size_t k = d_size; k > 0; --k) {
     std::string_view tail(d_tail + d_size - k, k);
-    for (std::string_view name : {"SgD:", "atomProp:", "Sg:"}) {
+    for (std::string_view name : {"SgD:", "atomProp:"}) {
       if (k < name.size() && name.substr(0, k) == tail) {
         return d_pos[d_size - k];
       }
@@ -433,6 +439,133 @@ bool SgroupHeader::push(char c) {
   return true;
 }
 
+namespace {
+
+// Whether an extraction from `s` would write its variable: one that finds
+// the end of the stream (after white space) or a stream already failed
+// leaves it as it was, and sets failbit as the extraction would.
+bool writes(std::istream &s) {
+  if (!s.good()) {
+    s.setstate(std::ios_base::failbit);
+    return false;
+  }
+  s >> std::ws;
+  if (s.eof()) {
+    s.setstate(std::ios_base::failbit);
+    return false;
+  }
+  return true;
+}
+
+constexpr char kStereoShort[] =
+    "a V3000 enhanced-stereo collection has fewer atoms than its count, so "
+    "RDKit 2024.03 would read an atom number no extraction wrote";
+constexpr char kStereoTwice[] =
+    "a V3000 enhanced-stereo collection lists an atom twice (or fewer atoms "
+    "than its count, which RDKit 2024.03 reads as the last repeated); RDKit "
+    "keeps the duplicate, which dangles once the atom is removed, as the "
+    "reader's own removeHs may remove it";
+
+// Whether the upper-cased logical line `line` matches the regex
+// parseEnhancedStereo (MolFileParser.cpp) matches stereo groups with,
+//   MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *
+// with its groups' text. It is matched by hand: the wrapper keeps
+// std::regex off this path, which every V3000 read takes, since DRD (the
+// races job) cannot see libstdc++'s regex compiler's lazily built tables
+// ordered between threads.
+bool match_stereo_collection(const std::string &line, std::string &type,
+                             std::string &count, std::string &atoms) {
+  if (line.compare(0, kStereoGroupPrefix, kStereoGroup) != 0 ||
+      line.size() < kStereoGroupPrefix + 3) {
+    return false;
+  }
+  std::size_t pos = kStereoGroupPrefix;
+  type = line.substr(pos, 3);
+  pos += 3;
+  while (pos < line.size() && is_digit(line[pos])) {
+    ++pos;
+  }
+  const auto spaces = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  static constexpr std::string_view atoms_tag = "ATOMS=(";
+  if (pos == spaces || line.compare(pos, atoms_tag.size(), atoms_tag) != 0) {
+    return false;
+  }
+  pos += atoms_tag.size();
+  const auto count_start = pos;
+  while (pos < line.size() && is_digit(line[pos])) {
+    ++pos;
+  }
+  if (pos == count_start) {
+    return false;
+  }
+  count = line.substr(count_start, pos - count_start);
+  const auto count_end = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  if (pos == count_end) {
+    return false;
+  }
+  auto end = line.find_last_not_of(' ');
+  if (end == std::string::npos || end < pos || line[end] != ')') {
+    return false;
+  }
+  atoms = line.substr(pos, end - pos);
+  return true;
+}
+
+// The error RDKit 2024.03's reading of an enhanced-stereo collection line
+// (parseEnhancedStereo, on the upper-cased logical line) would make, or
+// nullptr. It reads the count's atom numbers into one uninitialized
+// unsigned with unchecked extractions, so where the list is shorter than
+// its count the first may be unset and the rest repeat the last; and it
+// keeps an atom listed twice, whose second copy a removal leaves dangling
+// (check_stereo_group_removals in mol_checks.h), as the reader's own
+// removeHs does before the wrapper sees the molecule (RDKit 2026.03's
+// StereoGroup refuses a repeat, checkForDupes).
+const char *stereo_collection_error(const std::string &line) {
+  std::string type;
+  std::string count_text;
+  std::string atoms;
+  if (!match_stereo_collection(line, type, count_text, atoms) ||
+      (type != "ABS" && type != "REL" && type != "RAC")) {
+    return nullptr;
+  }
+  unsigned int count;
+  try {
+    count = RDKit::FileParserUtils::toUnsigned(count_text, true);
+  } catch (const std::exception &) {
+    return nullptr;  // RDKit throws
+  }
+  std::stringstream stream(atoms);
+  std::set<unsigned int> seen;
+  unsigned int index = 0;
+  bool written = false;
+  for (unsigned int i = 0; i < count; ++i) {
+    if (writes(stream)) {
+      stream >> index;
+      written = true;
+    } else if (!written) {
+      return kStereoShort;
+    }
+    if (!seen.insert(index).second) {
+      return kStereoTwice;
+    }
+  }
+  return nullptr;
+}
+
+// As ParseV3000CTAB reads a block of stereo groups: "BEGIN COLLECTION".
+bool begins_collection(const std::string &line) {
+  return line.size() > 15 && line.compare(0, 5, "BEGIN") == 0 &&
+         line.compare(6, 10, "COLLECTION") == 0;
+}
+
+}  // namespace
+
 bool InputScanner::fail(std::string why) {
   if (d_error.empty()) {
     d_error = std::move(why);
@@ -498,15 +631,41 @@ std::uint64_t InputScanner::logical_hold(bool dangers_only,
     *why = kSgroupHeader;
     result = d_logical_start;
   }
+  if (d_in_collection && d_prefix == kStereoGroup && d_logical_start < result) {
+    std::string line = d_line;
+    for (int i = 0; i < pending; ++i) {
+      line += static_cast<char>(
+          std::toupper(static_cast<unsigned char>(d_pend[i])));
+    }
+    if (const char *error = stereo_collection_error(line)) {
+      *why = error;
+      result = d_logical_start;
+    }
+  }
   if (!dangers_only) {
     result = std::min(result, checks.tokens.partial());
   }
   return result;
 }
 
+// The problem RDKit's SmartsToMol (strictCXSMILES on) would have with the
+// SMARTS of the "M  MRV SMA" line read so far, as ParseMarvinSmartsLine
+// reads it: the line after getLine drops a trailing "\r", from column 15.
+std::string InputScanner::mrv_problem() const {
+  std::string_view content(d_mrv_line);
+  if (!content.empty() && content.back() == '\r') {
+    content.remove_suffix(1);
+  }
+  if (content.size() <= 8) {
+    return {};  // substr throws
+  }
+  return smiles_cx_problem(std::string(content.substr(8)), true);
+}
+
 std::uint64_t InputScanner::hold() const {
   const char *why = "";
   std::uint64_t result = logical_hold(false, &why);
+  result = std::min(result, d_mrv_danger);
   result = std::min(result, d_mline_tokens.partial());
   result = std::min(result, d_data_tokens.partial());
   return result;
@@ -521,6 +680,12 @@ bool InputScanner::finish() {
   if (start != kNone) {
     return fail_at(why, start);
   }
+  if (d_mrv_danger != kNone) {
+    auto problem = mrv_problem();
+    if (!problem.empty()) {
+      return fail_at(problem, d_mrv_danger);
+    }
+  }
   return true;
 }
 
@@ -531,8 +696,31 @@ void InputScanner::mol_line_byte(char c, std::uint64_t pos) {
   bool data = std::memcmp(d_head, "M  SCD", 6) == 0 ||
               std::memcmp(d_head, "M  SED", 6) == 0;
   if (!data) {
+    // Of the other lines, RDKit parses only an "M  MRV SMA" line's rest as
+    // SMARTS (ParseMarvinSmartsLine); a field in it is held from its start
+    // until the line ends, and then refused if RDKit would read past the
+    // end of the SMARTS (smiles_cx_problem).
+    if (std::memcmp(d_head, "M  MRV ", 7) != 0) {
+      return;
+    }
+    if (d_pos < 10) {
+      d_mrv_line += c;
+      d_mrv = d_pos == 9 && d_mrv_line == "SMA";
+      return;
+    }
+    if (!d_mrv) {
+      return;
+    }
+    if (d_mrv_line.size() < kMaxHold) {
+      d_mrv_line += c;
+    } else {
+      d_mrv_long = true;
+    }
     if (d_mline_tokens.push(c, pos)) {
-      fail_at(kCxField, d_mline_tokens.start());
+      d_mrv_danger = std::min(d_mrv_danger, d_mline_tokens.start());
+    }
+    if (d_mrv_long && d_mrv_danger != kNone) {
+      fail_at(kLongMrvLine, d_mrv_danger);
     }
     return;
   }
@@ -569,8 +757,9 @@ void InputScanner::confirm(char c, std::uint64_t pos) {
          " characters; RDKit matches it with a regex that recurses once per "
          "character");
   }
-  // A COUNTS line's numbers fit; longer lines need only their keyword.
-  if (d_line.size() < 256) {
+  // A COUNTS line's numbers fit; longer lines need only their keyword, but
+  // for a stereo group's (refused past kMaxStereoGroupLine).
+  if (d_line.size() < 256 || d_prefix == kStereoGroup) {
     d_line += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
   }
   end_points(c);
@@ -590,6 +779,17 @@ void InputScanner::confirm(char c, std::uint64_t pos) {
 void InputScanner::end_logical_line() {
   if (d_checks.header.open()) {
     fail_at(kSgroupHeader, d_logical_start);
+  }
+  // A collection block's lines, until one that starts with "END"
+  // (parseEnhancedStereo); its stereo groups are checked.
+  if (d_in_collection) {
+    if (d_line.compare(0, 3, "END") == 0) {
+      d_in_collection = false;
+    } else if (const char *error = stereo_collection_error(d_line)) {
+      fail_at(error, d_logical_start);
+    }
+  } else if (begins_collection(d_line)) {
+    d_in_collection = true;
   }
   if (d_line.compare(0, 10, "BEGIN CTAB") == 0) {
     d_num_sgroups = 0;
@@ -710,6 +910,16 @@ void InputScanner::end_line() {
   } else if (d_pos >= 7 && std::memcmp(d_head, "M  SED", 6) == 0) {
     d_data_tokens.reset();
   }
+  if (d_mrv_danger != kNone) {
+    auto problem = mrv_problem();
+    if (!problem.empty()) {
+      fail_at(problem, d_mrv_danger);
+    }
+  }
+  d_mrv = false;
+  d_mrv_long = false;
+  d_mrv_line.clear();
+  d_mrv_danger = kNone;
   d_mline_tokens.reset();
   d_data_cr = false;
   d_pending = 0;

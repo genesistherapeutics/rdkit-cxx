@@ -21,7 +21,10 @@ use crate::{Error, Result};
 /// lists are what `update_params_from_json` reads from `normalizationData`,
 /// `fragmentData`, `acidbaseData`, and `tautomerTransformData`: Python keeps
 /// them on the C++ object, with no attributes. A list that is not empty
-/// replaces the matching file.
+/// replaces the matching file. Where RDKit would read the normalizations
+/// file, it is read once and its transformations handed to RDKit as
+/// normalization data, so a file of none (only comments, say) is
+/// `Error::Value`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CleanupParameters {
     /// The file of normalization transformations.

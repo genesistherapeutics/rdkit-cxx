@@ -567,8 +567,10 @@ impl ChemicalReaction {
 
     /// Replaces the reactant atoms labeled in their `molFileValue` property
     /// with the named recursive queries, of which there are none. A label
-    /// with no query is `Error::Key`; an uninitialized reaction is
-    /// `Error::Value`. Mirrors `ChemicalReaction.AddRecursiveQueriesToReaction`.
+    /// with no query is parsed as SMARTS, and `Error::Key` if it is not;
+    /// SMARTS whose CXSMILES extension RDKit 2024.03 would read past the end
+    /// of (as `mol_from_smarts` checks it), and an uninitialized reaction,
+    /// are `Error::Value`. Mirrors `ChemicalReaction.AddRecursiveQueriesToReaction`.
     pub fn add_recursive_queries_to_reaction(&mut self) -> Result<()> {
         self.add_recursive_queries_to_reaction_with_params(&Default::default())
     }

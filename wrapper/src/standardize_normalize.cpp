@@ -56,18 +56,26 @@ std::unique_ptr<Normalizer> normalizer_default() {
   return std::make_unique<Normalizer>();
 }
 
+// The file's reactions are checked (check_transformation_lines) and RDKit
+// reads the text checked, not the file, which could change between; an
+// empty name is RDKit's default normalizations, which it reads from no file.
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
-  check_file_cx_fields(to_path(normalize_filename), "the normalizations file");
-  return std::make_unique<Normalizer>(to_path(normalize_filename),
-                                      max_restarts);
+  const auto name = to_path(normalize_filename);
+  if (name.empty()) {
+    return std::make_unique<Normalizer>(name, max_restarts);
+  }
+  const auto text = read_file(name);
+  check_transformation_lines(text);
+  std::istringstream in(text);
+  return std::make_unique<Normalizer>(in, max_restarts);
 }
 
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
-  check_text_cx_fields(std::string(param_data), "the normalizations");
+  check_transformation_lines(std::string(param_data));
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Normalizer>(
       in, to_cleanup_parameters(params).maxRestarts);
@@ -75,8 +83,9 @@ std::unique_ptr<Normalizer> normalizer_from_data(
 
 std::unique_ptr<Normalizer> normalizer_from_params(
     const CleanupParametersData &params) {
-  return std::unique_ptr<Normalizer>(
-      MS::normalizerFromParams(to_cleanup_parameters(params)));
+  auto cleanup = to_cleanup_parameters(params);
+  read_normalizations(cleanup);
+  return std::unique_ptr<Normalizer>(MS::normalizerFromParams(cleanup));
 }
 
 // Normalizing runs reactions, and disconnecting metals matches patterns

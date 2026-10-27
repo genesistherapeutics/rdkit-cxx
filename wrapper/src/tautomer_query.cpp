@@ -309,9 +309,10 @@ std::unique_ptr<TautomerQuery> tautomer_query_clone(
 
 std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
     const RWMol &mol, rust::Slice<const std::uint8_t> tautomer_transform_file) {
-  // An empty path reads RDKit's default transforms.
-  check_file_cx_fields(to_path(tautomer_transform_file),
-                       "the tautomer transforms file");
+  // An empty path reads RDKit's default transforms. RDKit's tautomer reader
+  // parses no CXSMILES extension: it erases the spaces from the SMARTS it
+  // splits at tabs (read_transformation_lines in file_checks.h), so the file
+  // needs no check, and check_transforms checks what it read.
   MolStandardize::TautomerCatalogParams params(
       to_path(tautomer_transform_file));
   check_transforms(params);

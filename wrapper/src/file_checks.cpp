@@ -5,11 +5,16 @@
 
 #include "rdkit-cxx/file_checks.h"
 
+#include <algorithm>
+#include <climits>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <set>
 #include <sstream>
 #include <vector>
 
+#include <GraphMol/ROMol.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
@@ -76,6 +81,42 @@ void check_bond_refs(const boost::property_tree::ptree &tree) {
       }
     }
     check_bond_refs(child);
+  }
+}
+
+// RDKit 2024.03's Marvin reader puts each atom with an mrvStereoGroup into
+// its group by the index of the first atom with its id (getAtomIndex in
+// MarvinDefs.cpp), so two atoms with one id list an atom twice, which RDKit
+// 2024.03's StereoGroup keeps and a removal leaves dangling
+// (check_stereo_group_removals in mol_checks.h): say, when the reader
+// removes the hydrogens. Ids in an atom array must therefore differ.
+void check_atom_ids(const boost::property_tree::ptree &tree) {
+  for (const auto &[key, child] : tree) {
+    if (key == "atomArray") {
+      std::set<std::string> ids;
+      auto add = [&](const std::string &id) {
+        if (!ids.insert(id).second) {
+          throw RDKit::FileParseException(
+              "atom id " + id +
+              " appears twice in an atom array of the MRV file");
+        }
+      };
+      std::vector<std::string> compact;
+      boost::algorithm::split(
+          compact, child.get<std::string>("<xmlattr>.atomID", ""),
+          boost::algorithm::is_space(), boost::algorithm::token_compress_on);
+      for (const auto &id : compact) {
+        if (!id.empty()) {
+          add(id);
+        }
+      }
+      for (const auto &[akey, atom] : child) {
+        if (akey == "atom") {
+          add(atom.get<std::string>("<xmlattr>.id", ""));
+        }
+      }
+    }
+    check_atom_ids(child);
   }
 }
 
@@ -234,9 +275,63 @@ bool polymer_sgroup_past_end(CxCursor c) {
   return c.past();
 }
 
+// RDKit 2024.03's parse_enhanced_stereo (CXSmilesOps.cpp) adds each atom
+// index listed after "a:", "o<n>:", or "&<n>:" to the group the type and
+// number name, merging sections by 10 * number + type, so a group can list
+// an atom twice, which RDKit 2024.03's StereoGroup keeps and a removal
+// leaves dangling (check_stereo_group_removals in mol_checks.h): say, when
+// the parser removes the hydrogens ("[H][C@](C)(F)Cl |&1:0,0,1|" crashes
+// Python). Every place a section may start is read as one, which may refuse
+// a few extensions where such text is inside another section.
+bool cx_stereo_group_repeats(std::string_view ext) {
+  auto digit = [](char c) { return c >= '0' && c <= '9'; };
+  std::map<unsigned int, std::set<unsigned long long>> groups;
+  for (std::size_t p = 0; p < ext.size(); ++p) {
+    unsigned int type;
+    if (ext[p] == 'a') {
+      type = 0;
+    } else if (ext[p] == 'o') {
+      type = 1;
+    } else if (ext[p] == '&' && p + 1 < ext.size() && ext[p + 1] != '#') {
+      type = 2;
+    } else {
+      continue;
+    }
+    std::size_t q = p + 1;
+    unsigned int id = 0;
+    if (type != 0) {
+      for (; q < ext.size() && digit(ext[q]); ++q) {
+        id = id * 10 + static_cast<unsigned int>(ext[q] - '0');
+      }
+    }
+    if (q >= ext.size() || ext[q] != ':') {
+      continue;
+    }
+    auto &atoms = groups[10 * id + type];
+    for (++q; q < ext.size() && digit(ext[q]);) {
+      unsigned long long index = 0;
+      for (; q < ext.size() && digit(ext[q]); ++q) {
+        index = std::min(index * 10 + static_cast<unsigned>(ext[q] - '0'),
+                         static_cast<unsigned long long>(UINT_MAX) + 1);
+      }
+      if (!atoms.insert(index).second) {
+        return true;
+      }
+      if (q < ext.size() && ext[q] == ',') {
+        ++q;
+      }
+    }
+  }
+  return false;
+}
+
 }  // namespace
 
-std::string cx_extension_problem(std::string_view cx) {
+std::string cx_extension_problem(std::string_view cx, bool strict) {
+  if (cx_stereo_group_repeats(cx)) {
+    return "a CXSMILES stereo group lists an atom twice, which RDKit 2024.03 "
+           "keeps, leaving it to dangle once the atom is removed";
+  }
   const std::size_t n = cx.size();
   for (std::size_t p = 0; p < n; ++p) {
     if (cx[p] == 'S' && p + 3 < n && cx.compare(p, 4, "SgD:") == 0) {
@@ -245,10 +340,12 @@ std::string cx_extension_problem(std::string_view cx) {
                "fields; RDKit 2024.03 reads past the end of the extension "
                "text";
       }
-    } else if (cx[p] == 'S' && p + 2 < n && cx.compare(p, 3, "Sg:") == 0) {
+    } else if (!strict && cx[p] == 'S' && p + 2 < n &&
+               cx.compare(p, 3, "Sg:") == 0) {
       if (polymer_sgroup_past_end(CxCursor(cx, p + 3))) {
         return "a CXSMILES polymer S-group (Sg) has no ':' after its type; "
-               "RDKit 2024.03 steps past the end of the extension text";
+               "with strictCXSMILES off, RDKit 2024.03 copies the text past "
+               "the end of the extension";
       }
     } else if (cx[p] == 'a' && n - p > 9 &&
                cx.compare(p, 9, "atomProp:") == 0) {
@@ -261,7 +358,7 @@ std::string cx_extension_problem(std::string_view cx) {
   return {};
 }
 
-std::string smiles_cx_problem(const std::string &text) {
+std::string smiles_cx_problem(const std::string &text, bool strict) {
   auto sidx = text.find_first_of(" \t");
   if (sidx == std::string::npos || sidx == 0) {
     return {};
@@ -270,14 +367,15 @@ std::string smiles_cx_problem(const std::string &text) {
   if (cx.empty() || cx[0] != '|') {
     return {};
   }
-  return cx_extension_problem(cx);
+  return cx_extension_problem(cx, strict);
 }
 
-void check_smiles_cx(const std::string &text, bool allow_cxsmiles) {
+void check_smiles_cx(const std::string &text, bool allow_cxsmiles,
+                     bool strict) {
   if (!allow_cxsmiles) {
     return;
   }
-  auto why = smiles_cx_problem(text);
+  auto why = smiles_cx_problem(text, strict);
   if (!why.empty()) {
     throw ValueErrorException(why);
   }
@@ -291,7 +389,8 @@ void check_reaction_cx(const std::string &text, bool allow_cxsmiles) {
   if (sidx == std::string::npos || sidx == 0) {
     return;
   }
-  auto why = cx_extension_problem(boost::trim_copy(text.substr(sidx)));
+  // parseReaction throws when the extension does not parse.
+  auto why = cx_extension_problem(boost::trim_copy(text.substr(sidx)), true);
   if (!why.empty()) {
     throw ValueErrorException(why);
   }
@@ -314,17 +413,50 @@ void check_text_cx_fields(std::string_view text, const char *what) {
   }
 }
 
-void check_file_cx_fields(const std::string &path, const char *what) {
-  if (path.empty()) {
-    return;
+std::vector<std::pair<std::string, std::string>> read_transformation_lines(
+    const std::string &text) {
+  // As readTransformations(std::istream &) and getReaction(const
+  // std::string &), down to their reading past the last token: a line of one
+  // field gives an empty SMARTS (the tokenizer clears its token at the end).
+  std::vector<std::pair<std::string, std::string>> result;
+  std::istringstream in(text);
+  constexpr int kMaxLineLen = 512;
+  char line[kMaxLineLen];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, kMaxLineLen, '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    std::vector<std::string> fields;
+    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
+    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
+    fields.resize(std::max<std::size_t>(fields.size(), 2));
+    boost::erase_all(fields[0], " ");
+    boost::erase_all(fields[1], " ");
+    result.emplace_back(std::move(fields[0]), std::move(fields[1]));
   }
-  std::ifstream in(path, std::ios::binary);
-  if (!in) {
-    return;  // RDKit's own open fails, or reads nothing.
+  return result;
+}
+
+void check_transformation_lines(const std::string &text) {
+  for (const auto &[name, smarts] : read_transformation_lines(text)) {
+    check_reaction_cx(smarts);
   }
-  std::string text((std::istreambuf_iterator<char>(in)),
-                   std::istreambuf_iterator<char>());
-  check_text_cx_fields(text, what);
+}
+
+void check_query_props(const RDKit::ROMol &mol, const std::string &prop) {
+  for (const auto *atom : mol.atoms()) {
+    std::string value;
+    try {
+      if (!atom->getPropIfPresent(prop, value)) {
+        continue;
+      }
+    } catch (const std::exception &) {
+      continue;  // not a string, which RDKit refuses
+    }
+    check_smiles_cx(value, true, true);
+  }
 }
 
 void check_mrv(const std::string &text) {
@@ -332,6 +464,7 @@ void check_mrv(const std::string &text) {
   boost::property_tree::ptree tree;
   boost::property_tree::read_xml(in, tree);
   check_bond_refs(tree);
+  check_atom_ids(tree);
 }
 
 }  // namespace rdkit_cxx

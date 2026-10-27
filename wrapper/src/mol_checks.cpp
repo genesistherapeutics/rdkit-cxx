@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <limits>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -18,6 +19,7 @@
 
 #include <GraphMol/MolOps.h>
 #include <GraphMol/MonomerInfo.h>
+#include <GraphMol/PeriodicTable.h>
 #include <GraphMol/QueryOps.h>
 #include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
@@ -241,27 +243,13 @@ void check_bond_query(const RDKit::Bond::QUERYBOND_QUERY *root,
 // The fields _pickle<unsigned char> writes in one byte, which MolPickler
 // uses for a molecule of at most 255 atoms whatever its bond count (RDKit
 // 2026.09 also counts bonds, rdkit/rdkit#9563): every atom index fits, but
-// a bond index or a list's size may not. For parts (check_picklable_parts),
-// whatever the molecule's size, with bonds named as a part of at most
-// max_part_bonds bonds may number them.
-void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
-                        bool parts = false, unsigned max_part_bonds = 0) {
-  if (!parts && mol.getNumAtoms() > kPickleByteMax) {
+// a bond index or a list's size may not.
+void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where) {
+  if (mol.getNumAtoms() > kPickleByteMax) {
     return;
   }
-  // A part's bonds are numbered from 0, so past 255 only in a part of more
-  // than 256 bonds.
-  const bool any_bond = parts && max_part_bonds > kPickleByteMax + 1;
   auto check_bond = [&](std::size_t bond, const std::string &what) {
-    if (any_bond) {
-      throw ValueErrorException(
-          what + " " + std::to_string(bond) +
-          " may be numbered past 255 in a part of more than 256 bonds, more "
-          "than a molecule pickle holds");
-    }
-    if (!parts) {
-      check_pickle_byte(bond, what);
-    }
+    check_pickle_byte(bond, what);
   };
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
@@ -294,6 +282,42 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
   }
 }
 
+// streamWriteProps counts the properties it writes in a std::uint16_t for
+// the molecule, each conformer, atom and bond (with the property flags, or
+// for a recursive query's molecule the default flags), and each substance
+// group (always): past 65535 the count wraps, and the reader takes the rest
+// of the properties for the pickle's next fields. Counts every property,
+// whether or not the flags write it, which is at least as many.
+constexpr std::size_t kPickleCountMax = 65535;
+
+void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
+  auto count = props.getDict().getData().size();
+  if (count > kPickleCountMax) {
+    throw ValueErrorException(
+        what + " has " + std::to_string(count) +
+        " properties, more than a molecule pickle counts (65535)");
+  }
+}
+
+void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
+  check_prop_count(mol, where.substr(0, where.size() - 3));
+  for (auto conf = mol.beginConformers(); conf != mol.endConformers(); ++conf) {
+    check_prop_count(**conf,
+                     where + "conformer " + std::to_string((*conf)->getId()));
+  }
+  for (const auto *atom : mol.atoms()) {
+    check_prop_count(*atom, where + "atom " + std::to_string(atom->getIdx()));
+  }
+  for (const auto *bond : mol.bonds()) {
+    check_prop_count(*bond, where + "bond " + std::to_string(bond->getIdx()));
+  }
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    check_prop_count(sgroups[i],
+                     where + "substance group " + std::to_string(i));
+  }
+}
+
 }  // namespace
 
 void check_pickled_mol(const RDKit::ROMol &mol) {
@@ -307,23 +331,44 @@ void check_pickled_mol(const RDKit::ROMol &mol) {
         for (const auto *atom : current.atoms()) {
           check_monomer_info(*atom, which);
         }
+        // RDKit 2024.03's StereoGroup keeps an atom or bond listed twice,
+        // whose second copy a removal leaves dangling
+        // (check_stereo_group_removals); 2026.03's constructor refuses
+        // them, with these messages.
+        for (const auto &group : current.getStereoGroups()) {
+          std::unordered_set<const RDKit::Atom *> atoms;
+          for (const auto *atom : group.getAtoms()) {
+            if (!atoms.insert(atom).second) {
+              throw ValueErrorException("Duplicate atom in StereoGroup");
+            }
+          }
+          std::unordered_set<const RDKit::Bond *> bonds;
+          for (const auto *bond : group.getBonds()) {
+            if (!bonds.insert(bond).second) {
+              throw ValueErrorException("Duplicate bond in StereoGroup");
+            }
+          }
+        }
       },
       [](const auto &) {});
 }
 
 namespace {
 
-// check_picklable, and for parts, check_picklable_parts: the molecule's own
-// fields as parts' are, its recursive queries' molecules, which parts copy
-// whole, as themselves.
-void check_picklable(const RDKit::ROMol &mol, bool parts,
-                     unsigned max_part_bonds) {
+// check_picklable, and for parts, check_picklable_parts: RDKit 2024.03's
+// parts (Subgraphs::pathToSubmol) keep no substance or stereo groups, so
+// only their queries and property counts are checked, and their recursive
+// queries' molecules, which parts copy whole, as themselves.
+void check_picklable(const RDKit::ROMol &mol, bool parts) {
   walk_pickled(
       mol,
       [&](const RDKit::ROMol &current, bool nested) {
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
-        check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        if (!parts || nested) {
+          check_pickle_bytes(current, where);
+        }
+        check_prop_counts(current, where);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
             check_bond_query(
@@ -337,12 +382,10 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
 
 }  // namespace
 
-void check_picklable(const RDKit::ROMol &mol) {
-  check_picklable(mol, false, 0);
-}
+void check_picklable(const RDKit::ROMol &mol) { check_picklable(mol, false); }
 
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
-  check_picklable(mol, true, max_part_bonds);
+void check_picklable_parts(const RDKit::ROMol &mol) {
+  check_picklable(mol, true);
 }
 
 namespace {
@@ -913,6 +956,157 @@ StereoGroupBondGuard::~StereoGroupBondGuard() {
     restored.push_back(with_bonds(groups[g], std::move(bonds)));
   }
   d_mol.setStereoGroups(std::move(restored));
+}
+
+namespace {
+
+// As ProximityEntry, IsBonded (with ctdIGNORE_H_H_CONTACTS), IsBlacklistedAtom,
+// SamePDBResidue, and IsBlacklistedPair in ProximityBonds.cpp.
+struct Proximity {
+  float x, y, z, r;
+  int atm, hash, next, elem;
+};
+
+bool proximity_bonded(const Proximity &p, const Proximity &q) {
+  constexpr double kExt = 0.45;
+  constexpr double kMin2 = 0.16;
+  constexpr double kMax2 = 29.7025;
+  if (p.elem == 1 && q.elem == 1) {
+    return false;
+  }
+  double dx = (double)p.x - (double)q.x;
+  double dist2 = dx * dx;
+  if (dist2 > kMax2) {
+    return false;
+  }
+  double dy = (double)p.y - (double)q.y;
+  dist2 += dy * dy;
+  if (dist2 > kMax2) {
+    return false;
+  }
+  double dz = (double)p.z - (double)q.z;
+  dist2 += dz * dz;
+  if (dist2 > kMax2 || dist2 < kMin2) {
+    return false;
+  }
+  double radius = (double)p.r + (double)q.r + kExt;
+  return dist2 <= radius * radius;
+}
+
+bool proximity_blacklisted_atom(const RDKit::Atom *atom) {
+  int elem = atom->getAtomicNum();
+  return !((5 <= elem && elem <= 8) || (14 <= elem && elem <= 16) ||
+           (32 <= elem && elem <= 34) || (51 <= elem && elem <= 52));
+}
+
+// The PDB reader and determine_connectivity give RDKit only PDB residue
+// info (OtherMonomerInfoSetAside), so other info reads as none here.
+const RDKit::AtomPDBResidueInfo *pdb_info(const RDKit::Atom *atom) {
+  return dynamic_cast<const RDKit::AtomPDBResidueInfo *>(
+      atom->getMonomerInfo());
+}
+
+bool proximity_blacklisted_pair(const RDKit::Atom *beg,
+                                const RDKit::Atom *end) {
+  const auto *b = pdb_info(beg);
+  const auto *e = pdb_info(end);
+  if (!b || b->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {
+    return false;
+  }
+  if (!e || e->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {
+    return false;
+  }
+  bool same = b->getResidueNumber() == e->getResidueNumber() &&
+              b->getResidueName() == e->getResidueName() &&
+              b->getChainId() == e->getChainId() &&
+              b->getInsertionCode() == e->getInsertionCode();
+  if (!same) {
+    if (proximity_blacklisted_atom(beg) || proximity_blacklisted_atom(end)) {
+      return true;
+    }
+    if (b->getResidueName() == "HOH" || e->getResidueName() == "HOH") {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
+void check_proximity_hydrogens(const RDKit::ROMol &mol, bool without_bonds) {
+  if (!mol.getNumConformers()) {
+    return;  // ConnectTheDots then adds no bonds.
+  }
+  constexpr int kHashSize = 1024;
+  constexpr int kHashMask = 1023;
+  constexpr int kHashX = 571;
+  constexpr int kHashY = 127;
+  constexpr int kHashZ = 3;
+  constexpr double kMaxDist = 5.45;
+  const unsigned count = mol.getNumAtoms();
+  std::vector<int> table(kHashSize, -1);
+  std::vector<Proximity> tmp(count);
+  std::set<std::pair<unsigned, unsigned>> bonds;
+  std::vector<unsigned> degree(count, 0);
+  if (!without_bonds) {
+    for (const auto *bond : mol.bonds()) {
+      auto a = bond->getBeginAtomIdx();
+      auto b = bond->getEndAtomIdx();
+      bonds.emplace(std::min(a, b), std::max(a, b));
+    }
+    for (unsigned i = 0; i < count; ++i) {
+      degree[i] = mol.getAtomWithIdx(i)->getDegree();
+    }
+  }
+  const auto *periodic = RDKit::PeriodicTable::getTable();
+  const auto &conf = mol.getConformer();
+  for (unsigned i = 0; i < count; ++i) {
+    const auto *atom = mol.getAtomWithIdx(i);
+    unsigned elem = atom->getAtomicNum();
+    const auto &p = conf.getAtomPos(i);
+    auto &ti = tmp[i];
+    ti.x = (float)p.x;
+    ti.y = (float)p.y;
+    ti.z = (float)p.z;
+    ti.r = (float)periodic->getRcovalent(elem);
+    ti.atm = static_cast<int>(i);
+    ti.elem = static_cast<int>(elem);
+    int hash = kHashX * (int)(p.x / kMaxDist) + kHashY * (int)(p.y / kMaxDist) +
+               kHashZ * (int)(p.z / kMaxDist);
+    for (int dx = -kHashX; dx <= kHashX; dx += kHashX) {
+      for (int dy = -kHashY; dy <= kHashY; dy += kHashY) {
+        for (int dz = -kHashZ; dz <= kHashZ; dz += kHashZ) {
+          int probe = hash + dx + dy + dz;
+          int list = table[probe & kHashMask];
+          while (list != -1) {
+            const auto &tj = tmp[list];
+            auto a = static_cast<unsigned>(ti.atm);
+            auto b = static_cast<unsigned>(tj.atm);
+            if (tj.hash == probe && proximity_bonded(ti, tj) &&
+                !bonds.count({std::min(a, b), std::max(a, b)}) &&
+                !proximity_blacklisted_pair(atom, mol.getAtomWithIdx(b))) {
+              bonds.emplace(std::min(a, b), std::max(a, b));
+              ++degree[a];
+              ++degree[b];
+            }
+            list = tj.next;
+          }
+        }
+      }
+    }
+    int list = hash & kHashMask;
+    ti.next = table[list];
+    table[list] = static_cast<int>(i);
+    ti.hash = hash;
+  }
+  for (unsigned i = 0; i < count; ++i) {
+    if (tmp[i].elem == 1 && degree[i] > 1) {
+      throw ValueErrorException(
+          "hydrogen " + std::to_string(i) +
+          " would be bonded to several atoms by proximity bonding, whose "
+          "pruning in RDKit 2024.03 removes bonds while it iterates over them");
+    }
+  }
 }
 
 }  // namespace rdkit_cxx

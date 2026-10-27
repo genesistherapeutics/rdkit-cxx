@@ -205,7 +205,7 @@ std::uint32_t mol_holder_add_smiles(MolHolderHandle &holder, rust::Str smiles) {
   check_room(holder.ptr->size());
   std::string text(smiles);
   // The holder parses it later, with CXSMILES on (check_smiles_cx).
-  check_smiles_cx(text);
+  check_smiles_cx(text, true, true);
   if (auto *h = dynamic_cast<CachedSmilesMolHolder *>(holder.ptr.get())) {
     return h->addSmiles(text);
   }

@@ -376,7 +376,7 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
   std::string text(smiles);
   std::map<std::string, std::string> repl;
   auto params = smiles_parser_params(data, repl);
-  check_smiles_cx(text, params.allowCXSMILES);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   // Sanitizing kekulizes, which RDKit 2024.03 cannot do safely for a ring
   // system of 32 or more dummy atoms (check_kekulize_questions), so text
   // that may hold that many ('*' or "#0" each, before any replacements) is
@@ -419,7 +419,7 @@ std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
   params.strictCXSMILES = data.strict_cxsmiles;
   params.mergeHs = data.merge_hs;
   params.replacements = &repl;
-  check_smiles_cx(text, params.allowCXSMILES);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   return parsed(RDKit::SmartsToMol(text, params), "SMARTS", text);
 }
 
@@ -800,23 +800,139 @@ FP::Mol2ParserParams mol2_params(bool sanitize, bool remove_hs,
   return params;
 }
 
+// Tokens as RDKit's Mol2 parser splits a line, at spaces, tabs, and
+// newlines.
+std::vector<std::string> mol2_tokens(const std::string &line) {
+  std::vector<std::string> tokens;
+  boost::split(tokens, line, boost::is_any_of(" \t\n"),
+               boost::token_compress_on);
+  tokens.erase(std::remove(tokens.begin(), tokens.end(), ""), tokens.end());
+  return tokens;
+}
+
+// As boost::lexical_cast<unsigned int>, which takes an optional sign and
+// digits, a minus wrapping modulo 2^32; nullopt where it throws.
+std::optional<unsigned> mol2_unsigned(const std::string &token) {
+  std::size_t i = 0;
+  bool negative = false;
+  if (!token.empty() && (token[0] == '+' || token[0] == '-')) {
+    negative = token[0] == '-';
+    i = 1;
+  }
+  if (i == token.size()) {
+    return std::nullopt;
+  }
+  std::uint64_t value = 0;
+  for (; i < token.size(); ++i) {
+    if (token[i] < '0' || token[i] > '9') {
+      return std::nullopt;
+    }
+    value = value * 10 + static_cast<unsigned>(token[i] - '0');
+    if (value > UINT_MAX) {
+      return std::nullopt;
+    }
+  }
+  auto v = static_cast<unsigned>(value);
+  return negative ? 0u - v : v;
+}
+
+// RDKit 2024.03's ParseMol2FileBondLine (Mol2FileParser.cpp) refuses a bond
+// only when both of its atom numbers are past the counts line's atoms (it
+// tests them with || where it means &&, RDKit #9417), and then indexes its
+// atom table with each, reading past it for the other (RDKit 2026.03
+// refuses either, GHSA-x698-52p4-x72f); a number of 0 wraps to UINT_MAX.
+// This finds the lines MolFromMol2DataStream reads, as it does: the counts
+// line after the first MOLECULE header's name, and the bond block of nBonds
+// lines after a BOND header (each header the first molecule has, as RDKit
+// reads the last; or the start of the data, where RDKit seeks without one),
+// and throws ValueErrorException for an atom number outside 1 to the atom
+// count. Text RDKit refuses itself passes.
+void check_mol2_bonds(const std::string &text) {
+  std::vector<std::string> lines;
+  boost::split(lines, text, boost::is_any_of("\n"));
+  for (auto &line : lines) {
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+  }
+  auto first_token = [](const std::string &line) {
+    auto tokens = mol2_tokens(line);
+    return tokens.empty() ? std::string() : tokens[0];
+  };
+  std::size_t mol = lines.size();
+  std::vector<std::size_t> bond_blocks;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    if (lines[i].empty() || lines[i][0] != '@') {
+      continue;
+    }
+    auto token = first_token(lines[i]);
+    if (token == "@<TRIPOS>MOLECULE") {
+      if (mol != lines.size()) {
+        break;
+      }
+      mol = i + 1;
+    } else if (token == "@<TRIPOS>BOND") {
+      bond_blocks.push_back(i + 1);
+    }
+  }
+  if (mol + 1 >= lines.size()) {
+    return;
+  }
+  if (bond_blocks.empty()) {
+    bond_blocks.push_back(0);
+  }
+  auto counts = mol2_tokens(lines[mol + 1]);
+  if (counts.empty()) {
+    return;
+  }
+  auto num_atoms = mol2_unsigned(counts[0]);
+  auto num_bonds =
+      counts.size() > 1 ? mol2_unsigned(counts[1]) : std::optional<unsigned>(0);
+  if (!num_atoms || !num_bonds) {
+    return;
+  }
+  for (auto start : bond_blocks) {
+    for (std::size_t i = start; i < lines.size() && i - start < *num_bonds;
+         ++i) {
+      auto tokens = mol2_tokens(lines[i]);
+      if (tokens.size() < 3) {
+        break;
+      }
+      for (std::size_t t = 1; t <= 2; ++t) {
+        auto number = mol2_unsigned(tokens[t]);
+        if (number && (*number == 0 || *number > *num_atoms)) {
+          throw ValueErrorException(
+              "the Mol2 bond line \"" + lines[i] + "\" names atom " +
+              tokens[t] + ", outside the molecule's " +
+              std::to_string(*num_atoms) +
+              " atoms, which RDKit 2024.03 reads past its atom table for");
+        }
+      }
+    }
+  }
+}
+
 }  // namespace
 
 std::unique_ptr<RWMol> mol_from_mol2_block(rust::Str mol2_block, bool sanitize,
                                            bool remove_hs,
                                            bool cleanup_substructures) {
-  return parsed(FP::MolFromMol2Block(
-                    std::string(mol2_block),
-                    mol2_params(sanitize, remove_hs, cleanup_substructures)),
+  std::string text(mol2_block);
+  check_mol2_bonds(text);
+  return parsed(FP::MolFromMol2Block(text, mol2_params(sanitize, remove_hs,
+                                                       cleanup_substructures)),
                 "Mol2 block");
 }
 
 std::unique_ptr<RWMol> mol_from_mol2_file(rust::Slice<const std::uint8_t> path,
                                           bool sanitize, bool remove_hs,
                                           bool cleanup_substructures) {
+  // RDKit reads the text checked, not the file, which could change between.
   auto name = to_path(path);
-  return parsed(FP::MolFromMol2File(name, mol2_params(sanitize, remove_hs,
-                                                      cleanup_substructures)),
+  auto text = read_file(name);
+  check_mol2_bonds(text);
+  return parsed(FP::MolFromMol2Block(text, mol2_params(sanitize, remove_hs,
+                                                       cleanup_substructures)),
                 "Mol2 file " + name);
 }
 
@@ -906,6 +1022,9 @@ std::unique_ptr<RWMol> pdb_from_text(const std::string &text, bool sanitize,
         FP::MolFromPDBDataStream(in, pdb_params(false, false, flavor, false));
     if (probe) {
       check_pdb_coordinates(*probe);
+      // ConnectTheDots_Large prunes a hydrogen with several bonds while it
+      // iterates over them (rdkit/rdkit#9444).
+      check_proximity_hydrogens(*probe, false);
     }
   }
   std::istringstream in(text);

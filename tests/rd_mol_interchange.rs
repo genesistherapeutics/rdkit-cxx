@@ -500,6 +500,12 @@ fn stereo_groups_ignore_bonds() {
     let mol = json_to_mols(&json).unwrap().remove(0);
     assert_eq!(mol.get_stereo_groups()[0].get_atoms(), [1, 2]);
     assert_eq!(mol_to_smarts(&mol).unwrap(), "[#6]-[#6]=[#6]-[#6H3]");
+    // RDKit 2024.03 keeps an atom a group lists twice, which a removal
+    // leaves dangling.
+    let twice = doc(&[butene(
+        r#","stereoGroups":[{"type":"or","id":1,"atoms":[1,2,1]}]"#,
+    )]);
+    assert!(is_value(json_to_mols(&twice)));
 }
 
 #[test]
