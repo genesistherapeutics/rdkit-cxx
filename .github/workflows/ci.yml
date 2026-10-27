@@ -10,7 +10,7 @@ name: CI
 # (README.md, Releases).
 on:
   push:
-    branches: [main, rdkit-2026.03]
+    branches: [main, rdkit-2024.03]
   pull_request:
 
 permissions:
@@ -27,7 +27,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04, ubuntu-24.04-arm, macos-15]
+        # No Linux arm64 runner: conda-forge has no linux-aarch64 build of
+        # librdkit-dev (or rdkit) for RDKit 2024.03; its first is 2024.09.1.
+        os: [ubuntu-24.04, macos-15]
     runs-on: ${{ matrix.os }}
     # ccache (below) compiles the C++ wrapper. It hashes the compiler by its
     # contents, since the environment's compiler is reinstalled every run,
@@ -77,7 +79,7 @@ jobs:
           cargo build -p downstream --config "target.'cfg(target_os = \"linux\")'.linker = '/usr/bin/cc'"
           env -u LD_LIBRARY_PATH -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
             ./target/debug/downstream | tee downstream.out
-          grep "^RDKit 2026.03." downstream.out
+          grep "^RDKit 2024.03." downstream.out
       - name: Building outside an environment fails with one message
         run: |
           if env -u CONDA_PREFIX -u RDKIT_PREFIX cargo build > missing.out 2>&1; then

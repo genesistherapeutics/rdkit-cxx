@@ -5,7 +5,7 @@
 
 name: Release
 
-# Run by hand from the Actions tab, on rdkit-2026.03 (README.md, Releases).
+# Run by hand from the Actions tab, on rdkit-2024.03 (README.md, Releases).
 # crates.io's trusted publisher for rdkit-cxx names this file.
 on:
   workflow_dispatch:
@@ -22,7 +22,7 @@ jobs:
   # with read-only permissions: the bump commit reaches the publish job as a
   # patch, and nothing is pushed until crates.io has the crate.
   build:
-    if: github.repository == 'skearnes/rdkit-cxx' && github.ref == 'refs/heads/rdkit-2026.03'
+    if: github.repository == 'skearnes/rdkit-cxx' && github.ref == 'refs/heads/rdkit-2024.03'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
