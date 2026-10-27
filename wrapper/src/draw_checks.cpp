@@ -224,7 +224,12 @@ std::vector<std::string> label_pieces(const std::string &label, char orient,
 }
 
 // AtomSymbol::adjustColons strips <...> from a label with a colon, in a loop
-// that never ends once a '>' comes before the next '<'.
+// that never ends once a '>' comes before the next '<' or, in RDKit 2025.03,
+// none comes after it (the label grows until memory runs out). It then reads
+// the drawn characters' rects at the colon's place in the stripped label and
+// after it, checking the first against one more than their number and the
+// second against the label's length, markup included, so a colon that is the
+// last character drawn reads past the end when markup follows it.
 void check_colon_markup(const std::string &label, const char *what) {
   if (label.find(':') == std::string::npos) {
     return;
@@ -233,18 +238,40 @@ void check_colon_markup(const std::string &label, const char *what) {
   while (true) {
     const auto lt = tmp.find('<');
     if (lt == std::string::npos) {
-      return;
+      break;
     }
     const auto gt = tmp.find('>');
-    if (gt == std::string::npos) {
-      return;
-    }
-    if (gt < lt) {
+    if (gt == std::string::npos || gt < lt) {
       refuse(std::string(what) +
-             " has a colon and a '>' before a '<', which RDKit's label "
-             "layout loops on forever");
+             " has a colon and a '<' without a '>' after it, which RDKit's "
+             "label layout loops on forever");
     }
     tmp = tmp.substr(0, lt) + tmp.substr(gt + 1);
+  }
+  const auto colon = tmp.find(':');
+  if (colon == std::string::npos) {
+    return;
+  }
+  // The characters getStringRects draws: a <lit> label's text, or the
+  // label's, without the sub- and superscript markup.
+  std::string drawn = label;
+  if (label.compare(0, 5, "<lit>") == 0) {
+    drawn = label.substr(5);
+    drawn = drawn.substr(0, drawn.find("</lit>"));
+  }
+  std::size_t rects = 0;
+  auto mode = TextMode::Normal;
+  for (std::size_t i = 0; i < drawn.size(); ++i) {
+    if (drawn[i] == '<' && read_markup(drawn, i, mode)) {
+      continue;
+    }
+    ++rects;
+  }
+  if (colon >= rects || (colon < label.size() - 1 && colon + 1 >= rects)) {
+    refuse(std::string(what) +
+           " has a colon that is its last character drawn, with markup "
+           "after it, where RDKit 2025.03's label layout reads past the end "
+           "of the characters' rects");
   }
 }
 

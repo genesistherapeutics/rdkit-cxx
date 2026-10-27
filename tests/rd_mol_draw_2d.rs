@@ -388,7 +388,15 @@ fn atom_labels_and_notes() {
     };
     d.set_draw_options(&opts).unwrap();
     d.draw_molecule(&m).unwrap();
-    for label in BAD_MARKUP.into_iter().chain(["a:b>c<d"]) {
+    // RDKit 2025.03 reads past the rects of a label whose last character is
+    // a colon with markup after it, as a label in <lit> always has (Python
+    // crashes on "C:").
+    for label in ["C:N", "C<sub>2</sub>:N"] {
+        opts.atom_labels = BTreeMap::from([(0, label.to_string())]);
+        d.set_draw_options(&opts).unwrap();
+        d.draw_molecule(&m).unwrap();
+    }
+    for label in BAD_MARKUP.into_iter().chain(["a:b>c<d", "C:", ":"]) {
         opts.atom_labels = BTreeMap::from([(0, label.to_string())]);
         d.set_draw_options(&opts).unwrap();
         assert_value_error(d.draw_molecule(&m));
