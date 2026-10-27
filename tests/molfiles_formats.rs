@@ -549,6 +549,20 @@ fn marvin_cml_xyz_pdb() {
             .contains("<molecule id=\"m-1\"")
     );
     mol_to_cml_file(&smiles("CO"), common::temp_path("m.cml")).unwrap();
+    // RDKit 2025.03 writes a tetrahedral atom's parity from its first four
+    // neighbors, reading past the end of fewer.
+    let chiral = smiles("C[C@H](F)Cl");
+    assert!(is_value(mol_to_cml_block(&chiral)));
+    assert!(is_value(mol_to_cml_file(
+        &chiral,
+        common::temp_path("chiral.cml")
+    )));
+    let with_hs = add_hs(&chiral).unwrap();
+    assert!(
+        mol_to_cml_block(&with_hs)
+            .unwrap()
+            .contains("<atomParity atomRefs4=\"a0 a2 a3 a7\">1</atomParity>")
+    );
 
     let mol = methanol_3d();
     let xyz = mol_to_xyz_block_with_params(
