@@ -114,9 +114,8 @@ use rdkit_cxx::chem::{
     fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
     mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cx_smiles_with_params, mol_to_mol_block,
-    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
-    molzip_fragments_with_params, pattern_fingerprint,
+    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
+    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
 };
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{

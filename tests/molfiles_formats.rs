@@ -10,7 +10,9 @@
 mod common;
 
 use rdkit_cxx::Error;
-use rdkit_cxx::chem::rd_chem_draw::{CDXFormat, mol_to_chem_draw_block, mol_to_chem_draw_block_format};
+use rdkit_cxx::chem::rd_chem_draw::{
+    CDXFormat, mol_to_chem_draw_block, mol_to_chem_draw_block_format,
+};
 use rdkit_cxx::chem::*;
 use rdkit_cxx::geometry::Point3D;
 

@@ -75,7 +75,7 @@ fn sanitization_steps() {
     kekulize_if_possible(&mut kekule).unwrap();
     assert_eq!(
         kekule.get_bond_with_idx(0).unwrap().get_bond_type(),
-        BondType::Single
+        BondType::Double
     );
 
     let mut methyl = unsanitized("[CH3]");

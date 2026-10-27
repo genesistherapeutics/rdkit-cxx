@@ -309,7 +309,9 @@ fn owned_bonds() {
     query.set_bond_type(BondType::Double);
     assert_eq!(query.get_bond_type(), BondType::Double);
     assert!(query.set_stereo_atoms(0, 1).is_err());
-    assert!(matches!(query.get_smarts(), Err(Error::Value { .. })));
+    // RDKit 2025.03 throws a bare C string for a query it cannot write, a
+    // RuntimeError in Python.
+    assert!(matches!(query.get_smarts(), Err(Error::Runtime { .. })));
     let mut m = RWMol::from(mol());
     m.get_bond_with_idx_mut(0)
         .unwrap()

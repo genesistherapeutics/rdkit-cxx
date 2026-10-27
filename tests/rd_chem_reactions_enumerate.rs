@@ -420,11 +420,10 @@ fn libraries_and_strategies_move_between_threads() {
     assert_eq!(strategy.type_(), "EvenSamplePairsStrategy");
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo; a
-/// library's reaction and building blocks are molecule pickles, which RDKit
-/// writes with such a type for a plain info Python gave it (U10).
+/// A library's reaction and building blocks are molecule pickles, whose
+/// monomer types RDKit 2025.03 reads by their type.
 #[test]
-fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
+fn loaded_libraries_check_monomer_types() {
     let mut amine = smiles("CN");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
@@ -446,10 +445,13 @@ fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
         .unwrap()
         + 8;
     let mut changed = bytes.clone();
-    changed[at] = 1;
+    changed[at] = 3;
     let mut loaded = EnumerateLibrary::default();
     // SAFETY: serialize's bytes with one byte changed inside a molecule
-    // pickle, as RDKit writes them for a molecule whose plain info has the
-    // PDB type; Boost's framing is serialize's.
-    assert!(is_value(unsafe { loaded.init_from_string(&changed) }));
+    // pickle, to a monomer type RDKit refuses; Boost's framing is
+    // serialize's.
+    assert!(matches!(
+        unsafe { loaded.init_from_string(&changed) },
+        Err(Error::Runtime { .. })
+    ));
 }

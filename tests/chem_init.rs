@@ -122,7 +122,10 @@ fn suppliers_from_filenames() -> Result<()> {
     let mols: Vec<_> = suppl.mols().collect::<Result<_>>()?;
     let smiles: Vec<String> = mols.iter().map(mol_to_smiles).collect::<Result<_>>()?;
     assert_eq!(smiles, ["CCO", "c1ccccc1"]);
-    let names: Vec<String> = mols.iter().map(|m| m.get_prop("_Name")).collect::<Result<_>>()?;
+    let names: Vec<String> = mols
+        .iter()
+        .map(|m| m.get_prop("_Name"))
+        .collect::<Result<_>>()?;
     assert_eq!(names, ["ethanol", "benzene"]);
 
     let sdf = common::temp_path("supplier.SDF");

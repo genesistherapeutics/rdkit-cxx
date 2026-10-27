@@ -481,9 +481,23 @@ void check_mae(const RWMol &mol, const RDKit::STR_VECT &props) {
   }
 }
 
+// RDKit 2025.03's shared_ptr constructor checks the stream after moving it
+// away, so it always fails its "null stream" precondition. Python's wrapper
+// sets the protected stream itself (LocalMaeWriter), as this does; it starts
+// from the raw-pointer constructor, which owns (and here soon deletes) a
+// second ostream on the same buffer, since the default constructor is inline
+// and needs maeparser's Writer, whose header RDKit does not install.
+class SharedStreamMaeWriter : public RDKit::MaeWriter {
+ public:
+  explicit SharedStreamMaeWriter(std::shared_ptr<std::ostream> stream)
+      : RDKit::MaeWriter(new std::ostream(stream->rdbuf())) {
+    dp_ostream = std::move(stream);
+  }
+};
+
 std::unique_ptr<MaeWriter> make_mae_writer(WriterOutput out) {
   auto w = std::make_unique<MaeWriter>();
-  w->writer = std::make_unique<RDKit::MaeWriter>(out.stream);
+  w->writer = std::make_unique<SharedStreamMaeWriter>(out.stream);
   w->out = std::move(out);
   return w;
 }
