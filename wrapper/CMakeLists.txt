@@ -235,11 +235,10 @@ target_include_directories(rdkitcxx PRIVATE
   # (compat/GraphMol/GaussianShape).
   compat
   # RDKit's own copies, from the release found (vendor/<release>), of
-  # headers its packages do not install. conda-forge's librdkit-dev 2026.03
+  # headers its packages do not install. conda-forge's librdkit-dev 2025.03
   # installs none of ML/InfoTheory's headers (RDKit::InfoTheory's); an
-  # install that has them finds its own first, earlier on the path. Nor does
-  # it install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
-  # SynthonSpace.h and Synthon.h include. GraphMol/MolDraw2D holds the
+  # install that has them finds its own first, earlier on the path.
+  # GraphMol/MolDraw2D holds the
   # drawing code's internal headers (DrawText.h, DrawMol.h, and those they
   # include, and MolDraw2DDetails.h), which no package installs
   # (draw_drawer.cpp).
