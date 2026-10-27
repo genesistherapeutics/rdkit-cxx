@@ -1222,3 +1222,35 @@ M  END
         "C1=CCC=C1.[*]->[Fe+].[CH2-]CCCC"
     );
 }
+
+// A normalizations file that yields no transformations: RDKit takes empty
+// normalization data to mean "read the file", so it would read the file the
+// wrapper checked again. The calls that hand RDKit the parameters refuse
+// it; a normalizer made from the file itself keeps its empty catalog.
+#[test]
+fn normalizations_files_without_transformations() {
+    let path = std::env::temp_dir().join(format!(
+        "rdkit-cxx-no-normalizations-{}.txt",
+        std::process::id()
+    ));
+    std::fs::write(&path, "// only a comment\n\n").unwrap();
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    assert!(matches!(
+        normalizer_from_params(&params),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        normalize_with_params(&mol("C[N+](=O)[O-]"), &params),
+        Err(Error::Value { .. })
+    ));
+    assert!(matches!(
+        cleanup_with_params(&mol("CC"), &params),
+        Err(Error::Value { .. })
+    ));
+    let normalizer = Normalizer::new(&path, 10).unwrap();
+    assert_eq!(smiles(&normalizer.normalize(&mol("CC")).unwrap()), "CC");
+    std::fs::remove_file(&path).unwrap();
+}

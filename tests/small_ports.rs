@@ -5,7 +5,7 @@
 
 // The small Python modules: MolStandardize's ReorderTautomers,
 // ChemicalFeatures, Graphs, and FilterCatalog. Values from Python's modules
-// in RDKit 2026.03.6.
+// in RDKit 2025.09.6.
 
 use rdkit_cxx::chem::chemical_features::{
     GetMolFeatureParams, build_feature_factory_from_string, mcff_get_features_for_mol,

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Pharm2D in RDKit 2026.03.6, and the tests
+// Values from Python's rdkit.Chem.Pharm2D in RDKit 2025.09.6, and the tests
 // of UnitTestGenerate.py, UnitTestGobbi.py, UnitTestMatcher.py,
 // UnitTestSignature.py, and UnitTestUtils.py with the doctests.
 

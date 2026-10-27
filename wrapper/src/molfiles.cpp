@@ -967,8 +967,10 @@ std::optional<unsigned> mol2_unsigned(const std::string &token) {
 // the lines MolFromMol2DataStream reads, as it does: the counts line after
 // the first MOLECULE header's name, and the bond block of nBonds lines after
 // a BOND header (each header the first molecule has, as RDKit reads the
-// last), and throws ValueErrorException for an atom number outside 1 to the
-// atom count. Text RDKit refuses itself passes.
+// last; or the start of the data, where RDKit seeks without one, its
+// bondStart left 0), and throws ValueErrorException for an atom number
+// outside 1 to the atom count, as rdkit-2024.03's does. Text RDKit refuses
+// itself passes.
 void check_mol2_bonds(const std::string &text) {
   std::vector<std::string> lines;
   boost::split(lines, text, boost::is_any_of("\n"));
@@ -999,6 +1001,9 @@ void check_mol2_bonds(const std::string &text) {
   }
   if (mol + 1 >= lines.size()) {
     return;
+  }
+  if (bond_blocks.empty()) {
+    bond_blocks.push_back(0);
   }
   auto counts = mol2_tokens(lines[mol + 1]);
   if (counts.empty()) {

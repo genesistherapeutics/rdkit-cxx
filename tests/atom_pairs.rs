@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.AtomPairs in RDKit 2026.03.6, and the
+// Values from Python's rdkit.Chem.AtomPairs in RDKit 2025.09.6, and the
 // doctests of its modules (UnitTestDescriptors.py's regressions test
 // rdMolDescriptors' deprecated fingerprints, which are not ported).
 

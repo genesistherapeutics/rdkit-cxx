@@ -762,6 +762,15 @@ fn mol2_bond_atoms_in_range() {
         assert!(is_value(mol_from_mol2_file(&path)), "{atom}");
         std::fs::remove_file(&path).unwrap();
     }
+    // Without a BOND header RDKit 2025.09 reads the bond lines from the start
+    // of the data (valgrind: invalid reads, for this block's first line).
+    let headless = format!(
+        "# 1 99 1\n{}",
+        MOL2_ETHANOL
+            .replace("END", "3")
+            .replace("@<TRIPOS>BOND\n", "")
+    );
+    assert!(is_value(mol_from_mol2_block(&headless)));
 }
 
 /// A V3000 block for `CO` with a superatom SGroup over the O whose line ends
@@ -918,6 +927,43 @@ fn sgroup_fields_across_chunks() {
     let mut suppl = ForwardSDMolSupplier::new(&path).unwrap();
     assert!(suppl.mols().any(|r| matches!(r, Err(Error::Value { .. }))));
     std::fs::remove_file(&path).unwrap();
+}
+
+/// A reader that cannot seek and hands out at most 4093 bytes a read, as a
+/// decompressing reader may.
+struct Trickle(std::io::Cursor<Vec<u8>>);
+
+impl std::io::Read for Trickle {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = buf.len().min(4093);
+        self.0.read(&mut buf[..n])
+    }
+}
+
+// The scanner holds back a CTAB line until it ends, reading the next chunk
+// ahead into its own store, so a source that cannot seek back gives every
+// byte once: a field straddling the 64 KiB boundary reads as from a file.
+#[test]
+fn sgroup_fields_across_chunks_of_unseekable_readers() {
+    let read = |text: String| {
+        let reader = Trickle(std::io::Cursor::new(text.into_bytes()));
+        let mut suppl = ForwardSDMolSupplier::from_fileobj(reader).unwrap();
+        suppl.mols().collect::<Vec<_>>()
+    };
+    for before in [1, 2, 4, 8, 11, 13] {
+        let mols = read(straddling_sd_file("SAP=(3 2 1 1)", before));
+        assert_eq!(mols.len(), 2, "{before}");
+        let second = mols[1].as_ref().unwrap();
+        assert_eq!(attach_points(second), [(1, 0, "1".to_string())], "{before}");
+        let results = read(straddling_sd_file("COMPNO=", before));
+        assert!(results[0].is_ok(), "{before}");
+        assert!(
+            results
+                .iter()
+                .any(|r| matches!(r, Err(Error::Value { .. }))),
+            "{before}"
+        );
+    }
 }
 
 #[test]

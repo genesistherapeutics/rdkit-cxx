@@ -389,9 +389,14 @@ fn assign_symmetry_classes(bd_mat: &[Vec<f64>], num_atoms: usize, cutoff: i32) -
         .iter()
         .map(|row| {
             let mut sorted = row.clone();
-            // NaN sorts last. RDKit 2025.09's Python sorts each row as a
-            // list, in which NaN compares false with everything, so for a
-            // given matrix with NaN its order follows the sort's steps.
+            // NaN sorts last, as RDKit 2026.03's numpy.sort puts it. RDKit
+            // 2025.09's Python sorts each row as a list, in which NaN
+            // compares false with everything, so a row with NaN keeps
+            // whatever order CPython's list sort leaves it in, and its
+            // classes can differ (CC(C)O's Balaban matrix with two NaN
+            // pairs: BertzCT 12.754887502163468 there, 10.754887502163468
+            // here). Only a supplied matrix holds NaN; this does not
+            // reproduce that sort.
             sorted.sort_by(|a, b| match (a.is_nan(), b.is_nan()) {
                 (false, false) => a.partial_cmp(b).expect("neither is NaN"),
                 (a_nan, b_nan) => a_nan.cmp(&b_nan),

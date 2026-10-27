@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports the doctests of Python's Chem.FindMolChiralCenters, with values from
-// RDKit 2026.03.6. The file holds one test, so the one call that turns legacy
+// RDKit 2025.09.6. The file holds one test, so the one call that turns legacy
 // stereo perception off runs with no other thread reading the environment.
 
 use rdkit_cxx::Error;
@@ -27,7 +27,7 @@ fn expected(codes: &[(u32, &str)]) -> Vec<(u32, String)> {
 
 #[test]
 fn find_mol_chiral_centers_matches_python() {
-    // RDKit 2026.03 perceives stereo with its legacy code by default.
+    // RDKit 2025.09 perceives stereo with its legacy code by default.
     assert!(get_use_legacy_stereo_perception());
 
     let mut mol = mol_from_smiles("[C@H](Cl)(F)Br").unwrap();

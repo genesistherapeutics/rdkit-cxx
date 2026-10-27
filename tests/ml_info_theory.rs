@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports the BitClusterer test of rdkit/ML/InfoTheory/UnitTestCorrMatGen.py,
-// with values from Python's rdkit.ML.InfoTheory modules in RDKit 2026.03.6.
+// with values from Python's rdkit.ML.InfoTheory modules in RDKit 2025.09.6.
 // Gains come from RDKit's C++ `InfoGain`, whose rounding differs across
 // platforms (arm64's build differs in the last bits), so they are compared
 // to within rounding.

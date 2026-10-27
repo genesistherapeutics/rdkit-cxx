@@ -6,7 +6,7 @@
 // Ports rdkit/DataStructs/UnitTestBitEnsemble.py (but its database tests),
 // UnitTestDocTests.py (with the doctests of BitUtils, LazySignature, and
 // VectCollection), UnitTestFlatMatrix.py, and UnitTestTopNContainer.py,
-// with values from Python's rdkit.DataStructs in RDKit 2026.03.6.
+// with values from Python's rdkit.DataStructs in RDKit 2025.09.6.
 
 use std::cell::Cell;
 

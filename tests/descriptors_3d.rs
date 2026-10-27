@@ -3,10 +3,12 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Ports testGet3DMolDescriptors of RDKit's rdkit/Chem/UnitTestDescriptors.py,
-// with its reference file tests/data/descriptors_multiconf.sdf
-// (rdkit/Chem/test_data), and pins values from Python's
-// rdkit.Chem.Descriptors3D in RDKit 2026.03.6.
+// Ports testGet3DMolDescriptors of RDKit 2026.03.6's
+// rdkit/Chem/UnitTestDescriptors.py, with its reference file
+// tests/data/descriptors_multiconf.sdf (rdkit/Chem/test_data), which RDKit
+// 2025.09.6's version, embedding its conformers, lacks; and pins values
+// from Python's rdkit.Chem.Descriptors3D in RDKit 2025.09.6, the same as
+// 2026.03.6's.
 
 use std::collections::BTreeMap;
 
