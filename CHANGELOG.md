@@ -171,7 +171,12 @@ A program built against one release stops when it loads with another.
     for which RDKit 2025.09 throws partway through a layout.
   - RDKit 2025.09's embedder, CIP labeler, `DetermineBondOrders`, and
     synthon search leave RDKit's `SIGINT` handler installed; the wrappers
-    restore the process's after each call.
+    restore the process's after each call. The synthon search clears
+    RDKit's Ctrl-C flag around each call, since a `SIGINT` during one search
+    left it set and cut the next fingerprint build short, after which a
+    fingerprint search dereferenced the missing fingerprints. A fingerprint
+    search builds a space's fingerprints first, and refuses a space whose
+    fingerprints are incomplete (`Error::Value`).
 
 ### Bindings
 
