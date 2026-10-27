@@ -96,7 +96,7 @@ std::uint64_t siphash(const std::uint64_t key[2], const char *data,
 // leaves its variable as it was, uninitialized for the group's sequence and
 // external ids, a CSTATE's count and bond, a COMPNO, and an array's first
 // value, and a SAP field read that way pops the last character of an empty
-// string. RDKit 2025.09 checks them (rdkit/rdkit#9417). These read a group's
+// string. RDKit 2026.03.5 checks them (rdkit/rdkit#9417). These read a group's
 // line as RDKit does, field by field, and say whether RDKit would read such
 // a value. Where RDKit would stop reading the line (a check that throws, or
 // a lookup of an atom or bond that may), they read on, so they check at

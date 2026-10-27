@@ -154,8 +154,8 @@ constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
 // RDKit 2024.09's RWMol::removeBond and batchRemoveBonds leave the stereo
-// groups that hold the bond pointing at it, deleted (RDKit 2025.09 takes it
-// out of them, rdkit/rdkit#8558), for copying, pickling, and the writers to
+// groups that hold the bond pointing at it, deleted (RDKit 2025.03.3 takes
+// it out of them, rdkit/rdkit#8558), for copying, pickling, and the writers to
 // read. An atom's removal removes its bonds so, and then drops every group
 // left with no atoms, bonds or not. So a group's bond dangles after a removal
 // when the group keeps an atom. RDKit 2024.09's groups may also list an
@@ -271,7 +271,7 @@ class StereoGroupBondGuard {
 void check_proximity_hydrogens(const RDKit::ROMol &mol, bool without_bonds);
 
 // For the wrappers' own removals from a molecule (RWMol's removeAtom,
-// removeBond, and commitBatchEdit), as RDKit 2025.09 makes them: takes the
+// removeBond, and commitBatchEdit), as RDKit 2025.03.3 makes them: takes the
 // molecule's stereo groups out when it is made, so none is left pointing at
 // an atom or bond RDKit deletes, and when it is destroyed, even when the
 // call throws, rebuilds each group from its atoms and bonds still in the

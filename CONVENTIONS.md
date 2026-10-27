@@ -425,7 +425,7 @@ its Boost.Python modules and its `.py` modules.
   may list an atom twice, which an atom's removal takes out once. RWMol's
   own removals from Rust run under a `StereoGroupRemovalGuard`, which
   rebuilds the groups from the atoms and bonds still in the molecule, as
-  RDKit 2025.09 leaves them, and `check_removals` refuses, for RDKit's own
+  RDKit 2025.03.3 leaves them, and `check_removals` refuses, for RDKit's own
   removals, a molecule whose groups they would leave dangling, by what they
   remove (`Removes`).
 

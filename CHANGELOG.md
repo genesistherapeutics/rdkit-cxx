@@ -89,7 +89,7 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - Stereo groups (RDKit #8558): RDKit 2024.09's bond removals leave a
     group that holds the bond pointing at it, and its groups may list an
     atom twice, which a removal takes out once. `RWMol`'s removals take the
-    bond out of the groups, as RDKit 2025.09 does; RDKit's own removals
+    bond out of the groups, as RDKit 2025.03.3 does; RDKit's own removals
     (the SMILES writer for several fragments, `get_mol_frags_as_mols`,
     `remove_hs`, the transforms, the standardizer, and the rest) refuse a
     molecule whose groups they would leave dangling (`Error::Value`), or

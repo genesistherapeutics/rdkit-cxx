@@ -5,7 +5,7 @@
 
 // RDKit 2024.09's bond removals leave the stereo groups that hold the bond
 // pointing at it, deleted (rdkit/rdkit#8558). RWMol's own removals take the
-// bond out of the groups, as RDKit 2025.09 does, and RDKit's other removals
+// bond out of the groups, as RDKit 2025.03.3 does, and RDKit's other removals
 // refuse a molecule whose groups they would leave so.
 
 use rdkit_cxx::Error;

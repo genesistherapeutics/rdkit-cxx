@@ -458,8 +458,9 @@ fn substance_group_checks() {
     .remove(0);
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
-    // RDKit 2024.09 leaves a missing lvIdx unset; the wrapper gives it -1,
-    // as later releases do, and 4294967295 reads as -1 in AttachPoint's int.
+    // RDKit 2024.09 leaves a missing lvIdx unset, as later releases do; the
+    // wrapper gives it -1, the value RDKit's writer leaves out, and
+    // 4294967295 reads as -1 in AttachPoint's int.
     let points = group.get_attach_points().unwrap();
     assert_eq!((points[0].lv_idx, points[1].lv_idx), (-1, -1));
     // RDKit reads lvIdx with GetUint, so a negative one is refused.

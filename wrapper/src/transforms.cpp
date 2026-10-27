@@ -107,7 +107,7 @@ std::vector<unsigned> check_fragment_args(
     indices.push_back(idx);
   }
   // RDKit 2024.09's fragmentOnBonds finds every bond before it removes any,
-  // and reads a repeated one after removing it; RDKit 2025.09 refuses them
+  // and reads a repeated one after removing it; RDKit 2026.03.5 refuses them
   // (rdkit/rdkit#9430).
   std::vector<unsigned> sorted(indices);
   std::sort(sorted.begin(), sorted.end());
