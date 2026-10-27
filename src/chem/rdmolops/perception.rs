@@ -6,9 +6,9 @@
 //! Ring finding, aromaticity, cleanup, and the other perception steps.
 
 use crate::Result;
+use crate::chem::Mol;
 use crate::chem::rdchem::AsAtom;
 use crate::chem::rdchem::enums::rdkit_enum;
-use crate::chem::{Mol, rdmolops::KekulizeParams};
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::perception::ffi;
 
@@ -23,49 +23,40 @@ rdkit_enum! {
     }
 }
 
-/// Parameters for `get_sssr_with_params`, with Python's defaults (A2).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct GetSSSRParams {
-    /// Uses dative bonds in ring finding.
-    pub include_dative_bonds: bool,
-}
-
 /// The smallest set of smallest rings, as atom indices; also stores them in
 /// the molecule's ring info. Mirrors `rdmolops.GetSSSR`.
 pub fn get_sssr(mol: &mut Mol) -> Result<Vec<Vec<u32>>> {
-    get_sssr_with_params(mol, &GetSSSRParams::default())
+    get_sssr_with_include_dative_bonds(mol, false)
 }
 
-/// Mirrors `rdmolops.GetSSSR(mol, includeDativeBonds)`.
-pub fn get_sssr_with_params(mol: &mut Mol, params: &GetSSSRParams) -> Result<Vec<Vec<u32>>> {
+/// Mirrors `rdmolops.GetSSSR(mol, includeDativeBonds)`: also uses dative
+/// bonds in ring finding.
+pub fn get_sssr_with_include_dative_bonds(
+    mol: &mut Mol,
+    include_dative_bonds: bool,
+) -> Result<Vec<Vec<u32>>> {
     Ok(IndexList::into_nested(ffi::get_sssr(
         mol.pin_mut(),
-        params.include_dative_bonds,
+        include_dative_bonds,
     )?))
-}
-
-/// Parameters for `get_symm_sssr_with_params`, with Python's defaults (A2).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct GetSymmSSSRParams {
-    /// Uses dative bonds in ring finding.
-    pub include_dative_bonds: bool,
 }
 
 /// The symmetrized SSSR, as atom indices: the SSSR plus the rings that make
 /// it symmetric, as for cubane's sixth ring. Also stores them in the ring
 /// info. Mirrors `rdmolops.GetSymmSSSR`.
 pub fn get_symm_sssr(mol: &mut Mol) -> Result<Vec<Vec<u32>>> {
-    get_symm_sssr_with_params(mol, &GetSymmSSSRParams::default())
+    get_symm_sssr_with_include_dative_bonds(mol, false)
 }
 
-/// Mirrors `rdmolops.GetSymmSSSR(mol, includeDativeBonds)`.
-pub fn get_symm_sssr_with_params(
+/// Mirrors `rdmolops.GetSymmSSSR(mol, includeDativeBonds)`: also uses
+/// dative bonds in ring finding.
+pub fn get_symm_sssr_with_include_dative_bonds(
     mol: &mut Mol,
-    params: &GetSymmSSSRParams,
+    include_dative_bonds: bool,
 ) -> Result<Vec<Vec<u32>>> {
     Ok(IndexList::into_nested(ffi::get_symm_sssr(
         mol.pin_mut(),
-        params.include_dative_bonds,
+        include_dative_bonds,
     )?))
 }
 
@@ -135,24 +126,22 @@ pub fn assign_radicals(mol: &mut Mol) -> Result<()> {
     Ok(ffi::assign_radicals(mol.pin_mut())?)
 }
 
-/// Parameters for `kekulize_if_possible_with_params`, with Python's defaults
-/// (A2): the same as `kekulize_with_params`'s.
-pub type KekulizeIfPossibleParams = KekulizeParams;
-
 /// Kekulizes the molecule, leaving it as it was if that fails. Mirrors
 /// `rdmolops.KekulizeIfPossible`. `Error::Value` as for `kekulize`.
 pub fn kekulize_if_possible(mol: &mut Mol) -> Result<()> {
-    kekulize_if_possible_with_params(mol, &KekulizeIfPossibleParams::default())
+    kekulize_if_possible_with_clear_aromatic_flags(mol, false)
 }
 
-/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags)`.
-pub fn kekulize_if_possible_with_params(
+/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags)`: also
+/// clears the aromatic flags on atoms and bonds. `Error::Value` as for
+/// `kekulize`.
+pub fn kekulize_if_possible_with_clear_aromatic_flags(
     mol: &mut Mol,
-    params: &KekulizeIfPossibleParams,
+    clear_aromatic_flags: bool,
 ) -> Result<()> {
     Ok(ffi::kekulize_if_possible(
         mol.pin_mut(),
-        params.clear_aromatic_flags,
+        clear_aromatic_flags,
     )?)
 }
 

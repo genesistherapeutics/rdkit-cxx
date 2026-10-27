@@ -6590,11 +6590,11 @@ name_exception = "V3K is one word: reaction_to_v3k_rxn_block"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionsFromCDXMLBlock"
-rust = ["rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block", "rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block_with_params"]
+reason = "not bound: RDKit 2024.03 reads reactions from CDXML with its molecule parser (FileParsers/CDXMLParser.cpp, over Boost.PropertyTree), which reads atoms of fragments it has already freed (a use-after-free under valgrind) and is not audited for the rest of the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionsFromCDXMLFile"
-rust = ["rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file", "rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file_with_params"]
+reason = "not bound: RDKit 2024.03 reads reactions from CDXML with its molecule parser (FileParsers/CDXMLParser.cpp, over Boost.PropertyTree), which reads atoms of fragments it has already freed (a use-after-free under valgrind) and is not audited for the rest of the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReduceProductToSideChains"
@@ -10929,7 +10929,7 @@ rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_name"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerInfo.__init__"
-rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_params"]
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_name"]
 overloads_note = "type PDBRESIDUE, which Python allows, is Error::Value: only AtomPDBResidueInfo has it (U10)"
 
 [[entry]]
@@ -14362,11 +14362,11 @@ rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolsFromCDXML"
-reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+reason = "not bound: RDKit 2024.03 reads molecules from CDXML with its own parser (FileParsers/CDXMLParser.cpp, over Boost.PropertyTree), which reads atoms of fragments it has already freed (a use-after-free under valgrind) and is not audited for the rest of the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolsFromCDXMLFile"
-reason = "not bound: with ChemDraw support, RDKit reads CDXML and CDX through the ChemDraw SDK (External/ChemDraw, about 40,000 lines parsing untrusted XML and binary input), which this binding has not audited for the input it trusts (U1)"
+reason = "not bound: RDKit 2024.03 reads molecules from CDXML with its own parser (FileParsers/CDXMLParser.cpp, over Boost.PropertyTree), which reads atoms of fragments it has already freed (a use-after-free under valgrind) and is not audited for the rest of the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolsFromPNGFile"
@@ -15378,7 +15378,7 @@ rust = ["rdkit_cxx::chem::rdmolops::get_most_substituted_core_match"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetSSSR"
-rust = ["rdkit_cxx::chem::rdmolops::get_sssr", "rdkit_cxx::chem::rdmolops::get_sssr_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::get_sssr", "rdkit_cxx::chem::rdmolops::get_sssr_with_include_dative_bonds"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetShortestPath"
@@ -15386,7 +15386,7 @@ rust = ["rdkit_cxx::chem::rdmolops::get_shortest_path"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetSymmSSSR"
-rust = ["rdkit_cxx::chem::rdmolops::get_symm_sssr", "rdkit_cxx::chem::rdmolops::get_symm_sssr_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::get_symm_sssr", "rdkit_cxx::chem::rdmolops::get_symm_sssr_with_include_dative_bonds"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetUseLegacyStereoPerception"
@@ -15402,11 +15402,11 @@ rust = ["rdkit_cxx::chem::rdmolops::has_query_hs"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.Kekulize"
-rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_clear_aromatic_flags"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.KekulizeIfPossible"
-rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_clear_aromatic_flags"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.LayeredFingerprint"
@@ -15499,7 +15499,7 @@ rust = ["rdkit_cxx::chem::rdmolops::rdk_fingerprint", "rdkit_cxx::chem::rdmolops
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.ReapplyMolBlockWedging"
-rust = ["rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging", "rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging", "rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_all_bond_types"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.RemoveAllHs"

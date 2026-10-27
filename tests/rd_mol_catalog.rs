@@ -233,12 +233,9 @@ fn bits_without_entries() {
 /// OTHER, and the offset of the type, which RDKit 2024.03 writes as a u32.
 fn monomer_entry_pickle() -> (Vec<u8>, usize) {
     let mut mol = mol_from_smiles("C").unwrap();
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut entry = MolCatalogEntry::default();
     entry.set_mol(&mol);
     let pickle = entry.serialize().unwrap();
