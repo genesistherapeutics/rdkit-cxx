@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/ML/Descriptors/UnitTestMolDescriptors.py, and pins
-// values from Python's MolecularDescriptorCalculator in RDKit 2026.03.6.
+// values from Python's MolecularDescriptorCalculator in RDKit 2024.03.6.
 // Also tests the ports of rdkit.Chem.ReducedGraphs and
 // rdkit.Chem.ChemUtils.DescriptorUtilities.
 
@@ -79,8 +79,8 @@ fn matches_python() {
             "Number of Hydrogen Bond Donors",
             "Number of N functional groups attached to aromatics",
             "N/A",
-            "CalcFractionCSP3( (rdkit.Chem.rdchem.Mol)mol) -> float : returns the fraction of C \
-             atoms that are SP3 hybridized",
+            "CalcFractionCSP3( (Mol)mol) -> float : returns the fraction of C atoms that are SP3 \
+             hybridized",
         ]
     );
     let values = calc.calc_descriptors(&mol_from_smiles("CCC(=O)O").unwrap());
@@ -124,7 +124,7 @@ fn every_descriptor() {
     let names: Vec<&str> = desc_list().iter().map(|(name, _)| *name).collect();
     let calc = MolecularDescriptorCalculator::new(&names);
     let values = calc.calc_descriptors(&mol_from_smiles("C").unwrap());
-    assert_eq!(values.len(), 217);
+    assert_eq!(values.len(), 210);
     assert!(values.iter().all(|&v| v != -666.0 && v != 777.0));
     // Python's fragment counts, lambdas, have no version.
     let versions = calc.get_descriptor_versions();

@@ -1247,7 +1247,7 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::pharm_2d::utils::get_possible_scaffolds_with_use_triangle_inequality as _;
     use rdkit_cxx::chem::pharm_2d::utils::get_triangles as _;
     use rdkit_cxx::chem::pharm_2d::utils::get_unique_combinations as _;
-    use rdkit_cxx::chem::pharm_2d::utils::get_unique_combinations as _;
+    use rdkit_cxx::chem::pharm_2d::utils::get_unique_combinations_new as _;
     use rdkit_cxx::chem::pharm_2d::utils::num_combinations as _;
     use rdkit_cxx::chem::pharm_2d::utils::order_triangle as _;
     use rdkit_cxx::chem::pharm_2d::utils::scaffold_passes as _;

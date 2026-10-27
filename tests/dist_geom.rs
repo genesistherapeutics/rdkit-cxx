@@ -385,7 +385,14 @@ fn embedding_inputs_rdkit_trusts() {
     ));
 
     // The minimizers work in four dimensions, past 65535 coordinates here.
-    let mut big = mol_from_smiles(&"C".repeat(16384)).unwrap();
+    // Unsanitized: RDKit 2024.03's legacy stereo perception ranks a long
+    // chain's atoms in quadratic time.
+    let unsanitized = SmilesParserParams {
+        sanitize: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut big = mol_from_smiles_with_params(&"C".repeat(16384), &unsanitized).unwrap();
     assert!(matches!(embed_molecule(&mut big), Err(Error::Value { .. })));
 }
 

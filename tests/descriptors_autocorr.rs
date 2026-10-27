@@ -17,20 +17,20 @@ use rdkit_cxx::chem::rd_mol_descriptors::calc_autocorr_2d;
 #[test]
 fn autocorr_descriptors() {
     let before: Vec<&str> = desc_list().iter().map(|(name, _)| *name).collect();
-    assert_eq!(before.len(), 217);
+    assert_eq!(before.len(), 210);
     setup_autocorr_descriptors();
     let after: Vec<&str> = desc_list().iter().map(|(name, _)| *name).collect();
     // As in Python: the AUTOCORR2D descriptors, descList, and then the
     // descriptors from GraphDescriptors on a second time.
-    assert_eq!(after.len(), 600);
+    assert_eq!(after.len(), 586);
     assert_eq!(after[0], "AUTOCORR2D_1");
     assert_eq!(after[191], "AUTOCORR2D_192");
-    assert_eq!(after[192..409], before[..]);
-    assert_eq!(after[409], "AvgIpc");
-    assert_eq!(after[409..], before[26..]);
+    assert_eq!(after[192..402], before[..]);
+    assert_eq!(after[402], "AvgIpc");
+    assert_eq!(after[402..], before[26..]);
     let names: BTreeSet<&str> = after.iter().copied().collect();
     assert!(before.iter().all(|name| names.contains(name)));
-    assert_eq!(names.len(), 409);
+    assert_eq!(names.len(), 402);
 
     let m = mol_from_smiles("CCCc1ccccc1").unwrap();
     let results = calc_autocorr_2d(&m).unwrap();
@@ -42,8 +42,8 @@ fn autocorr_descriptors() {
     }
     let descs = calc_mol_descriptors(&m);
     // Python's dictionary keeps each name where it first appears.
-    assert_eq!(descs.len(), 409);
+    assert_eq!(descs.len(), 402);
     let names: Vec<&str> = descs.iter().map(|(name, _)| *name).collect();
-    assert_eq!(names, after[..409]);
+    assert_eq!(names, after[..402]);
     assert_eq!(descs[0], ("AUTOCORR2D_1", Some(results[0])));
 }

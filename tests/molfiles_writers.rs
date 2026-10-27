@@ -353,10 +353,9 @@ fn mae_writer() {
             .unwrap()
             .starts_with("f_m_ct {\n  i_m_ct_stereo_status\n  i_rdkit_n\n  s_m_title\n  :::\n")
     );
-    assert!(matches!(
-        MaeWriter::get_text(&Mol::default()),
-        Err(Error::Value { .. })
-    ));
+    // RDKit 2024.03 logs that a molecule without atoms cannot be exported,
+    // and writes nothing, as Python's GetText returns ''.
+    assert_eq!(MaeWriter::get_text(&Mol::default()).unwrap(), "");
     // Closing without molecules writes nothing.
     let mut out = Vec::new();
     MaeWriter::from_fileobj(&mut out).unwrap().close().unwrap();

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Pharm2D in RDKit 2026.03.6, and the tests
+// Values from Python's rdkit.Chem.Pharm2D in RDKit 2024.03.6, and the tests
 // of UnitTestGenerate.py, UnitTestGobbi.py, UnitTestMatcher.py,
 // UnitTestSignature.py, and UnitTestUtils.py with the doctests.
 
@@ -192,12 +192,61 @@ fn unique_combinations_match_python() {
         [(1, vec![11, 111]), (1, vec![12]), (2, vec![31])]
     );
     assert_eq!(combos[11], [(1, vec![13]), (1, vec![14]), (2, vec![32])]);
+    assert_eq!(
+        combos[2],
+        [(1, vec![11, 111]), (1, vec![13]), (2, vec![31])]
+    );
+    assert_eq!(combos[4], [(1, vec![12]), (1, vec![13]), (2, vec![31])]);
+    assert_eq!(
+        combos[6],
+        [(1, vec![11, 111]), (1, vec![14]), (2, vec![31])]
+    );
     let choices = vec![c(&[&[11], &[12]]), c(&[&[11], &[13]]), c(&[&[11], &[14]])];
     assert_eq!(
-        utils::get_unique_combinations(&choices, &[1, 1, 1])
+        utils::get_unique_combinations(&choices, &[1, 1, 1]).unwrap(),
+        [
+            vec![(1, vec![11]), (1, vec![13]), (1, vec![14])],
+            vec![(1, vec![11]), (1, vec![12]), (1, vec![14])],
+            vec![(1, vec![11]), (1, vec![12]), (1, vec![13])],
+            vec![(1, vec![12]), (1, vec![13]), (1, vec![14])]
+        ]
+    );
+    // In the order found, not sorted (RDKit 2024.03.6's recursion).
+    let choices = vec![c(&[&[3], &[1]]), c(&[&[2], &[0]])];
+    assert_eq!(
+        utils::get_unique_combinations(&choices, &[0, 1]).unwrap(),
+        [
+            vec![(0, vec![3]), (1, vec![2])],
+            vec![(0, vec![3]), (1, vec![0])],
+            vec![(0, vec![1]), (1, vec![2])],
+            vec![(0, vec![1]), (1, vec![0])]
+        ]
+    );
+    let choices = vec![c(&[&[5], &[1]]), c(&[&[5], &[1], &[2]])];
+    assert_eq!(
+        utils::get_unique_combinations(&choices, &[0, 0]).unwrap(),
+        [
+            vec![(0, vec![1]), (0, vec![5])],
+            vec![(0, vec![2]), (0, vec![5])],
+            vec![(0, vec![1]), (0, vec![2])]
+        ]
+    );
+    // No choices give no combinations, and a lone choice keeps its repeats.
+    let none: Vec<Vec<Vec<u32>>> = vec![];
+    assert!(
+        utils::get_unique_combinations(&none, &[])
             .unwrap()
-            .len(),
-        4
+            .is_empty()
+    );
+    let choices = vec![c(&[&[1], &[1]])];
+    assert_eq!(
+        utils::get_unique_combinations(&choices, &[0]).unwrap(),
+        [vec![(0, vec![1])], vec![(0, vec![1])]]
+    );
+    let choices = vec![c(&[&[1], &[1]]), c(&[&[2]])];
+    assert_eq!(
+        utils::get_unique_combinations(&choices, &[0, 1]).unwrap(),
+        [vec![(0, vec![1]), (1, vec![2])]]
     );
     let choices = vec![c(&[&[0], &[4]]), c(&[&[0]])];
     assert_eq!(
@@ -229,6 +278,79 @@ fn unique_combinations_match_python() {
     );
     assert!(matches!(
         utils::get_unique_combinations(&choices, &[0, 1]),
+        Err(Error::Value { .. })
+    ));
+}
+
+#[test]
+fn unique_combinations_new_match_python() {
+    let c = |xs: &[&[u32]]| -> Vec<Vec<u32>> { xs.iter().map(|x| x.to_vec()).collect() };
+    let choices = vec![
+        c(&[&[11, 111], &[12], &[14]]),
+        c(&[&[11, 111], &[12], &[13]]),
+        c(&[&[31], &[32]]),
+    ];
+    let combos = utils::get_unique_combinations_new(&choices, &[1, 1, 2]).unwrap();
+    assert_eq!(combos.len(), 12);
+    assert_eq!(
+        combos[2],
+        [(1, vec![11, 111]), (1, vec![13]), (2, vec![31])]
+    );
+    assert_eq!(
+        combos[4],
+        [(1, vec![11, 111]), (1, vec![14]), (2, vec![31])]
+    );
+    assert_eq!(combos[6], [(1, vec![12]), (1, vec![13]), (2, vec![31])]);
+    let mut recursive = utils::get_unique_combinations(&choices, &[1, 1, 2]).unwrap();
+    recursive.sort();
+    assert_eq!(combos, recursive);
+    let choices = vec![c(&[&[11], &[12]]), c(&[&[11], &[13]]), c(&[&[11], &[14]])];
+    assert_eq!(
+        utils::get_unique_combinations_new(&choices, &[1, 1, 1]).unwrap(),
+        [
+            vec![(1, vec![11]), (1, vec![12]), (1, vec![13])],
+            vec![(1, vec![11]), (1, vec![12]), (1, vec![14])],
+            vec![(1, vec![11]), (1, vec![13]), (1, vec![14])],
+            vec![(1, vec![12]), (1, vec![13]), (1, vec![14])]
+        ]
+    );
+    let choices = vec![c(&[&[3], &[1]]), c(&[&[2], &[0]])];
+    assert_eq!(
+        utils::get_unique_combinations_new(&choices, &[0, 1]).unwrap(),
+        [
+            vec![(0, vec![1]), (1, vec![0])],
+            vec![(0, vec![1]), (1, vec![2])],
+            vec![(0, vec![3]), (1, vec![0])],
+            vec![(0, vec![3]), (1, vec![2])]
+        ]
+    );
+    let choices = vec![c(&[&[5], &[1]]), c(&[&[5], &[1], &[2]])];
+    assert_eq!(
+        utils::get_unique_combinations_new(&choices, &[0, 0]).unwrap(),
+        [
+            vec![(0, vec![1]), (0, vec![2])],
+            vec![(0, vec![1]), (0, vec![5])],
+            vec![(0, vec![2]), (0, vec![5])]
+        ]
+    );
+    let none: Vec<Vec<Vec<u32>>> = vec![];
+    assert_eq!(
+        utils::get_unique_combinations_new(&none, &[]).unwrap(),
+        [vec![]]
+    );
+    let choices = vec![c(&[&[1], &[1]])];
+    assert_eq!(
+        utils::get_unique_combinations_new(&choices, &[0]).unwrap(),
+        [vec![(0, vec![1])]]
+    );
+    let empty: Vec<Vec<Vec<u32>>> = vec![vec![], vec![], vec![]];
+    assert!(
+        utils::get_unique_combinations_new(&empty, &[0, 1, 1])
+            .unwrap()
+            .is_empty()
+    );
+    assert!(matches!(
+        utils::get_unique_combinations_new(&choices, &[0, 1]),
         Err(Error::Value { .. })
     ));
 }
@@ -589,6 +711,49 @@ fn gobbi_matches_python() {
     let mut bit157 = bi[&157].clone();
     bit157.sort();
     assert_eq!(bit157, [vec![vec![0], vec![6]], vec![vec![5], vec![0]]]);
+}
+
+#[test]
+fn bit_info_order_matches_python() {
+    // A bit's matches come in GetUniqueCombinations' order, the order RDKit
+    // 2024.03.6's recursion finds them in, which for features listed out of
+    // atom order is not sorted.
+    let factory = base_factory(false);
+    let bit_info = |smi: &str| {
+        gen_2d_fingerprint_with_outputs(&smiles(smi), &factory, &Default::default())
+            .unwrap()
+            .1
+    };
+    let bi = bit_info("Cc1cc(=O)n2c(cc(=O)n2-c2ccccc2)[nH]1");
+    assert_eq!(
+        bi[&93],
+        [
+            vec![vec![4], vec![9], vec![5, 6, 7, 8, 10]],
+            vec![vec![4], vec![9], vec![1, 2, 3, 5, 6, 17]]
+        ]
+    );
+    assert_eq!(
+        bi[&3],
+        [
+            vec![vec![4], vec![1, 2, 3, 5, 6, 17]],
+            vec![vec![9], vec![5, 6, 7, 8, 10]],
+            vec![vec![10], vec![1, 2, 3, 5, 6, 17]],
+            vec![vec![10], vec![11, 12, 13, 14, 15, 16]],
+            vec![vec![17], vec![5, 6, 7, 8, 10]]
+        ]
+    );
+    let bi = bit_info("c1ccccc1-n1c(=O)cc2[nH]c(C)cc(=O)n21");
+    assert_eq!(
+        bi[&4],
+        [
+            vec![vec![8], vec![0, 1, 2, 3, 4, 5]],
+            vec![vec![8], vec![10, 11, 12, 14, 15, 17]],
+            vec![vec![11], vec![0, 1, 2, 3, 4, 5]],
+            vec![vec![16], vec![6, 7, 9, 10, 17]],
+            vec![vec![16], vec![0, 1, 2, 3, 4, 5]],
+            vec![vec![17], vec![0, 1, 2, 3, 4, 5]]
+        ]
+    );
 }
 
 #[test]

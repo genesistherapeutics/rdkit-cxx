@@ -392,7 +392,15 @@ fn atom_labels_and_notes() {
     };
     d.set_draw_options(&opts).unwrap();
     d.draw_molecule(&m).unwrap();
-    for label in BAD_MARKUP.into_iter().chain(["a:b>c<d"]) {
+    opts.atom_labels = BTreeMap::from([(0, "A:B".to_string())]);
+    d.set_draw_options(&opts).unwrap();
+    d.draw_molecule(&m).unwrap();
+    // A colon RDKit 2024.03's adjustColons would index past the label's
+    // characters by (Python segfaults on these).
+    for label in BAD_MARKUP
+        .into_iter()
+        .chain(["a:b>c<d", "A:", ":", "Ab:", "A</lit>:B"])
+    {
         opts.atom_labels = BTreeMap::from([(0, label.to_string())]);
         d.set_draw_options(&opts).unwrap();
         assert_value_error(d.draw_molecule(&m));

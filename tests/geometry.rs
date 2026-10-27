@@ -42,11 +42,13 @@ fn point3d() {
     let mut n = Point3D::new(3.0, 0.0, 4.0);
     n.normalize().unwrap();
     assert_eq!(n, Point3D::new(0.6, 0.0, 0.8));
+    // RDKit 2024.03 gives NaN for a zero vector, as Python does.
     let mut zero = Point3D::default();
-    assert!(matches!(zero.normalize(), Err(Error::Runtime { .. })));
-    // Python's AngleTo is NaN for a zero vector, too.
-    assert!(zero.angle_to(&p).is_nan());
-    assert!(matches!(p.direction_vector(&p), Err(Error::Runtime { .. })));
+    zero.normalize().unwrap();
+    assert!(zero.x.is_nan() && zero.y.is_nan() && zero.z.is_nan());
+    assert!(Point3D::default().angle_to(&p).is_nan());
+    let dir = p.direction_vector(&p).unwrap();
+    assert!(dir.x.is_nan() && dir.y.is_nan() && dir.z.is_nan());
 }
 
 #[test]
@@ -67,13 +69,14 @@ fn point2d() {
         Point2D::from(Point3D::new(1.0, 2.0, 3.0)),
         Point2D::new(1.0, 2.0)
     );
-    // Point2D's AngleTo normalizes, so a zero vector raises.
-    assert!(matches!(
-        Point2D::default().angle_to(&a),
-        Err(Error::Runtime { .. })
-    ));
+    // RDKit 2024.03 gives NaN for a zero vector, as Python does.
+    assert!(Point2D::default().angle_to(&a).unwrap().is_nan());
+    assert!(Point2D::default().signed_angle_to(&a).unwrap().is_nan());
     let mut zero = Point2D::default();
-    assert!(zero.normalize().is_err());
+    zero.normalize().unwrap();
+    assert!(zero.x.is_nan() && zero.y.is_nan());
+    let dir = a.direction_vector(&a).unwrap();
+    assert!(dir.x.is_nan() && dir.y.is_nan());
 }
 
 #[test]
