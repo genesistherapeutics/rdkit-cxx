@@ -172,7 +172,7 @@ unsigned ring_info_num_ring_families(const RWMol &mol) {
 
 // numRelevantCycles converts RDL_getNofRC's double with rdcast, a
 // static_cast in release builds. RDL returns RDL_INVALID_RC_COUNT (DBL_MAX)
-// for null ring-family data, which RDKit 2026.03 passes it when the families
+// for null ring-family data, which RDKit 2025.09 passes it when the families
 // were never found, and for counts too large to compute; either is out of
 // unsigned int's range. The families are checked as RDKit 2026.09 checks
 // them, and the count before it is converted.

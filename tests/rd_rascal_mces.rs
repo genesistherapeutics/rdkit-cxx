@@ -161,18 +161,21 @@ fn options() {
     assert_eq!(results[0].smarts_string(), "C(-C)-C");
     assert_eq!(results[11].smarts_string(), "CCC");
 
+    // RDKit 2025.09 measures from fragments it has pruned for any
+    // maxFragSeparation but -1.
     let opts = RascalOptions {
         similarity_threshold: 0.1,
         max_frag_separation: 2,
         ..Default::default()
     };
-    let results = find_mces_with_opts(
-        &smiles("c1ccccc1CCCCC(=O)O"),
-        &smiles("c1ccccc1CC(=O)O"),
-        &opts,
-    )
-    .unwrap();
-    assert_eq!(results[0].smarts_string(), "c1:c:c:c:c:c:1-CC");
+    assert!(matches!(
+        find_mces_with_opts(
+            &smiles("c1ccccc1CCCCC(=O)O"),
+            &smiles("c1ccccc1CC(=O)O"),
+            &opts,
+        ),
+        Err(Error::Value { .. })
+    ));
 
     let opts = RascalOptions {
         similarity_threshold: 0.5,
@@ -206,7 +209,7 @@ fn checked_options() {
     let (a, b) = (smiles("c1ccccc1CC(=O)O"), smiles("c1ccccc1CCC(=O)O"));
     let find = |opts: RascalOptions| find_mces_with_opts(&a, &b, &opts);
     // RDKit computes the distance matrices only for -1 and up, and reads
-    // them for anything but -1.
+    // them for anything but -1; only -1 is taken.
     assert!(matches!(
         find(RascalOptions {
             max_frag_separation: -2,

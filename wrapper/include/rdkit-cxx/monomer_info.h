@@ -64,8 +64,7 @@ unsigned pdb_residue_info_get_secondary_structure(
     const AtomPDBResidueInfo &info);
 unsigned pdb_residue_info_get_segment_number(const AtomPDBResidueInfo &info);
 void pdb_residue_info_set_serial_number(AtomPDBResidueInfo &info, int val);
-void pdb_residue_info_set_residue_name(AtomPDBResidueInfo &info,
-                                      rust::Str val);
+void pdb_residue_info_set_residue_name(AtomPDBResidueInfo &info, rust::Str val);
 void pdb_residue_info_set_residue_number(AtomPDBResidueInfo &info, int val);
 void pdb_residue_info_set_chain_id(AtomPDBResidueInfo &info, rust::Str val);
 void pdb_residue_info_set_alt_loc(AtomPDBResidueInfo &info, rust::Str val);

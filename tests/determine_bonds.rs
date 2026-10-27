@@ -503,3 +503,76 @@ fn concurrent_bond_orders() {
         handle.join().unwrap();
     }
 }
+
+#[test]
+fn hydrogens_bonded_to_three_atoms_are_refused() {
+    // RDKit 2025.09 keeps only a hydrogen's closest proximity bond,
+    // removing the others while it iterates over the hydrogen's neighbors,
+    // which reads past them once it has three. Python's bonds for two.
+    let mut mol = mol_from_xyz_block("3\n\nH 0 0 0\nC 1 0 0\nC -1 0 0\n").unwrap();
+    determine_connectivity(&mut mol).unwrap();
+    assert_eq!(bonds(&mol), [(0, 1)]);
+    for xyz in [
+        "4\n\nH 0 0 0\nC 1 0 0\nC -1 0 0\nC 0 1 0\n",
+        "5\n\nH 0 0 0\nC 1 0 0\nC -1 0 0\nC 0 1 0\nC 0 -1 0\n",
+    ] {
+        let mut mol = mol_from_xyz_block(xyz).unwrap();
+        assert!(value(determine_connectivity(&mut mol)), "{xyz}");
+        let mut mol = mol_from_xyz_block(xyz).unwrap();
+        assert!(value(determine_bonds(&mut mol)), "{xyz}");
+        // The van der Waals method is not RDKit's proximity bonding.
+        let mut mol = mol_from_xyz_block(xyz).unwrap();
+        let vdw = DetermineConnectivityParams {
+            use_vdw: true,
+            ..Default::default()
+        };
+        determine_connectivity_with_params(&mut mol, &vdw).unwrap();
+    }
+    // A hydrogen bonded to a hydrogen and two other atoms has one bond to a
+    // hydrogen removed first.
+    let mut mol = mol_from_xyz_block("4\n\nH 0 0 0\nC 1 0 0\nC -1 0 0\nH 0 0.8 0\n").unwrap();
+    determine_connectivity(&mut mol).unwrap();
+
+    // PDB proximity bonding, which ignores hydrogen-hydrogen contacts.
+    let atom = |i: usize, elem: &str, x: f64, y: f64| {
+        format!(
+            "HETATM{i:>5}  {elem:<3} UNL     1    {x:>8.3}{y:>8.3}{:>8.3}  1.00  0.00          {elem:>2}  \n",
+            0.0
+        )
+    };
+    let pdb = |atoms: &[(&str, f64, f64)]| {
+        let mut text: String = atoms
+            .iter()
+            .enumerate()
+            .map(|(i, (e, x, y))| atom(i + 1, e, *x, *y))
+            .collect();
+        text.push_str("END\n");
+        text
+    };
+    let keep_hs = MolFromPDBBlockParams {
+        remove_hs: false,
+        ..Default::default()
+    };
+    let two = pdb(&[("H", 0.0, 0.0), ("C", 1.0, 0.0), ("C", -1.0, 0.0)]);
+    let mol = mol_from_pdb_block_with_params(&two, &keep_hs).unwrap();
+    assert_eq!(bonds(&mol), [(0, 1)]);
+    let three = pdb(&[
+        ("H", 0.0, 0.0),
+        ("C", 1.0, 0.0),
+        ("C", -1.0, 0.0),
+        ("C", 0.0, 1.0),
+    ]);
+    assert!(value(mol_from_pdb_block(&three)));
+    assert!(value(mol_from_pdb_block_with_params(&three, &keep_hs)));
+    let no_proximity = MolFromPDBBlockParams {
+        proximity_bonding: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    assert_eq!(
+        mol_from_pdb_block_with_params(&three, &no_proximity)
+            .unwrap()
+            .get_num_bonds(),
+        0
+    );
+}

@@ -260,6 +260,33 @@ rust::Vec<std::uint32_t> find_atom_environment_of_radius_n(
   return result;
 }
 
+namespace {
+
+// RDKit 2025.09's copyMolSubset (which pathToSubmol calls) clears a bond's
+// stereo atoms when either was left out, but keeps its stereo; a CIS, TRANS,
+// or atropisomer bond without stereo atoms is then read past (MolToSmiles
+// segfaults). RDKit 2026.03 clears the stereo too, or anchors it on the
+// bond's other neighbor. This clears it, as 2025.09 leaves nothing to
+// anchor it on.
+void clear_unanchored_stereo(RDKit::ROMol &mol) {
+  for (auto *bond : mol.bonds()) {
+    switch (bond->getStereo()) {
+      case RDKit::Bond::STEREOCIS:
+      case RDKit::Bond::STEREOTRANS:
+      case RDKit::Bond::STEREOATROPCW:
+      case RDKit::Bond::STEREOATROPCCW:
+        if (bond->getStereoAtoms().size() != 2) {
+          bond->setStereo(RDKit::Bond::STEREONONE);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+}  // namespace
+
 // copyMolSubset skips bond indices past the end, as Python does.
 std::unique_ptr<RWMol> path_to_submol(const RWMol &mol,
                                       rust::Slice<const std::uint32_t> path,
@@ -273,6 +300,7 @@ std::unique_ptr<RWMol> path_to_submol(const RWMol &mol,
   std::map<int, int> mapping;
   std::unique_ptr<RDKit::ROMol> submol(
       RDKit::Subgraphs::pathToSubmol(mol, bonds, use_query, mapping));
+  clear_unanchored_stereo(*submol);
   atom_map.clear();
   for (const auto &[from, to] : mapping) {
     atom_map.push_back(IndexPair{static_cast<std::uint32_t>(from),
@@ -296,13 +324,25 @@ std::unique_ptr<MolList> split_mol_by_pdb_chain_id(
 // As renumberAtomsHelper in Code/GraphMol/Wrap/MolOps.cpp, which rejects a
 // short newOrder and values past the atoms, and (pythonObjectToVect in
 // Code/RDBoost/Wrap.h treating an empty list as None) an empty one even for a
-// molecule without atoms. Here newOrder needs one entry per atom, and
-// renumberAtoms checks the values.
+// molecule without atoms. Here newOrder needs one entry per atom, and must
+// be a permutation of them: RDKit 2025.09's renumberAtoms refuses only values
+// above the atom count, writes one past its array for a value equal to it,
+// and reads atoms it never placed for a repeated one (RDKit 2026.03 checks
+// both, rdkit/rdkit#9450).
 std::unique_ptr<RWMol> renumber_atoms(
     const RWMol &mol, rust::Slice<const std::uint32_t> new_order) {
-  if (new_order.size() != mol.getNumAtoms()) {
+  unsigned n = mol.getNumAtoms();
+  if (new_order.size() != n) {
     throw ValueErrorException(
         "newOrder must have one entry for each atom in the molecule");
+  }
+  std::vector<bool> seen(n, false);
+  for (auto idx : new_order) {
+    if (idx >= n || seen[idx]) {
+      throw ValueErrorException("newOrder must hold each atom index once: " +
+                                std::to_string(idx));
+    }
+    seen[idx] = true;
   }
   std::unique_ptr<RDKit::ROMol> result(
       RDKit::MolOps::renumberAtoms(mol, to_vector(new_order)));
@@ -328,6 +368,7 @@ std::unique_ptr<RWMol> copy_mol_subset(const RWMol &mol,
   set_options(options, data);
   RDKit::SubsetInfo info;
   auto result = RDKit::copyMolSubset(mol, to_vector(path), info, options);
+  clear_unanchored_stereo(*result);
   set_info(info_data, info);
   return result;
 }
@@ -349,6 +390,7 @@ std::unique_ptr<RWMol> copy_mol_subset_atoms_bonds(
   RDKit::SubsetInfo info;
   auto result = RDKit::copyMolSubset(mol, to_vector(atom_indices),
                                      to_vector(bond_indices), info, options);
+  clear_unanchored_stereo(*result);
   set_info(info_data, info);
   return result;
 }

@@ -25,6 +25,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_pipeline.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize_normalize.h"
 #include "rdkit-cxx/streams.h"
@@ -64,6 +65,7 @@ MS::PipelineOptions to_options(const PipelineOptionsData &data) {
 }
 
 void check_metal_smarts(const std::string &smarts, const char *what) {
+  check_cx_atom_props(smarts);
   std::unique_ptr<RDKit::ROMol> query(RDKit::SmartsToMol(smarts));
   if (!query) {
     throw ValueErrorException(std::string(what) +

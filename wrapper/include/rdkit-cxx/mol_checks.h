@@ -148,9 +148,17 @@ void check_bond_end_points(const RDKit::ROMol &mol);
 constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
+// RDKit 2025.09 lets a stereo group hold an atom or bond twice: its
+// StereoGroup constructor accepts the duplicates (RDKit 2026.03 refuses them,
+// rdkit/rdkit#9258), and so do the CXSMILES and V3000 readers. When RWMol
+// removes the atom or bond it erases one of them from the group and keeps a
+// pointer to the deleted object in the other. Throws ValueErrorException for
+// a group with a duplicate.
+void check_stereo_group_duplicates(const RDKit::ROMol &mol);
+
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
-// bonds from it (or a copy): check_bond_end_points and
-// check_substance_group_parents.
+// bonds from it (or a copy): check_bond_end_points,
+// check_substance_group_parents, and check_stereo_group_duplicates.
 void check_removals(const RDKit::ROMol &mol);
 
 // As check_removals, for an RDKit call that combines the molecules
@@ -211,5 +219,22 @@ class StereoGroupBondGuard {
   // Each group's bond indices; empty when no group held a bond.
   std::vector<std::vector<unsigned>> d_bonds;
 };
+
+// RDKit 2025.09's proximity bonding (ConnectTheDots_Large in
+// ProximityBonds.cpp), for a hydrogen it leaves bonded to several atoms,
+// removes all but the closest bond while it iterates over the hydrogen's
+// neighbors, so the iteration reads past the end of the shrunken neighbor
+// list once a hydrogen has three or more (RDKit 2026.03 batches the
+// removals). This throws ValueErrorException for a molecule with a hydrogen
+// that could have three: its bonds (none when `bonds_removed`, as
+// determineConnectivity removes them first) and every atom RDKit's bonding
+// test, with `flags`, would bond to it, less the one bond to a hydrogen that
+// ctdQUICKREMOVE_H_H_CONTACTS removes.
+void check_proximity_hydrogens(const RDKit::ROMol &mol, unsigned flags,
+                               bool bonds_removed);
+// ConnectTheDots' flags, from ProximityBonds.h, which conda-forge's
+// librdkit-dev does not install.
+constexpr unsigned kCtdIgnoreHHContacts = 0x1;
+constexpr unsigned kCtdQuickRemoveHHContacts = 0x2;
 
 }  // namespace rdkit_cxx

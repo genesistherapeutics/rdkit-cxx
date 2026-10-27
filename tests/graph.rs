@@ -379,6 +379,8 @@ fn renumber() {
         &[0, 1, 2, 3, 4],
         &[0, 0, 1, 2],
         &[0, 1, 2, 9],
+        // RDKit 2025.09 writes past its array for the atom count itself.
+        &[0, 1, 2, 4],
     ] {
         assert!(matches!(
             renumber_atoms(&mol, bad),
@@ -441,4 +443,30 @@ fn subset_options_defaults() {
         }
     );
     assert_eq!(SubsetInfo::default().atom_mapping, BTreeMap::new());
+}
+
+#[test]
+fn subsets_drop_stereo_they_cannot_anchor() {
+    // RDKit 2025.09 keeps a bond's CIS or TRANS without the stereo atoms it
+    // left out, which MolToSmiles then reads past; the wrappers clear it.
+    for stereo in [
+        BondStereo::Stereocis,
+        BondStereo::Stereotrans,
+        BondStereo::Stereoatropcw,
+    ] {
+        let mut mol = smiles("FC=CF");
+        let mut bond = mol.get_bond_with_idx_mut(1).unwrap();
+        bond.set_stereo_atoms(0, 3).unwrap();
+        bond.set_stereo(stereo);
+        let path = rdkit_cxx::chem::path_to_submol(&mol, &[0, 1]).unwrap();
+        let subset = copy_mol_subset_atoms_bonds(&mol, &[0, 1, 2], &[0, 1]).unwrap();
+        for sub in [path, subset] {
+            let bond = sub.get_bond_with_idx(1).unwrap();
+            assert_eq!(bond.get_stereo(), BondStereo::Stereonone);
+            assert_eq!(mol_to_smiles(&sub).unwrap(), "C=CF");
+        }
+        // Kept where both stereo atoms are.
+        let whole = rdkit_cxx::chem::path_to_submol(&mol, &[0, 1, 2]).unwrap();
+        assert_eq!(whole.get_bond_with_idx(1).unwrap().get_stereo(), stereo);
+    }
 }

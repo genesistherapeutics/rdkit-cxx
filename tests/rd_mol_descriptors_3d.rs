@@ -390,6 +390,24 @@ fn whim_and_getaway() {
     let values = calc_getaway_with_params(&apap_with_q(), &custom).unwrap();
     assert_eq!(values.len(), 45);
     assert_all_close(&values[..6], &[34.054, 0.895, 4.019, 11.411, 4.659, 1.022]);
+    // RDKit 2025.09 leaves the lags past a small molecule's diameter
+    // uninitialized with a custom property.
+    let mut small = rdkit_cxx::chem::mol_from_mol_block(
+        "\n     RDKit          3D\n\n  3  2  0  0  0  0  0  0  0  0999 V2000\n    \
+         0.0000    0.0000    0.0000 C   0  0\n    1.5000    0.0000    0.0000 C   0  0\n    \
+         2.0000    1.4000    0.0000 O   0  0\n  1  2  1  0\n  2  3  1  0\nM  END\n",
+    )
+    .unwrap();
+    for idx in 0..3 {
+        small
+            .get_atom_with_idx_mut(idx)
+            .unwrap()
+            .set_double_prop("q", 0.1);
+    }
+    assert!(matches!(
+        calc_getaway_with_params(&small, &custom),
+        Err(Error::Value { .. })
+    ));
 }
 
 #[test]

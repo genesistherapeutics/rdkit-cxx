@@ -509,6 +509,7 @@ std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
                                                  std::uint64_t line_num) {
   RDKit::v2::SmilesParse::SmilesParserParams params;
   params.sanitize = false;
+  check_cx_atom_props(smiles);
   auto mol = RDKit::v2::SmilesParse::MolFromSmiles(smiles, params);
   if (!mol) {
     return std::nullopt;
@@ -652,10 +653,11 @@ void read_text(SynthonSpace &space, const std::string &name,
 // with no check against the file's size, and it reads the first reaction's
 // offset even when there are no reactions (the file of an empty space; a
 // segfault in Python). The records hold molecule and bit-vector pickles,
-// counts, and bools RDKit trusts, which is why the reader is unsafe in Rust. This reads the header and offsets as RDKit does
-// and refuses a file whose offsets do not ascend through it, which also tells
-// a complete file from one the writer, which ignores a failed stream, left
-// short: it writes zeros for the offsets first and the real ones last.
+// counts, and bools RDKit trusts, which is why the reader is unsafe in Rust.
+// This reads the header and offsets as RDKit does and refuses a file whose
+// offsets do not ascend through it, which also tells a complete file from one
+// the writer, which ignores a failed stream, left short: it writes zeros for
+// the offsets first and the real ones last.
 
 constexpr std::int32_t kEndianId = 0xa100f;
 constexpr std::int32_t kVersionMajor = 3;
@@ -1113,7 +1115,6 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended(
   }
   return finish(std::move(results), "SubstructureSearch");
 }
-
 
 void synthon_space_substructure_search_incremental(
     SynthonSpace &space, const RWMol &query, SearchCallback &callback,

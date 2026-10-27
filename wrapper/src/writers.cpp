@@ -481,9 +481,64 @@ void check_mae(const RWMol &mol, const RDKit::STR_VECT &props) {
   }
 }
 
+// RDKit 2025.09's MaeWriter constructor from a shared_ptr checks the
+// argument it has already moved from, so it always throws (RDKit 2026.03
+// fixed it, rdkit/rdkit#9451), and the one from a raw pointer takes the
+// stream and deletes it. The writer gets its own stream, whose buffer writes
+// to the output's and marks it bad when a write fails, as a failure of the
+// output's own stream would, for WriterOutput::check.
+class ForwardingBuf : public std::streambuf {
+ public:
+  explicit ForwardingBuf(std::shared_ptr<std::ostream> target)
+      : d_target(std::move(target)) {}
+
+ protected:
+  int_type overflow(int_type c) override {
+    if (traits_type::eq_int_type(c, traits_type::eof())) {
+      return traits_type::not_eof(c);
+    }
+    if (traits_type::eq_int_type(
+            d_target->rdbuf()->sputc(traits_type::to_char_type(c)),
+            traits_type::eof())) {
+      d_target->setstate(std::ios::badbit);
+      return traits_type::eof();
+    }
+    return c;
+  }
+  std::streamsize xsputn(const char *s, std::streamsize n) override {
+    auto written = d_target->rdbuf()->sputn(s, n);
+    if (written != n) {
+      d_target->setstate(std::ios::badbit);
+    }
+    return written;
+  }
+  int sync() override {
+    if (d_target->rdbuf()->pubsync() != 0) {
+      d_target->setstate(std::ios::badbit);
+      return -1;
+    }
+    return 0;
+  }
+
+ private:
+  std::shared_ptr<std::ostream> d_target;
+};
+
+class ForwardingOStream : public std::ostream {
+ public:
+  explicit ForwardingOStream(std::shared_ptr<std::ostream> target)
+      : std::ostream(nullptr), d_buf(std::move(target)) {
+    rdbuf(&d_buf);
+  }
+
+ private:
+  ForwardingBuf d_buf;
+};
+
 std::unique_ptr<MaeWriter> make_mae_writer(WriterOutput out) {
   auto w = std::make_unique<MaeWriter>();
-  w->writer = std::make_unique<RDKit::MaeWriter>(out.stream);
+  w->writer =
+      std::make_unique<RDKit::MaeWriter>(new ForwardingOStream(out.stream));
   w->out = std::move(out);
   return w;
 }

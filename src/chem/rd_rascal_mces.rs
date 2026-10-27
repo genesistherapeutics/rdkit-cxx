@@ -49,13 +49,16 @@ pub struct RascalOptions {
     /// The fewest atoms in a fragment of the MCES; -1 for no minimum.
     pub min_frag_size: i32,
     /// The most bonds between fragments of the MCES; -1 for no limit, and
-    /// below -1 is `Error::Value`.
+    /// any other value is `Error::Value`: RDKit 2025.09 measures from a
+    /// fragment it has just pruned.
     pub max_frag_separation: i32,
     /// Returns every MCES of the largest size, not just the first.
     pub all_best_mcess: bool,
     /// The most MCESs of one size to keep.
     pub max_best_mcess: u32,
-    /// Seconds to spend on one MCES; -1 for no limit.
+    /// Seconds to spend on one MCES; -1 for no limit. Not honored: RDKit
+    /// 2025.09 reads an empty vector when a timeout fires with a clique
+    /// larger than those it kept, so the search runs to the end.
     pub timeout: i32,
     /// Returns a result with the similarity estimates when they miss the
     /// threshold.

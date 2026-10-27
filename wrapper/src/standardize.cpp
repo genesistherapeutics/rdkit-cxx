@@ -24,6 +24,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
@@ -497,6 +498,7 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
 std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   std::string input(smiles);
+  check_cx_atom_props(input);
   std::unique_ptr<RWMol> mol{RDKit::SmilesToMol(input, 0, false)};
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +

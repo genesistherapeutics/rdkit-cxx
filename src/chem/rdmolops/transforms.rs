@@ -147,7 +147,9 @@ impl Default for ReplaceCoreParams {
 /// The sidechains left when the matched core is removed, each attached to
 /// a dummy atom, or `None` when they cannot be. `matches` pairs core atom
 /// indices with molecule atom indices. Mirrors `rdmolops.ReplaceCore(mol,
-/// core, matches)`. `Error::Value` for an index past either end.
+/// core, matches)`. `Error::Value` for an index past either end, and for a
+/// molecule atom that several core atoms match when one's neighbor in the
+/// core is not matched (RDKit 2025.09 reads past the matches for it).
 pub fn replace_core(mol: &Mol, core: &Mol, matches: &[(u32, u32)]) -> Result<Option<Mol>> {
     replace_core_with_params(mol, core, matches, &ReplaceCoreParams::default())
 }
@@ -529,8 +531,9 @@ fn fragment_on_some_bonds_impl(
 }
 
 /// A copy for each way to break `num_to_break` of the bonds. Mirrors
-/// `rdmolops.FragmentOnSomeBonds`. `Error::Value` for no bonds, more than
-/// 63, a repeated bond, or option lists shorter than the bonds;
+/// `rdmolops.FragmentOnSomeBonds`; none when `num_to_break` is above the
+/// number of bonds. `Error::Value` for no bonds, more than 63, a repeated
+/// bond, or option lists shorter than the bonds;
 /// `Error::Index` for a bond index past the end.
 pub fn fragment_on_some_bonds(mol: &Mol, bond_indices: &[u32]) -> Result<Vec<Mol>> {
     fragment_on_some_bonds_with_params(mol, bond_indices, &FragmentOnSomeBondsParams::default())
@@ -672,7 +675,10 @@ pub fn molzip_single_with_params(a: &Mol, params: &MolzipParams) -> Result<Optio
 /// result. Mirrors `rdmolops.molzipFragments`. `Error::Value` for a labeled
 /// atom without exactly one neighbor, or a linker (two labeled atoms bonded
 /// to each other): RDKit dereferences a null pointer for both when zipping
-/// a list.
+/// a list. With `generate_coordinates`, `Error::Value` too for more than one
+/// molecule under `MolzipLabel::FragmentOnBonds`, and for fragments after
+/// the first with the same SMILES: RDKit 2025.09 places atoms it did not
+/// zip past the end of the result.
 pub fn molzip_fragments(mols: &mut [Mol]) -> Result<Option<Mol>> {
     molzip_fragments_with_params(mols, &MolzipParams::default())
 }

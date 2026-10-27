@@ -224,7 +224,16 @@ std::vector<std::string> label_pieces(const std::string &label, char orient,
 }
 
 // AtomSymbol::adjustColons strips <...> from a label with a colon, in a loop
-// that never ends once a '>' comes before the next '<'.
+// that never ends once a '>' comes before the next '<' (or a '<' has no '>'
+// at all, which RDKit 2025.09 does not stop at either), and then sets the
+// colon's rectangle height from its neighbors'. RDKit 2025.09 reads the right
+// neighbor whenever the colon is not the last character of the label with its
+// markup, so for a colon drawn last (a user label "C:", which RDKit draws as
+// "<lit>C:</lit>") it reads one past its rectangles and crashes; RDKit 2026.03
+// bounds the read by the rectangles. The rectangles are one per character
+// drawn: of a <lit> label's text up to its </lit>, or of the label, less its
+// <sub>, <sup>, </sub>, and </sup> tags. Counting UTF-8 code points, never
+// more than RDKit's characters, refuses every label RDKit reads past for.
 void check_colon_markup(const std::string &label, const char *what) {
   if (label.find(':') == std::string::npos) {
     return;
@@ -233,18 +242,44 @@ void check_colon_markup(const std::string &label, const char *what) {
   while (true) {
     const auto lt = tmp.find('<');
     if (lt == std::string::npos) {
-      return;
+      break;
     }
     const auto gt = tmp.find('>');
-    if (gt == std::string::npos) {
-      return;
-    }
-    if (gt < lt) {
+    if (gt == std::string::npos || gt < lt) {
       refuse(std::string(what) +
-             " has a colon and a '>' before a '<', which RDKit's label "
-             "layout loops on forever");
+             " has a colon and a '<' without a '>' after it, which RDKit's "
+             "label layout loops on forever");
     }
     tmp = tmp.substr(0, lt) + tmp.substr(gt + 1);
+  }
+  const auto colon = tmp.find(':');
+  if (colon == std::string::npos || colon + 1 >= label.size()) {
+    return;
+  }
+  std::string drawn = label;
+  if (label.rfind("<lit>", 0) == 0) {
+    drawn = label.substr(5);
+    drawn = drawn.substr(0, drawn.find("</lit>"));
+  }
+  std::size_t chars = 0;
+  for (std::size_t i = 0; i < drawn.size(); ++i) {
+    if (drawn[i] == '<') {
+      const auto tag = drawn.substr(i, 6);
+      if (tag.rfind("<sub>", 0) == 0 || tag.rfind("<sup>", 0) == 0) {
+        i += 4;
+        continue;
+      }
+      if (tag == "</sub>" || tag == "</sup>") {
+        i += 5;
+        continue;
+      }
+    }
+    chars += (static_cast<unsigned char>(drawn[i]) & 0xC0) != 0x80;
+  }
+  if (colon + 1 >= chars) {
+    refuse(std::string(what) +
+           " has its first colon as the last character drawn, which RDKit "
+           "2025.09's label layout reads past its characters for");
   }
 }
 
@@ -591,11 +626,11 @@ void check_comic_bonds(const RDKit::ROMol &mol,
 }
 
 // isLinearAtom (DrawMol.cpp), which labels an atom of two bonds in a line,
-// reads each neighbor's bond type into an uninitialized array, skips a
-// neighbor whose direction from the atom directionVector cannot normalize,
-// and compares both types: RDKit 2026.03 reads an uninitialized value for a
-// neighbor at the atom's position (RDKit 2026.09 sets both,
-// rdkit/rdkit#9550). It reads the coordinates DrawMol extracts.
+// normalizes each neighbor's direction from the atom: for a neighbor at the
+// atom's position RDKit 2025.09 throws there, partway through laying out a
+// drawing (RDKit 2026.03 skips it and reads an uninitialized bond type
+// instead), so it is refused before RDKit starts. It reads the coordinates
+// DrawMol extracts.
 void check_linear_atoms(const RDKit::ROMol &mol,
                         const std::vector<RDGeom::Point2D> &coords) {
   for (const auto atom : mol.atoms()) {
@@ -608,8 +643,8 @@ void check_linear_atoms(const RDKit::ROMol &mol,
         at.directionVector(coords[nbr->getIdx()]);
       } catch (const std::runtime_error &) {
         refuse("atom " + std::to_string(atom->getIdx()) +
-               " has two bonds and a neighbor at its position, where RDKit "
-               "2026.03 reads an uninitialized bond type");
+               " has two bonds and a neighbor at its position, which RDKit's "
+               "label layout cannot take a direction to");
       }
     }
   }
@@ -843,6 +878,12 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
     return;
   }
   check_text_size(legend, "legend");
+  // DrawMol::extractLegend splits the legend at newlines, dropping empty
+  // lines, and RDKit 2025.09 goes on to place a legend of no lines (a
+  // segfault in Python; RDKit 2026.03 draws none).
+  if (legend.find_first_not_of('\n') == std::string::npos) {
+    refuse("a legend must have a character other than a newline");
+  }
   std::vector<std::string> lines;
   boost::split(lines, legend, boost::is_any_of("\n"));
   for (const auto &line : lines) {

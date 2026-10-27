@@ -40,8 +40,8 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
                                              EmbedParametersData &params);
 std::unique_ptr<std::string> embed_parameters_to_json(
     const EmbedParametersData &params);
-rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
-                                             bool set15bounds, bool scale_vdw,
+rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol, bool set15bounds,
+                                             bool scale_vdw,
                                              bool do_triangle_smoothing,
                                              bool use_macrocycle14config);
 rust::Vec<ExperimentalTorsionData> get_experimental_torsions(

@@ -144,7 +144,7 @@ std::unique_ptr<MolCatalogEntry> mol_catalog_entry_from_pickle(
   auto text = to_std(pickle);
   auto ss = pickle_stream(text);
   check_entry(ss, text.size());
-  // RDKit 2026.03's pickle constructor leaves dp_props uninitialized, and
+  // RDKit 2025.09's pickle constructor leaves dp_props uninitialized, and
   // initFromString deletes it. The default constructor initializes it, as
   // the catalog's own reader relies on.
   auto entry = std::make_unique<MolCatalogEntry>();

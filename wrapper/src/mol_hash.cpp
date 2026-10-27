@@ -6,12 +6,19 @@
 #include "rdkit-cxx/mol_hash.h"
 
 #include <mutex>
+#include <string>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
+
+namespace {
+
+constexpr unsigned kMaxAllocaAtoms = 4096;
+
+}  // namespace
 
 std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
                                       bool use_cx_smiles,
@@ -33,6 +40,18 @@ std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
     case HashFunction::HetAtomProtomer:
     case HashFunction::HetAtomProtomerv2:
       check_formal_charge_sum(mol, std::int64_t{255} * mol.getNumAtoms());
+      break;
+    case HashFunction::ExtendedMurcko:
+      // RDKit 2025.09's ExtendedMurckoScaffold and DepthFirstSearchForRing
+      // each take a byte per atom from the stack with alloca
+      // (hashfunctions.cpp); a page or more can step past a thread stack's
+      // one-page guard into other memory (RDKit 2026.03 uses vectors).
+      if (mol.getNumAtoms() >= kMaxAllocaAtoms) {
+        throw ValueErrorException(
+            "the ExtendedMurcko hash takes fewer than " +
+            std::to_string(kMaxAllocaAtoms) +
+            " atoms: RDKit 2025.09 allocates a byte per atom on the stack");
+      }
       break;
     default:
       break;

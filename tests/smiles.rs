@@ -72,3 +72,57 @@ fn mol_is_send() {
     fn assert_send<T: Send>() {}
     assert_send::<Mol>();
 }
+
+#[test]
+fn cx_atom_props_end_inside_the_text() {
+    use rdkit_cxx::chem::{
+        SmilesParserParams, mol_from_smarts, mol_from_smiles_with_params,
+        rd_chem_reactions::reaction_from_smarts,
+    };
+    // Python's values.
+    for (smiles, props) in [
+        ("C |atomProp:0.p.v|", vec![("p", "v")]),
+        ("C |atomProp:0.p.v| name", vec![("p", "v")]),
+        ("CC |atomProp:0.p.v:1.q.w|", vec![("p", "v"), ("q", "w")]),
+        ("C |atomProp:0.p.v,|", vec![("p", "v")]),
+    ] {
+        let mol = mol_from_smiles(smiles).unwrap();
+        for (i, (key, value)) in props.into_iter().enumerate() {
+            let atom = mol.get_atom_with_idx(i as u32).unwrap();
+            assert_eq!(atom.get_prop(key).unwrap(), value, "{smiles}");
+        }
+    }
+    // RDKit 2025.09 reads past the end of these, whose atomProp blocks run
+    // to it (the second and third through a property name read past a
+    // "|"); its Python returns None.
+    let lax = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    for text in [
+        "C |atomProp:0.p.v",
+        "C |atomProp:0.a|b.c",
+        "C |atomProp:0.p| x.y",
+        "C |atomProp:0.p.v  ",
+    ] {
+        assert!(
+            matches!(mol_from_smiles(text), Err(Error::Value { .. })),
+            "{text}"
+        );
+        assert!(
+            matches!(
+                mol_from_smiles_with_params(text, &lax),
+                Err(Error::Value { .. })
+            ),
+            "{text}"
+        );
+        assert!(
+            matches!(mol_from_smarts(text), Err(Error::Value { .. })),
+            "{text}"
+        );
+    }
+    assert!(matches!(
+        reaction_from_smarts("[C:1]>>[C:1] |atomProp:0.p.v"),
+        Err(Error::Value { .. })
+    ));
+}

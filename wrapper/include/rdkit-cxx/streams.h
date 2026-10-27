@@ -27,6 +27,23 @@
 //   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
 //   RDKit reads an END BOND line after it, so input that ends (or is cut
 //   off) before a value is checked is never parsed as a molecule.
+// - RDKit 2025.09 parses each V3000 SGroup line as it reads it, with stream
+//   extractions it does not check (MolSGroupParsing.cpp; RDKit 2026.03
+//   checks them). An SAP value takes a character and then two numbers and
+//   two words, and the second word's last character is popped without
+//   checking that there is one; a CSTATE value takes a character and then
+//   two numbers; and an array value (ATOMS, PATOMS, CBONDS, XBONDS, XBHEAD,
+//   XBCORR, BRKXYZ) takes a character, a count, and that many numbers into
+//   a variable that is never set if the line ends after the count. Where
+//   " SAP=" or " CSTATE=" (in any case) appears, the value must be a
+//   character, numbers below 2^32 for the numbers, and whitespace-separated
+//   words for the words; where an array's key appears, a count must not end
+//   the line; and "SAP" or "CSTATE" after a space must not end it either
+//   (the line reads as that key with an empty value). Because RDKit parses
+//   a line cut off by the end of the input (or by a refusal) as it does a
+//   whole one, input is never delivered, nor refused, inside such a field
+//   or a word that may begin one: delivery waits there until the scanner
+//   has read past it, and a refusal takes effect where it begins.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
@@ -61,13 +78,24 @@ class InputScanner {
   // the bytes before the first that breaks one, after which error() says
   // why).
   std::size_t feed(const char *bytes, std::size_t n);
+  // The input ends after the bytes fed; false if it ends inside a field
+  // checked above (or failed before).
+  bool finish();
   const std::string &error() const { return d_error; }
+  // The offset (from the first byte fed) before which the input may be cut
+  // off: a cut at or after it may leave RDKit a field it misreads.
+  std::uint64_t safe_end() const;
+  // Where the refusal of a failed input takes effect: the start of the field
+  // that broke a limit, or UINT64_MAX for the byte that failed.
+  std::uint64_t refuse_at() const { return d_refuse_at; }
 
  private:
   void end_line();
-  void confirm(char c);
+  void end_fields();
+  void confirm(char c, std::uint64_t at);
   void end_points(char c);
-  bool fail(std::string why);
+  void sgroup_fields(char c, std::uint64_t at);
+  bool fail(std::string why, std::uint64_t at = UINT64_MAX);
 
   std::string d_error;
   std::uint64_t d_lines = 0;
@@ -77,6 +105,10 @@ class InputScanner {
   char d_head[7] = {};
   int d_pending = 0;
   char d_pend[2] = {};
+  std::uint64_t d_pend_at[2] = {};
+  // The bytes fed, and where a refusal takes effect.
+  std::uint64_t d_fed = 0;
+  std::uint64_t d_refuse_at = UINT64_MAX;
   // The logical V3000 line, joined across continuations.
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
@@ -89,6 +121,21 @@ class InputScanner {
   bool d_in_number = false;
   std::uint64_t d_number = 0;
   std::uint64_t d_numbers = 0;
+  // In the logical line: the word after the last space (upper-cased, up to
+  // eight characters; longer is no key) and where that space is, and then a
+  // checked SGroup field's value: the character it skips, the token being
+  // read and whether one is, and the number in it.
+  bool d_word = false;
+  bool d_word_long = false;
+  std::uint64_t d_word_at = 0;
+  std::string d_word_text;
+  enum class Field : std::uint8_t { kNone, kSap, kCState, kArray };
+  Field d_field = Field::kNone;
+  std::uint64_t d_field_at = 0;
+  bool d_field_skipped = false;
+  int d_field_token = 0;
+  bool d_field_in_token = false;
+  std::uint64_t d_field_number = 0;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.
@@ -121,6 +168,7 @@ class CheckedStreambuf : public std::streambuf {
 
  private:
   bool fill(std::uint64_t chunk);
+  std::uint64_t deliverable() const;
   void refuse(const std::string &why, std::uint64_t at);
   int_type hit();
   void changed();
@@ -147,6 +195,8 @@ class CheckedStreambuf : public std::streambuf {
   std::uint64_t d_tail_hash = 0;
   std::uint64_t d_key[2] = {};
   InputScanner d_scanner;
+  // Whether the source's end has been scanned (and the scanner finished).
+  bool d_finished = false;
   std::atomic<bool> d_failed{false};
   mutable std::mutex d_error_mutex;
   std::string d_error;

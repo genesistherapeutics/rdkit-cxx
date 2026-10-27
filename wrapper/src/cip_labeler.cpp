@@ -45,7 +45,7 @@ bool is_carrier(const Atom &focus, const Atom &other, int idx) {
          mol.getBondBetweenAtoms(focus.getIdx(), idx);
 }
 
-// RDKit 2026.03's Sp2Bond::label reads each end's first neighbor other than
+// RDKit 2025.09's Sp2Bond::label reads each end's first neighbor other than
 // the bond's other atom, and AtropisomerBond::label its two carriers,
 // without checking that they exist: a double bond whose stereo atom is not
 // a neighbor of its own end (the other end atom, say), or an atropisomer

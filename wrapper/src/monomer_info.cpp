@@ -162,7 +162,7 @@ void pdb_residue_info_set_serial_number(AtomPDBResidueInfo &info, int val) {
 }
 
 void pdb_residue_info_set_residue_name(AtomPDBResidueInfo &info,
-                                      rust::Str val) {
+                                       rust::Str val) {
   info.setResidueName(std::string(val));
 }
 

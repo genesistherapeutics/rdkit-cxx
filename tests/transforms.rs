@@ -66,6 +66,13 @@ fn delete_and_replace_substructs() {
 
 #[test]
 fn replace_cores_and_sidechains() {
+    // Two core atoms of one bond each match molecule atom 0, and the
+    // neighbor of core atom 0 is not matched: RDKit 2025.09 reads past the
+    // matches to find its molecule atom.
+    assert!(matches!(
+        replace_core(&smiles("CC"), &smiles("OCC"), &[(0, 0), (2, 0)]),
+        Err(Error::Value { .. })
+    ));
     let mol = smiles("c1ccccc1CCO");
     let core = smiles("c1ccccc1");
     assert_eq!(
@@ -322,6 +329,24 @@ fn fragment_some_bonds() {
         ]
     );
     assert_eq!(fragment_on_some_bonds(&mol, &[0]).unwrap().len(), 1);
+    // More cuts than bonds, even past 63, which RDKit 2025.09 would shift a
+    // 64-bit integer by, give none; a repeated bond, which it would remove
+    // twice, is refused.
+    for num_to_break in [4, 64, 70, u32::MAX] {
+        let many = FragmentOnSomeBondsParams {
+            num_to_break,
+            ..Default::default()
+        };
+        assert!(
+            fragment_on_some_bonds_with_params(&mol, &[0, 1, 2], &many)
+                .unwrap()
+                .is_empty()
+        );
+    }
+    assert!(matches!(
+        fragment_on_some_bonds_with_params(&mol, &[1, 1], &two),
+        Err(Error::Value { .. })
+    ));
     let (_, cuts) = fragment_on_some_bonds_return_cuts_per_atom_with_params(
         &mol,
         &[0],
@@ -495,6 +520,41 @@ fn molzip_lists_that_rdkit_crashes_on() {
         ("R1".to_owned(), smiles("[*:1][*:2]")),
     ]);
     assert!(matches!(molzip_row(&mut row), Err(Error::Value { .. })));
+
+    // With coordinates, RDKit 2025.09 dereferences the null of a list it
+    // cannot zip, and the end of the zipped molecule for the atoms of the
+    // molecules it leaves out: all but the first with FragmentOnBonds, and a
+    // repeated fragment.
+    let fragment_on_bonds = MolzipParams {
+        label: MolzipLabel::FragmentOnBonds,
+        generate_coordinates: true,
+        ..Default::default()
+    };
+    let mut unzippable = vec![smiles("[2*]CC")];
+    assert!(
+        molzip_fragments_with_params(&mut unzippable, &fragment_on_bonds)
+            .unwrap()
+            .is_none()
+    );
+    let mut two = vec![smiles("[1*]C.[2*]N"), smiles("O")];
+    assert!(matches!(
+        molzip_fragments_with_params(&mut two, &fragment_on_bonds),
+        Err(Error::Value { .. })
+    ));
+    let mut repeated = vec![smiles("C[*:1].C[*:2]"), smiles("O[*:1]"), smiles("O[*:1]")];
+    assert!(matches!(
+        molzip_fragments_with_params(&mut repeated, &coords),
+        Err(Error::Value { .. })
+    ));
+    let mut row = BTreeMap::from([
+        ("Core".to_owned(), smiles("C[*:1].C[*:2]")),
+        ("R1".to_owned(), smiles("O[*:1]")),
+        ("R2".to_owned(), smiles("O[*:1]")),
+    ]);
+    assert!(matches!(
+        molzip_row_with_params(&mut row, &coords),
+        Err(Error::Value { .. })
+    ));
 }
 
 #[test]

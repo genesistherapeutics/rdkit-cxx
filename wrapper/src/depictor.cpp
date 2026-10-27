@@ -30,6 +30,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/depictor.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
@@ -143,10 +144,12 @@ void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
   const auto text = buffer.str();
   std::istringstream lines(text);
   std::string line;
-  // As CoordinateTemplates::loadTemplatesFromPath, which stops at the first
-  // line it cannot parse.
+  // As CoordinateTemplates::loadTemplatesFromPath, which parses each line as
+  // SMILES in RDKit 2025.09 (as SMARTS in 2026.03) and stops at the first it
+  // cannot parse.
   while (std::getline(lines, line)) {
-    std::unique_ptr<RDKit::ROMol> mol(RDKit::SmartsToMol(line));
+    check_cx_atom_props(line);
+    std::unique_ptr<RDKit::ROMol> mol(RDKit::SmilesToMol(line));
     if (!mol) {
       break;
     }

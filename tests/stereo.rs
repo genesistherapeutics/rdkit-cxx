@@ -99,3 +99,24 @@ fn stereo_info_default() {
     assert_eq!(info.permutation, 0);
     assert!(info.controlling_atoms.is_empty());
 }
+
+// RDKit 2025.09 accepts an atom listed twice in a stereo group, from its
+// constructor and its CXSMILES reader, and removing the atom erases one
+// entry and leaves a pointer to the deleted atom in the other.
+#[test]
+fn stereo_groups_hold_each_atom_once() {
+    let mol = mol_from_smiles("C[C@H](F)Cl").unwrap();
+    assert!(matches!(
+        create_stereo_group(StereoGroupType::StereoOr, &mol, &[1, 1]),
+        Err(Error::Value { .. })
+    ));
+    let parsed = mol_from_smiles("C[C@H](F)Cl |o1:1,1|").unwrap();
+    assert_eq!(parsed.get_stereo_groups().len(), 1);
+    let mut rw = RWMol::from(parsed);
+    assert!(matches!(rw.remove_atom(1), Err(Error::Value { .. })));
+    // Removing hydrogens or a substructure removes atoms too.
+    let mut with_hs = mol_from_smiles("[H]C[C@H](F)Cl |o1:2,2|").unwrap();
+    assert!(matches!(remove_hs(&with_hs), Err(Error::Value { .. })));
+    with_hs = mol_from_smiles("C[C@H](F)Cl |o1:1|").unwrap();
+    assert_eq!(with_hs.get_stereo_groups().len(), 1);
+}

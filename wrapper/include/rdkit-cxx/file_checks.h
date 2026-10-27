@@ -46,4 +46,14 @@ void check_debug_parse(int debug_parse);
 // malformed XML, and checks every bond.
 void check_mrv(const std::string &text);
 
+// RDKit 2025.09's CXSMILES atomProp reader (parse_atom_props in
+// CXSmilesOps.cpp), when its loop runs to the end of the extensions
+// (which end where the trimmed text does), steps one past the string's end
+// and reads the character there; without strictCXSMILES the caller then
+// copies the extensions up to that point, two characters past the end (RDKit
+// 2026.03 stops at the end). This runs the loop, as it reads, from every
+// "atomProp:" in the text, and throws ValueErrorException for one that
+// would run to the end.
+void check_cx_atom_props(const std::string &text);
+
 }  // namespace rdkit_cxx

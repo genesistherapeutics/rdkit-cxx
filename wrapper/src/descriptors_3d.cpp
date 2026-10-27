@@ -210,6 +210,32 @@ rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
                           });
 }
 
+// The largest topological distance between two atoms, as GETAWAY's Dmax
+// from MolOps::getDistanceMat, which counts a pair in different fragments as
+// far apart (1e8); here they count as `cap`, as does any distance from it.
+unsigned topological_diameter(const RDKit::ROMol &mol, unsigned cap) {
+  unsigned n = mol.getNumAtoms();
+  unsigned diameter = 0;
+  std::vector<unsigned> dist(n);
+  std::vector<unsigned> queue;
+  for (unsigned start = 0; start < n && diameter < cap; ++start) {
+    std::fill(dist.begin(), dist.end(), cap);
+    dist[start] = 0;
+    queue.assign(1, start);
+    for (std::size_t q = 0; q < queue.size(); ++q) {
+      const auto *atom = mol.getAtomWithIdx(queue[q]);
+      for (const auto *nbr : mol.atomNeighbors(atom)) {
+        if (dist[nbr->getIdx()] == cap && dist[atom->getIdx()] + 1 < cap) {
+          dist[nbr->getIdx()] = dist[atom->getIdx()] + 1;
+          queue.push_back(nbr->getIdx());
+        }
+      }
+    }
+    diameter = std::max(diameter, *std::max_element(dist.begin(), dist.end()));
+  }
+  return diameter;
+}
+
 // GETAWAY converts the precision to unsigned int, which is undefined for a
 // negative, huge, or NaN value, and prints each leverage with that many
 // digits into a 32-byte buffer, which 25 or more overflow. It sorts the
@@ -226,6 +252,17 @@ rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
     const auto &conf = mol.getConformer(conf_id);
     check_finite_coordinates(conf, "GETAWAY");
     check_distinct_positions(conf, "GETAWAY");
+  }
+  // With a custom property, RDKit 2025.09 (getGETAWAYDescCustom) fills its
+  // arrays of the 9 lags only up to the molecule's largest topological
+  // distance and returns the rest uninitialized (RDKit 2026.03 zeroes them,
+  // rdkit/rdkit#9450).
+  if (!custom.empty() && mol.getNumAtoms() > 0 &&
+      topological_diameter(mol, 8) < 8) {
+    throw ValueErrorException(
+        "GETAWAY with a custom atom property needs a topological distance of "
+        "8 or more between two atoms: RDKit 2025.09 returns uninitialized "
+        "values for shorter molecules");
   }
   return table_descriptor(
       mol, custom, true, true, [&](std::vector<double> &res) {

@@ -556,7 +556,9 @@ defaults! {
 
 /// A Chemical Markup Language document for a molecule. Formal charges that
 /// sum past the `i32` range are `Error::Value`, since RDKit sums them in
-/// `int`. Mirrors `rdmolfiles.MolToCMLBlock`.
+/// `int`, and so is a tetrahedral atom of fewer than 4 neighbors (an
+/// implicit hydrogen), whose parity RDKit 2025.09 writes from neighbors past
+/// the end of its list. Mirrors `rdmolfiles.MolToCMLBlock`.
 pub fn mol_to_cml_block(mol: &Mol) -> Result<String> {
     mol_to_cml_block_with_params(mol, &MolToCMLBlockParams::default())
 }

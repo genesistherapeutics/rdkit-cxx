@@ -7,30 +7,29 @@
 
 // RDKit::ControlCHandler (RDGeneral/ControlCHandler.h) swaps the process's
 // SIGINT handler and keeps the previous one, and its flag, in plain static
-// variables, so two calls that construct one at once race, and can leave
-// RDKit's handler installed after both. Every substructure match constructs one
-// (boost::vf2 and vf2_all in Substruct/vf2.hpp), so it is reached from the
-// match methods and the transforms that match, from descriptors and
-// fingerprints that type atoms by patterns (Crippen, the SMARTS counts, MACCS,
-// pattern fingerprints, feature invariants), from reactions, alignment,
-// force-field builders, depiction with templates, standardization, the
-// catalogs, and MCS; the embedder, DetermineBondOrders, and the CIP labeler
-// construct one directly, and so does the fingerprint code that runs the CIP
-// labeler for chirality. Every wrapper call that can construct one holds this
-// mutex for the whole RDKit call, and runs RDKit's own threads, which the mutex
-// cannot order, on the calling thread instead (CONVENTIONS.md U4). A wrapper
-// that also needs random_mutex() (global_state.h) takes this one first.
-//
-// In RDKit 2026.03 the matches, the embedder, DetermineBondOrders, the CIP
-// labeler, and the synthon search do not construct one but call the static
+// variables, so two threads that use it at once race. In RDKit 2025.09 the
+// embedder, DetermineBondOrders, the CIP labeler (which the fingerprint code
+// runs for chirality), and the synthon search call the static
 // ControlCHandler::reset(), which installs RDKit's handler and keeps nothing
 // to restore; RDKit's handler swallows the next SIGINT and installs whatever
-// handler a ControlCHandler last saved. The mutex therefore saves SIGINT's
-// disposition when it is taken and restores it when it is released, so the
-// process's own handler is back after every call that holds it, as a scoped
-// ControlCHandler (RDKit 2026.09, rdkit/rdkit#9393) leaves it. A handler
-// another thread installs while such a call runs is replaced by the one
-// before.
+// handler a ControlCHandler last saved. Substructure matches do not use it in
+// 2025.09 (RDKit 2026.03's boost::vf2 and vf2_all in Substruct/vf2.hpp call
+// reset() too), but the wrappers hold this mutex around every call that
+// matches substructures as well, as the rdkit-2026.03 branch does: the
+// match methods and the transforms that match, descriptors and fingerprints
+// that type atoms by patterns (Crippen, the SMARTS counts, MACCS, pattern
+// fingerprints, feature invariants), reactions, alignment, force-field
+// builders, depiction with templates, standardization, the catalogs, and
+// MCS. Every wrapper call that can reach a handler holds this mutex for the
+// whole RDKit call, and runs RDKit's own threads, which the mutex cannot
+// order, on the calling thread instead (CONVENTIONS.md U4). A wrapper that
+// also needs random_mutex() (global_state.h) takes this one first.
+//
+// The mutex saves SIGINT's disposition when it is taken and restores it when
+// it is released, so the process's own handler is back after every call
+// that holds it, as a scoped ControlCHandler (RDKit 2026.09,
+// rdkit/rdkit#9393) leaves it. A handler another thread installs while such
+// a call runs is replaced by the one before.
 
 #pragma once
 
@@ -42,12 +41,11 @@
 namespace rdkit_cxx {
 
 // Set while this thread runs a Rust closure that RDKit calls from inside a
-// substructure match (FMCS's final match checks run inside vf2), so with a
-// ControlCHandler alive: the thread holds control_c_mutex, which it cannot
-// release for the closure. A wrapper the closure calls that would take the
-// mutex again (undefined for a std::mutex the thread owns), or a lock that
-// comes before it in U4's order (which could deadlock with a thread waiting
-// for this one), fails with this check instead.
+// substructure match (FMCS's final match checks run inside vf2): the thread
+// holds control_c_mutex, which it cannot release for the closure. A wrapper the
+// closure calls that would take the mutex again (undefined for a std::mutex the
+// thread owns), or a lock that comes before it in U4's order (which could
+// deadlock with a thread waiting for this one), fails with this check instead.
 inline thread_local bool in_control_c_callback = false;
 
 inline void check_not_in_control_c_callback() {

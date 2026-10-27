@@ -93,7 +93,8 @@ pub struct CreateStereoGroupParams {
 
 /// A stereo group of `atom_ids` in `mol`. Mirrors `rdchem.CreateStereoGroup`,
 /// whose atoms are optional; a group needs at least one atom or bond, so they
-/// are required here.
+/// are required here. An atom or bond listed twice is `Error::Value`: RDKit
+/// 2025.09 would keep a pointer to it once it was removed.
 pub fn create_stereo_group(
     stereo_group_type: StereoGroupType,
     mol: &Mol,
@@ -140,6 +141,7 @@ impl Mol {
 
 impl RWMol {
     /// Replaces the stereo groups. Mirrors `RWMol.SetStereoGroups`.
+    /// `Error::Value` for a group that holds an atom or bond twice.
     pub fn set_stereo_groups(&mut self, stereo_groups: &[StereoGroup]) -> Result<()> {
         let data: Vec<_> = stereo_groups.iter().map(StereoGroup::to_ffi).collect();
         Ok(ffi::rwmol_set_stereo_groups(self.pin_mut(), &data)?)

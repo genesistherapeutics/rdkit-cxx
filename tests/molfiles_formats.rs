@@ -512,6 +512,18 @@ fn marvin_cml_xyz_pdb() {
             .contains("<molecule id=\"m-1\"")
     );
     mol_to_cml_file(&smiles("CO"), common::temp_path("m.cml")).unwrap();
+    // RDKit 2025.09 reads four neighbors for a tetrahedral atom's parity.
+    let chiral = smiles("N[C@@H](C)C(=O)O");
+    assert!(is_value(mol_to_cml_block(&chiral)));
+    assert!(is_value(mol_to_cml_file(
+        &chiral,
+        common::temp_path("c.cml")
+    )));
+    assert!(
+        mol_to_cml_block(&add_hs(&chiral).unwrap())
+            .unwrap()
+            .contains("atomParity")
+    );
 
     let mol = methanol_3d();
     let xyz = mol_to_xyz_block_with_params(
@@ -718,4 +730,167 @@ fn depicting_writers_run_on_many_threads() {
             });
         }
     });
+}
+
+const MOL2_ETHANOL: &str = "@<TRIPOS>MOLECULE
+ethanol
+ 3 2 0 0 0
+SMALL
+NO_CHARGES
+
+@<TRIPOS>ATOM
+      1 C1          0.0000    0.0000    0.0000 C.3     1  MOL       0.0000
+      2 C2          1.5000    0.0000    0.0000 C.3     1  MOL       0.0000
+      3 O1          2.0000    1.4000    0.0000 O.3     1  MOL       0.0000
+@<TRIPOS>BOND
+     1     1     2    1
+     2     2     END    1
+";
+
+#[test]
+fn mol2_bond_atoms_in_range() {
+    // RDKit 2025.09.6's Python gives [C][C][O-] for this ethanol.
+    let mol = mol_from_mol2_block(&MOL2_ETHANOL.replace("END", "3")).unwrap();
+    assert_eq!(mol_to_smiles(&mol).unwrap(), "[C][C][O-]");
+    // RDKit 2025.09 reads past its atom table for a bond with one atom out
+    // of range (and 0 wraps to past it); the wrapper refuses both.
+    for atom in ["4", "0", "50000000"] {
+        let block = MOL2_ETHANOL.replace("END", atom);
+        assert!(is_value(mol_from_mol2_block(&block)), "{atom}");
+        let path = std::env::temp_dir().join(format!("rdkit-cxx-mol2-{atom}.mol2"));
+        std::fs::write(&path, &block).unwrap();
+        assert!(is_value(mol_from_mol2_file(&path)), "{atom}");
+        std::fs::remove_file(&path).unwrap();
+    }
+}
+
+/// A V3000 block for `CO` with a superatom SGroup over the O whose line ends
+/// with `fields`.
+fn sgroup_block(fields: &str) -> String {
+    format!(
+        "\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 2 1 1 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 O 1 0 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 END BOND\n\
+         M  V30 BEGIN SGROUP\nM  V30 1 SUP 0 ATOMS=(1 2) XBONDS=(1 1) LABEL=OH {fields}\n\
+         M  V30 END SGROUP\nM  V30 END CTAB\nM  END\n"
+    )
+}
+
+fn attach_points(mol: &Mol) -> Vec<(u32, i32, String)> {
+    get_mol_substance_groups(mol)[0]
+        .get_attach_points()
+        .unwrap()
+        .into_iter()
+        .map(|a| (a.a_idx, a.lv_idx, a.id))
+        .collect()
+}
+
+const UNSANITIZED: MolFromMolBlockParams = MolFromMolBlockParams {
+    sanitize: false,
+    remove_hs: true,
+    strict_parsing: true,
+};
+
+#[test]
+fn sgroup_fields_are_checked() {
+    // Python's values.
+    for (fields, expected) in [
+        ("SAP=(3 2 1 1)", (1, 0, "1")),
+        ("SAP=(3 2 AIDX 1) CSTATE=(4 1 0 0 0)", (1, 1, "1")),
+        ("SAP=( 3  2 1   1x)", (1, 0, "1x")),
+    ] {
+        let mol = mol_from_mol_block_with_params(&sgroup_block(fields), &UNSANITIZED).unwrap();
+        let (a, lv, id) = expected;
+        assert_eq!(attach_points(&mol), [(a, lv, id.to_string())], "{fields}");
+    }
+    // RDKit 2025.09 pops the last character of an empty SAP id, and reads
+    // CSTATE numbers and an array's first value that were never read; its
+    // Python returns None for these, the string's length having been
+    // corrupted first.
+    for fields in [
+        "SAP=(3 2 1)",
+        "SAP=(3 2",
+        "SAP=(",
+        "SAP=",
+        "SAP",
+        "sap=(3 2 1)",
+        "SAP=(3x 2 1 1)",
+        "SAP=(3 2x 1 1)",
+        "SAP=(3 4294967296 1 1)",
+        "SAP=(3 2 -\nM  V30 1)",
+        "CSTATE=(4",
+        "CSTATE=(4 ",
+        "CSTATE=(x 1)",
+        "CSTATE",
+        "XBCORR=(2",
+        "XBCORR=(2 ",
+    ] {
+        let block = sgroup_block(fields);
+        assert!(
+            is_value(mol_from_mol_block_with_params(&block, &UNSANITIZED)),
+            "{fields:?}"
+        );
+        assert!(is_value(mol_from_mol_block(&block)), "{fields:?}");
+    }
+    // The end of the input is the end of a line.
+    let block = sgroup_block("SAP=(3 2 1 1)");
+    let cut = &block[..block.find("1 1)").unwrap() + 1];
+    assert!(is_value(mol_from_mol_block_with_params(cut, &UNSANITIZED)));
+}
+
+/// An SD file whose second record's SAP field starts `before` bytes before
+/// the first 64 KiB boundary (the chunk a checked stream reads in), after a
+/// first record padded with a data field.
+fn straddling_sd_file(sap: &str, before: usize) -> String {
+    let second = format!("{}$$$$\n", sgroup_block(sap));
+    let head = format!("{}>  <pad>\n", sgroup_block("SAP=(3 2 1 1)"));
+    let tail = "\n\n$$$$\n";
+    let at = 1 << 16;
+    let offset = second.find(" SAP=").unwrap();
+    let pad = at - before - offset - head.len() - tail.len();
+    format!("{head}{}{tail}{second}", "x".repeat(pad))
+}
+
+#[test]
+fn sgroup_fields_across_chunks() {
+    let dir = std::env::temp_dir();
+    for before in [1, 4, 8, 11] {
+        let path = dir.join(format!("rdkit-cxx-sap-{before}.sdf"));
+        std::fs::write(&path, straddling_sd_file("SAP=(3 2 1 1)", before)).unwrap();
+        let mut suppl = ForwardSDMolSupplier::new(&path).unwrap();
+        let mols: Vec<Mol> = suppl.mols().map(|m| m.unwrap()).collect();
+        assert_eq!(mols.len(), 2);
+        assert_eq!(attach_points(&mols[1]), [(1, 0, "1".to_string())]);
+        let mut suppl = SDMolSupplier::new(&path).unwrap();
+        assert_eq!(
+            suppl
+                .mols()
+                .collect::<rdkit_cxx::Result<Vec<_>>>()
+                .unwrap()
+                .len(),
+            2
+        );
+
+        // Refused where the field starts, so RDKit never parses the line
+        // cut off at the boundary.
+        std::fs::write(&path, straddling_sd_file("SAP=(3 2 1)", before)).unwrap();
+        let mut suppl = ForwardSDMolSupplier::new(&path).unwrap();
+        let results: Vec<_> = suppl.mols().collect();
+        assert!(results[0].is_ok());
+        assert!(
+            results
+                .iter()
+                .any(|r| matches!(r, Err(Error::Value { .. }))),
+            "{before}"
+        );
+        std::fs::remove_file(&path).unwrap();
+    }
+    // A file that ends in the field.
+    let path = dir.join("rdkit-cxx-sap-end.sdf");
+    let block = sgroup_block("SAP=(3 2 1 1)");
+    std::fs::write(&path, &block[..block.find("1 1)").unwrap() + 1]).unwrap();
+    let mut suppl = ForwardSDMolSupplier::new(&path).unwrap();
+    assert!(suppl.mols().any(|r| matches!(r, Err(Error::Value { .. }))));
+    std::fs::remove_file(&path).unwrap();
 }

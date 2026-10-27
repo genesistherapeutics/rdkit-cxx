@@ -26,6 +26,7 @@
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/rascal_mces.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
@@ -517,6 +518,14 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 //   int; a NaN threshold passes every comparison before it.
 // - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
 //   equivalentAtoms that does not parse.
+// - RDKit 2025.09's checkTimeout, when the time is up and the clique in hand
+//   is larger than those kept, clears them and reads the first (RDKit 2026.03
+//   checks, rdkit/rdkit#9450), so any timeout that fires can read an empty
+//   vector. The search runs without one: the timeout is not honored.
+// - RDKit 2025.09's RascalResult prunes fragments farther apart than
+//   maxFragSeparation by resetting one of a pair and going on to measure
+//   from it (a null dereference with three or more fragments; RDKit 2026.03
+//   fixed it, rdkit/rdkit#9424), so only -1 is taken.
 // completeSmallestRings implies completeAromaticRings (RascalOptions.h), and
 // buildPairs reads the ring SMILES that only completeAromaticRings makes, so
 // it is set here as documented.
@@ -533,7 +542,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   o.maxFragSeparation = d.max_frag_separation;
   o.allBestMCESs = d.all_best_mcess;
   o.maxBestMCESs = d.max_best_mcess;
-  o.timeout = d.timeout;
+  o.timeout = -1;
   o.returnEmptyMCES = d.return_empty_mces;
   o.maxBondMatchPairs = d.max_bond_match_pairs;
   o.equivalentAtoms = std::string(d.equivalent_atoms);
@@ -541,8 +550,10 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   o.ignoreAtomAromaticity = d.ignore_atom_aromaticity;
   o.minCliqueSize = d.min_clique_size;
 
-  if (o.maxFragSeparation < -1) {
-    throw ValueErrorException("maxFragSeparation must be -1 or more");
+  if (o.maxFragSeparation != -1) {
+    throw ValueErrorException(
+        "maxFragSeparation must be -1: RDKit 2025.09 dereferences a fragment "
+        "it pruned for any other value");
   }
   if (std::isnan(o.similarityThreshold)) {
     throw ValueErrorException("similarityThreshold is NaN");
@@ -553,6 +564,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
                boost::token_compress_on);
   if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
     for (const auto &smarts : classes) {
+      check_cx_atom_props(smarts);
       if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
         throw RDKit::SmilesParse::SmilesParseException(
             "could not parse the equivalentAtoms SMARTS '" + smarts + "'");

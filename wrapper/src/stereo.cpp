@@ -7,6 +7,7 @@
 
 #include "rdkit-cxx/stereo.h"
 
+#include <algorithm>
 #include <vector>
 
 #include <RDGeneral/Exceptions.h>
@@ -49,6 +50,20 @@ RDKit::StereoGroup from_data(RWMol &mol, StereoGroupType group_type,
   if (atoms.empty() && bonds.empty()) {
     throw ValueErrorException(
         "New StereoGroup must contain at least one atom or bond.");
+  }
+  // RDKit 2025.09 accepts a repeated atom or bond, of which a removal would
+  // leave a dangling pointer (check_stereo_group_duplicates); RDKit 2026.03
+  // refuses it.
+  std::vector<RDKit::Atom *> sorted_atoms(atoms);
+  std::sort(sorted_atoms.begin(), sorted_atoms.end());
+  std::vector<RDKit::Bond *> sorted_bonds(bonds);
+  std::sort(sorted_bonds.begin(), sorted_bonds.end());
+  if (std::adjacent_find(sorted_atoms.begin(), sorted_atoms.end()) !=
+          sorted_atoms.end() ||
+      std::adjacent_find(sorted_bonds.begin(), sorted_bonds.end()) !=
+          sorted_bonds.end()) {
+    throw ValueErrorException(
+        "a StereoGroup cannot hold an atom or bond twice");
   }
   return RDKit::StereoGroup(group_type, atoms, bonds, read_id);
 }

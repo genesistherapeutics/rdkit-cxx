@@ -297,7 +297,9 @@ pub fn calc_getaway(mol: &Mol) -> Result<Vec<f64>> {
     calc_getaway_with_params(mol, &CalcGETAWAYParams::default())
 }
 
-/// With a custom property, 45 values. Mirrors
+/// With a custom property, 45 values; `Error::Value` then for a molecule
+/// whose atoms are all within 7 bonds of each other, for which RDKit 2025.09
+/// returns uninitialized values. Mirrors
 /// `rdMolDescriptors.CalcGETAWAY(mol, confId, precision,
 /// CustomAtomProperty)`.
 pub fn calc_getaway_with_params(mol: &Mol, params: &CalcGETAWAYParams) -> Result<Vec<f64>> {

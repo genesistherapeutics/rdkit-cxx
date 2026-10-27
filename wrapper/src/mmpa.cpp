@@ -16,6 +16,7 @@
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
@@ -52,6 +53,7 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
   // SMARTS is dereferenced, and each match's first two atoms are read as
   // the bond to cut.
   std::string smarts(pattern);
+  check_cx_atom_props(smarts);
   std::unique_ptr<RDKit::RWMol> query(RDKit::SmartsToMol(smarts));
   if (!query) {
     throw RDKit::SmilesParse::SmilesParseException(

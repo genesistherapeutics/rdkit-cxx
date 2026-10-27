@@ -575,7 +575,11 @@ class DocumentChecker {
     }
     bool known = false;
     if (prefixed >= 0) {
-      known = is_atom_value_query(base) && *tag == prefixed;
+      // RDKit 2025.09 reads an AtomRingSize query's value through
+      // static_cast<ATOM_EQUALS_QUERY *>, and RangeQuery is no
+      // EqualityQuery (RDKit 2026.03 reads a range's bounds).
+      known = is_atom_value_query(base) && *tag == prefixed &&
+              !(prefixed == MolPickler::QUERY_RANGE && base == "AtomRingSize");
     } else if (is_atom_value_query(base)) {
       // AtomRingQuery is an EqualityQuery, which RDKit makes for
       // AtomInNRings and AtomRingBondCount (QueryOps.h, QueryOps.cpp).
