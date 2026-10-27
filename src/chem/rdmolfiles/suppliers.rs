@@ -253,8 +253,8 @@ impl SDMolSupplier {
         to_string(ffi::sd_mol_supplier_get_item_text(self.raw_mut(), index)?)
     }
 
-    /// Whether `atom.prop.*` and `bond.prop.*` data become atom and bond
-    /// properties. Mirrors `SDMolSupplier.GetProcessPropertyLists`.
+    /// Whether `atom.prop.*` data become atom properties (RDKit 2024.03 has
+    /// no bond property lists). Mirrors `SDMolSupplier.GetProcessPropertyLists`.
     pub fn get_process_property_lists(&self) -> bool {
         expect_ok(ffi::sd_mol_supplier_get_process_property_lists(self.raw()))
     }

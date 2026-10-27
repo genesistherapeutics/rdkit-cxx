@@ -204,6 +204,31 @@ void check_coord_gen_mol(const RDKit::ROMol &mol,
   // int (U9).
   check_formal_charge_sum(mol);
   check_coord_gen_morgan_scores(mol, treat_nonterminal_bonds_to_metal_as_zobs);
+  // RDKit 2024.03's CoordGen.h reads the first two stereo atoms of every
+  // double bond marked Z, E, cis, or trans (RDKit 2026 skips one with fewer),
+  // and indexes its atoms by them; Bond::setStereo sets Z and E without
+  // stereo atoms.
+  for (const auto *bond : mol.bonds()) {
+    const auto stereo = bond->getStereo();
+    if (bond->getBondType() != RDKit::Bond::DOUBLE ||
+        stereo <= RDKit::Bond::STEREOANY || stereo > RDKit::Bond::STEREOTRANS) {
+      continue;
+    }
+    const auto &atoms = bond->getStereoAtoms();
+    if (atoms.size() < 2) {
+      throw ValueErrorException(
+          "CoordGen needs two stereo atoms for double bond " +
+          std::to_string(bond->getIdx()) + ", whose stereo is set");
+    }
+    for (std::size_t i = 0; i < 2; ++i) {
+      if (atoms[i] < 0 ||
+          static_cast<unsigned>(atoms[i]) >= mol.getNumAtoms()) {
+        throw ValueErrorException(
+            "double bond " + std::to_string(bond->getIdx()) +
+            " has a stereo atom past the molecule's atoms");
+      }
+    }
+  }
 }
 
 bool depicts_with_coord_gen(bool force_rdkit) {

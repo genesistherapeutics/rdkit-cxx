@@ -564,14 +564,51 @@ FP::MultithreadedMolSupplier::Parameters mt_params(
   return params;
 }
 
+// As build, for the multithreaded suppliers, whose reader thread reads the
+// stream from the constructor on (suppliers.h): the input is checked before
+// the constructor, and after it only once the threads are done (mt_at_end),
+// since the check reads the stream's state that the reader thread writes.
+// A constructor that throws has started no threads but by failing to start
+// one (std::system_error).
+template <class W, class S, class... Args>
+void build_mt(W &w, std::unique_ptr<CheckedIStream> in, Args &&...args) {
+  SupplierInput input{std::move(in), nullptr};
+  input.check();
+  auto suppl = std::make_unique<S>(input.stream.get(), false,
+                                   std::forward<Args>(args)...);
+  // The old supplier, drained by its wrapper, goes before the stream it
+  // reads.
+  W old;
+  old.input = std::move(w.input);
+  old.suppl = std::move(w.suppl);
+  w.suppl = std::move(suppl);
+  w.input = std::move(input);
+}
+
+// Whether the supplier is at its end, which needs every thread done: the
+// last writer marks the output queue done after the reader has stopped. The
+// input is checked then, so input that failed explains the end.
+template <class W>
+bool mt_at_end(W &w) {
+  if (!w.suppl->atEnd()) {
+    return false;
+  }
+  w.input.check();
+  return true;
+}
+
 // next() returns null both at the end and for a record it could not read;
-// only a read record changes the last record id.
+// only a read record changes the last record id. A null at the end checks
+// the input (mt_at_end).
 template <class W>
 std::unique_ptr<RWMol> mt_next(W &w, std::uint32_t &record) {
   auto before = w.suppl->getLastRecordId();
-  auto mol = checked(w.input, [&] { return w.suppl->next(); });
+  auto mol = w.suppl->next();
   auto after = w.suppl->getLastRecordId();
   record = (mol || after != before) ? after : 0;
+  if (!mol) {
+    mt_at_end(w);
+  }
   return mol;
 }
 
@@ -587,8 +624,8 @@ void drain_supplier(FP::MultithreadedMolSupplier &suppl) {
 
 std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_new() {
   auto s = std::make_unique<MultithreadedSDMolSupplier>();
-  build<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
-      *s, checked_text(""), nullptr, FP::MultithreadedMolSupplier::Parameters(),
+  build_mt<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
+      *s, checked_text(""), FP::MultithreadedMolSupplier::Parameters(),
       FP::MolFileParserParams());
   return s;
 }
@@ -598,8 +635,8 @@ std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_from_file(
     bool strict_parsing, const MultithreadedParamsData &params) {
   auto p = mt_params(params);
   auto s = std::make_unique<MultithreadedSDMolSupplier>();
-  build<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
-      *s, open_checked_file(to_path(path), true), nullptr, p,
+  build_mt<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
+      *s, open_checked_file(to_path(path), true), p,
       mol_params(sanitize, remove_hs, strict_parsing));
   return s;
 }
@@ -610,7 +647,7 @@ std::unique_ptr<RWMol> mt_sd_mol_supplier_next(MultithreadedSDMolSupplier &s,
 }
 
 bool mt_sd_mol_supplier_at_end(MultithreadedSDMolSupplier &s) {
-  return checked(s.input, [&] { return s.suppl->atEnd(); });
+  return mt_at_end(s);
 }
 
 std::uint32_t mt_sd_mol_supplier_get_last_record_id(
@@ -643,8 +680,8 @@ void mt_sd_mol_supplier_set_process_property_lists(
 
 std::unique_ptr<MultithreadedSmilesMolSupplier> mt_smiles_mol_supplier_new() {
   auto s = std::make_unique<MultithreadedSmilesMolSupplier>();
-  build<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
-      *s, checked_text(""), nullptr, FP::MultithreadedMolSupplier::Parameters(),
+  build_mt<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
+      *s, checked_text(""), FP::MultithreadedMolSupplier::Parameters(),
       FP::SmilesMolSupplierParams());
   return s;
 }
@@ -656,8 +693,8 @@ mt_smiles_mol_supplier_from_file(rust::Slice<const std::uint8_t> path,
   auto p = mt_params(params);
   auto sp = smiles_params(smiles);
   auto s = std::make_unique<MultithreadedSmilesMolSupplier>();
-  build<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
-      *s, open_checked_file(to_path(path), true), nullptr, p, sp);
+  build_mt<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
+      *s, open_checked_file(to_path(path), true), p, sp);
   return s;
 }
 
@@ -667,7 +704,7 @@ std::unique_ptr<RWMol> mt_smiles_mol_supplier_next(
 }
 
 bool mt_smiles_mol_supplier_at_end(MultithreadedSmilesMolSupplier &s) {
-  return checked(s.input, [&] { return s.suppl->atEnd(); });
+  return mt_at_end(s);
 }
 
 std::uint32_t mt_smiles_mol_supplier_get_last_record_id(
