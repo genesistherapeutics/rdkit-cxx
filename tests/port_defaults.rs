@@ -9,7 +9,6 @@
 // A2).
 
 use rdkit_cxx::data_structs::FoldToTargetDensityParams;
-use rdkit_cxx::ml::cluster::butina::ClusterDataParams;
 use rdkit_cxx::ml::cluster::clusters::{ClusterParams, PrintParams};
 use rdkit_cxx::ml::data::data_utils::{CountResultsParams, FilterDataParams, TextToDataParams};
 use rdkit_cxx::ml::data::ml_data::MLDataSetParams;
@@ -24,15 +23,6 @@ use rdkit_cxx::utils::chemutils::ConfigToNumElectronsParams;
 
 #[test]
 fn defaults_are_pythons() {
-    // ClusterData(data, nPts, distThresh, isDistData=False, distFunc=EuclideanDist,
-    // reordering=False)
-    assert_eq!(
-        ClusterDataParams::default(),
-        ClusterDataParams {
-            is_dist_data: false,
-            reordering: false
-        }
-    );
     // Cluster(metric=0.0, children=None, position=None, index=-1, name=None, data=None)
     assert_eq!(
         ClusterParams::default(),

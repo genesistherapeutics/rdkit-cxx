@@ -5,18 +5,24 @@
 
 //! rdMolDescriptors's 3D descriptors, of a conformer: principal moments and
 //! the shape indices from them, the plane of best fit, autocorrelations,
-//! RDF, MoRSE, WHIM, GETAWAY, Coulomb matrices, and EEM charges.
+//! RDF, MoRSE, WHIM, Coulomb matrices, and EEM charges.
+//!
+//! GETAWAY (`rdMolDescriptors.CalcGETAWAY`) is not bound: RDKit 2024.03's
+//! `GetGeodesicMatrix` (GETAWAY.cpp) reserves a vector and writes past its
+//! size on every call, and `GETAWAY` reads its HATS, H, and R arrays
+//! uninitialized for molecules of topological diameter below 8, so no input
+//! check could make it sound (U1).
 //!
 //! Each takes a conformer id, −1 for the default conformer. A molecule
 //! without conformers is `Error::Runtime`, as in Python, and a missing id
 //! `Error::Value`.
 //!
-//! The moments and the indices from them, the plane of best fit, WHIM,
-//! GETAWAY, and EEM solve matrices of the coordinates, and Eigen leaves its
+//! The moments and the indices from them, the plane of best fit, WHIM, and
+//! EEM solve matrices of the coordinates, and Eigen leaves its
 //! output uninitialized when they are not finite, so for them coordinates
 //! beyond 1e9 or not finite are `Error::Value`, as are WHIM's custom weights.
-//! GETAWAY and EEM divide by the atoms' distances, so two atoms within 1e-6
-//! of each other are `Error::Value` there too, as embedding `[Na+].[Cl-]`
+//! EEM divides by the atoms' distances, so two atoms within 1e-6 of each
+//! other are `Error::Value` there too, as embedding `[Na+].[Cl-]`
 //! leaves them.
 
 use crate::Result;
@@ -270,41 +276,6 @@ pub fn calc_whim_with_params(mol: &Mol, params: &CalcWHIMParams) -> Result<Vec<f
         mol.as_ffi(),
         params.conf_id,
         params.thresh,
-        &params.custom_atom_property,
-    )?)
-}
-
-custom_property_params! {
-    /// Parameters for `calc_getaway_with_params`, with Python's defaults
-    /// (A2).
-    CalcGETAWAYParams {
-        /// The significant digits of the leverages RDKit clusters; RDKit
-        /// truncates it to an integer. It must be in [0, 25): RDKit's
-        /// conversion is undefined below 0 and for NaN, and it prints each
-        /// leverage with this many digits into a 32-byte buffer, so others
-        /// are `Error::Value`.
-        precision: f64 = 2.0,
-    }
-}
-
-/// The 273 GETAWAY descriptors. `Error::Value` for a molecule without atoms
-/// (where RDKit crashes), for the coordinates the module refuses, and above
-/// 46340 atoms (U3).
-/// For a disconnected molecule RDKit loops to its distance between
-/// fragments, 10^8, which takes seconds even for two atoms. Mirrors
-/// `rdMolDescriptors.CalcGETAWAY`.
-pub fn calc_getaway(mol: &Mol) -> Result<Vec<f64>> {
-    calc_getaway_with_params(mol, &CalcGETAWAYParams::default())
-}
-
-/// With a custom property, 45 values. Mirrors
-/// `rdMolDescriptors.CalcGETAWAY(mol, confId, precision,
-/// CustomAtomProperty)`.
-pub fn calc_getaway_with_params(mol: &Mol, params: &CalcGETAWAYParams) -> Result<Vec<f64>> {
-    Ok(ffi::calc_getaway(
-        mol.as_ffi(),
-        params.conf_id,
-        params.precision,
         &params.custom_atom_property,
     )?)
 }

@@ -5,13 +5,13 @@
 
 // Ports rdkit/ML/Cluster/UnitTestButina.py, UnitTestCluster.py, and
 // murtagh_test.py, with values from Python's rdkit.ML.Cluster modules in
-// RDKit 2026.03.6.
+// RDKit 2024.03.6.
 
 // Python's test data, 3.14, is not pi.
 #![allow(clippy::approx_constant)]
 
 use rdkit_cxx::Error;
-use rdkit_cxx::ml::cluster::butina::{self, ClusterDataParams};
+use rdkit_cxx::ml::cluster::butina;
 use rdkit_cxx::ml::cluster::cluster_utils::*;
 use rdkit_cxx::ml::cluster::clusters::{Cluster, ClusterParams, PrintParams, cmp, cmptol};
 use rdkit_cxx::ml::cluster::{murtagh, resemblance, standardize};
@@ -77,14 +77,67 @@ fn butina_unit_tests() {
     );
     // Empty input.
     assert!(flat(&[], 0, 2.0, true).is_empty());
-    // Mismatched input.
-    let err = butina::cluster_data_flat(&[1., 2., 3.], 1, 2.0).unwrap_err();
+    // Too many distances: Python warns and uses the first ones.
     assert_eq!(
-        err,
-        Error::Value {
-            message: "Mismatched input data dimension and nPts".to_owned()
-        }
+        butina::cluster_data_flat(&[1., 2., 3.], 1, 2.0).unwrap(),
+        [vec![0]]
     );
+    assert_eq!(
+        butina::cluster_data_flat(&[1., 2., 3., 4.], 3, 1.0).unwrap(),
+        [vec![1, 0], vec![2]]
+    );
+    assert_eq!(
+        butina::cluster_data_flat(&[0.5, 0.2, 0.9, 7.0], 3, 1.0).unwrap(),
+        [vec![2, 0, 1]]
+    );
+    // Too few: Python reads past the end.
+    assert!(matches!(
+        butina::cluster_data_flat(&[1., 2.], 3, 1.0),
+        Err(Error::Index { .. })
+    ));
+}
+
+#[test]
+fn butina_reordering_iterates_sets_like_python() {
+    // Reordering makes the recounted neighbor lists Python sets, so later
+    // clusters list their members in CPython's set order: {1, 6, 8} in an
+    // 8-slot table iterates 8, 1, 6.
+    let dists = [
+        0.1, 0.8, 0.4, 0.7, 0.6, 0.8, 0.5, 0.2, 0.2, 0.7, 0.3, 0.4, 0.0, 0.3, 1.0, 1.0, 0.9, 0.8,
+        0.5, 0.0, 0.4, 0.3, 0.9, 0.4, 0.3, 0.9, 0.3, 0.8, 0.1, 0.5, 0.7, 0.3, 0.2, 0.4, 0.7, 1.0,
+    ];
+    assert_eq!(
+        flat(&dists, 9, 0.3, true),
+        [vec![5, 0, 2, 3, 7], vec![4, 8, 1, 6]]
+    );
+    assert_eq!(
+        flat(&dists, 9, 0.3, false),
+        [vec![5, 0, 2, 3, 7], vec![4, 1, 6, 8]]
+    );
+    // Random distance sets (tenths from 0 to 1) of 10 to 40 points, with
+    // the clusters Python gives with reordering.
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/data/butina_reordering.tsv"
+    );
+    let text = std::fs::read_to_string(path).unwrap();
+    let mut n_cases = 0;
+    for line in text.lines() {
+        let fields: Vec<&str> = line.split('\t').collect();
+        let n_pts: usize = fields[0].parse().unwrap();
+        let thresh: f64 = fields[1].parse().unwrap();
+        let dists: Vec<f64> = fields[2]
+            .split(' ')
+            .map(|k| k.parse::<u32>().unwrap() as f64 / 10.0)
+            .collect();
+        let expected: Vec<Vec<usize>> = fields[3]
+            .split(';')
+            .map(|c| c.split(',').map(|x| x.parse().unwrap()).collect())
+            .collect();
+        assert_eq!(flat(&dists, n_pts, thresh, true), expected, "{line}");
+        n_cases += 1;
+    }
+    assert_eq!(n_cases, 60);
 }
 
 fn points() -> Vec<Vec<f64>> {
@@ -114,16 +167,11 @@ fn butina_points_match_python() {
         vec![0],
     ];
     assert_eq!(butina::cluster_data(&pts, 30, 2.5).unwrap(), expected);
-    let reordered = butina::cluster_data_with_params(
-        &pts,
-        30,
-        2.5,
-        &ClusterDataParams {
-            reordering: true,
-            ..Default::default()
-        },
-    )
-    .unwrap();
+    // RDKit 2024.03.6's Python raises for points of more than one
+    // coordinate; these are its clusters with the Euclidean distance as
+    // distFunc. With reordering, the fifth cluster's members come in set
+    // order.
+    let reordered = butina::cluster_data_with_reordering(&pts, 30, 2.5, true).unwrap();
     assert_eq!(
         reordered,
         [
@@ -131,31 +179,25 @@ fn butina_points_match_python() {
             vec![9, 2, 16, 20, 27],
             vec![4, 11, 15, 22, 25],
             vec![29, 1, 8, 18],
-            vec![21, 10, 14, 28],
+            vec![21, 10, 28, 14],
             vec![26, 5, 19],
             vec![23, 12],
             vec![7],
             vec![0],
         ]
     );
-    let m = butina::compute_distance_matrix(&pts, 30, |a, b| butina::euclidean_dist(a, b)).unwrap();
-    assert_eq!(m[7][3], 3.2542706982944396);
-    assert_eq!(m[29][0], 7.194229941032219);
+    assert_eq!(
+        butina::euclidean_dist(&pts[7], &pts[3]).unwrap(),
+        3.2542706982944396
+    );
+    assert_eq!(
+        butina::euclidean_dist(&pts[29], &pts[0]).unwrap(),
+        7.194229941032219
+    );
     assert_eq!(
         butina::euclidean_dist(&[1.5, 2.0], &[0.25, -3.0]).unwrap(),
         5.153882032022076
     );
-    let from_matrix = butina::cluster_data_with_params(
-        &m,
-        30,
-        2.5,
-        &ClusterDataParams {
-            is_dist_data: true,
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    assert_eq!(from_matrix, expected);
     let with_func = butina::cluster_data_with_dist_func(
         &pts,
         30,
@@ -165,8 +207,20 @@ fn butina_points_match_python() {
     )
     .unwrap();
     assert_eq!(with_func, expected);
+    // Points of one coordinate, which Python clusters as they are.
+    let line = [vec![0.0], vec![0.5], vec![3.0], vec![3.2]];
+    assert_eq!(
+        butina::cluster_data(&line, 4, 0.6).unwrap(),
+        [vec![3, 2], vec![1, 0]]
+    );
+    // Python indexes the points only to compare them.
+    assert_eq!(butina::cluster_data(&[], 1, 0.6).unwrap(), [vec![0]]);
     assert!(matches!(
         butina::cluster_data(&pts, 31, 2.5),
+        Err(Error::Index { .. })
+    ));
+    assert!(matches!(
+        butina::cluster_data(&[vec![0.0]], 2, 0.6),
         Err(Error::Index { .. })
     ));
     assert!(matches!(
@@ -481,7 +535,22 @@ fn cluster_utils_match_python() {
     let mut c = murtagh::cluster_data_dists(&dists, 5, murtagh::upgma())
         .unwrap()
         .remove(0);
+    // RDKit 2024.03.6's Python raises TypeError here (it indexes with a
+    // float); this is RDKit 2026.03.6's value, what it means to compute.
     assert_eq!(find_cluster_centroid_from_dists(&mut c, &dists).unwrap(), 1);
+    // Points with the same data, which RDKit 2024.03.6 handles: that data.
+    let same_data = |data: f64, index: i64| {
+        Cluster::new_with_params(&ClusterParams {
+            index,
+            data: Some(data),
+            ..Default::default()
+        })
+    };
+    let mut same = node(1.0, vec![same_data(0.0, 1), same_data(0.0, 2)], 3);
+    assert_eq!(
+        find_cluster_centroid_from_dists(&mut same, &[0.5]).unwrap(),
+        0
+    );
     assert_eq!(indices(&get_node_list(&mut c)), [3, 4, 6, 2, 8, 1, 5, 7, 9]);
     assert_eq!(indices(&c.get_points()), [3, 4, 2, 1, 5]);
     // Python's calls, in its order, on one tree that each call reorders.
@@ -541,10 +610,17 @@ fn resemblance_matches_python() {
         resemblance::find_min_val_in_list(&m, 4),
         Err(Error::Value { .. })
     ));
+    // RDKit 2024.03.6's Python raises TypeError after the first `   ---    `
+    // for two or more objects (it indexes with a float); this is the table
+    // RDKit 2026.03.6 prints, what it means to.
     assert_eq!(
         resemblance::show_metric_mat(&[0.4, 0.2, 0.3, 1.0 / 3.0, 0.5, 2.0], 4).unwrap(),
         "   ---      0.400000  0.200000  0.333333\n   ---       ---      0.300000  0.500000\n   \
          ---       ---       ---      2.000000\n   ---       ---       ---       ---    \n"
+    );
+    assert_eq!(
+        resemblance::show_metric_mat(&[], 1).unwrap(),
+        "   ---    \n"
     );
     let pts = vec![vec![0.0, 0.0], vec![3.0, 4.0], vec![6.0, 8.0]];
     assert_eq!(

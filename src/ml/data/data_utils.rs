@@ -888,6 +888,11 @@ pub fn count_results_with_params(
 /// Replaces the results of a data set with random values between their
 /// smallest and largest. Mirrors `DataUtils.RandomizeActivities(dataSet)`.
 ///
+/// Python's raises `NameError` in RDKit 2024.03.6 (its comment says the
+/// code "isn't working": it reads an undefined `examples`), after marking
+/// `runDetails`; this computes what it means to, as RDKit 2026.03's
+/// Python does.
+///
 /// Errors as [`randomize_activities_with_shuffle`].
 pub fn randomize_activities(data_set: &mut MLDataSet) -> Result<()> {
     randomize_activities_with_shuffle(data_set, false)
@@ -896,7 +901,9 @@ pub fn randomize_activities(data_set: &mut MLDataSet) -> Result<()> {
 /// As [`randomize_activities`]; with `shuffle`, shuffles the results
 /// instead, which keeps the number of each. Mirrors
 /// `DataUtils.RandomizeActivities(dataSet, shuffle)`, whose `runDetails`
-/// argument, a composite model's run record, is only marked.
+/// argument, a composite model's run record, is only marked. Without
+/// `shuffle`, Python's raises in RDKit 2024.03.6, as for
+/// [`randomize_activities`]; this computes what it means to.
 ///
 /// `Error::Value` for a data set with more than one result column, or,
 /// without `shuffle`, no points or a result that is not a number;

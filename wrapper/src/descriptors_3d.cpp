@@ -35,8 +35,8 @@ namespace Desc = RDKit::Descriptors;
 // otherwise RDKit's own precondition reports it.
 bool has_conformers(const RWMol &mol) { return mol.getNumConformers() > 0; }
 
-// AUTOCORR3D, WHIM, and GETAWAY take &v[0] of per-atom vectors, which is
-// undefined for a molecule without atoms (GETAWAY crashes).
+// AUTOCORR3D and WHIM take &v[0] of per-atom vectors, which is undefined
+// for a molecule without atoms.
 void check_has_atoms(const RWMol &mol) {
   if (mol.getNumAtoms() == 0) {
     throw ValueErrorException("these descriptors need at least one atom");
@@ -208,30 +208,6 @@ rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
                           [&](std::vector<double> &res) {
                             Desc::WHIM(mol, res, conf_id, thresh, custom);
                           });
-}
-
-// GETAWAY converts the precision to unsigned int, which is undefined for a
-// negative, huge, or NaN value, and prints each leverage with that many
-// digits into a 32-byte buffer, which 25 or more overflow. It sorts the
-// atoms' leverages with std::sort, which is undefined for NaN, and divides
-// by the atoms' distances (coordinate_checks.h).
-rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
-                               double precision,
-                               rust::Str custom_atom_property) {
-  if (!(precision >= 0.0 && precision < 25.0)) {
-    throw ValueErrorException("GETAWAY's precision must be in [0, 25)");
-  }
-  std::string custom(custom_atom_property);
-  if (has_conformers(mol)) {
-    const auto &conf = mol.getConformer(conf_id);
-    check_finite_coordinates(conf, "GETAWAY");
-    check_distinct_positions(conf, "GETAWAY");
-  }
-  return table_descriptor(
-      mol, custom, true, true, [&](std::vector<double> &res) {
-        Desc::GETAWAY(mol, res, conf_id, static_cast<unsigned int>(precision),
-                      custom);
-      });
 }
 
 rust::Vec<double> calc_coulomb_mat(const RWMol &mol, std::int32_t conf_id) {

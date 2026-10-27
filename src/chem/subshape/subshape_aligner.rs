@@ -95,7 +95,9 @@ pub fn get_shape_shape_distance(
 }
 
 /// Python's `rdkit.ML.Cluster.Butina.ClusterData` of a lower-triangle
-/// distance list: each cluster's centroid first.
+/// distance list: each cluster's centroid first. Without reordering, this
+/// counts each point as its own neighbor, as RDKit 2026.03 does, which
+/// gives RDKit 2024.03's clusters.
 #[allow(clippy::needless_range_loop)] // fills both triangles of the matrix
 fn butina_cluster(dists: &[f64], n_pts: usize, dist_thresh: f64) -> Vec<Vec<usize>> {
     let mut matrix = vec![vec![0.0; n_pts]; n_pts];

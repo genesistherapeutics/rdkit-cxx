@@ -52,12 +52,6 @@ pub(crate) mod ffi {
             thresh: f64,
             custom_atom_property: &str,
         ) -> Result<Vec<f64>>;
-        fn calc_getaway(
-            mol: &RWMol,
-            conf_id: i32,
-            precision: f64,
-            custom_atom_property: &str,
-        ) -> Result<Vec<f64>>;
         fn calc_coulomb_mat(mol: &RWMol, conf_id: i32) -> Result<Vec<f64>>;
         fn calc_eem_charges(mol: &RWMol, conf_id: i32) -> Result<Vec<f64>>;
 

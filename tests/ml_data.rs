@@ -6,7 +6,8 @@
 // Ports rdkit/ML/Data/UnitTestQuantize.py, UnitTestStats.py,
 // UnitTestMLData.py, UnitTestFilter.py, and UnitTestDoctests.py (with the
 // doctests of DataUtils and SplitData), with values from Python's
-// rdkit.ML.Data modules in RDKit 2026.03.6.
+// rdkit.ML.Data modules in RDKit 2024.03.6 (RDKit 2026.03.6's where 2024.03.6's
+// raises and the port computes what it means to).
 
 mod common;
 
@@ -427,6 +428,8 @@ fn randomize_activities_matches_python() {
     assert_eq!(last, [F(2.1), F(1.1), F(3.1), F(4.1), F(5.1)]);
     let mut d = build_data_set(dat("randomize_activities_matches_python")).unwrap();
     init_random_numbers((23, 42));
+    // RDKit 2024.03.6's Python raises NameError without shuffle; these are
+    // RDKit 2026.03.6's values.
     randomize_activities(&mut d).unwrap();
     let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
     assert_eq!(
