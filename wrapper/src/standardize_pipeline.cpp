@@ -16,6 +16,7 @@
 #include <GraphMol/MolStandardize/Fragment.h>
 #include <GraphMol/MolStandardize/Metal.h>
 #include <GraphMol/MolStandardize/Normalize.h>
+#include <GraphMol/MolStandardize/TransformCatalog/TransformCatalogParams.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
@@ -26,6 +27,8 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_pipeline.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
+#include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/standardize_normalize.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
@@ -76,12 +79,34 @@ void check_metal_smarts(const std::string &smarts, const char *what) {
 // a mol block sets its substance groups' PARENT chains, and the validation
 // and standardization steps remove atoms and bonds from it and its copies
 // (metal disconnection, fragment removal, getMolFrags).
+//
+// The mol block's relevant cycles are checked as Operations::parse reads it,
+// and the molecule's for the steps after (check_standardize_relevant_cycles):
+// the standardize step's normalizer and metal patterns are the options'.
 RDKit::RWMOL_SPTR checked_parse(const std::string &molblock,
                                 MS::PipelineResult &result,
                                 const MS::PipelineOptions &options) {
+  RDKit::v2::FileParsers::MolFileParserParams params;
+  params.sanitize = false;
+  params.removeHs = false;
+  params.strictParsing = options.strictParsing;
+  check_mol_block_relevant_cycles(molblock, params);
   auto mol = MS::Operations::parse(molblock, result, options);
   if (mol) {
     check_removals(*mol);
+    TransformCycles normalizations;
+    if (options.normalizerData.empty()) {
+      normalizations = normalization_cycles(CleanupParameters());
+    } else {
+      std::istringstream data(options.normalizerData);
+      normalizations = transform_cycles(
+          MS::TransformCatalogParams(data).getTransformations());
+    }
+    const MS::PipelineOptions defaults;
+    check_standardize_relevant_cycles(
+        *mol, normalizations,
+        options.metalNof != defaults.metalNof ||
+            options.metalNon != defaults.metalNon);
   }
   return mol;
 }

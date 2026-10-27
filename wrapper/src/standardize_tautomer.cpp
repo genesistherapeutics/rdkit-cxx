@@ -204,6 +204,9 @@ void tautomer_enumerator_clear_callback(TautomerEnumerator &enumerator) {
 std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
   check_removals(mol);
+  // enumerate symmetrizes a copy's rings, and the tautomers it writes have
+  // the molecule's graph.
+  check_graph_relevant_cycles(mol);
   HoldControlC control_c;
   return std::make_unique<TautomerEnumeratorResult>(enumerator.enumerate(mol));
 }
@@ -222,6 +225,7 @@ std::unique_ptr<RWMol> tautomer_enumerator_canonicalize_with(
     const TautomerEnumerator &enumerator, const RWMol &mol,
     const ScoreFunction &score) {
   check_removals(mol);
+  check_graph_relevant_cycles(mol);
   HoldControlC control_c;
   return adopt_mol(enumerator.canonicalize(mol, scorer(score)));
 }
@@ -234,6 +238,10 @@ std::vector<RDKit::ROMOL_SPTR> &tautomers(BorrowedMols &mols) {
   }
   for (const auto &mol : mols.mols()) {
     check_removals(*mol);
+    // pickCanonical writes the tautomers it ties with MolToSmiles.
+    if (mols.mols().size() > 1) {
+      check_stereo_relevant_cycles(*mol);
+    }
   }
   return mols.mols();
 }

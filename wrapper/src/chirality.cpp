@@ -14,6 +14,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -39,14 +40,19 @@ namespace {
 
 }  // namespace
 
+// Stereo perception, and setting double bonds' neighbor directions,
+// symmetrize the molecule's rings unless they are a symmetrized SSSR
+// (check_perceive_relevant_cycles).
 void assign_stereochemistry(RWMol &mol, bool clean_it, bool force,
                             bool flag_possible_stereo_centers) {
+  check_perceive_relevant_cycles(mol);
   RDKit::MolOps::assignStereochemistry(mol, clean_it, force,
                                        flag_possible_stereo_centers);
 }
 
 void assign_stereochemistry_from_3d(RWMol &mol, std::int32_t conf_id,
                                     bool replace_existing_tags) {
+  check_perceive_relevant_cycles(mol);
   RDKit::MolOps::assignStereochemistryFrom3D(mol, conf_id,
                                              replace_existing_tags);
 }
@@ -80,10 +86,12 @@ void remove_non_explicit_3d_chirality(RWMol &mol) {
 }
 
 void detect_bond_stereochemistry(RWMol &mol, std::int32_t conf_id) {
+  check_perceive_relevant_cycles(mol);
   RDKit::MolOps::detectBondStereochemistry(mol, conf_id);
 }
 
 void set_double_bond_neighbor_directions(RWMol &mol) {
+  check_perceive_relevant_cycles(mol);
   RDKit::MolOps::setDoubleBondNeighborDirections(mol, nullptr);
 }
 
@@ -91,6 +99,7 @@ void set_double_bond_neighbor_directions(RWMol &mol) {
 // check.
 void set_double_bond_neighbor_directions_with_conf(RWMol &mol,
                                                    const Conformer &conf) {
+  check_perceive_relevant_cycles(mol);
   RDKit::MolOps::setDoubleBondNeighborDirections(mol, &conf);
 }
 
@@ -124,10 +133,11 @@ rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
 }
 
 // As canonicalizeStereoGroupsHelper in Code/GraphMol/Wrap/MolOps.cpp: a
-// copy gets the canonical groups.
+// copy gets the canonical groups, which RDKit compares by canonical SMILES.
 std::unique_ptr<RWMol> canonicalize_stereo_groups(
     const RWMol &mol, StereoGroupAbsOptions output_absolute_groups,
     std::uint32_t max_stereo_groups) {
+  check_stereo_relevant_cycles(mol);
   auto copy = std::make_unique<RDKit::ROMol>(mol);
   RDKit::canonicalizeStereoGroups(copy, output_absolute_groups,
                                   max_stereo_groups);

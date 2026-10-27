@@ -25,6 +25,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/descriptors.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -195,9 +196,17 @@ RDKIT_CXX_COUNT(calc_num_heavy_atoms, Desc::calcNumHeavyAtoms)
 RDKIT_CXX_COUNT(calc_num_atoms, Desc::calcNumAtoms)
 RDKIT_CXX_COUNT_MATCHES(calc_num_heteroatoms, Desc::calcNumHeteroatoms)
 RDKIT_CXX_COUNT_MATCHES(calc_num_amide_bonds, Desc::calcNumAmideBonds)
-RDKIT_CXX_COUNT(calc_num_atom_stereo_centers, Desc::numAtomStereoCenters)
-RDKIT_CXX_COUNT(calc_num_unspecified_atom_stereo_centers,
-                Desc::numUnspecifiedAtomStereoCenters)
+// Both assign stereochemistry to a copy of a molecule without it
+// (Lipinski.cpp).
+#define RDKIT_CXX_COUNT_STEREO(name, function) \
+  std::uint32_t name(const RWMol &mol) {       \
+    check_stereo_relevant_cycles(mol);         \
+    return function(mol);                      \
+  }
+RDKIT_CXX_COUNT_STEREO(calc_num_atom_stereo_centers, Desc::numAtomStereoCenters)
+RDKIT_CXX_COUNT_STEREO(calc_num_unspecified_atom_stereo_centers,
+                       Desc::numUnspecifiedAtomStereoCenters)
+#undef RDKIT_CXX_COUNT_STEREO
 
 #undef RDKIT_CXX_COUNT
 #undef RDKIT_CXX_COUNT_MATCHES
@@ -342,8 +351,10 @@ rust::Vec<double> calc_autocorr_2d(const RWMol &mol,
 // BCUT2D(mol) reads Crippen contributions through their cache, on a copy
 // that keeps the molecule's computed properties (U8), and makes that copy
 // with removeAllHs (check_removals).
+// BCUT2D removes every hydrogen from a copy, sanitizing it.
 rust::Vec<double> bcut_2d(const RWMol &mol) {
   check_removals(mol);
+  check_remove_all_hs_relevant_cycles(mol, true);
   DescriptorCacheGuard guard(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_vec(Desc::BCUT2D(mol));

@@ -17,6 +17,7 @@
 #include <GraphMol/MolStandardize/Charge.h>
 #include <GraphMol/MolStandardize/Fragment.h>
 #include <GraphMol/MolStandardize/Normalize.h>
+#include <GraphMol/MolStandardize/TransformCatalog/TransformCatalogParams.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
@@ -106,6 +107,14 @@ void super_parent_in_place(RWMol &mol, const CleanupParameters &params,
   MS::cleanupInPlace(mol, params);
 }
 
+// Whether the op normalizes, as cleanup does and every parent's (unless
+// skipped) and the super parent.
+bool normalizes(StandardizeOp op) {
+  return op != StandardizeOp::Reionize &&
+         op != StandardizeOp::RemoveFragments &&
+         op != StandardizeOp::CanonicalTautomer;
+}
+
 // One op with its parameters, and the objects it shares across molecules.
 // Normalize, Reionize, and RemoveFragments share one normalizer, reionizer,
 // or remover across the threads of a multi-molecule call, as RDKit's own
@@ -133,6 +142,9 @@ class Standardizer {
     if (uses_tautomers(op)) {
       d_enumerator = checked_enumerator(d_params);
     }
+    if (normalizes(op)) {
+      d_normalizations = normalization_cycles(d_params);
+    }
   }
 
   // Standardizing removes hydrogens and fragments, splits the molecule into
@@ -141,6 +153,7 @@ class Standardizer {
   // place, this is checked before the first edit.
   void check(const RWMol &mol) const {
     check_removals(mol);
+    check_standardize_relevant_cycles(mol, d_normalizations);
     if (sums_charges(d_op, d_skip)) {
       check_reionizer_atoms(mol);
     }
@@ -215,6 +228,7 @@ class Standardizer {
   std::unique_ptr<MS::Reionizer> d_reionizer;
   std::unique_ptr<MS::FragmentRemover> d_remover;
   std::unique_ptr<MS::TautomerEnumerator> d_enumerator;
+  TransformCycles d_normalizations;
 };
 
 // Runs work(i) for each i below n on up to num_threads threads, as RDKit's
@@ -275,6 +289,24 @@ RWMol &as_rwmol(RDKit::ROMol &mol) {
 }
 
 }  // namespace
+
+// What the normalizations the parameters name do to cycles
+// (check_standardize_relevant_cycles). RDKit reads a normalization file
+// again for each molecule, so one that changes between reads is not held to
+// what it said here.
+TransformCycles normalization_cycles(const CleanupParameters &params) {
+  if (params.normalizationData.empty() && params.normalizations.empty()) {
+    static const TransformCycles defaults = transform_cycles(
+        MS::TransformCatalogParams(std::string()).getTransformations());
+    return defaults;
+  }
+  if (!params.normalizationData.empty()) {
+    return transform_cycles(MS::TransformCatalogParams(params.normalizationData)
+                                .getTransformations());
+  }
+  return transform_cycles(
+      MS::TransformCatalogParams(params.normalizations).getTransformations());
+}
 
 std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol) {
   std::unique_ptr<RDKit::ROMol> owned(mol);
@@ -507,6 +539,8 @@ std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   check_reionizer_atoms(*mol);
   // CXSMILES can give the substance groups PARENT chains (Standardizer).
   check_removals(*mol);
+  check_standardize_relevant_cycles(*mol,
+                                    normalization_cycles(CleanupParameters()));
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   MS::cleanupInPlace(*mol);
   return std::make_unique<std::string>(RDKit::MolToSmiles(*mol));

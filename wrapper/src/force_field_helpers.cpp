@@ -24,6 +24,7 @@
 #include "rdkit-cxx/ffi/force_field.rs.h"
 #include "rdkit-cxx/ffi/force_field_helpers.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/threads.h"
 
 namespace rdkit_cxx {
@@ -39,12 +40,17 @@ void check_builder_size(const RDKit::ROMol &mol) { check_matrix_size(mol); }
 // minimizing, which may use several threads, matches nothing.
 // Ignoring interfragment interactions, UFF's builder splits the molecule
 // into its fragments (getMolFrags), removing atoms from copies, which trusts
-// what check_removals checks.
-template <class... Args>
-ForceFields::ForceField *build_uff(RDKit::ROMol &mol, Args &&...args) {
+// what check_removals checks, and sanitizing them.
+ForceFields::ForceField *build_uff(RDKit::ROMol &mol, double vdw_thresh,
+                                   int conf_id,
+                                   bool ignore_interfrag_interactions) {
   check_removals(mol);
+  if (ignore_interfrag_interactions) {
+    check_frags_sanitize_relevant_cycles(mol);
+  }
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  return RDKit::UFF::constructForceField(mol, std::forward<Args>(args)...);
+  return RDKit::UFF::constructForceField(mol, vdw_thresh, conf_id,
+                                         ignore_interfrag_interactions);
 }
 
 template <class... Args>
@@ -208,6 +214,14 @@ int mmff_optimize_molecule(RWMol &mol, rust::Str mmff_variant,
 }
 
 unsigned mmff_sanitize_molecule(RWMol &mol) {
+  // sanitizeMMFFMol's operations.
+  namespace M = RDKit::MolOps;
+  check_sanitize_relevant_cycles(
+      mol, M::SANITIZE_CLEANUP | M::SANITIZE_PROPERTIES |
+               M::SANITIZE_SYMMRINGS | M::SANITIZE_KEKULIZE |
+               M::SANITIZE_FINDRADICALS | M::SANITIZE_SETCONJUGATION |
+               M::SANITIZE_SETHYBRIDIZATION | M::SANITIZE_CLEANUPCHIRALITY |
+               M::SANITIZE_ADJUSTHS);
   return RDKit::MMFF::sanitizeMMFFMol(mol);
 }
 

@@ -16,6 +16,7 @@
 #include "rdkit-cxx/ffi/enumerate_stereoisomers.rs.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -69,6 +70,8 @@ std::unique_ptr<StereoisomerEnumerator> stereoisomer_enumerator_new(
   // removes atoms from copies of a molecule of several fragments
   // (check_removals); the enumerator keeps its own copy.
   check_removals(mol);
+  // It perceives the stereochemistry of copies of the molecule.
+  check_stereo_relevant_cycles(mol);
   auto res = std::make_unique<StereoisomerEnumerator>();
   res->enumerator =
       std::make_unique<ES::StereoisomerEnumerator>(mol, options, verbose);
@@ -103,6 +106,8 @@ std::unique_ptr<RWMol> stereoisomer_enumerator_next(
       std::unique_ptr<RDKit::ROMol> with_hs(
           RDKit::MolOps::addHs(*enumerator.unchecked));
       check_embed_mol(*with_hs, embed_molecule_params());
+      // The embedder cuts each isomer into sanitized fragments.
+      check_frags_sanitize_relevant_cycles(*with_hs);
       enumerator.unchecked.reset();
     }
     control_c = std::unique_lock<ControlCMutex>(control_c_mutex());

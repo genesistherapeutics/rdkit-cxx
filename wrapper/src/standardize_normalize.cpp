@@ -9,6 +9,7 @@
 #include <sstream>
 
 #include <GraphMol/MolStandardize/MolStandardize.h>
+#include <GraphMol/MolStandardize/TransformCatalog/TransformCatalogParams.h>
 #include <GraphMol/SmilesParse/SmartsWrite.h>
 #include <RDGeneral/Exceptions.h>
 
@@ -46,34 +47,50 @@ std::unique_ptr<std::string> smarts(const RDKit::ROMol *query) {
   if (!query) {
     throw ValueErrorException("the disconnector has no query");
   }
+  check_smarts_relevant_cycles(*query);
   return std::make_unique<std::string>(RDKit::MolToSmarts(*query));
 }
 
 }  // namespace
 
+// Each normalizer's transforms are read once more, for what they do to
+// cycles; a file that changes between the reads is not held to that.
 std::unique_ptr<Normalizer> normalizer_default() {
-  return std::make_unique<Normalizer>();
+  return std::make_unique<Normalizer>(
+      normalization_cycles(CleanupParameters()));
 }
 
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
-  return std::make_unique<Normalizer>(to_path(normalize_filename),
-                                      max_restarts);
+  auto path = to_path(normalize_filename);
+  auto cycles =
+      transform_cycles(MS::TransformCatalogParams(path).getTransformations());
+  return std::make_unique<Normalizer>(cycles, path, max_restarts);
 }
 
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
+  std::istringstream data{std::string(param_data)};
+  auto cycles =
+      transform_cycles(MS::TransformCatalogParams(data).getTransformations());
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Normalizer>(
-      in, to_cleanup_parameters(params).maxRestarts);
+      cycles, in, to_cleanup_parameters(params).maxRestarts);
 }
 
+// As normalizerFromParams in Normalize.h.
 std::unique_ptr<Normalizer> normalizer_from_params(
-    const CleanupParametersData &params) {
-  return std::unique_ptr<Normalizer>(
-      MS::normalizerFromParams(to_cleanup_parameters(params)));
+    const CleanupParametersData &data) {
+  auto params = to_cleanup_parameters(data);
+  auto cycles = normalization_cycles(params);
+  if (params.normalizationData.empty()) {
+    return std::make_unique<Normalizer>(cycles, params.normalizations,
+                                        params.maxRestarts);
+  }
+  return std::make_unique<Normalizer>(cycles, params.normalizationData,
+                                      params.maxRestarts);
 }
 
 // Normalizing runs reactions, and disconnecting metals matches patterns
@@ -84,12 +101,14 @@ std::unique_ptr<Normalizer> normalizer_from_params(
 std::unique_ptr<RWMol> normalizer_normalize(const Normalizer &normalizer,
                                             const RWMol &mol) {
   check_removals(mol);
+  check_standardize_relevant_cycles(mol, normalizer.cycles());
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return adopt_mol(mut(normalizer).normalize(mol));
 }
 
 void normalizer_normalize_in_place(const Normalizer &normalizer, RWMol &mol) {
   check_removals(mol);
+  check_standardize_relevant_cycles(mol, normalizer.cycles());
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   mut(normalizer).normalizeInPlace(mol);
 }

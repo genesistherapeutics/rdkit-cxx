@@ -6,12 +6,14 @@
 #include "rdkit-cxx/abbreviations.h"
 
 #include <algorithm>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <string>
 #include <utility>
 
 #include <GraphMol/MolOps.h>
+#include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
 #include <boost/tokenizer.hpp>
@@ -67,7 +69,9 @@ A::AbbreviationDefinition definition(rust::Str label, rust::Str display_label,
 // the line has two fields: on a shorter line it dereferences, and increments,
 // boost's token_iterator past its end, whose precondition is that it is valid
 // (in a release build it yields the last token again, so a lone label is read
-// as its own SMARTS). Such lines are left out.
+// as its own SMARTS). Such lines are left out. Each definition's molecule
+// is its SMARTS after a dummy atom (createAbbreviationMol), whose rings
+// adjustQueryProperties symmetrizes (check_graph_relevant_cycles).
 std::string lines_with_smarts(const std::string &text) {
   boost::char_separator<char> line_sep("\n");
   boost::char_separator<char> field_sep(" \t");
@@ -77,6 +81,13 @@ std::string lines_with_smarts(const std::string &text) {
     auto field = fields.begin();
     if (field == fields.end() || ++field == fields.end()) {
       continue;
+    }
+    if (smiles_cycle_bound(*field) > MAX_INDEPENDENT_CYCLES) {
+      std::string smarts = (*field)[0] == '*' ? *field : "*" + *field;
+      std::unique_ptr<RDKit::RWMol> mol(RDKit::SmartsToMol(smarts));
+      if (mol && mol->getNumAtoms() >= 2) {
+        check_graph_relevant_cycles(*mol);
+      }
     }
     res += line;
     res += '\n';

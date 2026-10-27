@@ -20,6 +20,7 @@
 
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/mol_list.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -35,6 +36,10 @@ using CleanupParameters = RDKit::MolStandardize::CleanupParameters;
 // NUL byte are refused (util.h's to_path).
 CleanupParameters to_cleanup_parameters(const CleanupParametersData &data);
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params);
+
+// What the normalizations the parameters name do to cycles
+// (check_standardize_relevant_cycles).
+TransformCycles normalization_cycles(const CleanupParameters &params);
 
 // Takes ownership of a molecule an RDKit object returned, which may be an
 // ROMol or an RWMol, as an RWMol without cached matrices (CONVENTIONS.md U6).

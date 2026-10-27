@@ -30,6 +30,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/mol_interchange.rs.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -741,8 +742,16 @@ std::unique_ptr<MolList> json_to_mols(rust::Str json_block,
   return list;
 }
 
+// The writer's addMol symmetrizes a copy of each molecule whose rings are
+// not a symmetrized SSSR, and of each recursive query's molecule it writes.
+void check_json_relevant_cycles(const RDKit::ROMol &mol) {
+  check_perceive_relevant_cycles(mol);
+  check_smarts_relevant_cycles(mol, false);
+}
+
 std::unique_ptr<std::string> mol_to_json(
     const RWMol &mol, const JSONWriteParametersData &params) {
+  check_json_relevant_cycles(mol);
   return std::make_unique<std::string>(
       MI::MolToJSONData(mol, write_params(params)));
 }
@@ -751,6 +760,7 @@ std::unique_ptr<std::string> mols_to_json(
     BorrowedMols &mols, const JSONWriteParametersData &params) {
   std::vector<const RDKit::ROMol *> list;
   for (const auto &mol : mols.mols()) {
+    check_json_relevant_cycles(*mol);
     list.push_back(mol.get());
   }
   return std::make_unique<std::string>(
