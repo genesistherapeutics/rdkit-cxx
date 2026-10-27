@@ -40,6 +40,9 @@ struct WriterOutput {
   // The file, when the wrapper opened one; the Rust writer, if any.
   std::ofstream *file = nullptr;
   const RustWriteBuf *rust = nullptr;
+  // A stream of the RDKit writer's own over `stream`'s buffer, if it has one
+  // (MaeWriter, in writers.cpp), while the writer holds it.
+  const std::ostream *writer_stream = nullptr;
   // Throws BadFileException if the output has failed.
   void check() const;
 };

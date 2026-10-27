@@ -271,7 +271,10 @@ void check_colon_markup(const std::string &label, const char *what) {
       ++drawn;
     }
   }
-  if (colon >= drawn || (colon + 1 >= drawn && colon + 1 < label.size())) {
+  // RDKit reads past the rects for a colon that is the last character drawn
+  // unless it is the label's last byte; atom labels reach it wrapped in
+  // <lit></lit>, so the check refuses a last-drawn colon either way.
+  if (colon + 1 >= drawn) {
     refuse(std::string(what) +
            " has a colon whose place without the label's markup is past "
            "the characters RDKit draws, which its label layout indexes out "

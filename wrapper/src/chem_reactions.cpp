@@ -909,8 +909,12 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_block(rust::Str mrv,
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
-  return finish(RDKit::v2::MarvinParser::ReactionFromMrvBlock(text, params),
-                "the Marvin block");
+  // RDKit 2024.03 declares ReactionFromMrvBlock but defines it as
+  // ReactionFromMrvString; the stream reader is both.
+  std::istringstream stream(text);
+  return finish(
+      RDKit::v2::MarvinParser::ReactionFromMrvDataStream(stream, params),
+      "the Marvin block");
 }
 
 std::unique_ptr<ChemicalReaction> reaction_from_mrv_file(
@@ -921,8 +925,10 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_file(
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
-  return finish(RDKit::v2::MarvinParser::ReactionFromMrvBlock(text, params),
-                "the Marvin file " + to_std(path));
+  std::istringstream stream(text);
+  return finish(
+      RDKit::v2::MarvinParser::ReactionFromMrvDataStream(stream, params),
+      "the Marvin file " + to_std(path));
 }
 
 bool mrv_block_is_reaction(rust::Str mrv) {

@@ -97,7 +97,7 @@ void WriterOutput::check() const {
     throw RDKit::BadFileException("could not write the output: " +
                                   rust->error());
   }
-  if (stream && stream->fail()) {
+  if ((stream && stream->fail()) || (writer_stream && writer_stream->fail())) {
     throw RDKit::BadFileException("could not write the output");
   }
 }
@@ -481,9 +481,17 @@ void check_mae(const RWMol &mol, const RDKit::STR_VECT &props) {
   }
 }
 
+// RDKit 2024.03's MaeWriter(std::shared_ptr<std::ostream>) moves the pointer
+// into its member and then checks the moved-from argument, so it always
+// throws. The writer gets a stream of its own over the output's buffer
+// instead, which its raw-pointer constructor owns and deletes when it
+// closes; that stream's error state is checked with the output's while the
+// writer holds it.
 std::unique_ptr<MaeWriter> make_mae_writer(WriterOutput out) {
   auto w = std::make_unique<MaeWriter>();
-  w->writer = std::make_unique<RDKit::MaeWriter>(out.stream);
+  auto *stream = new std::ostream(out.stream->rdbuf());
+  w->writer = std::make_unique<RDKit::MaeWriter>(stream);
+  out.writer_stream = stream;
   w->out = std::move(out);
   return w;
 }
@@ -510,7 +518,15 @@ void mae_writer_write(MaeWriter &w, const RWMol &mol, std::int32_t conf_id) {
 
 void mae_writer_flush(MaeWriter &w) { flush_writer(w); }
 
-void mae_writer_close(MaeWriter &w) { close_writer(w); }
+// RDKit's close deletes the writer's stream (make_mae_writer), so the stream
+// is flushed and checked first, and not checked after.
+void mae_writer_close(MaeWriter &w) {
+  if (w.out.writer_stream) {
+    checked(w, [&] { w.writer->flush(); });
+    w.out.writer_stream = nullptr;
+  }
+  close_writer(w);
+}
 
 std::uint32_t mae_writer_num_mols(const MaeWriter &w) {
   return w.writer->numMols();
