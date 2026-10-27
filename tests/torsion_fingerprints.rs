@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.TorsionFingerprints in RDKit 2026.03.6, and
+// Values from Python's rdkit.Chem.TorsionFingerprints in RDKit 2024.03.6, and
 // the tests of UnitTestMol3D.py. The ligands are that test's PDB files with
 // their bond orders assigned from its template (AllChem's
 // AssignBondOrdersFromTemplate), written as mol files; Python gives the same
@@ -809,11 +809,11 @@ fn torsion_lists_match_python() {
         assert_floats(
             &calculate_torsion_weights_with_params(&m, &params).unwrap(),
             &[
-                0.00010000000000000009,
-                0.10000000000000002,
+                0.0166810053720006,
+                0.3593813663804628,
                 1.0,
-                0.10000000000000002,
-                0.10000000000000002,
+                0.3593813663804628,
+                0.3593813663804628,
             ],
         );
     }
@@ -842,11 +842,11 @@ fn torsion_lists_match_python() {
         assert_floats(
             &calculate_torsion_weights_with_params(&m, &params).unwrap(),
             &[
-                0.00010000000000000009,
-                0.10000000000000002,
+                0.0166810053720006,
+                0.3593813663804628,
                 1.0,
-                0.10000000000000002,
-                0.10000000000000002,
+                0.3593813663804628,
+                0.3593813663804628,
             ],
         );
     }
@@ -947,7 +947,7 @@ fn torsion_lists_match_python() {
         };
         assert_floats(
             &calculate_torsion_weights_with_params(&m, &params).unwrap(),
-            &[0.0166810053720006],
+            &[0.10000000000000002],
         );
     }
     {
@@ -968,7 +968,7 @@ fn torsion_lists_match_python() {
         };
         assert_floats(
             &calculate_torsion_weights_with_params(&m, &params).unwrap(),
-            &[0.0166810053720006, 0.0166810053720006],
+            &[0.10000000000000002, 0.10000000000000002],
         );
     }
     {
@@ -1008,11 +1008,11 @@ fn torsion_lists_match_python() {
         assert_floats(
             &calculate_torsion_weights_with_params(&m, &params).unwrap(),
             &[
-                0.005623413251903492,
-                0.10000000000000002,
-                0.10000000000000002,
-                0.005623413251903492,
-                0.6062849814573232,
+                0.03630780547701015,
+                0.22908676527677732,
+                0.22908676527677732,
+                0.03630780547701015,
+                1.078144099141388,
             ],
         );
     }
@@ -1053,11 +1053,11 @@ fn torsion_lists_match_python() {
         assert_floats(
             &calculate_torsion_weights_with_params(&m, &params).unwrap(),
             &[
-                0.005623413251903492,
-                0.10000000000000002,
-                0.10000000000000002,
-                0.005623413251903492,
-                0.6062849814573232,
+                0.03630780547701015,
+                0.22908676527677732,
+                0.22908676527677732,
+                0.03630780547701015,
+                1.078144099141388,
             ],
         );
     }

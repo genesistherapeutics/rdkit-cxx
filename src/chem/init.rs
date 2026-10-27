@@ -253,14 +253,12 @@ fn legacy_chiral_centers(
     mol: &mut Mol,
     params: &FindMolChiralCentersParams,
 ) -> Result<Vec<(u32, String)>> {
-    for idx in 0..mol.get_num_atoms() {
-        mol.get_atom_with_idx_mut(idx)?
-            .clear_prop("_ChiralityPossible");
-    }
+    // Python neither clears `_ChiralityPossible` nor cleans, so flags and CIP
+    // codes from an earlier perception stay.
     assign_stereochemistry_with_params(
         mol,
         &AssignStereochemistryParams {
-            clean_it: true,
+            clean_it: false,
             force: params.force,
             flag_possible_stereo_centers: params.include_unassigned,
         },

@@ -4,13 +4,14 @@
 // license that can be found in the LICENSE file.
 
 // Ports the doctests of Python's Chem.FindMolChiralCenters, with values from
-// RDKit 2026.03.6. The file holds one test, so the one call that turns legacy
+// RDKit 2024.03.6. The file holds one test, so the one call that turns legacy
 // stereo perception off runs with no other thread reading the environment.
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::{
-    FindMolChiralCentersParams, find_mol_chiral_centers, find_mol_chiral_centers_with_params,
-    get_use_legacy_stereo_perception, mol_from_smiles, set_use_legacy_stereo_perception,
+    ChiralType, FindMolChiralCentersParams, find_mol_chiral_centers,
+    find_mol_chiral_centers_with_params, get_use_legacy_stereo_perception, mol_from_smiles,
+    set_use_legacy_stereo_perception,
 };
 
 fn centers(smiles: &str, params: &FindMolChiralCentersParams) -> Vec<(u32, String)> {
@@ -27,7 +28,7 @@ fn expected(codes: &[(u32, &str)]) -> Vec<(u32, String)> {
 
 #[test]
 fn find_mol_chiral_centers_matches_python() {
-    // RDKit 2026.03 perceives stereo with its legacy code by default.
+    // RDKit 2024.03 perceives stereo with its legacy code by default.
     assert!(get_use_legacy_stereo_perception());
 
     let mut mol = mol_from_smiles("[C@H](Cl)(F)Br").unwrap();
@@ -122,6 +123,55 @@ fn find_mol_chiral_centers_matches_python() {
             .unwrap()
             .has_prop("_ChiralityPossible")
     );
+
+    // RDKit 2024.03.6's legacy implementation neither clears
+    // `_ChiralityPossible` nor cleans, so a second call keeps what the first
+    // perceived.
+    let mut mol = mol_from_smiles("[C@H](Cl)(F)Br").unwrap();
+    let legacy_assigned = FindMolChiralCentersParams {
+        use_legacy_implementation: Some(true),
+        ..Default::default()
+    };
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy_assigned).unwrap(),
+        expected(&[(0, "R")])
+    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_chiral_tag(ChiralType::ChiUnspecified);
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy_assigned).unwrap(),
+        expected(&[(0, "R")])
+    );
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy).unwrap(),
+        expected(&[(0, "R")])
+    );
+    let mut mol = mol_from_smiles("CC(F)Cl").unwrap();
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy).unwrap(),
+        expected(&[(1, "?")])
+    );
+    mol.get_atom_with_idx_mut(2).unwrap().set_atomic_num(17);
+    mol.update_property_cache().unwrap();
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy).unwrap(),
+        expected(&[(1, "?")])
+    );
+    let mut mol = mol_from_smiles("C[C@H](F)C(F)(Cl)Br").unwrap();
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy).unwrap(),
+        expected(&[(1, "S"), (3, "?")])
+    );
+    assert_eq!(
+        find_mol_chiral_centers_with_params(&mut mol, &legacy_assigned).unwrap(),
+        expected(&[(1, "S")])
+    );
+    let possible: Vec<bool> = mol
+        .get_atoms()
+        .map(|atom| atom.has_prop("_ChiralityPossible"))
+        .collect();
+    assert_eq!(possible, [false, true, false, true, false, false, false]);
 
     // Safe Rust cannot switch the process-wide setting for the call, as
     // Python does, so the legacy implementation needs it on.

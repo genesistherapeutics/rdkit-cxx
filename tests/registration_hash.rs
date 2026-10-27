@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/Chem/UnitTestRegistrationHash.py, with exact layers
-// and hashes from Python's RegistrationHash in RDKit 2026.03.6.
+// and hashes from Python's RegistrationHash in RDKit 2024.03.6.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
@@ -867,9 +867,41 @@ fn github_8654() {
         cxflag: CXSmilesFields::CX_NONE,
         ..Default::default()
     };
+    // RDKit 2024.03.6 canonicalizes m1's stereo group even when cxflag does
+    // not write it, which flips its stereo, so the molecules' layers differ
+    // (RDKit 2026.03's fix for #8654 makes them equal).
+    let layers1 = get_mol_layers_with_params(&m1, &no_extensions).unwrap();
+    let layers2 = get_mol_layers_with_params(&m2, &no_extensions).unwrap();
     assert_eq!(
-        get_mol_layers_with_params(&m1, &no_extensions).unwrap(),
-        get_mol_layers_with_params(&m2, &no_extensions).unwrap()
+        layers1,
+        layers([
+            "O=C(N[C@H]1C[C@@H](C(=O)O)[C@@H]2C[C@H]12)C1CC(=O)N(Cc2ccccn2)C1",
+            "",
+            "C18H21N3O4",
+            "O=C(NC1CC(C(=O)O)C2CC12)C1CC(=O)N(Cc2ccccn2)C1",
+            "[O][C]([N]C1CC([C]([O])[O])C2CC12)C1C[C]([O])N(C[C]2[CH][CH][CH][CH][N]2)C1_2_0",
+            "[]",
+            "[O][C]([N][C@H]1C[C@@H]([C]([O])[O])[C@@H]2C[C@H]12)C1C[C]([O])N(C[C]2[CH][CH][CH][CH][N]2)C1_2_0",
+        ])
+    );
+    assert_eq!(
+        layers2[&HashLayer::CanonicalSmiles],
+        "O=C(N[C@H]1C[C@@H](C(=O)O)[C@@H]2C[C@@H]21)C1CC(=O)N(Cc2ccccn2)C1"
+    );
+    assert_eq!(
+        layers2[&HashLayer::TautomerHash],
+        "[O][C]([N][C@H]1C[C@@H]([C]([O])[O])[C@@H]2C[C@@H]21)C1C[C]([O])N(C[C]2[CH][CH][CH][CH][N]2)C1_2_0"
+    );
+    assert_ne!(layers1, layers2);
+    // With the default cxflag, m1's CXSmiles keeps its stereo group.
+    let layers1 = get_mol_layers(&m1).unwrap();
+    assert_eq!(
+        layers1[&HashLayer::CanonicalSmiles],
+        "O=C(N[C@H]1C[C@@H](C(=O)O)[C@@H]2C[C@H]12)C1CC(=O)N(Cc2ccccn2)C1 |&1:3,5,9,11|"
+    );
+    assert_eq!(
+        layers1[&HashLayer::TautomerHash],
+        "[O][C]([N][C@H]1C[C@@H]([C]([O])[O])[C@@H]2C[C@H]12)C1C[C]([O])N(C[C]2[CH][CH][CH][CH][N]2)C1_2_0 |&1:3,5,9,11|"
     );
 }
 

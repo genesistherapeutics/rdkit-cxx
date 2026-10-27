@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/Chem/UnitTestFragmentDescriptors.py (RDKit
-// 2026.03.6), and pins values from Python's rdkit.Chem.Fragments.
+// 2024.03.6), and pins values from Python's rdkit.Chem.Fragments.
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::{Mol, fragments, mol_from_smiles};
@@ -359,6 +359,28 @@ fn test22_fr_alkyl_halide() {
             ("c1ccccc1CC(C)(C)Cl", 1),
         ],
     );
+}
+
+/// RDKit 2024.03.6's `fr_prisulfonamd` SMARTS asks for oxygens charged both
+/// `+0` and `-1` (`[OX1;+0;-1]`), so it matches nothing, primary sulfonamides
+/// included; `fr_sulfonamd` still counts them.
+#[test]
+fn fr_prisulfonamd_matches_nothing() {
+    let cases = [
+        ("NS(=O)(=O)c1ccccc1", 1),
+        ("[NH2]S([O-])([O-])C", 1),
+        ("CS(=O)(=O)NC", 1),
+    ];
+    for (smi, sulfonamd) in cases {
+        let m = mol_from_smiles(smi).unwrap();
+        assert_eq!(fragments::fr_prisulfonamd(&m).unwrap(), 0, "{smi}");
+        assert_eq!(
+            fragments::fr_prisulfonamd_with_count_unique(&m, false).unwrap(),
+            0,
+            "{smi}"
+        );
+        assert_eq!(fragments::fr_sulfonamd(&m).unwrap(), sulfonamd, "{smi}");
+    }
 }
 
 /// Every fragment count, in Python's order, unique and not (countUnique),

@@ -416,12 +416,25 @@ fn multithreaded_sd_supplier() {
     let path = write("threaded.sdf", &three_sd());
     let mut suppl = MultithreadedSDMolSupplier::new(&path).unwrap();
     assert_eq!(suppl.get_last_record_id(), 0);
-    let mut got = names(suppl.mols());
+    // RDKit 2024.03's threads read the file's end as empty last records, one
+    // or more, as Python's trailing Nones.
+    let mols: Vec<_> = suppl.mols().collect();
+    assert!(mols.len() >= 4, "{}", mols.len());
+    let mut got: Vec<String> = mols
+        .iter()
+        .filter_map(|mol| mol.as_ref().ok())
+        .map(|mol| mol.get_prop("_Name").unwrap())
+        .collect();
     got.sort();
     assert_eq!(got, ["ethane", "methanol", "ring"]);
+    assert!(
+        mols.iter()
+            .filter_map(|mol| mol.as_ref().err())
+            .all(|err| matches!(err, Error::Parse { .. }))
+    );
     assert!(suppl.at_end());
-    assert!((1..=3).contains(&suppl.get_last_record_id()));
-    assert!(suppl.get_last_item_text().unwrap().contains("$$$$"));
+    assert!(suppl.get_last_record_id() >= 4);
+    suppl.get_last_item_text().unwrap();
     // RDKit's threads read the setting without a lock.
     assert!(matches!(
         suppl.set_process_property_lists(false),
@@ -434,15 +447,22 @@ fn multithreaded_sd_supplier() {
         ..Default::default()
     };
     let mut threaded = MultithreadedSDMolSupplier::new_with_params(&path, &params).unwrap();
-    threaded.set_process_property_lists(false).unwrap();
-    assert!(!threaded.get_process_property_lists());
-    assert_eq!(threaded.mols().count(), 3);
+    // RDKit 2024.03's threads start when the supplier is made: the setting
+    // can only be set to what it is.
+    threaded.set_process_property_lists(true).unwrap();
+    assert!(matches!(
+        threaded.set_process_property_lists(false),
+        Err(Error::Value { .. })
+    ));
+    assert!(threaded.get_process_property_lists());
+    assert_eq!(threaded.mols().filter(Result::is_ok).count(), 3);
     // Dropping a supplier mid-read stops its threads.
     let mut early = MultithreadedSDMolSupplier::new(&path).unwrap();
-    early.mols().next().unwrap().unwrap();
+    // Its threads put records out of order, the empty last ones too.
+    early.mols().next().unwrap().ok();
     drop(early);
     let mut empty = MultithreadedSDMolSupplier::default();
-    assert_eq!(empty.mols().count(), 0);
+    assert!(empty.mols().all(|mol| mol.is_err()));
 }
 
 #[test]
@@ -524,12 +544,18 @@ fn long_stereo_group_lines_are_refused() {
     assert!(mols[0].is_ok());
     assert!(matches!(mols[1], Err(Error::Value { .. })));
 
-    let mut threaded = MultithreadedSDMolSupplier::new(&path).unwrap();
-    let mols: Vec<_> = threaded.mols().collect();
-    assert!(
-        mols.iter()
-            .any(|mol| matches!(mol, Err(Error::Value { .. })))
-    );
+    // RDKit 2024.03's threads start reading when the supplier is made, so
+    // the checked input can refuse the line then or at a later read.
+    match MultithreadedSDMolSupplier::new(&path) {
+        Err(err) => assert!(matches!(err, Error::Value { .. }), "{err:?}"),
+        Ok(mut threaded) => {
+            let mols: Vec<_> = threaded.mols().collect();
+            assert!(
+                mols.iter()
+                    .any(|mol| matches!(mol, Err(Error::Value { .. })))
+            );
+        }
+    }
 
     let mut text = SDMolSupplier::default();
     text.set_data(&sd).unwrap();

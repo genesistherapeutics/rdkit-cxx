@@ -420,11 +420,13 @@ fn libraries_and_strategies_move_between_threads() {
     assert_eq!(strategy.type_(), "EvenSamplePairsStrategy");
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo; a
-/// library's reaction and building blocks are molecule pickles, which RDKit
-/// writes with such a type for a plain info Python gave it (U10).
+/// A library's reaction and building blocks are molecule pickles, whose
+/// monomer types are checked (U10). RDKit 2024.03 writes the type as a u32
+/// and makes the info of the type it reads, so a plain info's type changed
+/// to PDBRESIDUE loads as PDB residue info, and an unknown type is RDKit's
+/// error.
 #[test]
-fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
+fn loaded_libraries_read_monomer_types_as_rdkit_reads_them() {
     let mut amine = smiles("CN");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
@@ -441,15 +443,19 @@ fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
     unsafe { loaded.init_from_string(&bytes) }.unwrap();
     // The info's name (a u32 length, then its bytes), then its type.
     let at = bytes
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap()
         + 8;
     let mut changed = bytes.clone();
     changed[at] = 1;
     let mut loaded = EnumerateLibrary::default();
     // SAFETY: serialize's bytes with one byte changed inside a molecule
-    // pickle, as RDKit writes them for a molecule whose plain info has the
-    // PDB type; Boost's framing is serialize's.
-    assert!(is_value(unsafe { loaded.init_from_string(&changed) }));
+    // pickle, its monomer type, which RDKit 2024.03 reads into info of that
+    // type; Boost's framing is serialize's.
+    unsafe { loaded.init_from_string(&changed) }.unwrap();
+    changed[at] = 7;
+    let mut loaded = EnumerateLibrary::default();
+    // SAFETY: as above; RDKit refuses the type.
+    assert!(unsafe { loaded.init_from_string(&changed) }.is_err());
 }

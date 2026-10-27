@@ -213,10 +213,8 @@ pub fn get_mol_layers_with_params(
     let mut mol = remove_unnecessary_hs(original_molecule, true)?;
     strip_atom_map_labels(&mut mol)?;
 
-    // Canonicalize the stereo groups only when writing enhanced stereo.
-    if params.cxflag & CXSmilesFields::CX_ENHANCEDSTEREO != CXSmilesFields::CX_NONE {
-        canonicalize_enhanced_stereo(&mut mol)?;
-    }
+    // Canonicalize the stereo groups, whether or not `cxflag` writes them.
+    canonicalize_enhanced_stereo(&mut mol)?;
 
     let formula = mol_hash(&mol, HashFunction::MolFormula)?;
 
