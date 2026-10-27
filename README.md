@@ -27,7 +27,7 @@ those bindings, and computes what Python computes: `rdkit.Chem.QED` is
 Coverage: every name in RDKit 2024.03's Python interface, in its compiled
 modules and its Python modules, has a Rust counterpart or a recorded reason it
 has none ([Parity](#parity)). Of the 3,322 names the compiled modules expose,
-2,886 are bound. Of the 2,643 its Python modules define, 1,000 are ported; the
+2,885 are bound. Of the 2,643 its Python modules define, 1,000 are ported; the
 rest are Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM), legacy
 code whose replacement is bound (the sping canvases, the Python MCS search),
 command-line plumbing, Python protocol hooks, or deprecated.
