@@ -28,7 +28,8 @@ pub struct AssignCIPLabelsParams {
 /// `_CIPCode` properties. Mirrors `rdCIPLabeler.AssignCIPLabels`. An
 /// atropisomer bond with an end of no other bonds is left unlabeled, as
 /// RDKit 2026.09 leaves it; RDKit 2025.03 (and Python) reads past an empty
-/// vector for one.
+/// vector for one. More than 64 stereo atoms and bonds to label is
+/// `Error::Value`: RDKit 2025.03 pairs their descriptors in a 64-bit mask.
 pub fn assign_cip_labels(mol: &mut Mol) -> Result<()> {
     assign_cip_labels_with_params(mol, &AssignCIPLabelsParams::default())
 }
