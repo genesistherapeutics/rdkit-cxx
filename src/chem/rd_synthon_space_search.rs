@@ -44,6 +44,17 @@
 //! A reaction's synthons' chains are checked together, as a product carries
 //! them all.
 //!
+//! RDKit's fingerprint build stops between reactions at a Ctrl-C, after it
+//! has recorded the fingerprint type, leaving a space whose fingerprint
+//! search would dereference the missing fingerprints; RDKit 2026.03's
+//! fingerprint searches leave a Ctrl-C they took in RDKit's flag, which
+//! would cut the next build short. Here every call clears the flag before
+//! and after RDKit runs, the fingerprint searches build a space's
+//! fingerprints before searching it, and a space whose fingerprints are
+//! incomplete anyway (a build that failed partway) is `Error::Value` for
+//! `build_synthon_fingerprints`, the fingerprint searches, and the database
+//! writers.
+//!
 //! Shapes are built (`build_synthon_shapes`) for the database files, but
 //! the shape search and the progress bars are not bound (the manifest says
 //! why).

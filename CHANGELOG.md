@@ -96,6 +96,15 @@ Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
 - A query bond's (and query atom's) `expand_query` is `Error::Value` for a
   query bond or atom without a query of its own: RDKit's
   `QueryBond::expandQuery` reads that query's description unchecked.
+- The synthon space's fingerprint build is no longer cut short by a Ctrl-C
+  an earlier call left in RDKit's flag, after which the next fingerprint
+  search dereferenced the synthons' missing fingerprints (a segfault): RDKit
+  2026.03's fingerprint searches leave a SIGINT they take in the flag, and
+  the build records the fingerprint type before it reads the flag. Each
+  synthon wrapper clears the flag around RDKit's call, the fingerprint
+  searches build missing fingerprints first, and a space whose fingerprints
+  are incomplete is `Error::Value` for the build, the fingerprint searches,
+  and the database writers.
 
 ### Bindings
 
