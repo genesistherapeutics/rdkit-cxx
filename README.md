@@ -299,9 +299,9 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in these ways. They
-do not corrupt memory on the supported platforms, and they need fixes in
-RDKit:
+Safe Rust can still reach undefined behavior in RDKit in these ways, which
+need fixes in RDKit. All but the last do not corrupt memory on the supported
+platforms, and the last needs the system to run out of threads:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
