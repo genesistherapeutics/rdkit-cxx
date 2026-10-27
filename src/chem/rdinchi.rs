@@ -113,9 +113,13 @@ pub fn inchi_to_mol_with_params(
 /// Cl, Br, and I, whose hydrogens InChI counts itself, and any radical); an
 /// isotope more than 100 from its element's average mass; a coordinate that
 /// is not finite or exceeds 1e18 in magnitude; a tetrahedral stereo center
-/// with three or four neighbors, counting hydrogens, but fewer than three
-/// neighbor atoms, whose other neighbors RDKit leaves unset; or a stereo
-/// bond whose stereo atoms are not in the molecule. `Error::Kekulize` (or
+/// with fewer than three neighbor atoms but three or more neighbors counting
+/// implicit hydrogens, whose other neighbors RDKit leaves unset; an atom
+/// with any chiral tag, or a `molParity` property, and more than four
+/// neighbor atoms, which RDKit 2024.03 writes past InChI's four stereo
+/// neighbors; an atom that is the lower-index end of more than 20 bonds,
+/// past InChI's per-atom bond arrays; or a stereo bond whose stereo atoms
+/// are not in the molecule. `Error::Kekulize` (or
 /// another sanitization variant) for aromatic systems RDKit cannot kekulize.
 /// Mirrors `rdinchi.MolToInchi`.
 ///

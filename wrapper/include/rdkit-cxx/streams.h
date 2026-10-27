@@ -27,6 +27,34 @@
 //   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
 //   RDKit reads an END BOND line after it, so input that ends (or is cut
 //   off) before a value is checked is never parsed as a molecule.
+// - RDKit 2024.03 reads several V3000 S-group values with operator>> into
+//   variables it leaves uninitialized, or reads the result unchecked
+//   (ParseV3000ParseLabel and the functions it calls in
+//   MolSGroupParsing.cpp): CSTATE's count and bond (`CSTATE=(` and
+//   `CSTATE=(4` read neither, `CSTATE=(4 ` no bond), the first value of
+//   ATOMS, PATOMS, CBONDS, XBONDS, XBHEAD, XBCORR, and BRKXYZ arrays whose
+//   nonzero count ends the line, PARENT's and COMPNO's value at the end of
+//   the line, and SAP's last string, which it pops a character from even
+//   when a read failed and left it empty (2026.03 initializes and checks
+//   them). A value after " CSTATE=", " SAP=", " PARENT=", " COMPNO=", or
+//   one of those arrays' names must give RDKit's reads something to read
+//   before the logical line ends (SgroupValue in streams.cpp).
+// - RDKit parses SMARTS in mol blocks, with CXSMILES on: the rest of an
+//   "M  MRV SMA" line and the data of a SMARTSQ data S-group (V2000 "M  SCD"
+//   and "M  SED" lines, V3000 FIELDDATA). A mol block's "M  " lines (V3000
+//   ones joined, V2000 SCD and SED data joined as RDKit joins them) may not
+//   hold "SgD:", "atomProp:", or "Sg:", the CXSMILES fields RDKit 2024.03
+//   reads past the end of (cx_extension_problem in file_checks.h).
+// - A SMILES file's lines (scan_smiles_lines) are checked as the SMILES
+//   suppliers read them: the SMILES column's CXSMILES extension, as
+//   check_smiles_cx checks it.
+//
+// RDKit parses each line as soon as it has read it, and reads a line cut off
+// by the end of the input (or by a refusal) as a whole one. So a byte is
+// delivered only once a cut after it would be safe: the scanner holds back
+// the bytes from the start of a value or field whose check needs bytes not
+// yet scanned (hold()), and refuses (cut()) at the start of a held value,
+// never inside one, nor before what it already delivered.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
@@ -54,6 +82,72 @@ constexpr std::uint64_t kMaxInputLines = (std::uint64_t{1} << 31) - (1 << 20);
 // The longest V3000 enhanced-stereo line, in characters after "M  V30 ".
 constexpr std::uint64_t kMaxStereoGroupLine = 4000;
 
+// The most bytes held back at once (see above); input that needs more is
+// refused.
+constexpr std::uint64_t kMaxHold = std::uint64_t{1} << 20;
+// The longest V3000 S-group value window: white space RDKit skips inside a
+// value whose check is pending.
+constexpr std::uint64_t kMaxValueWindow = 4096;
+
+// Finds "SgD:", "atomProp:", and "Sg:" in a stream of bytes.
+class CxTokenMatcher {
+ public:
+  // Takes the byte at `pos`; true if it ends a field name, whose start
+  // start() then gives.
+  bool push(char c, std::uint64_t pos);
+  std::uint64_t start() const { return d_start; }
+  // The start of the longest field-name prefix the bytes end with, or
+  // UINT64_MAX.
+  std::uint64_t partial() const;
+  void reset() { d_size = 0; }
+
+ private:
+  static constexpr std::size_t kLongest = 9;
+  char d_tail[kLongest] = {};
+  std::uint64_t d_pos[kLongest] = {};
+  std::size_t d_size = 0;
+  std::uint64_t d_start = 0;
+};
+
+// A V3000 logical line's S-group values (see above): what RDKit's reads of
+// the value after a label would find if the line ended at each byte.
+class SgroupValue {
+ public:
+  // Takes the byte at `pos` of the logical line; false if RDKit would
+  // misread the value (why() and start() then say why and where it began).
+  bool push(char c, std::uint64_t pos);
+  // Whether the line ending here leaves RDKit a value it misreads.
+  bool open() const { return d_open != UINT64_MAX; }
+  std::uint64_t start() const { return d_open; }
+  const char *why() const { return d_why; }
+  void reset() { *this = SgroupValue(); }
+
+ private:
+  enum class Kind : std::uint8_t {
+    kNone, kCState, kSap, kScalar, kArray
+  };
+  bool fail(const char *why);
+  void close();
+  Kind d_kind = Kind::kNone;
+  int d_state = 0;
+  // The label since the last space (at most 7 characters, then too long).
+  char d_label[7] = {};
+  std::size_t d_label_size = 0;
+  bool d_label_long = false;
+  bool d_after_space = false;
+  std::uint64_t d_label_end = 0;
+  std::uint64_t d_number = 0;
+  std::uint64_t d_open = UINT64_MAX;
+  std::uint64_t d_window = 0;
+  const char *d_why = "";
+};
+
+// What a V3000 logical line holds that a cut-off line could misread.
+struct LogicalChecks {
+  SgroupValue value;
+  CxTokenMatcher tokens;
+};
+
 // Scans text in order, one byte at a time across calls.
 class InputScanner {
  public:
@@ -61,22 +155,56 @@ class InputScanner {
   // the bytes before the first that breaks one, after which error() says
   // why).
   std::size_t feed(const char *bytes, std::size_t n);
+  // The input ended after the bytes fed. False if that breaks a limit.
+  bool finish();
   const std::string &error() const { return d_error; }
+  // After a failure, the first byte that may not be delivered.
+  std::uint64_t cut() const { return d_cut; }
+  // The first byte that may not be delivered until more is scanned, or
+  // UINT64_MAX.
+  std::uint64_t hold() const;
+  // Checks each line as a SMILES supplier with this delimiter and SMILES
+  // column reads it. Called before any byte is fed.
+  void scan_smiles_lines(std::string delimiter, int column);
 
  private:
   void end_line();
-  void confirm(char c);
+  void confirm(char c, std::uint64_t pos);
   void end_points(char c);
   bool fail(std::string why);
+  bool fail_at(std::string why, std::uint64_t start);
+  std::uint64_t logical_hold(bool dangers_only) const;
+  void mol_line_byte(char c, std::uint64_t pos);
+  void smiles_line_byte(char c, std::uint64_t pos);
+  void end_smiles_line();
 
   std::string d_error;
   std::uint64_t d_lines = 0;
+  // The offset of the next byte, where a failure cuts the input, and the
+  // first byte not yet delivered as safe at the end of the last feed.
+  std::uint64_t d_fed = 0;
+  std::uint64_t d_cut = UINT64_MAX;
+  std::uint64_t d_safe = 0;
   // The physical line being read: its length so far, its first seven bytes,
-  // and its last two (unconfirmed) bytes of V3000 content.
+  // and its last two (unconfirmed) bytes of V3000 content, with their
+  // offsets.
   std::uint64_t d_pos = 0;
   char d_head[7] = {};
   int d_pending = 0;
   char d_pend[2] = {};
+  std::uint64_t d_pend_pos[2] = {};
+  // The V3000 logical line's values and CXSMILES field names, a V2000 "M  "
+  // line's field names, and those of the SCD and SED data joined.
+  LogicalChecks d_checks;
+  CxTokenMatcher d_mline_tokens;
+  CxTokenMatcher d_data_tokens;
+  // A SMILES file's line, with its first CXSMILES field name's offset.
+  bool d_smiles = false;
+  std::string d_delimiter;
+  int d_column = 0;
+  std::string d_line;
+  CxTokenMatcher d_line_tokens;
+  std::uint64_t d_line_first = UINT64_MAX;
   // The logical V3000 line, joined across continuations.
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
@@ -112,6 +240,10 @@ class CheckedStreambuf : public std::streambuf {
   // thread.
   bool failed() const { return d_failed.load(std::memory_order_acquire); }
   std::string error() const;
+  // As InputScanner::scan_smiles_lines; before any read.
+  void scan_smiles_lines(std::string delimiter, int column) {
+    d_scanner.scan_smiles_lines(std::move(delimiter), column);
+  }
 
  protected:
   int_type underflow() override;
@@ -121,6 +253,7 @@ class CheckedStreambuf : public std::streambuf {
 
  private:
   bool fill(std::uint64_t chunk);
+  bool release(std::uint64_t pos);
   void refuse(const std::string &why, std::uint64_t at);
   int_type hit();
   void changed();
@@ -138,6 +271,13 @@ class CheckedStreambuf : public std::streambuf {
   std::uint64_t d_offset = 0;
   std::uint64_t d_scanned = 0;
   std::uint64_t d_limit = UINT64_MAX;
+  // The first byte held back (InputScanner::hold), and a copy of held bytes
+  // from chunks no longer in the buffer, from d_carry_pos; whether the
+  // scanner was told that the source ended.
+  std::uint64_t d_hold = UINT64_MAX;
+  std::string d_carry;
+  std::uint64_t d_carry_pos = 0;
+  bool d_finished = false;
   // The size below which the source may not shrink: the bytes it has shown,
   // and the end a seek reported.
   std::uint64_t d_least_end = 0;
@@ -157,6 +297,10 @@ class CheckedIStream : public std::istream {
  public:
   explicit CheckedIStream(std::unique_ptr<std::streambuf> source);
   const CheckedStreambuf &checked() const { return d_buf; }
+  // As CheckedStreambuf::scan_smiles_lines.
+  void scan_smiles_lines(std::string delimiter, int column) {
+    d_buf.scan_smiles_lines(std::move(delimiter), column);
+  }
   // Throws ValueErrorException if RDKit asked for refused input.
   void check() const;
 

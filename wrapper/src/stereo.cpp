@@ -98,8 +98,8 @@ StereoGroupData create_stereo_group(StereoGroupType group_type,
                                     rust::Slice<const std::uint32_t> atom_ids,
                                     unsigned read_id) {
   // The group is built only to read back RDKit's checks and ids.
-  return to_data(from_data(const_cast<RWMol &>(mol), group_type, atom_ids,
-                           {}, read_id));
+  return to_data(
+      from_data(const_cast<RWMol &>(mol), group_type, atom_ids, {}, read_id));
 }
 
 void forward_stereo_group_ids(RWMol &mol) { RDKit::forwardStereoGroupIds(mol); }

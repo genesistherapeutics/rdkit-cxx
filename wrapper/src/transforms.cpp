@@ -149,19 +149,6 @@ bool has_zip_label(const RDKit::Atom *atom, const RDKit::MolzipParams &params) {
   }
 }
 
-// The atom at `idx` in the molecule molzip combines from `mols`
-// (combineMols puts each molecule's atoms after the ones before), or null.
-const RDKit::Atom *combined_atom(const std::vector<const RDKit::ROMol *> &mols,
-                                 unsigned idx) {
-  for (const auto *mol : mols) {
-    if (idx < mol->getNumAtoms()) {
-      return mol->getAtomWithIdx(idx);
-    }
-    idx -= mol->getNumAtoms();
-  }
-  return nullptr;
-}
-
 // molzip takes the atom bonded to each labeled atom from get_other_atom,
 // which is null unless the labeled atom has exactly one neighbor. RDKit
 // dereferences that null pointer with the FragmentOnBonds label, and when
@@ -174,10 +161,10 @@ const RDKit::Atom *combined_atom(const std::vector<const RDKit::ROMol *> &mols,
 // the atom another label bonds, which the batch edit deletes as a used
 // dummy; restore_chirality then reads it (restore, getOwningMol) after it is
 // freed. So no call may hold one, for any label: with FragmentOnBonds every
-// dummy is labeled, so a dummy bonded to a dummy, and the atom a dummy's
-// isotope names, which RDKit bonds, may not be a dummy either. `mols` are
-// the molecules RDKit combines, in order, which a FragmentOnBonds isotope
-// indexes.
+// dummy is labeled, so no dummy may be bonded to a dummy. (The atom a
+// FragmentOnBonds isotope names, which RDKit bonds, can then be a dummy only
+// if RDKit finds no dummy beside it naming the other atom back, and gives up
+// before it deletes anything.) `mols` are the molecules RDKit combines.
 void check_zip_labels(const std::vector<const RDKit::ROMol *> &mols,
                       const RDKit::MolzipParams &params, bool zipping_list) {
   const bool fob = params.label == RDKit::MolzipLabel::FragmentOnBonds;
@@ -197,16 +184,6 @@ void check_zip_labels(const std::vector<const RDKit::ROMol *> &mols,
               "molzip: RDKit 2024.03 cannot zip a linker (labeled atoms " +
               std::to_string(atom->getIdx()) + " and " +
               std::to_string(nbr->getIdx()) + " bonded to each other)");
-        }
-      }
-      if (fob) {
-        const auto *target = combined_atom(mols, atom->getIsotope());
-        if (target && target->getAtomicNum() == 0) {
-          throw ValueErrorException(
-              "molzip: dummy atom " + std::to_string(atom->getIdx()) +
-              "'s isotope names atom " + std::to_string(atom->getIsotope()) +
-              ", a dummy atom, which RDKit 2024.03 would delete and then "
-              "read");
         }
       }
     }
@@ -625,10 +602,10 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
   check_zip_labels(parts, params, true);
   check_removals(parts);
   auto lock = lock_if_depicting(params);
-  if (!check_zipped_depiction(
-          mols.mols(), params, [&](const RDKit::MolzipParams &probe) {
-            return RDKit::molzip(mols.mols(), probe);
-          })) {
+  if (!check_zipped_depiction(mols.mols(), params,
+                              [&](const RDKit::MolzipParams &probe) {
+                                return RDKit::molzip(mols.mols(), probe);
+                              })) {
     return nullptr;
   }
   return to_rwmol(RDKit::molzip(mols.mols(), params));

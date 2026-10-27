@@ -14,6 +14,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_validate.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
@@ -176,6 +177,7 @@ void atom_list_push(AtomList &list, const Atom &atom) {
 // As validateSmiles in Validate.cpp, with MolVSValidation's charge check.
 std::unique_ptr<std::vector<std::string>> validate_smiles(rust::Str smiles) {
   std::string input(smiles);
+  check_smiles_cx(input);
   std::unique_ptr<RWMol> mol(RDKit::SmilesToMol(input));
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +

@@ -21,6 +21,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/filter_catalog.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
@@ -862,6 +863,7 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
   texts.reserve(smiles.size());
   for (auto text : smiles) {
     texts.emplace_back(text);
+    check_smiles_cx(texts.back());
   }
   std::vector<std::vector<FilterCatalog::CONST_SENTRY>> results(texts.size());
   // More threads than SMILES would have nothing to do.

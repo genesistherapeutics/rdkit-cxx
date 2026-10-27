@@ -642,9 +642,9 @@ impl Default for MolzipParams {
 /// `Error::Value` with `MolzipLabel::FragmentOnBonds` for a dummy without
 /// exactly one neighbor, which RDKit would dereference as null, and with
 /// any label for a linker (two labeled atoms bonded to each other, such as
-/// `[*:1][*:2]`; with `FragmentOnBonds`, two dummies bonded to each other, or
-/// a dummy whose isotope names a dummy): RDKit 2024.03 has no linker support
-/// and reads the linker's atoms after deleting them. Also as
+/// `[*:1][*:2]`; with `FragmentOnBonds`, two dummies bonded to each other):
+/// RDKit 2024.03 has no linker support and reads the linker's atoms after
+/// deleting them. Also as
 /// `RWMol::remove_atom` for what RDKit's removals trust.
 pub fn molzip(a: &Mol, b: &Mol) -> Result<Option<Mol>> {
     molzip_with_params(a, b, &MolzipParams::default())

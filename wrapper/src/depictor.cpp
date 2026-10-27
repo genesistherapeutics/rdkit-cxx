@@ -30,6 +30,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/depictor.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
@@ -145,6 +146,7 @@ void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
   // As CoordinateTemplates::loadTemplatesFromPath, which stops at the first
   // line it cannot parse.
   while (std::getline(lines, line)) {
+    check_smiles_cx(line);
     std::unique_ptr<RDKit::ROMol> mol(RDKit::SmartsToMol(line));
     if (!mol) {
       break;
@@ -308,14 +310,15 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
   // DepictUtils.cpp). The depictor reads nothing else of those groups, so it
   // gets a copy whose groups hold no bonds.
   const RDKit::ROMol &query = has_ref_patt ? ref_patt : reference;
-  if (params.allowRGroups) {
-    // It then removes the copy's terminal R groups (check_removals).
-    check_removals(query);
-  }
   std::unique_ptr<RDKit::RWMol> stripped;
   if (params.allowRGroups && has_stereo_group_bonds(query)) {
     stripped = std::make_unique<RDKit::RWMol>(query);
     clear_stereo_group_bonds(*stripped);
+  }
+  if (params.allowRGroups) {
+    // It then removes the copy's terminal R groups (check_removals), from
+    // the copy whose groups hold no bonds.
+    check_removals(stripped ? *stripped : query);
   }
   const RDKit::ROMol &ref = stripped && !has_ref_patt ? *stripped : reference;
   const RDKit::ROMol *patt = nullptr;

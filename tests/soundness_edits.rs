@@ -220,9 +220,7 @@ fn with_coordinates(label: MolzipLabel) -> MolzipParams {
 
 #[test]
 fn molzip_refuses_linkers() {
-    assert!(is_value(molzip_single(&smiles(
-        "C[*:1].[*:1][*:2].[*:2]N"
-    ))));
+    assert!(is_value(molzip_single(&smiles("C[*:1].[*:1][*:2].[*:2]N"))));
     assert!(is_value(molzip(
         &smiles("C[*:1].[*:2]N"),
         &smiles("[*:1][*:2]")
@@ -244,14 +242,18 @@ fn molzip_refuses_linkers() {
         &smiles("C[Xe].[Xe][Kr].[Kr]N"),
         &atom_type
     )));
-    // With FragmentOnBonds, two dummies bonded to each other, or a dummy
-    // whose isotope names a dummy.
-    assert!(is_value(molzip_single_with_params(&smiles("[1*][1*]"), &fob())));
-    assert!(is_value(molzip_with_params(
-        &smiles("C[2*]"),
-        &smiles("[0*]N"),
+    // With FragmentOnBonds, two dummies bonded to each other.
+    assert!(is_value(molzip_single_with_params(
+        &smiles("[1*][1*]"),
         &fob()
     )));
+    // A dummy whose isotope names a dummy finds no dummy beside it naming
+    // its own atom back, so RDKit gives up before it deletes anything.
+    assert!(
+        molzip_with_params(&smiles("C[2*]"), &smiles("[0*]N"), &fob())
+            .unwrap()
+            .is_none()
+    );
     let mut list = vec![smiles("C[*:1]"), smiles("[*:1][*:2]"), smiles("N[*:2]")];
     assert!(is_value(molzip_fragments(&mut list)));
 
@@ -291,12 +293,9 @@ fn molzip_lists_with_coordinates() {
     );
     let mut list = vec![smiles("CC*")];
     assert!(
-        molzip_fragments_with_params(
-            &mut list,
-            &with_coordinates(MolzipLabel::FragmentOnBonds)
-        )
-        .unwrap()
-        .is_none()
+        molzip_fragments_with_params(&mut list, &with_coordinates(MolzipLabel::FragmentOnBonds))
+            .unwrap()
+            .is_none()
     );
 
     // A fragment after the first whose SMILES repeats one's.
@@ -328,24 +327,20 @@ fn molzip_lists_with_coordinates() {
         &with_coordinates(MolzipLabel::FragmentOnBonds)
     )));
     let mut list = vec![fragmented];
-    let zipped = molzip_fragments_with_params(
-        &mut list,
-        &with_coordinates(MolzipLabel::FragmentOnBonds),
-    )
-    .unwrap()
-    .unwrap();
+    let zipped =
+        molzip_fragments_with_params(&mut list, &with_coordinates(MolzipLabel::FragmentOnBonds))
+            .unwrap()
+            .unwrap();
     assert_eq!(to_smiles(&zipped), "CCN");
     assert_eq!(zipped.get_num_conformers(), 1);
     assert_eq!(list[0].get_num_conformers(), 1);
 
     // Ordinary lists get coordinates.
     let mut list = vec![smiles("c1ccccc1[*:1]"), smiles("[*:1]CC")];
-    let zipped = molzip_fragments_with_params(
-        &mut list,
-        &with_coordinates(MolzipLabel::AtomMapNumber),
-    )
-    .unwrap()
-    .unwrap();
+    let zipped =
+        molzip_fragments_with_params(&mut list, &with_coordinates(MolzipLabel::AtomMapNumber))
+            .unwrap()
+            .unwrap();
     assert_eq!(to_smiles(&zipped), "CCc1ccccc1");
     assert!(list.iter().all(|mol| mol.get_num_conformers() == 1));
     let mut row = BTreeMap::from([

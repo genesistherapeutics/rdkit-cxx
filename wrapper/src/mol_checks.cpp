@@ -16,6 +16,7 @@
 #include <utility>
 #include <vector>
 
+#include <GraphMol/MolOps.h>
 #include <GraphMol/MonomerInfo.h>
 #include <GraphMol/QueryOps.h>
 #include <GraphMol/SubstanceGroup.h>
@@ -475,6 +476,221 @@ void check_removals(const RDKit::ROMol &mol) {
   check_bond_end_points(mol);
   check_substance_group_parents(mol);
   check_stereo_group_removals(mol);
+}
+
+void check_fragment_removals(const RDKit::ROMol &mol) {
+  check_bond_end_points(mol);
+  check_substance_group_parents(mol);
+  if (mol.getStereoGroups().empty()) {
+    return;
+  }
+  std::vector<int> frags;
+  if (RDKit::MolOps::getMolFrags(mol, frags) < 2) {
+    return;
+  }
+  const auto &groups = mol.getStereoGroups();
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    const auto &group = groups[g];
+    std::unordered_set<const RDKit::Atom *> seen;
+    for (const auto *atom : group.getAtoms()) {
+      if (!seen.insert(atom).second) {
+        throw ValueErrorException(
+            "stereo group " + std::to_string(g) + " repeats atom " +
+            std::to_string(atom->getIdx()) +
+            ", whose second copy RDKit 2024.03 leaves in the group when it "
+            "removes the atom, and reads after it is deleted");
+      }
+    }
+    if (group.getBonds().empty() || group.getAtoms().empty()) {
+      continue;
+    }
+    const int frag = frags[group.getAtoms().front()->getIdx()];
+    bool one_fragment = true;
+    for (const auto *atom : group.getAtoms()) {
+      one_fragment = one_fragment && frags[atom->getIdx()] == frag;
+    }
+    for (const auto *bond : group.getBonds()) {
+      one_fragment = one_fragment && frags[bond->getBeginAtomIdx()] == frag;
+    }
+    if (!one_fragment) {
+      throw ValueErrorException(
+          "stereo group " + std::to_string(g) +
+          " holds a bond and atoms of different fragments, which RDKit "
+          "2024.03 leaves pointing at the bond in a fragment's copy it "
+          "removes the bond from, and reads after it is deleted");
+    }
+  }
+}
+
+// Bridges by Tarjan's low-link, with its own stack.
+void check_kekulize_questions(const RDKit::ROMol &mol) {
+  const auto n = mol.getNumAtoms();
+  bool aromatic = false;
+  unsigned dummies = 0;
+  for (const auto *atom : mol.atoms()) {
+    aromatic = aromatic || atom->getIsAromatic();
+    dummies += atom->getAtomicNum() == 0;
+  }
+  for (const auto *bond : mol.bonds()) {
+    aromatic = aromatic || bond->getIsAromatic() ||
+               bond->getBondType() == RDKit::Bond::AROMATIC;
+  }
+  if (!aromatic || dummies < MAX_KEKULIZE_QUESTIONS) {
+    return;
+  }
+  std::vector<unsigned> order(n, 0), low(n, 0);
+  std::vector<char> bridge(mol.getNumBonds(), 0);
+  unsigned counter = 0;
+  // An atom, the bond it was reached by, and its bonds left to follow.
+  struct Frame {
+    unsigned atom;
+    int via;
+    std::vector<const RDKit::Bond *> bonds;
+    std::size_t pos;
+  };
+  for (unsigned start = 0; start < n; ++start) {
+    if (order[start]) {
+      continue;
+    }
+    std::vector<Frame> stack;
+    auto push = [&](unsigned atom, int via) {
+      order[atom] = low[atom] = ++counter;
+      Frame frame{atom, via, {}, 0};
+      for (const auto *bond : mol.atomBonds(mol.getAtomWithIdx(atom))) {
+        frame.bonds.push_back(bond);
+      }
+      stack.push_back(std::move(frame));
+    };
+    push(start, -1);
+    while (!stack.empty()) {
+      auto &top = stack.back();
+      if (top.pos < top.bonds.size()) {
+        const auto *bond = top.bonds[top.pos++];
+        if (static_cast<int>(bond->getIdx()) == top.via) {
+          continue;
+        }
+        const auto other = bond->getOtherAtomIdx(top.atom);
+        if (order[other]) {
+          low[top.atom] = std::min(low[top.atom], order[other]);
+        } else {
+          push(other, static_cast<int>(bond->getIdx()));
+        }
+        continue;
+      }
+      const auto atom = top.atom;
+      const auto via = top.via;
+      stack.pop_back();
+      if (!stack.empty()) {
+        auto &parent = stack.back();
+        low[parent.atom] = std::min(low[parent.atom], low[atom]);
+        if (low[atom] > order[parent.atom]) {
+          bridge[via] = 1;
+        }
+      }
+    }
+  }
+  // Union the atoms across ring bonds.
+  std::vector<unsigned> root(n);
+  for (unsigned i = 0; i < n; ++i) {
+    root[i] = i;
+  }
+  auto find = [&root](unsigned i) {
+    while (root[i] != i) {
+      root[i] = root[root[i]];
+      i = root[i];
+    }
+    return i;
+  };
+  std::vector<char> in_ring(n, 0);
+  for (const auto *bond : mol.bonds()) {
+    if (!bridge[bond->getIdx()]) {
+      in_ring[bond->getBeginAtomIdx()] = in_ring[bond->getEndAtomIdx()] = 1;
+      root[find(bond->getBeginAtomIdx())] = find(bond->getEndAtomIdx());
+    }
+  }
+  std::map<unsigned, unsigned> dummy_count;
+  std::map<unsigned, bool> has_non_dummy;
+  for (const auto *atom : mol.atoms()) {
+    const auto idx = atom->getIdx();
+    if (!in_ring[idx]) {
+      continue;
+    }
+    const auto r = find(idx);
+    if (atom->getAtomicNum() == 0) {
+      ++dummy_count[r];
+    } else {
+      has_non_dummy[r] = true;
+    }
+  }
+  for (const auto &[r, count] : dummy_count) {
+    if (count >= MAX_KEKULIZE_QUESTIONS && has_non_dummy[r]) {
+      throw ValueErrorException(
+          "a ring system holds " + std::to_string(count) +
+          " dummy atoms, at least " + std::to_string(MAX_KEKULIZE_QUESTIONS) +
+          ", for which RDKit 2024.03's kekulization shifts past the width of "
+          "an unsigned int");
+    }
+  }
+}
+
+void check_query_h_removals(const RDKit::ROMol &mol) {
+  check_bond_end_points(mol);
+  check_substance_group_parents(mol);
+  // A superset of isQueryH's query hydrogens: of atomic number 1, or a
+  // query atom with at most one neighbor whose query holds an atomic number
+  // 1 that is not negated.
+  auto maybe_merged = [](const RDKit::Atom *atom) {
+    if (atom->getAtomicNum() == 1) {
+      return true;
+    }
+    if (!atom->hasQuery() || atom->getDegree() > 1) {
+      return false;
+    }
+    std::vector<const RDKit::QueryAtom::QUERYATOM_QUERY *> stack{
+        atom->getQuery()};
+    while (!stack.empty()) {
+      const auto *query = stack.back();
+      stack.pop_back();
+      if (query->getDescription() == "AtomAtomicNum" &&
+          !query->getNegation()) {
+        const auto *equals =
+            dynamic_cast<const RDKit::ATOM_EQUALS_QUERY *>(query);
+        if (!equals || equals->getVal() == 1) {
+          return true;
+        }
+      }
+      for (auto child = query->beginChildren(); child != query->endChildren();
+           ++child) {
+        stack.push_back(child->get());
+      }
+    }
+    return false;
+  };
+  const auto &groups = mol.getStereoGroups();
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    std::unordered_set<const RDKit::Atom *> seen;
+    for (const auto *atom : groups[g].getAtoms()) {
+      if (maybe_merged(atom) && !seen.insert(atom).second) {
+        throw ValueErrorException(
+            "stereo group " + std::to_string(g) + " repeats atom " +
+            std::to_string(atom->getIdx()) +
+            ", whose second copy RDKit 2024.03 leaves in the group when it "
+            "merges the atom as a query hydrogen, and reads after it is "
+            "deleted");
+      }
+    }
+    for (const auto *bond : groups[g].getBonds()) {
+      if (maybe_merged(bond->getBeginAtom()) ||
+          maybe_merged(bond->getEndAtom())) {
+        throw ValueErrorException(
+            "stereo group " + std::to_string(g) + " holds bond " +
+            std::to_string(bond->getIdx()) +
+            " of a possible query hydrogen, which RDKit 2024.03 leaves in "
+            "the group when it merges the hydrogen, and reads after it is "
+            "deleted");
+      }
+    }
+  }
 }
 
 void remove_from_stereo_groups(RDKit::ROMol &mol,

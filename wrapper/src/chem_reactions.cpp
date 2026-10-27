@@ -39,6 +39,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 
 #include "rdkit-cxx/adjust_query.h"
@@ -65,15 +66,23 @@ namespace {
 using RDKit::MOL_SPTR_VECT;
 using RDKit::ROMOL_SPTR;
 
-// The reaction's templates, as check_removals checks a molecule: the SMILES
-// writer writes a template of several components a component at a time,
-// which it makes by removing the other atoms from copies (getMolFrags), and
-// SANITIZE_MERGEHS removes the reactants' query hydrogens.
-void check_template_removals(const ChemicalReaction &rxn) {
+// The reaction's templates, as check_fragment_removals checks a molecule:
+// the SMILES writer writes a template of several components a component at
+// a time, which it makes by removing the other atoms from copies
+// (getMolFrags). With merge_hs, the reactants as check_query_h_removals
+// checks one: SANITIZE_MERGEHS removes their query hydrogens (fixHs).
+void check_template_removals(const ChemicalReaction &rxn,
+                             bool merge_hs = false) {
   for (const auto *templates :
        {&rxn.getReactants(), &rxn.getAgents(), &rxn.getProducts()}) {
     for (const auto &templ : *templates) {
-      check_removals(*templ);
+      if (merge_hs) {
+        if (templates == &rxn.getReactants()) {
+          check_query_h_removals(*templ);
+        }
+      } else {
+        check_fragment_removals(*templ);
+      }
     }
   }
 }
@@ -317,9 +326,77 @@ void check_png_for_metadata(const std::string &data) {
   throw RDKit::FileParseException("did not find IEND block in PNG");
 }
 
+// RDKit 2024.03's V3000 rxn reader (ParseV3000RxnBlock in
+// ChemReactions/MDLParser.cpp) declares each agent's chiralityPossible
+// without initializing it, and ParseV3000CTAB only ever sets it to true, so
+// calculate3dFlag and finishMolProcessing read an indeterminate bool for an
+// agent without stereo bonds (2026.03 initializes it to false). So a V3000
+// rxn ("$RXN V3000" header) whose COUNTS line, the fifth line, which RDKit
+// reads with its continuations, gives a nonzero agent count is refused.
+void check_rxn_agents(const std::string &text) {
+  std::istringstream in(text);
+  std::vector<std::string> lines;
+  std::string line;
+  // As getLine in FileParserUtils.h: one trailing "\r" is dropped.
+  auto next = [&in, &line] {
+    if (!std::getline(in, line)) {
+      return false;
+    }
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+    return true;
+  };
+  if (!next() || line.compare(0, 4, "$RXN") != 0 || line.size() < 10 ||
+      line.compare(5, 5, "V3000") != 0) {
+    return;
+  }
+  for (int i = 0; i < 4; ++i) {
+    if (!next()) {
+      return;
+    }
+  }
+  // As getV3000Line in MolFileParser.cpp.
+  std::string counts;
+  while (true) {
+    if (line.size() < 7 || line.compare(0, 7, "M  V30 ") != 0) {
+      return;  // RDKit throws
+    }
+    if (line.back() != '-') {
+      counts += line.substr(7);
+      break;
+    }
+    counts += line.substr(7, line.size() - 8);
+    if (!next()) {
+      line.clear();
+    }
+  }
+  boost::to_upper(counts);
+  boost::trim(counts);
+  std::vector<std::string> tokens;
+  boost::split(tokens, counts, boost::is_any_of(" \t"),
+               boost::token_compress_on);
+  if (tokens.size() <= 3 || tokens[0] != "COUNTS") {
+    return;
+  }
+  unsigned agents = 0;
+  try {
+    agents = boost::lexical_cast<unsigned>(boost::trim_copy_if(
+        tokens[3], boost::is_any_of(" ")));
+  } catch (const boost::bad_lexical_cast &) {
+    return;  // RDKit throws
+  }
+  if (agents) {
+    throw ValueErrorException(
+        "a V3000 rxn block with agents: RDKit 2024.03 reads an uninitialized "
+        "chirality flag for each agent");
+  }
+}
+
 // As ReactionFromPNGStream in ChemReactions/PNGParser.cpp: the first record
-// RDKit can use, with its pickle's templates checked (U10) and its rxn block
-// checked before RDKit reads it (U12).
+// RDKit can use, with its pickle's templates checked (U10), its rxn block
+// checked before RDKit reads it (U12, check_rxn_agents), and its SMILES or
+// SMARTS's CXSMILES extension checked (check_reaction_cx).
 std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
   check_png_metadata(data);
   namespace RP = RDKit::v2::ReactionParser;
@@ -329,11 +406,14 @@ std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
       rxn = std::make_unique<ChemicalReaction>(value);
       check_reaction_monomer_types(*rxn);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmilesTag)) {
+      check_reaction_cx(value);
       rxn = RP::ReactionFromSmiles(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmartsTag)) {
+      check_reaction_cx(value);
       rxn = RP::ReactionFromSmarts(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnRxnTag)) {
       check_input_text(value);
+      check_rxn_agents(value);
       rxn = RP::ReactionFromRxnBlock(value);
     } else {
       continue;
@@ -840,6 +920,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_smarts(
         std::string(replacement_values[i]);
   }
   std::string text(smarts);
+  check_reaction_cx(text);
   return finish(
       std::unique_ptr<ChemicalReaction>(
           RDKit::RxnSmartsToChemicalReaction(text, &replacements, use_smiles)),
@@ -877,6 +958,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_rxn_block(rust::Str rxn_block,
   std::string text(rxn_block);
   // Its templates are mol blocks, read by RDKit's line-oriented reader (U12).
   check_input_text(text);
+  check_rxn_agents(text);
   RDKit::v2::FileParsers::MolFileParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
@@ -893,6 +975,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_rxn_file(
   // block.
   auto text = read_path(path);
   check_input_text(text);
+  check_rxn_agents(text);
   RDKit::v2::FileParsers::MolFileParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
@@ -1273,7 +1356,7 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
   auto params = adjust_query_params_from_data(data);
   if (sanitize_ops & RxnOps::SANITIZE_MERGEHS) {
     // Checked before the first step edits the reaction.
-    check_template_removals(rxn);
+    check_template_removals(rxn, true);
   }
   unsigned int failed = RxnOps::SANITIZE_NONE;
   try {

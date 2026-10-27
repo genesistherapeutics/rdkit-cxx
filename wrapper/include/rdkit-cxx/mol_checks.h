@@ -176,6 +176,44 @@ void check_stereo_group_removals(const RDKit::ROMol &mol);
 // check_substance_group_parents, and check_stereo_group_removals.
 void check_removals(const RDKit::ROMol &mol);
 
+// As check_removals, for an RDKit call whose only removals are those of
+// getMolFrags(asMols) (MolOps.cpp), as the SMILES writer's for a molecule
+// of several fragments: it makes each fragment from a copy of the molecule
+// by removing every other fragment's atoms, and the writer then copies it,
+// which reads its groups. A group of fragment F survives in F's copy, with
+// its atoms in F (removeAtomFromGroups drops a group left with none), so it
+// is left pointing at a removed bond or a repeated atom's second copy only
+// when it holds a bond and atoms of different fragments, or repeats an atom,
+// in a molecule of several fragments; check_stereo_group_removals refuses
+// those only. A molecule of one fragment, which RDKit does not split, has
+// nothing refused.
+void check_fragment_removals(const RDKit::ROMol &mol);
+
+// RDKit 2024.03's Kekulize (Kekulize.cpp), when it cannot kekulize a fused
+// ring system, retries with each subset of the system's "question" atoms
+// (markDbondCands: dummy atoms of its rings that may take a double bond),
+// enumerated by QuestionEnumerator with `0x1u << d_questions.size()`, which
+// is undefined for 32 or more (2026.03 uses a dynamic_bitset). A fused
+// system is the rings (with at least one non-dummy atom) that share bonds,
+// so its atoms are joined by ring bonds; this counts, in each set of atoms
+// joined by ring bonds (bonds that are not bridges) and holding a non-dummy
+// atom, the dummy atoms, and throws ValueErrorException when one holds
+// MAX_KEKULIZE_QUESTIONS or more, in a molecule with an aromatic atom or
+// bond (Kekulize does nothing without one). For every wrapper that
+// sanitizes (with SANITIZE_KEKULIZE) or kekulizes.
+constexpr unsigned MAX_KEKULIZE_QUESTIONS = 32;
+void check_kekulize_questions(const RDKit::ROMol &mol);
+
+// As check_removals, for MolOps::mergeQueryHs (AddHs.cpp; reactions'
+// SANITIZE_MERGEHS through fixHs), which removes only the atoms its isQueryH
+// calls query hydrogens: atoms of atomic number 1, and query atoms with at
+// most one neighbor. So a group is left pointing at a removed bond only when
+// the bond has such an atom at an end, and at a repeated atom's second copy
+// only when it repeats one; check_stereo_group_removals refuses those only.
+// (mergeQueryHs also merges the Hs of recursive queries' molecules, which
+// this does not check.)
+void check_query_h_removals(const RDKit::ROMol &mol);
+
 // As check_removals, for an RDKit call that combines the molecules
 // (insertMol, combineMols) and then removes atoms or bonds: RDKit does not
 // renumber the substance groups' indices, so the combination's PARENT

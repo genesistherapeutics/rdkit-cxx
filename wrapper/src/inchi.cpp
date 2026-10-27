@@ -10,13 +10,17 @@
 #include <cmath>
 #include <cstdint>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <string_view>
+#include <vector>
 
 #include <GraphMol/Atom.h>
 #include <GraphMol/Bond.h>
 #include <GraphMol/Conformer.h>
+#include <GraphMol/MolOps.h>
 #include <GraphMol/PeriodicTable.h>
+#include <GraphMol/SanitException.h>
 #include <GraphMol/inchi.h>
 #include <RDGeneral/Exceptions.h>
 
@@ -41,6 +45,8 @@ constexpr unsigned kMaxInchiAtoms = 32766;
 constexpr std::size_t kMaxInchiStereo0D = 32767;
 // num_iso_H is a signed char.
 constexpr unsigned kMaxInchiHs = 127;
+// MAXVAL: the entries of inchi_Atom's neighbor, bond_type, and bond_stereo.
+constexpr unsigned kMaxInchiBonds = 20;
 // ISOTOPIC_SHIFT_MAX: isotopic_mass is ISOTOPIC_SHIFT_FLAG (10000) plus the
 // isotope's difference from the average mass, and InChI reads a value
 // outside 10000 +/- 100 as an absolute mass instead (inchi_dll.c), whose
@@ -195,6 +201,22 @@ void check_coordinates(const RDKit::ROMol &mol) {
   }
 }
 
+// An atom's implicit hydrogens as MolToInchi counts them on its kekulized
+// copy (calcImplicitValence, then getNumImplicitHs); 0 when the copy could
+// not be kekulized, as MolToInchi then fails first, or the count fails.
+unsigned implicit_hs(std::optional<RDKit::RWMol> &kekulized, unsigned idx) {
+  if (!kekulized) {
+    return 0;
+  }
+  RDKit::Atom *atom = kekulized->getAtomWithIdx(idx);
+  try {
+    atom->calcImplicitValence();
+  } catch (const std::exception &) {
+    return 0;  // MolToInchi throws there too
+  }
+  return atom->getNumImplicitHs();
+}
+
 // What MolToInchi narrows into InChI's fields (inchi_Atom and inchi_Input in
 // inchi_api.h) without checking it, read as MolToInchi reads it.
 void check_inchi_input(const RWMol &mol) {
@@ -212,6 +234,14 @@ void check_inchi_input(const RWMol &mol) {
   RDKit::RWMol copy(mol);
   if (mol.needsUpdatePropertyCache()) {
     copy.updatePropertyCache(false);
+  }
+  // MolToInchi kekulizes its copy (failing, before any stereo, if it cannot)
+  // and counts implicit hydrogens on it.
+  std::optional<RDKit::RWMol> kekulized(copy);
+  try {
+    RDKit::MolOps::Kekulize(*kekulized, false);
+  } catch (const RDKit::MolSanitizeException &) {
+    kekulized.reset();
   }
   const RDKit::PeriodicTable *table = RDKit::PeriodicTable::getTable();
   std::size_t num_stereo = 0;
@@ -257,21 +287,49 @@ void check_inchi_input(const RWMol &mol) {
               " hydrogens; InChI takes at most 127 per atom");
         }
     }
+    // MolToInchi (RDKit 2024.03, External/INCHI-API/inchi.cpp) makes a
+    // stereo0D for every atom with a chiral tag other than CHI_UNSPECIFIED,
+    // or with a "molParity" property, and with at least three neighbors and
+    // implicit hydrogens, writing each neighbor into its four-entry neighbor
+    // array: five or more neighbors write past it (2026.03 ignores such
+    // atoms).
+    if ((atom->getChiralTag() != RDKit::Atom::CHI_UNSPECIFIED ||
+         atom->hasProp("molParity")) &&
+        atom->getDegree() > 4) {
+      throw ValueErrorException(
+          "atom " + std::to_string(idx) + " has a chiral tag or molParity and " +
+          std::to_string(atom->getDegree()) +
+          " neighbors; RDKit 2024.03's InChI writer takes at most 4");
+    }
     if (is_tetrahedral(*atom)) {
       ++num_stereo;
-      // MolToInchi keeps a tetrahedral center of three or four neighbors,
-      // counting hydrogens, but fills in only its neighbor atoms (and itself
-      // for a fourth), so with fewer than three InChI reads uninitialized
-      // neighbor indices.
-      unsigned total = atom->getTotalDegree();
-      if (total >= 3 && total <= 4 && atom->getDegree() < 3) {
+      // With fewer than three neighbor atoms it fills in only those (and the
+      // atom itself for the fourth when there are three), and passes a CW
+      // or CCW center whose implicit hydrogens (counted on its kekulized
+      // copy, after calcImplicitValence) bring the total to three or more
+      // with uninitialized neighbor indices.
+      if (atom->getDegree() < 3 &&
+          atom->getDegree() + implicit_hs(kekulized, idx) >= 3) {
         throw ValueErrorException(
             "atom " + std::to_string(idx) +
             " is a tetrahedral stereo center with " +
             std::to_string(atom->getDegree()) +
-            " neighbor atoms; InChI needs at least 3, counting only "
-            "hydrogens that are atoms");
+            " neighbor atoms and implicit hydrogens; InChI needs at least 3 "
+            "neighbor atoms");
       }
+    }
+  }
+  // MolToInchi stores each bond in the neighbor arrays of its lower-index
+  // atom, which hold MAXVAL (20) entries, without a bound (2026.03 fails
+  // instead): more overflow the heap array of inchi_Atoms.
+  std::vector<unsigned> lower_bonds(copy.getNumAtoms(), 0);
+  for (const RDKit::Bond *bond : copy.bonds()) {
+    unsigned lower = std::min(bond->getBeginAtomIdx(), bond->getEndAtomIdx());
+    if (++lower_bonds[lower] > kMaxInchiBonds) {
+      throw ValueErrorException(
+          "atom " + std::to_string(lower) +
+          " is the lower-index atom of more than 20 bonds; RDKit 2024.03's "
+          "InChI writer stores at most 20 per atom");
     }
   }
   for (const RDKit::Bond *bond : copy.bonds()) {

@@ -81,6 +81,218 @@ void check_bond_refs(const boost::property_tree::ptree &tree) {
 
 }  // namespace
 
+namespace {
+
+// An iterator RDKit's CX parser moves, as an index into the text: at() is
+// what `*first` reads, the terminator at end(); past() is set once RDKit
+// would form an iterator beyond end() + 1 or dereference end() + 1.
+class CxCursor {
+ public:
+  // The index `first` stands at.
+  std::size_t i;
+
+  CxCursor(std::string_view text, std::size_t pos) : i(pos), d_text(text) {}
+
+  std::size_t n() const { return d_text.size(); }
+  char at() {
+    if (i < n()) {
+      return d_text[i];
+    }
+    if (i > n()) {
+      d_past = true;
+    }
+    return '\0';
+  }
+  char at(std::size_t j) const { return j < n() ? d_text[j] : '\0'; }
+  bool digit() { return i <= n() && at() >= '0' && at() <= '9'; }
+  void step() {
+    ++i;
+    if (i > n() + 1) {
+      d_past = true;
+    }
+  }
+  bool past() const { return d_past; }
+
+  // As read_text_to: true if it would throw (an escape "&#" not closed by
+  // ";"), which ends the parse. `produced` is whether the text read is
+  // nonempty.
+  bool read_text_to(std::string_view delims, bool &produced) {
+    produced = false;
+    std::size_t start = i;
+    while (i <= n() && delims.find(at()) == std::string_view::npos) {
+      if (at() == '&' && n() - i > 2 && at(i + 1) == '#') {
+        if (start != i) {
+          produced = true;
+        }
+        std::size_t next = i + 2;
+        while (next != n() && at(next) >= '0' && at(next) <= '9') {
+          ++next;
+        }
+        if (next == n() || at(next) != ';') {
+          return true;
+        }
+        if (next > i + 2) {
+          produced = true;
+        }
+        i = next + 1;
+        start = i;
+      } else {
+        step();
+      }
+    }
+    if (start != i) {
+      produced = true;
+    }
+    return false;
+  }
+
+ private:
+  std::string_view d_text;
+  bool d_past = false;
+};
+
+// parse_data_sgroup after "SgD:".
+bool data_sgroup_past_end(CxCursor c) {
+  // read_int_list
+  while (true) {
+    while (c.digit()) {
+      c.step();
+    }
+    if (c.i >= c.n() || c.at() != ',') {
+      break;
+    }
+    c.step();
+  }
+  c.step();
+  // parse_data_sgroup_attr, for each of the five fields
+  for (int field = 0; field < 5 && !c.past(); ++field) {
+    if (c.i != c.n() && c.at() != '|' && !c.past()) {
+      bool produced;
+      if (c.read_text_to(":", produced)) {
+        return false;
+      }
+      c.step();
+    }
+  }
+  if (!c.past() && c.i < c.n() && c.at() == '(') {
+    bool produced;
+    if (c.read_text_to(")", produced)) {
+      return false;
+    }
+    c.step();
+  }
+  return c.past();
+}
+
+// parse_atom_props after "atomProp:".
+bool atom_props_past_end(CxCursor c) {
+  if (c.i >= c.n()) {
+    return false;
+  }
+  auto separator = [&c] { return c.at() == '|' || c.at() == ','; };
+  while (c.i <= c.n() && !separator()) {
+    std::size_t start = c.i;
+    while (c.digit()) {
+      c.step();
+    }
+    if (c.i > start) {
+      if (c.i >= c.n() || c.at() != '.') {
+        return false;
+      }
+      c.step();
+      bool produced;
+      if (c.read_text_to(".", produced)) {
+        return false;
+      }
+      if (produced) {
+        if (c.i >= c.n() || c.at() != '.') {
+          return false;
+        }
+        c.step();
+        if (c.read_text_to(":|,", produced)) {
+          return false;
+        }
+      }
+    }
+    if (c.i <= c.n() && !separator()) {
+      c.step();
+    }
+  }
+  if (c.i <= c.n()) {
+    return false;  // RDKit's own checks return first
+  }
+  return true;  // *first at end() + 1
+}
+
+// parse_polymer_sgroup after "Sg:": its type and the ':' after it.
+bool polymer_sgroup_past_end(CxCursor c) {
+  bool produced;
+  if (c.read_text_to(":", produced)) {
+    return false;
+  }
+  c.step();
+  return c.past();
+}
+
+}  // namespace
+
+std::string cx_extension_problem(std::string_view cx) {
+  const std::size_t n = cx.size();
+  for (std::size_t p = 0; p < n; ++p) {
+    if (cx[p] == 'S' && p + 3 < n && cx.compare(p, 4, "SgD:") == 0) {
+      if (data_sgroup_past_end(CxCursor(cx, p + 4))) {
+        return "a CXSMILES data S-group (SgD) has fewer than five ':'-ended "
+               "fields; RDKit 2024.03 reads past the end of the extension "
+               "text";
+      }
+    } else if (cx[p] == 'S' && p + 2 < n && cx.compare(p, 3, "Sg:") == 0) {
+      if (polymer_sgroup_past_end(CxCursor(cx, p + 3))) {
+        return "a CXSMILES polymer S-group (Sg) has no ':' after its type; "
+               "RDKit 2024.03 steps past the end of the extension text";
+      }
+    } else if (cx[p] == 'a' && n - p > 9 &&
+               cx.compare(p, 9, "atomProp:") == 0) {
+      if (atom_props_past_end(CxCursor(cx, p + 9))) {
+        return "a CXSMILES atom property (atomProp) runs to the end of the "
+               "extension text; RDKit 2024.03 reads past it";
+      }
+    }
+  }
+  return {};
+}
+
+void check_smiles_cx(const std::string &text, bool allow_cxsmiles) {
+  if (!allow_cxsmiles) {
+    return;
+  }
+  auto sidx = text.find_first_of(" \t");
+  if (sidx == std::string::npos || sidx == 0) {
+    return;
+  }
+  auto cx = boost::trim_copy(text.substr(sidx));
+  if (cx.empty() || cx[0] != '|') {
+    return;
+  }
+  auto why = cx_extension_problem(cx);
+  if (!why.empty()) {
+    throw ValueErrorException(why);
+  }
+}
+
+void check_reaction_cx(const std::string &text, bool allow_cxsmiles) {
+  if (!allow_cxsmiles) {
+    return;
+  }
+  auto sidx = text.find_first_of('|');
+  if (sidx == std::string::npos || sidx == 0) {
+    return;
+  }
+  auto why = cx_extension_problem(boost::trim_copy(text.substr(sidx)));
+  if (!why.empty()) {
+    throw ValueErrorException(why);
+  }
+}
+
 void check_mrv(const std::string &text) {
   std::istringstream in(text);
   boost::property_tree::ptree tree;
