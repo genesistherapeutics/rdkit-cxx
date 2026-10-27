@@ -6,7 +6,6 @@
 #include "rdkit-cxx/dclv.h"
 
 #include <cmath>
-#include <mutex>
 #include <string>
 
 #include <GraphMol/Descriptors/DCLV.h>
@@ -61,6 +60,67 @@ void check_monomer_infos(const RWMol &mol, bool is_protein) {
   }
 }
 
+// The residues DCLV.cpp treats as protein (residueCheck), and those it
+// leaves out as solvent (AtomRecord::isSolvent).
+bool is_standard_residue(const std::string &name) {
+  static const char *const names[] = {
+      "ALA", "GLY", "LEU", "SER", "VAL", "THR", "LYS", "ASP", "ILE", "ASN",
+      "GLU", "PRO", "ARG", "PHE", "GLN", "TYR", "HIS", "CYS", "MET", "TRP"};
+  for (const char *n : names) {
+    if (name == n) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool is_solvent(const std::string &name) {
+  static const char *const names[] = {"DOD", "D20", "HOH", "H20", "SOL",
+                                      "SO4", "SUL", "WAT", "TIP", "P04"};
+  for (const char *n : names) {
+    if (name == n) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// For a protein without its ligand, the voxel grid holds only atoms of
+// standard residues; with none of those, RDKit 2025.03's createVoxelGrid
+// returns before it sets the grid's scales (voxX to voxW, members of a
+// default-initialized State), which findNeighbours then reads for every
+// other atom. RDKit computes on the molecule without its hydrogens.
+void check_gridded_atoms(const RWMol &mol, bool is_protein,
+                         bool include_ligand) {
+  if (!is_protein || include_ligand) {
+    return;
+  }
+  bool any_member = false;
+  for (const auto *atom : mol.atoms()) {
+    if (atom->getAtomicNum() == 1) {
+      continue;
+    }
+    const auto *info = atom->getMonomerInfo();
+    const std::string res_name =
+        info ? static_cast<const RDKit::AtomPDBResidueInfo *>(info)
+                   ->getResidueName()
+             : "UNK";
+    if (is_solvent(res_name)) {
+      continue;
+    }
+    any_member = true;
+    if (info && is_standard_residue(res_name)) {
+      return;
+    }
+  }
+  if (any_member) {
+    throw ValueErrorException(
+        "DoubleCubicLatticeVolume with isProtein and without the ligand needs "
+        "an atom of a standard residue: RDKit 2025.03 reads its voxel grid's "
+        "unset scales otherwise");
+  }
+}
+
 }  // namespace
 
 DclvResults dclv_compute(const RWMol &mol, bool is_protein, bool include_ligand,
@@ -89,14 +149,9 @@ DclvResults dclv_compute(const RWMol &mol, bool is_protein, bool include_ligand,
     }
   }
   check_monomer_infos(mol, is_protein);
-  // generateStandardDots builds its icosahedron in function-local statics on
-  // first use, which the race checker cannot see ordered with the reads
-  // other threads make, so the calls take turns (U4).
-  static std::mutex mutex;
-  std::unique_lock<std::mutex> lock(mutex);
+  check_gridded_atoms(mol, is_protein, include_ligand);
   RDKit::Descriptors::DoubleCubicLatticeVolume dclv(
       mol, is_protein, include_ligand, probe_radius, depth, dot_density);
-  lock.unlock();
   DclvResults results;
   results.surface_area = dclv.getSurfaceArea();
   results.volume = dclv.getVolume();

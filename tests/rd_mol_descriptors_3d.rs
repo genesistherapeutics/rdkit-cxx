@@ -991,6 +991,17 @@ fn double_cubic_lattice_volume_checks() {
         .unwrap()
         .set_pdb_residue_info(&AtomPDBResidueInfo::new(""));
     assert!(value(DoubleCubicLatticeVolume::new(&short)));
+    // A protein's grid without the ligand holds only standard residues, and
+    // with none of those RDKit 2025.03 reads the grid's unset scales.
+    let no_ligand = DoubleCubicLatticeVolumeParams {
+        is_protein: true,
+        include_ligand: false,
+        ..Default::default()
+    };
+    assert!(value(DoubleCubicLatticeVolume::new_with_params(
+        &apap(),
+        &no_ligand
+    )));
 }
 
 #[test]
