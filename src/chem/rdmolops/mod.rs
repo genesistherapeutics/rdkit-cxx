@@ -105,21 +105,10 @@ impl Default for SanitizeMolParams {
 }
 
 /// Parameters for `kekulize_with_params`, with Python's defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct KekulizeParams {
     /// Clears the aromatic flags on atoms and bonds.
     pub clear_aromatic_flags: bool,
-    /// Picks the canonical Kekulé form.
-    pub canonical: bool,
-}
-
-impl Default for KekulizeParams {
-    fn default() -> KekulizeParams {
-        KekulizeParams {
-            clear_aromatic_flags: false,
-            canonical: true,
-        }
-    }
 }
 
 /// Parameters for `add_hs_with_params`. Mirrors `rdmolops.AddHsParameters`,
@@ -191,13 +180,9 @@ pub fn kekulize(mol: &mut Mol) -> Result<()> {
     kekulize_with_params(mol, &KekulizeParams::default())
 }
 
-/// Mirrors `rdmolops.Kekulize(mol, clearAromaticFlags, canonical)`.
+/// Mirrors `rdmolops.Kekulize(mol, clearAromaticFlags)`.
 pub fn kekulize_with_params(mol: &mut Mol, params: &KekulizeParams) -> Result<()> {
-    Ok(ffi::kekulize(
-        mol.pin_mut(),
-        params.clear_aromatic_flags,
-        params.canonical,
-    )?)
+    Ok(ffi::kekulize(mol.pin_mut(), params.clear_aromatic_flags)?)
 }
 
 /// A copy of a molecule with its hydrogens made explicit. Mirrors

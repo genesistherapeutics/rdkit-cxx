@@ -78,7 +78,6 @@ fn kekulize_forms() {
     assert!(benzene.get_atoms().all(|a| a.get_is_aromatic()));
     let clear = KekulizeParams {
         clear_aromatic_flags: true,
-        ..Default::default()
     };
     kekulize_with_params(&mut benzene, &clear).unwrap();
     assert!(benzene.get_atoms().all(|a| !a.get_is_aromatic()));
@@ -96,7 +95,6 @@ fn kekulize_forms() {
         KekulizeParams::default(),
         KekulizeParams {
             clear_aromatic_flags: false,
-            canonical: true
         }
     );
 }

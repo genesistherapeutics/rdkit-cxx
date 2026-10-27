@@ -70,11 +70,7 @@ pub(crate) mod ffi {
 
         fn sanitize_mol(mol: Pin<&mut RWMol>, sanitize_ops: u32, catch_errors: bool)
         -> Result<u32>;
-        fn kekulize(
-            mol: Pin<&mut RWMol>,
-            clear_aromatic_flags: bool,
-            canonical: bool,
-        ) -> Result<()>;
+        fn kekulize(mol: Pin<&mut RWMol>, clear_aromatic_flags: bool) -> Result<()>;
         fn add_hs_parameters_default() -> Result<AddHsParametersData>;
         fn add_hs(mol: &RWMol, params: &AddHsParametersData) -> Result<UniquePtr<RWMol>>;
         fn get_mol_frags(mol: &RWMol) -> Result<Vec<IndexList>>;

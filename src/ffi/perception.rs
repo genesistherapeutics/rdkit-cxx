@@ -52,11 +52,7 @@ pub(crate) mod ffi {
         fn set_conjugation(mol: Pin<&mut RWMol>) -> Result<()>;
         fn set_hybridization(mol: Pin<&mut RWMol>) -> Result<()>;
         fn assign_radicals(mol: Pin<&mut RWMol>) -> Result<()>;
-        fn kekulize_if_possible(
-            mol: Pin<&mut RWMol>,
-            clear_aromatic_flags: bool,
-            canonical: bool,
-        ) -> Result<()>;
+        fn kekulize_if_possible(mol: Pin<&mut RWMol>, clear_aromatic_flags: bool) -> Result<()>;
         fn haptic_bonds_to_dative(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn dative_bonds_to_haptic(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn needs_hs(mol: &RWMol) -> Result<bool>;

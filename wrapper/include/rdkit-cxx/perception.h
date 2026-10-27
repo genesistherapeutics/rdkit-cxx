@@ -41,8 +41,7 @@ void set_aromaticity(RWMol &mol, AromaticityModel model);
 void set_conjugation(RWMol &mol);
 void set_hybridization(RWMol &mol);
 void assign_radicals(RWMol &mol);
-void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags,
-                          bool canonical);
+void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags);
 std::unique_ptr<RWMol> haptic_bonds_to_dative(const RWMol &mol);
 std::unique_ptr<RWMol> dative_bonds_to_haptic(const RWMol &mol);
 bool needs_hs(const RWMol &mol);
