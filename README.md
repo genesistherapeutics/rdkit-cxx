@@ -349,6 +349,19 @@ Other limits:
 - Substructure matching runs one call at a time across the process, since
   every match swaps RDKit's `SIGINT` handler through static variables
   (`control_c_mutex()`), so matching does not scale across threads.
+- After a substructure match, RDKit's own `SIGINT` handler stays
+  installed: `ControlCHandler` keeps the handler it replaced in one static
+  variable, so nested handlers (a search's, and the one each match makes)
+  restore RDKit's. Ctrl-C then no longer stops the program but sets RDKit's
+  cancellation flag, which the next RDKit call that reads it may take as a
+  cancellation. The wrappers clear the flag where a stale one would leave
+  RDKit's state broken (building a synthon space's fingerprints), but not
+  everywhere RDKit reads it.
+- A synthon space whose fingerprint build was cut short, by Ctrl-C during
+  the build or an exception from the generator, cannot be searched by
+  fingerprint or written to a database file (`Error::Value`), since RDKit
+  would read the missing fingerprints and does not rebuild them for the
+  same generator; read the space again.
 - Some inputs abort the process by overflowing the stack, which cannot
   corrupt memory: an SLN string with a `{` followed by about 100,000
   characters (RDKit's regular expression), and SMILES of very deep

@@ -66,6 +66,11 @@ void atom_expand_query(Atom &atom, const Atom &other, int how,
   const auto &query = as_query<const RDKit::QueryAtom>(other, "atom");
   auto how_ = composite(how);
   if (query.hasQuery()) {
+    // QueryAtom::expandQuery reads this query's description; RDKit 2026.09
+    // refuses a null one only with a PRECONDITION (an Invariant).
+    if (!self.hasQuery()) {
+      throw ValueErrorException("the query atom has no query to expand");
+    }
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }
 }
@@ -92,6 +97,12 @@ void bond_expand_query(Bond &bond, const Bond &other, int how,
   const auto &query = as_query<const RDKit::QueryBond>(other, "bond");
   auto how_ = composite(how);
   if (query.hasQuery()) {
+    // QueryBond::expandQuery (QueryBond.cpp) reads this query's description
+    // without checking that there is one, in every release: a null
+    // dereference for a query bond without a query.
+    if (!self.hasQuery()) {
+      throw ValueErrorException("the query bond has no query to expand");
+    }
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }
 }
@@ -102,6 +113,14 @@ void bond_set_query(Bond &bond, const Bond &other) {
   if (query.hasQuery()) {
     self.setQuery(query.getQuery()->copy());
   }
+}
+
+std::unique_ptr<Atom> query_atom_without_query_for_tests() {
+  return std::make_unique<RDKit::QueryAtom>();
+}
+
+std::unique_ptr<Bond> query_bond_without_query_for_tests() {
+  return std::make_unique<RDKit::QueryBond>();
 }
 
 rust::Vec<std::uint32_t> mol_get_atoms_matching_query(const RWMol &mol,

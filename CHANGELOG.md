@@ -39,6 +39,63 @@
   molecule's size), `EnumerateLibrary` archives, synthon-space database
   files, and PNG metadata, from the metadata functions and from Cairo
   drawers with `include_metadata`.
+- V3000 mol blocks, and the SD, mol-file, and rxn readers that read them,
+  are `Error::Value` for an SGroup line (or its `DEFAULT` line) that ends
+  after `COMPNO=` or a bare `COMPNO` label, and for an enhanced-stereo
+  collection that lists no atoms for a nonzero count (`ATOMS=(1 )`). RDKit
+  reads both values with extractions that write nothing there and then
+  uses the unset variable; Valgrind reports a conditional jump on an
+  uninitialized value in Python. Since RDKit parses a line cut off by a
+  refusal or the end of the input as a whole one, a checked stream now
+  holds back a COMPNO field or an enhanced-stereo line until it has read
+  past it, reading ahead without seeking, and refuses one that spans more
+  than 1 MiB.
+- `json_to_mols` reads an attachment point without `lvIdx` as -1, the value
+  RDKit's JSON writer leaves out. RDKit's reader left the point's
+  `lvIdx` uninitialized, so a molecule written by `mol_to_json` read back
+  an indeterminate leaving atom.
+- `mol_from_smiles_with_params`, `mol_from_smarts_with_params`, and the PNG
+  metadata readers are `Error::Value`, with `strict_cxsmiles` off, for a
+  CXSMILES data substance group (`SgD:`) whose field has no `:` after it or
+  whose coordinates have no `)`, and for a polymer group (`Sg:`) whose type
+  has no `:` after it. RDKit's CXSMILES parser stops past the end of the
+  extension there, and the non-strict parse then copies the text up to
+  that point, up to 2 bytes past its end. Strict parsing, the default,
+  rethrows RDKit's own parse error instead and is unchanged.
+- Molecules with more than 65535 properties on the molecule, a conformer,
+  an atom, a bond, or a substance group are refused wherever a molecule is
+  pickled, as the one-byte counts above are (a panic from
+  `Mol::to_binary` and `ChemicalReaction::to_binary`). MolPickler counts
+  properties in a `u16`, which wraps, and its reader then takes the
+  remaining property bytes for the pickle's next fields: in Python, 65536
+  properties make every read fail ("Bond index out of range"), and 65535
+  user properties beside the computed ones are silently dropped. Every
+  property counts, whether or not the property flags write it; substance
+  groups' properties are always pickled.
+- `FragCatGenerator::add_frags_from_mol` counts every stereo group of the
+  molecule against the one-byte limit, not only those a fragment can hold
+  whole: from RDKit 2025.09 on, a fragment keeps each stereo group that
+  shares an atom with it. With 256 three-atom groups and fragments of one
+  bond, RDKit wrote a catalog it could not read ("ENDMOL tag not found").
+- `expand_query` is `Error::Value` for a query atom or bond that has no
+  query of its own: RDKit's `QueryBond::expandQuery` dereferences the null
+  query, and `QueryAtom`'s fails an invariant. No safe Rust path makes such
+  an atom or bond, so this only guards a path RDKit might add.
+- `SynthonSpace::build_synthon_fingerprints` clears RDKit's Ctrl-C flag
+  before and after the build, and the fingerprint searches and the
+  database writers are `Error::Value` for a space whose fingerprints are
+  incomplete. RDKit leaves its `SIGINT` handler installed after a
+  substructure match, so a Ctrl-C afterwards sets its flag with nothing to
+  clear it; the build then returned before fingerprinting anything, with
+  the space's fingerprint type set, and the next fingerprint search
+  dereferenced the missing fingerprints (a segfault, as in Python after a
+  substructure search, a SIGINT, and `BuildSynthonFingerprints`).
+- `DoubleCubicLatticeVolume::get_polar_surface_area_with_params` and
+  `get_polar_volume_with_params` panic, with `include_hs`, for a molecule
+  with a bond between two hydrogens, instead of overflowing the stack:
+  RDKit 2026.09.1 recurses through the hydrogens forever (rdkit/rdkit#9687,
+  fixed after that release; Python segfaults on H2). They stay infallible,
+  as Python's raise for nothing else.
 
 ## 2026.9.0
 

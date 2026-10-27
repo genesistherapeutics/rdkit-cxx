@@ -170,7 +170,10 @@ its Boost.Python modules and its `.py` modules.
   never reads a file that changed after the check; PNG files are read and
   their chunks checked the same way. Parsers RDKit fuzzes
   (`Code/Fuzz`: SMILES and mol blocks) are trusted, except for the limits
-  U12 checks. RDKit fuzzes molecule pickles too, but only their parsing:
+  U12 checks and the CXSMILES substance-group fields that a parse without
+  `strictCXSMILES` copies past their end (`check_smiles_cx` in
+  `rdkit-cxx/file_checks.h`, which every SMILES or SMARTS parse a caller
+  can make non-strict calls first). RDKit fuzzes molecule pickles too, but only their parsing:
   MolPickler takes a query's class from its tag and its matching function
   from its description independently, as the JSON reader below does, and
   converts values it reads without range checks, so a pickle RDKit did not
@@ -208,7 +211,8 @@ its Boost.Python modules and its `.py` modules.
   so `json_to_mols` parses the document first, with the same boost::json
   parser, checks what RDKit would read unchecked (`DocumentChecker` in
   `mol_interchange.cpp`, which follows RDKit's reads and leaves RDKit's own
-  errors to RDKit), and hands RDKit the checked document serialized again.
+  errors to RDKit), and hands RDKit the checked document serialized again,
+  with -1 for an attachment point's `lvIdx` RDKit would leave unset.
   Its queries must be ones RDKit makes, since RDKit takes a query's class
   from its tag and its meaning from its description, while the code that
   reads queries takes the description to imply the class: each
@@ -222,8 +226,9 @@ its Boost.Python modules and its `.py` modules.
   copy of the checked lines.
   MolPickler also writes pickles it cannot read: it writes some counts in
   one byte (query nodes' children; in a molecule of at most 255 atoms and
-  bonds, substance groups' lists and stereo groups) and truncates larger
-  ones, and the reader then parses the bytes after them unchecked. So every
+  bonds, substance groups' lists and stereo groups) and properties' counts
+  in two, and truncates larger ones, and the reader then parses the bytes
+  after them unchecked. So every
   wrapper that hands MolPickler a molecule, alone or inside another format
   (`git grep -l 'pickleMol\|MolPickler::pickle\|pickleReaction'` in
   RDKit's sources), first calls `check_picklable`
@@ -390,7 +395,13 @@ its Boost.Python modules and its `.py` modules.
   past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
   run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
   value that is empty, or in parentheses holds anything but numbers below
-  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
+  2^32 between spaces, is refused too. So are a COMPNO label that ends its
+  line and an enhanced-stereo collection with no atoms for a nonzero count,
+  whose values RDKit reads with extractions that write nothing; since RDKit
+  parses a line a refusal cuts off as a whole one, a checked stream holds
+  such a field back until it has read past it (reading ahead without
+  seeking, at most 1 MiB), and a refusal there takes effect where the field
+  begins. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record

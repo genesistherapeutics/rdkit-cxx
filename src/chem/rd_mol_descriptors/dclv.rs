@@ -190,6 +190,13 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Mirrors `GetPolarSurfaceArea(includeSandP, includeHs)`.
+    ///
+    /// # Panics
+    ///
+    /// With `include_hs`, for a molecule with a bond between two hydrogens:
+    /// RDKit 2026.09.1 asks whether each hydrogen's neighbors are polar
+    /// through the other hydrogen, and recurses until the stack overflows
+    /// (rdkit/rdkit#9687). Python crashes.
     pub fn get_polar_surface_area_with_params(
         &mut self,
         params: &GetPolarSurfaceAreaParams,
@@ -264,6 +271,10 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Mirrors `GetPolarVolume(includeSandP, includeHs)`.
+    ///
+    /// # Panics
+    ///
+    /// As `get_polar_surface_area_with_params`.
     pub fn get_polar_volume_with_params(&mut self, params: &GetPolarVolumeParams) -> f64 {
         expect_ok(ffi::dclv_get_polar_volume(
             self.raw(),

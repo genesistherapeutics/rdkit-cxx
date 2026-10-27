@@ -196,3 +196,33 @@ impl Mol {
             .collect())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Error;
+    use crate::chem::rdqueries::{has_prop_query_atom, has_prop_query_bond};
+
+    #[test]
+    fn expanding_a_missing_query_is_refused() {
+        // QueryBond::expandQuery dereferences its null query (QueryAtom's
+        // has a PRECONDITION); no safe path makes either.
+        let mut atom = Atom::from_ffi(expect_ok(ffi::query_atom_without_query_for_tests()));
+        let other = has_prop_query_atom("a");
+        assert!(matches!(
+            atom.expand_query(&other),
+            Err(Error::Value { .. })
+        ));
+        let mut bond = Bond::from_ffi(expect_ok(ffi::query_bond_without_query_for_tests()));
+        let other = has_prop_query_bond("a");
+        assert!(matches!(
+            bond.expand_query(&other),
+            Err(Error::Value { .. })
+        ));
+        // A query to expand is expanded.
+        let mut atom = has_prop_query_atom("a");
+        atom.expand_query(&has_prop_query_atom("b")).unwrap();
+        let mut bond = has_prop_query_bond("a");
+        bond.expand_query(&has_prop_query_bond("b")).unwrap();
+    }
+}

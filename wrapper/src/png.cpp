@@ -88,7 +88,8 @@ std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
 }
 
 // As PNGStreamToMols in PNGParser.cpp: a molecule for one metadata value,
-// or null for a SMILES RDKit cannot parse. The mol block is checked (U12).
+// or null for a SMILES RDKit cannot parse. The mol block is checked (U12),
+// and so is a SMILES's CXSMILES extension (check_smiles_cx).
 std::unique_ptr<RWMol> from_metadata(const std::string &key,
                                      const std::string &value,
                                      const RDKit::SmilesParserParams &params) {
@@ -96,6 +97,7 @@ std::unique_ptr<RWMol> from_metadata(const std::string &key,
     return from_pickle(value);
   }
   if (boost::starts_with(key, RDKit::PNGData::smilesTag)) {
+    check_smiles_cx(value, params.allowCXSMILES, params.strictCXSMILES);
     check_smiles_relevant_cycles(value, params);
     return std::unique_ptr<RWMol>(RDKit::SmilesToMol(value, params));
   }

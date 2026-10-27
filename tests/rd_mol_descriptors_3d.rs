@@ -1006,3 +1006,63 @@ fn double_cubic_lattice_volume_in_threads() {
         assert_close(volume, 521.2816592976219, 1e-9);
     }
 }
+
+/// `smiles`, with explicit hydrogens kept, in a line along x.
+fn on_a_line(smiles: &str) -> Mol {
+    let params = rdkit_cxx::chem::SmilesParserParams {
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut mol = rdkit_cxx::chem::mol_from_smiles_with_params(smiles, &params).unwrap();
+    let mut conf = Conformer::new(mol.get_num_atoms());
+    for i in 0..mol.get_num_atoms() {
+        conf.set_atom_position(
+            i,
+            Point3D {
+                x: 0.9 * f64::from(i),
+                y: 0.0,
+                z: 0.0,
+            },
+        )
+        .unwrap();
+    }
+    mol.add_conformer(&conf).unwrap();
+    mol
+}
+
+const WITH_HS: GetPolarSurfaceAreaParams = GetPolarSurfaceAreaParams {
+    include_s_and_p: false,
+    include_hs: true,
+};
+
+// RDKit 2026.09.1 recurses through two bonded hydrogens until the stack
+// overflows (rdkit/rdkit#9687); Python's GetPolarSurfaceArea crashes on H2.
+#[test]
+#[should_panic(expected = "joins two hydrogens")]
+fn dclv_polar_surface_area_refuses_h_h_bonds() {
+    let mol = on_a_line("[H][H]");
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    dclv.get_polar_surface_area_with_params(&WITH_HS);
+}
+
+#[test]
+#[should_panic(expected = "joins two hydrogens")]
+fn dclv_polar_volume_refuses_h_h_bonds() {
+    let mol = on_a_line("O.[H][H]");
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    dclv.get_polar_volume_with_params(&GetPolarVolumeParams {
+        include_s_and_p: false,
+        include_hs: true,
+    });
+}
+
+#[test]
+fn dclv_polar_descriptors_without_h_h_bonds() {
+    let mol = on_a_line("[H][H]");
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    // Without hydrogens RDKit does not recurse.
+    assert_eq!(dclv.get_polar_surface_area(), 0.0);
+    let mol = on_a_line("[H]O[H]");
+    let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+    assert!(dclv.get_polar_surface_area_with_params(&WITH_HS) > 0.0);
+}

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 namespace rdkit_cxx {
 
@@ -45,5 +46,27 @@ void check_debug_parse(int debug_parse);
 // segfault in Python). This parses the XML as RDKit does, which throws for
 // malformed XML, and checks every bond.
 void check_mrv(const std::string &text);
+
+// RDKit 2026.09's CXSMILES parser (parse_it in CXSmilesOps.cpp) reads its
+// text, the extension from its opening "|", up to end() and in places past
+// it: read_text_to dereferences end() and stops one past it when no
+// delimiter comes first, so a data substance group's ("SgD:") field without
+// a ":" after it, its coordinates without a ")", and a polymer group's
+// ("Sg:") type without a ":" step past the end, and the parse fails there.
+// Without strictCXSMILES, MolFromSmiles and MolFromSmarts then copy the
+// text up to where it stopped into _CXSMILES_Data (handleCXPartAndName in
+// SmilesParse.cpp), up to 2 bytes past the terminating null: 1 past the
+// allocation of a longer, heap-allocated extension. (rdkit/rdkit#8116 only
+// added a PRECONDITION in parse_data_sgroup_attr.) With strictCXSMILES the
+// failure is rethrown and nothing is copied, so only a parse without it is
+// checked. Each such block is read here from wherever it appears in the
+// text, as the parser would read it there, which covers wherever the parser
+// does; a refusal throws ValueErrorException. (As rdkit-2024.09's wrapper.)
+void check_cx_extensions(std::string_view cx, bool strict);
+
+// The extension MolFromSmiles and MolFromSmarts parse (preprocessSmiles in
+// SmilesParse.cpp): after the text's first space or tab, trimmed, if it
+// starts with "|" and allowCXSMILES is set.
+void check_smiles_cx(const std::string &text, bool allow_cx, bool strict);
 
 }  // namespace rdkit_cxx

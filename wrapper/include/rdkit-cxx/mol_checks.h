@@ -153,11 +153,13 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 //   parent atoms, bonds, brackets, CStates, and attachment points
 //   (_pickleSubstanceGroup), and the number of stereo groups and each one's
 //   numbers of atoms and bonds (_pickleStereo).
-// Throws ValueErrorException for a count past 255 in any of these, in the
-// molecule or in the molecules of its recursive queries, which MolPickler
-// pickles as molecules with their own one-byte rule. Every wrapper that hands
-// a molecule to MolPickler, alone or inside another format, calls it on the
-// molecules it will pickle (CONVENTIONS.md U2).
+// It also counts the properties of the molecule, each conformer, atom, bond,
+// and substance group in two bytes (streamWriteProps), wrapping past 65535.
+// Throws ValueErrorException for a count past 255 (or 65535) in any of these,
+// in the molecule or in the molecules of its recursive queries, which
+// MolPickler pickles as molecules with their own one-byte rule. Every wrapper
+// that hands a molecule to MolPickler, alone or inside another format, calls
+// it on the molecules it will pickle (CONVENTIONS.md U2).
 void check_picklable(const RDKit::ROMol &mol);
 
 // check_picklable on a reaction's reactant, product, and agent templates,
@@ -174,13 +176,17 @@ void check_picklable_templates(const Reaction &rxn) {
 
 // As check_picklable, for the parts FragCatGenerator::addFragsFromMol makes
 // of the molecule and pickles in its catalog's entries: subgraphs of at most
-// max_part_bonds bonds, made with copyMolSubset, which keeps a substance or
-// stereo group only when the part holds all its atoms and bonds. So a part
-// has at most 255 atoms and bonds whenever max_part_bonds is below 255, and a
-// small part can come from a molecule of any size: the one-byte limits apply
-// to the molecule's own groups whatever its size, except to groups whose
-// distinct atoms or bonds no part has room for. Recursive queries' molecules
-// are pickled whole, and checked as check_picklable checks them.
+// max_part_bonds bonds, made with copyMolSubset, which keeps a substance
+// group only when the part holds all its atoms and bonds, and, from RDKit
+// 2025.09 on (copySelectedStereoGroups in Subset.cpp), every stereo group
+// that shares an atom (and a bond, if it has bonds) with the part, with the
+// members the part holds. So a part has at most 255 atoms and bonds whenever
+// max_part_bonds is below 255, and a small part can come from a molecule of
+// any size: the one-byte limits apply to the molecule's own groups whatever
+// its size, except to substance groups whose distinct atoms or bonds no part
+// has room for; every stereo group counts, with at most a part's atoms and
+// bonds. Recursive queries' molecules are pickled whole, and checked as
+// check_picklable checks them.
 void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
 
 // RWMol::removeAtom and batchRemoveAtoms (so commitBatchEdit too) rewrite

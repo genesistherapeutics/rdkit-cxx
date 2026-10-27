@@ -459,3 +459,41 @@ fn fragments_are_picklable() {
     let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
     assert_eq!(read.get_num_entries(), catalog.get_num_entries());
 }
+
+// From RDKit 2025.09 on, copyMolSubset keeps every stereo group that shares
+// an atom with a fragment, so a one-bond fragment of a molecule with 256
+// three-atom groups has 256 of them, which MolPickler truncates to 0 in one
+// byte; RDKit 2026.09 then writes a catalog it cannot read ("ENDMOL tag not
+// found").
+#[test]
+fn fragments_count_every_stereo_group() {
+    let chain = "C".repeat(800);
+    let mut mol = RWMol::from(mol(&chain));
+    let groups: Vec<_> = (0..256u32)
+        .map(|g| {
+            create_stereo_group(
+                StereoGroupType::StereoAnd,
+                &mol,
+                &[3 * g, 3 * g + 1, 3 * g + 2],
+            )
+            .unwrap()
+        })
+        .collect();
+    mol.set_stereo_groups(&groups).unwrap();
+    let mol = Mol::from(mol);
+    let generator = FragCatGenerator;
+    let mut catalog = FragCatalog::new(&params(1, 1));
+    let Err(Error::Value { message }) = generator.add_frags_from_mol(&mol, &mut catalog) else {
+        panic!("a fragment's pickle would truncate its stereo groups");
+    };
+    assert!(message.contains("number of stereo groups"), "{message}");
+
+    let mut mol = RWMol::from(mol);
+    mol.set_stereo_groups(&groups[..255]).unwrap();
+    let mol = Mol::from(mol);
+    let mut catalog = FragCatalog::new(&params(1, 1));
+    generator.add_frags_from_mol(&mol, &mut catalog).unwrap();
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
+    assert_eq!(read.get_num_entries(), catalog.get_num_entries());
+}

@@ -66,6 +66,51 @@ fn smiles_params() {
 }
 
 #[test]
+fn cx_substance_group_fields_are_checked() {
+    let loose = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let loose_smarts = SmartsParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    // Without strictCXSMILES, RDKit 2026.09 copies the extension up to 2
+    // bytes past its end (handleCXPartAndName); ASan reports a 1-byte heap
+    // over-read for an extension too long for the short-string buffer.
+    let long = format!("C |SgD:0:{}:v::::(1", "f".repeat(40));
+    for smiles in [
+        "C |SgD:0:f:v::::(1",
+        "C |SgD:0:name:data|",
+        "C |SgD:0:abc",
+        "C |Sg:n",
+        "C |$X$,Sg:n",
+        long.as_str(),
+    ] {
+        let err = mol_from_smiles_with_params(smiles, &loose).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
+        let err = mol_from_smarts_with_params(smiles, &loose_smarts).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
+        // Strict, RDKit's own parse error.
+        assert!(mol_from_smiles(smiles).is_err(), "{smiles}");
+    }
+    // As in Python.
+    let mol = mol_from_smiles_with_params("C |SgD:0:name:data::::|", &loose).unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+    let mol = mol_from_smiles_with_params("C |SgD:0:f:v::::(1)|", &loose).unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+    mol_from_smiles_with_params("*C* |$star_e;;star_e$,Sg:n:1::ht|", &loose).unwrap();
+    // Without allowCXSMILES the text after the space is the name.
+    let plain = SmilesParserParams {
+        allow_cxsmiles: false,
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let mol = mol_from_smiles_with_params("C |Sg:n", &plain).unwrap();
+    assert_eq!(mol.get_prop("_Name").unwrap(), "|Sg:n");
+}
+
+#[test]
 fn smarts() {
     assert_eq!(
         mol_to_smarts(&mol_from_smarts("[OX2H]").unwrap()).unwrap(),
