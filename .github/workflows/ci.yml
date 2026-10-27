@@ -186,7 +186,8 @@ jobs:
           rustup default stable
       - run: pip install pre-commit
       # Runs every hook, addlicense among them, on every file. CI also runs on
-      # main, where no-commit-to-branch would always fail.
+      # main and the series' branches, where no-commit-to-branch would always
+      # fail.
       - run: SKIP=no-commit-to-branch pre-commit run --all-files --show-diff-on-failure
 
   docs:

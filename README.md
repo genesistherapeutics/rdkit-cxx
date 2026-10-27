@@ -411,11 +411,11 @@ one takes more than its pin ([Releases](#releases)).
 
 Each RDKit series has a long-running branch, `rdkit-<series>`
 (`rdkit-2025.09` for RDKit 2025.09), from which its crate versions are
-released, and to which fixes for that series go. `main` follows the newest
-series, and its changes land there first: its branch, `rdkit-2026.09`, takes
-them by merging `main`, and keeps the series once `main` moves on. Pushing to
-a branch publishes nothing; CI runs on every push to `main` and the series'
-branches.
+released, and to which fixes for that series go, through pull requests as on
+`main`. `main` follows the newest series, whose changes land on `main` first:
+its branch, `rdkit-2026.09`, takes them by merging `main`, and keeps the
+series once `main` moves on. Pushing to a branch publishes nothing; CI runs on
+every push to `main` and the series' branches.
 
 Releases are cut by hand: run the
 [Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
