@@ -438,3 +438,21 @@ fn enumeration_refuses_too_many_variation_points() {
         err => panic!("{err:?}"),
     }
 }
+
+// toBinary and toJSON pickle the query's molecules, which RDKit would
+// write, and could not read back, with a truncated count (Mol::to_binary).
+#[test]
+fn molecules_a_pickle_cannot_hold_are_refused() {
+    let with_groups = |n: usize| {
+        let mut rw = RWMol::from(smiles("C[C@H](F)Cl"));
+        let group = create_stereo_group(StereoGroupType::StereoOr, &rw, &[1]).unwrap();
+        rw.set_stereo_groups(&vec![group; n]).unwrap();
+        create_extended_query_mol(&rw.into()).unwrap()
+    };
+    let fits = with_groups(255);
+    fits.to_binary().unwrap();
+    fits.to_json().unwrap();
+    let too_many = with_groups(256);
+    assert!(matches!(too_many.to_binary(), Err(Error::Value { .. })));
+    assert!(matches!(too_many.to_json(), Err(Error::Value { .. })));
+}

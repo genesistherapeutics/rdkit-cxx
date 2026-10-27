@@ -133,7 +133,8 @@ impl ExtendedQueryMol {
     }
 
     /// The query as JSON: each molecule's pickle in base64, with its SMILES
-    /// or SMARTS. Mirrors `ExtendedQueryMol.ToJSON`.
+    /// or SMARTS. Mirrors `ExtendedQueryMol.ToJSON`. `Error::Value` for a
+    /// molecule a pickle cannot hold (`Mol::to_binary`).
     pub fn to_json(&self) -> Result<String> {
         to_string(ffi::extended_query_mol_to_json(self.as_ffi())?)
     }
