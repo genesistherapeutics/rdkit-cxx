@@ -13,6 +13,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/stereo.rs.h"
+#include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
 
@@ -50,6 +51,10 @@ RDKit::StereoGroup from_data(RWMol &mol, StereoGroupType group_type,
     throw ValueErrorException(
         "New StereoGroup must contain at least one atom or bond.");
   }
+  // RDKit 2025.03 removes an atom or bond from a group once (RWMol's
+  // removeAtom and removeBond), leaving a duplicate to dangle; 2026.03's
+  // constructor refuses them, with these messages.
+  check_stereo_group_members(atoms, bonds);
   return RDKit::StereoGroup(group_type, atoms, bonds, read_id);
 }
 

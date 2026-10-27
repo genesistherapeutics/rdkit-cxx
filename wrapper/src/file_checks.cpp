@@ -8,6 +8,8 @@
 #include <climits>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -80,6 +82,41 @@ void check_bond_refs(const boost::property_tree::ptree &tree) {
   }
 }
 
+// RDKit 2025.03's Marvin reader puts each atom with an mrvStereoGroup into
+// its group by the index of the first atom with its id (getAtomIndex), so two
+// atoms with one id list an atom twice, which dangles once removed
+// (check_stereo_group_members in mol_checks.h): say, when the reader removes
+// the hydrogens. Ids in an atom array must therefore differ.
+void check_atom_ids(const boost::property_tree::ptree &tree) {
+  for (const auto &[key, child] : tree) {
+    if (key == "atomArray") {
+      std::set<std::string> ids;
+      auto add = [&](const std::string &id) {
+        if (!ids.insert(id).second) {
+          throw RDKit::FileParseException(
+              "atom id " + id +
+              " appears twice in an atom array of the MRV file");
+        }
+      };
+      std::vector<std::string> compact;
+      boost::algorithm::split(
+          compact, child.get<std::string>("<xmlattr>.atomID", ""),
+          boost::algorithm::is_space(), boost::algorithm::token_compress_on);
+      for (const auto &id : compact) {
+        if (!id.empty()) {
+          add(id);
+        }
+      }
+      for (const auto &[akey, atom] : child) {
+        if (akey == "atom") {
+          add(atom.get<std::string>("<xmlattr>.id", ""));
+        }
+      }
+    }
+    check_atom_ids(child);
+  }
+}
+
 }  // namespace
 
 void check_mrv(const std::string &text) {
@@ -87,6 +124,7 @@ void check_mrv(const std::string &text) {
   boost::property_tree::ptree tree;
   boost::property_tree::read_xml(in, tree);
   check_bond_refs(tree);
+  check_atom_ids(tree);
 }
 
 namespace {
@@ -186,7 +224,57 @@ bool atom_props_overrun(std::string_view ext, std::size_t first) {
   return first > last;
 }
 
+// RDKit 2025.03's parse_enhanced_stereo adds each atom index listed after
+// "a:", "o<n>:", or "&<n>:" to the group the type and number name, merging
+// sections by 10 * number + type, so a group can list an atom twice, which
+// leaves a dangling atom once the atom is removed (check_stereo_group_members
+// in mol_checks.h): say, when the parser removes the hydrogens. Every place a
+// section may start is read as one, which may refuse a few extensions where
+// such text is inside another section.
+void check_cx_stereo_groups(std::string_view ext) {
+  std::map<unsigned int, std::set<unsigned long long>> groups;
+  for (std::size_t p = 0; p < ext.size(); ++p) {
+    unsigned int type;
+    if (ext[p] == 'a') {
+      type = 0;
+    } else if (ext[p] == 'o') {
+      type = 1;
+    } else if (ext[p] == '&' && p + 1 < ext.size() && ext[p + 1] != '#') {
+      type = 2;
+    } else {
+      continue;
+    }
+    std::size_t q = p + 1;
+    unsigned int id = 0;
+    if (type != 0) {
+      for (; q < ext.size() && digit(ext[q]); ++q) {
+        id = id * 10 + static_cast<unsigned int>(ext[q] - '0');
+      }
+    }
+    if (q >= ext.size() || ext[q] != ':') {
+      continue;
+    }
+    auto &atoms = groups[10 * id + type];
+    for (++q; q < ext.size() && digit(ext[q]);) {
+      unsigned long long index = 0;
+      for (; q < ext.size() && digit(ext[q]); ++q) {
+        index = std::min(index * 10 + static_cast<unsigned>(ext[q] - '0'),
+                         static_cast<unsigned long long>(UINT_MAX) + 1);
+      }
+      if (!atoms.insert(index).second) {
+        throw ValueErrorException(
+            "a CXSMILES stereo group lists an atom twice, which RDKit 2025.03 "
+            "keeps, leaving it to dangle once the atom is removed");
+      }
+      if (q < ext.size() && ext[q] == ',') {
+        ++q;
+      }
+    }
+  }
+}
+
 void check_cx_extension(std::string_view ext) {
+  check_cx_stereo_groups(ext);
   constexpr std::string_view key = "atomProp:";
   for (auto at = ext.find(key); at != std::string_view::npos;
        at = ext.find(key, at + 1)) {

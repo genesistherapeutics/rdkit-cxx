@@ -40,6 +40,24 @@ fn create_and_set_stereo_groups() {
         create_stereo_group(StereoGroupType::StereoAnd, &rw, &[1, 40]).unwrap_err(),
         Error::Index { index: 40, len: 7 }
     );
+    // RDKit 2025.03 keeps a duplicate, which dangles once its atom or bond is
+    // removed; 2026.03's messages.
+    assert_eq!(
+        create_stereo_group(StereoGroupType::StereoAnd, &rw, &[1, 4, 1]).unwrap_err(),
+        Error::Value {
+            message: "Duplicate atom in StereoGroup".into()
+        }
+    );
+    let bonds = CreateStereoGroupParams {
+        bond_ids: vec![2, 2],
+        ..Default::default()
+    };
+    assert_eq!(
+        create_stereo_group_with_params(StereoGroupType::StereoAnd, &rw, &bonds).unwrap_err(),
+        Error::Value {
+            message: "Duplicate bond in StereoGroup".into()
+        }
+    );
     let params = CreateStereoGroupParams {
         atom_ids: vec![1],
         read_id: 5,

@@ -10,6 +10,7 @@
 #include <cstring>
 #include <fstream>
 #include <random>
+#include <regex>
 #include <set>
 #include <sstream>
 #include <utility>
@@ -306,6 +307,50 @@ class SGroupReplay {
   std::string d_error;
 };
 
+// The error RDKit 2025.03's reading of an enhanced-stereo collection line
+// (parseEnhancedStereo in MolFileParser.cpp, on the upper-cased line) would
+// make, or an empty string. It reads the count's atom numbers with
+// unchecked extractions, so the first may be unset and the rest repeat the
+// last, and it keeps an atom listed twice, which then dangles once removed
+// (check_stereo_group_members in mol_checks.h): say, when the reader removes
+// the hydrogens.
+std::string stereo_collection_error(const std::string &line) {
+  static const std::regex label(
+      R"regex(MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *)regex");
+  std::smatch match;
+  if (!std::regex_match(line, match, label) ||
+      (match[1] != "ABS" && match[1] != "REL" && match[1] != "RAC")) {
+    return {};
+  }
+  unsigned int count;
+  try {
+    count = RDKit::FileParserUtils::toUnsigned(match[3].str(), true);
+  } catch (const std::exception &) {
+    return {};  // RDKit throws
+  }
+  std::stringstream stream(match[4].str());
+  std::set<unsigned int> seen;
+  unsigned int index = 0;
+  bool written = false;
+  for (unsigned int i = 0; i < count; ++i) {
+    if (SGroupReplay::writes(stream)) {
+      stream >> index;
+      written = true;
+    } else if (!written) {
+      return "a V3000 enhanced-stereo collection has fewer atoms than its "
+             "count, so RDKit 2025.03 would read an atom number no extraction "
+             "wrote";
+    }
+    if (!seen.insert(index).second) {
+      return "a V3000 enhanced-stereo collection lists an atom twice (or "
+             "fewer atoms than its count, which RDKit 2025.03 reads as the "
+             "last repeated); RDKit keeps the duplicate, which dangles once "
+             "the atom is removed";
+    }
+  }
+  return {};
+}
+
 // The error RDKit 2025.03's reading of an SGroup header line would make, or
 // an empty string.
 std::string sgroup_line_error(const std::string &line,
@@ -492,6 +537,14 @@ bool InputScanner::v3000_line(const std::string &line, bool advance) {
     return true;
   }
   auto upper = boost::to_upper_copy(line);
+  if (d_ctab == Ctab::kCounted && upper.compare(0, 10, "MDLV30/STE") == 0) {
+    auto error = stereo_collection_error(upper);
+    if (!error.empty()) {
+      d_refused_at = d_line_start;
+      return fail(error);
+    }
+    return true;
+  }
   if (upper.compare(0, 10, "BEGIN CTAB") == 0) {
     if (advance) {
       d_ctab = Ctab::kCtabStart;

@@ -88,11 +88,20 @@ class DescriptorCacheGuard {
 //   hybridizations, bonds' types, directions, and stereo, and stereo
 //   groups' types to the enums unchecked, and the Rust enums have no
 //   variant for a value RDKit's lacks (U2).
+// - A stereo group may list an atom or bond twice (check_stereo_group_members).
 // Throws ValueErrorException for any of these, in the molecule or in the
 // molecules of its recursive queries, which RDKit pickles as molecules.
 // Every wrapper that reads a molecule pickle, alone or inside another
 // format, calls it on the molecules it read.
 void check_pickled_mol(const RDKit::ROMol &mol);
+
+// RDKit 2025.03 removes a removed atom or bond from each stereo group once
+// (removeAtomFromGroups and removeBondFromGroups in StereoGroup.cpp), so a
+// group that lists one twice keeps a dangling pointer, which the next
+// stereo cleanup reads. Throws ValueErrorException("Duplicate atom in
+// StereoGroup"), as 2026.03's constructor does, or the same for a bond.
+void check_stereo_group_members(const std::vector<RDKit::Atom *> &atoms,
+                                const std::vector<RDKit::Bond *> &bonds);
 
 // MolPickler writes some values in one byte, truncating larger ones: a
 // query's number of children, and in a molecule of at most 255 atoms, the

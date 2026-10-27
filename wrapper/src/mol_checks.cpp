@@ -306,8 +306,31 @@ void check_pickled_mol(const RDKit::ROMol &mol) {
         for (const auto *atom : current.atoms()) {
           check_monomer_info(*atom, which);
         }
+        for (const auto &group : current.getStereoGroups()) {
+          check_stereo_group_members(group.getAtoms(), group.getBonds());
+        }
       },
       [](const auto &) {});
+}
+
+namespace {
+
+template <class T>
+void check_unique(const std::vector<T *> &items, const char *what) {
+  std::vector<T *> sorted(items);
+  std::sort(sorted.begin(), sorted.end());
+  if (std::adjacent_find(sorted.begin(), sorted.end()) != sorted.end()) {
+    throw ValueErrorException(std::string("Duplicate ") + what +
+                              " in StereoGroup");
+  }
+}
+
+}  // namespace
+
+void check_stereo_group_members(const std::vector<RDKit::Atom *> &atoms,
+                                const std::vector<RDKit::Bond *> &bonds) {
+  check_unique(atoms, "atom");
+  check_unique(bonds, "bond");
 }
 
 namespace {

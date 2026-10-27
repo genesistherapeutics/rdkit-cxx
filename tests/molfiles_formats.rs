@@ -143,6 +143,38 @@ fn cx_atom_props_are_checked() {
 }
 
 #[test]
+fn stereo_groups_listing_an_atom_twice_are_refused() {
+    // RDKit 2025.03 keeps the duplicate, which dangles once the atom is
+    // removed: removing hydrogens, Python crashes on the second.
+    for text in [
+        "C[C@H](F)Cl |&1:1,1|",
+        "[H][C@](C)(F)Cl |&1:0,0,1|",
+        "C[C@H](F)C[C@H](F)Cl |o1:1,o1:4,o1:1|",
+        "C[C@H](F)Cl |a:1,a:1|",
+    ] {
+        assert!(is_value(mol_from_smiles(text)), "{text}");
+    }
+    for text in ["C[C@H](F)Cl |&1:1,&2:1|", "C[C@H](F)Cl |a:1,o1:1|"] {
+        assert!(mol_from_smiles(text).is_ok(), "{text}");
+    }
+    let block = mol_to_v3k_mol_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    assert!(mol_from_mol_block(&block).is_ok());
+    // A list shorter than its count repeats its last atom, or reads one unset.
+    for atoms in ["(2 2 2)", "(2 2)", "(1 )"] {
+        let bad = block.replace("ATOMS=(1 2)", &format!("ATOMS={atoms}"));
+        assert_ne!(bad, block);
+        assert!(is_value(mol_from_mol_block(&bad)), "{atoms}");
+    }
+    let mrv = mol_to_mrv_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    let twice = mrv.replace(
+        "</atomArray>",
+        "<atom id=\"a2\" elementType=\"Br\" x2=\"3\" y2=\"3\" mrvStereoGroup=\"and1\"/></atomArray>",
+    );
+    assert_ne!(twice, mrv);
+    assert!(is_parse(mol_from_mrv_block(&twice)));
+}
+
+#[test]
 fn fragments() {
     let mol = smiles("OCCN");
     assert_eq!(mol_fragment_to_smiles(&mol, &[1, 2, 3]).unwrap(), "CCN");
