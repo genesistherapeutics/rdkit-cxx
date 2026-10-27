@@ -23,32 +23,34 @@ fn lookups() {
     assert_eq!(table.get_n_outer_elecs(6).unwrap(), 4);
     assert_eq!(table.get_most_common_isotope(6).unwrap(), 12);
     assert!((table.get_most_common_isotope_mass(6).unwrap() - 12.0).abs() < 1e-6);
-    assert_eq!(table.get_row(11).unwrap(), 3);
-    assert_eq!(table.get_row_str("Na").unwrap(), 3);
     assert!((table.get_mass_for_isotope(6, 13).unwrap() - 13.003).abs() < 1e-3);
     assert!(table.get_abundance_for_isotope_str("C", 12).unwrap() > 98.0);
     assert!(table.get_rvdw(6).unwrap() > table.get_rcovalent(6).unwrap());
     assert!(table.get_rb0(6).unwrap() > 0.0);
-    assert!(table.get_max_atomic_number() >= 118);
 }
 
 #[test]
 fn bad_inputs() {
     let table = get_periodic_table();
-    let max = table.get_max_atomic_number();
+    // RDKit 2024.03's table holds atomic numbers 0 to 118.
     assert_eq!(
         table.get_atomic_weight(500).unwrap_err(),
         Error::Index {
             index: 500,
-            len: max as usize + 1
+            len: 119
         }
     );
+    assert!(table.get_atomic_weight(118).is_ok());
+    assert!(matches!(
+        table.get_atomic_weight(119),
+        Err(Error::Index { .. })
+    ));
     assert!(matches!(
         table.get_atomic_number("Xx"),
         Err(Error::Runtime { .. })
     ));
     assert!(matches!(
-        table.get_row_str("Xx"),
+        table.get_default_valence_str("Xx"),
         Err(Error::Runtime { .. })
     ));
 }

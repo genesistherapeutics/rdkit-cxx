@@ -15,8 +15,8 @@ fn atom_details() {
     assert!(carbon.get_no_implicit());
     assert!(carbon.has_owning_mol() && !carbon.has_query());
     assert!(!carbon.needs_update_property_cache());
-    assert_eq!(carbon.get_valence(ValenceType::Explicit).unwrap(), 4);
-    assert_eq!(carbon.get_valence(ValenceType::Implicit).unwrap(), 0);
+    assert_eq!(carbon.get_explicit_valence().unwrap(), 4);
+    assert_eq!(carbon.get_implicit_valence().unwrap(), 0);
     assert!(!carbon.has_valence_violation().unwrap());
     assert_eq!(carbon.get_smarts().unwrap(), "[CH3:7]");
     let oxygen = mol.get_atom_with_idx(1).unwrap();
@@ -46,12 +46,15 @@ fn atom_details() {
         Err(Error::Runtime { .. })
     ));
     assert!(!Atom::from_num(6).has_owning_mol());
-    assert_eq!(
-        Atom::from_num(6)
-            .get_valence(ValenceType::Explicit)
-            .unwrap(),
-        0
-    );
+    // Outside a molecule the valences are uncomputed, as in Python.
+    assert!(matches!(
+        Atom::from_num(6).get_explicit_valence(),
+        Err(Error::Runtime { .. })
+    ));
+    assert!(matches!(
+        Atom::from_num(6).get_implicit_valence(),
+        Err(Error::Runtime { .. })
+    ));
 }
 
 #[test]
@@ -80,12 +83,6 @@ fn atom_setters() {
     atom.set_atom_map_num_with_strict(12, true).unwrap();
     atom.set_num_radical_electrons(1);
     assert_eq!(atom.get_num_radical_electrons(), 1);
-    atom.clear_property_cache();
-    assert!(atom.needs_update_property_cache());
-    assert!(matches!(
-        atom.get_valence(ValenceType::Explicit),
-        Err(Error::Runtime { .. })
-    ));
     assert!(!atom.invert_chirality());
     let mut chiral = mol_from_smiles("F[C@H](Cl)Br").unwrap();
     assert!(chiral.get_atom_with_idx_mut(1).unwrap().invert_chirality());
@@ -186,14 +183,38 @@ fn mol_details() {
             .collect::<Vec<_>>(),
         [0, 1, 2, 3, 4, 5]
     );
-    assert_eq!(mol.get_name().unwrap(), "");
-    mol.set_name("benzyl alcohol");
-    assert_eq!(mol.get_name().unwrap(), "benzyl alcohol");
+    mol.set_prop("_Name", "benzyl alcohol");
     assert_eq!(mol.get_prop("_Name").unwrap(), "benzyl alcohol");
     assert!(!mol.needs_update_property_cache());
-    mol.clear_property_cache();
-    assert!(mol.needs_update_property_cache());
-    mol.update_property_cache().unwrap();
+    // Without sanitizing or removing hydrogens, the parser leaves the
+    // valences uncomputed.
+    let mut unsanitized = mol_from_smiles_with_params(
+        "CC",
+        &SmilesParserParams {
+            sanitize: false,
+            remove_hs: false,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert!(unsanitized.needs_update_property_cache());
+    assert!(matches!(
+        unsanitized
+            .get_atom_with_idx(0)
+            .unwrap()
+            .get_explicit_valence(),
+        Err(Error::Runtime { .. })
+    ));
+    unsanitized.update_property_cache().unwrap();
+    assert!(!unsanitized.needs_update_property_cache());
+    assert_eq!(
+        unsanitized
+            .get_atom_with_idx(0)
+            .unwrap()
+            .get_explicit_valence()
+            .unwrap(),
+        1
+    );
     mol.debug_with_use_stdout(false);
     assert!(mol_from_smiles("").unwrap().get_aromatic_atoms().is_empty());
 }

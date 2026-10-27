@@ -177,27 +177,6 @@ fn discrete_value_vect_pickles() {
 const ZERO_BITS_PER_VALUE: [u8; 12] = [0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0];
 
 #[test]
-fn real_value_vect_pickles() {
-    let mut rvv = RealValueVect::new(4);
-    rvv.set_val(1, 2.5).unwrap();
-    let pkl = rvv.to_binary();
-    assert_eq!(
-        RealValueVect::from_pkl(&pkl).unwrap().get_val(1).unwrap(),
-        2.5
-    );
-    // RDKit allocates the length a pickle gives before reading the values.
-    for bad in [
-        with_i32(pkl.clone(), 0, i32::MIN),
-        with_u32(pkl.clone(), 4, u32::MAX),
-        with_u32(pkl.clone(), 4, 1 << 31),
-        with_u32(pkl.clone(), 4, 5),
-        pkl[..pkl.len() - 1].to_vec(),
-    ] {
-        assert!(is_value(RealValueVect::from_pkl(&bad)), "{bad:?}");
-    }
-}
-
-#[test]
 fn sparse_int_vect_pickles() {
     let mut siv = IntSparseIntVect::new(10).unwrap();
     siv.set_val(3, 5).unwrap();
@@ -359,35 +338,9 @@ fn uniform_grid3d_pickles() {
 }
 
 #[test]
-fn uniform_real_value_grid3d_pickles() {
-    let mut grid = UniformRealValueGrid3D::new(2.0, 2.0, 2.0).unwrap();
-    grid.set_val(3, 2.5).unwrap();
-    let pkl = grid.to_binary();
-    let copy = UniformRealValueGrid3D::from_pkl(&pkl).unwrap();
-    assert!(copy.compare_grids(&grid));
-    assert!(copy.clone().compare_grids(&grid));
-    for bad in [
-        with_i32(pkl.clone(), 0, i32::MIN),
-        with_u32(pkl.clone(), 4, 5),
-        with_u32(pkl.clone(), 4, 0),
-        with_f64(pkl.clone(), 16, f64::NAN),
-        with_f64(pkl.clone(), 16, f64::INFINITY),
-        with_f64(pkl.clone(), 32, f64::NAN),
-        with_i32(pkl.clone(), 52, i32::MIN),
-        with_u32(pkl.clone(), 56, 7),
-        // RDKit allocates the storage size before reading the storage.
-        with_u32(pkl.clone(), 48, u32::MAX),
-        pkl[..pkl.len() - 1].to_vec(),
-    ] {
-        assert!(is_value(UniformRealValueGrid3D::from_pkl(&bad)), "{bad:?}");
-    }
-}
-
-#[test]
 fn grid_constructors() {
     // A grid with no points along an axis can't be copied.
     assert!(is_value(UniformGrid3D::new(0.1, 1.0, 1.0)));
-    assert!(is_value(UniformRealValueGrid3D::new(1.0, 0.1, 1.0)));
     let bad_offset = UniformGrid3DParams {
         off_set: Some(Point3D::new(f64::NAN, 0.0, 0.0)),
         ..Default::default()
@@ -397,16 +350,6 @@ fn grid_constructors() {
         1.0,
         1.0,
         &bad_offset
-    )));
-    let bad_spacing = UniformRealValueGrid3DParams {
-        spacing: f64::INFINITY,
-        off_set: None,
-    };
-    assert!(is_value(UniformRealValueGrid3D::new_with_params(
-        1.0,
-        1.0,
-        1.0,
-        &bad_spacing
     )));
 }
 

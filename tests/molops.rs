@@ -78,7 +78,6 @@ fn kekulize_forms() {
     assert!(benzene.get_atoms().all(|a| a.get_is_aromatic()));
     let clear = KekulizeParams {
         clear_aromatic_flags: true,
-        ..Default::default()
     };
     kekulize_with_params(&mut benzene, &clear).unwrap();
     assert!(benzene.get_atoms().all(|a| !a.get_is_aromatic()));
@@ -95,8 +94,7 @@ fn kekulize_forms() {
     assert_eq!(
         KekulizeParams::default(),
         KekulizeParams {
-            clear_aromatic_flags: false,
-            canonical: true
+            clear_aromatic_flags: false
         }
     );
 }
@@ -106,7 +104,7 @@ fn add_hs_returns_a_new_molecule() {
     let methane = mol_from_smiles("C").unwrap();
     assert_eq!(add_hs(&methane).unwrap().get_num_atoms(), 5);
     assert_eq!(methane.get_num_atoms(), 1);
-    let only_o = AddHsParameters {
+    let only_o = AddHsParams {
         only_on_atoms: Some(vec![1]),
         ..Default::default()
     };
@@ -116,7 +114,7 @@ fn add_hs_returns_a_new_molecule() {
             .get_num_atoms(),
         3
     );
-    let bad = AddHsParameters {
+    let bad = AddHsParams {
         only_on_atoms: Some(vec![7]),
         ..Default::default()
     };
@@ -124,13 +122,8 @@ fn add_hs_returns_a_new_molecule() {
         add_hs_with_params(&methane, &bad).unwrap_err(),
         Error::Index { index: 7, len: 1 }
     );
-    let defaults = AddHsParameters::default();
-    assert!(
-        !(defaults.explicit_only
-            || defaults.add_coords
-            || defaults.add_residue_info
-            || defaults.skip_queries)
-    );
+    let defaults = AddHsParams::default();
+    assert!(!(defaults.explicit_only || defaults.add_coords || defaults.add_residue_info));
     assert_eq!(defaults.only_on_atoms, None);
 }
 

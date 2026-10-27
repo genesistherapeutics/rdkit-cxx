@@ -40,26 +40,17 @@ fn param_defaults() {
     assert_eq!(
         GetSSSRParams::default(),
         GetSSSRParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false
+            include_dative_bonds: false
         }
     );
     assert_eq!(
         GetSymmSSSRParams::default(),
         GetSymmSSSRParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false
-        }
-    );
-    assert_eq!(
-        FindRingFamiliesParams::default(),
-        FindRingFamiliesParams {
-            include_dative_bonds: false,
-            include_hydrogen_bonds: false
+            include_dative_bonds: false
         }
     );
     let kekulize = KekulizeIfPossibleParams::default();
-    assert!(!kekulize.clear_aromatic_flags && kekulize.canonical);
+    assert!(!kekulize.clear_aromatic_flags);
 }
 
 #[test]
@@ -82,9 +73,10 @@ fn sanitization_steps() {
 
     let mut kekule = smiles("c1ccccc1");
     kekulize_if_possible(&mut kekule).unwrap();
+    // RDKit 2024.03 kekulizes in atom order, as Python's does.
     assert_eq!(
         kekule.get_bond_with_idx(0).unwrap().get_bond_type(),
-        BondType::Single
+        BondType::Double
     );
 
     let mut methyl = unsanitized("[CH3]");

@@ -12,7 +12,7 @@
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::{
-    AtomRef, BondType, Mol, RWMol, SmilesParserParams, ValenceType, get_periodic_table,
+    AtomRef, BondType, Mol, RWMol, SmilesParserParams, get_periodic_table,
     mol_from_smiles_with_params, mol_to_smiles,
 };
 
@@ -35,7 +35,7 @@ fn set_dative_bonds(mol: &Mol, from_atoms: &[i32]) -> Result<RWMol> {
                 .get_bond_between_atoms(nbr.get_idx(), metal.get_idx())?
                 .expect("neighbors are bonded");
             if from_atoms.contains(&nbr.get_atomic_num())
-                && i64::from(nbr.get_valence(ValenceType::Explicit)?)
+                && i64::from(nbr.get_explicit_valence()?)
                     > i64::from(pt.get_default_valence(nbr.get_atomic_num() as u32)?)
                 && bond.get_bond_type() == BondType::Single
             {
@@ -68,6 +68,6 @@ fn main() -> Result<()> {
 
     // It also shows up in the SMILES, an RDKit extension:
     println!("{}", mol_to_smiles(&m2)?);
-    assert_eq!(mol_to_smiles(&m2)?, "C[N](C)(C)->[Pt]");
+    assert_eq!(mol_to_smiles(&m2)?, "CN(C)(C)->[Pt]");
     Ok(())
 }

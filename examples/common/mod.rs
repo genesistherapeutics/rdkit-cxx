@@ -8,10 +8,10 @@
 //!
 //! Jupyter shows a molecule as a PNG or an SVG, by a display setting
 //! (`IPythonConsole.ipython_useSVG`). The examples draw SVGs, whose content
-//! they can check: each atom and bond index or atom note is a
-//! `class='note'` element for each character, each CIP label character a
-//! `class='CIP_Code'` element, and each atom label character a
-//! `class='atom-N'` element.
+//! they can check: each atom and bond index, atom note, or CIP label is a
+//! `class='note'` element for each character (RDKit 2024.03 draws CIP labels
+//! as atom notes), and each atom label character a `class='atom-N'`
+//! element.
 
 #![allow(dead_code)]
 

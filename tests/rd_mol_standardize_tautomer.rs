@@ -39,8 +39,6 @@ struct Case {
     canonical: &'static str,
     kekulized: &'static [&'static str],
     scores: &'static [i32],
-    rings: &'static [i32],
-    substructs: &'static [i32],
 }
 
 const CASES: [Case; 5] = [
@@ -52,8 +50,6 @@ const CASES: [Case; 5] = [
         canonical: "O=c1cccc[nH]1",
         kekulized: &["O=C1CC=CC=N1", "O=C1C=CC=CN1", "OC1=CC=CC=N1"],
         scores: &[6, 102, 100],
-        rings: &[0, 100, 100],
-        substructs: &[6, 2, 0],
     },
     Case {
         input: "CC(=O)C",
@@ -63,8 +59,6 @@ const CASES: [Case; 5] = [
         canonical: "CC(C)=O",
         kekulized: &["C=C(C)O", "CC(C)=O"],
         scores: &[1, 5],
-        rings: &[0, 0],
-        substructs: &[1, 5],
     },
     Case {
         input: "OC(C)=C(C)C",
@@ -74,8 +68,6 @@ const CASES: [Case; 5] = [
         canonical: "CC(=O)C(C)C",
         kekulized: &["C=C(O)C(C)C", "CC(=O)C(C)C", "CC(C)=C(C)O"],
         scores: &[2, 6, 3],
-        rings: &[0, 0, 0],
-        substructs: &[2, 6, 3],
     },
     Case {
         input: "c1ccc2[nH]ncc2c1",
@@ -85,8 +77,6 @@ const CASES: [Case; 5] = [
         canonical: "c1ccc2[nH]ncc2c1",
         kekulized: &["C1=CC=C2NN=CC2=C1", "C1=CC2=CNN=C2C=C1"],
         scores: &[350, 350],
-        rings: &[350, 350],
-        substructs: &[0, 0],
     },
     Case {
         input: "C[C@H](N)C(=O)O",
@@ -96,8 +86,6 @@ const CASES: [Case; 5] = [
         canonical: "CC(N)C(=O)O",
         kekulized: &["C=C(N)C(O)O", "CC(=N)C(O)O", "CC(N)=C(O)O", "CC(N)C(=O)O"],
         scores: &[0, 2, 1, 6],
-        rings: &[0, 0, 0, 0],
-        substructs: &[0, 2, 1, 6],
     },
 ];
 
@@ -172,13 +160,16 @@ fn enumeration() {
                 TautomerEnumerator::score_tautomer(&m).unwrap(),
                 case.scores[i]
             );
-            assert_eq!(score_rings(&m).unwrap(), case.rings[i]);
-            assert_eq!(score_substructs(&m).unwrap(), case.substructs[i]);
-            assert_eq!(score_hetero_hs(&m).unwrap(), 0);
         }
     }
-    assert_eq!(score_rings(&mol("c1ccccc1-c1ccccn1")).unwrap(), 350);
-    assert_eq!(score_hetero_hs(&mol("SCC[PH2]")).unwrap(), -3);
+    assert_eq!(
+        TautomerEnumerator::score_tautomer(&mol("c1ccccc1-c1ccccn1")).unwrap(),
+        350
+    );
+    assert_eq!(
+        TautomerEnumerator::score_tautomer(&mol("SCC[PH2]")).unwrap(),
+        -3
+    );
     assert_eq!(TautomerEnumerator::tautomer_score_version(), "1.0.0");
 }
 
@@ -487,47 +478,10 @@ fn panics_in_callbacks_are_errors() {
 }
 
 #[test]
-fn substruct_terms() {
-    let terms = get_default_tautomer_score_substructs();
-    assert_eq!(terms.len(), 12);
-    assert_eq!(
-        terms[0],
-        SubstructTerm::new(
-            "benzoquinone",
-            "[#6]1([#6]=[#6][#6]([#6]=[#6]1)=,:[N,S,O])=,:[N,S,O]",
-            25
-        )
-    );
-    assert_eq!(terms[1], SubstructTerm::new("oxim", "[#6]=[N][OH]", 4));
-    let custom = [
-        SubstructTerm::new("C=O", "[#6]=,:[#8]", 7),
-        SubstructTerm::new("bad", "[C", 5),
-    ];
-    let acetone = mol("CC(=O)C");
-    assert_eq!(score_substructs_with_terms(&acetone, &custom).unwrap(), 7);
-    assert_eq!(score_substructs(&acetone).unwrap(), 5);
-    // RDKit counts at most 1000 matches of a term.
-    let chain = mol(&"C".repeat(3000));
-    let carbon = [SubstructTerm::new("c", "[#6]", 1)];
-    assert_eq!(score_substructs_with_terms(&chain, &carbon).unwrap(), 1000);
-}
-
-#[test]
 fn large_scores_are_refused() {
-    // RDKit adds each term's score times its matches (up to 1000) in int;
-    // Python gets -1000 here.
-    let chain = mol(&"C".repeat(3000));
-    let big = [SubstructTerm::new("c", "[#6]", i32::MAX)];
-    assert!(is_value(score_substructs_with_terms(&chain, &big)));
-    let big = [
-        SubstructTerm::new("c", "[#6]", i32::MAX / 2000 + 1),
-        SubstructTerm::new("n", "[#7]", -(i32::MAX / 2000 + 1)),
-    ];
-    assert!(is_value(score_substructs_with_terms(&chain, &big)));
-
     // The default score adds up to 382 per atom for hydrogens on P, S, Se,
-    // and Te, and 250 per ring, in int. (Rings enough to overflow
-    // score_rings, some 8.6 million, take gigabytes to enumerate.)
+    // and Te, and 250 per ring, in int. (Rings enough to overflow the ring
+    // score, some 8.6 million, take gigabytes to enumerate.)
     let atom = Atom::from_num(6);
     let mut many = RWMol::default();
     for _ in 0..(i32::MAX as u32 - 47000) / 383 + 1 {

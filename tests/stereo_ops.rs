@@ -38,16 +38,6 @@ fn chiral_centers() {
             .unwrap(),
         "R"
     );
-    assert_eq!(
-        compute_atom_cip_ranks(&mut smiles("C[C@H](F)Cl")).unwrap(),
-        [0, 1, 2, 3]
-    );
-    // RDKit writes out of bounds ranking no atoms.
-    assert!(
-        compute_atom_cip_ranks(&mut Mol::default())
-            .unwrap()
-            .is_empty()
-    );
 
     assert!(
         find_meso_centers(&smiles("C[C@H](F)[C@@H](F)C"))
@@ -175,8 +165,6 @@ fn wedging() {
 fn enhanced_stereo() {
     let and = smiles("C[C@H](F)[C@H](F)C |&1:1,3|");
     assert_eq!(and.get_stereo_groups().len(), 1);
-    let canon = canonicalize_stereo_groups(&and).unwrap();
-    assert_eq!(mol_to_smiles(&canon).unwrap(), "C[C@H](F)[C@@H](C)F");
 
     let mut or = smiles("C[C@H](F)[C@@H](F)C |o1:1,3|");
     simplify_enhanced_stereo(&mut or).unwrap();
@@ -200,7 +188,6 @@ fn enhanced_stereo() {
     let groups = flagged.get_stereo_groups();
     assert_eq!(groups.len(), 1);
     assert_eq!(groups[0].get_group_type(), StereoGroupType::StereoAnd);
-    cleanup_stereo_groups(&mut flagged).unwrap();
 }
 
 #[test]
@@ -211,12 +198,6 @@ fn param_defaults() {
     assert_eq!((from_3d.conf_id, from_3d.replace_existing_tags), (-1, true));
     let meso = FindMesoCentersParams::default();
     assert!(meso.include_isotopes && !meso.include_atom_maps);
-    let canon = CanonicalizeStereoGroupsParams::default();
-    assert_eq!(
-        canon.output_absolute_groups,
-        StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist
-    );
-    assert_eq!(canon.max_stereo_groups, 12);
     let labels = AddStereoAnnotationsParams::default();
     assert_eq!(labels.abs_label, "abs ({cip})");
     assert_eq!(labels.or_label, "or{id}");
@@ -236,7 +217,7 @@ fn param_defaults() {
         [1000, 10000, 100000, 1000000]
     );
     let reapply = ReapplyMolBlockWedgingParams::default();
-    assert!(reapply.all_bond_types && !reapply.verify);
+    assert!(reapply.all_bond_types);
     let expand = ExpandAttachmentPointsParams::default();
     assert!(expand.add_as_queries && expand.add_coords);
 }

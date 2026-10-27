@@ -71,10 +71,9 @@ Some recipes differ from the cookbook's text on purpose:
 - Create Fragments: Python's `with Chem.RWMol(mol)` batches the bond
   removals, so the example brackets them with `begin_batch_edit` and
   `commit_batch_edit`.
-- Highlight a Substructure in a Molecule: after a substructure search,
-  Jupyter keeps the query, and when the recipe then sets the atoms to
-  highlight by hand, drawing them fails in RDKit 2026.03, since they do not
-  fit the query. The example shows the failure, then draws the atoms without
-  the query, as the recipe intends.
+- Highlight a Substructure in a Molecule: Jupyter highlights the matched
+  atoms, and the drawer the bonds between them; `mol_to_svg_with_params`
+  takes the bonds explicitly, so the example passes the bonds between the
+  atoms.
 - On a Plot: the recipe puts the molecule on a matplotlib plot, which has no
   counterpart here; the example draws the image.

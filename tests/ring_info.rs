@@ -66,7 +66,7 @@ fn uninitialized_ring_info_is_an_error_not_an_abort() {
 
 #[test]
 fn unsanitized_smiles_still_finds_rings() {
-    // RDKit 2026.03's SMILES parser runs fast ring finding without
+    // RDKit 2024.03's SMILES parser runs fast ring finding without
     // sanitization.
     let params = SmilesParserParams {
         sanitize: false,
