@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/rgroup.h"
 
+#include <algorithm>
 #include <chrono>
 #include <climits>
 #include <mutex>
@@ -136,9 +137,25 @@ void check_label(std::int64_t label) {
 // The decomposition removes atoms from copies of the cores and of the
 // molecules it adds (their matching cores, replaceCore, getMolFrags, the
 // R groups' hydrogens), which trusts what check_removals checks.
+//
+// MCS alignment (prepareCore, RGroupDecompParams.cpp) runs findMCS on each
+// later core and the first, with RDKit's default threshold, so the one with
+// fewer bonds is the search's query; RDKit 2024.03's Seed::grow shifts by a
+// seed's count of new query bonds, which is undefined at 64 (fmcs.cpp), so
+// that core must have fewer than 64 bonds.
 void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
                  const RDKit::RGroupDecompositionParameters &p) {
   bool mcs = !p.onlyMatchAtRGroups && (p.alignment & RDKit::MCS);
+  if (mcs) {
+    for (std::size_t i = 1; i < cores.size(); ++i) {
+      if (std::min(cores[i]->getNumBonds(), cores[0]->getNumBonds()) >= 64) {
+        throw ValueErrorException(
+            "MCS alignment of cores " + std::to_string(i) +
+            " and 0 would search for an MCS with a query of 64 or more bonds, "
+            "which RDKit 2024.03's search mishandles");
+      }
+    }
+  }
   for (const auto &core : cores) {
     check_removals(*core);
     for (const auto *atom : core->atoms()) {

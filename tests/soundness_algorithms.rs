@@ -19,6 +19,17 @@ fn smiles(text: &str) -> Mol {
     mol_from_smiles(text).unwrap()
 }
 
+/// Without the legacy labels the SMILES parser assigns.
+fn without_labels(text: &str) -> Mol {
+    let mut mol = smiles(text);
+    for idx in 0..mol.get_num_atoms() {
+        mol.get_atom_with_idx_mut(idx)
+            .unwrap()
+            .clear_prop("_CIPCode");
+    }
+    mol
+}
+
 fn is_value_error<T: std::fmt::Debug>(result: &Result<T, Error>) -> bool {
     matches!(result, Err(Error::Value { .. }))
 }
@@ -121,18 +132,22 @@ fn rascal_timeouts() {
 #[test]
 fn cip_labeler_descriptor_count() {
     let chain = |n: usize| format!("F{}Cl", "[C@H](O)".repeat(n));
-    let mut mol = smiles(&chain(33));
+    let mut mol = without_labels(&chain(33));
     let result = assign_cip_labels(&mut mol);
     assert!(is_value_error(&result), "{result:?}");
-    // Labeling at most 32 of them is fine.
+    // Labeling at most 32 of them is fine, as Python labels them.
     let some = AssignCIPLabelsParams {
-        atoms_to_label: Some((1..=32).collect()),
+        atoms_to_label: Some((1..64).step_by(2).collect()),
         ..AssignCIPLabelsParams::default()
     };
-    assert!(assign_cip_labels_with_params(&mut mol, &some).is_ok());
-    assert_eq!(atom_labels(&mol).len(), 32);
+    assign_cip_labels_with_params(&mut mol, &some).unwrap();
+    let labels: String = atom_labels(&mol)
+        .into_iter()
+        .map(|(_, label)| label)
+        .collect();
+    assert_eq!(labels, "SRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSS");
     // 32, as Python labels them.
-    let mut mol = smiles(&chain(32));
+    let mut mol = without_labels(&chain(32));
     assign_cip_labels(&mut mol).unwrap();
     let labels: String = atom_labels(&mol)
         .into_iter()
@@ -140,7 +155,7 @@ fn cip_labeler_descriptor_count() {
         .collect();
     assert_eq!(labels, "SRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSR");
     // Atoms and bonds both count; untagged ones do not.
-    let mut mol = smiles("C[C@H](O)/C=C/[C@@H](N)C");
+    let mut mol = without_labels("C[C@H](O)/C=C/[C@@H](N)C");
     assign_cip_labels(&mut mol).unwrap();
     assert_eq!(
         atom_labels(&mol),
@@ -169,12 +184,13 @@ fn cip_labeler_stereo_atom_is_other_end() {
 // ExtendedMurckoScaffold allocates a byte of stack per atom with alloca.
 #[test]
 fn extended_murcko_atom_limit() {
-    let big = smiles(&"C".repeat(4001));
+    // Disconnected methanes keep RDKit's ring search short.
+    let big = smiles(&vec!["C"; 4001].join("."));
     assert!(is_value_error(&mol_hash(
         &big,
         HashFunction::ExtendedMurcko
     )));
-    let limit = smiles(&"C".repeat(4000));
+    let limit = smiles(&vec!["C"; 4000].join("."));
     assert!(mol_hash(&limit, HashFunction::ExtendedMurcko).is_ok());
     // As Python.
     assert_eq!(
@@ -215,6 +231,7 @@ fn implicit_valence_before_property_cache() {
         "CC",
         &SmilesParserParams {
             sanitize: false,
+            remove_hs: false,
             ..Default::default()
         },
     )

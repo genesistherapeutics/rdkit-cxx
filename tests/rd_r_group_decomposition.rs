@@ -477,3 +477,15 @@ fn enumeration_refuses_too_many_variation_points() {
         err => panic!("{err:?}"),
     }
 }
+
+// MCS alignment of two cores runs RDKit's MCS search with the smaller as
+// its query, which RDKit 2024.03 mishandles from 64 bonds on.
+#[test]
+fn mcs_alignment_of_large_cores_is_refused() {
+    let big = [chain(65), chain(66)];
+    assert!(matches!(
+        RGroupDecomposition::new(&big),
+        Err(Error::Value { .. })
+    ));
+    RGroupDecomposition::new(&[chain(65), chain(10)]).unwrap();
+}
