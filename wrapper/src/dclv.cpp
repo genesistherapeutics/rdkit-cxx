@@ -78,20 +78,23 @@ void check_zero_radii_last(const DoubleCubicLatticeVolume &dclv) {
   }
 }
 
-// With includeHs, includeAsPolar asks whether a hydrogen's neighbors are
-// polar by calling itself on them, hydrogens included, so two bonded
-// hydrogens recurse until the stack overflows (rdkit/rdkit#9687, fixed
-// after 2026.09.1); the polar surface area and volume ask it of every atom.
-// Those methods return a plain double, as Python's, so the constructor
-// refuses such a molecule.
-void check_no_hydrogen_bonds(const RWMol &mol) {
-  for (const auto *bond : mol.bonds()) {
+// RDKit 2026.03's includeAsPolar (DCLV.cpp), with includeHs, asks whether
+// each of a hydrogen's neighbors is polar by calling itself with includeHs,
+// so two bonded hydrogens recurse until the stack overflows (a segfault in
+// Python for H2; rdkit/rdkit#9687, fixed after 2026.09.1). A hydrogen
+// bonded to a hydrogen is refused for the polar descriptors with hydrogens.
+void check_polar_hydrogens(const DoubleCubicLatticeVolume &dclv,
+                           bool include_hs) {
+  if (!include_hs) {
+    return;
+  }
+  for (const auto *bond : dclv.mol.bonds()) {
     if (bond->getBeginAtom()->getAtomicNum() == 1 &&
         bond->getEndAtom()->getAtomicNum() == 1) {
       throw ValueErrorException(
-          "DoubleCubicLatticeVolume needs no bond between two hydrogens, for "
-          "which RDKit's polar surface area and volume recurse without end; "
-          "bond " +
+          "with includeHs, DoubleCubicLatticeVolume's polar descriptors need "
+          "no hydrogen bonded to a hydrogen, which RDKit 2026.03 follows "
+          "back and forth until the stack overflows; bond " +
           std::to_string(bond->getIdx()) + " joins two");
     }
   }
@@ -134,7 +137,6 @@ std::unique_ptr<DoubleCubicLatticeVolume> dclv_new(
   if (is_protein) {
     check_monomer_infos(mol);
   }
-  check_no_hydrogen_bonds(mol);
   auto dclv = std::make_unique<DoubleCubicLatticeVolume>(
       mol, std::vector<double>(radii.begin(), radii.end()), is_protein,
       include_ligand, probe_radius, conf_id);
@@ -165,6 +167,7 @@ double dclv_get_atom_surface_area(DoubleCubicLatticeVolume &dclv,
 
 double dclv_get_polar_surface_area(DoubleCubicLatticeVolume &dclv,
                                    bool include_s_and_p, bool include_hs) {
+  check_polar_hydrogens(dclv, include_hs);
   std::lock_guard<std::mutex> lock(record_cache_mutex());
   return dclv.getPolarSurfaceArea(include_s_and_p, include_hs);
 }
@@ -200,6 +203,7 @@ double dclv_get_atom_volume(DoubleCubicLatticeVolume &dclv,
 
 double dclv_get_polar_volume(DoubleCubicLatticeVolume &dclv,
                              bool include_s_and_p, bool include_hs) {
+  check_polar_hydrogens(dclv, include_hs);
   std::lock_guard<std::mutex> lock(record_cache_mutex());
   return dclv.getPolarVolume(include_s_and_p, include_hs);
 }

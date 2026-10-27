@@ -875,19 +875,44 @@ fn double_cubic_lattice_volume() {
     assert_close(protein.get_surface_area(), 359.1514138560083, 1e-9);
 }
 
+// RDKit 2026.03 asks whether a hydrogen's neighbors are polar by recursing
+// with includeHs, so two bonded hydrogens recurse until the stack overflows
+// (a segfault in Python; rdkit/rdkit#9687). Python raises for none of these,
+// so the methods stay infallible and panic.
 #[test]
-fn double_cubic_lattice_volume_refuses_bonded_hydrogens() {
+fn dclv_polar_descriptors_with_bonded_hydrogens() {
     let params = SmilesParserParams {
         remove_hs: false,
         ..Default::default()
     };
-    // RDKit's polar surface area with includeHs recurses through the two
-    // hydrogens without end (Python crashes).
     let h2 = mol_from_smiles_with_params("[H][H] |(0,0,0;0.74,0,0)|", &params).unwrap();
-    assert!(matches!(
-        DoubleCubicLatticeVolume::new(&h2),
-        Err(Error::Value { .. })
-    ));
+    let mut dclv = DoubleCubicLatticeVolume::new(&h2).unwrap();
+    assert_eq!(dclv.get_polar_surface_area(), 0.0);
+    assert_eq!(dclv.get_polar_volume(), 0.0);
+    let area = GetPolarSurfaceAreaParams {
+        include_hs: true,
+        ..Default::default()
+    };
+    let volume = GetPolarVolumeParams {
+        include_hs: true,
+        ..Default::default()
+    };
+    for result in [
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            dclv.get_polar_surface_area_with_params(&area)
+        })),
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            dclv.get_polar_volume_with_params(&volume)
+        })),
+    ] {
+        let payload = result.unwrap_err();
+        let message = payload.downcast_ref::<String>().unwrap();
+        assert!(
+            message.contains("hydrogen bonded to a hydrogen"),
+            "{message}"
+        );
+    }
+    // Hydrogens on a polar atom count, with include_hs.
     let water =
         mol_from_smiles_with_params("[H]O[H] |(0,0,0;0.96,0,0;1.2,0.93,0)|", &params).unwrap();
     let mut dclv = DoubleCubicLatticeVolume::new(&water).unwrap();

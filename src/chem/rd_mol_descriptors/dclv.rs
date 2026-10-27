@@ -105,10 +105,7 @@ pub struct GetPolarVolumeParams {
 /// - an atom with radius 0, which masks it, or an atom left out as solvent,
 ///   before an atom with a nonzero radius: RDKit lists neighbors only for
 ///   the atoms it keeps but looks them up by atom index, so the later atoms
-///   read another atom's list, and the last past the end (Python crashes);
-/// - a bond between two hydrogens, for which RDKit's polar surface area and
-///   volume with `include_hs` recurse until the stack overflows (Python
-///   crashes, rdkit/rdkit#9687).
+///   read another atom's list, and the last past the end (Python crashes).
 pub struct DoubleCubicLatticeVolume<'m> {
     /// Never null.
     ptr: UniquePtr<ffi::DoubleCubicLatticeVolume>,
@@ -193,6 +190,12 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Mirrors `GetPolarSurfaceArea(includeSandP, includeHs)`.
+    ///
+    /// # Panics
+    ///
+    /// With `include_hs`, for a hydrogen bonded to a hydrogen: RDKit 2026.03
+    /// recurses between them until the stack overflows (rdkit/rdkit#9687;
+    /// Python crashes).
     pub fn get_polar_surface_area_with_params(
         &mut self,
         params: &GetPolarSurfaceAreaParams,
@@ -260,6 +263,10 @@ impl<'m> DoubleCubicLatticeVolume<'m> {
     }
 
     /// Mirrors `GetPolarVolume(includeSandP, includeHs)`.
+    ///
+    /// # Panics
+    ///
+    /// As `get_polar_surface_area_with_params`.
     pub fn get_polar_volume_with_params(&mut self, params: &GetPolarVolumeParams) -> f64 {
         expect_ok(ffi::dclv_get_polar_volume(
             self.raw(),
