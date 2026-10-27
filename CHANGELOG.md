@@ -128,7 +128,7 @@ A program built against one release stops when it loads with another.
     an `EqualityQuery`. A JSON attachment point without `lvIdx`, which RDKit
     2025.09 leaves uninitialized, gets -1, as RDKit's writer means by leaving
     it out.
-  - The `ExtendedMurcko` hash takes fewer than 4,096 atoms: RDKit 2025.09
+  - The `ExtendedMurcko` hash takes at most 4,000 atoms: RDKit 2025.09
     takes a byte per atom from the stack.
   - Ring-system templates are checked as SMILES, as RDKit 2025.09 parses
     them.

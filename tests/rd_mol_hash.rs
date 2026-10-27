@@ -98,9 +98,9 @@ fn het_atom_tautomer_hashes() {
 #[test]
 fn extended_murcko_atom_limit() {
     // RDKit 2025.09 takes a byte per atom from the stack for this hash.
-    let mol = mol_from_smiles(&"C".repeat(4095)).unwrap();
+    let mol = mol_from_smiles(&"C".repeat(4000)).unwrap();
     assert_eq!(mol_hash(&mol, HashFunction::ExtendedMurcko).unwrap(), "");
-    let mol = mol_from_smiles(&"C".repeat(4096)).unwrap();
+    let mol = mol_from_smiles(&"C".repeat(4001)).unwrap();
     assert!(matches!(
         mol_hash(&mol, HashFunction::ExtendedMurcko),
         Err(rdkit_cxx::Error::Value { .. })
