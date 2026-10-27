@@ -315,7 +315,9 @@ class SGroupReplay {
 // (check_stereo_group_members in mol_checks.h): say, when the reader removes
 // the hydrogens.
 std::string stereo_collection_error(const std::string &line) {
-  static const std::regex label(
+  // A plain local, as RDKit's: DRD (the races job) cannot see a function's
+  // static initialization ordered with other threads' reads.
+  const std::regex label(
       R"regex(MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *)regex");
   std::smatch match;
   if (!std::regex_match(line, match, label) ||

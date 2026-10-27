@@ -648,14 +648,17 @@ void check_synthon_text(std::string_view text) {
 void read_text(SynthonSpace &space, const std::string &name,
                const char *cancelled_what) {
   auto text = read_file(name);
-  check_synthon_text(text);
   auto fresh = std::make_unique<SSS::SynthonSpace>();
   bool cancelled = false;
   {
-    std::istringstream in(std::move(text));
     // readStream calls reset(), and the synthons' pattern
-    // fingerprints match patterns (control_c_lock.h).
+    // fingerprints match patterns (control_c_lock.h). The check runs under
+    // the lock too: it and readStream split lines with std::regex, and DRD
+    // (the races job) cannot see libstdc++'s lazily built regex tables, or
+    // RDKit's function-local static regexes, ordered between threads.
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    check_synthon_text(text);
+    std::istringstream in(std::move(text));
     ControlCFlagGuard flag;
     fresh->readStream(in, cancelled);
   }
