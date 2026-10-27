@@ -7,6 +7,20 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_mol_enumerator::*;
 use rdkit_cxx::chem::*;
 
+/// A chain of `n` carbons, parsed unsanitized and then sanitized: RDKit
+/// 2024.03's SMILES parser runs its legacy stereo perception, whose time
+/// grows with the cube of a chain's length (a minute for 4002 atoms).
+fn chain(n: usize) -> Mol {
+    let params = SmilesParserParams {
+        sanitize: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut mol = mol_from_smiles_with_params(&"C".repeat(n), &params).unwrap();
+    sanitize_mol(&mut mol).unwrap();
+    mol
+}
+
 // Expected values come from Python's rdMolEnumerator.
 
 fn smiles(smi: &str) -> Mol {
@@ -202,7 +216,7 @@ fn refuses_link_nodes_reactions_cannot_find() {
 // RDKit recurses once per variation point.
 #[test]
 fn refuses_too_many_variation_points() {
-    let mut mol = smiles(&"C".repeat(4002));
+    let mut mol = chain(4002);
     for idx in 0..4001 {
         let mut bond = mol.get_bond_with_idx_mut(idx).unwrap();
         bond.set_prop("_MolFileBondEndPts", "(1 1)");

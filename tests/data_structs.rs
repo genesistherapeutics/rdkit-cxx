@@ -276,18 +276,6 @@ fn value_vects() {
     assert_eq!(DiscreteValueVect::from_pkl(&d.to_binary()).unwrap(), d);
     assert_eq!(DiscreteValueVect::default().len(), 0);
 
-    let mut r = RealValueVect::new(3);
-    r.set_val(0, 1.5).unwrap();
-    let mut q = RealValueVect::new(3);
-    q.set_val(0, 0.5).unwrap();
-    q.set_val(2, 2.0).unwrap();
-    assert_eq!(r.get_total_val(), 1.5);
-    assert_eq!(compute_l1_norm_real_value_vect(&r, &q).unwrap(), 3.0);
-    assert_eq!(convert_to_numpy_array(&(&r - &q)), [1.0, 0.0, -2.0]);
-    let mut s = r.clone();
-    s += &q;
-    assert_eq!(convert_to_numpy_array(&s), [2.0, 0.0, 2.0]);
-
     assert_eq!(convert_to_numpy_array(&bits(4, &[1])), [0, 1, 0, 0]);
 }
 

@@ -226,8 +226,8 @@ fn reactions_and_grids() {
     let rxn = reaction_from_smarts("[C:1]=[O:2].[N:3]>>[C:1](-[N:3])-[O:2]").unwrap();
     let mut d = MolDraw2DCairo::new(-1, -1).unwrap();
     d.draw_reaction(&rxn).unwrap();
-    // Python: 231 by 25, with the reaction in the metadata.
-    assert_near((d.width(), d.height()), (231, 25));
+    // Python: 238 by 26, with the reaction in the metadata.
+    assert_near((d.width(), d.height()), (238, 26));
     let png = d.get_drawing_text().unwrap();
     assert_eq!(png_size(&png), (d.width(), d.height()));
     assert_eq!(

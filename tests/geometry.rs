@@ -256,10 +256,6 @@ fn uniform_grid3d_params() {
             Err(Error::Value { .. })
         ));
     }
-    assert!(matches!(
-        UniformRealValueGrid3D::new(f64::INFINITY, 1.0, 1.0),
-        Err(Error::Value { .. })
-    ));
 }
 
 #[test]
@@ -368,64 +364,6 @@ fn write_grid() {
     let text = std::fs::read_to_string(&path).unwrap();
     assert!(text.starts_with("Grid file representing a Shape"));
     std::fs::remove_dir_all(&dir).unwrap();
-}
-
-#[test]
-fn uniform_real_value_grid3d() {
-    let default = UniformRealValueGrid3D::default();
-    assert_eq!(
-        (
-            default.get_num_x(),
-            default.get_size(),
-            default.get_spacing()
-        ),
-        (1, 1, 1.0)
-    );
-    assert_eq!(default.get_offset(), Point3D::default());
-
-    let mut grid = UniformRealValueGrid3D::new(4.0, 4.0, 4.0).unwrap();
-    assert_eq!(grid.get_num_x(), 8);
-    assert_eq!(grid.get_size(), 512);
-    assert_eq!(grid.get_offset(), Point3D::new(-2.0, -2.0, -2.0));
-    grid.set_val(3, 2.5).unwrap();
-    grid.set_val_point(&Point3D::default(), 1.25).unwrap();
-    assert_eq!(grid.get_val(3).unwrap(), 2.5);
-    assert_eq!(grid.get_val_point(&Point3D::default()), 1.25);
-    assert_eq!(grid.get_val_point(&Point3D::new(10.0, 0.0, 0.0)), -1.0);
-    assert_eq!(grid.get_val_point(&Point3D::new(1e300, 0.0, 0.0)), -1.0);
-    assert_eq!(grid.get_occupancy_vect().get_total_val(), 3.75);
-    assert_eq!(
-        grid.get_val(1000).unwrap_err(),
-        Error::Index {
-            index: 1000,
-            len: 512
-        }
-    );
-
-    let mut copy = grid.clone();
-    assert!(copy.compare_grids(&grid) && copy.compare_params(&grid) && copy.compare_vectors(&grid));
-    copy.set_val(0, 7.0).unwrap();
-    assert!(!copy.compare_grids(&grid));
-    assert!(copy.compare_params(&grid));
-    assert!(!copy.compare_vectors(&grid));
-    copy += &grid;
-    assert_eq!(copy.get_occupancy_vect().get_total_val(), 14.5);
-    copy &= &grid;
-    assert_eq!(copy.get_occupancy_vect().get_total_val(), 3.75);
-    copy |= &grid;
-    assert_eq!(copy.get_occupancy_vect().get_total_val(), 3.75);
-    copy -= &grid;
-    assert_eq!(copy.get_occupancy_vect().get_total_val(), 0.0);
-
-    let pickled = UniformRealValueGrid3D::from_pkl(&grid.to_binary()).unwrap();
-    assert!(pickled.compare_grids(&grid));
-    let params = UniformRealValueGrid3DParams {
-        spacing: 1.0,
-        off_set: Some(Point3D::default()),
-    };
-    let other = UniformRealValueGrid3D::new_with_params(2.0, 2.0, 2.0, &params).unwrap();
-    assert_eq!(other.get_size(), 8);
-    assert!(!other.compare_params(&grid));
 }
 
 #[test]

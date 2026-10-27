@@ -9,6 +9,20 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_r_group_decomposition::*;
 use rdkit_cxx::chem::*;
 
+/// A chain of `n` carbons, parsed unsanitized and then sanitized: RDKit
+/// 2024.03's SMILES parser runs its legacy stereo perception, whose time
+/// grows with the cube of a chain's length (a minute for 4002 atoms).
+fn chain(n: usize) -> Mol {
+    let params = SmilesParserParams {
+        sanitize: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut mol = mol_from_smiles_with_params(&"C".repeat(n), &params).unwrap();
+    sanitize_mol(&mut mol).unwrap();
+    mol
+}
+
 // Expected values come from Python's rdRGroupDecomposition.
 
 const MOLS: [&str; 4] = ["c1ccccc1Cl", "c1ccccc1CCO", "Cc1ccccc1Br", "CCCC"];
@@ -56,10 +70,8 @@ fn params_defaults() {
     assert!(p.remove_hydrogens_post_match);
     assert!(!p.allow_non_terminal_r_groups);
     assert!(!p.allow_multiple_r_groups_on_unlabelled);
-    assert!(!p.allow_multiple_cores_in_same_mol);
     assert!(!p.do_tautomers);
     assert!(!p.do_enumeration);
-    assert!(!p.include_target_mol_in_results);
     assert_eq!(p.timeout, -1.0);
     assert_eq!(p.ga_population_size, -1);
     assert_eq!(p.ga_maximum_operations, -1);
@@ -164,21 +176,6 @@ fn options() {
         assert_eq!(rows, expected_rows());
         assert_eq!(unmatched, [3]);
     }
-
-    let target = RGroupDecompositionParameters {
-        include_target_mol_in_results: true,
-        ..RGroupDecompositionParameters::default()
-    };
-    let (rows, _) =
-        r_group_decompose_as_smiles_with_options(&benzene(), &mols(&MOLS[..1]), &target).unwrap();
-    assert_eq!(
-        rows,
-        [row(&[
-            ("Core", "c1ccc([*:1])cc1"),
-            ("Mol", "Clc1ccccc1"),
-            ("R1", "Cl[*:1]")
-        ])]
-    );
 
     let timeout = RGroupDecompositionParameters {
         timeout: 1e-9,
@@ -465,7 +462,7 @@ fn threads() {
 // variation point, as rdMolEnumerator's own checks say.
 #[test]
 fn enumeration_refuses_too_many_variation_points() {
-    let mut core = mol_from_smiles(&"C".repeat(4002)).unwrap();
+    let mut core = chain(4002);
     for idx in 0..4001 {
         let mut bond = core.get_bond_with_idx_mut(idx).unwrap();
         bond.set_prop("_MolFileBondEndPts", "(1 1)");

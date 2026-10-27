@@ -181,7 +181,7 @@ fn setters() {
     let opts = d.draw_options();
     assert_eq!(opts.get_background_colour(), DrawColour::new(0.9, 0.9, 0.9));
     assert_eq!(
-        opts.get_atom_palette(),
+        opts.atom_colour_palette,
         BTreeMap::from([(-1, DrawColour::new(0.1, 0.2, 0.3))])
     );
 }
@@ -314,9 +314,10 @@ fn conformers() {
 
 #[test]
 fn degenerate_layouts_keep_the_drawer_usable() {
-    // Two coincident ring-fusion atoms: RDKit throws while laying out the
-    // double bonds, which the wrappers' layout of it finds before RDKit
-    // draws. (Coincident atoms of two bonds are refused before that.)
+    // Two coincident ring-fusion atoms: RDKit 2026.03 throws while laying
+    // out the double bonds; RDKit 2024.03's directionVector does not refuse
+    // the zero vector, so it draws, as in Python. A missing conformer is
+    // refused instead.
     let mut m = depicted("c1ccc2ccccc2c1");
     let p = m.get_conformer().unwrap().get_atom_position(3).unwrap();
     m.get_conformer_mut()
@@ -324,10 +325,12 @@ fn degenerate_layouts_keep_the_drawer_usable() {
         .set_atom_position(8, p)
         .unwrap();
     let mut d = svg();
-    assert!(matches!(
-        d.draw_molecule(&m).unwrap_err(),
-        Error::Runtime { .. }
-    ));
+    d.draw_molecule(&m).unwrap();
+    let params = DrawMoleculeParams {
+        conf_id: 5,
+        ..Default::default()
+    };
+    assert!(d.draw_molecule_with_params(&m, &params).is_err());
     d.draw_molecule(&mol("CCO")).unwrap();
     d.finish_drawing();
     assert!(d.get_drawing_text().unwrap().ends_with("</svg>\n"));
@@ -352,7 +355,6 @@ fn legends() {
         "a\nb",
         "x<sub>2</sub>",
         "<sup>1</sup>x",
-        "\n\n",
         "é",
         "x<sub>",
     ] {
@@ -363,16 +365,10 @@ fn legends() {
         assert_value_error(d.draw_molecule_with_params(&m, &with_legend(legend)));
     }
     assert_value_error(d.draw_molecule_with_params(&m, &with_legend("a\n<sub>b")));
+    // RDKit 2024.03's extractLegend reads the last of the legend's lines
+    // without checking there is one (Python segfaults).
+    assert_value_error(d.draw_molecule_with_params(&m, &with_legend("\n\n")));
     assert_value_error(d.draw_molecule_with_params(&m, &with_legend(&"x".repeat(10_001))));
-    // Vertical legends are drawn a character at a time.
-    let opts = MolDrawOptions {
-        legend_position: LegendPosition::Left,
-        legend_vertical_text: true,
-        ..Default::default()
-    };
-    d.set_draw_options(&opts).unwrap();
-    d.draw_molecule_with_params(&m, &with_legend("<sub>2</sub>"))
-        .unwrap();
 
     // Without FreeType, RDKit indexes its width table by char.
     let params = MolDraw2DSVGParams {
@@ -454,7 +450,7 @@ fn atom_labels_and_notes() {
 #[test]
 fn stereo_annotations() {
     let mut d = svg();
-    let mut opts = MolDrawOptions {
+    let opts = MolDrawOptions {
         add_stereo_annotation: true,
         ..Default::default()
     };
@@ -466,12 +462,6 @@ fn stereo_annotations() {
     d.draw_molecule(&m).unwrap();
 
     let grouped = mol("C[C@H](F)Cl |o1:1|");
-    opts.add_stereo_group_annotation = true;
-    opts.stereo_group_or_label = "<sub>".into();
-    d.set_draw_options(&opts).unwrap();
-    assert_value_error(d.draw_molecule(&grouped));
-    opts.stereo_group_or_label = "or".into();
-    d.set_draw_options(&opts).unwrap();
     d.draw_molecule(&grouped).unwrap();
 }
 
@@ -687,7 +677,7 @@ fn module_functions() {
         .get_bonds()
         .map(|b| b.get_bond_type_as_double().unwrap())
         .collect();
-    assert_eq!(orders, [1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
+    assert_eq!(orders, [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]);
     let params = PrepareMolForDrawingParams {
         kekulize: false,
         add_chiral_hs: false,
@@ -778,22 +768,6 @@ fn flexible_canvases_too_small_to_scale() {
 }
 
 #[test]
-fn extents_must_include_something_drawn() {
-    let mut d = svg();
-    let opts = MolDrawOptions {
-        drawing_extents_include: DrawElement::HIGHLIGHTS,
-        ..Default::default()
-    };
-    d.set_draw_options(&opts).unwrap();
-    assert_value_error(d.draw_molecule(&mol("CCO")));
-    let params = DrawMoleculeParams {
-        highlight_atoms: vec![0],
-        ..Default::default()
-    };
-    d.draw_molecule_with_params(&mol("CCO"), &params).unwrap();
-}
-
-#[test]
 fn attachment_points_need_bond_length() {
     let mut d = svg();
     let mut opts = MolDrawOptions {
@@ -845,9 +819,11 @@ fn comic_mode_needs_bonds_with_length() {
 }
 
 /// RDKit 2026.03 reads an uninitialized bond type for an atom of two bonds
-/// with a neighbor at its position (isLinearAtom); an atom of three draws.
+/// with a neighbor at its position (isLinearAtom). RDKit 2024.03's
+/// directionVector does not refuse the zero vector, so isLinearAtom reads
+/// both bond types and both draw, as in Python.
 #[test]
-fn atoms_of_two_bonds_need_their_neighbors_apart() {
+fn atoms_of_two_bonds_with_a_neighbor_at_their_position_draw() {
     let at_atom_0 = |smiles: &str| {
         let mut m = depicted(smiles);
         let p = m.get_conformer().unwrap().get_atom_position(0).unwrap();
@@ -857,7 +833,7 @@ fn atoms_of_two_bonds_need_their_neighbors_apart() {
             .unwrap();
         m
     };
-    assert_value_error(svg().draw_molecule(&at_atom_0("CCO")));
+    svg().draw_molecule(&at_atom_0("CCO")).unwrap();
     svg().draw_molecule(&at_atom_0("CC(C)C")).unwrap();
 }
 
@@ -1057,7 +1033,7 @@ fn grids() {
     d.finish_drawing();
     let text = d.get_drawing_text().unwrap();
     // Python's counts.
-    assert_eq!(text.matches("class='bond-0").count(), 7);
+    assert_eq!(text.matches("class='bond-0").count(), 9);
     assert_eq!(text.matches("#FF7F7F").count(), 4);
     // A drawer that has drawn holds molecules RDKit would lay out again.
     assert_value_error(d.draw_molecules(&mols));
@@ -1117,14 +1093,14 @@ fn reactions() {
             text.matches("#FF0000").count(),
             text.matches("#0000FF").count()
         ),
-        (12, 4)
+        (17, 7)
     );
     assert_value_error(d.draw_reaction(&rxn));
 
     let mut flexi = MolDraw2DSVG::new(-1, -1).unwrap();
     flexi.draw_reaction(&rxn).unwrap();
     let (w, h) = (flexi.width(), flexi.height());
-    assert!((w - 231).abs() <= 1 && (h - 25).abs() <= 1, "{w} {h}");
+    assert!((w - 238).abs() <= 1 && (h - 26).abs() <= 1, "{w} {h}");
 
     let fresh = || MolDraw2DSVG::new(600, 200).unwrap();
     fresh()
@@ -1204,7 +1180,7 @@ fn acs1996_drawings() {
             text.matches("<path").count(),
             text.matches("#FF7F7F").count()
         ),
-        ((58, 30), 23, 4)
+        ((58, 47), 23, 4)
     );
     let mut d = MolDraw2DSVG::new(-1, -1).unwrap();
     draw_molecule_acs1996(&mut d, &m).unwrap();

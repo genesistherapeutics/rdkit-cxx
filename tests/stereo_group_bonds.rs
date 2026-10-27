@@ -202,7 +202,7 @@ fn symmetrized_alignment_leaves_groups() {
     let mut reference = smiles("CC(=O)[O-]");
     compute_2d_coords(&mut reference).unwrap();
     let mut probe = with_group(reference.clone(), &[0], &[2]);
-    let params = BestAlignmentParams {
+    let params = GetBestRMSParams {
         symmetrize_conjugated_terminal_groups: true,
         ..Default::default()
     };

@@ -30,11 +30,6 @@ fn is_value_error<T>(result: Result<T, Error>) -> bool {
 }
 
 #[test]
-fn version() {
-    assert_eq!(get_inchi_version(), "1.07.3");
-}
-
-#[test]
 fn inchis_and_keys() {
     let cases = [
         (
@@ -290,8 +285,15 @@ fn too_many_atoms_are_refused() {
 #[test]
 fn too_many_stereo_elements_are_refused() {
     // num_stereo0D is a signed short too. Each center has three neighbor
-    // atoms, which InChI needs.
-    let mut mol: Mol = mol_from_smiles(&"C(F)".repeat(16000)).unwrap();
+    // atoms, which InChI needs. Unsanitized: RDKit 2024.03's legacy stereo
+    // perception, which sanitizing SMILES runs, ranks a chain this long for
+    // minutes.
+    let unsanitized = SmilesParserParams {
+        sanitize: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut mol: Mol = mol_from_smiles_with_params(&"C(F)".repeat(16000), &unsanitized).unwrap();
     for idx in (2..31998).step_by(2) {
         mol.get_atom_with_idx_mut(idx)
             .unwrap()
@@ -467,7 +469,6 @@ fn inchi_to_mol_reads_inchis() {
         ("InChI=1S/CH4/h1H4/i1+1", "[13CH4]"),
         ("InChI=1S/C2H6/c1-2/h1-2H3/i1D", "[2H]CC"),
         ("InChI=1/C2H6/c1-2/h1-2H3", "CC"),
-        ("InChI=1S/C/q-5", "[C-5]"),
     ];
     for (inchi, smiles) in cases {
         let result = inchi_to_mol(inchi).unwrap();
@@ -481,6 +482,11 @@ fn inchi_to_mol_reads_inchis() {
         );
         assert_eq!(mol_to_smiles(&result.mol.unwrap()).unwrap(), smiles);
     }
+
+    // RDKit 2024.03's sanitization refuses the carbon's valence of 5, as
+    // Python's InchiToMol raises.
+    let error = inchi_to_mol("InChI=1S/C/q-5").unwrap_err();
+    assert!(error.to_string().contains("Explicit valence"), "{error}");
 
     let deuterated = "InChI=1S/C2H6/c1-2/h1-2H3/i1D";
     let kept = inchi_to_mol_with_params(

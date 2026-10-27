@@ -7,6 +7,20 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_rascal_mces::*;
 use rdkit_cxx::chem::*;
 
+/// A chain of `n` carbons, parsed unsanitized and then sanitized: RDKit
+/// 2024.03's SMILES parser runs its legacy stereo perception, whose time
+/// grows with the cube of a chain's length (a minute for 4002 atoms).
+fn chain(n: usize) -> Mol {
+    let params = SmilesParserParams {
+        sanitize: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut mol = mol_from_smiles_with_params(&"C".repeat(n), &params).unwrap();
+    sanitize_mol(&mut mol).unwrap();
+    mol
+}
+
 // Expected values come from Python's rdRascalMCES. Searches use the default
 // 60-second timeout, which none of these comes near.
 
@@ -32,20 +46,16 @@ fn defaults() {
     assert_eq!(opts.similarity_threshold, 0.7);
     assert!(opts.complete_aromatic_rings);
     assert!(!opts.ring_matches_ring_only);
-    assert!(!opts.complete_smallest_rings);
     assert!(!opts.exact_connections_match);
     assert!(!opts.single_largest_frag);
     assert_eq!(opts.min_frag_size, -1);
     assert_eq!(opts.max_frag_separation, -1);
     assert!(!opts.all_best_mcess);
-    assert_eq!(opts.max_best_mcess, 10000);
     assert_eq!(opts.timeout, 60);
     assert!(!opts.return_empty_mces);
     assert_eq!(opts.max_bond_match_pairs, 1000);
     assert_eq!(opts.equivalent_atoms, "");
     assert!(!opts.ignore_bond_orders);
-    assert!(opts.ignore_atom_aromaticity);
-    assert_eq!(opts.min_clique_size, 0);
 
     let clus = RascalClusterOptions::default();
     assert_eq!(clus.similarity_cutoff, 0.7);
@@ -110,7 +120,7 @@ fn options() {
     let results = find_mces_with_opts(&ad1, &ad2, &opts).unwrap();
     assert_eq!(
         results[0].smarts_string(),
-        "CNc1:c:c:c(-CC(=O)-NCCCCCCCCCC):c:c:1"
+        "CCCCCCCCCCNC12CC3CC(-C1)-CC(-C2)-C3"
     );
 
     let mut opts = RascalOptions {
@@ -184,24 +194,6 @@ fn options() {
 }
 
 #[test]
-fn complete_smallest_rings() {
-    // complete_smallest_rings implies complete_aromatic_rings: RDKit reads
-    // ring SMILES only the latter makes, past the end of an empty list.
-    let (a, b) = (smiles("c1ccc2ccccc2c1"), smiles("c1ccccc1.c1ccccc1"));
-    for complete_aromatic_rings in [true, false] {
-        let opts = RascalOptions {
-            similarity_threshold: 0.1,
-            complete_smallest_rings: true,
-            complete_aromatic_rings,
-            ..Default::default()
-        };
-        let results = find_mces_with_opts(&a, &b, &opts).unwrap();
-        assert_eq!(results[0].smarts_string(), "c1:c:c:c:c:c:1.c:c:c:c");
-        assert!(close(results[0].similarity(), 0.71627));
-    }
-}
-
-#[test]
 fn checked_options() {
     let (a, b) = (smiles("c1ccccc1CC(=O)O"), smiles("c1ccccc1CCC(=O)O"));
     let find = |opts: RascalOptions| find_mces_with_opts(&a, &b, &opts);
@@ -252,7 +244,7 @@ fn checked_options() {
 fn molecule_sizes_are_checked() {
     // The similarity estimates square a count of matched atoms and bonds in
     // int: 23171 atoms and 23170 bonds each is one past.
-    let chain = smiles(&"C".repeat(23171));
+    let chain = chain(23171);
     assert!(matches!(
         find_mces(&chain, &chain),
         Err(Error::Value { .. })
@@ -359,10 +351,11 @@ fn clusters() {
 }
 
 #[test]
-fn errors_on_cluster_threads_are_returned() {
-    // A molecule without ring info makes RDKit throw. Python's threads
-    // catch nothing, so the process ends; here the pairs run on the calling
-    // thread, and the error is returned.
+fn molecules_without_ring_info() {
+    // RDKit 2024.03 reads a molecule's ring info unchecked except where
+    // ring_matches_ring_only asks whether a bond is in a ring, which throws
+    // without it. Clustering, which has no such option, reads the empty ring
+    // info, as Python's does. Python's values.
     let without_rings = |text: &str| {
         let mut mol = smiles(text);
         mol.clear_computed_props();
@@ -376,17 +369,22 @@ fn errors_on_cluster_threads_are_returned() {
             num_threads,
             ..Default::default()
         };
-        assert!(matches!(
-            rascal_cluster_with_opts(&mols, &opts),
-            Err(Error::Runtime { .. })
-        ));
-        assert!(matches!(
-            rascal_butina_cluster_with_opts(&mols, &opts),
-            Err(Error::Runtime { .. })
-        ));
+        assert_eq!(
+            rascal_cluster_with_opts(&mols, &opts).unwrap(),
+            [vec![3, 4, 1, 2, 0], vec![5, 6]]
+        );
+        assert_eq!(
+            rascal_butina_cluster_with_opts(&mols, &opts).unwrap(),
+            [vec![4, 3, 1, 2, 0], vec![6], vec![5]]
+        );
     }
+    assert!(find_mces(&mols[5], &mols[6]).unwrap().is_empty());
+    let ring_only = RascalOptions {
+        ring_matches_ring_only: true,
+        ..Default::default()
+    };
     assert!(matches!(
-        find_mces(&mols[5], &mols[6]),
+        find_mces_with_opts(&mols[5], &mols[6], &ring_only),
         Err(Error::Runtime { .. })
     ));
 }

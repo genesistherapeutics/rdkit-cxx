@@ -105,7 +105,6 @@ fn additional_output() {
     output.allocate_bit_info_map();
     output.collect_atom_counts();
     output.allocate_atom_to_bits();
-    output.collect_atoms_per_bit();
     let params = GetFingerprintParams {
         additional_output: Some(output),
         ..Default::default()
@@ -130,7 +129,6 @@ fn additional_output() {
         output.get_atom_to_bits().unwrap(),
         &[vec![33, 38], vec![16, 2], vec![39, 30]]
     );
-    assert_eq!(output.get_atoms_per_bit().unwrap()[&2], vec![vec![1, 0, 2]]);
     assert!(output.get_bit_paths().is_none());
 
     let rdkit = get_rdkit_fp_generator_with_params(&GetRDKitFPGeneratorParams {
@@ -298,7 +296,7 @@ fn bulk_errors_do_not_abort() {
 }
 
 #[test]
-fn options_and_json() {
+fn options() {
     let mut generator = morgan();
     let options = generator.get_options();
     assert_eq!(options.fp_size, 64);
@@ -321,14 +319,6 @@ fn options_and_json() {
         default.kind,
         FingerprintKindOptions::Morgan(MorganFingerprintOptions { radius: 3, .. })
     ));
-    let json = generator.to_json().unwrap();
-    assert!(json.contains("\"radius\":\"1\""));
-    let copy = fingerprint_generator_from_json(&json).unwrap();
-    assert_eq!(
-        copy.get_fingerprint(&smiles("CCO")).unwrap().get_on_bits(),
-        vec![2, 16, 30, 33, 38, 39]
-    );
-
     let mut bigger = options.clone();
     bigger.fp_size = 128;
     bigger.set_count_bounds(&[1, 3]);
@@ -351,29 +341,6 @@ fn options_and_json() {
     ));
     // A refused change leaves the options alone.
     assert_eq!(generator.get_options(), bigger);
-    // RDKit's loader dereferences whatever part the JSON leaves out, and
-    // casts the environment generator to the arguments' kind.
-    assert!(matches!(
-        fingerprint_generator_from_json("{}"),
-        Err(Error::Value { .. })
-    ));
-    let mismatched = json.replace("MorganEnvGenerator", "AtomPairEnvGenerator");
-    assert!(matches!(
-        fingerprint_generator_from_json(&mismatched),
-        Err(Error::Value { .. })
-    ));
-    let no_invariants = generator
-        .to_json()
-        .unwrap()
-        .replace("atomInvariantsGenerator", "unused");
-    assert!(matches!(
-        fingerprint_generator_from_json(&no_invariants),
-        Err(Error::Value { .. })
-    ));
-    assert!(matches!(
-        fingerprint_generator_from_json("not JSON"),
-        Err(Error::Runtime { .. })
-    ));
 }
 
 #[test]
@@ -432,11 +399,6 @@ fn generator_parameters_that_rdkit_trusts() {
             only_shortest_paths: false,
         });
     assert!(matches!(tt.set_options(&options), Err(Error::Value { .. })));
-    let json = r#"{"name":"FingerprintGenerator","fingerprintArguments":{"type":"TopologicalTorsionArguments","torsionAtomCount":"20","onlyShortestPaths":"false","countSimulation":"false","fpSize":"2048","numBitsPerFeature":"1","includeChirality":"false","countBounds":["1"]},"atomEnvironmentGenerator":{"type":"TopologicalTorsionEnvGenerator"},"atomInvariantsGenerator":{"type":"AtomPairAtomInvGenerator","includeChirality":"false"}}"#;
-    assert!(matches!(
-        fingerprint_generator_from_json(json),
-        Err(Error::Value { .. })
-    ));
 }
 
 #[test]

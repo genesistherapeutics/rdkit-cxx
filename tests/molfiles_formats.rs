@@ -47,13 +47,6 @@ fn defaults_match_python() {
         cx.restore_bond_dirs,
         RestoreBondDirOption::RestoreBondDirOptionClear
     );
-    let scsr = MolFromSCSRParams::default();
-    assert!(scsr.include_leaving_groups && scsr.sanitize && scsr.remove_hs);
-    assert_eq!(scsr.scsr_template_names, SCSRTemplateNames::AsEntered);
-    assert_eq!(
-        scsr.scsr_base_hbond_options,
-        SCSRBaseHbondOptions::UseSapAll
-    );
     let pdb = MolFromPDBBlockParams::default();
     assert!(pdb.sanitize && pdb.remove_hs && pdb.proximity_bonding);
     assert_eq!(pdb.flavor, 0);
@@ -249,20 +242,9 @@ fn property_lists() {
     };
     create_atom_int_property_list_with_params(&mut mol, "n", &wrapped).unwrap();
     assert_eq!(mol.get_prop("atom.iprop.n").unwrap(), "[x]\nx 1\n2 3");
-    for i in 0..3 {
-        mol.get_bond_with_idx_mut(i)
-            .unwrap()
-            .set_double_prop("d", 1.5);
-    }
-    create_bond_double_property_list(&mut mol, "d").unwrap();
-    assert_eq!(mol.get_prop("bond.dprop.d").unwrap(), "1.5 1.5 1.5");
-    create_bond_string_property_list(&mut mol, "missing").unwrap();
-    assert_eq!(mol.get_prop("bond.prop.missing").unwrap(), "n/a n/a n/a");
     create_atom_bool_property_list(&mut mol, "missing").unwrap();
     create_atom_double_property_list(&mut mol, "missing").unwrap();
     create_atom_string_property_list(&mut mol, "missing").unwrap();
-    create_bond_int_property_list(&mut mol, "missing").unwrap();
-    create_bond_bool_property_list(&mut mol, "missing").unwrap();
 }
 
 #[test]
@@ -408,33 +390,6 @@ fn bond_end_points_are_checked() {
             "{props:?}"
         );
     }
-}
-
-#[test]
-fn scsr_blocks() {
-    // A hydrogen bond between atoms that are not template atoms, in a block
-    // without templates: RDKit indexes its empty template list.
-    let block = "\n  test\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
-                 M  V30 BEGIN CTAB\nM  V30 COUNTS 2 1 0 0 0\nM  V30 BEGIN ATOM\n\
-                 M  V30 1 N 0.0 0.0 0.0 0\nM  V30 2 O 1.5 0.0 0.0 0\n\
-                 M  V30 END ATOM\nM  V30 BEGIN BOND\nM  V30 1 10 1 2\n\
-                 M  V30 END BOND\nM  V30 END CTAB\nM  V30 BEGIN TEMPLATE\n\
-                 M  V30 END TEMPLATE\nM  END\n";
-    assert!(is_parse(mol_from_scsr_block(block)));
-    let ignore = MolFromSCSRParams {
-        scsr_base_hbond_options: SCSRBaseHbondOptions::Ignore,
-        ..Default::default()
-    };
-    let mol = mol_from_scsr_block_with_params(block, &ignore).unwrap();
-    assert_eq!(mol.get_num_atoms(), 2);
-    let path = common::temp_path("hbond.scsr");
-    std::fs::write(&path, block).unwrap();
-    assert!(is_parse(mol_from_scsr_file(&path)));
-    assert!(mol_from_scsr_file_with_params(&path, &ignore).is_ok());
-    assert!(matches!(
-        mol_from_scsr_file("does-not-exist.mol"),
-        Err(Error::Os { .. })
-    ));
 }
 
 #[test]
@@ -658,25 +613,6 @@ fn sequences() {
 }
 
 #[test]
-fn chem_draw() {
-    assert!(has_chem_draw_cdx_support());
-    let cdxml = mol_to_cdxml_block(&smiles("CO")).unwrap();
-    assert!(cdxml.starts_with("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"));
-    let cdx = mol_to_cdxml_block_format(&smiles("CO"), CDXMLFormat::Cdx).unwrap();
-    assert!(cdx.starts_with(b"VjCD0100"));
-    // RDKit scales 2D coordinates by the mean bond length, which a molecule
-    // without bonds lacks, and casts them to 32-bit fixed point.
-    assert!(is_value(mol_to_cdxml_block(&smiles("C"))));
-    let mut far = methanol_3d();
-    far.get_conformer_mut()
-        .unwrap()
-        .set_atom_position(0, Point3D::new(1e6, 0.0, 0.0))
-        .unwrap();
-    assert!(is_value(mol_to_cdxml_block(&far)));
-    assert!(mol_to_cdxml_block(&methanol_3d()).is_ok());
-}
-
-#[test]
 fn smiles_debug_parse_must_be_zero() {
     // RDKit keeps the parser's debug level in a global every parse reads.
     let debug = SmilesParserParams {
@@ -700,7 +636,6 @@ fn depicting_writers_run_on_many_threads() {
         mol_to_v2k_mol_block(&mol).unwrap(),
         mol_to_v3k_mol_block(&mol).unwrap(),
         mol_to_mrv_block(&mol).unwrap(),
-        mol_to_cdxml_block(&mol).unwrap(),
     );
     std::thread::scope(|scope| {
         for _ in 0..4 {
@@ -710,7 +645,6 @@ fn depicting_writers_run_on_many_threads() {
                     assert_eq!(mol_to_v2k_mol_block(&mol).unwrap(), expected.0);
                     assert_eq!(mol_to_v3k_mol_block(&mol).unwrap(), expected.1);
                     assert_eq!(mol_to_mrv_block(&mol).unwrap(), expected.2);
-                    assert_eq!(mol_to_cdxml_block(&mol).unwrap(), expected.3);
                 }
             });
         }

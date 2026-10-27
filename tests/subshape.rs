@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Subshape in RDKit 2026.03.6 (built with
+// Values from Python's rdkit.Chem.Subshape in RDKit 2024.03.6 (built with
 // Eigen3, as conda-forge's is), and the tests of UnitTestSubshape.py. The
 // alignments' counts are UnitTestSubshape.py's; the shapes' points, moments,
 // and distances come from embedding and eigenvectors, so they are compared
@@ -15,7 +15,7 @@ use rdkit_cxx::chem::subshape::builder_utils::*;
 use rdkit_cxx::chem::subshape::subshape_aligner::*;
 use rdkit_cxx::chem::subshape::subshape_builder::*;
 use rdkit_cxx::chem::subshape::subshape_objects::*;
-use rdkit_cxx::chem::{AddHsParameters, Mol, SDMolSupplier, add_hs_with_params};
+use rdkit_cxx::chem::{AddHsParams, Mol, SDMolSupplier, add_hs_with_params};
 use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 fn molecules() -> Vec<Mol> {
@@ -25,7 +25,7 @@ fn molecules() -> Vec<Mol> {
     );
     let mut suppl = SDMolSupplier::new(path).unwrap();
     let n = suppl.len().unwrap();
-    let params = AddHsParameters {
+    let params = AddHsParams {
         add_coords: true,
         ..Default::default()
     };
@@ -123,7 +123,7 @@ fn subshapes_match_python() {
     let target_mol = ms[0].clone();
     let mut alg_store = vec![Vec::new()];
     let expected_stats = [
-        (1113, vec![("coarseGrid", 125.0), ("direction", 983.0)]),
+        (1113, vec![("coarseGrid", 127.0), ("direction", 981.0)]),
         (
             1713,
             vec![
@@ -265,12 +265,12 @@ fn subshape_objects_and_helpers() {
     // The grids hold 2-bit values, so sums saturate at 3.
     assert_eq!(
         (total(&union), total(&sum), total(&inter)),
-        (9290, 9654, 4169)
+        (9265, 9618, 4194)
     );
     let tanimoto = get_shape_shape_distance(&s0, &s1, SubshapeDistanceMetric::Tanimoto).unwrap();
     let protrude = get_shape_shape_distance(&s0, &s1, SubshapeDistanceMetric::Protrude).unwrap();
     assert!(
-        close(tanimoto, 0.551237890204521, 1e-12) && close(protrude, 0.3088527851458886, 1e-12)
+        close(tanimoto, 0.5473286562331354, 1e-12) && close(protrude, 0.3047082228116711, 1e-12)
     );
     let coarse = builder.sample_subshape(&s0, 1.0).unwrap();
     assert_eq!(

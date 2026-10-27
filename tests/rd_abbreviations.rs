@@ -42,7 +42,6 @@ fn default_definition() {
     assert_eq!(def.display_label, "");
     assert_eq!(def.display_label_w, "");
     assert!(def.mol.is_none());
-    assert!(def.includes_x_bonds);
 }
 
 #[test]
@@ -72,7 +71,6 @@ fn defaults() {
     let first = &abbrevs[0];
     assert_eq!(first.display_label, "CO<sub>2</sub>Et");
     assert_eq!(first.display_label_w, "EtO<sub>2</sub>C");
-    assert!(first.includes_x_bonds);
     let mol = first.mol.as_ref().unwrap();
     assert_eq!(
         mol_to_smarts(mol).unwrap(),

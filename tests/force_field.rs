@@ -357,7 +357,9 @@ fn minimizer_size_is_capped() {
         optimize_molecule(&mut ff),
         Err(Error::Value { .. })
     ));
-    let mut big = mol_from_smiles(&"C".repeat(21846)).unwrap();
+    // Methanes: RDKit 2024.03's legacy stereo perception ranks a long
+    // chain's atoms in quadratic time.
+    let mut big = mol_from_smiles(&vec!["C"; 21846].join(".")).unwrap();
     assert!(matches!(
         uff_optimize_molecule(&mut big),
         Err(Error::Value { .. })
@@ -423,7 +425,6 @@ fn mmff_force_fields() {
         },
     )
     .unwrap();
-    assert_eq!(props.get_mmff_variant(), "MMFF94s");
     let ff = mmff_get_molecule_force_field_with_params(
         &mut mol,
         &props,
@@ -440,7 +441,7 @@ fn mmff_force_fields() {
 #[test]
 fn mmff_properties() {
     let mut mol = ethanol();
-    let mut props = mmff_get_molecule_properties(&mut mol).unwrap().unwrap();
+    let props = mmff_get_molecule_properties(&mut mol).unwrap().unwrap();
     let types: Vec<u32> = (0..9)
         .map(|i| props.get_mmff_atom_type(i).unwrap())
         .collect();
@@ -506,66 +507,85 @@ fn mmff_properties() {
         Err(Error::Index { index: 9, len: 9 })
     );
 
-    assert_eq!(props.get_mmff_dielectric_model(), 1);
-    assert_eq!(props.get_mmff_dielectric_constant(), 1.0);
-    assert_eq!(props.get_mmff_variant(), "MMFF94");
-    assert!(props.get_mmff_bond_term() && props.get_mmff_ele_term());
+    // RDKit 2024.03 has setters for these, not getters: each shows in the
+    // energy, and the setter's default puts it back. Ethylene glycol's
+    // hydroxyls, unlike ethanol's, interact electrostatically.
+    let mut mol = add_hs(&mol_from_smiles("OCCO").unwrap()).unwrap();
+    let mut seeded = rdkit_cxx::chem::rd_dist_geom::EmbedParameters {
+        random_seed: 42,
+        ..rdkit_cxx::chem::rd_dist_geom::etkdg_v3()
+    };
+    assert_eq!(
+        rdkit_cxx::chem::rd_dist_geom::embed_molecule_with_params(&mut mol, &mut seeded).unwrap(),
+        0
+    );
+    let mut props = MMFFMolProperties::new(&mut mol).unwrap();
+    let energy = |mol: &mut Mol, props: &MMFFMolProperties| {
+        mmff_get_molecule_force_field(mol, props)
+            .unwrap()
+            .calc_energy()
+            .unwrap()
+    };
+    let full = energy(&mut mol, &props);
     props.set_mmff_dielectric_model_with_diel_model(2);
+    let distance = energy(&mut mol, &props);
+    assert!((distance - full).abs() > 1e-6);
     props
         .set_mmff_dielectric_constant_with_diel_const(4.0)
         .unwrap();
-    props.set_mmff_variant_with_mmff_variant("MMFF94s").unwrap();
+    assert!((energy(&mut mol, &props) - distance).abs() > 1e-6);
     props.set_mmff_ele_term_with_state(false);
+    let no_ele = energy(&mut mol, &props);
+    props.set_mmff_variant_with_mmff_variant("MMFF94s").unwrap();
     props.set_mmff_verbosity_with_verbosity(MMFFVerbosity::MmffVerbosityLow);
-    assert_eq!(props.get_mmff_dielectric_model(), 2);
-    assert_eq!(props.get_mmff_dielectric_constant(), 4.0);
-    assert_eq!(props.get_mmff_variant(), "MMFF94s");
-    assert!(!props.get_mmff_ele_term());
     props.set_mmff_dielectric_model();
     props.set_mmff_dielectric_constant();
+    // Without electrostatics the dielectric is moot.
+    assert_close(energy(&mut mol, &props), no_ele);
     props.set_mmff_variant();
     props.set_mmff_ele_term();
     props.set_mmff_verbosity();
-    assert_eq!(props.get_mmff_dielectric_model(), 1);
-    assert_eq!(props.get_mmff_dielectric_constant(), 1.0);
-    assert_eq!(props.get_mmff_variant(), "MMFF94");
-    assert!(props.get_mmff_ele_term());
-    for (get, set_off, set_on) in [
+    assert_close(energy(&mut mol, &props), full);
+    // Ethylene glycol has no out-of-plane bends.
+    for (set_off, set_on, contributes) in [
         (
-            MMFFMolProperties::get_mmff_angle_term as fn(&MMFFMolProperties) -> bool,
             MMFFMolProperties::set_mmff_angle_term_with_state as fn(&mut MMFFMolProperties, bool),
             MMFFMolProperties::set_mmff_angle_term as fn(&mut MMFFMolProperties),
+            true,
         ),
         (
-            MMFFMolProperties::get_mmff_bond_term,
             MMFFMolProperties::set_mmff_bond_term_with_state,
             MMFFMolProperties::set_mmff_bond_term,
+            true,
         ),
         (
-            MMFFMolProperties::get_mmff_stretch_bend_term,
             MMFFMolProperties::set_mmff_stretch_bend_term_with_state,
             MMFFMolProperties::set_mmff_stretch_bend_term,
+            true,
         ),
         (
-            MMFFMolProperties::get_mmff_oop_term,
             MMFFMolProperties::set_mmff_oop_term_with_state,
             MMFFMolProperties::set_mmff_oop_term,
+            false,
         ),
         (
-            MMFFMolProperties::get_mmff_torsion_term,
             MMFFMolProperties::set_mmff_torsion_term_with_state,
             MMFFMolProperties::set_mmff_torsion_term,
+            true,
         ),
         (
-            MMFFMolProperties::get_mmff_vdw_term,
             MMFFMolProperties::set_mmff_vdw_term_with_state,
             MMFFMolProperties::set_mmff_vdw_term,
+            true,
         ),
     ] {
         set_off(&mut props, false);
-        assert!(!get(&props));
+        assert_eq!(
+            (energy(&mut mol, &props) - full).abs() > 1e-9,
+            contributes
+        );
         set_on(&mut props);
-        assert!(get(&props));
+        assert_close(energy(&mut mol, &props), full);
     }
     assert!(matches!(
         props.set_mmff_variant_with_mmff_variant("foo"),

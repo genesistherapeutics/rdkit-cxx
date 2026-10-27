@@ -85,7 +85,7 @@ fn potential_stereo() {
     let bonds = find_potential_stereo_with_params(&mut double, &params).unwrap();
     assert_eq!(bonds[0].type_, StereoType::BondDouble);
     assert_eq!(bonds[0].specified, StereoSpecified::Unspecified);
-    assert_eq!(StereoInfo::NOATOM, Atom::NOATOM);
+    assert_eq!(StereoInfo::NOATOM, u32::MAX);
 }
 
 #[test]

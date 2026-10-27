@@ -16,7 +16,7 @@ fn parser_and_writer_defaults() {
     let s = SmartsParserParams::default();
     assert!(s.allow_cxsmiles && s.parse_name && s.strict_cxsmiles && !s.merge_hs);
     let w = SmilesWriteParams::default();
-    assert!(w.canonical && w.clean_stereo && w.do_isomeric_smiles && w.include_dative_bonds);
+    assert!(w.canonical && w.do_isomeric_smiles && w.include_dative_bonds);
     assert!(
         !(w.all_bonds_explicit
             || w.all_hs_explicit
@@ -201,7 +201,6 @@ fn mol_block_depiction_refuses_what_the_depictor_would_mishandle() {
     for result in [
         mol_to_v3k_mol_block(&mol),
         mol_to_mrv_block(&mol),
-        mol_to_cdxml_block(&mol),
         SDWriter::get_text(&mol),
     ] {
         assert!(matches!(

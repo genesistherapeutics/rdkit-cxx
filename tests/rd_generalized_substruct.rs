@@ -8,6 +8,20 @@ use rdkit_cxx::chem::rd_generalized_substruct::*;
 use rdkit_cxx::chem::*;
 use rdkit_cxx::data_structs::all_probe_bits_match;
 
+/// A chain of `n` carbons, parsed unsanitized and then sanitized: RDKit
+/// 2024.03's SMILES parser runs its legacy stereo perception, whose time
+/// grows with the cube of a chain's length (a minute for 4002 atoms).
+fn chain(n: usize) -> Mol {
+    let params = SmilesParserParams {
+        sanitize: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut mol = mol_from_smiles_with_params(&"C".repeat(n), &params).unwrap();
+    sanitize_mol(&mut mol).unwrap();
+    mol
+}
+
 // Expected values come from Python's rdGeneralizedSubstruct.
 
 fn smiles(text: &str) -> Mol {
@@ -427,7 +441,7 @@ fn large_tautomer_bundles_are_not_pickled() {
 // point, as rdMolEnumerator's own checks say (CONVENTIONS.md U12).
 #[test]
 fn enumeration_refuses_too_many_variation_points() {
-    let mut mol = smiles(&"C".repeat(4002));
+    let mut mol = chain(4002);
     for idx in 0..4001 {
         let mut bond = mol.get_bond_with_idx_mut(idx).unwrap();
         bond.set_prop("_MolFileBondEndPts", "(1 1)");

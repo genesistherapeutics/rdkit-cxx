@@ -45,7 +45,6 @@ fn params_defaults() {
     assert!(!params.include_generic_bond_scaffolds);
     assert!(params.include_scaffolds_without_attachments);
     assert!(params.include_scaffolds_with_attachments);
-    assert!(!params.include_names);
     assert!(params.keep_only_first_fragment);
     assert!(params.prune_before_fragmenting);
     assert!(params.flatten_isotopes);
@@ -60,11 +59,11 @@ fn params_defaults() {
     assert_eq!(brics.num_bond_breakers(), 46);
 
     let mut changed = ScaffoldNetworkParams::default();
-    changed.include_names = true;
+    changed.flatten_isotopes = false;
     let copy = changed.clone();
-    assert!(copy.include_names);
+    assert!(!copy.flatten_isotopes);
     assert_eq!(copy.num_bond_breakers(), 1);
-    assert!(format!("{copy:?}").contains("include_names: true"));
+    assert!(format!("{copy:?}").contains("flatten_isotopes: false"));
 }
 
 #[test]
@@ -156,22 +155,17 @@ fn create_and_update() {
 fn flags() {
     let mut mol = mol_from_smiles("c1ccccc1C1CC1").unwrap();
     mol.set_prop("_Name", "cpd1");
-    let mut params = ScaffoldNetworkParams::default();
-    params.include_names = true;
+    let params = ScaffoldNetworkParams::default();
     let network = create_scaffold_network(std::slice::from_ref(&mol), &params).unwrap();
     assert_eq!(
         network.nodes[..3],
-        [
-            "c1ccc(C2CC2)cc1 cpd1",
-            "c1ccc(C2CC2)cc1",
-            "*1**1*1:*:*:*:*:*:1"
-        ]
+        ["c1ccc(C2CC2)cc1", "*c1ccccc1", "**1:*:*:*:*:*:1"]
     );
     assert_eq!(
         network.edges[0].to_string(),
-        "NetworkEdge( 0->1, type:Initialize )"
+        "NetworkEdge( 0->1, type:Fragment )"
     );
-    assert_eq!(network.counts, [1; 11]);
+    assert_eq!(network.counts, [1; 9]);
 
     let mut params = ScaffoldNetworkParams::default();
     params.include_generic_scaffolds = false;
@@ -199,30 +193,15 @@ fn flags() {
 }
 
 #[test]
-fn invalid_utf8_names() {
-    // A name read from a Latin-1 file reaches a node.
-    let mol = mol_from_mol_file(common::latin1_mol_file()).unwrap();
-    let mut params = ScaffoldNetworkParams::default();
-    params.include_names = true;
-    assert!(matches!(
-        create_scaffold_network(&[mol], &params),
-        Err(Error::Value { .. })
-    ));
-}
-
-#[test]
 fn pickles() {
     let mut mol = mol_from_smiles("c1ccccc1C1CC1").unwrap();
     mol.set_prop("_Name", "cpd1");
-    let mut params = ScaffoldNetworkParams::default();
-    params.include_names = true;
-    let network = create_scaffold_network(&[mol], &params).unwrap();
+    let network = create_scaffold_network(&[mol], &ScaffoldNetworkParams::default()).unwrap();
     // Python's pickle of the same network.
-    let python = "22 serialization::archive 20 0 1 0 0 11 0 20 c1ccc(C2CC2)cc1 cpd1 15 \
-                  c1ccc(C2CC2)cc1 19 *1**1*1:*:*:*:*:*:1 9 *c1ccccc1 15 **1:*:*:*:*:*:1 8 \
-                  c1ccccc1 14 *1:*:*:*:*:*:1 6 *C1CC1 6 **1**1 5 C1CC1 5 *1**1 11 0 1 1 1 1 \
-                  1 1 1 1 1 1 1 11 0 1 1 1 1 1 1 1 1 1 1 1 0 0 10 0 0 0 0 1 5 1 2 2 1 3 1 3 4 \
-                  2 3 5 4 5 6 2 1 7 1 7 8 2 7 9 4 9 10 2";
+    let python = "22 serialization::archive 20 0 1 0 0 9 0 15 c1ccc(C2CC2)cc1 9 *c1ccccc1 15 \
+                  **1:*:*:*:*:*:1 8 c1ccccc1 14 *1:*:*:*:*:*:1 6 *C1CC1 6 **1**1 5 C1CC1 5 \
+                  *1**1 9 0 1 1 1 1 1 1 1 1 1 9 0 1 1 1 1 1 1 1 1 1 0 0 8 0 0 0 0 1 1 1 2 2 1 \
+                  3 4 3 4 2 0 5 1 5 6 2 5 7 4 7 8 2";
     // Boost writes its archive version after the signature, so only the
     // signature is compared.
     let pkl = network.to_binary().unwrap();

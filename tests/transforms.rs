@@ -391,10 +391,13 @@ fn molzip_pairs() {
         ),
         "CN"
     );
-    let linker = molzip(&smiles("[*:1][*:2]"), &smiles("C[*:1].N[*:2]"))
-        .unwrap()
-        .unwrap();
-    assert_eq!(to_smiles(&linker), "CN");
+    // RDKit 2024.03 deletes a linker's dummy atoms, bonded to each other,
+    // before it restores the chirality of the atoms it zipped, which include
+    // them (Python raises only when the freed atom reads as unowned).
+    assert!(matches!(
+        molzip(&smiles("[*:1][*:2]"), &smiles("C[*:1].N[*:2]")),
+        Err(Error::Value { .. })
+    ));
     assert_eq!(
         MolzipParams::default(),
         MolzipParams {
@@ -402,7 +405,6 @@ fn molzip_pairs() {
             atom_symbols: vec![],
             enforce_valence_rules: true,
             generate_coordinates: false,
-            align_coordinates: false,
         }
     );
 }

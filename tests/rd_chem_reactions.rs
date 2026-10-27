@@ -272,9 +272,6 @@ fn param_defaults_match_python() {
     assert!(png.include_pkl && png.include_smiles && !png.include_smarts && !png.include_rxn);
     let png = ReactionMetadataToPNGFileParams::default();
     assert!(png.include_pkl && png.include_smiles && !png.include_smarts && !png.include_mol);
-    let cx = ReactionToCXSmilesParams::default();
-    assert_eq!(cx.params, SmilesWriteParams::default());
-    assert_eq!(cx.flags, 0x7fffffff);
     let depict = Compute2DCoordsForReactionParams::default();
     assert!((depict.spacing - 1.0).abs() < 1e-12);
     assert!(depict.update_props && depict.canon_orient && !depict.permute_deg4_nodes);
@@ -309,38 +306,24 @@ fn writers() {
         reaction_to_smiles_with_params(&rxn, &non_canonical).unwrap(),
         "[C:1](=[O:2])O.[NH3:3]>>[C:1](=[O:2])[N:3]"
     );
-    assert_eq!(reaction_to_cx_smarts(&rxn).unwrap(), AMIDE);
-    assert_eq!(
-        reaction_to_cx_smiles(&rxn).unwrap(),
-        "O[C:1]=[O:2].[NH3:3]>>[C:1](=[O:2])[N:3]"
-    );
     let labeled = reaction_from_smarts("[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;$|").unwrap();
     assert_eq!(
-        reaction_to_cx_smiles(&labeled).unwrap(),
-        "[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;;;$|"
-    );
-    assert_eq!(
         reaction_to_smarts(&labeled).unwrap(),
-        "[C&H3:1][O&H1:2]>>[C&H2:1]=[O:2]"
-    );
-    let none = ReactionToCXSmilesParams {
-        flags: 0,
-        ..Default::default()
-    };
-    assert_eq!(
-        reaction_to_cx_smiles_with_params(&labeled, &none).unwrap(),
-        "[CH3:1][OH:2]>>[CH2:1]=[O:2]"
-    );
-    assert_eq!(
-        reaction_to_cx_smarts_with_params(&labeled, &none).unwrap(),
         "[C&H3:1][O&H1:2]>>[C&H2:1]=[O:2]"
     );
 }
 
 #[test]
 fn smarts_and_smiles_parsers() {
+    let use_smiles = ReactionFromSmartsParams {
+        use_smiles: true,
+        ..Default::default()
+    };
     assert_eq!(
-        reaction_to_smiles(&reaction_from_smiles("CC(=O)O.N>>CC(N)=O").unwrap()).unwrap(),
+        reaction_to_smiles(
+            &reaction_from_smarts_with_params("CC(=O)O.N>>CC(N)=O", &use_smiles).unwrap()
+        )
+        .unwrap(),
         "CC(=O)O.N>>CC(N)=O"
     );
     let replacements = BTreeMap::from([("{acid}".to_owned(), "[C:1](=[O:2])O".to_owned())]);
@@ -351,7 +334,11 @@ fn smarts_and_smiles_parsers() {
     let rxn =
         reaction_from_smarts_with_params("{acid}.[N:3]>>[C:1](=[O:2])[N:3]", &params).unwrap();
     assert_eq!(reaction_to_smarts(&rxn).unwrap(), AMIDE);
-    let rxn = reaction_from_smiles_with_replacements("{acid}.N>>CC(N)=O", &replacements).unwrap();
+    let params = ReactionFromSmartsParams {
+        replacements: replacements.clone(),
+        use_smiles: true,
+    };
+    let rxn = reaction_from_smarts_with_params("{acid}.N>>CC(N)=O", &params).unwrap();
     assert_eq!(rxn.get_num_reactant_templates(), 2);
     for bad in ["CC", "C>>C>>C", "[C:1>>C"] {
         assert!(
@@ -1260,7 +1247,7 @@ fn long_stereo_group_lines_are_refused() {
 }
 
 /// A reaction whose agent is methane with plain monomer info named "MARK",
-/// its pickle, and where the info's type byte is in it.
+/// its pickle, and where the info's type is in it.
 fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
     let params = AtomMonomerInfoParams {
@@ -1273,18 +1260,21 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
     rxn.add_agent_template(&methane);
     let pkl = rxn.to_binary();
-    // The info's name (a u32 length, then its bytes), then its type.
+    // The info's name (a u32 length, then its bytes), then its type, a u32
+    // in RDKit 2024.03.
     let name = pkl
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap();
     (rxn, pkl, name + 8)
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo,
-/// and a reaction pickle's templates are molecule pickles (U10).
+/// A reaction pickle's templates are molecule pickles, whose monomer types
+/// are checked (U10). RDKit 2024.03 makes the info of the type it reads, so
+/// a plain info's type changed to PDBRESIDUE reads as PDB residue info, as
+/// in Python, and an unknown type is RDKit's error.
 #[test]
-fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
+fn reaction_pickles_read_monomer_types_as_rdkit_reads_them() {
     let (_, pkl, at) = marked_reaction_pickle();
     // SAFETY: a pickle RDKit wrote.
     unsafe { ChemicalReaction::from_bin_str(&pkl) }.unwrap();
@@ -1292,14 +1282,26 @@ fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
     unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)) }.unwrap();
     let mut changed = pkl.clone();
     changed[at] = 1;
-    assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
-        unsafe { ChemicalReaction::from_bin_str(&changed) },
-        Err(Error::Value { .. })
-    ));
-    assert!(matches!(
+    // SAFETY: a pickle RDKit wrote but for a monomer type, which RDKit
+    // 2024.03 reads into info of that type.
+    let rxn = unsafe { ChemicalReaction::from_bin_str(&changed) }.unwrap();
+    let agent = rxn.get_agent_template(0).unwrap();
+    let info = agent
+        .get_atom_with_idx(0)
+        .unwrap()
+        .get_monomer_info()
+        .unwrap();
+    assert_eq!(info.get_monomer_type(), AtomMonomerType::Pdbresidue);
+    // SAFETY: as above.
+    unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) }.unwrap();
+    changed[at] = 7;
+    assert!(
+        // SAFETY: as above; RDKit refuses the type.
+        unsafe { ChemicalReaction::from_bin_str(&changed) }.is_err()
+    );
+    assert!(
         // SAFETY: as above.
-        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) },
-        Err(Error::Value { .. })
-    ));
+        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) }
+            .is_err()
+    );
 }

@@ -52,15 +52,8 @@ fn with_chunk(png: &[u8], kind: &[u8; 4], data: &[u8]) -> Vec<u8> {
 
 #[test]
 fn defaults_match_python() {
-    let params = PNGMetadataParams::default();
+    let params = MolMetadataToPNGParams::default();
     assert!(params.include_pkl && params.include_smiles && !params.include_mol);
-    assert_eq!(params.property_flags, PropertyPickleOptions::NoProps);
-    assert_eq!(params.cx_smiles_flags, CXSmilesFields::CX_ALL);
-    assert_eq!(
-        params.restore_bond_dirs,
-        RestoreBondDirOption::RestoreBondDirOptionClear
-    );
-    assert_eq!(params.smiles_write_params, SmilesWriteParams::default());
     assert_eq!(MolsFromPNGStringParams::default().tag, "rdkitPKL");
     assert_eq!(MolsFromPNGFileParams::default().tag, "rdkitPKL");
 }
@@ -71,7 +64,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string(&smiles("CO"), PNG).unwrap();
     assert_eq!(
         keys(&png),
-        ["rdkitPKL rdkit 2026.03.6", "SMILES rdkit 2026.03.6"]
+        ["rdkitPKL rdkit 2024.03.6", "SMILES rdkit 2024.03.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -93,7 +86,7 @@ fn molecules() {
         to_smiles(unsafe { mols_from_png_string_with_params(&two, &tagged) }.unwrap()),
         ["CO", "CCN"]
     );
-    let mol_block = PNGMetadataParams {
+    let mol_block = MolMetadataToPNGParams {
         include_pkl: false,
         include_mol: true,
         ..Default::default()
@@ -101,7 +94,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string_with_params(&smiles("CO"), PNG, &mol_block).unwrap();
     assert_eq!(
         keys(&png),
-        ["SMILES rdkit 2026.03.6", "MOL rdkit 2026.03.6"]
+        ["SMILES rdkit 2024.03.6", "MOL rdkit 2024.03.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -249,7 +242,7 @@ fn depiction_refuses_what_the_depictor_would_mishandle() {
     mol.get_atom_with_idx_mut(0)
         .unwrap()
         .set_chiral_tag(ChiralType::ChiSquareplanar);
-    let mol_block = PNGMetadataParams {
+    let mol_block = MolMetadataToPNGParams {
         include_mol: true,
         ..Default::default()
     };
@@ -261,10 +254,12 @@ fn depiction_refuses_what_the_depictor_would_mishandle() {
 }
 
 #[test]
-fn pickles_cannot_give_plain_info_the_pdb_type() {
+fn pickled_monomer_types_are_read_as_rdkit_reads_them() {
     // A pickle recorded in the metadata goes through the monomer-type checks
-    // that molecule pickles do (U10): RDKit casts any info of type PDBRESIDUE
-    // to AtomPDBResidueInfo, reading past the end of a plain one.
+    // that molecule pickles do (U10). RDKit 2024.03 writes the type as a
+    // u32 and makes the info of the type it reads, so a plain info's type
+    // changed to PDBRESIDUE reads as PDB residue info, as in Python, and an
+    // unknown type is RDKit's error.
     let mut mol = smiles("C");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
@@ -274,10 +269,10 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
     );
     let mut pkl = mol.to_binary();
-    // The info's name (a u32 length, then its bytes), then its type as a byte.
+    // The info's name (a u32 length, then its bytes), then its type.
     let at = pkl
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap()
         + 8;
     let chunk = |pkl: &[u8]| {
@@ -296,14 +291,24 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
     assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
     pkl[at] = 1;
     let png = chunk(&pkl);
-    assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
-        unsafe { mol_from_png_string(&png) },
-        Err(Error::Value { .. })
-    ));
-    assert!(matches!(
+    // SAFETY: a pickle RDKit wrote but for a monomer type, which RDKit
+    // 2024.03 reads into info of that type.
+    let read = unsafe { mol_from_png_string(&png) }.unwrap();
+    let info = read
+        .get_atom_with_idx(0)
+        .unwrap()
+        .get_monomer_info()
+        .unwrap();
+    assert_eq!(info.get_monomer_type(), AtomMonomerType::Pdbresidue);
+    assert_eq!(info.get_name().unwrap(), "MARK");
+    pkl[at] = 7;
+    let png = chunk(&pkl);
+    assert!(
+        // SAFETY: as above; RDKit refuses the type.
+        unsafe { mol_from_png_string(&png) }.is_err()
+    );
+    assert!(
         // SAFETY: as above.
-        unsafe { mols_from_png_string(&png) },
-        Err(Error::Value { .. })
-    ));
+        unsafe { mols_from_png_string(&png) }.is_err()
+    );
 }

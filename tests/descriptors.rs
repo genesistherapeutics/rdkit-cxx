@@ -5,7 +5,7 @@
 
 // Ports RDKit's rdkit/Chem/UnitTestDescriptors.py and the doctests of
 // rdkit.Chem.Descriptors, and checks CalcMolDescriptors against Python's in
-// RDKit 2026.03.6 on the molecules of tests/data/calc_mol_descriptors.tsv,
+// RDKit 2024.03.6 on the molecules of tests/data/calc_mol_descriptors.tsv,
 // which Python's CalcMolDescriptors wrote (repr of each value, None where a
 // descriptor failed).
 

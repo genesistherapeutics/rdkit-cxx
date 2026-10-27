@@ -36,8 +36,8 @@ use std::thread;
 
 use rdkit_cxx::chem::draw::rd_mol_draw_2d::{MolDraw2DSVG, MolDrawOptions};
 use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::{
-    FragmentRemover, MetalDisconnector, MolVSValidation, Normalizer, Pipeline, TautomerEnumerator,
-    Uncharger, cleanup_in_place_mols,
+    FragmentRemover, MetalDisconnector, MolVSValidation, Normalizer, TautomerEnumerator, Uncharger,
+    cleanup_in_place_mols,
 };
 use rdkit_cxx::chem::rd_abbreviations::{
     AbbreviationDefinition, condense_mol_abbreviations, get_default_abbreviations,
@@ -64,9 +64,6 @@ use rdkit_cxx::chem::rd_dist_geom::{
     embed_multiple_confs_with_params, get_experimental_torsions,
     get_molecule_bounds_matrix_with_params,
 };
-use rdkit_cxx::chem::rd_enumerate_stereoisomers::{
-    StereoEnumerationOptions, StereoisomerEnumerator,
-};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     FingerprintGenerator64, GetMorganGeneratorParams, get_morgan_feature_atom_inv_gen,
     get_morgan_generator_with_params,
@@ -76,7 +73,6 @@ use rdkit_cxx::chem::rd_force_field_helpers::uff_optimize_molecule;
 use rdkit_cxx::chem::rd_generalized_substruct::{
     self, ExtendedQueryMol, create_extended_query_mol,
 };
-use rdkit_cxx::chem::rd_mif::HBond;
 use rdkit_cxx::chem::rd_mmpa::fragment_mol;
 use rdkit_cxx::chem::rd_mol_align::{
     RandomTransformParams, align_mol, get_best_rms, random_transform, random_transform_with_params,
@@ -90,15 +86,10 @@ use rdkit_cxx::chem::rd_mol_descriptors::{
 };
 use rdkit_cxx::chem::rd_mol_enumerator::enumerate;
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
-use rdkit_cxx::chem::rd_mol_processing::{
-    GetFingerprintsForMolsInFileParams, SupplierOptions,
-    get_fingerprints_for_mols_in_file_with_params,
-};
 use rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecomposition;
 use rdkit_cxx::chem::rd_rascal_mces::{find_mces, rascal_cluster};
 use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
 use rdkit_cxx::chem::rd_substruct_library::{MolHolder, SubstructLibrary};
-use rdkit_cxx::chem::rd_synthon_space_search::{ShapeBuildParams, SynthonSpace};
 use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
 use rdkit_cxx::chem::rdfiltercatalog::{FilterCatalog, FilterCatalogEntry, SmartsMatcher};
 use rdkit_cxx::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog};
@@ -107,17 +98,14 @@ use rdkit_cxx::chem::scaffolds::rd_scaffold_network::{
     ScaffoldNetworkParams, create_scaffold_network,
 };
 use rdkit_cxx::chem::{
-    Conformer, Mol, MolFragmentToSmilesParams, MolFromSCSRParams, MolToCXSmilesParams,
-    MolToRandomSmilesVectParams, MolzipParams, PNGMetadataParams, ResonanceMolSupplier,
-    SCSRBaseHbondOptions, SDWriter, SmilesWriteParams, assign_cip_labels, delete_substructs,
-    fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
-    mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
+    Conformer, Mol, MolFragmentToSmilesParams, MolMetadataToPNGParams, MolToCXSmilesParams,
+    MolToRandomSmilesVectParams, MolzipParams, ResonanceMolSupplier, SDWriter, SmilesWriteParams,
+    assign_cip_labels, delete_substructs, fragment_on_brics_bonds,
+    mol_fragment_to_cx_smiles_with_params, mol_fragment_to_smiles_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cdxml_block, mol_to_cx_smiles_with_params, mol_to_mol_block,
-    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
-    molzip_fragments_with_params, pattern_fingerprint,
+    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
+    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
 };
-use rdkit_cxx::chem::{rd_gaussian_shape, rd_shape_align};
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
@@ -151,10 +139,6 @@ H 0.5980 -1.4177 -0.1686
 H 1.8339 1.0320 0.4595
 ";
 
-/// An RNA dimer whose base templates SCSR's Auto option matches to find
-/// their hydrogen-bond sites.
-const RIBOSE_SCSR: &str = include_str!("data/RiboseFullname.mol");
-
 fn main() {
     // RDKit fills some static data on first use (the periodic table, the
     // SMILES parser's and writer's tables), ordered by C++'s thread-safe
@@ -178,7 +162,6 @@ fn main() {
         "-C(=O)O\t*-C(=O)[O;H1,-]\tcarboxylic acids\n-O\t*-[O;H1,-]\talcohols\n\n=O\t*=O\taldehydes\n",
     )
     .unwrap();
-    std::fs::write(synthons(), SYNTHONS).unwrap();
 
     // RDKit's random number generator: each module's writers against the
     // SMILES writer.
@@ -186,7 +169,6 @@ fn main() {
     phase(random_cx_smiles(), random_smiles());
     phase(random_fragment_smiles(), random_smiles());
     phase(seeded_random_smiles(), random_smiles());
-    phase(random_png_metadata(), random_smiles());
     phase(flipped_coords(), random_smiles());
     phase(mimicked_distances(), random_smiles());
     phase(matched_3d_depiction(), random_smiles());
@@ -195,8 +177,6 @@ fn main() {
     phase(unseeded_embedding(), random_smiles());
     phase(bounds_matrix_embedding(), random_smiles());
     phase(random_transforms(), random_smiles());
-    phase(embedded_stereoisomers(), random_smiles());
-    phase(synthon_shapes(), random_smiles());
     // Comic-mode drawing draws its lines with std::rand, under the same
     // lock.
     phase(comic_drawing(), comic_drawing());
@@ -213,8 +193,10 @@ fn main() {
     phase(prefer_coord_gen(), rxn_block());
     phase(prefer_coord_gen(), drawn_without_coords());
 
-    // ControlCHandler's statics: a substructure match from each module
-    // against a plain one.
+    // The Ctrl-C lock (control_c_lock.h), which every substructure match
+    // holds: a match from each module against a plain one. RDKit 2024.03 has
+    // no ControlCHandler, so the lock guards nothing of RDKit's there, and
+    // these check that the matches share no other unordered state.
     phase(has_substruct_match(), substruct_matches());
     phase(resonance_matches(), substruct_matches());
     phase(deleted_substructs(), substruct_matches());
@@ -239,9 +221,6 @@ fn main() {
     phase(seeded_embedding(), substruct_matches());
     phase(experimental_torsions(), substruct_matches());
     phase(feature_morgan_fp(), substruct_matches());
-    phase(feature_fps_in_file(), substruct_matches());
-    phase(fps_in_file(), substruct_matches());
-    phase(scsr_hbonds(), substruct_matches());
     phase(cip_labels(), substruct_matches());
     phase(bonds_from_xyz(), substruct_matches());
     phase(cleaned_up_mols(), substruct_matches());
@@ -251,7 +230,6 @@ fn main() {
     phase(metals_disconnected(), substruct_matches());
     phase(canonical_tautomer(), substruct_matches());
     phase(validated(), substruct_matches());
-    phase(pipeline_run(), substruct_matches());
     phase(filter_catalog_match(), substruct_matches());
     phase(fragments_cataloged(), substruct_matches());
     phase(maximum_common_substructure(), substruct_matches());
@@ -262,33 +240,22 @@ fn main() {
     phase(substruct_library_matches(), substruct_matches());
     phase(rgroups_decomposed(), substruct_matches());
     phase(scaffold_network(), substruct_matches());
-    phase(pubchem_shape_alignment(), substruct_matches());
-    phase(gaussian_shapes(), substruct_matches());
-    phase(mif_h_bonds(), substruct_matches());
     phase(mol_features(), substruct_matches());
     phase(condensed_abbreviations(), substruct_matches());
     phase(enumerated_link_nodes(), substruct_matches());
-    phase(embedded_stereoisomers(), substruct_matches());
-    phase(synthon_substructure_search(), substruct_matches());
-    phase(synthon_rascal_search(), substruct_matches());
-    phase(synthon_shapes(), substruct_matches());
     phase(inchi_written(), substruct_matches());
     phase(inchi_read(), substruct_matches());
 
-    // The rest: the grid centroids' cache, the property registry, DCLV's
-    // surface cache, the shape modules' globals, and Murtagh's statics.
+    // The rest: the grid centroids' cache, the property registry, DCLV
+    // (which in RDKit 2024.03 keeps no cache, and shares nothing), and
+    // Murtagh's statics.
     phase(grid_centroids(), grid_centroids());
     phase(registered_property(), available_properties());
     phase(dclv_surfaces(), dclv_surfaces());
-    phase(pubchem_shape_alignment(), pubchem_shape_scores());
-    phase(gaussian_shapes(), gaussian_shapes());
-    phase(synthon_shapes(), gaussian_shapes());
     phase(murtagh_clusters(), hierarchical_picks());
-    phase(cdxml_blocks(), cdxml_blocks());
 
     std::fs::remove_file(templates()).unwrap();
     std::fs::remove_file(groups()).unwrap();
-    std::fs::remove_file(synthons()).unwrap();
 }
 
 /// One thread's call in a phase: `run` on the input `make` builds, on the
@@ -460,20 +427,6 @@ fn seeded_random_smiles() -> Call<Mol> {
             };
             let smiles = mol_to_random_smiles_vect_with_params(&mol, 5, &seeded).unwrap();
             assert_eq!(smiles.len(), 5);
-        },
-    }
-}
-
-fn random_png_metadata() -> Call<Mol> {
-    Call {
-        make: |_| mol(ASPIRIN),
-        run: |mol| {
-            let png = PNGMetadataParams {
-                smiles_write_params: random(),
-                ..Default::default()
-            };
-            let written = mol_metadata_to_png_string_with_params(&mol, PNG, &png).unwrap();
-            assert!(written.len() > PNG.len());
         },
     }
 }
@@ -684,7 +637,7 @@ fn png_mol_block() -> Call<Mol> {
     Call {
         make: |_| mol("F[C@H](Cl)Br"),
         run: |mol| {
-            let with_mol = PNGMetadataParams {
+            let with_mol = MolMetadataToPNGParams {
                 include_mol: true,
                 ..Default::default()
             };
@@ -735,7 +688,7 @@ fn comic_drawing() -> Call<Mol> {
     }
 }
 
-// ControlCHandler's statics, which every substructure match writes.
+// The Ctrl-C lock, which every substructure match holds.
 
 fn substruct_matches() -> Call<(Mol, Mol)> {
     Call {
@@ -992,76 +945,6 @@ fn feature_morgan_fp() -> Call<(FingerprintGenerator64, Mol)> {
     }
 }
 
-/// A SMILES file for thread `i`, which the call removes.
-fn smiles_file(i: u32) -> PathBuf {
-    let path =
-        std::env::temp_dir().join(format!("rdkit-cxx-threads-{}-{i}.smi", std::process::id()));
-    std::fs::write(
-        &path,
-        format!("SMILES\tName\n{ASPIRIN}\ta\nc1ccccc1O\tb\nCCN\tc\n"),
-    )
-    .unwrap();
-    path
-}
-
-fn fps_in_file_with(generator: &FingerprintGenerator64, path: PathBuf) {
-    let params = GetFingerprintsForMolsInFileParams {
-        generator: Some(generator),
-        options: SupplierOptions {
-            num_threads: 2,
-            ..Default::default()
-        },
-    };
-    let fps = get_fingerprints_for_mols_in_file_with_params(&path, &params).unwrap();
-    assert_eq!(fps.len(), 3);
-    std::fs::remove_file(&path).unwrap();
-}
-
-/// rdMolProcessing with feature invariants: RDKit's threads parse, and the
-/// calling thread fingerprints under the Ctrl-C lock.
-fn feature_fps_in_file() -> Call<(FingerprintGenerator64, PathBuf)> {
-    Call {
-        make: |i| {
-            let features = GetMorganGeneratorParams {
-                atom_invariants_generator: Some(get_morgan_feature_atom_inv_gen()),
-                ..Default::default()
-            };
-            (
-                get_morgan_generator_with_params(&features).unwrap(),
-                smiles_file(i),
-            )
-        },
-        run: |(generator, path)| fps_in_file_with(&generator, path),
-    }
-}
-
-/// rdMolProcessing without a lock: RDKit's threads fingerprint the molecules
-/// they parse, in the wrapper's write callback.
-fn fps_in_file() -> Call<(FingerprintGenerator64, PathBuf)> {
-    Call {
-        make: |i| {
-            (
-                get_morgan_generator_with_params(&GetMorganGeneratorParams::default()).unwrap(),
-                smiles_file(i),
-            )
-        },
-        run: |(generator, path)| fps_in_file_with(&generator, path),
-    }
-}
-
-fn scsr_hbonds() -> Call<()> {
-    Call {
-        make: |_| (),
-        run: |()| {
-            let auto = MolFromSCSRParams {
-                scsr_base_hbond_options: SCSRBaseHbondOptions::Auto,
-                ..Default::default()
-            };
-            mol_from_scsr_block_with_params(RIBOSE_SCSR, &auto).unwrap();
-        },
-    }
-}
-
 fn cip_labels() -> Call<Mol> {
     Call {
         make: |_| mol("F[C@H](Cl)Br"),
@@ -1142,20 +1025,6 @@ fn validated() -> Call<(MolVSValidation, Mol)> {
     Call {
         make: |_| (MolVSValidation::default(), mol("CC(=O)O.Cl")),
         run: |(validation, mol)| assert!(!validation.validate(&mol).unwrap().is_empty()),
-    }
-}
-
-fn pipeline_run() -> Call<(Pipeline, String)> {
-    Call {
-        make: |_| {
-            (
-                Pipeline::default(),
-                mol_to_mol_block(&depicted("CC(=O)[O-].[Na+]")).unwrap(),
-            )
-        },
-        run: |(pipeline, block)| {
-            pipeline.run(&block).unwrap();
-        },
     }
 }
 
@@ -1279,52 +1148,6 @@ fn scaffold_network() -> Call<Vec<Mol>> {
     }
 }
 
-// PubChem's shape code sets its overlap cutoff in globals and fills a static
-// list of color patterns (pubchem_shape_mutex), whose matches construct
-// ControlCHandlers.
-fn pubchem_shape_alignment() -> Call<(Mol, Mol)> {
-    Call {
-        make: |_| (embedded("CCO"), embedded("CCN")),
-        run: |(reference, mut probe)| {
-            let (shape, _) = rd_shape_align::align_mol(&reference, &mut probe).unwrap();
-            assert!(shape > 0.0);
-        },
-    }
-}
-
-fn pubchem_shape_scores() -> Call<(Mol, Mol)> {
-    Call {
-        make: |_| (embedded("CCO"), embedded("CCN")),
-        run: |(mol1, mol2)| {
-            let opts = rd_shape_align::ShapeInputOptions::default();
-            let (shape, _) = rd_shape_align::score_mol(&mol1, &mol2, &opts, &opts).unwrap();
-            assert!(shape > 0.0);
-        },
-    }
-}
-
-// The Gaussian shapes fill a static list of feature patterns
-// (gaussian_shape_mutex) and match them.
-fn gaussian_shapes() -> Call<Mol> {
-    Call {
-        make: |_| embedded("Oc1ccccc1"),
-        run: |mol| {
-            let shape = rd_gaussian_shape::ShapeInput::new(&mol).unwrap();
-            assert!(shape.num_features() > 0);
-        },
-    }
-}
-
-// An H-bond field finds its special atoms with a serine pattern.
-fn mif_h_bonds() -> Call<Mol> {
-    Call {
-        make: |_| embedded("NC(CO)C(=O)O"),
-        run: |mol| {
-            HBond::new(&mol).unwrap();
-        },
-    }
-}
-
 fn mol_features() -> Call<(MolChemicalFeatureFactory, Mol)> {
     Call {
         make: |_| {
@@ -1359,22 +1182,6 @@ fn enumerated_link_nodes() -> Call<Mol> {
     }
 }
 
-// Embedding each isomer draws from RDKit's generator, with a
-// ControlCHandler alive.
-fn embedded_stereoisomers() -> Call<Mol> {
-    Call {
-        make: |_| mol("CC1CC2CCC1C2"),
-        run: |mol| {
-            let options = StereoEnumerationOptions {
-                try_embedding: true,
-                ..Default::default()
-            };
-            let isomers = StereoisomerEnumerator::new_with_params(&mol, &options).unwrap();
-            assert_eq!(isomers.count(), 4);
-        },
-    }
-}
-
 // MolToInchi's reverse cleanup matches a pattern on every call.
 fn inchi_written() -> Call<Mol> {
     Call {
@@ -1389,93 +1196,6 @@ fn inchi_read() -> Call<String> {
     Call {
         make: |_| "InChI=1S/CH3NO2/c1-2(3)4/h1H3".to_string(),
         run: |inchi| assert!(inchi_to_mol(&inchi).unwrap().mol.is_some()),
-    }
-}
-
-// The ChemDraw library fills its attribute-name maps on the first CDXML
-// write (chemdraw_mutex), which this phase must make.
-fn cdxml_blocks() -> Call<Mol> {
-    Call {
-        make: |_| depicted("CCO"),
-        run: |mol| assert!(mol_to_cdxml_block(&mol).unwrap().contains("BondLength")),
-    }
-}
-
-/// A synthon space of benzamides, written by `main`. The second amine's
-/// unassigned stereocenter makes shape building enumerate its isomers.
-const SYNTHONS: &str = "SMILES\tsynton_id\tsynton#\treaction_id
-c1ccccc1C(=O)[1*]\t1-1\t1\tamide
-[1*]N1CCCC1\t2-1\t2\tamide
-[1*]NC(C)CC\t2-2\t2\tamide
-";
-
-fn synthons() -> PathBuf {
-    std::env::temp_dir().join(format!(
-        "rdkit-cxx-threads-{}-synthons.txt",
-        std::process::id()
-    ))
-}
-
-// Reading the space and searching it construct ControlCHandlers.
-fn synthon_substructure_search() -> Call<Mol> {
-    Call {
-        make: |_| mol_from_smarts("c1ccccc1C(=O)N").unwrap(),
-        run: |query| {
-            let mut space = SynthonSpace::default();
-            space.read_text_file(synthons()).unwrap();
-            let hits = space.substructure_search(&query).unwrap();
-            assert_eq!(hits.get_hit_molecules().len(), 2);
-        },
-    }
-}
-
-// RASCAL matches substructures, and its incremental search releases the
-// Ctrl-C lock for the closure, which matches too.
-fn synthon_rascal_search() -> Call<(SynthonSpace, Mol, Mol)> {
-    Call {
-        make: |_| {
-            let mut space = SynthonSpace::default();
-            space.read_text_file(synthons()).unwrap();
-            (
-                space,
-                mol("c1ccccc1C(=O)NC(C)CC"),
-                mol_from_smarts("C(=O)N").unwrap(),
-            )
-        },
-        run: |(mut space, query, pattern)| {
-            let mut hits = 0;
-            space
-                .rascal_search_incremental(&query, None, |batch| {
-                    for hit in &batch {
-                        assert!(hit.has_substruct_match(&pattern)?);
-                    }
-                    hits += batch.len();
-                    Ok(false)
-                })
-                .unwrap();
-            assert!(hits > 0);
-        },
-    }
-}
-
-// Shape building embeds each sample product's stereoisomers without a seed
-// (from RDKit's generator) and its conformers, and fills and matches the
-// shapes' feature patterns (gaussian_shape_mutex).
-fn synthon_shapes() -> Call<SynthonSpace> {
-    Call {
-        make: |_| {
-            let mut space = SynthonSpace::default();
-            space.read_text_file(synthons()).unwrap();
-            space
-        },
-        run: |mut space| {
-            let params = ShapeBuildParams {
-                num_confs: 2,
-                ..Default::default()
-            };
-            space.build_synthon_shapes_with_py_params(&params).unwrap();
-            assert_eq!(space.get_num_synthons_with_shapes(), 3);
-        },
     }
 }
 
@@ -1551,7 +1271,7 @@ fn available_properties() -> Call<()> {
     }
 }
 
-// DCLV's surface tests share a global cache.
+// DCLV from several threads at once.
 fn dclv_surfaces() -> Call<Mol> {
     Call {
         make: |_| {
@@ -1566,9 +1286,8 @@ fn dclv_surfaces() -> Call<Mol> {
             mol
         },
         run: |mol| {
-            let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+            let dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
             assert!(dclv.get_surface_area() > 0.0);
-            assert!(dclv.get_polar_surface_area() > 0.0);
         },
     }
 }
