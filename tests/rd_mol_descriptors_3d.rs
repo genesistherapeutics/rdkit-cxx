@@ -9,7 +9,8 @@
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_mol_descriptors::*;
 use rdkit_cxx::chem::{
-    Conformer, Mol, MolFromMolBlockParams, mol_from_mol_block_with_params, mol_from_smiles,
+    Conformer, Mol, MolFromMolBlockParams, SmilesParserParams, mol_from_mol_block_with_params,
+    mol_from_smiles, mol_from_smiles_with_params,
 };
 use rdkit_cxx::geometry::Point3D;
 
@@ -872,6 +873,29 @@ fn double_cubic_lattice_volume() {
     };
     let mut protein = DoubleCubicLatticeVolume::new_with_params(&mol, &protein).unwrap();
     assert_close(protein.get_surface_area(), 359.1514138560083, 1e-9);
+}
+
+#[test]
+fn double_cubic_lattice_volume_refuses_bonded_hydrogens() {
+    let params = SmilesParserParams {
+        remove_hs: false,
+        ..Default::default()
+    };
+    // RDKit's polar surface area with includeHs recurses through the two
+    // hydrogens without end (Python crashes).
+    let h2 = mol_from_smiles_with_params("[H][H] |(0,0,0;0.74,0,0)|", &params).unwrap();
+    assert!(matches!(
+        DoubleCubicLatticeVolume::new(&h2),
+        Err(Error::Value { .. })
+    ));
+    let water =
+        mol_from_smiles_with_params("[H]O[H] |(0,0,0;0.96,0,0;1.2,0.93,0)|", &params).unwrap();
+    let mut dclv = DoubleCubicLatticeVolume::new(&water).unwrap();
+    let all = GetPolarSurfaceAreaParams {
+        include_s_and_p: true,
+        include_hs: true,
+    };
+    assert!(dclv.get_polar_surface_area_with_params(&all) > dclv.get_polar_surface_area());
 }
 
 #[test]

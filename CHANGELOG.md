@@ -105,6 +105,10 @@ Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
   searches build missing fingerprints first, and a space whose fingerprints
   are incomplete is `Error::Value` for the build, the fingerprint searches,
   and the database writers.
+- `DoubleCubicLatticeVolume`'s constructors refuse a molecule with a bond
+  between two hydrogens (`Error::Value`): its polar surface area and volume
+  with `include_hs` recurse through them until the stack overflows, as in
+  Python (rdkit/rdkit#9687, fixed after RDKit 2026.09.1).
 
 ### Bindings
 

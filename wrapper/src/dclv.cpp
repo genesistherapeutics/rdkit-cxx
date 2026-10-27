@@ -78,6 +78,25 @@ void check_zero_radii_last(const DoubleCubicLatticeVolume &dclv) {
   }
 }
 
+// With includeHs, includeAsPolar asks whether a hydrogen's neighbors are
+// polar by calling itself on them, hydrogens included, so two bonded
+// hydrogens recurse until the stack overflows (rdkit/rdkit#9687, fixed
+// after 2026.09.1); the polar surface area and volume ask it of every atom.
+// Those methods return a plain double, as Python's, so the constructor
+// refuses such a molecule.
+void check_no_hydrogen_bonds(const RWMol &mol) {
+  for (const auto *bond : mol.bonds()) {
+    if (bond->getBeginAtom()->getAtomicNum() == 1 &&
+        bond->getEndAtom()->getAtomicNum() == 1) {
+      throw ValueErrorException(
+          "DoubleCubicLatticeVolume needs no bond between two hydrogens, for "
+          "which RDKit's polar surface area and volume recurse without end; "
+          "bond " +
+          std::to_string(bond->getIdx()) + " joins two");
+    }
+  }
+}
+
 boost::dynamic_bitset<> atom_set(const DoubleCubicLatticeVolume &dclv,
                                  rust::Slice<const std::uint32_t> indices) {
   boost::dynamic_bitset<> atoms(dclv.mol.getNumAtoms());
@@ -115,6 +134,7 @@ std::unique_ptr<DoubleCubicLatticeVolume> dclv_new(
   if (is_protein) {
     check_monomer_infos(mol);
   }
+  check_no_hydrogen_bonds(mol);
   auto dclv = std::make_unique<DoubleCubicLatticeVolume>(
       mol, std::vector<double>(radii.begin(), radii.end()), is_protein,
       include_ligand, probe_radius, conf_id);
