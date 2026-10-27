@@ -225,8 +225,6 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::draw::mol_to_image_with_params as _;
     use rdkit_cxx::chem::draw::mols_matrix_to_grid_image as _;
     use rdkit_cxx::chem::draw::mols_matrix_to_grid_image_with_params as _;
-    use rdkit_cxx::chem::draw::mols_matrix_to_grid_image_use_svg as _;
-    use rdkit_cxx::chem::draw::mols_matrix_to_grid_image_use_svg_with_params as _;
     use rdkit_cxx::chem::draw::mols_to_grid_image as _;
     use rdkit_cxx::chem::draw::mols_to_grid_image_with_params as _;
     use rdkit_cxx::chem::draw::mols_to_grid_image_use_svg as _;
@@ -4041,9 +4039,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rdmolfiles::MaeWriter>::write;
     let _ = <rdkit_cxx::chem::rdmolfiles::MaeWriter>::write_with_conf_id;
     use rdkit_cxx::chem::rdmolfiles::metadata_from_png_file as _;
-    use rdkit_cxx::chem::rdmolfiles::metadata_from_png_file_as_list as _;
     use rdkit_cxx::chem::rdmolfiles::metadata_from_png_string as _;
-    use rdkit_cxx::chem::rdmolfiles::metadata_from_png_string_as_list as _;
     use rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smarts as _;
     use rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smarts_with_params as _;
     use rdkit_cxx::chem::rdmolfiles::mol_fragment_to_cx_smiles as _;
@@ -5204,7 +5200,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::geometry::rd_geometry::UniformGrid3D>::from_pkl;
     use rdkit_cxx::geometry::rd_geometry::write_grid_to_file as _;
     use rdkit_cxx::ml::cluster::butina::cluster_data as _;
-    use rdkit_cxx::ml::cluster::butina::cluster_data_with_params as _;
+    use rdkit_cxx::ml::cluster::butina::cluster_data_with_reordering as _;
     use rdkit_cxx::ml::cluster::butina::cluster_data_flat as _;
     use rdkit_cxx::ml::cluster::butina::cluster_data_flat_with_reordering as _;
     use rdkit_cxx::ml::cluster::butina::cluster_data_with_dist_func as _;

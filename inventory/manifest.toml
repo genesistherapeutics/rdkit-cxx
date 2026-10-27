@@ -887,8 +887,8 @@ reason = "draws into a Qt QPixmap; Rust has no Qt, and draw::mol_to_image return
 
 [[entry]]
 python = "rdkit.Chem.Draw.MolsMatrixToGridImage"
-rust = ["rdkit_cxx::chem::draw::mols_matrix_to_grid_image", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_with_params", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_use_svg", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_use_svg_with_params"]
-overloads_note = "useSVG=True is mols_matrix_to_grid_image_use_svg (A4); returnPNG, which returns PNG data for a PIL image, is how both PNG forms return"
+rust = ["rdkit_cxx::chem::draw::mols_matrix_to_grid_image", "rdkit_cxx::chem::draw::mols_matrix_to_grid_image_with_params"]
+overloads_note = "RDKit 2024.03 draws only PNGs here (it does not pass useSVG on); returnPNG, which returns PNG data for a PIL image, is how both forms return"
 
 [[entry]]
 python = "rdkit.Chem.Draw.MolsToGridImage"
@@ -4526,11 +4526,12 @@ rust = ["rdkit_cxx::chem::pharm_2d::utils::get_triangles"]
 [[entry]]
 python = "rdkit.Chem.Pharm2D.Utils.GetUniqueCombinations"
 rust = ["rdkit_cxx::chem::pharm_2d::utils::get_unique_combinations"]
+overloads_note = "the arguments Python uses in its recursion are not bound (which)"
 
 [[entry]]
 python = "rdkit.Chem.Pharm2D.Utils.GetUniqueCombinations_new"
-rust = ["rdkit_cxx::chem::pharm_2d::utils::get_unique_combinations"]
-name_exception = "an alias of GetUniqueCombinations"
+rust = ["rdkit_cxx::chem::pharm_2d::utils::get_unique_combinations_new"]
+overloads_note = "which, which Python ignores, is not ported"
 
 [[entry]]
 python = "rdkit.Chem.Pharm2D.Utils.NumCombinations"
@@ -14115,13 +14116,11 @@ rust = ["rdkit_cxx::chem::rdmolfiles::MaeWriter::write", "rdkit_cxx::chem::rdmol
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MetadataFromPNGFile"
-rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_file", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_file_as_list"]
-overloads_note = "asList changes the return type, so it has its own function (A4)"
+rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_file"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MetadataFromPNGString"
-rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_string", "rdkit_cxx::chem::rdmolfiles::metadata_from_png_string_as_list"]
-overloads_note = "asList changes the return type, so it has its own function (A4)"
+rust = ["rdkit_cxx::chem::rdmolfiles::metadata_from_png_string"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolfiles.MolFragmentToCXSmarts"
@@ -18188,7 +18187,7 @@ rust = ["rdkit_cxx::geometry::rd_geometry::write_grid_to_file"]
 
 [[entry]]
 python = "rdkit.ML.Cluster.Butina.ClusterData"
-rust = ["rdkit_cxx::ml::cluster::butina::cluster_data", "rdkit_cxx::ml::cluster::butina::cluster_data_with_params", "rdkit_cxx::ml::cluster::butina::cluster_data_flat", "rdkit_cxx::ml::cluster::butina::cluster_data_flat_with_reordering", "rdkit_cxx::ml::cluster::butina::cluster_data_with_dist_func"]
+rust = ["rdkit_cxx::ml::cluster::butina::cluster_data", "rdkit_cxx::ml::cluster::butina::cluster_data_with_reordering", "rdkit_cxx::ml::cluster::butina::cluster_data_flat", "rdkit_cxx::ml::cluster::butina::cluster_data_flat_with_reordering", "rdkit_cxx::ml::cluster::butina::cluster_data_with_dist_func"]
 
 [[entry]]
 python = "rdkit.ML.Cluster.Butina.EuclideanDist"
