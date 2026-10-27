@@ -412,10 +412,10 @@ one takes more than its pin ([Releases](#releases)).
 Each RDKit series has a long-running branch, `rdkit-<series>`
 (`rdkit-2025.09` for RDKit 2025.09), from which its crate versions are
 released, and to which fixes for that series go, through pull requests as on
-`main`. `main` follows the newest series, whose changes land on `main` first:
-its branch, `rdkit-2026.09`, takes them by merging `main`, and keeps the
-series once `main` moves on. Pushing to a branch publishes nothing; CI runs on
-every push to `main` and the series' branches.
+`main`. `main` follows the newest series, whose changes land and are released
+on `main`: its branch, `rdkit-2026.09`, is brought up to date with `main`, and
+takes over the series' releases once `main` moves on. Pushing to a branch
+publishes nothing; CI runs on every push to `main` and the series' branches.
 
 Releases are cut by hand: run the
 [Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
@@ -448,16 +448,17 @@ major and minor levels by hand, in the pull request that updates
 bump-my-version bump --new-version 2027.3.0
 ```
 
-Merge `main` into the old series' branch before that pull request, so the
-branch keeps the series' last commit, and once it merges, create the new
-series' branch from `main` and add it to the Release workflow's branch
-choices.
+Bring the old series' branch up to date with `main` before that pull
+request, so the branch keeps the series' last commit, and once it merges,
+create the new series' branch from `main` and add it to the Release
+workflow's branch choices.
 
 The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
 conda-forge daily and opens an issue, assigned to the repository owner, with
-the steps, when it has a `librdkit-dev` release newer than the one
-`environment.yml` pins. A new patch release of the series needs a patch
-release of the crate too: the build accepts it only once `wrapper/vendor/`
+the steps, when it has a `librdkit-dev` release newer than one
+`environment.yml` pins: a new series, or a patch release of the series `main`
+or a series' branch pins. A new patch release of a series needs a patch
+release of its crate line too: the build accepts it only once `wrapper/vendor/`
 holds its headers ([`wrapper/vendor/`](wrapper/vendor/README.md)).
 
 ## License
