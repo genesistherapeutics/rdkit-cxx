@@ -183,10 +183,13 @@ its Boost.Python modules and its `.py` modules.
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
   read later. MolPickler writes some counts, and in RDKit 2024.09 a small
   molecule's bond indices, in one byte, and the property counts in two, and
-  reads a larger value's pickle out of step, so every wrapper that hands RDKit a molecule to pickle
-  (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
-  truncate: RDKit could not read the pickle back, as the contract and the
-  holders' safe reads assume. The wrappers still check what they checked before, for
+  reads a larger value's pickle out of step, so every wrapper that hands
+  RDKit a molecule to pickle, alone or inside another format (`git grep -l
+  'pickleMol\|MolPickler::pickle\|pickleReaction'` in RDKit's sources finds
+  them), refuses one it would truncate (`check_picklable` in
+  `rdkit-cxx/mol_checks.h`, or one of the variants beside it): RDKit could
+  not read the pickle back, as the contract and the holders' safe reads
+  assume. The wrappers still check what they checked before, for
   pickles that meet the contract but come from another RDKit: a molecule
   pickle's enum values, which MolPickler casts unchecked (bond types,
   directions, and stereo, atoms' chiral tags and hybridizations, stereo
