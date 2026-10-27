@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- `RingInfo.num_relevant_cycles` is `Error::Value` for more relevant cycles
+  than `u32` holds. RDKit converts RingDecomposerLib's count, a `double`, to
+  `unsigned int` without a check, which is undefined out of range; Python
+  returns 33 for a ring of 33 diamonds, which has 2^33 + 33.
+
 ## 2026.9.0
 
 The first release. It supports RDKit 2026.09.1 from conda-forge on Linux
