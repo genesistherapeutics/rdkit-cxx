@@ -20,16 +20,17 @@ namespace rdkit_cxx {
 unsigned num_threads_to_use(int target);
 
 // The most writer threads a caller may ask RDKit's MultithreadedMolSupplier
-// to start. It starts every one at its first next(), so a count the system
-// cannot start fails there, and one this large would only cost memory.
+// for. RDKit 2024.03 starts one whatever the count (its derived suppliers'
+// parameters hide the base class's, which startThreads reads), and the bound
+// keeps the newer lines' limit.
 inline constexpr unsigned kMaxSupplierThreads = 1024;
 
 // The largest queue a caller may ask RDKit's MultithreadedMolSupplier for.
-// RDKit 2026.03 allocates both queues in the supplier's constructor, and if
-// either allocation throws, the base destructor's close() dereferences the
-// output queue it never made (RDKit 2026.09 checks it, rdkit/rdkit#9462).
-// A queue this size takes tens of megabytes, which Rust code treats as an
-// allocation that succeeds or aborts.
+// RDKit allocates both queues in the supplier's constructor, and if either
+// allocation throws, the base destructor joins threads that never started
+// and deletes a queue it may never have made. A queue this size takes tens
+// of megabytes, which Rust code treats as an allocation that succeeds or
+// aborts.
 inline constexpr unsigned kMaxSupplierQueueSize = 1u << 20;
 
 // Calls work(t) for each t in [0, n), each on its own thread (the calling

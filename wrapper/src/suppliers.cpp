@@ -566,33 +566,24 @@ FP::MultithreadedMolSupplier::Parameters mt_params(
 
 // next() returns null both at the end and for a record it could not read;
 // only a read record changes the last record id.
-//
-// The first next() starts the reader thread and every writer thread
-// (MultithreadedMolSupplier::startThreads). When the system refuses one,
-// std::thread throws std::system_error, leaving the threads already started
-// running; the output queue is marked done only when every writer the
-// parameters name has finished, so a later next() would wait forever. The
-// supplier is refused from then on, and its destructor joins the threads
-// that did start.
 template <class W>
 std::unique_ptr<RWMol> mt_next(W &w, std::uint32_t &record) {
-  if (w.broken) {
-    throw std::runtime_error("the supplier's threads could not all be started");
-  }
   auto before = w.suppl->getLastRecordId();
-  std::unique_ptr<RWMol> mol;
-  try {
-    mol = checked(w.input, [&] { return w.suppl->next(); });
-  } catch (const std::system_error &) {
-    w.broken = true;
-    throw;
-  }
+  auto mol = checked(w.input, [&] { return w.suppl->next(); });
   auto after = w.suppl->getLastRecordId();
   record = (mol || after != before) ? after : 0;
   return mol;
 }
 
 }  // namespace
+
+void drain_supplier(FP::MultithreadedMolSupplier &suppl) {
+  // next() blocks until a record is parsed or every thread is done; a null
+  // record before the end is one RDKit could not read.
+  while (!suppl.atEnd()) {
+    suppl.next();
+  }
+}
 
 std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_new() {
   auto s = std::make_unique<MultithreadedSDMolSupplier>();
@@ -615,7 +606,6 @@ std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_from_file(
 
 std::unique_ptr<RWMol> mt_sd_mol_supplier_next(MultithreadedSDMolSupplier &s,
                                                std::uint32_t &record) {
-  s.started = true;
   return mt_next(s, record);
 }
 
@@ -639,15 +629,16 @@ bool mt_sd_mol_supplier_get_process_property_lists(
 }
 
 // RDKit's parsing threads read the flag without a lock
-// (MultithreadedSDMolSupplier::readMolProps), so it may not change once they
-// have started, at the first next().
+// (MultithreadedSDMolSupplier::readMolProps), and in RDKit 2024.03 they run
+// from the supplier's construction, so the flag may not change: setting the
+// value it has is a no-op, and another is refused.
 void mt_sd_mol_supplier_set_process_property_lists(
     MultithreadedSDMolSupplier &s, bool val) {
-  if (s.started) {
+  if (val != s.suppl->getProcessPropertyLists()) {
     throw ValueErrorException(
-        "the property-list setting cannot change once reading has started");
+        "RDKit 2024.03's multithreaded supplier starts parsing when it is "
+        "made, so its property-list setting cannot change");
   }
-  s.suppl->setProcessPropertyLists(val);
 }
 
 std::unique_ptr<MultithreadedSmilesMolSupplier> mt_smiles_mol_supplier_new() {

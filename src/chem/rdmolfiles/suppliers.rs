@@ -974,13 +974,14 @@ pub struct MultithreadedSDMolSupplierParams {
     /// Rejects malformed records rather than reading what it can.
     pub strict_parsing: bool,
     /// The parsing threads: 0 for one per core. More than 1024 is
-    /// `Error::Value`: RDKit starts every one at the first read. If the
-    /// system cannot start them all, that read is `Error::Runtime`, and so is
-    /// every read after it.
+    /// `Error::Value`. RDKit 2024.03 accepts the count and starts one parsing
+    /// thread whatever it is: its derived suppliers keep the parameters in a
+    /// member that hides the base class's, which starts the threads.
     pub num_writer_threads: u32,
     /// The records read ahead; 0, which never lets RDKit's threads finish, and
-    /// sizes above 2^20 are `Error::Value`: RDKit 2026.03 allocates each queue
-    /// whole, and dereferences null if that allocation fails.
+    /// sizes above 2^20 are `Error::Value`: RDKit allocates each queue
+    /// whole when the supplier is made, and cannot clean up after a failed
+    /// allocation.
     pub size_input_queue: usize,
     /// The molecules parsed ahead, limited as `size_input_queue`.
     pub size_output_queue: usize,
@@ -1002,8 +1003,9 @@ impl Default for MultithreadedSDMolSupplierParams {
 /// The molecules of an SD file, parsed on threads of its own, in the order
 /// they finish. Mirrors `rdmolfiles.MultithreadedSDMolSupplier`.
 ///
-/// The threads start at the first molecule asked for and stop when the
-/// supplier is dropped. `Default` is a supplier without records.
+/// RDKit 2024.03 starts the threads when the supplier is made. Dropping the
+/// supplier parses the records not yet read, since RDKit's threads cannot be
+/// stopped before they finish. `Default` is a supplier without records.
 pub struct MultithreadedSDMolSupplier {
     /// Never null.
     ptr: UniquePtr<ffi::MultithreadedSDMolSupplier>,
@@ -1092,8 +1094,9 @@ impl MultithreadedSDMolSupplier {
         ))
     }
 
-    /// Once reading has started this is `Error::Value`: RDKit's parsing
-    /// threads read the setting without a lock. Mirrors
+    /// Setting it to the value it has does nothing, and another value is
+    /// `Error::Value`: RDKit 2024.03's parsing threads run from the supplier's
+    /// making and read the setting without a lock. Mirrors
     /// `MultithreadedSDMolSupplier.SetProcessPropertyLists`.
     pub fn set_process_property_lists(&mut self, val: bool) -> Result<()> {
         Ok(ffi::mt_sd_mol_supplier_set_process_property_lists(
@@ -1191,8 +1194,9 @@ impl Default for MultithreadedSmilesMolSupplierParams {
 /// they finish. Mirrors `rdmolfiles.MultithreadedSmilesMolSupplier`.
 ///
 /// RDKit reads the end of the file as a last, empty record, which is an
-/// `Err`, as Python yields `None` for it. The threads start at the first
-/// molecule asked for and stop when the supplier is dropped. `Default` is a
+/// `Err`, as Python yields `None` for it. RDKit 2024.03 starts the threads
+/// when the supplier is made. Dropping the supplier parses the records not
+/// yet read, since RDKit's threads cannot be stopped before they finish. `Default` is a
 /// supplier without records.
 pub struct MultithreadedSmilesMolSupplier {
     /// Never null.

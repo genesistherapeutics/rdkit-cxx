@@ -74,20 +74,36 @@ class TDTMolSupplier {
   bool at_end = true;
 };
 
+// RDKit 2024.03's multithreaded suppliers start their reader and writer
+// threads in the constructor, and only the base class's destructor joins
+// them: by then the derived supplier, whose virtual record readers and
+// members the threads use, is destroyed, and the destructor neither stops
+// the reader nor empties the queues, so a thread blocked on a full queue
+// never finishes. These wrappers therefore read the supplier to its end
+// before destroying it (drain_supplier, suppliers.cpp), which parses the
+// records left; every RDKit thread has finished by then.
+void drain_supplier(RDKit::v2::FileParsers::MultithreadedMolSupplier &suppl);
+
 class MultithreadedSDMolSupplier {
  public:
+  ~MultithreadedSDMolSupplier() {
+    if (suppl) {
+      drain_supplier(*suppl);
+    }
+  }
   SupplierInput input;
   std::unique_ptr<RDKit::v2::FileParsers::MultithreadedSDMolSupplier> suppl;
-  bool started = false;
-  // Whether starting its threads failed (suppliers.cpp, mt_next).
-  bool broken = false;
 };
 
 class MultithreadedSmilesMolSupplier {
  public:
+  ~MultithreadedSmilesMolSupplier() {
+    if (suppl) {
+      drain_supplier(*suppl);
+    }
+  }
   SupplierInput input;
   std::unique_ptr<RDKit::v2::FileParsers::MultithreadedSmilesMolSupplier> suppl;
-  bool broken = false;
 };
 
 // Shared structs, defined by the bridge (src/ffi/suppliers.rs).
