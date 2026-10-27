@@ -476,3 +476,44 @@ fn kekulizing_refuses_32_question_atoms() {
     let chain = format!("c1ccccc1{}", "*".repeat(40));
     mol_from_smiles(&chain).unwrap();
 }
+
+/// A reader that cannot seek and hands out at most 1000 bytes a call.
+struct Unseekable(std::io::Cursor<Vec<u8>>);
+
+impl std::io::Read for Unseekable {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = buf.len().min(1000);
+        self.0.read(&mut buf[..n])
+    }
+}
+
+#[test]
+fn unseekable_readers_check_lines_across_chunks() {
+    // Group lines that cross the scanner's 64 KiB chunks are read whole from
+    // a reader that cannot seek back, and refused there as from a file.
+    let pad = "x".repeat(70_000);
+    let read = |line: &str| {
+        let text = (v3000(1, &[line]) + "$$$$\n").repeat(2);
+        let reader = Unseekable(std::io::Cursor::new(text.into_bytes()));
+        let mut suppl = ForwardSDMolSupplier::from_fileobj(reader).unwrap();
+        suppl.mols().collect::<Vec<_>>()
+    };
+    let good = read(&format!("1 SUP 0 ATOMS=(1 3) LABEL={pad} SAP=(3 3 2 1)"));
+    assert_eq!(good.len(), 2);
+    assert!(
+        good.iter()
+            .all(|m| m.as_ref().unwrap().get_num_atoms() == 3)
+    );
+    let bad = read(&format!("1 SUP 0 ATOMS=(1 3) LABEL={pad} SAP=(3 3 2)"));
+    assert!(
+        matches!(bad.as_slice(), [Err(Error::Value { .. })]),
+        "{bad:?}"
+    );
+    // So is an "M  MRV SMA" SMARTS cut by a chunk boundary.
+    let block = mol_to_mol_block(&smiles("CC")).unwrap();
+    let sma = format!("M  MRV SMA   1 C{} {OVERRUN}", "C".repeat(70_000));
+    let text = block.replace("M  END", &format!("{sma}\nM  END")) + "$$$$\n";
+    let reader = Unseekable(std::io::Cursor::new(text.into_bytes()));
+    let mut suppl = ForwardSDMolSupplier::from_fileobj(reader).unwrap();
+    assert!(suppl.mols().all(|m| m.is_err()));
+}
