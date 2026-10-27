@@ -10,7 +10,7 @@ pub(crate) mod ffi {
     #[allow(clippy::upper_case_acronyms)]
     enum FingerprintType {
         AtomPairFP = 1,
-        TopologicalTorsionFP,
+        TopologicalTorsion,
         MorganFP,
         RDKitFP,
         PatternFP,
@@ -186,17 +186,6 @@ pub(crate) mod ffi {
             rxn: &ChemicalReaction,
             params: &SmilesWriteParamsData,
         ) -> Result<UniquePtr<CxxString>>;
-        fn reaction_to_cx_smarts(
-            rxn: &ChemicalReaction,
-            params: &SmilesWriteParamsData,
-            flags: u32,
-        ) -> Result<UniquePtr<CxxString>>;
-        fn reaction_to_cx_smiles(
-            rxn: &ChemicalReaction,
-            params: &SmilesWriteParamsData,
-            flags: u32,
-        ) -> Result<UniquePtr<CxxString>>;
-        fn cx_smiles_fields_all() -> Result<u32>;
         fn reaction_from_rxn_block(
             rxn_block: &str,
             sanitize: bool,

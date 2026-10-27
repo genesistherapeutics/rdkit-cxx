@@ -46,7 +46,6 @@ cx_smiles_fields!(
     CX_BOND_CFG,
     CX_BOND_ATROPISOMER,
     CX_COORDINATE_BONDS,
-    CX_ZERO_BONDS,
     CX_ALL,
     CX_ALL_BUT_COORDS,
 );

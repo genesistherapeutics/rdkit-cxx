@@ -10,7 +10,7 @@ use std::pin::Pin;
 use cxx::UniquePtr;
 
 use crate::Result;
-use crate::data_structs::{DiscreteValueType, DiscreteValueVect, RealValueVect};
+use crate::data_structs::{DiscreteValueType, DiscreteValueVect};
 use crate::error::{expect_ok, op};
 use crate::ffi::grid::ffi;
 use crate::geometry::Point3D;
@@ -196,23 +196,6 @@ grid_type!(
     uniform_grid3d_get_spacing, uniform_grid3d_assign_op
 );
 
-grid_type!(
-    /// A grid of real numbers over a box. Mirrors
-    /// `rdGeometry.UniformRealValueGrid3D`.
-    ///
-    /// The in-place operators panic for grids with other parameters.
-    UniformRealValueGrid3D, UniformRealValueGrid3D, f64, f64,
-    uniform_real_value_grid3d_from_pkl, uniform_real_value_grid3d_clone,
-    uniform_real_value_grid3d_to_binary, uniform_real_value_grid3d_get_grid_point_index,
-    uniform_real_value_grid3d_get_grid_index, uniform_real_value_grid3d_get_grid_indices,
-    uniform_real_value_grid3d_get_val_point, uniform_real_value_grid3d_get_val,
-    uniform_real_value_grid3d_set_val, uniform_real_value_grid3d_set_val_point,
-    uniform_real_value_grid3d_get_grid_point_loc, uniform_real_value_grid3d_get_size,
-    uniform_real_value_grid3d_get_num_x, uniform_real_value_grid3d_get_num_y,
-    uniform_real_value_grid3d_get_num_z, uniform_real_value_grid3d_get_offset,
-    uniform_real_value_grid3d_get_spacing, uniform_real_value_grid3d_assign_op
-);
-
 /// Parameters for `UniformGrid3D::new_with_params`, with Python's defaults
 /// (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -326,98 +309,6 @@ impl UniformGrid3D {
             params.max_layers,
             params.ignore_out_of_bound,
         )?)
-    }
-}
-
-/// Parameters for `UniformRealValueGrid3D::new_with_params`, with Python's
-/// defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct UniformRealValueGrid3DParams {
-    /// The distance between grid points.
-    pub spacing: f64,
-    /// The grid's corner; `None` centers the grid on the origin.
-    pub off_set: Option<Point3D>,
-}
-
-impl Default for UniformRealValueGrid3DParams {
-    fn default() -> UniformRealValueGrid3DParams {
-        UniformRealValueGrid3DParams {
-            spacing: 0.5,
-            off_set: None,
-        }
-    }
-}
-
-impl UniformRealValueGrid3D {
-    /// A grid of `dim_x` by `dim_y` by `dim_z`, which must be positive; a
-    /// grid of 2^31 points or more is `Error::Value`. Mirrors
-    /// `UniformRealValueGrid3D(dimX, dimY, dimZ)`.
-    pub fn new(dim_x: f64, dim_y: f64, dim_z: f64) -> Result<UniformRealValueGrid3D> {
-        UniformRealValueGrid3D::new_with_params(dim_x, dim_y, dim_z, &Default::default())
-    }
-
-    /// Mirrors `UniformRealValueGrid3D(dimX, dimY, dimZ, spacing, offSet)`.
-    pub fn new_with_params(
-        dim_x: f64,
-        dim_y: f64,
-        dim_z: f64,
-        params: &UniformRealValueGrid3DParams,
-    ) -> Result<UniformRealValueGrid3D> {
-        Ok(UniformRealValueGrid3D::from_ffi(
-            ffi::uniform_real_value_grid3d_new(
-                dim_x,
-                dim_y,
-                dim_z,
-                params.spacing,
-                params.off_set.is_some(),
-                &params.off_set.unwrap_or_default(),
-            )?,
-        ))
-    }
-
-    /// A copy of the values. Mirrors `GetOccupancyVect`, which returns the
-    /// grid's own.
-    pub fn get_occupancy_vect(&self) -> RealValueVect {
-        RealValueVect::from_ffi(expect_ok(
-            ffi::uniform_real_value_grid3d_get_occupancy_vect(self.raw()),
-        ))
-    }
-
-    /// Whether the values match. Mirrors
-    /// `UniformRealValueGrid3D.CompareVectors`.
-    pub fn compare_vectors(&self, other: &UniformRealValueGrid3D) -> bool {
-        expect_ok(ffi::uniform_real_value_grid3d_compare(
-            self.raw(),
-            other.raw(),
-            b'v',
-        ))
-    }
-
-    /// Whether `other` has the same size, spacing, and offset. Mirrors
-    /// `UniformRealValueGrid3D.CompareParams`.
-    pub fn compare_params(&self, other: &UniformRealValueGrid3D) -> bool {
-        expect_ok(ffi::uniform_real_value_grid3d_compare(
-            self.raw(),
-            other.raw(),
-            b'p',
-        ))
-    }
-
-    /// Whether the parameters and values match. Mirrors
-    /// `UniformRealValueGrid3D.CompareGrids`.
-    pub fn compare_grids(&self, other: &UniformRealValueGrid3D) -> bool {
-        expect_ok(ffi::uniform_real_value_grid3d_compare(
-            self.raw(),
-            other.raw(),
-            b'g',
-        ))
-    }
-}
-
-/// A 1 Å grid of 1 by 1 by 1. Mirrors `UniformRealValueGrid3D()`.
-impl Default for UniformRealValueGrid3D {
-    fn default() -> UniformRealValueGrid3D {
-        UniformRealValueGrid3D::from_ffi(expect_ok(ffi::uniform_real_value_grid3d_default()))
     }
 }
 

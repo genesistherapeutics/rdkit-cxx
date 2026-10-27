@@ -165,8 +165,6 @@ pub struct ConstrainedDepictionParams {
     /// The molecule's conformer to align (`align_only`) or to compare
     /// wedging against, or -1 for the first.
     pub existing_conf_id: i32,
-    /// Uses ring system templates for complex ring systems.
-    pub use_ring_templates: bool,
     /// The reference's conformer, or -1 for the first (Python's `confId`).
     pub conf_id: i32,
     /// A query that maps the molecule's atoms to the reference's (Python's
@@ -185,7 +183,6 @@ impl Default for ConstrainedDepictionParams {
             align_only: data.align_only,
             adjust_mol_block_wedging: data.adjust_mol_block_wedging,
             existing_conf_id: data.existing_conf_id,
-            use_ring_templates: data.use_ring_templates,
             conf_id: data.conf_id,
             ref_patt: None,
         }
@@ -201,7 +198,6 @@ impl ConstrainedDepictionParams {
             align_only: self.align_only,
             adjust_mol_block_wedging: self.adjust_mol_block_wedging,
             existing_conf_id: self.existing_conf_id,
-            use_ring_templates: self.use_ring_templates,
             conf_id: self.conf_id,
         }
     }

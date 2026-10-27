@@ -18,11 +18,9 @@ pub(crate) mod ffi {
         include!("rdkit-cxx/ffi/geometry.rs.h");
 
         type UniformGrid3D;
-        type UniformRealValueGrid3D;
         type Point3D = crate::ffi::geometry::ffi::Point3D;
         type DiscreteValueType = crate::ffi::data_structs::ffi::DiscreteValueType;
         type DiscreteValueVect = crate::ffi::data_structs::ffi::DiscreteValueVect;
-        type RealValueVect = crate::ffi::data_structs::ffi::RealValueVect;
 
         #[allow(clippy::too_many_arguments)]
         fn uniform_grid3d_new(
@@ -106,75 +104,6 @@ pub(crate) mod ffi {
             window_radius: f64,
             inclusion_fraction: f64,
         ) -> Result<Vec<Point3D>>;
-        fn uniform_real_value_grid3d_default() -> Result<UniquePtr<UniformRealValueGrid3D>>;
-        fn uniform_real_value_grid3d_new(
-            dim_x: f64,
-            dim_y: f64,
-            dim_z: f64,
-            spacing: f64,
-            has_offset: bool,
-            offset: &Point3D,
-        ) -> Result<UniquePtr<UniformRealValueGrid3D>>;
-        fn uniform_real_value_grid3d_from_pkl(
-            pkl: &[u8],
-        ) -> Result<UniquePtr<UniformRealValueGrid3D>>;
-        fn uniform_real_value_grid3d_clone(
-            grid: &UniformRealValueGrid3D,
-        ) -> Result<UniquePtr<UniformRealValueGrid3D>>;
-        fn uniform_real_value_grid3d_to_binary(grid: &UniformRealValueGrid3D) -> Result<Vec<u8>>;
-        fn uniform_real_value_grid3d_get_grid_point_index(
-            grid: &UniformRealValueGrid3D,
-            point: &Point3D,
-        ) -> Result<i32>;
-        fn uniform_real_value_grid3d_get_grid_index(
-            grid: &UniformRealValueGrid3D,
-            xi: u32,
-            yi: u32,
-            zi: u32,
-        ) -> Result<i32>;
-        fn uniform_real_value_grid3d_get_grid_indices(
-            grid: &UniformRealValueGrid3D,
-            idx: u32,
-        ) -> Result<GridIndices>;
-        fn uniform_real_value_grid3d_get_val_point(
-            grid: &UniformRealValueGrid3D,
-            pt: &Point3D,
-        ) -> Result<f64>;
-        fn uniform_real_value_grid3d_get_val(grid: &UniformRealValueGrid3D, id: u32)
-        -> Result<f64>;
-        fn uniform_real_value_grid3d_set_val(
-            grid: Pin<&mut UniformRealValueGrid3D>,
-            id: u32,
-            val: f64,
-        ) -> Result<()>;
-        fn uniform_real_value_grid3d_set_val_point(
-            grid: Pin<&mut UniformRealValueGrid3D>,
-            pt: &Point3D,
-            val: f64,
-        ) -> Result<()>;
-        fn uniform_real_value_grid3d_get_grid_point_loc(
-            grid: &UniformRealValueGrid3D,
-            point_id: u32,
-        ) -> Result<Point3D>;
-        fn uniform_real_value_grid3d_get_size(grid: &UniformRealValueGrid3D) -> Result<u32>;
-        fn uniform_real_value_grid3d_get_num_x(grid: &UniformRealValueGrid3D) -> Result<u32>;
-        fn uniform_real_value_grid3d_get_num_y(grid: &UniformRealValueGrid3D) -> Result<u32>;
-        fn uniform_real_value_grid3d_get_num_z(grid: &UniformRealValueGrid3D) -> Result<u32>;
-        fn uniform_real_value_grid3d_get_offset(grid: &UniformRealValueGrid3D) -> Result<Point3D>;
-        fn uniform_real_value_grid3d_get_spacing(grid: &UniformRealValueGrid3D) -> Result<f64>;
-        fn uniform_real_value_grid3d_get_occupancy_vect(
-            grid: &UniformRealValueGrid3D,
-        ) -> Result<UniquePtr<RealValueVect>>;
-        fn uniform_real_value_grid3d_compare(
-            grid: &UniformRealValueGrid3D,
-            other: &UniformRealValueGrid3D,
-            what: u8,
-        ) -> Result<bool>;
-        fn uniform_real_value_grid3d_assign_op(
-            grid: Pin<&mut UniformRealValueGrid3D>,
-            other: &UniformRealValueGrid3D,
-            op: u8,
-        ) -> Result<()>;
     }
 }
 
@@ -182,5 +111,3 @@ pub(crate) mod ffi {
 // methods write nothing.
 unsafe impl Send for ffi::UniformGrid3D {}
 unsafe impl Sync for ffi::UniformGrid3D {}
-unsafe impl Send for ffi::UniformRealValueGrid3D {}
-unsafe impl Sync for ffi::UniformRealValueGrid3D {}

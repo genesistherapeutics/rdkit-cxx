@@ -14,7 +14,6 @@
 
 #include <GraphMol/Canon.h>
 #include <GraphMol/Depictor/RDDepictor.h>
-#include <GraphMol/FileParsers/CDXMLParser.h>
 #include <GraphMol/FileParsers/FileParserUtils.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/FileParsers/FileWriters.h>
@@ -254,27 +253,6 @@ FP::PDBParserParams pdb_params(bool sanitize, bool remove_hs,
   return params;
 }
 
-// The SCSR readers parse templates with strictParsing off, as Python's do.
-// RDKit's template loop (SCSRMolFileParser.cpp) frees the molecule it is
-// building and then keeps using it when a template raises
-// MolFileUnhandledFeatureException, which only strict parsing throws, so it
-// must stay off.
-FP::MolFileParserParams scsr_mol_params(bool sanitize, bool remove_hs) {
-  FP::MolFileParserParams params;
-  params.sanitize = sanitize;
-  params.removeHs = remove_hs;
-  params.strictParsing = false;
-  return params;
-}
-
-FP::MolFromSCSRParams scsr_params(const MolFromSCSRParamsData &data) {
-  FP::MolFromSCSRParams params;
-  params.includeLeavingGroups = data.include_leaving_groups;
-  params.scsrTemplateNames = data.scsr_template_names;
-  params.scsrBaseHbondOptions = data.scsr_base_hbond_options;
-  return params;
-}
-
 // RDKit's property lists (getPropertyList in FileParserUtils.h) drop the
 // last character of the line so far when a value fills the line; with no
 // missing-value marker the first line is empty, and dropping from it is
@@ -300,16 +278,6 @@ void check_first_list_value(Range items, const std::string &prop,
   }
 }
 
-template <typename T>
-void check_property_list(RWMol &mol, bool bonds, const std::string &prop,
-                         const std::string &marker, unsigned line_size) {
-  if (bonds) {
-    check_first_list_value<T>(mol.bonds(), prop, marker, line_size);
-  } else {
-    check_first_list_value<T>(mol.atoms(), prop, marker, line_size);
-  }
-}
-
 }  // namespace
 
 RDKit::SmilesWriteParams write_params(const SmilesWriteParamsData &data) {
@@ -317,7 +285,6 @@ RDKit::SmilesWriteParams write_params(const SmilesWriteParamsData &data) {
   params.doIsomericSmiles = data.do_isomeric_smiles;
   params.doKekule = data.do_kekule;
   params.canonical = data.canonical;
-  params.cleanStereo = data.clean_stereo;
   params.allBondsExplicit = data.all_bonds_explicit;
   params.allHsExplicit = data.all_hs_explicit;
   params.doRandom = data.do_random;
@@ -379,24 +346,17 @@ SmartsParserParamsData smarts_parser_params_default() {
 SmilesWriteParamsData smiles_write_params_default() {
   RDKit::SmilesWriteParams params;
   return SmilesWriteParamsData{
-      params.doIsomericSmiles,   params.doKekule,
-      params.canonical,          params.cleanStereo,
-      params.allBondsExplicit,   params.allHsExplicit,
-      params.doRandom,           params.rootedAtAtom,
-      params.includeDativeBonds, params.ignoreAtomMapNumbers};
+      params.doIsomericSmiles,     params.doKekule,
+      params.canonical,            params.allBondsExplicit,
+      params.allHsExplicit,        params.doRandom,
+      params.rootedAtAtom,         params.includeDativeBonds,
+      params.ignoreAtomMapNumbers};
 }
 
 MolWriterParamsData mol_writer_params_default() {
   RDKit::MolWriterParams params;
   return MolWriterParamsData{params.includeStereo, params.kekulize,
                              params.forceV3000, params.precision, -1};
-}
-
-MolFromSCSRParamsData mol_from_scsr_params_default() {
-  FP::MolFromSCSRParams params;
-  return MolFromSCSRParamsData{params.includeLeavingGroups,
-                               params.scsrTemplateNames,
-                               params.scsrBaseHbondOptions};
 }
 
 // As MolFromSmilesHelper in Code/GraphMol/Wrap/rdmolfiles.cpp.
@@ -642,31 +602,30 @@ void canonicalize_enhanced_stereo(RWMol &mol) {
   RDKit::Canon::canonicalizeEnhancedStereo(mol);
 }
 
-void create_property_list(RWMol &mol, bool bonds, std::uint8_t kind,
-                          rust::Str prop_name, rust::Str missing_value_marker,
+// RDKit 2024.03 reads integer properties as int64_t.
+void create_property_list(RWMol &mol, std::uint8_t kind, rust::Str prop_name,
+                          rust::Str missing_value_marker,
                           std::uint32_t line_size) {
   namespace FPU = RDKit::FileParserUtils;
   std::string prop(prop_name), marker(missing_value_marker);
   switch (kind) {
     case 0:
-      check_property_list<int>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondIntPropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomIntPropertyList(mol, prop, marker, line_size);
+      check_first_list_value<std::int64_t>(mol.atoms(), prop, marker,
+                                           line_size);
+      FPU::createAtomIntPropertyList(mol, prop, marker, line_size);
       break;
     case 1:
-      check_property_list<double>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondDoublePropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomDoublePropertyList(mol, prop, marker, line_size);
+      check_first_list_value<double>(mol.atoms(), prop, marker, line_size);
+      FPU::createAtomDoublePropertyList(mol, prop, marker, line_size);
       break;
     case 2:
-      check_property_list<bool>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondBoolPropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomBoolPropertyList(mol, prop, marker, line_size);
+      check_first_list_value<bool>(mol.atoms(), prop, marker, line_size);
+      FPU::createAtomBoolPropertyList(mol, prop, marker, line_size);
       break;
     default:
-      check_property_list<std::string>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondStringPropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomStringPropertyList(mol, prop, marker, line_size);
+      check_first_list_value<std::string>(mol.atoms(), prop, marker,
+                                          line_size);
+      FPU::createAtomStringPropertyList(mol, prop, marker, line_size);
       break;
   }
 }
@@ -759,84 +718,6 @@ void mol_to_v3k_mol_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
   RDKit::MolToV3KMolFile(mol, to_path(path), writer_params(data), data.conf_id);
 }
 
-namespace {
-
-// RDKit's SCSR converter (MolFromSCSRMolConverter in SCSRMolFileParser.cpp),
-// with the UseSapAll and UseSapOne options, looks up the template of both
-// atoms of every hydrogen bond before it checks that they are template atoms,
-// indexing an empty template vector when the block has no templates. Such a
-// block can only fail, with "No Attach Point for bond", which this throws
-// first. It reads the main molecule and the template header as
-// SCSRMolFromSCSRDataStream does, and leaves any other failure to RDKit.
-void check_scsr_hbonds(const std::string &text,
-                       const FP::MolFileParserParams &params,
-                       const FP::MolFromSCSRParams &scsr) {
-  if (scsr.scsrBaseHbondOptions != FP::SCSRBaseHbondOptions::UseSapAll &&
-      scsr.scsrBaseHbondOptions != FP::SCSRBaseHbondOptions::UseSapOne) {
-    return;
-  }
-  std::istringstream in(text);
-  unsigned int line = 0;
-  auto local = params;
-  local.parsingSCSRMol = true;
-  std::unique_ptr<RWMol> mol;
-  try {
-    mol = FP::MolFromMolDataStream(in, line, local);
-    if (!mol ||
-        RDKit::FileParserUtils::getV3000Line(&in, line) != "BEGIN TEMPLATE") {
-      return;
-    }
-    if (RDKit::FileParserUtils::getV3000Line(&in, line).substr(0, 8) ==
-        "TEMPLATE") {
-      return;
-    }
-  } catch (...) {
-    return;  // RDKit fails the same way
-  }
-  for (const auto bond : mol->bonds()) {
-    if (bond->getBondType() == RDKit::Bond::HYDROGEN) {
-      throw RDKit::FileParseException("No Attach Point for bond");
-    }
-  }
-}
-
-std::unique_ptr<RWMol> scsr_from_text(const std::string &text, bool sanitize,
-                                      bool remove_hs,
-                                      const MolFromSCSRParamsData &data,
-                                      const std::string &what) {
-  check_input_text(text);
-  auto params = scsr_mol_params(sanitize, remove_hs);
-  auto scsr = scsr_params(data);
-  check_scsr_hbonds(text, params, scsr);
-  std::istringstream in(text);
-  unsigned int line = 0;
-  // With Auto, RDKit finds the bases' hydrogen-bond sites by substructure
-  // matches (control_c_lock.h).
-  std::unique_lock<ControlCMutex> control_c;
-  if (scsr.scsrBaseHbondOptions == FP::SCSRBaseHbondOptions::Auto) {
-    control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
-  }
-  return parsed(FP::MolFromSCSRDataStream(in, line, params, scsr), what);
-}
-
-}  // namespace
-
-// As MolFromSCSRBlock in Code/GraphMol/Wrap/rdmolfiles.cpp.
-std::unique_ptr<RWMol> mol_from_scsr_block(rust::Str mol_block, bool sanitize,
-                                           bool remove_hs,
-                                           const MolFromSCSRParamsData &data) {
-  return scsr_from_text(std::string(mol_block), sanitize, remove_hs, data,
-                        "SCSR mol block");
-}
-
-// The file is read once and checked; RDKit parses those bytes (U2).
-std::unique_ptr<RWMol> mol_from_scsr_file(rust::Slice<const std::uint8_t> path,
-                                          bool sanitize, bool remove_hs,
-                                          const MolFromSCSRParamsData &data) {
-  auto name = to_path(path);
-  return scsr_from_text(read_file(name), sanitize, remove_hs, data,
-                        "SCSR mol file " + name);
-}
 
 namespace {
 
@@ -1111,76 +992,6 @@ std::unique_ptr<std::string> mol_to_fasta(const RWMol &mol) {
 
 std::unique_ptr<std::string> mol_to_helm(const RWMol &mol) {
   return str(RDKit::MolToHELM(mol));
-}
-
-bool has_chem_draw_cdx_support() {
-  return RDKit::v2::CDXMLParser::hasChemDrawCDXSupport();
-}
-
-namespace {
-
-// The ChemDraw library under RDKit's CDXML writer fills its attribute-name
-// maps on first use behind a check made outside its lock
-// (InitAttributeMapsIfNeeded in chemdraw/CDXObject.cpp), so a thread can read
-// a map another thread is still filling, and it keeps the names of unknown
-// tags in a static map it writes without a lock. Every call into it holds
-// this mutex (CONVENTIONS.md U4), after any lock_depiction().
-std::mutex &chemdraw_mutex() {
-  check_not_in_control_c_callback();
-  static std::mutex mutex;
-  return mutex;
-}
-
-// RDKit's ChemDraw writer (MolToChemDrawBlock in External/ChemDraw/writer.cpp)
-// converts each coordinate of conformer 0 to 32-bit fixed point with a C
-// cast (CDXCoordinatefromPoints in CDXIO.h), which is undefined for a value
-// that is not finite or does not fit. In 2D it first scales the coordinates
-// by 28.8 over the mean bond length, which is NaN for a molecule without
-// bonds and infinite when the bonds have no length. This computes the values
-// it would convert.
-void check_cdx_coordinates(const RDKit::ROMol &mol) {
-  const auto &conf = mol.getConformer(0);
-  bool is3d = conf.is3D();
-  double scale = 1.0;
-  if (!is3d) {
-    double dist = 0.0;
-    for (const auto bond : mol.bonds()) {
-      dist += (conf.getAtomPos(bond->getBeginAtomIdx()) -
-               conf.getAtomPos(bond->getEndAtomIdx()))
-                  .length();
-    }
-    dist /= mol.getNumBonds();
-    scale = 2 * 14.4 / dist;  // 2 * DEFAULT_CDX_BOND_LENGTH
-  }
-  for (const auto &pos : conf.getPositions()) {
-    // 2D positions drop z.
-    for (double c : {pos.x, pos.y, is3d ? pos.z : 0.0}) {
-      if (!(std::fabs(scale * c * 65536.0) < 2147483648.0)) {
-        throw ValueErrorException(
-            "ChemDraw coordinates must be finite and fit in 32-bit fixed "
-            "point; a 2D molecule needs bonds of nonzero length");
-      }
-    }
-  }
-}
-
-}  // namespace
-
-// As MolToCDXMLBlockHelper in Code/GraphMol/Wrap/rdmolfiles.cpp. The copy
-// is kekulized and given coordinates as MolToChemDrawBlock does, then checked
-// and written; RDKit's own copy of it then needs neither.
-rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
-                                           CDXMLFormat format) {
-  RDKit::RWMol copy(mol);
-  RDKit::MolOps::Kekulize(copy);
-  if (!copy.getNumConformers()) {
-    auto lock = lock_depiction();
-    check_compute_2d_coords_mol(copy, false);
-    RDDepict::compute2DCoords(copy);
-  }
-  check_cdx_coordinates(copy);
-  std::lock_guard<std::mutex> chemdraw(chemdraw_mutex());
-  return to_bytes(RDKit::v2::CDXMLParser::MolToCDXMLBlock(copy, format));
 }
 
 }  // namespace rdkit_cxx

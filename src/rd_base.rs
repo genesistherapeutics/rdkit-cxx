@@ -110,34 +110,3 @@ impl Default for BlockLogs {
         }
     }
 }
-
-/// Captures what RDKit writes to its error log until dropped. Mirrors
-/// `rdBase.CaptureErrorLog`, a context manager in Python.
-pub struct CaptureErrorLog {
-    capture: UniquePtr<ffi::CaptureErrorLog>,
-}
-
-impl std::fmt::Debug for CaptureErrorLog {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("CaptureErrorLog").finish_non_exhaustive()
-    }
-}
-
-impl Default for CaptureErrorLog {
-    fn default() -> CaptureErrorLog {
-        CaptureErrorLog {
-            capture: expect_ok(ffi::capture_error_log_new()),
-        }
-    }
-}
-
-impl CaptureErrorLog {
-    /// The messages captured so far, with RDKit's timestamps. Mirrors
-    /// `CaptureErrorLog.messages`.
-    pub fn messages(&self) -> String {
-        let messages = expect_ok(ffi::capture_error_log_messages(
-            self.capture.as_ref().unwrap(),
-        ));
-        String::from_utf8_lossy(messages.as_bytes()).into_owned()
-    }
-}

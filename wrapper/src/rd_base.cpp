@@ -74,13 +74,4 @@ std::unique_ptr<BlockLogs> block_logs_new() {
   return std::make_unique<BlockLogs>();
 }
 
-std::unique_ptr<CaptureErrorLog> capture_error_log_new() {
-  return std::make_unique<CaptureErrorLog>();
-}
-
-std::unique_ptr<std::string> capture_error_log_messages(
-    const CaptureErrorLog &capture) {
-  return std::make_unique<std::string>(capture.messages());
-}
-
 }  // namespace rdkit_cxx

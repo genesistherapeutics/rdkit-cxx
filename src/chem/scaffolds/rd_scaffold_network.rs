@@ -102,9 +102,6 @@ pub struct ScaffoldNetworkParams {
     /// Includes scaffolds with their attachment points. Mirrors
     /// `ScaffoldNetworkParams.includeScaffoldsWithAttachments`.
     pub include_scaffolds_with_attachments: bool,
-    /// Appends the molecules' names to their nodes. Mirrors
-    /// `ScaffoldNetworkParams.includeNames`.
-    pub include_names: bool,
     /// Keeps only the first fragment of each bond break. Mirrors
     /// `ScaffoldNetworkParams.keepOnlyFirstFragment`.
     pub keep_only_first_fragment: bool,
@@ -136,7 +133,6 @@ impl ScaffoldNetworkParams {
             include_generic_bond_scaffolds: flags.include_generic_bond_scaffolds,
             include_scaffolds_without_attachments: flags.include_scaffolds_without_attachments,
             include_scaffolds_with_attachments: flags.include_scaffolds_with_attachments,
-            include_names: flags.include_names,
             keep_only_first_fragment: flags.keep_only_first_fragment,
             prune_before_fragmenting: flags.prune_before_fragmenting,
             flatten_isotopes: flags.flatten_isotopes,
@@ -153,7 +149,6 @@ impl ScaffoldNetworkParams {
             include_generic_bond_scaffolds: self.include_generic_bond_scaffolds,
             include_scaffolds_without_attachments: self.include_scaffolds_without_attachments,
             include_scaffolds_with_attachments: self.include_scaffolds_with_attachments,
-            include_names: self.include_names,
             keep_only_first_fragment: self.keep_only_first_fragment,
             prune_before_fragmenting: self.prune_before_fragmenting,
             flatten_isotopes: self.flatten_isotopes,
@@ -218,7 +213,6 @@ impl fmt::Debug for ScaffoldNetworkParams {
                 "include_scaffolds_with_attachments",
                 &self.include_scaffolds_with_attachments,
             )
-            .field("include_names", &self.include_names)
             .field("keep_only_first_fragment", &self.keep_only_first_fragment)
             .field("prune_before_fragmenting", &self.prune_before_fragmenting)
             .field("flatten_isotopes", &self.flatten_isotopes)
@@ -238,8 +232,7 @@ impl fmt::Debug for ScaffoldNetworkParams {
 /// otherwise); RDKit's networks always have one.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct ScaffoldNetwork {
-    /// The scaffolds' SMILES, with the molecules' names when
-    /// `include_names` was set. Mirrors `ScaffoldNetwork.nodes`.
+    /// The scaffolds' SMILES. Mirrors `ScaffoldNetwork.nodes`.
     pub nodes: Vec<String>,
     /// How often each node was reached while the network was built.
     /// Mirrors `ScaffoldNetwork.counts`.

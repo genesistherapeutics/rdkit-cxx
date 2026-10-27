@@ -19,7 +19,6 @@
 
 #include <DataStructs/BitVects.h>
 #include <DataStructs/DiscreteValueVect.h>
-#include <DataStructs/RealValueVect.h>
 #include <DataStructs/SparseIntVect.h>
 
 #include "rust/cxx.h"
@@ -50,7 +49,6 @@ class SparseIntVect {
 
 using DiscreteValueVect = RDKit::DiscreteValueVect;
 using DiscreteValueType = RDKit::DiscreteValueVect::DiscreteValueType;
-using RealValueVect = RDKit::RealValueVect;
 
 // Shared structs, defined by the bridge (src/ffi/data_structs.rs).
 struct SparseIntVectElements;
@@ -195,22 +193,5 @@ void discrete_value_vect_assign_op(DiscreteValueVect &a,
                                    const DiscreteValueVect &b, std::uint8_t op);
 std::uint32_t discrete_value_vect_compute_l1_norm(const DiscreteValueVect &a,
                                                   const DiscreteValueVect &b);
-
-std::unique_ptr<RealValueVect> real_value_vect_new(std::uint32_t length);
-std::unique_ptr<RealValueVect> real_value_vect_from_pkl(
-    rust::Slice<const std::uint8_t> pkl);
-std::unique_ptr<RealValueVect> real_value_vect_clone(const RealValueVect &rvv);
-double real_value_vect_get_val(const RealValueVect &rvv, std::uint32_t i);
-void real_value_vect_set_val(RealValueVect &rvv, std::uint32_t i, double val);
-std::uint32_t real_value_vect_get_length(const RealValueVect &rvv);
-double real_value_vect_get_total_val(const RealValueVect &rvv);
-rust::Vec<std::uint8_t> real_value_vect_to_binary(const RealValueVect &rvv);
-std::unique_ptr<RealValueVect> real_value_vect_binary_op(const RealValueVect &a,
-                                                         const RealValueVect &b,
-                                                         std::uint8_t op);
-void real_value_vect_assign_op(RealValueVect &a, const RealValueVect &b,
-                               std::uint8_t op);
-double real_value_vect_compute_l1_norm(const RealValueVect &a,
-                                       const RealValueVect &b);
 
 }  // namespace rdkit_cxx

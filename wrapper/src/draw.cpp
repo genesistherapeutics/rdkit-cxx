@@ -67,11 +67,8 @@ RDKit::MolDrawOptions options_from_data(const MolDrawOptionsData &data) {
   opts.annotationFontScale = data.annotation_font_scale;
   opts.fontFile = from_bytes(data.font_file);
   opts.legendColour = colour_from_data(data.legend_colour);
-  opts.legendPosition = data.legend_position;
-  opts.legendVerticalText = data.legend_vertical_text;
   opts.multipleBondOffset = data.multiple_bond_offset;
   opts.padding = data.padding;
-  opts.componentPadding = data.reagent_padding;
   opts.additionalAtomLabelPadding = data.additional_atom_label_padding;
   if (data.atom_label_keys.size() != data.atom_label_values.size()) {
     throw ValueErrorException("atom label keys and values differ in number");
@@ -92,8 +89,6 @@ RDKit::MolDrawOptions options_from_data(const MolDrawOptionsData &data) {
   }
   opts.symbolColour = colour_from_data(data.symbol_colour);
   opts.annotationColour = colour_from_data(data.annotation_colour);
-  opts.atomNoteColour = colour_from_data(data.atom_note_colour);
-  opts.bondNoteColour = colour_from_data(data.bond_note_colour);
   opts.bondLineWidth = data.bond_line_width;
   opts.scaleBondWidth = data.scale_bond_width;
   opts.scaleHighlightBondWidth = data.scale_highlight_bond_width;
@@ -116,11 +111,9 @@ RDKit::MolDrawOptions options_from_data(const MolDrawOptionsData &data) {
   opts.isotopeLabels = data.isotope_labels;
   opts.dummyIsotopeLabels = data.dummy_isotope_labels;
   opts.addStereoAnnotation = data.add_stereo_annotation;
-  opts.showAllCIPCodes = data.show_all_cip_codes;
   opts.atomHighlightsAreCircles = data.atom_highlights_are_circles;
   opts.multiColourHighlightStyle = data.multi_colour_highlight_style;
   opts.centreMoleculesBeforeDrawing = data.centre_molecules_before_drawing;
-  opts.drawingExtentsInclude = data.drawing_extents_include;
   opts.explicitMethyl = data.explicit_methyl;
   opts.includeRadicals = data.include_radicals;
   opts.includeMetadata = data.include_metadata;
@@ -131,21 +124,13 @@ RDKit::MolDrawOptions options_from_data(const MolDrawOptionsData &data) {
       colour_from_data(data.variable_attachment_colour);
   opts.includeChiralFlagLabel = data.include_chiral_flag_label;
   opts.simplifiedStereoGroupLabel = data.simplified_stereo_group_label;
-  opts.stereoGroupAndLabel = from_bytes(data.stereo_group_and_label);
-  opts.stereoGroupOrLabel = from_bytes(data.stereo_group_or_label);
-  opts.stereoGroupAbsLabel = from_bytes(data.stereo_group_abs_label);
-  opts.addStereoGroupAnnotation = data.add_stereo_group_annotation;
   opts.unspecifiedStereoIsUnknown = data.unspecified_stereo_is_unknown;
   opts.singleColourWedgeBonds = data.single_colour_wedge_bonds;
-  opts.singleColourBonds = data.single_colour_bonds;
   opts.useMolBlockWedging = data.use_mol_block_wedging;
   opts.scalingFactor = data.scaling_factor;
   opts.baseFontSize = data.base_font_size;
   opts.drawMolsSameScale = data.draw_mols_same_scale;
   opts.useComplexQueryAtomSymbols = data.use_complex_query_atom_symbols;
-  opts.bracketsAroundAtomLists = data.brackets_around_atom_lists;
-  opts.standardColoursForHighlightedAtoms =
-      data.standard_colours_for_highlighted_atoms;
   return opts;
 }
 
@@ -172,11 +157,8 @@ MolDrawOptionsData options_to_data(const RDKit::MolDrawOptions &opts) {
   data.annotation_font_scale = opts.annotationFontScale;
   data.font_file = to_bytes(opts.fontFile);
   data.legend_colour = colour_to_data(opts.legendColour);
-  data.legend_position = opts.legendPosition;
-  data.legend_vertical_text = opts.legendVerticalText;
   data.multiple_bond_offset = opts.multipleBondOffset;
   data.padding = opts.padding;
-  data.reagent_padding = opts.componentPadding;
   data.additional_atom_label_padding = opts.additionalAtomLabelPadding;
   for (const auto &[idx, label] : opts.atomLabels) {
     // Only the JSON parser can give a label a negative key, which
@@ -197,8 +179,6 @@ MolDrawOptionsData options_to_data(const RDKit::MolDrawOptions &opts) {
   }
   data.symbol_colour = colour_to_data(opts.symbolColour);
   data.annotation_colour = colour_to_data(opts.annotationColour);
-  data.atom_note_colour = colour_to_data(opts.atomNoteColour);
-  data.bond_note_colour = colour_to_data(opts.bondNoteColour);
   data.bond_line_width = opts.bondLineWidth;
   data.scale_bond_width = opts.scaleBondWidth;
   data.scale_highlight_bond_width = opts.scaleHighlightBondWidth;
@@ -216,11 +196,9 @@ MolDrawOptionsData options_to_data(const RDKit::MolDrawOptions &opts) {
   data.isotope_labels = opts.isotopeLabels;
   data.dummy_isotope_labels = opts.dummyIsotopeLabels;
   data.add_stereo_annotation = opts.addStereoAnnotation;
-  data.show_all_cip_codes = opts.showAllCIPCodes;
   data.atom_highlights_are_circles = opts.atomHighlightsAreCircles;
   data.multi_colour_highlight_style = opts.multiColourHighlightStyle;
   data.centre_molecules_before_drawing = opts.centreMoleculesBeforeDrawing;
-  data.drawing_extents_include = opts.drawingExtentsInclude;
   data.explicit_methyl = opts.explicitMethyl;
   data.include_radicals = opts.includeRadicals;
   data.include_metadata = opts.includeMetadata;
@@ -231,21 +209,13 @@ MolDrawOptionsData options_to_data(const RDKit::MolDrawOptions &opts) {
       colour_to_data(opts.variableAttachmentColour);
   data.include_chiral_flag_label = opts.includeChiralFlagLabel;
   data.simplified_stereo_group_label = opts.simplifiedStereoGroupLabel;
-  data.stereo_group_and_label = to_bytes(opts.stereoGroupAndLabel);
-  data.stereo_group_or_label = to_bytes(opts.stereoGroupOrLabel);
-  data.stereo_group_abs_label = to_bytes(opts.stereoGroupAbsLabel);
-  data.add_stereo_group_annotation = opts.addStereoGroupAnnotation;
   data.unspecified_stereo_is_unknown = opts.unspecifiedStereoIsUnknown;
   data.single_colour_wedge_bonds = opts.singleColourWedgeBonds;
-  data.single_colour_bonds = opts.singleColourBonds;
   data.use_mol_block_wedging = opts.useMolBlockWedging;
   data.scaling_factor = opts.scalingFactor;
   data.base_font_size = opts.baseFontSize;
   data.draw_mols_same_scale = opts.drawMolsSameScale;
   data.use_complex_query_atom_symbols = opts.useComplexQueryAtomSymbols;
-  data.brackets_around_atom_lists = opts.bracketsAroundAtomLists;
-  data.standard_colours_for_highlighted_atoms =
-      opts.standardColoursForHighlightedAtoms;
   return data;
 }
 
@@ -309,9 +279,6 @@ MolDrawOptionsData update_mol_draw_options_from_json(
   // Boost's parser refuses lone surrogates, so the text stays UTF-8; this
   // keeps the conversion's guarantee should a parser write them.
   check_utf8(opts.fontFile, "fontFile");
-  check_utf8(opts.stereoGroupAndLabel, "stereoGroupAndLabel");
-  check_utf8(opts.stereoGroupOrLabel, "stereoGroupOrLabel");
-  check_utf8(opts.stereoGroupAbsLabel, "stereoGroupAbsLabel");
   for (const auto &[idx, label] : opts.atomLabels) {
     check_utf8(label, "atomLabels");
   }

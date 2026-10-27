@@ -181,14 +181,12 @@ const STRING: u8 = 3;
 
 fn create_property_list(
     mol: &mut Mol,
-    bonds: bool,
     kind: u8,
     prop_name: &str,
     params: &CreatePropertyListParams,
 ) -> Result<()> {
     Ok(ffi::create_property_list(
         mol.pin_mut(),
-        bonds,
         kind,
         prop_name,
         &params.missing_value_marker,
@@ -197,10 +195,10 @@ fn create_property_list(
 }
 
 macro_rules! property_lists {
-    ($($name:ident, $with:ident, $bonds:expr, $kind:expr, $python:literal;)*) => {
+    ($($name:ident, $with:ident, $kind:expr, $python:literal;)*) => {
         $(
             #[doc = concat!(
-                "Stores the atoms' or bonds' values of a property as one molecule \
+                "Stores the atoms' values of a property as one molecule \
                  property that SD writers write as a property list. A value of \
                  another type is `Error::Runtime`. Mirrors `rdmolfiles.",
                 $python,
@@ -220,27 +218,19 @@ macro_rules! property_lists {
                 prop_name: &str,
                 params: &CreatePropertyListParams,
             ) -> Result<()> {
-                create_property_list(mol, $bonds, $kind, prop_name, params)
+                create_property_list(mol, $kind, prop_name, params)
             }
         )*
     };
 }
 
 property_lists! {
-    create_atom_int_property_list, create_atom_int_property_list_with_params, false, INT,
+    create_atom_int_property_list, create_atom_int_property_list_with_params, INT,
         "CreateAtomIntPropertyList";
-    create_atom_double_property_list, create_atom_double_property_list_with_params, false,
-        DOUBLE, "CreateAtomDoublePropertyList";
-    create_atom_bool_property_list, create_atom_bool_property_list_with_params, false, BOOL,
+    create_atom_double_property_list, create_atom_double_property_list_with_params, DOUBLE,
+        "CreateAtomDoublePropertyList";
+    create_atom_bool_property_list, create_atom_bool_property_list_with_params, BOOL,
         "CreateAtomBoolPropertyList";
-    create_atom_string_property_list, create_atom_string_property_list_with_params, false,
-        STRING, "CreateAtomStringPropertyList";
-    create_bond_int_property_list, create_bond_int_property_list_with_params, true, INT,
-        "CreateBondIntPropertyList";
-    create_bond_double_property_list, create_bond_double_property_list_with_params, true,
-        DOUBLE, "CreateBondDoublePropertyList";
-    create_bond_bool_property_list, create_bond_bool_property_list_with_params, true, BOOL,
-        "CreateBondBoolPropertyList";
-    create_bond_string_property_list, create_bond_string_property_list_with_params, true,
-        STRING, "CreateBondStringPropertyList";
+    create_atom_string_property_list, create_atom_string_property_list_with_params, STRING,
+        "CreateAtomStringPropertyList";
 }

@@ -98,21 +98,6 @@ void set_bond_stereo_from_directions(RWMol &mol) {
   RDKit::MolOps::setBondStereoFromDirections(mol);
 }
 
-rust::Vec<std::uint32_t> compute_atom_cip_ranks(RWMol &mol) {
-  rust::Vec<std::uint32_t> result;
-  // assignAtomCIPRanks sets the first ranked entry's rank without checking
-  // there is one, writing out of bounds for a molecule with no atoms.
-  if (mol.getNumAtoms() == 0) {
-    return result;
-  }
-  RDKit::UINT_VECT ranks;
-  RDKit::Chirality::assignAtomCIPRanks(mol, ranks);
-  for (auto rank : ranks) {
-    result.push_back(rank);
-  }
-  return result;
-}
-
 rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
                                        bool include_atom_maps) {
   rust::Vec<IndexPair> result;
@@ -121,21 +106,6 @@ rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
     result.push_back(IndexPair{first, second});
   }
   return result;
-}
-
-// As canonicalizeStereoGroupsHelper in Code/GraphMol/Wrap/MolOps.cpp: a
-// copy gets the canonical groups.
-std::unique_ptr<RWMol> canonicalize_stereo_groups(
-    const RWMol &mol, StereoGroupAbsOptions output_absolute_groups,
-    std::uint32_t max_stereo_groups) {
-  auto copy = std::make_unique<RDKit::ROMol>(mol);
-  RDKit::canonicalizeStereoGroups(copy, output_absolute_groups,
-                                  max_stereo_groups);
-  return std::make_unique<RWMol>(*copy);
-}
-
-void cleanup_stereo_groups(RWMol &mol) {
-  RDKit::Chirality::cleanupStereoGroups(mol);
 }
 
 void simplify_enhanced_stereo(RWMol &mol, bool remove_affected_stereo_groups) {
@@ -188,8 +158,8 @@ void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
   RDKit::Chirality::wedgeMolBonds(mol, &mol.getConformer(id), &params);
 }
 
-void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify) {
-  RDKit::Chirality::reapplyMolBlockWedging(mol, all_bond_types, verify);
+void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types) {
+  RDKit::Chirality::reapplyMolBlockWedging(mol, all_bond_types);
 }
 
 void set_allow_nontetrahedral_chirality(bool val) {

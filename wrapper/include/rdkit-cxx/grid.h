@@ -19,7 +19,6 @@
 
 #include <Geometry/GridUtils.h>
 #include <Geometry/UniformGrid3D.h>
-#include <Geometry/UniformRealValueGrid3D.h>
 
 #include "rdkit-cxx/data_structs.h"
 #include "rdkit-cxx/geometry.h"
@@ -28,7 +27,6 @@
 namespace rdkit_cxx {
 
 using UniformGrid3D = RDGeom::UniformGrid3D;
-using UniformRealValueGrid3D = RDGeom::UniformRealValueGrid3D;
 
 // A shared struct, defined by the bridge (src/ffi/grid.rs).
 struct GridIndices;
@@ -106,54 +104,5 @@ Point3D compute_grid_centroid(const UniformGrid3D &grid, const Point3D &pt,
 rust::Vec<Point3D> find_grid_terminal_points(const UniformGrid3D &grid,
                                              double window_radius,
                                              double inclusion_fraction);
-
-std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_default();
-std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_new(
-    double dim_x, double dim_y, double dim_z, double spacing, bool has_offset,
-    const Point3D &offset);
-std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_from_pkl(
-    rust::Slice<const std::uint8_t> pkl);
-std::unique_ptr<UniformRealValueGrid3D> uniform_real_value_grid3d_clone(
-    const UniformRealValueGrid3D &grid);
-rust::Vec<std::uint8_t> uniform_real_value_grid3d_to_binary(
-    const UniformRealValueGrid3D &grid);
-std::int32_t uniform_real_value_grid3d_get_grid_point_index(
-    const UniformRealValueGrid3D &grid, const Point3D &point);
-std::int32_t uniform_real_value_grid3d_get_grid_index(
-    const UniformRealValueGrid3D &grid, std::uint32_t xi, std::uint32_t yi,
-    std::uint32_t zi);
-GridIndices uniform_real_value_grid3d_get_grid_indices(
-    const UniformRealValueGrid3D &grid, std::uint32_t idx);
-double uniform_real_value_grid3d_get_val_point(
-    const UniformRealValueGrid3D &grid, const Point3D &pt);
-double uniform_real_value_grid3d_get_val(const UniformRealValueGrid3D &grid,
-                                         std::uint32_t id);
-void uniform_real_value_grid3d_set_val(UniformRealValueGrid3D &grid,
-                                       std::uint32_t id, double val);
-void uniform_real_value_grid3d_set_val_point(UniformRealValueGrid3D &grid,
-                                             const Point3D &pt, double val);
-Point3D uniform_real_value_grid3d_get_grid_point_loc(
-    const UniformRealValueGrid3D &grid, std::uint32_t point_id);
-std::uint32_t uniform_real_value_grid3d_get_size(
-    const UniformRealValueGrid3D &grid);
-std::uint32_t uniform_real_value_grid3d_get_num_x(
-    const UniformRealValueGrid3D &grid);
-std::uint32_t uniform_real_value_grid3d_get_num_y(
-    const UniformRealValueGrid3D &grid);
-std::uint32_t uniform_real_value_grid3d_get_num_z(
-    const UniformRealValueGrid3D &grid);
-Point3D uniform_real_value_grid3d_get_offset(
-    const UniformRealValueGrid3D &grid);
-double uniform_real_value_grid3d_get_spacing(
-    const UniformRealValueGrid3D &grid);
-std::unique_ptr<RealValueVect> uniform_real_value_grid3d_get_occupancy_vect(
-    const UniformRealValueGrid3D &grid);
-// `what` is 'v' (vectors), 'p' (parameters), or 'g' (both).
-bool uniform_real_value_grid3d_compare(const UniformRealValueGrid3D &grid,
-                                       const UniformRealValueGrid3D &other,
-                                       std::uint8_t what);
-void uniform_real_value_grid3d_assign_op(UniformRealValueGrid3D &grid,
-                                         const UniformRealValueGrid3D &other,
-                                         std::uint8_t op);
 
 }  // namespace rdkit_cxx

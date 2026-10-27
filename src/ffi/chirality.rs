@@ -5,14 +5,6 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::StereoGroupAbsOptions`; cxx checks the values.
-    #[repr(i32)]
-    enum StereoGroupAbsOptions {
-        OnlyIncludeWhenOtherGroupsExist,
-        NeverInclude,
-        AlwaysInclude,
-    }
-
     /// A pair of atom indices.
     struct IndexPair {
         first: u32,
@@ -33,7 +25,6 @@ pub(crate) mod ffi {
         type Bond = crate::ffi::bond::ffi::Bond;
         type Conformer = crate::ffi::conformer::ffi::Conformer;
         type StereoGroupType = crate::ffi::stereo::ffi::StereoGroupType;
-        type StereoGroupAbsOptions;
 
         fn assign_stereochemistry(
             mol: Pin<&mut RWMol>,
@@ -70,19 +61,12 @@ pub(crate) mod ffi {
             conf: &Conformer,
         ) -> Result<()>;
         fn set_bond_stereo_from_directions(mol: Pin<&mut RWMol>) -> Result<()>;
-        fn compute_atom_cip_ranks(mol: Pin<&mut RWMol>) -> Result<Vec<u32>>;
         fn find_meso_centers(
             mol: &RWMol,
             include_isotopes: bool,
             include_atom_maps: bool,
         ) -> Result<Vec<IndexPair>>;
 
-        fn canonicalize_stereo_groups(
-            mol: &RWMol,
-            output_absolute_groups: StereoGroupAbsOptions,
-            max_stereo_groups: u32,
-        ) -> Result<UniquePtr<RWMol>>;
-        fn cleanup_stereo_groups(mol: Pin<&mut RWMol>) -> Result<()>;
         fn simplify_enhanced_stereo(
             mol: Pin<&mut RWMol>,
             remove_affected_stereo_groups: bool,
@@ -112,11 +96,7 @@ pub(crate) mod ffi {
             conformer: &Conformer,
             params: &BondWedgingParametersData,
         ) -> Result<()>;
-        fn reapply_mol_block_wedging(
-            mol: Pin<&mut RWMol>,
-            all_bond_types: bool,
-            verify: bool,
-        ) -> Result<()>;
+        fn reapply_mol_block_wedging(mol: Pin<&mut RWMol>, all_bond_types: bool) -> Result<()>;
 
         fn set_allow_nontetrahedral_chirality(val: bool) -> Result<()>;
         fn get_allow_nontetrahedral_chirality() -> Result<bool>;

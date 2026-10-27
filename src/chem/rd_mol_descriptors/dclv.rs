@@ -6,32 +6,31 @@
 //! rdMolDescriptors's double cubic lattice method for surface areas and
 //! volumes.
 
-use std::collections::BTreeMap;
-use std::marker::PhantomData;
-use std::pin::Pin;
-
-use cxx::UniquePtr;
-
 use crate::Result;
 use crate::chem::Mol;
-use crate::error::expect_ok;
 use crate::ffi::dclv::ffi;
-use crate::geometry::Point3D;
 
-/// Parameters for `DoubleCubicLatticeVolume::new_with_params` and
-/// `DoubleCubicLatticeVolume::from_radii_with_params`, with Python's
+/// Parameters for `DoubleCubicLatticeVolume::new_with_params`, with Python's
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct DoubleCubicLatticeVolumeParams {
     /// Treats the molecule as a protein: solvent residues (HOH, SO4, and
-    /// the like) are left out, by their PDB residue info.
+    /// the like) are left out, by their PDB residue info, and the surface
+    /// area is the residues'.
     pub is_protein: bool,
     /// For a protein, keeps its HETATM ligands.
     pub include_ligand: bool,
-    /// The solvent probe's radius.
+    /// The solvent probe's radius; a negative one is RDKit's default (1.4
+    /// for a protein, else 1.2). With `is_protein`, the defaults of this and
+    /// `depth` together become 1.4 and 2.
     pub probe_radius: f64,
-    /// The conformer; −1 is the default conformer.
-    pub conf_id: i32,
+    /// The tessellation depth, which sets the number of dots on each atom's
+    /// sphere: 20 × 4^depth. At most 8; a negative depth is 0.
+    pub depth: i32,
+    /// Dots per unit area instead of a tessellation. RDKit 2024.03 reads an
+    /// uninitialized count for any value but 0, so this refuses others with
+    /// `Error::Value`.
+    pub dot_density: i32,
 }
 
 impl Default for DoubleCubicLatticeVolumeParams {
@@ -39,247 +38,112 @@ impl Default for DoubleCubicLatticeVolumeParams {
         DoubleCubicLatticeVolumeParams {
             is_protein: false,
             include_ligand: true,
-            probe_radius: 1.4,
-            conf_id: -1,
+            probe_radius: 1.2,
+            depth: 4,
+            dot_density: 0,
         }
     }
 }
 
-/// Parameters for `DoubleCubicLatticeVolume::get_polar_surface_area_with_params`,
-/// with Python's defaults (A2).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct GetPolarSurfaceAreaParams {
-    /// Counts sulfur and phosphorus as polar, with nitrogen and oxygen.
-    pub include_s_and_p: bool,
-    /// Counts the hydrogens on polar atoms.
-    pub include_hs: bool,
-}
-
-/// Parameters for `DoubleCubicLatticeVolume::get_polar_volume_with_params`,
-/// with Python's defaults (A2).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct GetPolarVolumeParams {
-    /// Counts sulfur and phosphorus as polar, with nitrogen and oxygen.
-    pub include_s_and_p: bool,
-    /// Counts the hydrogens on polar atoms.
-    pub include_hs: bool,
-}
-
-/// Surface areas and volumes of a conformer by Eisenhaber's double cubic
-/// lattice method. Mirrors `rdMolDescriptors.DoubleCubicLatticeVolume`.
-///
-/// RDKit keeps a reference to the molecule, so this borrows it. Python's
-/// object does not keep its molecule alive, and dangles once the molecule
-/// is gone. The results are cached as they are computed, so the methods
-/// take `&mut self`.
+/// Surface area and volumes of a molecule's first conformer, without its
+/// hydrogens, by Eisenhaber's double cubic lattice method. Mirrors
+/// `rdMolDescriptors.DoubleCubicLatticeVolume`, which computes them all when
+/// it is made.
 ///
 /// ```no_run
 /// use rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume;
 /// # fn embedded() -> rdkit_cxx::chem::Mol { unimplemented!() }
 /// let mol = embedded();
-/// let mut dclv = DoubleCubicLatticeVolume::new(&mol)?;
+/// let dclv = DoubleCubicLatticeVolume::new(&mol)?;
 /// let area = dclv.get_surface_area();
-/// # Ok::<(), rdkit_cxx::Error>(())
-/// ```
-///
-/// The molecule cannot change while it is borrowed:
-///
-/// ```compile_fail
-/// use rdkit_cxx::chem::rd_mol_descriptors::DoubleCubicLatticeVolume;
-/// let mut mol = rdkit_cxx::chem::mol_from_smiles("CCO")?;
-/// let mut dclv = DoubleCubicLatticeVolume::new(&mol)?;
-/// mol.update_property_cache()?;
-/// dclv.get_surface_area();
 /// # Ok::<(), rdkit_cxx::Error>(())
 /// ```
 ///
 /// RDKit trusts its inputs, so the constructors refuse what it would mishandle,
 /// with `Error::Value`:
 ///
-/// - a molecule without atoms, whose largest radius RDKit reads anyway;
-/// - radii other than one per atom, and radii or a probe radius beyond 1e6
-///   or not finite, and coordinates beyond 1e8 or not finite: RDKit casts
-///   them, scaled, to integer indices into its voxel grid;
-/// - with `is_protein`, monomer info that is not PDB residue info, which
-///   RDKit casts to it regardless;
-/// - an atom with radius 0, which masks it, or an atom left out as solvent,
-///   before an atom with a nonzero radius: RDKit lists neighbors only for
-///   the atoms it keeps but looks them up by atom index, so the later atoms
-///   read another atom's list, and the last past the end (Python crashes).
-pub struct DoubleCubicLatticeVolume<'m> {
-    /// Never null.
-    ptr: UniquePtr<ffi::DoubleCubicLatticeVolume>,
-    mol: PhantomData<&'m Mol>,
+/// - coordinates beyond 1e6 or not finite, and a probe radius beyond 1e5 or
+///   not finite: RDKit converts them, scaled, to integer indices into its
+///   voxel grid;
+/// - monomer info that is not PDB residue info, which RDKit casts to it
+///   regardless, and PDB atom names shorter than RDKit reads (two
+///   characters for a protein, else one);
+/// - with `is_protein` and not `include_ligand`, a molecule without an atom
+///   of the 20 standard residues, for which RDKit reads its grid's
+///   uninitialized scale;
+/// - a nonzero `dot_density`.
+///
+/// A molecule without a conformer is `Error::Value`. A depth over 8 is
+/// `Error::Runtime`, as Python's raises.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DoubleCubicLatticeVolume {
+    data: Results,
 }
 
-impl std::fmt::Debug for DoubleCubicLatticeVolume<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("DoubleCubicLatticeVolume")
-            .finish_non_exhaustive()
-    }
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Results {
+    surface_area: f64,
+    volume: f64,
+    vdw_volume: f64,
+    compactness: f64,
+    packing_density: f64,
 }
 
-impl<'m> DoubleCubicLatticeVolume<'m> {
-    fn make(mol: &'m Mol, radii: &[f64], params: &DoubleCubicLatticeVolumeParams) -> Result<Self> {
-        let ptr = ffi::dclv_new(
-            mol.as_ffi(),
-            radii,
-            params.is_protein,
-            params.include_ligand,
-            params.probe_radius,
-            params.conf_id,
-        )?;
-        Ok(DoubleCubicLatticeVolume {
-            ptr,
-            mol: PhantomData,
-        })
-    }
-
-    fn raw(&mut self) -> Pin<&mut ffi::DoubleCubicLatticeVolume> {
-        self.ptr.pin_mut()
-    }
-
-    /// With van der Waals radii, for the default conformer. Mirrors
-    /// `DoubleCubicLatticeVolume(mol)`.
-    pub fn new(mol: &'m Mol) -> Result<Self> {
+impl DoubleCubicLatticeVolume {
+    /// With Python's defaults. Mirrors `DoubleCubicLatticeVolume(mol)`.
+    pub fn new(mol: &Mol) -> Result<DoubleCubicLatticeVolume> {
         DoubleCubicLatticeVolume::new_with_params(mol, &DoubleCubicLatticeVolumeParams::default())
     }
 
     /// Mirrors `DoubleCubicLatticeVolume(mol, isProtein, includeLigand,
-    /// probeRadius, confId)`.
-    pub fn new_with_params(mol: &'m Mol, params: &DoubleCubicLatticeVolumeParams) -> Result<Self> {
-        DoubleCubicLatticeVolume::make(mol, &[], params)
-    }
-
-    /// With one radius per atom; empty means van der Waals radii, as
-    /// Python's empty list does. Mirrors `DoubleCubicLatticeVolume(mol,
-    /// radii)`.
-    pub fn from_radii(mol: &'m Mol, radii: &[f64]) -> Result<Self> {
-        DoubleCubicLatticeVolume::from_radii_with_params(
-            mol,
-            radii,
-            &DoubleCubicLatticeVolumeParams::default(),
-        )
-    }
-
-    /// Mirrors `DoubleCubicLatticeVolume(mol, radii, isProtein,
-    /// includeLigand, probeRadius, confId)`.
-    pub fn from_radii_with_params(
-        mol: &'m Mol,
-        radii: &[f64],
+    /// probeRadius, depth, dotDensity)`.
+    pub fn new_with_params(
+        mol: &Mol,
         params: &DoubleCubicLatticeVolumeParams,
-    ) -> Result<Self> {
-        DoubleCubicLatticeVolume::make(mol, radii, params)
+    ) -> Result<DoubleCubicLatticeVolume> {
+        let data = ffi::dclv_compute(
+            mol.as_ffi(),
+            params.is_protein,
+            params.include_ligand,
+            params.probe_radius,
+            params.depth,
+            params.dot_density,
+        )?;
+        Ok(DoubleCubicLatticeVolume {
+            data: Results {
+                surface_area: data.surface_area,
+                volume: data.volume,
+                vdw_volume: data.vdw_volume,
+                compactness: data.compactness,
+                packing_density: data.packing_density,
+            },
+        })
     }
 
     /// The solvent-accessible surface area. Mirrors `GetSurfaceArea`.
-    pub fn get_surface_area(&mut self) -> f64 {
-        expect_ok(ffi::dclv_get_surface_area(self.raw()))
-    }
-
-    /// One atom's solvent-accessible surface area; `Error::Index` for an
-    /// atom out of range. Mirrors `GetAtomSurfaceArea`.
-    pub fn get_atom_surface_area(&mut self, atom_idx: u32) -> Result<f64> {
-        Ok(ffi::dclv_get_atom_surface_area(self.raw(), atom_idx)?)
-    }
-
-    /// The surface area of the nitrogens and oxygens. Mirrors
-    /// `GetPolarSurfaceArea`.
-    pub fn get_polar_surface_area(&mut self) -> f64 {
-        self.get_polar_surface_area_with_params(&GetPolarSurfaceAreaParams::default())
-    }
-
-    /// Mirrors `GetPolarSurfaceArea(includeSandP, includeHs)`.
-    pub fn get_polar_surface_area_with_params(
-        &mut self,
-        params: &GetPolarSurfaceAreaParams,
-    ) -> f64 {
-        expect_ok(ffi::dclv_get_polar_surface_area(
-            self.raw(),
-            params.include_s_and_p,
-            params.include_hs,
-        ))
-    }
-
-    /// The surface area of the given atoms; `Error::Index` for an atom out
-    /// of range, which Python skips. Mirrors `GetPartialSurfaceArea`.
-    pub fn get_partial_surface_area(&mut self, atom_indices: &[u32]) -> Result<f64> {
-        Ok(ffi::dclv_get_partial_surface_area(
-            self.raw(),
-            atom_indices,
-        )?)
-    }
-
-    /// Lattice points of each atom's probe sphere, buried or not, by atom.
-    /// Mirrors `GetSurfacePoints`. In RDKit 2026.03 they are the points the
-    /// surface-area methods have tested, the sphere's 320 once for each time
-    /// an atom's area was computed, or each sphere's once when no area has
-    /// been.
-    pub fn get_surface_points(&mut self) -> BTreeMap<u32, Vec<Point3D>> {
-        let (mut atoms, mut counts, mut points) = (Vec::new(), Vec::new(), Vec::new());
-        expect_ok(ffi::dclv_get_surface_points(
-            self.raw(),
-            &mut atoms,
-            &mut counts,
-            &mut points,
-        ));
-        let mut points = points.into_iter();
-        atoms
-            .into_iter()
-            .zip(counts)
-            .map(|(atom, count)| (atom, points.by_ref().take(count as usize).collect()))
-            .collect()
+    pub fn get_surface_area(&self) -> f64 {
+        self.data.surface_area
     }
 
     /// The volume inside the probe's surface. Mirrors `GetVolume`.
-    pub fn get_volume(&mut self) -> f64 {
-        expect_ok(ffi::dclv_get_volume(self.raw()))
+    pub fn get_volume(&self) -> f64 {
+        self.data.volume
     }
 
     /// The van der Waals volume. Mirrors `GetVDWVolume`.
-    pub fn get_vdw_volume(&mut self) -> f64 {
-        expect_ok(ffi::dclv_get_vdw_volume(self.raw()))
-    }
-
-    /// One atom's volume with the given solvent radius; `Error::Index` for
-    /// an atom out of range. Mirrors `GetAtomVolume`.
-    pub fn get_atom_volume(&mut self, atom_idx: u32, solvent_radius: f64) -> Result<f64> {
-        Ok(ffi::dclv_get_atom_volume(
-            self.raw(),
-            atom_idx,
-            solvent_radius,
-        )?)
-    }
-
-    /// The volume of the nitrogens and oxygens. Mirrors `GetPolarVolume`.
-    pub fn get_polar_volume(&mut self) -> f64 {
-        self.get_polar_volume_with_params(&GetPolarVolumeParams::default())
-    }
-
-    /// Mirrors `GetPolarVolume(includeSandP, includeHs)`.
-    pub fn get_polar_volume_with_params(&mut self, params: &GetPolarVolumeParams) -> f64 {
-        expect_ok(ffi::dclv_get_polar_volume(
-            self.raw(),
-            params.include_s_and_p,
-            params.include_hs,
-        ))
-    }
-
-    /// The volume of the given atoms; `Error::Index` for an atom out of
-    /// range, which Python skips. Mirrors `GetPartialVolume`.
-    pub fn get_partial_volume(&mut self, atom_indices: &[u32]) -> Result<f64> {
-        Ok(ffi::dclv_get_partial_volume(self.raw(), atom_indices)?)
+    pub fn get_vdw_volume(&self) -> f64 {
+        self.data.vdw_volume
     }
 
     /// The surface area over that of a sphere of the same volume. Mirrors
     /// `GetCompactness`.
-    pub fn get_compactness(&mut self) -> f64 {
-        expect_ok(ffi::dclv_get_compactness(self.raw()))
+    pub fn get_compactness(&self) -> f64 {
+        self.data.compactness
     }
 
     /// The van der Waals volume over the total volume. Mirrors
     /// `GetPackingDensity`.
-    pub fn get_packing_density(&mut self) -> f64 {
-        expect_ok(ffi::dclv_get_packing_density(self.raw()))
+    pub fn get_packing_density(&self) -> f64 {
+        self.data.packing_density
     }
 }

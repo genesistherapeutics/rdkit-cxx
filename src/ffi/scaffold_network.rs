@@ -21,7 +21,6 @@ pub(crate) mod ffi {
         include_generic_bond_scaffolds: bool,
         include_scaffolds_without_attachments: bool,
         include_scaffolds_with_attachments: bool,
-        include_names: bool,
         keep_only_first_fragment: bool,
         prune_before_fragmenting: bool,
         flatten_isotopes: bool,

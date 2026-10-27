@@ -30,7 +30,6 @@ pub(crate) mod ffi {
         type SparseIntVect;
         type DiscreteValueVect;
         type DiscreteValueType;
-        type RealValueVect;
 
         fn bit_vect_new_explicit(size: u32, bits_set: bool) -> Result<UniquePtr<BitVect>>;
         fn bit_vect_new_sparse(size: u32) -> Result<UniquePtr<BitVect>>;
@@ -160,25 +159,6 @@ pub(crate) mod ffi {
             b: &DiscreteValueVect,
         ) -> Result<u32>;
 
-        fn real_value_vect_new(length: u32) -> Result<UniquePtr<RealValueVect>>;
-        fn real_value_vect_from_pkl(pkl: &[u8]) -> Result<UniquePtr<RealValueVect>>;
-        fn real_value_vect_clone(rvv: &RealValueVect) -> Result<UniquePtr<RealValueVect>>;
-        fn real_value_vect_get_val(rvv: &RealValueVect, i: u32) -> Result<f64>;
-        fn real_value_vect_set_val(rvv: Pin<&mut RealValueVect>, i: u32, val: f64) -> Result<()>;
-        fn real_value_vect_get_length(rvv: &RealValueVect) -> Result<u32>;
-        fn real_value_vect_get_total_val(rvv: &RealValueVect) -> Result<f64>;
-        fn real_value_vect_to_binary(rvv: &RealValueVect) -> Result<Vec<u8>>;
-        fn real_value_vect_binary_op(
-            a: &RealValueVect,
-            b: &RealValueVect,
-            op: u8,
-        ) -> Result<UniquePtr<RealValueVect>>;
-        fn real_value_vect_assign_op(
-            a: Pin<&mut RealValueVect>,
-            b: &RealValueVect,
-            op: u8,
-        ) -> Result<()>;
-        fn real_value_vect_compute_l1_norm(a: &RealValueVect, b: &RealValueVect) -> Result<f64>;
     }
 }
 
@@ -190,5 +170,3 @@ unsafe impl Send for ffi::SparseIntVect {}
 unsafe impl Sync for ffi::SparseIntVect {}
 unsafe impl Send for ffi::DiscreteValueVect {}
 unsafe impl Sync for ffi::DiscreteValueVect {}
-unsafe impl Send for ffi::RealValueVect {}
-unsafe impl Sync for ffi::RealValueVect {}

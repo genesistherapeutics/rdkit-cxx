@@ -33,7 +33,6 @@ pub(crate) mod ffi {
         do_isomeric_smiles: bool,
         do_kekule: bool,
         canonical: bool,
-        clean_stereo: bool,
         all_bonds_explicit: bool,
         all_hs_explicit: bool,
         do_random: bool,
@@ -68,7 +67,6 @@ pub(crate) mod ffi {
         CX_BOND_CFG = 0x200,
         CX_BOND_ATROPISOMER = 0x400,
         CX_COORDINATE_BONDS = 0x800,
-        CX_ZERO_BONDS = 0x2000,
         CX_ALL = 0x7fff_ffff,
         CX_ALL_BUT_COORDS = 0x7fff_fffb,
     }
@@ -80,39 +78,6 @@ pub(crate) mod ffi {
         RestoreBondDirOptionClear = 1,
     }
 
-    /// `RDKit::v2::FileParsers::SCSRTemplateNames`; cxx checks the values.
-    #[repr(i32)]
-    enum SCSRTemplateNames {
-        AsEntered,
-        UseFirstName,
-        UseSecondName,
-    }
-
-    /// `RDKit::v2::FileParsers::SCSRBaseHbondOptions`; cxx checks the values.
-    #[repr(i32)]
-    enum SCSRBaseHbondOptions {
-        Ignore,
-        UseSapAll,
-        UseSapOne,
-        Auto,
-    }
-
-    /// `RDKit::v2::CDXMLParser::CDXMLFormat`; cxx checks the values.
-    #[repr(i32)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum CDXMLFormat {
-        CDXML = 0,
-        CDX = 1,
-        Auto = 2,
-    }
-
-    /// `MolFromSCSRParams`.
-    struct MolFromSCSRParamsData {
-        include_leaving_groups: bool,
-        scsr_template_names: SCSRTemplateNames,
-        scsr_base_hbond_options: SCSRBaseHbondOptions,
-    }
-
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/molfiles.h");
@@ -122,15 +87,11 @@ pub(crate) mod ffi {
         type Bond = crate::ffi::bond::ffi::Bond;
         type CXSmilesFields;
         type RestoreBondDirOption;
-        type SCSRTemplateNames;
-        type SCSRBaseHbondOptions;
-        type CDXMLFormat;
 
         fn smiles_parser_params_default() -> Result<SmilesParserParamsData>;
         fn smarts_parser_params_default() -> Result<SmartsParserParamsData>;
         fn smiles_write_params_default() -> Result<SmilesWriteParamsData>;
         fn mol_writer_params_default() -> Result<MolWriterParamsData>;
-        fn mol_from_scsr_params_default() -> Result<MolFromSCSRParamsData>;
 
         fn mol_from_smiles(
             smiles: &str,
@@ -215,7 +176,6 @@ pub(crate) mod ffi {
         /// `kind` is 0 for int, 1 for double, 2 for bool, 3 for string.
         fn create_property_list(
             mol: Pin<&mut RWMol>,
-            bonds: bool,
             kind: u8,
             prop_name: &str,
             missing_value_marker: &str,
@@ -252,18 +212,6 @@ pub(crate) mod ffi {
             path: &[u8],
             params: &MolWriterParamsData,
         ) -> Result<()>;
-        fn mol_from_scsr_block(
-            mol_block: &str,
-            sanitize: bool,
-            remove_hs: bool,
-            params: &MolFromSCSRParamsData,
-        ) -> Result<UniquePtr<RWMol>>;
-        fn mol_from_scsr_file(
-            path: &[u8],
-            sanitize: bool,
-            remove_hs: bool,
-            params: &MolFromSCSRParamsData,
-        ) -> Result<UniquePtr<RWMol>>;
 
         fn mol_from_tpl_block(
             tpl_block: &str,
@@ -365,7 +313,5 @@ pub(crate) mod ffi {
         fn mol_to_sequence(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
         fn mol_to_fasta(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
         fn mol_to_helm(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
-        fn has_chem_draw_cdx_support() -> Result<bool>;
-        fn mol_to_cdxml_block(mol: &RWMol, format: CDXMLFormat) -> Result<Vec<u8>>;
     }
 }

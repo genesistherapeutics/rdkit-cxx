@@ -5,15 +5,11 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `PNGMetadataParams`.
+    /// `MolMetadataToPNGString`'s and `MolMetadataToPNGFile`'s flags.
     struct PNGMetadataParamsData {
         include_pkl: bool,
         include_smiles: bool,
         include_mol: bool,
-        property_flags: u32,
-        smiles_write_params: SmilesWriteParamsData,
-        cx_smiles_flags: u32,
-        restore_bond_dirs: RestoreBondDirOption,
     }
 
     unsafe extern "C++" {
@@ -24,11 +20,8 @@ pub(crate) mod ffi {
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type MolList = crate::ffi::molops::ffi::MolList;
         type SmilesParserParamsData = crate::ffi::molfiles::ffi::SmilesParserParamsData;
-        type SmilesWriteParamsData = crate::ffi::molfiles::ffi::SmilesWriteParamsData;
-        type RestoreBondDirOption = crate::ffi::molfiles::ffi::RestoreBondDirOption;
         type PNGMetadata;
 
-        fn png_metadata_params_default() -> Result<PNGMetadataParamsData>;
         fn mol_from_png_string(
             png: &[u8],
             params: &SmilesParserParamsData,

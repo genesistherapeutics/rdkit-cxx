@@ -27,6 +27,5 @@ pub use sparse_int_vect::{
     IntSparseIntVect, LongSparseIntVect, SparseIntVectType, UIntSparseIntVect, ULongSparseIntVect,
 };
 pub use value_vect::{
-    ConvertToNumpyArray, DiscreteValueType, DiscreteValueVect, RealValueVect, compute_l1_norm,
-    compute_l1_norm_real_value_vect, convert_to_numpy_array,
+    ConvertToNumpyArray, DiscreteValueType, DiscreteValueVect, compute_l1_norm, convert_to_numpy_array,
 };

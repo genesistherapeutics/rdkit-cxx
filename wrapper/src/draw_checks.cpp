@@ -846,18 +846,6 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
     return;
   }
   check_text_size(legend, "legend");
-  using Position = RDKit::MolDrawOptions::LegendPosition;
-  const bool vertical = (opts.legendPosition == Position::Left ||
-                         opts.legendPosition == Position::Right) &&
-                        opts.legendVerticalText;
-  if (vertical) {
-    for (char c : legend) {
-      if (c != '\n') {
-        check_run(std::string(1, c), freetype, "legend");
-      }
-    }
-    return;
-  }
   std::vector<std::string> lines;
   boost::split(lines, legend, boost::is_any_of("\n"));
   for (const auto &line : lines) {

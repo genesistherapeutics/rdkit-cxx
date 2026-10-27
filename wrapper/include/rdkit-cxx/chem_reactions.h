@@ -146,13 +146,6 @@ std::unique_ptr<std::string> reaction_to_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params);
 std::unique_ptr<std::string> reaction_to_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params);
-std::unique_ptr<std::string> reaction_to_cx_smarts(
-    const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
-    std::uint32_t flags);
-std::unique_ptr<std::string> reaction_to_cx_smiles(
-    const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
-    std::uint32_t flags);
-std::uint32_t cx_smiles_fields_all();
 std::unique_ptr<ChemicalReaction> reaction_from_rxn_block(rust::Str rxn_block,
                                                           bool sanitize,
                                                           bool remove_hs,

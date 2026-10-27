@@ -54,7 +54,6 @@ ScaffoldNetworkParams with_flags(const ScaffoldNetworkParams &params,
       flags.include_scaffolds_without_attachments;
   res.includeScaffoldsWithAttachments =
       flags.include_scaffolds_with_attachments;
-  res.includeNames = flags.include_names;
   res.keepOnlyFirstFragment = flags.keep_only_first_fragment;
   res.pruneBeforeFragmenting = flags.prune_before_fragmenting;
   res.flattenIsotopes = flags.flatten_isotopes;
@@ -102,7 +101,6 @@ ScaffoldNetworkFlags scaffold_network_params_flags(
                               p.includeGenericBondScaffolds,
                               p.includeScaffoldsWithoutAttachments,
                               p.includeScaffoldsWithAttachments,
-                              p.includeNames,
                               p.keepOnlyFirstFragment,
                               p.pruneBeforeFragmenting,
                               p.flattenIsotopes,

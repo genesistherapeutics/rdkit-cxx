@@ -37,7 +37,7 @@ def test_upper_camel_case(name, expected):
 
 
 def inventory(*entries):
-    return {"rdkit_version": "2026.03.6", "entries": list(entries)}
+    return {"rdkit_version": "2024.03.6", "entries": list(entries)}
 
 
 def entry(python, kind, overloads=1):

@@ -22,6 +22,38 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 include(cmake/RDKitCxxVersion.cmake)
 
 find_package(rdkit CONFIG REQUIRED)
+# RDKit 2024.03's CMake package was written for its Python build. Its
+# RDKit::rdkit_base, which every RDKit target links, names Boost libraries
+# (Boost::system, Boost::serialization, Boost::iostreams) its config never
+# finds, and include directories of the Python it was built with
+# (include/python3.10 and numpy's), which conda-forge's librdkit-dev does not
+# install. The wrapper finds the Boost libraries named, and drops the
+# include directories that do not exist, so CMake can use the targets.
+get_target_property(rdkit_cxx_base_links RDKit::rdkit_base
+  INTERFACE_LINK_LIBRARIES)
+set(rdkit_cxx_boost_components)
+foreach(link IN LISTS rdkit_cxx_base_links)
+  if(link MATCHES "^Boost::(.+)$" AND NOT TARGET "${link}")
+    list(APPEND rdkit_cxx_boost_components "${CMAKE_MATCH_1}")
+  endif()
+endforeach()
+if(rdkit_cxx_boost_components)
+  list(REMOVE_DUPLICATES rdkit_cxx_boost_components)
+  find_package(Boost ${RDKit_USE_BOOST_VERSION} CONFIG REQUIRED
+    COMPONENTS ${rdkit_cxx_boost_components})
+endif()
+get_target_property(rdkit_cxx_base_includes RDKit::rdkit_base
+  INTERFACE_INCLUDE_DIRECTORIES)
+if(rdkit_cxx_base_includes)
+  set(rdkit_cxx_existing_includes)
+  foreach(dir IN LISTS rdkit_cxx_base_includes)
+    if(EXISTS "${dir}")
+      list(APPEND rdkit_cxx_existing_includes "${dir}")
+    endif()
+  endforeach()
+  set_target_properties(RDKit::rdkit_base PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${rdkit_cxx_existing_includes}")
+endif()
 # vendor/<release> holds the headers below that RDKit does not install, so
 # only a release with a directory there is supported.
 rdkit_cxx_check_release("${rdkit_VERSION}" "${RDKIT_CXX_SUPPORTED_SERIES}"
@@ -66,7 +98,6 @@ set(RDKIT_CXX_SOURCES
   src/mhfp.cpp
   src/reduced_graphs.cpp
   src/sln_parse.cpp
-  src/conformer_parser.cpp
   src/mmpa.cpp
   src/deprotect.cpp
   src/graph.cpp
@@ -82,7 +113,6 @@ set(RDKIT_CXX_SOURCES
   src/standardize_normalize.cpp
   src/standardize_validate.cpp
   src/standardize_tautomer.cpp
-  src/standardize_pipeline.cpp
   src/file_checks.cpp
   src/streams.cpp
   src/png.cpp
@@ -118,23 +148,17 @@ set(RDKIT_CXX_SOURCES
   src/chemical_features.cpp
   src/mol_chemical_features.cpp
   src/free_sasa.cpp
-  src/mif.cpp
-  src/shape_align.cpp
-  src/gaussian_shape.cpp
   src/metric_matrix_calc.cpp
   src/murtagh_checks.cpp
   src/cluster.cpp
   src/sim_div_pickers.cpp
   src/info_theory.cpp
   src/abbreviations.cpp
-  src/enumerate_stereoisomers.cpp
   src/mol_enumerator.cpp
-  src/mol_processing.cpp
   src/mol_interchange.cpp
   src/draw.cpp
   src/draw_checks.cpp
   src/draw_drawer.cpp
-  src/synthon_space_search.cpp
   src/inchi.cpp
   src/trajectory.cpp
 )
@@ -190,17 +214,12 @@ set(RDKIT_CXX_RDKIT_TARGETS
   ChemicalFeatures
   MolChemicalFeatures
   FreeSASALib
-  MolInteractionFields
-  PubChemShape
-  GaussianShape
   hc
   SimDivPickers
   InfoTheory
   Abbreviations
-  EnumerateStereoisomers
   MolEnumerator
   MolInterchange
-  SynthonSpaceSearch
   RDInchiLib
 )
 
@@ -215,7 +234,7 @@ add_library(rdkitcxx STATIC ${RDKIT_CXX_SOURCES} ${RDKIT_CXX_GENERATED_SOURCES})
 # one loaded. Only that file needs it, so the others' flags stay the same.
 set_source_files_properties(src/errors.cpp PROPERTIES
   COMPILE_DEFINITIONS RDKIT_CXX_RDKIT_VERSION="${rdkit_VERSION}")
-# conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser; without
+# conda-forge's macOS build of RDKit 2024.03.6 has no SLN parser; without
 # one, the SLN wrappers refuse every call (sln_parse.cpp), and nothing
 # throws the parser's exception (errors.cpp).
 if(TARGET RDKit::SLNParse)
@@ -230,22 +249,19 @@ target_include_directories(rdkitcxx PRIVATE
   third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
-  # Declarations RDKit's installed headers need (compat/maeparser), and
-  # names they include that RDKit installs elsewhere
-  # (compat/GraphMol/GaussianShape).
+  # Declarations RDKit's installed headers need (compat/maeparser).
   compat
   # RDKit's own copies, from the release found (vendor/<release>), of
-  # headers its packages do not install. conda-forge's librdkit-dev 2026.03
+  # headers its packages do not install. conda-forge's librdkit-dev 2024.03
   # installs none of ML/InfoTheory's headers (RDKit::InfoTheory's); an
-  # install that has them finds its own first, earlier on the path. Nor does
-  # it install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
-  # SynthonSpace.h and Synthon.h include. GraphMol/MolDraw2D holds the
+  # install that has them finds its own first, earlier on the path.
+  # GraphMol/MolDraw2D holds the
   # drawing code's internal headers (DrawText.h, DrawMol.h, and those they
   # include, and MolDraw2DDetails.h), which no package installs
   # (draw_drawer.cpp).
   vendor/${rdkit_VERSION}
 )
-# RDKit 2026.03's headers test macros that RDConfig.h defines without
+# RDKit 2024.03's headers test macros that RDConfig.h defines without
 # including it: RingInfo.h declares its ring-family members only under
 # RDK_USE_URF. Every source reads RDConfig.h first, so it compiles against
 # the classes the library was built with.
@@ -254,13 +270,6 @@ foreach(target IN LISTS RDKIT_CXX_RDKIT_TARGETS)
   target_link_libraries(rdkitcxx PUBLIC RDKit::${target})
   string(APPEND link_libraries "$<TARGET_LINKER_FILE:RDKit::${target}>\n")
 endforeach()
-
-# rdMolProcessing reads gzipped files with Boost.Iostreams' gzip filter, as
-# RDKit's gzstream does, when RDKit was built with it.
-if(TARGET Boost::iostreams)
-  target_link_libraries(rdkitcxx PUBLIC Boost::iostreams)
-  string(APPEND link_libraries "$<TARGET_LINKER_FILE:Boost::iostreams>\n")
-endif()
 
 # RDKit::MolDraw2D cannot be linked like the targets above: conda-forge's
 # package names Cairo::Cairo in its link interface without defining it, and

@@ -39,20 +39,16 @@ RascalOptionsData to_data(const Rascal::RascalOptions &o) {
   return RascalOptionsData{o.similarityThreshold,
                            o.completeAromaticRings,
                            o.ringMatchesRingOnly,
-                           o.completeSmallestRings,
                            o.exactConnectionsMatch,
                            o.singleLargestFrag,
                            o.minFragSize,
                            o.maxFragSeparation,
                            o.allBestMCESs,
-                           o.maxBestMCESs,
                            o.timeout,
                            o.returnEmptyMCES,
                            o.maxBondMatchPairs,
                            rust::String::lossy(o.equivalentAtoms),
-                           o.ignoreBondOrders,
-                           o.ignoreAtomAromaticity,
-                           o.minCliqueSize};
+                           o.ignoreBondOrders};
 }
 
 RascalClusterOptionsData to_data(const Rascal::RascalClusterOptions &o) {
@@ -517,29 +513,21 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 //   int; a NaN threshold passes every comparison before it.
 // - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
 //   equivalentAtoms that does not parse.
-// completeSmallestRings implies completeAromaticRings (RascalOptions.h), and
-// buildPairs reads the ring SMILES that only completeAromaticRings makes, so
-// it is set here as documented.
 Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   Rascal::RascalOptions o;
   o.similarityThreshold = d.similarity_threshold;
-  o.completeAromaticRings =
-      d.complete_aromatic_rings || d.complete_smallest_rings;
+  o.completeAromaticRings = d.complete_aromatic_rings;
   o.ringMatchesRingOnly = d.ring_matches_ring_only;
-  o.completeSmallestRings = d.complete_smallest_rings;
   o.exactConnectionsMatch = d.exact_connections_match;
   o.singleLargestFrag = d.single_largest_frag;
   o.minFragSize = d.min_frag_size;
   o.maxFragSeparation = d.max_frag_separation;
   o.allBestMCESs = d.all_best_mcess;
-  o.maxBestMCESs = d.max_best_mcess;
   o.timeout = d.timeout;
   o.returnEmptyMCES = d.return_empty_mces;
   o.maxBondMatchPairs = d.max_bond_match_pairs;
   o.equivalentAtoms = std::string(d.equivalent_atoms);
   o.ignoreBondOrders = d.ignore_bond_orders;
-  o.ignoreAtomAromaticity = d.ignore_atom_aromaticity;
-  o.minCliqueSize = d.min_clique_size;
 
   if (o.maxFragSeparation < -1) {
     throw ValueErrorException("maxFragSeparation must be -1 or more");

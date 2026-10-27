@@ -43,7 +43,6 @@ pub(crate) mod ffi {
         align_only: bool,
         adjust_mol_block_wedging: bool,
         existing_conf_id: i32,
-        use_ring_templates: bool,
         conf_id: i32,
     }
 

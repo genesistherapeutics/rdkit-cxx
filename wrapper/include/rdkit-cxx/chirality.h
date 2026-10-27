@@ -15,7 +15,6 @@
 #include <vector>
 
 #include <GraphMol/Chirality.h>
-#include <GraphMol/SmilesParse/CanonicalizeStereoGroups.h>
 
 #include "rdkit-cxx/bond.h"
 #include "rdkit-cxx/conformer.h"
@@ -25,7 +24,6 @@
 
 namespace rdkit_cxx {
 
-using StereoGroupAbsOptions = RDKit::StereoGroupAbsOptions;
 
 // Shared structs, defined by the bridge (src/ffi/chirality.rs).
 struct IndexPair;
@@ -49,14 +47,9 @@ void set_double_bond_neighbor_directions(RWMol &mol);
 void set_double_bond_neighbor_directions_with_conf(RWMol &mol,
                                                    const Conformer &conf);
 void set_bond_stereo_from_directions(RWMol &mol);
-rust::Vec<std::uint32_t> compute_atom_cip_ranks(RWMol &mol);
 rust::Vec<IndexPair> find_meso_centers(const RWMol &mol, bool include_isotopes,
                                        bool include_atom_maps);
 
-std::unique_ptr<RWMol> canonicalize_stereo_groups(
-    const RWMol &mol, StereoGroupAbsOptions output_absolute_groups,
-    std::uint32_t max_stereo_groups);
-void cleanup_stereo_groups(RWMol &mol);
 void simplify_enhanced_stereo(RWMol &mol, bool remove_affected_stereo_groups);
 void translate_chiral_flag_to_stereo_groups(
     RWMol &mol, StereoGroupType zero_flag_group_type);
@@ -71,7 +64,7 @@ void wedge_bond(Bond &bond, std::uint32_t from_atom_idx, std::int32_t conf_id);
 BondWedgingParametersData bond_wedging_parameters_default();
 void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
                      const BondWedgingParametersData &params);
-void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify);
+void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types);
 
 // These settings live in environment variables, which RDKit sets with
 // setenv; the Rust setters are unsafe for that reason (CONVENTIONS.md U5).

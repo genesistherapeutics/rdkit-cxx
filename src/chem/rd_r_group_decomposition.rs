@@ -152,10 +152,6 @@ pub struct RGroupDecompositionParameters {
     /// Allows several R groups on an unlabeled core atom. Mirrors
     /// `RGroupDecompositionParameters.allowMultipleRGroupsOnUnlabelled`.
     pub allow_multiple_r_groups_on_unlabelled: bool,
-    /// Allows a core to match a molecule more than once, on different
-    /// atoms. Mirrors
-    /// `RGroupDecompositionParameters.allowMultipleCoresInSameMol`.
-    pub allow_multiple_cores_in_same_mol: bool,
     /// Matches the cores' tautomers. RDKit's tautomer matcher reads the
     /// matches of a recursive SMARTS (`$(...)`) as the core's, past their
     /// end, so a core with one is `Error::Value`. Mirrors
@@ -166,10 +162,6 @@ pub struct RGroupDecompositionParameters {
     /// on (as `rd_generalized_substruct` checks them) are `Error::Value`.
     /// Mirrors `RGroupDecompositionParameters.doEnumeration`.
     pub do_enumeration: bool,
-    /// Includes the molecule, with the matched atoms and bonds as
-    /// properties. Mirrors
-    /// `RGroupDecompositionParameters.includeTargetMolInResults`.
-    pub include_target_mol_in_results: bool,
     /// Seconds, none when not positive. Mirrors
     /// `RGroupDecompositionParameters.timeout`.
     pub timeout: f64,
@@ -213,10 +205,8 @@ impl Default for RGroupDecompositionParameters {
             remove_hydrogens_post_match: d.remove_hydrogens_post_match,
             allow_non_terminal_r_groups: d.allow_non_terminal_r_groups,
             allow_multiple_r_groups_on_unlabelled: d.allow_multiple_r_groups_on_unlabelled,
-            allow_multiple_cores_in_same_mol: d.allow_multiple_cores_in_same_mol,
             do_tautomers: d.do_tautomers,
             do_enumeration: d.do_enumeration,
-            include_target_mol_in_results: d.include_target_mol_in_results,
             timeout: d.timeout,
             ga_population_size: d.ga_population_size,
             ga_maximum_operations: d.ga_maximum_operations,
@@ -244,10 +234,8 @@ impl RGroupDecompositionParameters {
             remove_hydrogens_post_match: self.remove_hydrogens_post_match,
             allow_non_terminal_r_groups: self.allow_non_terminal_r_groups,
             allow_multiple_r_groups_on_unlabelled: self.allow_multiple_r_groups_on_unlabelled,
-            allow_multiple_cores_in_same_mol: self.allow_multiple_cores_in_same_mol,
             do_tautomers: self.do_tautomers,
             do_enumeration: self.do_enumeration,
-            include_target_mol_in_results: self.include_target_mol_in_results,
             timeout: self.timeout,
             ga_population_size: self.ga_population_size,
             ga_maximum_operations: self.ga_maximum_operations,
@@ -261,7 +249,7 @@ impl RGroupDecompositionParameters {
 }
 
 /// One molecule's decomposition: its core and R groups by label (`Core`,
-/// `R1`, ..., and `Mol` with `include_target_mol_in_results`).
+/// `R1`, ...).
 /// A Rust addition, naming Python's dictionary.
 pub type RGroupRow<T> = BTreeMap<String, T>;
 

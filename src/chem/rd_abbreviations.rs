@@ -44,16 +44,13 @@ pub struct AbbreviationDefinition {
     /// The label in a drawing when the bond comes from the west. Mirrors
     /// `AbbreviationDefinition.displayLabelW`.
     pub display_label_w: String,
-    /// The query molecule, whose first atom is a dummy when
-    /// `includes_x_bonds` is set. Mirrors `AbbreviationDefinition.mol`.
+    /// The query molecule, whose first atom is the dummy for the bond to the
+    /// rest of the molecule. Mirrors `AbbreviationDefinition.mol`.
     pub mol: Option<Mol>,
-    /// Whether the definition includes the bonds to atoms outside the
-    /// abbreviation. Mirrors `AbbreviationDefinition.includesXBonds`.
-    pub includes_x_bonds: bool,
 }
 
-/// RDKit's default-constructed definition: empty labels, no molecule, and
-/// `includes_x_bonds`. Mirrors `AbbreviationDefinition()`.
+/// RDKit's default-constructed definition: empty labels and no molecule.
+/// Mirrors `AbbreviationDefinition()`.
 impl Default for AbbreviationDefinition {
     fn default() -> AbbreviationDefinition {
         AbbreviationDefinition::from_ffi(expect_ok(ffi::abbreviation_definition_default()))
@@ -73,7 +70,6 @@ impl AbbreviationDefinition {
             display_label: text(data.display_label),
             display_label_w: text(data.display_label_w),
             mol: (!data.mol.is_null()).then(|| Mol::from_ffi(data.mol)),
-            includes_x_bonds: data.includes_x_bonds,
         }
     }
 }
@@ -98,7 +94,6 @@ fn with_list<T>(
                 &def.label,
                 &def.display_label,
                 &def.display_label_w,
-                def.includes_x_bonds,
                 mol.as_ffi(),
             ),
             None => ffi::abbreviation_list_push(
@@ -106,7 +101,6 @@ fn with_list<T>(
                 &def.label,
                 &def.display_label,
                 &def.display_label_w,
-                def.includes_x_bonds,
             ),
         });
     }

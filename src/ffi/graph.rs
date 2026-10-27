@@ -5,30 +5,6 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::SubsetMethod`; cxx checks the values.
-    #[repr(i32)]
-    #[allow(clippy::upper_case_acronyms)]
-    enum SubsetMethod {
-        BONDS_BETWEEN_ATOMS = 0,
-        BONDS = 1,
-    }
-
-    /// `RDKit::SubsetOptions`.
-    struct SubsetOptionsData {
-        sanitize: bool,
-        clear_computed_props: bool,
-        copy_as_query: bool,
-        copy_coordinates: bool,
-        conformer_idx: i32,
-        method: SubsetMethod,
-    }
-
-    /// `RDKit::SubsetInfo`'s mappings, as (from, to) pairs.
-    struct SubsetInfoData {
-        atom_mapping: Vec<IndexPair>,
-        bond_mapping: Vec<IndexPair>,
-    }
-
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/graph.h");
@@ -39,7 +15,6 @@ pub(crate) mod ffi {
         type MolList = crate::ffi::molops::ffi::MolList;
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type IndexPair = crate::ffi::chirality::ffi::IndexPair;
-        type SubsetMethod;
 
         fn get_distance_matrix(mol: &RWMol, use_bo: bool, use_atom_wts: bool) -> Result<Vec<f64>>;
         fn get_3d_distance_matrix(
@@ -108,19 +83,5 @@ pub(crate) mod ffi {
 
         fn renumber_atoms(mol: &RWMol, new_order: &[u32]) -> Result<UniquePtr<RWMol>>;
 
-        fn subset_options_default() -> Result<SubsetOptionsData>;
-        fn copy_mol_subset(
-            mol: &RWMol,
-            path: &[u32],
-            options: &SubsetOptionsData,
-            info: &mut SubsetInfoData,
-        ) -> Result<UniquePtr<RWMol>>;
-        fn copy_mol_subset_atoms_bonds(
-            mol: &RWMol,
-            atom_indices: &[u32],
-            bond_indices: &[u32],
-            options: &SubsetOptionsData,
-            info: &mut SubsetInfoData,
-        ) -> Result<UniquePtr<RWMol>>;
     }
 }

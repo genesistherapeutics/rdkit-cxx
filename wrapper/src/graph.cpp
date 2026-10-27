@@ -260,14 +260,17 @@ rust::Vec<std::uint32_t> find_atom_environment_of_radius_n(
   return result;
 }
 
-// copyMolSubset skips bond indices past the end, as Python does.
+// RDKit 2024.03's pathToSubmol fetches each bond with getBondWithIdx,
+// whose range check would throw with the half-built molecule unowned, so the
+// indices are checked first; Python raises from that check.
 std::unique_ptr<RWMol> path_to_submol(const RWMol &mol,
                                       rust::Slice<const std::uint32_t> path,
                                       bool use_query,
                                       rust::Vec<IndexPair> &atom_map) {
   RDKit::PATH_TYPE bonds;
   for (auto idx : path) {
-    // PATH_TYPE holds ints; copyMolSubset converts them back to unsigned.
+    check_index(idx, mol.getNumBonds());
+    // PATH_TYPE holds ints; pathToSubmol converts them back to unsigned.
     bonds.push_back(static_cast<int>(idx));
   }
   std::map<int, int> mapping;
@@ -307,50 +310,6 @@ std::unique_ptr<RWMol> renumber_atoms(
   std::unique_ptr<RDKit::ROMol> result(
       RDKit::MolOps::renumberAtoms(mol, to_vector(new_order)));
   return std::make_unique<RWMol>(*result);
-}
-
-SubsetOptionsData subset_options_default() {
-  RDKit::SubsetOptions options;
-  return SubsetOptionsData{options.sanitize,
-                           options.clearComputedProps,
-                           options.copyAsQuery,
-                           options.copyCoordinates,
-                           static_cast<std::int32_t>(options.conformerIdx),
-                           options.method};
-}
-
-// The path form skips indices past the end, as Python does.
-std::unique_ptr<RWMol> copy_mol_subset(const RWMol &mol,
-                                       rust::Slice<const std::uint32_t> path,
-                                       const SubsetOptionsData &data,
-                                       SubsetInfoData &info_data) {
-  RDKit::SubsetOptions options;
-  set_options(options, data);
-  RDKit::SubsetInfo info;
-  auto result = RDKit::copyMolSubset(mol, to_vector(path), info, options);
-  set_info(info_data, info);
-  return result;
-}
-
-// copyMolSubset throws RDKit's IndexErrorException, which has no length,
-// for indices past the end; the wrapper checks them first (E3).
-std::unique_ptr<RWMol> copy_mol_subset_atoms_bonds(
-    const RWMol &mol, rust::Slice<const std::uint32_t> atom_indices,
-    rust::Slice<const std::uint32_t> bond_indices,
-    const SubsetOptionsData &data, SubsetInfoData &info_data) {
-  for (auto idx : atom_indices) {
-    check_index(idx, mol.getNumAtoms());
-  }
-  for (auto idx : bond_indices) {
-    check_index(idx, mol.getNumBonds());
-  }
-  RDKit::SubsetOptions options;
-  set_options(options, data);
-  RDKit::SubsetInfo info;
-  auto result = RDKit::copyMolSubset(mol, to_vector(atom_indices),
-                                     to_vector(bond_indices), info, options);
-  set_info(info_data, info);
-  return result;
 }
 
 }  // namespace rdkit_cxx

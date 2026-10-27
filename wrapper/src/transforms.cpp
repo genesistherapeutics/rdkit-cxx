@@ -119,7 +119,6 @@ RDKit::MolzipParams to_params(const MolzipParamsData &data) {
   }
   params.enforceValenceRules = data.enforce_valence_rules;
   params.generateCoordinates = data.generate_coordinates;
-  params.alignCoordinates = data.align_coordinates;
   return params;
 }
 
@@ -421,7 +420,7 @@ MolzipParamsData molzip_params_default() {
   }
   return MolzipParamsData{params.label, std::move(symbols),
                           params.enforceValenceRules,
-                          params.generateCoordinates, params.alignCoordinates};
+                          params.generateCoordinates};
 }
 
 namespace {

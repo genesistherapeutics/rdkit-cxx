@@ -1,5 +1,5 @@
 {
- "rdkit_version": "2026.03.6",
+ "rdkit_version": "2024.03.6",
  "entries": [
   {
    "python": "rdkit.Chem.AllChem.AssignBondOrdersFromTemplate",
@@ -188,6 +188,13 @@
    "kind": "module_function",
    "overloads": [
     "def ExplainAtomCode(code, branchSubtract=0, includeChirality=False)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.AtomPairs.Utils.NumPiElectrons",
+   "kind": "module_function",
+   "overloads": [
+    "def NumPiElectrons(atom)"
    ]
   },
   {
@@ -962,7 +969,7 @@
    "python": "rdkit.Chem.Descriptors3D.CalcMolDescriptors3D",
    "kind": "module_function",
    "overloads": [
-    "def CalcMolDescriptors3D(mol, confId=-1)"
+    "def CalcMolDescriptors3D(mol, confId=None)"
    ]
   },
   {
@@ -1045,13 +1052,6 @@
    "kind": "module_function",
    "overloads": [
     "def DebugDraw(mol, size=(350, 350), drawer=None, asSVG=True, useBW=True, includeHLabels=True, addAtomIndices=True, addBondIndices=False)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Draw.DrawMolWithMatches",
-   "kind": "module_function",
-   "overloads": [
-    "def DrawMolWithMatches(mol, matches, molSize=(350, 300), qry=None, label='', options=<rdkit.Chem.Draw.rdMolDraw2D.MolDrawOptions object>, colors=None, doPNG=True, kekulize=True, confId=-1)"
    ]
   },
   {
@@ -1168,31 +1168,23 @@
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.DrawMorganBit",
-   "kind": "module_function",
-   "overloads": [
-    "def DrawMorganBit(...)"
-   ]
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.DrawMorganBits",
-   "kind": "module_function",
-   "overloads": [
-    "def DrawMorganBits(...)"
-   ]
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.DrawRDKitBit",
-   "kind": "module_function",
-   "overloads": [
-    "def DrawRDKitBit(...)"
-   ]
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.DrawRDKitBits",
-   "kind": "module_function",
-   "overloads": [
-    "def DrawRDKitBits(...)"
-   ]
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.EnableSubstructMatchRendering",
@@ -1215,10 +1207,8 @@
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.ShowMols",
-   "kind": "module_function",
-   "overloads": [
-    "def ShowMols(...)"
-   ]
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.UninstallIPythonRenderer",
@@ -1251,13 +1241,6 @@
    "kind": "module_function",
    "overloads": [
     "def drawMol3D(...)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Draw.IPythonConsole.drawMols3D",
-   "kind": "module_function",
-   "overloads": [
-    "def drawMols3D(...)"
    ]
   },
   {
@@ -1304,13 +1287,6 @@
    "python": "rdkit.Chem.Draw.IPythonConsole.kekulizeStructures",
    "kind": "module_attribute",
    "overloads": []
-  },
-  {
-   "python": "rdkit.Chem.Draw.IPythonConsole.listToLists",
-   "kind": "module_function",
-   "overloads": [
-    "def listToLists(...)"
-   ]
   },
   {
    "python": "rdkit.Chem.Draw.IPythonConsole.molSize",
@@ -1651,14 +1627,28 @@
    "python": "rdkit.Chem.Draw.MolToImage",
    "kind": "module_function",
    "overloads": [
-    "def MolToImage(mol, size=(300, 300), kekulize=True, wedgeBonds=True, fitImage=False, options=None, **kwargs)"
+    "def MolToImage(mol, size=(300, 300), kekulize=True, wedgeBonds=True, fitImage=False, options=None, canvas=None, **kwargs)"
    ]
   },
   {
-   "python": "rdkit.Chem.Draw.MolToSVG",
+   "python": "rdkit.Chem.Draw.MolToImageFile",
    "kind": "module_function",
    "overloads": [
-    "def MolToSVG(mol, size=(300, 300), kekulize=True, wedgeBonds=True, drawOptions=None, **kwargs)"
+    "def MolToImageFile(mol, filename, size=(300, 300), kekulize=True, wedgeBonds=True, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.MolToMPL",
+   "kind": "module_function",
+   "overloads": [
+    "def MolToMPL(mol, size=(300, 300), kekulize=True, wedgeBonds=True, imageType=None, fitImage=False, options=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.MolToQPixmap",
+   "kind": "module_function",
+   "overloads": [
+    "def MolToQPixmap(mol, size=(300, 300), kekulize=True, wedgeBonds=True, fitImage=False, options=None, **kwargs)"
    ]
   },
   {
@@ -1718,13 +1708,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForFingerprintGenerator",
-   "kind": "module_function",
-   "overloads": [
-    "def GetAtomicWeightsForFingerprintGenerator(refMol, probeMol, fpg, useCounts=False, metric=<Boost.Python.function object>)"
-   ]
-  },
-  {
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetAtomicWeightsForModel",
    "kind": "module_function",
    "overloads": [
@@ -1749,28 +1732,21 @@
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForFingerprint",
    "kind": "module_function",
    "overloads": [
-    "def GetSimilarityMapForFingerprint(refMol, probeMol, fpFunction, draw2d, metric=<Boost.Python.function object>, **kwargs)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForFingerprintGenerator",
-   "kind": "module_function",
-   "overloads": [
-    "def GetSimilarityMapForFingerprintGenerator(refMol, probeMol, fpg, draw2d, metric=<Boost.Python.function object>, useCounts=False, **kwargs)"
+    "def GetSimilarityMapForFingerprint(refMol, probeMol, fpFunction, metric=<Boost.Python.function object>, **kwargs)"
    ]
   },
   {
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapForModel",
    "kind": "module_function",
    "overloads": [
-    "def GetSimilarityMapForModel(probeMol, fpFunction, predictionFunction, draw2d, **kwargs)"
+    "def GetSimilarityMapForModel(probeMol, fpFunction, predictionFunction, **kwargs)"
    ]
   },
   {
    "python": "rdkit.Chem.Draw.SimilarityMaps.GetSimilarityMapFromWeights",
    "kind": "module_function",
    "overloads": [
-    "def GetSimilarityMapFromWeights(mol, weights, draw2d, colorMap=None, scale=-1, size=(250, 250), sigma=None, coordScale=1.5, step=0.01, colors='k', contourLines=10, alpha=0.5, gridResolution=0.1, extraGridPadding=0.5, useFillThreshold=False, fillThreshold=0.01, fillThresholdIsFraction=True, **kwargs)"
+    "def GetSimilarityMapFromWeights(mol, weights, colorMap=None, scale=-1, size=(250, 250), sigma=None, coordScale=1.5, step=0.01, colors='k', contourLines=10, alpha=0.5, draw2d=None, **kwargs)"
    ]
   },
   {
@@ -1798,10 +1774,272 @@
    "overloads": []
   },
   {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas",
+   "kind": "class",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas.addCanvasDashedWedge",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasDashedWedge(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas.addCanvasLine",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasLine(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas.addCanvasPolygon",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasPolygon(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas.addCanvasText",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasText(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.Canvas.flush",
+   "kind": "method",
+   "overloads": [
+    "def flush(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.convertColor",
+   "kind": "module_function",
+   "overloads": [
+    "def convertColor(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.aggCanvas.faceMap",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas",
+   "kind": "class",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(self, image=None, size=None, ctx=None, imageType=None, fileName=None)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.addCanvasDashedWedge",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasDashedWedge(self, p1, p2, p3, dash=(2, 2), color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.addCanvasLine",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasLine(self, p1, p2, color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.addCanvasPolygon",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasPolygon(self, ps, color=(0, 0, 0), fill=True, stroke=False, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.addCanvasText",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasText(self, text, pos, font, color=(0, 0, 0), **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.addCircle",
+   "kind": "method",
+   "overloads": [
+    "def addCircle(self, center, radius, color=(0, 0, 0), fill=True, stroke=False, alpha=1.0, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.Canvas.flush",
+   "kind": "method",
+   "overloads": [
+    "def flush(self)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.have_cairocffi",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.have_pango",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.cairoCanvas.scriptPattern",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
    "python": "rdkit.Chem.Draw.calcAtomGaussians",
    "kind": "module_function",
    "overloads": [
     "def calcAtomGaussians(mol, a=0.03, step=0.02, weights=None)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.canvasbase.CanvasBase",
+   "kind": "class",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.canvasbase.CanvasBase.addCanvasDashedWedge",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasDashedWedge(self, p1, p2, p3, dash=(2, 2), color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.canvasbase.CanvasBase.addCanvasLine",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasLine(self, p1, p2, color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.canvasbase.CanvasBase.addCanvasPolygon",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasPolygon(self, ps, color=(0, 0, 0), **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.canvasbase.CanvasBase.addCanvasText",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasText(self, text, pos, font, color=(0, 0, 0), **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.canvasbase.CanvasBase.flush",
+   "kind": "method",
+   "overloads": [
+    "def flush(self)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas",
+   "kind": "class",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(self, size, name='', imageType='png')"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas.addCanvasDashedWedge",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasDashedWedge(self, p1, p2, p3, dash=(2, 2), color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas.addCanvasLine",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasLine(self, p1, p2, color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas.addCanvasPolygon",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasPolygon(self, ps, color=(0, 0, 0), **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas.addCanvasText",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasText(self, text, pos, font, color=(0, 0, 0), **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.mplCanvas.Canvas.rescalePt",
+   "kind": "method",
+   "overloads": [
+    "def rescalePt(self, p1)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas",
+   "kind": "class",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas.addCanvasDashedWedge",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasDashedWedge(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas.addCanvasLine",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasLine(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas.addCanvasPolygon",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasPolygon(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas.addCanvasText",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasText(...)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.qtCanvas.Canvas.flush",
+   "kind": "method",
+   "overloads": [
+    "def flush(...)"
    ]
   },
   {
@@ -1810,6 +2048,72 @@
    "overloads": [
     "def shouldKekulize(mol, kekulize)"
    ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas",
+   "kind": "class",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.__init__",
+   "kind": "method",
+   "overloads": [
+    "def __init__(self, size, name, imageType='png')"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.addCanvasDashedWedge",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasDashedWedge(self, p1, p2, p3, dash=(2, 2), color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.addCanvasLine",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasLine(self, p1, p2, color=(0, 0, 0), color2=None, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.addCanvasPolygon",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasPolygon(self, ps, color=(0, 0, 0), fill=True, stroke=False, **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.addCanvasText",
+   "kind": "method",
+   "overloads": [
+    "def addCanvasText(self, text, pos, font, color=(0, 0, 0), **kwargs)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.flush",
+   "kind": "method",
+   "overloads": [
+    "def flush(self)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.Canvas.save",
+   "kind": "method",
+   "overloads": [
+    "def save(self)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.convertColor",
+   "kind": "module_function",
+   "overloads": [
+    "def convertColor(color)"
+   ]
+  },
+  {
+   "python": "rdkit.Chem.Draw.spingCanvas.faceMap",
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.EState.AtomTypes.BuildPatts",
@@ -4284,13 +4588,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.Lipinski.NumAmideBonds",
-   "kind": "module_function",
-   "overloads": [
-    "def NumAmideBonds(x, y=<Boost.Python.function object>)"
-   ]
-  },
-  {
    "python": "rdkit.Chem.Lipinski.NumAromaticCarbocycles",
    "kind": "module_function",
    "overloads": [
@@ -4312,20 +4609,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.Lipinski.NumAtomStereoCenters",
-   "kind": "module_function",
-   "overloads": [
-    "def NumAtomStereoCenters(x, y=<Boost.Python.function object>)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Lipinski.NumBridgeheadAtoms",
-   "kind": "module_function",
-   "overloads": [
-    "def NumBridgeheadAtoms(x, y=<Boost.Python.function object>)"
-   ]
-  },
-  {
    "python": "rdkit.Chem.Lipinski.NumHAcceptors",
    "kind": "module_function",
    "overloads": [
@@ -4344,13 +4627,6 @@
    "kind": "module_function",
    "overloads": [
     "def NumHeteroatoms(x)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Lipinski.NumHeterocycles",
-   "kind": "module_function",
-   "overloads": [
-    "def NumHeterocycles(x, y=<Boost.Python.function object>)"
    ]
   },
   {
@@ -4379,27 +4655,6 @@
    "kind": "module_function",
    "overloads": [
     "def NumSaturatedRings(x, y=<Boost.Python.function object>)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Lipinski.NumSpiroAtoms",
-   "kind": "module_function",
-   "overloads": [
-    "def NumSpiroAtoms(x, y=<Boost.Python.function object>)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Lipinski.NumUnspecifiedAtomStereoCenters",
-   "kind": "module_function",
-   "overloads": [
-    "def NumUnspecifiedAtomStereoCenters(x, y=<Boost.Python.function object>)"
-   ]
-  },
-  {
-   "python": "rdkit.Chem.Lipinski.Phi",
-   "kind": "module_function",
-   "overloads": [
-    "def Phi(x, y=<Boost.Python.function object>)"
    ]
   },
   {
@@ -5273,13 +5528,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.MultiConfMolFromSDF",
-   "kind": "module_function",
-   "overloads": [
-    "def MultiConfMolFromSDF(sdf, sanitize=True, removeHs=True, strictParsing=True)"
-   ]
-  },
-  {
    "python": "rdkit.Chem.PandasPatcher.InteractiveRenderer",
    "kind": "module_attribute",
    "overloads": []
@@ -5293,35 +5541,35 @@
    "python": "rdkit.Chem.PandasPatcher.MolFormatter.__call__",
    "kind": "method",
    "overloads": [
-    "def __call__(self, x)"
+    "def __call__(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.MolFormatter.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self, orig_formatter=None)"
+    "def __init__(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.MolFormatter.default_formatter",
-   "kind": "static_method",
+   "kind": "method",
    "overloads": [
-    "def default_formatter(x)"
+    "def default_formatter(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.MolFormatter.get_formatters",
-   "kind": "static_method",
+   "kind": "method",
    "overloads": [
-    "def get_formatters(cls, df, orig_formatters)"
+    "def get_formatters(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.MolFormatter.is_mol",
-   "kind": "static_method",
+   "kind": "method",
    "overloads": [
-    "def is_mol(x)"
+    "def is_mol(...)"
    ]
   },
   {
@@ -5343,25 +5591,75 @@
    "python": "rdkit.Chem.PandasPatcher.changeMoleculeRendering",
    "kind": "module_function",
    "overloads": [
-    "def changeMoleculeRendering(frame, renderer='image')"
+    "def changeMoleculeRendering(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.check_rdk_attr",
    "kind": "module_function",
    "overloads": [
-    "def check_rdk_attr(frame, attr)"
+    "def check_rdk_attr(...)"
    ]
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.dataframe_applymap",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.dataframeformatter_class",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.html_formatter_class",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.html_formatter_module",
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.PandasPatcher.is_molecule_image",
    "kind": "module_function",
    "overloads": [
-    "def is_molecule_image(s)"
+    "def is_molecule_image(...)"
    ]
   },
   {
+   "python": "rdkit.Chem.PandasPatcher.log",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
    "python": "rdkit.Chem.PandasPatcher.molJustify",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.orig_get_adjustment",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.orig_get_formatter",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.orig_to_html",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.orig_write_cell",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.pandas_formats",
    "kind": "module_attribute",
    "overloads": []
   },
@@ -5374,49 +5672,54 @@
    "python": "rdkit.Chem.PandasPatcher.patchPandas",
    "kind": "module_function",
    "overloads": [
-    "def patchPandas()"
+    "def patchPandas(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.patched_get_adjustment",
    "kind": "module_function",
    "overloads": [
-    "def patched_get_adjustment()"
+    "def patched_get_adjustment(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.patched_get_formatter",
    "kind": "module_function",
    "overloads": [
-    "def patched_get_formatter(self, i, *args, **kwargs)"
+    "def patched_get_formatter(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.patched_to_html",
    "kind": "module_function",
    "overloads": [
-    "def patched_to_html(self, *args, **kwargs)"
+    "def patched_to_html(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.patched_write_cell",
    "kind": "module_function",
    "overloads": [
-    "def patched_write_cell(self, s, *args, **kwargs)"
+    "def patched_write_cell(...)"
    ]
+  },
+  {
+   "python": "rdkit.Chem.PandasPatcher.pprint_thing",
+   "kind": "module_attribute",
+   "overloads": []
   },
   {
    "python": "rdkit.Chem.PandasPatcher.renderImagesInAllDataFrames",
    "kind": "module_function",
    "overloads": [
-    "def renderImagesInAllDataFrames(images=True)"
+    "def renderImagesInAllDataFrames(...)"
    ]
   },
   {
    "python": "rdkit.Chem.PandasPatcher.set_rdk_attr",
    "kind": "module_function",
    "overloads": [
-    "def set_rdk_attr(frame, attr)"
+    "def set_rdk_attr(...)"
    ]
   },
   {
@@ -5425,10 +5728,15 @@
    "overloads": []
   },
   {
+   "python": "rdkit.Chem.PandasPatcher.to_html_class",
+   "kind": "module_attribute",
+   "overloads": []
+  },
+  {
    "python": "rdkit.Chem.PandasPatcher.unpatchPandas",
    "kind": "module_function",
    "overloads": [
-    "def unpatchPandas()"
+    "def unpatchPandas(...)"
    ]
   },
   {
@@ -5489,7 +5797,7 @@
    "python": "rdkit.Chem.PandasTools.LoadSDF",
    "kind": "module_function",
    "overloads": [
-    "def LoadSDF(filename, idName='ID', molColName='ROMol', includeFingerprints=False, isomericSmiles=True, smilesName=None, embedProps=False, removeHs=True, strictParsing=True, sanitize=True, autoConvertStrings=False)"
+    "def LoadSDF(filename, idName='ID', molColName='ROMol', includeFingerprints=False, isomericSmiles=True, smilesName=None, embedProps=False, removeHs=True, strictParsing=True, sanitize=True)"
    ]
   },
   {
@@ -5531,7 +5839,7 @@
    "python": "rdkit.Chem.PandasTools.SaveXlsxFromFrame",
    "kind": "module_function",
    "overloads": [
-    "def SaveXlsxFromFrame(frame, outFile, molCol='ROMol', size=(300, 300), dpi=96, formats=None)"
+    "def SaveXlsxFromFrame(frame, outFile, molCol='ROMol', size=(300, 300), formats=None)"
    ]
   },
   {
@@ -5566,11 +5874,6 @@
    "overloads": [
     "def WriteSDF(df, out, molColName='ROMol', idName=None, properties=None, allNumeric=False, forceV3000=False)"
    ]
-  },
-  {
-   "python": "rdkit.Chem.PandasTools.XLSX_DEFAULT_DPI",
-   "kind": "module_attribute",
-   "overloads": []
   },
   {
    "python": "rdkit.Chem.PandasTools.drawOptions",
@@ -5813,14 +6116,14 @@
    "python": "rdkit.Chem.Pharm2D.Utils.GetUniqueCombinations",
    "kind": "module_function",
    "overloads": [
-    "def GetUniqueCombinations(choices, classes)"
+    "def GetUniqueCombinations(choices, classes, which=0)"
    ]
   },
   {
    "python": "rdkit.Chem.Pharm2D.Utils.GetUniqueCombinations_new",
    "kind": "module_function",
    "overloads": [
-    "def GetUniqueCombinations_new(choices, classes)"
+    "def GetUniqueCombinations_new(choices, classes, which=0)"
    ]
   },
   {
@@ -6868,7 +7171,7 @@
    "python": "rdkit.Chem.RegistrationHash.GetMolLayers",
    "kind": "module_function",
    "overloads": [
-    "def GetMolLayers(original_molecule: rdkit.Chem.rdchem.Mol, data_field_names: Optional[Iterable] = None, escape: Optional[str] = None, cxflag=1089, enable_tautomer_hash_v2=False) -> Dict[rdkit.Chem.RegistrationHash.HashLayer, str]"
+    "def GetMolLayers(original_molecule: rdkit.Chem.rdchem.Mol, data_field_names: Optional[Iterable] = None, escape: Optional[str] = None, cxflag=1089, enable_tautomer_hash_v2=False) -> {<HashLayer.CANONICAL_SMILES: 1>, <HashLayer.ESCAPE: 2>, <HashLayer.SGROUP_DATA: 6>, <HashLayer.FORMULA: 3>, <HashLayer.NO_STEREO_SMILES: 4>, <HashLayer.TAUTOMER_HASH: 7>, <HashLayer.NO_STEREO_TAUTOMER_HASH: 5>}"
    ]
   },
   {
@@ -7097,7 +7400,7 @@
    "python": "rdkit.Chem.SimpleEnum.Enumerator.EnumerateReaction",
    "kind": "module_function",
    "overloads": [
-    "def EnumerateReaction(reaction, bbLists, uniqueProductsOnly=False, funcGroupFilename='/root/micromamba/envs/rdkit-py/share/RDKit/Data/Functional_Group_Hierarchy.txt', propName='molFileValue')"
+    "def EnumerateReaction(reaction, bbLists, uniqueProductsOnly=False, funcGroupFilename='/root/mmroot/envs/rdkit-py/share/RDKit/Data/Functional_Group_Hierarchy.txt', propName='molFileValue')"
    ]
   },
   {
@@ -8826,13 +9129,6 @@
    ]
   },
   {
-   "python": "rdkit.Chem.inchi.MolFromInchiAndAuxInfo",
-   "kind": "module_function",
-   "overloads": [
-    "def MolFromInchiAndAuxInfo(inchi, auxinfo, sanitize=True, removeHs=True, logLevel=None, treatWarningAsError=False)"
-   ]
-  },
-  {
    "python": "rdkit.Chem.inchi.MolToInchi",
    "kind": "module_function",
    "overloads": [
@@ -9158,20 +9454,6 @@
    "python": "rdkit.DataStructs.VectCollection.VectCollection.orVect",
    "kind": "property",
    "overloads": []
-  },
-  {
-   "python": "rdkit.DataStructs.getElementFromFlatMatrix",
-   "kind": "module_function",
-   "overloads": [
-    "def getElementFromFlatMatrix(matrix, i, j)"
-   ]
-  },
-  {
-   "python": "rdkit.DataStructs.getNForFlatMatrix",
-   "kind": "module_function",
-   "overloads": [
-    "def getNForFlatMatrix(matrix)"
-   ]
   },
   {
    "python": "rdkit.DataStructs.similarityFunctions",
@@ -9585,13 +9867,6 @@
    "kind": "module_function",
    "overloads": [
     "def EuclideanDist(pi, pj)"
-   ]
-  },
-  {
-   "python": "rdkit.ML.Cluster.Butina.compute_distance_matrix",
-   "kind": "module_function",
-   "overloads": [
-    "def compute_distance_matrix(data, n_pts, dist_func)"
    ]
   },
   {
@@ -11144,11 +11419,6 @@
    ]
   },
   {
-   "python": "rdkit.VECT_WRAPS",
-   "kind": "module_attribute",
-   "overloads": []
-  },
-  {
    "python": "rdkit.VLib.Filter.FilterNode",
    "kind": "class",
    "overloads": []
@@ -11649,32 +11919,6 @@
    "kind": "method",
    "overloads": [
     "def next(self)"
-   ]
-  },
-  {
-   "python": "rdkit.VectIter",
-   "kind": "class",
-   "overloads": []
-  },
-  {
-   "python": "rdkit.VectIter.__init__",
-   "kind": "method",
-   "overloads": [
-    "def __init__(self, vect)"
-   ]
-  },
-  {
-   "python": "rdkit.VectIter.__iter__",
-   "kind": "method",
-   "overloads": [
-    "def __iter__(self)"
-   ]
-  },
-  {
-   "python": "rdkit.VectIter.__next__",
-   "kind": "method",
-   "overloads": [
-    "def __next__(self)"
    ]
   },
   {
@@ -15851,140 +16095,105 @@
    "python": "rdkit.sping.stringformat.StringFormatter.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self)"
+    "def __init__(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_b",
    "kind": "method",
    "overloads": [
-    "def end_b(self)"
+    "def end_b(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_greek",
    "kind": "method",
    "overloads": [
-    "def end_greek(self)"
+    "def end_greek(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_i",
    "kind": "method",
    "overloads": [
-    "def end_i(self)"
+    "def end_i(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_sub",
    "kind": "method",
    "overloads": [
-    "def end_sub(self)"
+    "def end_sub(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_super",
    "kind": "method",
    "overloads": [
-    "def end_super(self)"
+    "def end_super(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.end_u",
    "kind": "method",
    "overloads": [
-    "def end_u(self)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_charref",
-   "kind": "method",
-   "overloads": [
-    "def handle_charref(self, name)"
+    "def end_u(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.handle_data",
    "kind": "method",
    "overloads": [
-    "def handle_data(self, data)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_endtag",
-   "kind": "method",
-   "overloads": [
-    "def handle_endtag(self, tag)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_entityref",
-   "kind": "method",
-   "overloads": [
-    "def handle_entityref(self, name)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_startendtag",
-   "kind": "method",
-   "overloads": [
-    "def handle_startendtag(self, tag, attributes)"
-   ]
-  },
-  {
-   "python": "rdkit.sping.stringformat.StringFormatter.handle_starttag",
-   "kind": "method",
-   "overloads": [
-    "def handle_starttag(self, tag, attributes)"
+    "def handle_data(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.parseSegments",
    "kind": "method",
    "overloads": [
-    "def parseSegments(self, s)"
+    "def parseSegments(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_b",
    "kind": "method",
    "overloads": [
-    "def start_b(self, attributes)"
+    "def start_b(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_greek",
    "kind": "method",
    "overloads": [
-    "def start_greek(self, attributes, letter)"
+    "def start_greek(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_i",
    "kind": "method",
    "overloads": [
-    "def start_i(self, attributes)"
+    "def start_i(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_sub",
    "kind": "method",
    "overloads": [
-    "def start_sub(self, attributes)"
+    "def start_sub(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_super",
    "kind": "method",
    "overloads": [
-    "def start_super(self, attributes)"
+    "def start_super(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringFormatter.start_u",
    "kind": "method",
    "overloads": [
-    "def start_u(self, attributes)"
+    "def start_u(...)"
    ]
   },
   {
@@ -15996,63 +16205,63 @@
    "python": "rdkit.sping.stringformat.StringSegment.__init__",
    "kind": "method",
    "overloads": [
-    "def __init__(self)"
+    "def __init__(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringSegment.calcNewFont",
    "kind": "method",
    "overloads": [
-    "def calcNewFont(self, font)"
+    "def calcNewFont(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringSegment.calcNewY",
    "kind": "method",
    "overloads": [
-    "def calcNewY(self, font, y)"
+    "def calcNewY(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.StringSegment.dump",
    "kind": "method",
    "overloads": [
-    "def dump(self)"
+    "def dump(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.allTagCombos",
    "kind": "module_function",
    "overloads": [
-    "def allTagCombos(canvas, x, y, font=None, color=None, angle=0)"
+    "def allTagCombos(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.drawString",
    "kind": "module_function",
    "overloads": [
-    "def drawString(canvas, s, x, y, font=None, color=None, angle=0)"
+    "def drawString(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.fontAscent",
    "kind": "module_function",
    "overloads": [
-    "def fontAscent(canvas, font=None)"
+    "def fontAscent(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.fontDescent",
    "kind": "module_function",
    "overloads": [
-    "def fontDescent(canvas, font=None)"
+    "def fontDescent(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.fontHeight",
    "kind": "module_function",
    "overloads": [
-    "def fontHeight(canvas, font=None)"
+    "def fontHeight(...)"
    ]
   },
   {
@@ -16064,7 +16273,7 @@
    "python": "rdkit.sping.stringformat.rotateXY",
    "kind": "module_function",
    "overloads": [
-    "def rotateXY(x, y, theta)"
+    "def rotateXY(...)"
    ]
   },
   {
@@ -16076,14 +16285,14 @@
    "python": "rdkit.sping.stringformat.stringWidth",
    "kind": "module_function",
    "overloads": [
-    "def stringWidth(canvas, s, font=None)"
+    "def stringWidth(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.stringformatTest",
    "kind": "module_function",
    "overloads": [
-    "def stringformatTest()"
+    "def stringformatTest(...)"
    ]
   },
   {
@@ -16100,14 +16309,14 @@
    "python": "rdkit.sping.stringformat.test1",
    "kind": "module_function",
    "overloads": [
-    "def test1()"
+    "def test1(...)"
    ]
   },
   {
    "python": "rdkit.sping.stringformat.test2",
    "kind": "module_function",
    "overloads": [
-    "def test2()"
+    "def test2(...)"
    ]
   },
   {
@@ -16411,7 +16620,7 @@
    "python": "rdkit.utils.chemutils.GetAtomicData",
    "kind": "module_function",
    "overloads": [
-    "def GetAtomicData(atomDict, descriptorsDesired, dBase='/root/micromamba/envs/rdkit-py/share/RDKit/Data/atomdb.gdb', table='atomic_data', where='', user='sysdba', password='masterkey', includeElCounts=0)"
+    "def GetAtomicData(atomDict, descriptorsDesired, dBase='/root/mmroot/envs/rdkit-py/share/RDKit/Data/atomdb.gdb', table='atomic_data', where='', user='sysdba', password='masterkey', includeElCounts=0)"
    ]
   },
   {

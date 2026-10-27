@@ -15,20 +15,20 @@ use std::path::Path;
 
 use cxx::UniquePtr;
 
-use crate::chem::{
-    CXSmilesFields, Mol, PropertyPickleOptions, RestoreBondDirOption, SmilesParserParams,
-    SmilesWriteParams,
-};
+use crate::chem::{Mol, SmilesParserParams};
 use crate::error::expect_ok;
 use crate::ffi::molops::ffi as molops;
 use crate::ffi::png::ffi;
 use crate::util::path_bytes;
 use crate::{Error, Result};
 
-/// What `mol_metadata_to_png_string_with_params` records. Mirrors
-/// `rdmolfiles.PNGMetadataParams` (CONVENTIONS.md A3).
+/// What `mol_metadata_to_png_string_with_params` and
+/// `mol_metadata_to_png_file_with_params` record, with Python's defaults
+/// (A2). The pickle has the process-wide properties
+/// (`get_default_pickle_properties`), and the CXSMILES and mol block are
+/// written with their writers' defaults.
 #[derive(Clone, Debug, PartialEq)]
-pub struct PNGMetadataParams {
+pub struct MolMetadataToPNGParams {
     /// Records the molecule's pickle; `Error::Value` for a molecule a pickle
     /// cannot hold (`Mol::to_binary`).
     pub include_pkl: bool,
@@ -36,42 +36,24 @@ pub struct PNGMetadataParams {
     pub include_smiles: bool,
     /// Records its mol block.
     pub include_mol: bool,
-    /// The properties the pickle includes; by default the process-wide
-    /// setting (`get_default_pickle_properties`).
-    pub property_flags: PropertyPickleOptions,
-    /// How the CXSMILES is written.
-    pub smiles_write_params: SmilesWriteParams,
-    /// The CXSMILES extensions to write.
-    pub cx_smiles_flags: CXSmilesFields,
-    /// What the CXSMILES does with bond directions.
-    pub restore_bond_dirs: RestoreBondDirOption,
 }
 
-impl Default for PNGMetadataParams {
-    fn default() -> PNGMetadataParams {
-        let data = expect_ok(ffi::png_metadata_params_default());
-        PNGMetadataParams {
-            include_pkl: data.include_pkl,
-            include_smiles: data.include_smiles,
-            include_mol: data.include_mol,
-            property_flags: PropertyPickleOptions::from_bits_retain(data.property_flags),
-            smiles_write_params: SmilesWriteParams::from_ffi(data.smiles_write_params),
-            cx_smiles_flags: CXSmilesFields::from_bits_retain(data.cx_smiles_flags),
-            restore_bond_dirs: RestoreBondDirOption::from_ffi(data.restore_bond_dirs),
+impl Default for MolMetadataToPNGParams {
+    fn default() -> MolMetadataToPNGParams {
+        MolMetadataToPNGParams {
+            include_pkl: true,
+            include_smiles: true,
+            include_mol: false,
         }
     }
 }
 
-impl PNGMetadataParams {
+impl MolMetadataToPNGParams {
     fn to_ffi(&self) -> ffi::PNGMetadataParamsData {
         ffi::PNGMetadataParamsData {
             include_pkl: self.include_pkl,
             include_smiles: self.include_smiles,
             include_mol: self.include_mol,
-            property_flags: self.property_flags.bits(),
-            smiles_write_params: self.smiles_write_params.to_ffi(),
-            cx_smiles_flags: self.cx_smiles_flags.bits(),
-            restore_bond_dirs: self.restore_bond_dirs.to_ffi(),
         }
     }
 }
@@ -246,15 +228,15 @@ pub unsafe fn mols_from_png_file_with_params(
 /// The PNG `png` with a molecule's pickle and CXSMILES added to its metadata.
 /// Mirrors `rdmolfiles.MolMetadataToPNGString`.
 pub fn mol_metadata_to_png_string(mol: &Mol, png: &[u8]) -> Result<Vec<u8>> {
-    mol_metadata_to_png_string_with_params(mol, png, &PNGMetadataParams::default())
+    mol_metadata_to_png_string_with_params(mol, png, &MolMetadataToPNGParams::default())
 }
 
-/// Mirrors `rdmolfiles.MolMetadataToPNGString(mol, png, params)` and
-/// `MolMetadataToPNGString(mol, png, includePkl, includeSmiles, includeMol)`.
+/// Mirrors `rdmolfiles.MolMetadataToPNGString(mol, png, includePkl,
+/// includeSmiles, includeMol)`.
 pub fn mol_metadata_to_png_string_with_params(
     mol: &Mol,
     png: &[u8],
-    params: &PNGMetadataParams,
+    params: &MolMetadataToPNGParams,
 ) -> Result<Vec<u8>> {
     Ok(ffi::mol_metadata_to_png_string(
         mol.as_ffi(),
@@ -266,15 +248,15 @@ pub fn mol_metadata_to_png_string_with_params(
 /// The PNG in a file with a molecule's metadata added; the file is not
 /// changed. Mirrors `rdmolfiles.MolMetadataToPNGFile`.
 pub fn mol_metadata_to_png_file(mol: &Mol, filename: impl AsRef<Path>) -> Result<Vec<u8>> {
-    mol_metadata_to_png_file_with_params(mol, filename, &PNGMetadataParams::default())
+    mol_metadata_to_png_file_with_params(mol, filename, &MolMetadataToPNGParams::default())
 }
 
-/// Mirrors `rdmolfiles.MolMetadataToPNGFile(mol, filename, params)` and its
-/// keyword form.
+/// Mirrors `rdmolfiles.MolMetadataToPNGFile(mol, filename, includePkl,
+/// includeSmiles, includeMol)`.
 pub fn mol_metadata_to_png_file_with_params(
     mol: &Mol,
     filename: impl AsRef<Path>,
-    params: &PNGMetadataParams,
+    params: &MolMetadataToPNGParams,
 ) -> Result<Vec<u8>> {
     Ok(ffi::mol_metadata_to_png_file(
         mol.as_ffi(),

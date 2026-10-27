@@ -17,7 +17,7 @@ rdkit_enum! {
     /// Mirrors `rdChemReactions.FingerprintType`.
     FingerprintType: ffi::FingerprintType {
         AtomPairFp = AtomPairFP,
-        TopologicalTorsion = TopologicalTorsionFP,
+        TopologicalTorsion = TopologicalTorsion,
         MorganFp = MorganFP,
         RdkitFp = RDKitFP,
         PatternFp = PatternFP,

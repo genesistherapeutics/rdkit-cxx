@@ -26,9 +26,11 @@
 #include <GraphMol/Depictor/DepictUtils.h>
 #include <GraphMol/FileParsers/PNGParser.h>
 #include <GraphMol/FilterCatalog/FunctionalGroupHierarchy.h>
-#include <GraphMol/Fingerprints/AtomPairGenerator.h>
-#include <GraphMol/Fingerprints/MorganGenerator.h>
-#include <GraphMol/Fingerprints/TopologicalTorsionGenerator.h>
+// Not the fingerprint generators' headers: TopologicalTorsionGenerator.h's
+// namespace RDKit::TopologicalTorsion collides with RDKit 2024.03's
+// FingerprintType enumerator of that name.
+#include <GraphMol/Fingerprints/AtomPairs.h>
+#include <GraphMol/Fingerprints/MorganFingerprints.h>
 #include <GraphMol/MarvinParse/MarvinParser.h>
 #include <GraphMol/MolOps.h>
 #include <GraphMol/MolPickler.h>
@@ -376,40 +378,38 @@ ReactionFingerprintParamsData fp_params_to_data(
 }
 
 // A template's count fingerprint, as generateFingerprint in
-// ReactionFingerprints.cpp makes it; null for the types it refuses.
+// ReactionFingerprints.cpp makes it, with RDKit 2024.03's hashed
+// fingerprint functions; null for the types it refuses.
 std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> count_fingerprint(
     RDKit::ROMol &mol, unsigned fp_size, FingerprintType type) {
   mol.updatePropertyCache(false);
   switch (type) {
     case FingerprintType::AtomPairFP: {
-      RDKit::AtomPair::AtomPairArguments args;
-      args.d_fpSize = fp_size;
-      std::unique_ptr<RDKit::FingerprintGenerator<std::uint32_t>> gen{
-          RDKit::AtomPair::getAtomPairGenerator<std::uint32_t>(args)};
-      return std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>>(
-          gen->getCountFingerprint(mol));
+      std::unique_ptr<RDKit::SparseIntVect<std::int32_t>> tmp(
+          RDKit::AtomPairs::getHashedAtomPairFingerprint(mol, fp_size));
+      auto res = std::make_unique<RDKit::SparseIntVect<std::uint32_t>>(fp_size);
+      for (const auto &[idx, val] : tmp->getNonzeroElements()) {
+        res->setVal(static_cast<std::uint32_t>(idx), val);
+      }
+      return res;
     }
-    case FingerprintType::TopologicalTorsionFP: {
-      RDKit::TopologicalTorsion::TopologicalTorsionArguments args;
-      args.d_fpSize = fp_size;
-      std::unique_ptr<RDKit::FingerprintGenerator<std::uint64_t>> gen{
-          RDKit::TopologicalTorsion::getTopologicalTorsionGenerator<
-              std::uint64_t>(args)};
-      return std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>>(
-          gen->getCountFingerprint(mol));
+    case FingerprintType::TopologicalTorsion: {
+      std::unique_ptr<RDKit::SparseIntVect<std::int64_t>> tmp(
+          RDKit::AtomPairs::getHashedTopologicalTorsionFingerprint(mol,
+                                                                   fp_size));
+      auto res = std::make_unique<RDKit::SparseIntVect<std::uint32_t>>(fp_size);
+      for (const auto &[idx, val] : tmp->getNonzeroElements()) {
+        res->setVal(static_cast<std::uint32_t>(idx), val);
+      }
+      return res;
     }
     case FingerprintType::MorganFP: {
       if (!mol.getRingInfo()->isInitialized()) {
         mol.updatePropertyCache();
         RDKit::MolOps::findSSSR(mol);
       }
-      RDKit::MorganFingerprint::MorganArguments args;
-      args.d_radius = 2;
-      args.d_fpSize = fp_size;
-      std::unique_ptr<RDKit::FingerprintGenerator<std::uint32_t>> gen{
-          RDKit::MorganFingerprint::getMorganGenerator<std::uint32_t>(args)};
       return std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>>(
-          gen->getCountFingerprint(mol));
+          RDKit::MorganFingerprints::getHashedFingerprint(mol, 2, fp_size));
     }
     default:
       return nullptr;
@@ -868,27 +868,6 @@ std::unique_ptr<std::string> reaction_to_smiles(
   check_template_removals(rxn);
   auto lock = random_lock(params);
   return own(RDKit::ChemicalReactionToRxnSmiles(rxn, write_params(params)));
-}
-
-std::unique_ptr<std::string> reaction_to_cx_smarts(
-    const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
-    std::uint32_t flags) {
-  auto lock = random_lock(params);
-  return own(
-      RDKit::ChemicalReactionToCXRxnSmarts(rxn, write_params(params), flags));
-}
-
-std::unique_ptr<std::string> reaction_to_cx_smiles(
-    const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
-    std::uint32_t flags) {
-  check_template_removals(rxn);
-  auto lock = random_lock(params);
-  return own(
-      RDKit::ChemicalReactionToCXRxnSmiles(rxn, write_params(params), flags));
-}
-
-std::uint32_t cx_smiles_fields_all() {
-  return RDKit::SmilesWrite::CXSmilesFields::CX_ALL;
 }
 
 std::unique_ptr<ChemicalReaction> reaction_from_rxn_block(rust::Str rxn_block,

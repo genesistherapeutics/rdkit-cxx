@@ -77,10 +77,8 @@ RDKit::RGroupDecompositionParameters params_from(
   p.removeHydrogensPostMatch = d.remove_hydrogens_post_match;
   p.allowNonTerminalRGroups = d.allow_non_terminal_r_groups;
   p.allowMultipleRGroupsOnUnlabelled = d.allow_multiple_r_groups_on_unlabelled;
-  p.allowMultipleCoresInSameMol = d.allow_multiple_cores_in_same_mol;
   p.doTautomers = d.do_tautomers;
   p.doEnumeration = d.do_enumeration;
-  p.includeTargetMolInResults = d.include_target_mol_in_results;
   p.timeout = d.timeout;
   p.gaPopulationSize = d.ga_population_size;
   p.gaMaximumOperations = d.ga_maximum_operations;
@@ -246,10 +244,8 @@ RGroupDecompositionParametersData r_group_decomposition_parameters_default() {
       p.removeHydrogensPostMatch,
       p.allowNonTerminalRGroups,
       p.allowMultipleRGroupsOnUnlabelled,
-      p.allowMultipleCoresInSameMol,
       p.doTautomers,
       p.doEnumeration,
-      p.includeTargetMolInResults,
       p.timeout,
       p.gaPopulationSize,
       p.gaMaximumOperations,

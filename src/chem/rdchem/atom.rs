@@ -10,7 +10,7 @@ use cxx::UniquePtr;
 
 use crate::Result;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
-use crate::chem::rdchem::{BondRef, ChiralType, HybridizationType, Mol, ValenceType};
+use crate::chem::rdchem::{BondRef, ChiralType, HybridizationType, Mol};
 use crate::error::{expect_ok, to_string};
 use crate::ffi::atom::ffi;
 use crate::ffi::props::ffi::{RDProps, atom_as_props};
@@ -122,10 +122,18 @@ macro_rules! atom_getters {
                 expect_ok(ffi::atom_needs_update_property_cache(self.raw()))
             }
 
-            /// The explicit or implicit valence; 0 outside a molecule. Needs
-            /// the property cache. Mirrors `Atom.GetValence`.
-            pub fn get_valence(&self, which: ValenceType) -> Result<u32> {
-                Ok(ffi::atom_get_valence(self.raw(), which.to_ffi())?)
+            /// The explicit valence: the bonds' and explicit hydrogens'.
+            /// `Error::Runtime` outside a molecule or before the property
+            /// cache is computed. Mirrors `Atom.GetExplicitValence`.
+            pub fn get_explicit_valence(&self) -> Result<u32> {
+                Ok(ffi::atom_get_explicit_valence(self.raw())?)
+            }
+
+            /// The implicit valence: the implicit hydrogens'. `Error::Runtime`
+            /// outside a molecule or before the property cache is computed.
+            /// Mirrors `Atom.GetImplicitValence`.
+            pub fn get_implicit_valence(&self) -> Result<u32> {
+                Ok(ffi::atom_get_implicit_valence(self.raw())?)
             }
 
             /// The atom as SMARTS, or as SMILES when it has no query. Mirrors
@@ -293,11 +301,6 @@ macro_rules! atom_setters {
                 ))
             }
 
-            /// Forgets the computed valences. Mirrors `Atom.ClearPropertyCache`.
-            pub fn clear_property_cache(&mut self) {
-                expect_ok(ffi::atom_clear_property_cache(self.raw_mut()))
-            }
-
             /// Inverts tetrahedral chirality, returning whether there was any.
             /// Mirrors `Atom.InvertChirality`.
             pub fn invert_chirality(&mut self) -> bool {
@@ -328,7 +331,7 @@ impl Default for GetSmartsParams {
     }
 }
 
-/// `Atom::NOATOM`, read from C++ for a test that pins the constant.
+/// `StereoInfo::NOATOM`, read from C++ for a test that pins the constant.
 #[cfg(test)]
 pub(crate) fn noatom_for_tests() -> u32 {
     expect_ok(ffi::atom_noatom())
@@ -359,9 +362,6 @@ impl Atom {
     pub fn new(what: &str) -> Result<Atom> {
         Ok(Atom::from_ffi(ffi::atom_new(what)?))
     }
-
-    /// The index that marks "no atom". Mirrors `Atom.NOATOM`.
-    pub const NOATOM: u32 = u32::MAX;
 
     /// An atom with atomic number `num`. Mirrors `Atom(num)`.
     pub fn from_num(num: u32) -> Atom {
@@ -593,6 +593,6 @@ mod tests {
 
     #[test]
     fn noatom_matches_rdkit() {
-        assert_eq!(Atom::NOATOM, noatom_for_tests());
+        assert_eq!(crate::chem::rdchem::StereoInfo::NOATOM, noatom_for_tests());
     }
 }

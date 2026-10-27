@@ -196,14 +196,6 @@ value_vect_type!(
     discrete_value_vect_binary_op, discrete_value_vect_assign_op
 );
 
-value_vect_type!(
-    /// A vector of real numbers. Mirrors `cDataStructs.RealValueVect`.
-    RealValueVect, RealValueVect, f64,
-    real_value_vect_clone, real_value_vect_from_pkl, real_value_vect_get_val,
-    real_value_vect_set_val, real_value_vect_get_length, real_value_vect_get_total_val,
-    real_value_vect_to_binary, real_value_vect_binary_op, real_value_vect_assign_op
-);
-
 impl DiscreteValueVect {
     /// `length` zeros of `val_type`. Mirrors `DiscreteValueVect(valType,
     /// length)`.
@@ -245,20 +237,6 @@ impl PartialEq for DiscreteValueVect {
     }
 }
 
-impl RealValueVect {
-    /// `length` zeros. Mirrors `RealValueVect(length)`.
-    pub fn new(length: u32) -> RealValueVect {
-        RealValueVect::from_ffi(expect_ok(ffi::real_value_vect_new(length)))
-    }
-}
-
-/// An empty vector, a Rust addition (Python's constructors take a length).
-impl Default for RealValueVect {
-    fn default() -> RealValueVect {
-        RealValueVect::new(0)
-    }
-}
-
 /// The sum of the absolute differences, for vectors of one length and value
 /// type. Mirrors `cDataStructs.ComputeL1Norm`.
 pub fn compute_l1_norm(v1: &DiscreteValueVect, v2: &DiscreteValueVect) -> Result<u32> {
@@ -266,12 +244,6 @@ pub fn compute_l1_norm(v1: &DiscreteValueVect, v2: &DiscreteValueVect) -> Result
         v1.raw(),
         v2.raw(),
     )?)
-}
-
-/// As [`compute_l1_norm`], for real vectors. Mirrors
-/// `cDataStructs.ComputeL1Norm(RealValueVect, RealValueVect)` (A5).
-pub fn compute_l1_norm_real_value_vect(v1: &RealValueVect, v2: &RealValueVect) -> Result<f64> {
-    Ok(ffi::real_value_vect_compute_l1_norm(v1.raw(), v2.raw())?)
 }
 
 mod sealed {
@@ -287,7 +259,7 @@ mod sealed {
 /// sealed, so only this crate's vectors implement it.
 pub trait ConvertToNumpyArray: sealed::Values {
     /// The type of the vector's values in the array: `u32` for
-    /// `DiscreteValueVect`, `f64` for `RealValueVect`, and `i32` for the bit
+    /// `DiscreteValueVect` and `i32` for the bit
     /// and sparse-int vectors, as NumPy's array would hold them.
     type Value;
 }
@@ -298,18 +270,6 @@ impl ConvertToNumpyArray for DiscreteValueVect {
 
 impl sealed::Values for DiscreteValueVect {
     fn values(&self) -> Vec<u32> {
-        (0..self.len())
-            .map(|i| self.get_val(i).expect("the index is in range"))
-            .collect()
-    }
-}
-
-impl ConvertToNumpyArray for RealValueVect {
-    type Value = f64;
-}
-
-impl sealed::Values for RealValueVect {
-    fn values(&self) -> Vec<f64> {
         (0..self.len())
             .map(|i| self.get_val(i).expect("the index is in range"))
             .collect()

@@ -9,9 +9,7 @@
 //! The wrapper checks what RDKit trusts (CONVENTIONS.md U1): a
 //! `max_frag_separation` below -1 and a NaN similarity threshold, which
 //! RDKit reads past a matrix and casts, and equivalent-atom SMARTS that do
-//! not parse, which RDKit dereferences; `complete_smallest_rings` sets
-//! `complete_aromatic_rings`, as RDKit documents but does not do (it reads
-//! ring data only the latter makes). Molecules past the sizes RDKit's `int`
+//! not parse, which RDKit dereferences. Molecules past the sizes RDKit's `int`
 //! arithmetic allows are refused. Each MCES matches substructures, so the
 //! clusterings run their pairs on the calling thread (CONVENTIONS.md U4),
 //! where an error is returned rather than ending the process.
@@ -39,9 +37,6 @@ pub struct RascalOptions {
     pub complete_aromatic_rings: bool,
     /// Matches ring bonds only to ring bonds.
     pub ring_matches_ring_only: bool,
-    /// Keeps only rings complete in both molecules' ring info; implies
-    /// `complete_aromatic_rings` and `ring_matches_ring_only`.
-    pub complete_smallest_rings: bool,
     /// Matches atoms only to atoms with as many explicit connections.
     pub exact_connections_match: bool,
     /// Returns only the largest fragment of the MCES.
@@ -53,8 +48,6 @@ pub struct RascalOptions {
     pub max_frag_separation: i32,
     /// Returns every MCES of the largest size, not just the first.
     pub all_best_mcess: bool,
-    /// The most MCESs of one size to keep.
-    pub max_best_mcess: u32,
     /// Seconds to spend on one MCES; -1 for no limit.
     pub timeout: i32,
     /// Returns a result with the similarity estimates when they miss the
@@ -67,11 +60,6 @@ pub struct RascalOptions {
     pub equivalent_atoms: String,
     /// Matches bonds whatever their order.
     pub ignore_bond_orders: bool,
-    /// Matches atoms on their atomic numbers alone.
-    pub ignore_atom_aromaticity: bool,
-    /// The fewest bonds in the MCES; overrides `similarity_threshold` when
-    /// above 0.
-    pub min_clique_size: u32,
 }
 
 impl Default for RascalOptions {
@@ -81,20 +69,16 @@ impl Default for RascalOptions {
             similarity_threshold: d.similarity_threshold,
             complete_aromatic_rings: d.complete_aromatic_rings,
             ring_matches_ring_only: d.ring_matches_ring_only,
-            complete_smallest_rings: d.complete_smallest_rings,
             exact_connections_match: d.exact_connections_match,
             single_largest_frag: d.single_largest_frag,
             min_frag_size: d.min_frag_size,
             max_frag_separation: d.max_frag_separation,
             all_best_mcess: d.all_best_mcess,
-            max_best_mcess: d.max_best_mcess,
             timeout: d.timeout,
             return_empty_mces: d.return_empty_mces,
             max_bond_match_pairs: d.max_bond_match_pairs,
             equivalent_atoms: d.equivalent_atoms,
             ignore_bond_orders: d.ignore_bond_orders,
-            ignore_atom_aromaticity: d.ignore_atom_aromaticity,
-            min_clique_size: d.min_clique_size,
         }
     }
 }
@@ -105,20 +89,16 @@ impl RascalOptions {
             similarity_threshold: self.similarity_threshold,
             complete_aromatic_rings: self.complete_aromatic_rings,
             ring_matches_ring_only: self.ring_matches_ring_only,
-            complete_smallest_rings: self.complete_smallest_rings,
             exact_connections_match: self.exact_connections_match,
             single_largest_frag: self.single_largest_frag,
             min_frag_size: self.min_frag_size,
             max_frag_separation: self.max_frag_separation,
             all_best_mcess: self.all_best_mcess,
-            max_best_mcess: self.max_best_mcess,
             timeout: self.timeout,
             return_empty_mces: self.return_empty_mces,
             max_bond_match_pairs: self.max_bond_match_pairs,
             equivalent_atoms: self.equivalent_atoms.clone(),
             ignore_bond_orders: self.ignore_bond_orders,
-            ignore_atom_aromaticity: self.ignore_atom_aromaticity,
-            min_clique_size: self.min_clique_size,
         }
     }
 }

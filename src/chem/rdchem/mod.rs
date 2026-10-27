@@ -56,7 +56,7 @@ pub use conformer::{AsConformer, AsConformerMut, Conformer, ConformerMut, Confor
 pub use editable_mol::EditableMol;
 pub use enums::{
     BondDir, BondStereo, BondType, ChiralType, HybridizationType, StereoDescriptor,
-    StereoGroupType, StereoSpecified, StereoType, ValenceType,
+    StereoGroupType, StereoSpecified, StereoType,
 };
 pub use mol::{Atoms, Bonds, Conformers, Mol};
 pub use mol_bundle::{FixedMolSizeMolBundle, MolBundle, mol_bundle_can_serialize};

@@ -18,7 +18,6 @@ mod cleanup;
 mod fragment;
 mod metal;
 mod normalize;
-mod pipeline;
 mod tautomer;
 mod validate;
 
@@ -27,6 +26,5 @@ pub use cleanup::*;
 pub use fragment::*;
 pub use metal::*;
 pub use normalize::*;
-pub use pipeline::*;
 pub use tautomer::*;
 pub use validate::*;

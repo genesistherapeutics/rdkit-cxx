@@ -164,8 +164,6 @@ pub struct SmilesWriteParams {
     pub do_kekule: bool,
     /// Writes the canonical form.
     pub canonical: bool,
-    /// Removes stereo markers that canonicalization finds redundant.
-    pub clean_stereo: bool,
     /// Writes every bond symbol.
     pub all_bonds_explicit: bool,
     /// Writes every hydrogen in brackets.
@@ -192,7 +190,6 @@ impl SmilesWriteParams {
             do_isomeric_smiles: data.do_isomeric_smiles,
             do_kekule: data.do_kekule,
             canonical: data.canonical,
-            clean_stereo: data.clean_stereo,
             all_bonds_explicit: data.all_bonds_explicit,
             all_hs_explicit: data.all_hs_explicit,
             do_random: data.do_random,
@@ -207,7 +204,6 @@ impl SmilesWriteParams {
             do_isomeric_smiles: self.do_isomeric_smiles,
             do_kekule: self.do_kekule,
             canonical: self.canonical,
-            clean_stereo: self.clean_stereo,
             all_bonds_explicit: self.all_bonds_explicit,
             all_hs_explicit: self.all_hs_explicit,
             do_random: self.do_random,

@@ -5,7 +5,7 @@
  * license that can be found in the LICENSE file.
  */
 
-// rdmolops's graph matrices, paths, subgraphs, and subsets.
+// rdmolops's graph matrices, paths, and subgraphs.
 
 #pragma once
 
@@ -13,9 +13,7 @@
 #include <map>
 #include <memory>
 
-// RDKit 2026.03's Subset.h uses std::map and ROMol without including them.
 #include <GraphMol/ROMol.h>
-#include <GraphMol/Subset.h>
 
 #include "rdkit-cxx/mol.h"
 #include "rdkit-cxx/mol_list.h"
@@ -23,14 +21,10 @@
 
 namespace rdkit_cxx {
 
-using SubsetMethod = RDKit::SubsetMethod;
-
 // Shared structs, defined by the bridges (src/ffi/graph.rs, geometry.rs,
 // chirality.rs).
 struct IndexList;
 struct IndexPair;
-struct SubsetOptionsData;
-struct SubsetInfoData;
 
 rust::Vec<double> get_distance_matrix(const RWMol &mol, bool use_bo,
                                       bool use_atom_wts);
@@ -70,15 +64,5 @@ std::unique_ptr<MolList> split_mol_by_pdb_chain_id(
 
 std::unique_ptr<RWMol> renumber_atoms(
     const RWMol &mol, rust::Slice<const std::uint32_t> new_order);
-
-SubsetOptionsData subset_options_default();
-std::unique_ptr<RWMol> copy_mol_subset(const RWMol &mol,
-                                       rust::Slice<const std::uint32_t> path,
-                                       const SubsetOptionsData &options,
-                                       SubsetInfoData &info);
-std::unique_ptr<RWMol> copy_mol_subset_atoms_bonds(
-    const RWMol &mol, rust::Slice<const std::uint32_t> atom_indices,
-    rust::Slice<const std::uint32_t> bond_indices,
-    const SubsetOptionsData &options, SubsetInfoData &info);
 
 }  // namespace rdkit_cxx
