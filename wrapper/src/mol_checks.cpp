@@ -246,24 +246,12 @@ void check_bond_query(const RDKit::Bond::QUERYBOND_QUERY *root,
 // a bond index or a list's size may not. For parts (check_picklable_parts),
 // whatever the molecule's size, with bonds named as a part of at most
 // max_part_bonds bonds may number them.
-void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
-                        bool parts = false, unsigned max_part_bonds = 0) {
-  if (!parts && mol.getNumAtoms() > kPickleByteMax) {
+void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where) {
+  if (mol.getNumAtoms() > kPickleByteMax) {
     return;
   }
-  // A part's bonds are numbered from 0, so past 255 only in a part of more
-  // than 256 bonds.
-  const bool any_bond = parts && max_part_bonds > kPickleByteMax + 1;
   auto check_bond = [&](std::size_t bond, const std::string &what) {
-    if (any_bond) {
-      throw ValueErrorException(
-          what + " " + std::to_string(bond) +
-          " may be numbered past 255 in a part of more than 256 bonds, more "
-          "than a molecule pickle holds");
-    }
-    if (!parts) {
-      check_pickle_byte(bond, what);
-    }
+    check_pickle_byte(bond, what);
   };
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
@@ -385,14 +373,17 @@ namespace {
 // check_picklable, and for parts, check_picklable_parts: the molecule's own
 // fields as parts' are, its recursive queries' molecules, which parts copy
 // whole, as themselves.
-void check_picklable(const RDKit::ROMol &mol, bool parts,
-                     unsigned max_part_bonds) {
+void check_picklable(const RDKit::ROMol &mol, bool parts) {
   walk_pickled(
       mol,
       [&](const RDKit::ROMol &current, bool nested) {
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
-        check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        // A fragment catalog's part has no substance or stereo groups
+        // (pathToSubmol builds it of atoms and bonds alone).
+        if (!parts || nested) {
+          check_pickle_bytes(current, where);
+        }
         check_prop_counts(current, where);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
@@ -407,12 +398,10 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
 
 }  // namespace
 
-void check_picklable(const RDKit::ROMol &mol) {
-  check_picklable(mol, false, 0);
-}
+void check_picklable(const RDKit::ROMol &mol) { check_picklable(mol, false); }
 
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
-  check_picklable(mol, true, max_part_bonds);
+void check_picklable_parts(const RDKit::ROMol &mol) {
+  check_picklable(mol, true);
 }
 
 namespace {

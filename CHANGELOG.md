@@ -129,6 +129,9 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     point `lvIdx` -1, which 2024.09 leaves uninitialized.
   - Pickling refuses more than 65,535 properties on a molecule, atom,
     bond, conformer, or substance group, which RDKit writes in two bytes.
+    The fragment catalog's generator checks only the queries and property
+    counts of the fragments it pickles, which RDKit 2024.09 makes without
+    substance or stereo groups.
   - `renumber_atoms` refuses anything but a permutation (#9450), and
     `DoubleCubicLatticeVolume` what 2024.09's reads unchecked (a dot
     density, monomer info of another type, short PDB atom names, huge
@@ -173,6 +176,10 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     past its empty carriers for one, and refuses more than 64 stereo atoms
     and bonds at a time, past which 2024.09's descriptor pairing shifts by
     a negative count (`Error::Value`).
+  - `RingInfo.num_relevant_cycles` is `Error::Value` for more relevant
+    cycles than `u32` holds, which RDKit converts from RingDecomposerLib's
+    `double` unchecked (Python returns 33 for a ring of 33 diamonds, which
+    has 2^33 + 33).
   - `RingInfo.num_relevant_cycles` is `Error::Runtime` before the ring
     families are found, and every wrapper source reads `RDConfig.h` first,
     as for 2026.03.

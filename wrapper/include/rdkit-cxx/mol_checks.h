@@ -114,14 +114,12 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 // inside another format, calls it on the molecules it pickles.
 void check_picklable(const RDKit::ROMol &mol);
 
-// As check_picklable, for every molecule RDKit may make of some of mol's atoms
-// and at most max_part_bonds of its bonds, keeping the substance groups and
-// stereo groups within them and the atoms' and bonds' queries
-// (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
-// them, and, for parts of more than 256 bonds, whose bonds may be numbered
-// past 255, no group that names a bond. For the fragment catalog, whose
-// fragments no wrapper can reach.
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+// As check_picklable, for every molecule RDKit 2024.09 may make of some of
+// mol's atoms and bonds (Subgraphs::pathToSubmol), which keeps their queries
+// and properties but no substance or stereo groups: the queries, the
+// molecules of recursive queries, and the property counts. For the fragment
+// catalog, whose fragments no wrapper can reach.
+void check_picklable_parts(const RDKit::ROMol &mol);
 
 // check_picklable for each template of a reaction, which ReactionPickler
 // pickles as molecules.
