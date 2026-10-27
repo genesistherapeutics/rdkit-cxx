@@ -569,4 +569,18 @@ fn stereo_groups_hold_each_atom_once() {
     assert_eq!(mols[0].get_stereo_groups().len(), 1);
     // RDKit 2025.09 keeps an atom listed twice, which dangles once removed.
     assert!(is_value(json_to_mols(&json("[1,1]"))));
+    // ROMol::setStereoGroups merges ABS groups into one, which would list an
+    // atom of two of them twice.
+    let abs = |second: &str| {
+        json("[1]").replace(
+            r#"{"type":"and","id":0,"atoms":[1]}"#,
+            &format!(r#"{{"type":"abs","atoms":[1]}},{{"type":"abs","atoms":{second}}}"#),
+        )
+    };
+    assert_ne!(abs("[1]"), json("[1]"));
+    assert!(is_value(json_to_mols(&abs("[1]"))));
+    let groups = json_to_mols(&abs("[2]")).unwrap()[0].get_stereo_groups();
+    assert_eq!(groups.len(), 1);
+    // RDKit 2025.09 inserts each group's atoms at the front.
+    assert_eq!(groups[0].get_atoms(), [2, 1]);
 }

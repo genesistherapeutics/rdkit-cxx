@@ -257,7 +257,13 @@ class DocumentChecker {
       if (!list) {
         return;
       }
+      // ROMol::setStereoGroups merges the ABS groups into one, which holds
+      // an atom or bond twice if two of them list it.
+      std::set<std::int64_t> abs_seen[2];
       for (const auto &group : *list) {
+        const auto *type = member(group, "type");
+        const bool abs =
+            type && type->is_string() && type->as_string() == "abs";
         // RDKit 2025.09's StereoGroup keeps an atom or bond listed twice,
         // which dangles once removed (check_stereo_group_duplicates in
         // mol_checks.h).
@@ -270,7 +276,9 @@ class DocumentChecker {
           if (!id_list) {
             return;
           }
-          std::set<std::int64_t> seen;
+          std::set<std::int64_t> group_seen;
+          auto &seen =
+              abs ? abs_seen[std::string_view(what) == "bonds"] : group_seen;
           for (const auto &id : *id_list) {
             if (!id.is_int64()) {
               return;

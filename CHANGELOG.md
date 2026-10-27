@@ -81,6 +81,9 @@ A program built against one release stops when it loads with another.
     in the inputs whose readers remove hydrogens themselves before any check
     could run: CXSMILES enhanced stereo, V3000 collections, Marvin files
     (whose stereo groups take an atom by id, so ids must differ), and JSON.
+    So is an atom or bond in two ABS groups, which RDKit 2025.09's
+    `setStereoGroups` merges into one group that holds it twice
+    (`set_stereo_groups`, and JSON's `abs` groups).
   - `replace_core` with matches checks that each core atom's neighbors are
     matched; `molzip` with depiction refuses fragment lists RDKit 2025.09
     reads past.

@@ -123,3 +123,28 @@ fn stereo_groups_hold_each_atom_once() {
     rw.remove_atom(1).unwrap();
     assert!(rw.get_stereo_groups().is_empty());
 }
+
+// RDKit 2025.09's setStereoGroups merges ABS groups into one, which holds an
+// atom of two of them twice (rdkit-2024.03's "two ABS stereo groups").
+#[test]
+fn abs_groups_share_no_atom() {
+    let mut rw = RWMol::from(mol_from_smiles("[*:1]C").unwrap());
+    let abs = create_stereo_group(StereoGroupType::StereoAbsolute, &rw, &[0]).unwrap();
+    match rw.set_stereo_groups(&[abs.clone(), abs.clone()]) {
+        Err(Error::Value { message }) => {
+            assert!(message.contains("two ABS stereo groups"), "{message}")
+        }
+        other => panic!("{other:?}"),
+    }
+    assert!(rw.get_stereo_groups().is_empty());
+    rw.set_stereo_groups(&[abs]).unwrap();
+    let a = Mol::from(rw);
+    let mut partner = RWMol::from(mol_from_smiles("[*:1][C@H](F)Cl").unwrap());
+    let or = create_stereo_group(StereoGroupType::StereoOr, &partner, &[1]).unwrap();
+    partner.set_stereo_groups(&[or]).unwrap();
+    let zipped = rdmolops::molzip(&a, &Mol::from(partner)).unwrap().unwrap();
+    // The ABS group's one atom is the dummy molzip removes.
+    let groups = zipped.get_stereo_groups();
+    assert_eq!(groups.len(), 1);
+    assert_eq!(groups[0].get_group_type(), StereoGroupType::StereoOr);
+}
