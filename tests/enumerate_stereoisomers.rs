@@ -294,12 +294,31 @@ fn embedded_isomers() -> Result<()> {
     assert_eq!(isomers.len(), 2);
     for m in &isomers {
         assert_eq!(m.get_num_conformers(), 1);
-        assert_eq!(m.get_prop("_MolFileChiralFlag")?, "1");
+        // RDKit 2024.03's Python sets no _MolFileChiralFlag.
+        assert!(!m.has_prop("_MolFileChiralFlag"));
     }
     let cx: Vec<String> =
         enumerate_stereoisomers(&mol_from_smiles("C[C@H](F)[C@H](Cl)Br |o1:1,3|")?)?
             .map(|m| mol_to_cx_smiles(&m.unwrap()).unwrap())
             .collect();
     assert_eq!(cx, [r"C[C@@H](F)[C@@H](Cl)Br", r"C[C@H](F)[C@H](Cl)Br"]);
+    Ok(())
+}
+
+// RDKit 2024.03 clears only EITHERDOUBLE bond directions before enumerating,
+// so a double bond whose direction is UNKNOWN keeps it, and is not
+// enumerated.
+#[test]
+fn unknown_bond_dir_is_kept() -> Result<()> {
+    let mut m = mol_from_smiles("FC=CF")?;
+    m.get_bond_with_idx_mut(1)?
+        .set_bond_dir(rdkit_cxx::chem::BondDir::Unknown);
+    let isomers: Vec<Mol> = enumerate_stereoisomers(&m)?.collect::<Result<_>>()?;
+    assert_eq!(isomers.len(), 1);
+    assert_eq!(mol_to_smiles(&isomers[0])?, "FC=CF");
+    assert_eq!(
+        isomers[0].get_bond_with_idx(1)?.get_bond_dir(),
+        rdkit_cxx::chem::BondDir::Unknown
+    );
     Ok(())
 }
