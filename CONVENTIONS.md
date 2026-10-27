@@ -227,8 +227,9 @@ its Boost.Python modules and its `.py` modules.
   before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked; where RDKit reads a
-  file only by name (a synthon search's possible hits), it reads a private
-  copy of the checked lines.
+  file only by name, it is given the checked text or data instead (the
+  normalizations of a `Normalizer` or of `CleanupParameters`, read as
+  `normalizationData`).
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -391,9 +392,12 @@ its Boost.Python modules and its `.py` modules.
   line ends inside of: V3000 S-group values (`CSTATE`, `SAP`, `PARENT`,
   `COMPNO`, and counted arrays) cut short, and S-group lines without a
   leading number and two more tokens (or a block with fewer lines than its
-  `COUNTS` line names), whose ids it then reads uninitialized; and in the
-  "M  " lines it parses as CXSMILES SMARTS, the CXSMILES fields it reads
-  past the end of (`rdkit-cxx/file_checks.h`). A cut line is read as if it
+  `COUNTS` line names), whose ids it then reads uninitialized; V3000
+  enhanced-stereo collections that list an atom twice, or fewer atoms than
+  their count, whose first index it leaves unset; and in the `M  MRV SMA`
+  lines and SMARTSQ data it parses as CXSMILES SMARTS, the CXSMILES fields
+  it reads past the end of, found by replaying RDKit's reads
+  (`rdkit-cxx/file_checks.h`). A cut line is read as if it
   were whole, so a checked stream holds back the bytes of such a value or
   line until the next chunk shows it complete (at most 1 MiB), and refuses
   from its start. A checked stream stops delivering bytes before the
@@ -447,7 +451,10 @@ its Boost.Python modules and its `.py` modules.
   in two ABS groups), so a wrapper whose RDKit call removes atoms or bonds
   from a molecule, or from a copy of one, calls `check_removals`
   (`rdkit-cxx/mol_checks.h`) first, before any edit in place; it also
-  refuses stereo groups that hold bonds or repeat atoms. Calls whose only
+  refuses stereo groups that hold bonds or repeat atoms. Groups that repeat
+  an atom are also refused wherever they come in (CXSMILES, V3000, Marvin,
+  JSON, pickles, `set_stereo_groups`), since RDKit's parsers remove
+  hydrogens before a wrapper check can run. Calls whose only
   removals are `getMolFrags`' (the SMILES writers) use
   `check_fragment_removals`, which refuses only the groups those removals
   would leave dangling, and `SANITIZE_MERGEHS` uses
