@@ -445,11 +445,14 @@ std::size_t num_distinct(const std::vector<T> &values) {
 }
 
 // The counts _pickleSubstanceGroup and _pickleStereo write with one-byte
-// indices, for the groups that keep(atoms, bonds) says are pickled, given
-// their numbers of distinct atoms and bonds.
+// indices: for the substance groups that keep(atoms, bonds) says are
+// pickled, given their numbers of distinct atoms and bonds, and for every
+// stereo group, whose pickled lists hold at most atom_room atoms and
+// bond_room bonds.
 template <class Keep>
 void check_one_byte_groups(const RDKit::ROMol &mol, const std::string &where,
-                           Keep keep) {
+                           Keep keep, std::size_t atom_room = SIZE_MAX,
+                           std::size_t bond_room = SIZE_MAX) {
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
     const auto &sgroup = sgroups[i];
@@ -468,19 +471,15 @@ void check_one_byte_groups(const RDKit::ROMol &mol, const std::string &where,
     check_one_byte(sgroup.getAttachPoints().size(),
                    at + "number of attachment points");
   }
-  std::size_t kept = 0;
-  for (const auto &group : mol.getStereoGroups()) {
+  const auto &groups = mol.getStereoGroups();
+  check_one_byte(groups.size(), where + "number of stereo groups");
+  for (const auto &group : groups) {
     // A stereo group holds each atom and bond once.
-    if (!keep(group.getAtoms().size(), group.getBonds().size())) {
-      continue;
-    }
-    ++kept;
-    check_one_byte(group.getAtoms().size(),
+    check_one_byte(std::min(group.getAtoms().size(), atom_room),
                    where + "stereo group's number of atoms");
-    check_one_byte(group.getBonds().size(),
+    check_one_byte(std::min(group.getBonds().size(), bond_room),
                    where + "stereo group's number of bonds");
   }
-  check_one_byte(kept, where + "number of stereo groups");
 }
 
 // streamWriteProps (RDGeneral/StreamOps.h), as MolPickler calls it, counts
@@ -558,7 +557,8 @@ void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
             [max_part_bonds](std::size_t atoms, std::size_t bonds) {
               return atoms <= std::size_t{max_part_bonds} + 1 &&
                      bonds <= max_part_bonds;
-            });
+            },
+            std::size_t{max_part_bonds} + 1, max_part_bonds);
         check_bond_queries(current, "");
         check_prop_counts(current, "");
       },

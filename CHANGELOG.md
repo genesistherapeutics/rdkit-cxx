@@ -72,6 +72,11 @@
   user properties beside the computed ones are silently dropped. Every
   property counts, whether or not the property flags write it; substance
   groups' properties are always pickled.
+- `FragCatGenerator::add_frags_from_mol` counts every stereo group of the
+  molecule against the one-byte limit, not only those a fragment can hold
+  whole: from RDKit 2025.09 on, a fragment keeps each stereo group that
+  shares an atom with it. With 256 three-atom groups and fragments of one
+  bond, RDKit wrote a catalog it could not read ("ENDMOL tag not found").
 
 ## 2026.9.0
 
