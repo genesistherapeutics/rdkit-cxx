@@ -73,6 +73,9 @@ Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
   with `Error::Value`: RDKit reads each with a stream extraction it does not
   check, into an uninitialized `unsigned int`. A refused line is cut before
   any of it reaches RDKit, wherever it falls in a stream's 64 KiB chunks.
+- `json_to_mols` gives an attachment point without an `lvIdx` the -1 RDKit's
+  writer leaves out: RDKit's reader leaves the field uninitialized, so a
+  plain round trip of a molecule with a substance group read it.
 
 ### Bindings
 

@@ -254,6 +254,26 @@ fn substance_groups() {
 }
 
 #[test]
+fn attachment_points_without_leaving_atoms() {
+    // RDKit's writer leaves out an lvIdx of -1, and RDKit 2026.03's reader
+    // then leaves it uninitialized; the wrapper gives it -1.
+    let json = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"name":"","atoms":[{"impHs":3},{"impHs":2},{"z":8,"impHs":1}],"bonds":[{"atoms":[0,1]},{"atoms":[1,2]}],"substanceGroups":[{"properties":{"TYPE":"SUP","index":1,"LABEL":"CO"},"atoms":[1,2],"attachPoints":[{"aIdx":1,"id":"1"}]}]}]}"#;
+    let mol = json_to_mols(json).unwrap().remove(0);
+    let groups = get_mol_substance_groups(&mol);
+    let attach = groups[0].get_attach_points().unwrap();
+    assert_eq!((attach[0].a_idx, attach[0].lv_idx), (1, -1));
+    // And so does a round trip.
+    let json = mol_to_json(&mol).unwrap();
+    assert!(
+        json.contains(r#""attachPoints":[{"aIdx":1,"id":"1"}]"#),
+        "{json}"
+    );
+    let mol = json_to_mols(&json).unwrap().remove(0);
+    let groups = get_mol_substance_groups(&mol);
+    assert_eq!(groups[0].get_attach_points().unwrap()[0].lv_idx, -1);
+}
+
+#[test]
 fn queries_round_trip() {
     // Python's MolToSmarts(JSONToMols(MolToJSON(MolFromSmarts(s)))[0]).
     let cases = [
