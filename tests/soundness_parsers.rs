@@ -103,106 +103,23 @@ fn reaction_cx_fields_are_checked() {
 }
 
 #[test]
-fn smiles_supplier_lines_are_checked() {
+fn suppliers_parse_smiles_without_cx_extensions() {
+    // RDKit's SMILES and TDT suppliers parse with allowCXSMILES off
+    // (SmilesMolSupplierParams and TDTMolSupplierParams in MolSupplier.h),
+    // so a CXSMILES field is part of the SMILES, which does not parse, as
+    // from Python.
     let tabbed = SmilesMolSupplierParams {
         delimiter: "\t".into(),
         title_line: false,
         ..Default::default()
     };
-    let good = "C |atomProp:0.p.v|\tfirst\nCO\tsecond\n";
-    let mut suppl = smiles_mol_supplier_from_text_with_params(good, &tabbed).unwrap();
-    assert_eq!(suppl.len().unwrap(), 2);
-    assert_eq!(
-        suppl
-            .get(0)
-            .unwrap()
-            .get_atom_with_idx(0)
-            .unwrap()
-            .get_prop("p")
-            .unwrap(),
-        "v"
-    );
-    for bad in [
-        "C |atomProp:0.p.v\tfirst\n",
-        "CO\tfirst\nC |SgD:0:x|\tsecond\n",
-        "CO\tfirst\nC |SgD:0:x|\tsecond",
-    ] {
-        let mut suppl = SmilesMolSupplier::default();
-        let read = suppl
-            .set_data_with_params(bad, &tabbed)
-            .and_then(|()| suppl.len())
-            .and_then(|n| (0..n).try_for_each(|i| suppl.get(i).map(drop)));
-        assert!(is_value_error(read), "{bad:?}");
+    for text in ["C |atomProp:0.p.v\tfirst\n", "C |atomProp:0.p.v|\tfirst\n"] {
+        let mut suppl = smiles_mol_supplier_from_text_with_params(text, &tabbed).unwrap();
+        assert!(matches!(suppl.get(0), Err(Error::Parse { .. })), "{text:?}");
     }
-    // A record before the refused one is still read.
-    let mut suppl = SmilesMolSupplier::default();
-    suppl
-        .set_data_with_params("CO\tfirst\nC |SgD:0:x|\tsecond\n", &tabbed)
-        .unwrap();
-    assert_eq!(suppl.get(0).unwrap().get_num_atoms(), 2);
-    assert!(is_value_error(suppl.get(1)));
-    // With the default space delimiter, the SMILES column holds no CXSMILES.
-    let mut spaced =
-        smiles_mol_supplier_from_text_with_params("C |atomProp:0.p.v\n", &Default::default())
-            .unwrap();
-    assert_eq!(spaced.get(0).unwrap().get_num_atoms(), 1);
-
-    // The same through a file, long enough that lines cross the scanner's
-    // 64 KiB chunks.
-    let mut text = String::new();
-    for i in 0..6000 {
-        text.push_str(&format!("C |atomProp:0.p.v{i}|\tm{i}\n"));
-    }
-    let path = tmp_path("cx.smi");
-    std::fs::write(&path, &text).unwrap();
-    let mut suppl = SmilesMolSupplier::new_with_params(&path, &tabbed).unwrap();
-    assert_eq!(suppl.len().unwrap(), 6000);
-    let last = suppl.get(5999).unwrap();
-    assert_eq!(last.get_atom_with_idx(0).unwrap().get_prop("p").unwrap(), "v5999");
-    // And refused anywhere in it, also as the file's last line without a
-    // newline.
-    for at in [10, 2700, 5999] {
-        let mut lines: Vec<String> = text.lines().map(String::from).collect();
-        lines[at] = format!("C |atomProp:0.p.v{at}\tm{at}");
-        let mut bad = lines.join("\n");
-        if at != 5999 {
-            bad.push('\n');
-        }
-        std::fs::write(&path, &bad).unwrap();
-        let mut suppl = SmilesMolSupplier::new_with_params(&path, &tabbed).unwrap();
-        let read = suppl
-            .len()
-            .and_then(|n| (0..n).try_for_each(|i| suppl.get(i).map(drop)));
-        assert!(is_value_error(read), "line {at}");
-        let mt_params = MultithreadedSmilesMolSupplierParams {
-            delimiter: "\t".into(),
-            title_line: false,
-            ..Default::default()
-        };
-        let mut mt = MultithreadedSmilesMolSupplier::new_with_params(&path, &mt_params).unwrap();
-        let read: Result<Vec<_>, _> = mt.mols().collect();
-        assert!(is_value_error(read), "line {at}");
-    }
-    std::fs::remove_file(&path).unwrap();
-}
-
-#[test]
-fn tdt_smiles_are_checked() {
-    let mut suppl = TDTMolSupplier::default();
-    assert!(is_value_error(
-        suppl.set_data("$SMI<C |atomProp:0.p.v>\nCAS<1>\n|\n")
-    ));
-    suppl.set_data("$SMI<C |atomProp:0.p.v|>\nCAS<1>\n|\n").unwrap();
-    assert_eq!(
-        suppl
-            .get(0)
-            .unwrap()
-            .get_atom_with_idx(0)
-            .unwrap()
-            .get_prop("p")
-            .unwrap(),
-        "v"
-    );
+    let mut tdt = TDTMolSupplier::default();
+    tdt.set_data("$SMI<C |atomProp:0.p.v>\nCAS<1>\n|\n").unwrap();
+    assert!(matches!(tdt.get(0), Err(Error::Parse { .. })));
 }
 
 // V3000 S-group values.
