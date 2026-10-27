@@ -827,15 +827,16 @@ std::unique_ptr<RWMol> scsr_from_text(const std::string &text, bool sanitize,
   auto params = scsr_mol_params(sanitize, remove_hs);
   auto scsr = scsr_params(data);
   check_scsr_hbonds(text, params, scsr);
-  check_scsr_relevant_cycles(text, params, scsr);
-  std::istringstream in(text);
-  unsigned int line = 0;
   // With Auto, RDKit finds the bases' hydrogen-bond sites by substructure
-  // matches (control_c_lock.h).
+  // matches (control_c_lock.h). The relevant-cycle probe reads the block as
+  // RDKit's reader does, so it reads under the same lock.
   std::unique_lock<ControlCMutex> control_c;
   if (scsr.scsrBaseHbondOptions == FP::SCSRBaseHbondOptions::Auto) {
     control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
   }
+  check_scsr_relevant_cycles(text, params, scsr);
+  std::istringstream in(text);
+  unsigned int line = 0;
   return parsed(FP::MolFromSCSRDataStream(in, line, params, scsr), what);
 }
 
