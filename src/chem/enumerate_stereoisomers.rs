@@ -365,10 +365,7 @@ pub fn enumerate_stereoisomers_with_options(
     }
     for idx in 0..tm.get_num_bonds() {
         let mut bond = tm.get_bond_with_idx_mut(idx)?;
-        if matches!(
-            bond.get_bond_dir(),
-            BondDir::Eitherdouble | BondDir::Unknown
-        ) {
+        if bond.get_bond_dir() == BondDir::Eitherdouble {
             bond.set_bond_dir(BondDir::None);
         }
     }
@@ -387,7 +384,6 @@ pub fn enumerate_stereoisomers_with_options(
         res.unflipped = Some(res.tm.clone());
         return Ok(res);
     }
-    res.tm.set_prop("_MolFileChiralFlag", "1");
     let max = u64::from(options.max_isomers);
     res.bitsource = Some(if max == 0 || (n < 64 && 1u64 << n <= max) {
         BitSource::Range {

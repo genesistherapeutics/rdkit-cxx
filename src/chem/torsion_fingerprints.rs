@@ -420,9 +420,9 @@ fn calculate_beta(mol: &Mol, distmat: &[Vec<f64>], aid1: u32) -> Result<f64> {
     for b in mol.get_bonds() {
         let begin = b.get_begin_atom();
         let end = b.get_end_atom();
-        if heavy_atom_neighbors(&begin, None).len() > 1
-            && heavy_atom_neighbors(&end, None).len() > 1
-        {
+        // RDKit 2024.09's Python tests the end atom's neighbors twice and
+        // the begin atom's not at all (`len(nb2) > 1 and len(nb2) > 1`).
+        if heavy_atom_neighbors(&end, None).len() > 1 {
             let row = &distmat[aid1 as usize];
             let d = f64::max(row[begin.get_idx() as usize], row[end.get_idx() as usize]);
             if d > dmax {
