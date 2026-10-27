@@ -55,9 +55,6 @@ rust::Vec<double> calc_morse(const RWMol &mol, std::int32_t conf_id,
                              rust::Str custom_atom_property);
 rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
                             double thresh, rust::Str custom_atom_property);
-rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
-                               double precision,
-                               rust::Str custom_atom_property);
 // Row-major, numAtoms by numAtoms.
 rust::Vec<double> calc_coulomb_mat(const RWMol &mol, std::int32_t conf_id);
 rust::Vec<double> calc_eem_charges(const RWMol &mol, std::int32_t conf_id);

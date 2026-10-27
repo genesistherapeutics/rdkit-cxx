@@ -69,6 +69,19 @@ constexpr std::uint64_t kMaxStereoGroupLine = 4000;
 // values, each of them a number, for whatever field RDKit is reading.
 constexpr char kSGroupSuffix[] = " 0 0 0 0";
 
+// Whether the bytes pushed end in "atomProp:", which starts a CXSMILES
+// block RDKit's SMARTS parser may read past the end of (file_checks.h).
+class CxTokenMatcher {
+ public:
+  bool push(char c);
+  void clear() { d_size = 0; }
+
+ private:
+  static constexpr std::size_t kLongest = 9;
+  char d_tail[kLongest] = {};
+  std::size_t d_size = 0;
+};
+
 // Scans text in order, one byte at a time across calls.
 class InputScanner {
  public:
@@ -114,6 +127,27 @@ class InputScanner {
   bool d_first_group = false;
   std::string d_defaults;
   std::uint64_t d_groups_left = 0;
+  // Whether the lines are a collection block's, which RDKit reads for
+  // enhanced stereo (parseEnhancedStereo).
+  bool d_collection = false;
+  // The SMARTS RDKit parses from a mol block's properties: an "M  MRV SMA"
+  // line's from byte 15, and the data fields an "M  SCD" or "M  SED" line
+  // adds to (bytes 11 to 79), whose text runs on across lines until an
+  // SED's; and any V3000 line, which a data group's FIELDDATA may be. The
+  // physical line's first ten bytes, what it is, a "\r" held until the byte
+  // after it shows whether it ends the line, and the data lines' group.
+  enum class MLine : std::uint8_t { kUnknown, kNone, kSmarts, kData, kEnd };
+  void m_line_byte(char c);
+  void end_m_line();
+  std::string d_m_head;
+  MLine d_m_line = MLine::kUnknown;
+  bool d_m_sed = false;
+  bool d_m_cr = false;
+  bool d_data_open = false;
+  std::string d_data_group;
+  CxTokenMatcher d_m_tokens;
+  CxTokenMatcher d_data_tokens;
+  CxTokenMatcher d_v30_tokens;
   // The lines RDKit reads as groups', from their first byte to their last
   // newline (UINT64_MAX while open).
   std::vector<std::pair<std::uint64_t, std::uint64_t>> d_sgroup_lines;

@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_mol_hash::*;
 use rdkit_cxx::chem::*;
 
@@ -79,4 +80,18 @@ fn cx_smiles() {
         mol_hash_with_params(&mol, HashFunction::CanonicalSmiles, &skip_all).unwrap(),
         "C[C@H](F)Cl"
     );
+}
+
+/// RDKit 2024.09's ExtendedMurcko hash takes a byte of stack per atom with
+/// alloca, which past a page can step over the stack's guard page.
+#[test]
+fn extended_murcko_atoms_are_bounded() {
+    let chain = |n: usize| mol_from_smiles(&"C".repeat(n)).unwrap();
+    assert!(matches!(
+        mol_hash(&chain(4001), HashFunction::ExtendedMurcko),
+        Err(Error::Value { .. })
+    ));
+    mol_hash(&chain(4000), HashFunction::ExtendedMurcko).unwrap();
+    // Other hashes take no such buffer.
+    mol_hash(&chain(4001), HashFunction::MurckoScaffold).unwrap();
 }

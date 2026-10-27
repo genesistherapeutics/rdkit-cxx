@@ -458,13 +458,8 @@ fn hydrogens_of_several_proximity_bonds_are_refused() {
     // its end (U10), is hidden from RDKit and kept.
     let mut mol = atoms(METHYL);
     for i in 0..4 {
-        let info = AtomMonomerInfo::new_with_params(
-            AtomMonomerType::Other,
-            &AtomMonomerInfoParams {
-                name: format!("A{i}"),
-            },
-        )
-        .unwrap();
+        let info =
+            AtomMonomerInfo::new_with_name(AtomMonomerType::Other, &format!("A{i}")).unwrap();
         mol.get_atom_with_idx_mut(i as u32)
             .unwrap()
             .set_monomer_info(&info);

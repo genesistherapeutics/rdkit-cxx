@@ -14,10 +14,11 @@ use std::collections::BTreeMap;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::draw::rd_mol_draw_2d::*;
 use rdkit_cxx::chem::rd_chem_reactions::{
-    reaction_from_png_string, reaction_from_smarts, reaction_to_smarts,
+    ChemicalReaction, reaction_from_png_string, reaction_from_smarts, reaction_to_smarts,
 };
 use rdkit_cxx::chem::{
-    Mol, mol_from_png_string, mol_from_smiles, mol_to_smiles, mols_from_png_string,
+    Mol, mol_add_recursive_queries, mol_from_png_string, mol_from_smiles, mol_to_smiles,
+    mols_from_png_string,
 };
 
 fn mol(smiles: &str) -> Mol {
@@ -284,4 +285,44 @@ fn cairo_drawers_are_send() {
     .join()
     .unwrap();
     assert_eq!(png_size(&png), (100, 100));
+}
+
+// The metadata holds each molecule's and reaction's pickle, which RDKit
+// would write with a count past 255 truncated and could not read back.
+#[test]
+fn metadata_needs_picklable_molecules() {
+    let mut query = mol("CC");
+    query
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_prop("query", &vec!["a"; 256].join(","));
+    let queries = BTreeMap::from([("a".to_owned(), mol("C"))]);
+    mol_add_recursive_queries(&mut query, &queries, "query").unwrap();
+    let mut d = MolDraw2DCairo::new(300, 200).unwrap();
+    assert_value_error(d.draw_molecule(&query));
+    let params = MolDraw2DCairoParams {
+        panel_width: 150,
+        panel_height: 200,
+        ..Default::default()
+    };
+    let mut d = MolDraw2DCairo::new_with_params(300, 200, &params).unwrap();
+    assert_value_error(d.draw_molecules(&[mol("CCO"), query.clone()]));
+    let mut rxn = ChemicalReaction::default();
+    rxn.add_reactant_template(&query);
+    rxn.add_product_template(&mol("CC"));
+    let mut d = MolDraw2DCairo::new(300, 200).unwrap();
+    assert_value_error(d.draw_reaction(&rxn));
+
+    let mut plain = MolDraw2DCairo::new(300, 200).unwrap();
+    let opts = MolDrawOptions {
+        include_metadata: false,
+        ..Default::default()
+    };
+    plain.set_draw_options(&opts).unwrap();
+    plain.draw_molecule(&query).unwrap();
+    // SVG metadata holds no pickles.
+    MolDraw2DSVG::new(300, 200)
+        .unwrap()
+        .draw_molecule(&query)
+        .unwrap();
 }

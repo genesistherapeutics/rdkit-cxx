@@ -6,7 +6,7 @@
 // Ports RDKit's rdkit/Chem/EState unit tests (UnitTestEState.py,
 // UnitTestTypes.py, UnitTestFingerprints.py, and UnitTestVSA.py, whose
 // reference file is tests/data/EState_VSA.csv), with values from the papers
-// they cite, and pins values from Python's modules in RDKit 2026.03.6.
+// they cite, and pins values from Python's modules in RDKit 2024.09.6.
 
 use rdkit_cxx::chem::e_state::e_state_vsa;
 use rdkit_cxx::chem::e_state::fingerprinter::fingerprint_mol;

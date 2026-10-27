@@ -274,36 +274,25 @@ pub fn find_meso_centers_with_params(
     .collect())
 }
 
-/// Parameters for `canonicalize_stereo_groups_with_params`, with Python's
-/// defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct CanonicalizeStereoGroupsParams {
-    /// Whether the result gets an absolute group.
-    pub output_absolute_groups: StereoGroupAbsOptions,
-}
-
-impl Default for CanonicalizeStereoGroupsParams {
-    fn default() -> CanonicalizeStereoGroupsParams {
-        CanonicalizeStereoGroupsParams {
-            output_absolute_groups: StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist,
-        }
-    }
-}
-
 /// A copy whose stereo groups are canonical, so equivalent molecules write
 /// the same SMILES. Mirrors `rdmolops.CanonicalizeStereoGroups`.
 pub fn canonicalize_stereo_groups(mol: &Mol) -> Result<Mol> {
-    canonicalize_stereo_groups_with_params(mol, &CanonicalizeStereoGroupsParams::default())
+    canonicalize_stereo_groups_with_output_absolute_groups(
+        mol,
+        StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist,
+    )
 }
 
-/// Mirrors `rdmolops.CanonicalizeStereoGroups(mol, outputAbsoluteGroups)`.
-pub fn canonicalize_stereo_groups_with_params(
+/// Mirrors `rdmolops.CanonicalizeStereoGroups(mol, outputAbsoluteGroups)`:
+/// whether the result gets an absolute group (Python's default,
+/// `OnlyIncludeWhenOtherGroupsExist`).
+pub fn canonicalize_stereo_groups_with_output_absolute_groups(
     mol: &Mol,
-    params: &CanonicalizeStereoGroupsParams,
+    output_absolute_groups: StereoGroupAbsOptions,
 ) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::canonicalize_stereo_groups(
         mol.as_ffi(),
-        params.output_absolute_groups.to_ffi(),
+        output_absolute_groups.to_ffi(),
     )?))
 }
 
@@ -503,36 +492,22 @@ pub fn wedge_mol_bonds_with_params(
     )?)
 }
 
-/// Parameters for `reapply_mol_block_wedging_with_params`, with Python's
-/// defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct ReapplyMolBlockWedgingParams {
-    /// Reapplies wedges to bonds other than single and aromatic ones too.
-    pub all_bond_types: bool,
-}
-
-impl Default for ReapplyMolBlockWedgingParams {
-    fn default() -> ReapplyMolBlockWedgingParams {
-        ReapplyMolBlockWedgingParams {
-            all_bond_types: true,
-        }
-    }
-}
-
 /// Replaces the bond wedging with the wedges the mol block had. Mirrors
 /// `rdmolops.ReapplyMolBlockWedging`.
 pub fn reapply_mol_block_wedging(mol: &mut Mol) -> Result<()> {
-    reapply_mol_block_wedging_with_params(mol, &ReapplyMolBlockWedgingParams::default())
+    reapply_mol_block_wedging_with_all_bond_types(mol, true)
 }
 
-/// Mirrors `rdmolops.ReapplyMolBlockWedging(mol, allBondTypes)`.
-pub fn reapply_mol_block_wedging_with_params(
+/// Mirrors `rdmolops.ReapplyMolBlockWedging(mol, allBondTypes)`:
+/// `all_bond_types` (Python's default, true) reapplies wedges to bonds other
+/// than single and aromatic ones too.
+pub fn reapply_mol_block_wedging_with_all_bond_types(
     mol: &mut Mol,
-    params: &ReapplyMolBlockWedgingParams,
+    all_bond_types: bool,
 ) -> Result<()> {
     Ok(ffi::reapply_mol_block_wedging(
         mol.pin_mut(),
-        params.all_bond_types,
+        all_bond_types,
     )?)
 }
 

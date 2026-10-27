@@ -737,12 +737,10 @@ fn loading_checks_matchers() {
     // residue fields, which RDKit 2024.09's pickler reads as PDB residue
     // info (U10), as Python's FilterCatalog does.
     let mut pattern = mol_from_smarts("[#6]").unwrap();
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    pattern.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    pattern
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut catalog = FilterCatalog::default();
     let matcher = SmartsMatcher::from_mol("marked", &pattern);
     catalog.add_entry(&FilterCatalogEntry::new("marked", &matcher).unwrap());

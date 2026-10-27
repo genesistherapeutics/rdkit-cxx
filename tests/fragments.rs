@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/Chem/UnitTestFragmentDescriptors.py (RDKit
-// 2026.03.6), and pins values from Python's rdkit.Chem.Fragments.
+// 2024.09.6), and pins values from Python's rdkit.Chem.Fragments.
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::{Mol, fragments, mol_from_smiles};

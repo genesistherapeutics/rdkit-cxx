@@ -36,21 +36,22 @@ fn rings() {
 }
 
 #[test]
-fn param_defaults() {
+fn dative_bonds_in_ring_finding() {
+    // Python's GetSSSR and GetSymmSSSR leave dative bonds out by default.
+    let mut ring = unsanitized("C1CC->[Fe]<-C1");
+    assert!(get_sssr(&mut ring).unwrap().is_empty());
     assert_eq!(
-        GetSSSRParams::default(),
-        GetSSSRParams {
-            include_dative_bonds: false
-        }
+        get_sssr_with_include_dative_bonds(&mut ring, true)
+            .unwrap()
+            .len(),
+        1
     );
     assert_eq!(
-        GetSymmSSSRParams::default(),
-        GetSymmSSSRParams {
-            include_dative_bonds: false
-        }
+        get_symm_sssr_with_include_dative_bonds(&mut ring, true)
+            .unwrap()
+            .len(),
+        1
     );
-    let kekulize = KekulizeIfPossibleParams::default();
-    assert!(!kekulize.clear_aromatic_flags && kekulize.canonical);
 }
 
 #[test]

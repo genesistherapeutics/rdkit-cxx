@@ -29,7 +29,7 @@ using SanitizeFlags = RDKit::MolOps::SanitizeFlags;
 
 std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
                            bool catch_errors);
-void kekulize(RWMol &mol, bool clear_aromatic_flags, bool canonical);
+void kekulize(RWMol &mol, bool clear_aromatic_flags);
 std::unique_ptr<RWMol> add_hs(const RWMol &mol,
                               const AddHsParametersData &params);
 rust::Vec<IndexList> get_mol_frags(const RWMol &mol);

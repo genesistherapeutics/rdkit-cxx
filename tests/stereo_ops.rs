@@ -210,11 +210,6 @@ fn param_defaults() {
     assert_eq!((from_3d.conf_id, from_3d.replace_existing_tags), (-1, true));
     let meso = FindMesoCentersParams::default();
     assert!(meso.include_isotopes && !meso.include_atom_maps);
-    let canon = CanonicalizeStereoGroupsParams::default();
-    assert_eq!(
-        canon.output_absolute_groups,
-        StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist
-    );
     let labels = AddStereoAnnotationsParams::default();
     assert_eq!(labels.abs_label, "abs ({cip})");
     assert_eq!(labels.or_label, "or{id}");
@@ -233,8 +228,6 @@ fn param_defaults() {
         ],
         [1000, 10000, 100000, 1000000]
     );
-    let reapply = ReapplyMolBlockWedgingParams::default();
-    assert!(reapply.all_bond_types);
     let expand = ExpandAttachmentPointsParams::default();
     assert!(expand.add_as_queries && expand.add_coords);
 }

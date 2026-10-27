@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports rdkit/Chem/UnitTestFunctionalGroups.py; values from Python's
-// FunctionalGroups in RDKit 2026.03.6.
+// FunctionalGroups in RDKit 2024.09.6.
 
 use rdkit_cxx::chem::functional_groups::*;
 use rdkit_cxx::chem::{add_hs, mol_from_smiles};
@@ -139,7 +139,7 @@ fn rdkit_hierarchy() -> Result<()> {
 #[test]
 fn fingerprints_with_hydrogens() -> Result<()> {
     // test4Hs asserts that hydrogens never change a fingerprint, but in
-    // RDKit 2026.03.6 they change 725 of these 4978 in Python, the first
+    // RDKit 2024.09.6 they change 725 of these 4978 in Python, the first
     // for this molecule; the port computes what Python computes.
     let hierarchy = build_func_group_hierarchy()?;
     let csv = std::fs::read_to_string(concat!(

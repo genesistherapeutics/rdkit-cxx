@@ -246,24 +246,12 @@ void check_bond_query(const RDKit::Bond::QUERYBOND_QUERY *root,
 // a bond index or a list's size may not. For parts (check_picklable_parts),
 // whatever the molecule's size, with bonds named as a part of at most
 // max_part_bonds bonds may number them.
-void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
-                        bool parts = false, unsigned max_part_bonds = 0) {
-  if (!parts && mol.getNumAtoms() > kPickleByteMax) {
+void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where) {
+  if (mol.getNumAtoms() > kPickleByteMax) {
     return;
   }
-  // A part's bonds are numbered from 0, so past 255 only in a part of more
-  // than 256 bonds.
-  const bool any_bond = parts && max_part_bonds > kPickleByteMax + 1;
   auto check_bond = [&](std::size_t bond, const std::string &what) {
-    if (any_bond) {
-      throw ValueErrorException(
-          what + " " + std::to_string(bond) +
-          " may be numbered past 255 in a part of more than 256 bonds, more "
-          "than a molecule pickle holds");
-    }
-    if (!parts) {
-      check_pickle_byte(bond, what);
-    }
+    check_pickle_byte(bond, what);
   };
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
@@ -385,14 +373,17 @@ namespace {
 // check_picklable, and for parts, check_picklable_parts: the molecule's own
 // fields as parts' are, its recursive queries' molecules, which parts copy
 // whole, as themselves.
-void check_picklable(const RDKit::ROMol &mol, bool parts,
-                     unsigned max_part_bonds) {
+void check_picklable(const RDKit::ROMol &mol, bool parts) {
   walk_pickled(
       mol,
       [&](const RDKit::ROMol &current, bool nested) {
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
-        check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        // A fragment catalog's part has no substance or stereo groups
+        // (pathToSubmol builds it of atoms and bonds alone).
+        if (!parts || nested) {
+          check_pickle_bytes(current, where);
+        }
         check_prop_counts(current, where);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
@@ -407,12 +398,10 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
 
 }  // namespace
 
-void check_picklable(const RDKit::ROMol &mol) {
-  check_picklable(mol, false, 0);
-}
+void check_picklable(const RDKit::ROMol &mol) { check_picklable(mol, false); }
 
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
-  check_picklable(mol, true, max_part_bonds);
+void check_picklable_parts(const RDKit::ROMol &mol) {
+  check_picklable(mol, true);
 }
 
 namespace {
@@ -529,6 +518,32 @@ void check_stereo_group_removals(const RDKit::ROMol &mol, Removes removes) {
   // leaving the group pointing at the atom.
   check_stereo_group_members(mol, "");
   const auto &groups = mol.getStereoGroups();
+  // RDKit 2024.09's insertMol (insertStereoGroups in RWMol.cpp), which
+  // molzip and replaceSubstructs call before they remove atoms, merges the
+  // target's ABS groups into one, which repeats an atom or bond two of them
+  // hold (RDKit 2026.03's StereoGroup constructor refuses the repeat).
+  std::unordered_set<const void *> abs_members;
+  for (const auto &group : groups) {
+    if (group.getGroupType() != RDKit::StereoGroupType::STEREO_ABSOLUTE) {
+      continue;
+    }
+    for (const auto *atom : group.getAtoms()) {
+      if (!abs_members.insert(atom).second) {
+        throw ValueErrorException(
+            "atom " + std::to_string(atom->getIdx()) +
+            " is in two ABS stereo groups, which RDKit 2024.09 merges into "
+            "one group that repeats it when it combines molecules");
+      }
+    }
+    for (const auto *bond : group.getBonds()) {
+      if (!abs_members.insert(bond).second) {
+        throw ValueErrorException(
+            "bond " + std::to_string(bond->getIdx()) +
+            " is in two ABS stereo groups, which RDKit 2024.09 merges into "
+            "one group that repeats it when it combines molecules");
+      }
+    }
+  }
   if (removes == Removes::Anything) {
     for (std::size_t g = 0; g < groups.size(); ++g) {
       if (!groups[g].getBonds().empty()) {
@@ -568,6 +583,117 @@ void check_stereo_group_removals(const RDKit::ROMol &mol, Removes removes) {
 }
 
 }  // namespace
+
+// Bridges by Tarjan's low-link, with its own stack.
+void check_kekulize_questions(const RDKit::ROMol &mol) {
+  const auto n = mol.getNumAtoms();
+  bool aromatic = false;
+  unsigned dummies = 0;
+  for (const auto *atom : mol.atoms()) {
+    aromatic = aromatic || atom->getIsAromatic();
+    dummies += atom->getAtomicNum() == 0;
+  }
+  for (const auto *bond : mol.bonds()) {
+    aromatic = aromatic || bond->getIsAromatic() ||
+               bond->getBondType() == RDKit::Bond::AROMATIC;
+  }
+  if (!aromatic || dummies < MAX_KEKULIZE_QUESTIONS) {
+    return;
+  }
+  std::vector<unsigned> order(n, 0), low(n, 0);
+  std::vector<char> bridge(mol.getNumBonds(), 0);
+  unsigned counter = 0;
+  // An atom, the bond it was reached by, and its bonds left to follow.
+  struct Frame {
+    unsigned atom;
+    int via;
+    std::vector<const RDKit::Bond *> bonds;
+    std::size_t pos;
+  };
+  for (unsigned start = 0; start < n; ++start) {
+    if (order[start]) {
+      continue;
+    }
+    std::vector<Frame> stack;
+    auto push = [&](unsigned atom, int via) {
+      order[atom] = low[atom] = ++counter;
+      Frame frame{atom, via, {}, 0};
+      for (const auto *bond : mol.atomBonds(mol.getAtomWithIdx(atom))) {
+        frame.bonds.push_back(bond);
+      }
+      stack.push_back(std::move(frame));
+    };
+    push(start, -1);
+    while (!stack.empty()) {
+      auto &top = stack.back();
+      if (top.pos < top.bonds.size()) {
+        const auto *bond = top.bonds[top.pos++];
+        if (static_cast<int>(bond->getIdx()) == top.via) {
+          continue;
+        }
+        const auto other = bond->getOtherAtomIdx(top.atom);
+        if (order[other]) {
+          low[top.atom] = std::min(low[top.atom], order[other]);
+        } else {
+          push(other, static_cast<int>(bond->getIdx()));
+        }
+        continue;
+      }
+      const auto atom = top.atom;
+      const auto via = top.via;
+      stack.pop_back();
+      if (!stack.empty()) {
+        auto &parent = stack.back();
+        low[parent.atom] = std::min(low[parent.atom], low[atom]);
+        if (low[atom] > order[parent.atom]) {
+          bridge[via] = 1;
+        }
+      }
+    }
+  }
+  // Union the atoms across ring bonds.
+  std::vector<unsigned> root(n);
+  for (unsigned i = 0; i < n; ++i) {
+    root[i] = i;
+  }
+  auto find = [&root](unsigned i) {
+    while (root[i] != i) {
+      root[i] = root[root[i]];
+      i = root[i];
+    }
+    return i;
+  };
+  std::vector<char> in_ring(n, 0);
+  for (const auto *bond : mol.bonds()) {
+    if (!bridge[bond->getIdx()]) {
+      in_ring[bond->getBeginAtomIdx()] = in_ring[bond->getEndAtomIdx()] = 1;
+      root[find(bond->getBeginAtomIdx())] = find(bond->getEndAtomIdx());
+    }
+  }
+  std::map<unsigned, unsigned> dummy_count;
+  std::map<unsigned, bool> has_non_dummy;
+  for (const auto *atom : mol.atoms()) {
+    const auto idx = atom->getIdx();
+    if (!in_ring[idx]) {
+      continue;
+    }
+    const auto r = find(idx);
+    if (atom->getAtomicNum() == 0) {
+      ++dummy_count[r];
+    } else {
+      has_non_dummy[r] = true;
+    }
+  }
+  for (const auto &[r, count] : dummy_count) {
+    if (count >= MAX_KEKULIZE_QUESTIONS && has_non_dummy[r]) {
+      throw ValueErrorException(
+          "a ring system holds " + std::to_string(count) +
+          " dummy atoms, at least " + std::to_string(MAX_KEKULIZE_QUESTIONS) +
+          ", for which RDKit 2024.09's kekulization shifts past the width of "
+          "an unsigned int");
+    }
+  }
+}
 
 void check_removals(const RDKit::ROMol &mol, Removes removes) {
   check_bond_end_points(mol);

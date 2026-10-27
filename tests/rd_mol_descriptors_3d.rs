@@ -253,7 +253,6 @@ fn moment_params_defaults() {
             custom_atom_property: String::new(),
         }
     );
-    assert_eq!(CalcGETAWAYParams::default().precision, 2.0);
     assert_eq!(CalcRDFParams::default().conf_id, -1);
     assert!(CalcMORSEParams::default().custom_atom_property.is_empty());
     assert_eq!(CalcAUTOCORR3DParams::default().conf_id, -1);
@@ -346,7 +345,7 @@ fn autocorrelations() {
 }
 
 #[test]
-fn whim_and_getaway() {
+fn whim() {
     let mol = apap();
     let values = calc_whim(&mol).unwrap();
     assert_eq!(values.len(), 114);
@@ -371,77 +370,8 @@ fn whim_and_getaway() {
             19.623, 0.188, 0.673, 0.532, 35.488,
         ],
     );
-
-    let values = calc_getaway(&mol).unwrap();
-    assert_eq!(values.len(), 273);
-    assert_all_close(&values[..4], &[34.054, 0.895, 4.019, 11.411]);
-    assert_all_close(&values[200..203], &[0.096, 1.697, 1.452]);
-    let precise = CalcGETAWAYParams {
-        precision: 3.0,
-        ..Default::default()
-    };
-    assert_all_close(
-        &calc_getaway_with_params(&mol, &precise).unwrap()[..4],
-        &[38.054, 1.0, 4.019, 11.411],
-    );
-    let custom = CalcGETAWAYParams {
-        custom_atom_property: "q".to_string(),
-        ..Default::default()
-    };
-    let values = calc_getaway_with_params(&apap_with_q(), &custom).unwrap();
-    assert_eq!(values.len(), 45);
-    assert_all_close(&values[..6], &[34.054, 0.895, 4.019, 11.411, 4.659, 1.022]);
 }
 
-#[test]
-fn getaway_precision_is_checked() {
-    // RDKit converts the precision to unsigned int (undefined for these)
-    // and prints that many digits into a 32-byte buffer.
-    let mol = apap();
-    for precision in [-1.0, 25.0, 1e20, f64::NAN, f64::INFINITY] {
-        let p = CalcGETAWAYParams {
-            precision,
-            ..Default::default()
-        };
-        assert!(
-            matches!(calc_getaway_with_params(&mol, &p), Err(Error::Value { .. })),
-            "{precision}"
-        );
-    }
-    let p = CalcGETAWAYParams {
-        precision: 24.9,
-        ..Default::default()
-    };
-    assert_eq!(calc_getaway_with_params(&mol, &p).unwrap().len(), 273);
-}
-
-#[test]
-fn getaway_coordinates_are_checked() {
-    // NaN coordinates make NaN leverages, which RDKit sorts.
-    let mut mol = apap();
-    mol.get_conformer_mut()
-        .unwrap()
-        .set_atom_position(
-            0,
-            Point3D {
-                x: f64::NAN,
-                y: 0.0,
-                z: 0.0,
-            },
-        )
-        .unwrap();
-    assert!(matches!(calc_getaway(&mol), Err(Error::Value { .. })));
-    let p = CalcGETAWAYParams {
-        conf_id: 1,
-        ..Default::default()
-    };
-    assert_eq!(calc_getaway_with_params(&mol, &p).unwrap().len(), 273);
-}
-
-/// Eigen's SVD and eigensolvers leave their output uninitialized for NaN
-/// input, and RDKit reads it, so the descriptors that solve matrices of the
-/// coordinates need them finite, and those that divide by distances need
-/// the atoms apart.
 #[test]
 fn solved_descriptors_check_coordinates() {
     let nan = Point3D {
@@ -469,12 +399,11 @@ fn solved_descriptors_check_coordinates() {
         .unwrap()
         .set_atom_position(0, p)
         .unwrap();
-    for result in [calc_getaway(&mol), calc_eem_charges(&mol)] {
-        assert!(
-            matches!(&result, Err(Error::Value { message }) if message.contains("atoms 0 and 1")),
-            "{result:?}"
-        );
-    }
+    let result = calc_eem_charges(&mol);
+    assert!(
+        matches!(&result, Err(Error::Value { message }) if message.contains("atoms 0 and 1")),
+        "{result:?}"
+    );
     assert_eq!(calc_whim(&mol).unwrap().len(), 114);
     // WHIM weights the covariance matrix it solves by a custom property.
     let mut mol = apap();
@@ -497,11 +426,9 @@ fn solved_descriptors_check_coordinates() {
 
 #[test]
 fn no_atoms() {
-    // AUTOCORR3D, WHIM, and GETAWAY take &v[0] of empty vectors (GETAWAY
-    // crashes in Python).
+    // AUTOCORR3D and WHIM take &v[0] of empty vectors.
     let mut mol = Mol::default();
     mol.add_conformer(&Conformer::new(0)).unwrap();
-    assert!(matches!(calc_getaway(&mol), Err(Error::Value { .. })));
     assert!(matches!(calc_whim(&mol), Err(Error::Value { .. })));
     assert!(matches!(calc_autocorr_3d(&mol), Err(Error::Value { .. })));
     assert_eq!(calc_rdf(&mol).unwrap().len(), 210);
@@ -518,7 +445,6 @@ fn property_tables() {
     assert!(matches!(calc_rdf(&mol), Err(Error::Value { .. })));
     assert!(matches!(calc_morse(&mol), Err(Error::Value { .. })));
     assert!(matches!(calc_whim(&mol), Err(Error::Value { .. })));
-    assert!(matches!(calc_getaway(&mol), Err(Error::Value { .. })));
     assert!(matches!(calc_autocorr_3d(&mol), Err(Error::Value { .. })));
     let custom = CalcRDFParams {
         custom_atom_property: "q".to_string(),
@@ -926,32 +852,4 @@ fn double_cubic_lattice_volume_in_threads() {
         assert_close(area, 298.4404626262069, 1e-9);
         assert_close(volume, 411.9602195996842, 1e-9);
     }
-}
-
-fn with_coords(smiles: &str) -> Mol {
-    let mut mol = mol_from_smiles(smiles).unwrap();
-    let n = mol.get_num_atoms();
-    let mut conf = Conformer::new(n);
-    for i in 0..n {
-        let x = f64::from(i);
-        conf.set_atom_position(i, Point3D::new(1.5 * x, 0.3 * (x % 2.0), 0.1 * x))
-            .unwrap();
-    }
-    mol.add_conformer(&conf).unwrap();
-    mol
-}
-
-/// RDKit 2024.09's GETAWAY reads uninitialized sums for a molecule less than
-/// 8 bonds across (Python gives values like 5.5e294 for ethanol, changing
-/// between calls), and counts the distance between fragments as 1e8, looping
-/// that many times.
-#[test]
-fn getaway_needs_a_connected_molecule_8_bonds_across() {
-    for smiles in ["CCO", "C", "CCCCCCCC", "CCCCCCCCC.C"] {
-        let err = calc_getaway(&with_coords(smiles)).unwrap_err();
-        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
-    }
-    // Nine atoms in a chain are 8 bonds across.
-    assert_eq!(calc_getaway(&with_coords("CCCCCCCCC")).unwrap().len(), 273);
-    assert_eq!(calc_getaway(&apap()).unwrap().len(), 273);
 }

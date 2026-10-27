@@ -9,7 +9,7 @@ use rdkit_cxx::chem::*;
 
 // Expected values come from Python's rdSLNParse.
 
-/// conda-forge's macOS build of RDKit 2026.03.6 ships no SLN parser, and
+/// conda-forge's macOS build of RDKit 2024.09.6 ships no SLN parser, and
 /// every SLN function is then `Error::Value`; its Linux builds have one.
 fn has_sln_parser() -> bool {
     let has = match mol_from_sln("C") {

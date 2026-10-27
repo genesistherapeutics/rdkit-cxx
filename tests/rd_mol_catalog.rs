@@ -234,12 +234,9 @@ fn bits_without_entries() {
 /// PDB residue info, reading the fields from the bytes after it (U10).
 fn pdb_typed_entry_pickle() -> Vec<u8> {
     let mut mol = mol_from_smiles("C").unwrap();
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut entry = MolCatalogEntry::default();
     entry.set_mol(&mol);
     let mut pickle = entry.serialize().unwrap();

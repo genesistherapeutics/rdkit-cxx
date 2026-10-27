@@ -292,7 +292,7 @@ fn queries_round_trip() {
         assert_eq!(smarts(&json), [expected], "{query}");
     }
 
-    // RDKit 2026.03.6's MolToJSON of a mol block's atom list, A, and Q
+    // RDKit 2024.09.6's MolToJSON of a mol block's atom list, A, and Q
     // atoms, ring bond, substitution, and unsaturation counts, and query
     // bonds, as a version 11 document.
     let mol_block = r#"{"rdkitjson":{"version":11},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"name":"","atoms":[{"z":0},{"z":0},{"z":0},{},{},{"z":7}],"bonds":[{"atoms":[0,1]},{"bo":0,"atoms":[1,2]},{"bo":0,"atoms":[2,3]},{"bo":0,"atoms":[3,4]},{"bo":0,"atoms":[4,5]}],"conformers":[{"dim":2,"coords":[[0E0,0E0],[1E0,0E0],[2E0,0E0],[3E0,0E0],[4E0,0E0],[5E0,0E0]]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2024.09.6"},{"name":"rdkitQueries","formatVersion":10,"toolkitVersion":"2024.09.6","atomQueries":[{"descr":"AtomOr","tag":31,"children":[{"descr":"AtomOr","tag":31,"children":[{"descr":"AtomAtomicNum","tag":33,"val":6},{"descr":"AtomAtomicNum","tag":33,"val":7}]},{"descr":"AtomAtomicNum","tag":33,"val":8}]},{"descr":"AtomAtomicNum","type":"A","negated":true,"tag":33,"val":1},{"descr":"AtomOr","type":"Q","negated":true,"tag":31,"children":[{"descr":"AtomAtomicNum","tag":33,"val":6},{"descr":"AtomAtomicNum","tag":33,"val":1}]},{"descr":"AtomAnd","tag":30,"children":[{"descr":"AtomAtomicNum","tag":33,"val":6},{"descr":"AtomRingBondCount","tag":41,"val":2}]},{"descr":"AtomAnd","tag":30,"children":[{"descr":"AtomAtomicNum","tag":33,"val":6},{"descr":"AtomExplicitDegree","tag":33,"val":2}]},{"descr":"AtomAnd","tag":30,"children":[{"descr":"AtomAtomicNum","tag":33,"val":7},{"descr":"AtomUnsaturated","tag":33,"val":1}]}],"bondQueries":[{},{},{"descr":"SingleOrDoubleBond","type":"BondOrder","tag":33,"val":1},{"descr":"SingleOrAromaticBond","type":"BondOrder","tag":33,"val":1},{"descr":"BondNull","tag":40}]}]}]}"#;
@@ -458,8 +458,9 @@ fn substance_group_checks() {
     .remove(0);
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
-    // RDKit 2024.09 leaves a missing lvIdx unset; the wrapper gives it -1,
-    // as later releases do, and 4294967295 reads as -1 in AttachPoint's int.
+    // RDKit 2024.09 leaves a missing lvIdx unset, as later releases do; the
+    // wrapper gives it -1, the value RDKit's writer leaves out, and
+    // 4294967295 reads as -1 in AttachPoint's int.
     let points = group.get_attach_points().unwrap();
     assert_eq!((points[0].lv_idx, points[1].lv_idx), (-1, -1));
     // RDKit reads lvIdx with GetUint, so a negative one is refused.

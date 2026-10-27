@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rdfragcatalog::*;
 use rdkit_cxx::chem::*;
+use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 // Expected values come from Python's rdfragcatalog.
 
@@ -380,12 +381,9 @@ fn pdb_typed_molecules_are_read() {
     // 2024.09's pickler reads as PDB residue info (U10), as Python's
     // FragCatalog does.
     let mut mol = mol("CC");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut marked = mol.to_binary();
     let at = marked
         .windows(9)
@@ -409,4 +407,52 @@ fn pdb_typed_molecules_are_read() {
     let catalog = unsafe { FragCatalog::from_pickle(&splice(&marked)) }.unwrap();
     assert_eq!(catalog.get_num_entries(), 5);
     assert_eq!(catalog.get_entry_description(0).unwrap(), "C<-O>C");
+}
+
+/// `smiles` with a substance group of `atoms` and their bonds, with `n`
+/// brackets.
+fn with_brackets(smiles: &str, atoms: u32, n: usize) -> Mol {
+    let mut mol = mol(smiles);
+    let mut sgroup = create_mol_substance_group(&mut mol, "GEN");
+    for idx in 0..atoms {
+        sgroup.add_atom_with_idx(idx).unwrap();
+    }
+    for idx in 0..atoms - 1 {
+        sgroup.add_bond_with_idx(idx).unwrap();
+    }
+    let bracket = [Point3D::default(), Point3D::new(1.0, 0.0, 0.0)];
+    for _ in 0..n {
+        sgroup.add_bracket(&bracket).unwrap();
+    }
+    mol
+}
+
+// RDKit 2024.09 makes the entries' fragments of atoms and bonds alone
+// (pathToSubmol), with their queries but no substance or stereo groups, and
+// pickles them with one-byte counts when small, however large the molecule:
+// a group the molecule's pickle could not hold is left out of them, and a
+// query of too many children is refused.
+#[test]
+fn fragments_are_picklable() {
+    let generator = FragCatGenerator;
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let small = with_brackets("CCCC", 2, 256);
+    assert!(generator.add_frags_from_mol(&small, &mut catalog).unwrap() > 0);
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
+    assert_eq!(read.get_num_entries(), catalog.get_num_entries());
+
+    let mut query = mol(&"C".repeat(300));
+    query
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_prop("query", &vec!["a"; 256].join(","));
+    let queries = std::collections::BTreeMap::from([("a".to_owned(), mol("C"))]);
+    mol_add_recursive_queries(&mut query, &queries, "query").unwrap();
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let Err(Error::Value { message }) = generator.add_frags_from_mol(&query, &mut catalog) else {
+        panic!("a fragment's pickle would truncate its query's children");
+    };
+    assert!(message.contains("number of children"), "{message}");
+    assert_eq!(catalog.get_num_entries(), 0);
 }

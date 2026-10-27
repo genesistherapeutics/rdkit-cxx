@@ -59,9 +59,10 @@ void set_hybridization(RWMol &mol) { RDKit::MolOps::setHybridization(mol); }
 
 void assign_radicals(RWMol &mol) { RDKit::MolOps::assignRadicals(mol); }
 
-void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags,
-                          bool canonical) {
-  RDKit::MolOps::KekulizeIfPossible(mol, clear_aromatic_flags, canonical);
+// As kekulize (check_kekulize_questions).
+void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags) {
+  check_kekulize_questions(mol);
+  RDKit::MolOps::KekulizeIfPossible(mol, clear_aromatic_flags);
 }
 
 // Both remove atoms or bonds from the copy, which trusts what

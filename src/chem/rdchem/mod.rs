@@ -61,8 +61,7 @@ pub use enums::{
 pub use mol::{Atoms, Bonds, Conformers, Mol};
 pub use mol_bundle::{FixedMolSizeMolBundle, MolBundle, mol_bundle_can_serialize};
 pub use monomer_info::{
-    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, AtomPDBResidueInfo,
-    AtomPDBResidueInfoParams,
+    AtomMonomerInfo, AtomMonomerType, AtomPDBResidueInfo, AtomPDBResidueInfoParams,
 };
 pub use periodic_table::{PeriodicTable, get_periodic_table};
 pub use pickle::{

@@ -8,7 +8,11 @@
 // the nearest well-formed input still works.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::*;
 use rdkit_cxx::chem::rd_fmcs::*;
+use rdkit_cxx::chem::rd_rascal_mces::*;
+use rdkit_cxx::chem::rd_substruct_library::*;
+use rdkit_cxx::chem::scaffolds::rd_scaffold_network::*;
 use rdkit_cxx::chem::*;
 
 mod common;
@@ -168,13 +172,37 @@ fn proximity_bonding_refuses_shared_hydrogens() {
 }
 
 #[test]
-fn mcs_verbose_output_is_refused() {
+fn mcs_verbose_output_with_store_all_is_refused() {
     let mols = [smiles("CCO"), smiles("CCN")];
+    let both = MCSParameters {
+        verbose: true,
+        store_all: true,
+        ..Default::default()
+    };
+    assert!(is_value(find_mcs_with_params(&mols, &both)));
     let verbose = MCSParameters {
         verbose: true,
         ..Default::default()
     };
-    assert!(is_value(find_mcs_with_params(&mols, &verbose)));
+    assert_eq!(
+        find_mcs_with_params(&mols, &verbose).unwrap().num_atoms(),
+        2
+    );
+    // A seed of one atom ends the search before verbose output reads its
+    // bonds.
+    let seeded = MCSParameters {
+        verbose: true,
+        initial_seed: "[#6]".to_string(),
+        ..Default::default()
+    };
+    find_mcs_with_params(&mols, &seeded).unwrap();
+    let one_atom = [smiles("C"), smiles("CO")];
+    assert_eq!(
+        find_mcs_with_params(&one_atom, &verbose)
+            .unwrap()
+            .num_atoms(),
+        1
+    );
     assert_eq!(find_mcs(&mols).unwrap().num_atoms(), 2);
 }
 
@@ -240,4 +268,252 @@ fn dropping_a_multithreaded_supplier_mid_read_is_safe() {
         suppl.mols().next().unwrap().unwrap();
         drop(suppl);
     }
+}
+
+#[test]
+fn stereo_groups_listing_an_atom_twice_are_refused() {
+    // RDKit 2024.09 keeps the duplicate, which dangles once the atom is
+    // removed: removing hydrogens, Python crashes on the second.
+    for text in [
+        "C[C@H](F)Cl |&1:1,1|",
+        "[H][C@](C)(F)Cl |&1:0,0,1|",
+        "C[C@H](F)C[C@H](F)Cl |o1:1,o1:4,o1:1|",
+        "C[C@H](F)Cl |a:1,a:1|",
+    ] {
+        assert!(is_value(mol_from_smiles(text)), "{text}");
+    }
+    for text in ["C[C@H](F)Cl |&1:1,&2:1|", "C[C@H](F)Cl |a:1,o1:1|"] {
+        assert!(mol_from_smiles(text).is_ok(), "{text}");
+    }
+
+    let block = mol_to_v3k_mol_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    assert!(mol_from_mol_block(&block).is_ok());
+    // A list shorter than its count repeats its last atom, or reads one
+    // unset (still so in RDKit 2026.09).
+    for atoms in ["(2 2 2)", "(2 2)", "(1 )", "(2 )"] {
+        let bad = block.replace("ATOMS=(1 2)", &format!("ATOMS={atoms}"));
+        assert_ne!(bad, block);
+        assert!(is_value(mol_from_mol_block(&bad)), "{atoms}");
+    }
+    let two = mol_to_v3k_mol_block(&smiles("C[C@H](F)[C@H](F)Cl |&1:1,3|")).unwrap();
+    assert!(two.contains("ATOMS=(2 2 4)"), "{two}");
+    assert!(mol_from_mol_block(&two).is_ok());
+    let repeated = two.replace("ATOMS=(2 2 4)", "ATOMS=(3 2 2 4)");
+    assert!(is_value(mol_from_mol_block(&repeated)));
+    // Only a collection block's lines are read as stereo groups.
+    let elsewhere = block.replace(
+        "M  V30 END CTAB",
+        "M  V30 BEGIN OBJ3D\nM  V30 MDLV30/STERAC1 ATOMS=(1 )\nM  V30 END OBJ3D\nM  V30 END CTAB",
+    );
+    assert_ne!(elsewhere, block);
+    assert!(mol_from_mol_block(&elsewhere).is_ok());
+
+    let mrv = mol_to_mrv_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    let twice = mrv.replace(
+        "</atomArray>",
+        "<atom id=\"a2\" elementType=\"Br\" x2=\"3\" y2=\"3\" mrvStereoGroup=\"and1\"/></atomArray>",
+    );
+    assert_ne!(twice, mrv);
+    assert!(is_parse(mol_from_mrv_block(&twice)));
+
+    let json = mol_to_json(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    let doubled = json.replace("\"atoms\":[1]", "\"atoms\":[1,1]");
+    assert_ne!(doubled, json);
+    assert!(is_value(json_to_mols(&doubled)));
+    assert_eq!(json_to_mols(&json).unwrap().len(), 1);
+}
+
+// RDKit 2024.09's CXSMILES parser reads past the end of the text for an
+// atomProp block whose last value ends it (#9361); every entry point that
+// parses caller text as SMILES or SMARTS with CX extensions checks it.
+// ("|atomProp:0.a", a name without a value, RDKit refuses.)
+const OVERRUN: &str = "|atomProp:0.p.v";
+
+#[test]
+fn cx_extensions_are_checked_at_every_entry_point() {
+    let rascal = RascalOptions {
+        equivalent_atoms: format!("[#6]\t{OVERRUN}"),
+        ..Default::default()
+    };
+    assert!(is_value(find_mces_with_opts(
+        &smiles("CCO"),
+        &smiles("CCN"),
+        &rascal
+    )));
+    let fine = RascalOptions {
+        equivalent_atoms: "[#6] [#7]".to_string(),
+        ..Default::default()
+    };
+    find_mces_with_opts(&smiles("CCO"), &smiles("CCN"), &fine).unwrap();
+
+    let breaker = "[!#0;R:1]-!@[!#0:2]>>[*:1]-[#0].[#0]-[*:2]";
+    assert!(is_value(ScaffoldNetworkParams::new(&[&format!(
+        "{breaker}{OVERRUN}"
+    )])));
+    ScaffoldNetworkParams::new(&[breaker]).unwrap();
+
+    let mut holder = CachedSmilesMolHolder::default();
+    assert!(is_value(holder.add_smiles(&format!("CC {OVERRUN}"))));
+    holder.add_smiles("CC |$_AV:a;b$|").unwrap();
+
+    assert!(is_value(parse_mol_query_def_file_text(&format!(
+        "Alkyl\tC {OVERRUN}\n"
+    ))));
+    assert_eq!(
+        parse_mol_query_def_file_text("Alkyl\t[CX4]\n")
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn mol_block_smarts_are_checked() {
+    let block = mol_to_mol_block(&smiles("CC")).unwrap();
+    let with = |line: &str| block.replace("M  END", &format!("{line}\nM  END"));
+    // An "M  MRV SMA" line's SMARTS, from its 16th byte.
+    assert!(is_value(mol_from_mol_block(&with(&format!(
+        "M  MRV SMA   1 C {OVERRUN}"
+    )))));
+    let sma = mol_from_mol_block(&with("M  MRV SMA   1 [#6]")).unwrap();
+    assert_eq!(sma.get_num_atoms(), 2);
+    // A data group's field, which a SMARTSQ query parses, also when it runs
+    // across an SCD line into the SED's.
+    let data = |fields: &[&str]| {
+        let mut lines = vec![
+            "M  STY  1   1 DAT".to_string(),
+            "M  SAL   1  1   1".to_string(),
+            "M  SDT   1 MRV_QUERY                 F".to_string(),
+        ];
+        lines.extend(fields.iter().map(|f| f.to_string()));
+        with(&lines.join("\n"))
+    };
+    assert!(is_value(mol_from_mol_block(&data(&[&format!(
+        "M  SED   1 C {OVERRUN}"
+    )]))));
+    assert!(is_value(mol_from_mol_block(&data(&[
+        &format!("M  SCD   1 {} |atomP", "C".repeat(62)),
+        "M  SED   1 rop:0.p.v",
+    ]))));
+    mol_from_mol_block(&data(&["M  SED   1 [#6]"])).unwrap();
+    // Lines of another group within a field would be skipped by RDKit.
+    assert!(is_value(mol_from_mol_block(&data(&[
+        "M  SCD   1 C",
+        "M  SED   2 C",
+    ]))));
+    // A V3000 FIELDDATA value.
+    let v3k = v3000(
+        1,
+        &[&format!(
+            "1 DAT 0 ATOMS=(1 1) FIELDNAME=MRV_QUERY QUERYTYPE=SMARTSQ FIELDDATA=\"C {OVERRUN}\""
+        )],
+    );
+    assert!(is_value(mol_from_mol_block(&v3k)));
+    let v3k = v3000(
+        1,
+        &["1 DAT 0 ATOMS=(1 1) FIELDNAME=MRV_QUERY QUERYTYPE=SMARTSQ FIELDDATA=\"[#6]\""],
+    );
+    mol_from_mol_block(&v3k).unwrap();
+}
+
+#[test]
+fn normalization_files_are_read_and_checked_once() {
+    let path = common::temp_path("normalizations.txt");
+    std::fs::write(&path, format!("Bad\t[C:1]>>[N:1]{OVERRUN}\n")).unwrap();
+    assert!(is_value(Normalizer::new(&path, 200)));
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    assert!(is_value(normalize_with_params(&smiles("CCO"), &params)));
+    assert!(is_value(cleanup_with_params(&smiles("CCO"), &params)));
+    assert!(is_value(normalizer_from_params(&params)));
+    // The ops that do not normalize do not read it.
+    reionize_with_params(&smiles("CC(=O)O"), &params).unwrap();
+
+    std::fs::write(&path, "// a comment\nAmine\t[O:1]>>[N:1]\n").unwrap();
+    let normalizer = Normalizer::new(&path, 200).unwrap();
+    assert_eq!(
+        mol_to_smiles(&normalizer.normalize(&smiles("CCO")).unwrap()).unwrap(),
+        "CCN"
+    );
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    let normalized = normalize_with_params(&smiles("CCO"), &params).unwrap();
+    assert_eq!(mol_to_smiles(&normalized).unwrap(), "CCN");
+    std::fs::write(&path, "// nothing\n").unwrap();
+    assert!(is_value(normalize_with_params(&smiles("CCO"), &params)));
+}
+
+// A ring of one carbon and `dummies` aromatic dummy atoms.
+fn dummy_ring(dummies: usize) -> String {
+    format!("c1{}:1", ":*".repeat(dummies))
+}
+
+#[test]
+fn kekulizing_refuses_32_question_atoms() {
+    // RDKit 2024.09 enumerates the dummies' subsets in an unsigned int.
+    assert!(is_value(mol_from_smiles(&dummy_ring(32))));
+    assert!(is_value(mol_from_smiles(&dummy_ring(40))));
+    let params = SmilesParserParams {
+        sanitize: false,
+        ..Default::default()
+    };
+    let unsanitized = mol_from_smiles_with_params(&dummy_ring(32), &params).unwrap();
+    let mut mol = unsanitized.clone();
+    assert!(is_value(sanitize_mol(&mut mol)));
+    let mut mol = unsanitized.clone();
+    assert!(is_value(kekulize(&mut mol)));
+    let mut mol = unsanitized;
+    assert!(is_value(kekulize_if_possible(&mut mol)));
+    // Fewer dummies, or as many outside one ring system, are kekulized.
+    let mol = mol_from_smiles(&dummy_ring(30)).unwrap();
+    assert_eq!(mol.get_num_atoms(), 31);
+    let apart = format!("{}.{}", dummy_ring(20), dummy_ring(20));
+    mol_from_smiles(&apart).unwrap();
+    let chain = format!("c1ccccc1{}", "*".repeat(40));
+    mol_from_smiles(&chain).unwrap();
+}
+
+/// A reader that cannot seek and hands out at most 1000 bytes a call.
+struct Unseekable(std::io::Cursor<Vec<u8>>);
+
+impl std::io::Read for Unseekable {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = buf.len().min(1000);
+        self.0.read(&mut buf[..n])
+    }
+}
+
+#[test]
+fn unseekable_readers_check_lines_across_chunks() {
+    // Group lines that cross the scanner's 64 KiB chunks are read whole from
+    // a reader that cannot seek back, and refused there as from a file.
+    let pad = "x".repeat(70_000);
+    let read = |line: &str| {
+        let text = (v3000(1, &[line]) + "$$$$\n").repeat(2);
+        let reader = Unseekable(std::io::Cursor::new(text.into_bytes()));
+        let mut suppl = ForwardSDMolSupplier::from_fileobj(reader).unwrap();
+        suppl.mols().collect::<Vec<_>>()
+    };
+    let good = read(&format!("1 SUP 0 ATOMS=(1 3) LABEL={pad} SAP=(3 3 2 1)"));
+    assert_eq!(good.len(), 2);
+    assert!(
+        good.iter()
+            .all(|m| m.as_ref().unwrap().get_num_atoms() == 3)
+    );
+    let bad = read(&format!("1 SUP 0 ATOMS=(1 3) LABEL={pad} SAP=(3 3 2)"));
+    assert!(
+        matches!(bad.as_slice(), [Err(Error::Value { .. })]),
+        "{bad:?}"
+    );
+    // So is an "M  MRV SMA" SMARTS cut by a chunk boundary.
+    let block = mol_to_mol_block(&smiles("CC")).unwrap();
+    let sma = format!("M  MRV SMA   1 C{} {OVERRUN}", "C".repeat(70_000));
+    let text = block.replace("M  END", &format!("{sma}\nM  END")) + "$$$$\n";
+    let reader = Unseekable(std::io::Cursor::new(text.into_bytes()));
+    let mut suppl = ForwardSDMolSupplier::from_fileobj(reader).unwrap();
+    assert!(suppl.mols().all(|m| m.is_err()));
 }

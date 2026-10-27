@@ -183,10 +183,13 @@ its Boost.Python modules and its `.py` modules.
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
   read later. MolPickler writes some counts, and in RDKit 2024.09 a small
   molecule's bond indices, in one byte, and the property counts in two, and
-  reads a larger value's pickle out of step, so every wrapper that hands RDKit a molecule to pickle
-  (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
-  truncate: RDKit could not read the pickle back, as the contract and the
-  holders' safe reads assume. The wrappers still check what they checked before, for
+  reads a larger value's pickle out of step, so every wrapper that hands
+  RDKit a molecule to pickle, alone or inside another format (`git grep -l
+  'pickleMol\|MolPickler::pickle\|pickleReaction'` in RDKit's sources finds
+  them), refuses one it would truncate (`check_picklable` in
+  `rdkit-cxx/mol_checks.h`, or one of the variants beside it): RDKit could
+  not read the pickle back, as the contract and the holders' safe reads
+  assume. The wrappers still check what they checked before, for
   pickles that meet the contract but come from another RDKit: a molecule
   pickle's enum values, which MolPickler casts unchecked (bond types,
   directions, and stereo, atoms' chiral tags and hybridizations, stereo
@@ -240,21 +243,19 @@ its Boost.Python modules and its `.py` modules.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
-  registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
-  decomposition's random number singleton and fingerprint-variance scoring
-  static, under `rgroup_mutex()`, and the shape modules' pharmacophore
-  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
-  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
-  hierarchical clustering, under `murtagh_mutex()`, and the ChemDraw
-  library's attribute-name maps, which it fills behind an unlocked check,
-  under `chemdraw_mutex()`). State RDKit makes once,
+  registry in `Property.cpp`, and R-group decomposition's random number
+  singleton and fingerprint-variance scoring static, under
+  `rgroup_mutex()`, and the shape module's pharmacophore patterns and
+  PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`, and the
+  static work variables of Murtagh's hierarchical clustering, under
+  `murtagh_mutex()`). State RDKit makes once,
   on first use, is
   made under `std::call_once` before any other call (the MACCS patterns in
   `MACCS.cpp`). 2D depiction's settings and
   CoordGen's templates are globals every coordinate generation reads, so
   every wrapper whose RDKit call may compute 2D coordinates holds
   `lock_depiction()` (`depiction_lock.h`): the depiction functions; the
-  mol-block (V2000 and V3000), Marvin, ChemDraw, PNG, SD, and Maestro
+  mol-block (V2000 and V3000), Marvin, PNG, SD, and Maestro
   writers for a molecule without a conformer, and the V2000 rxn-block
   writer built on them (also in reaction PNG metadata) for a reaction with
   such a template; and `molzip` with
@@ -427,7 +428,7 @@ its Boost.Python modules and its `.py` modules.
   may list an atom twice, which an atom's removal takes out once. RWMol's
   own removals from Rust run under a `StereoGroupRemovalGuard`, which
   rebuilds the groups from the atoms and bonds still in the molecule, as
-  RDKit 2025.09 leaves them, and `check_removals` refuses, for RDKit's own
+  RDKit 2025.03.3 leaves them, and `check_removals` refuses, for RDKit's own
   removals, a molecule whose groups they would leave dangling, by what they
   remove (`Removes`).
 

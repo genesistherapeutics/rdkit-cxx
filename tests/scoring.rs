@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports rdkit/ML/Scoring/UnitTestScoring.py, with values from Python's
-// rdkit.ML.Scoring.Scoring in RDKit 2026.03.6, which match to the last bit.
+// rdkit.ML.Scoring.Scoring in RDKit 2024.09.6, which match to the last bit.
 
 use rdkit_cxx::Error;
 use rdkit_cxx::ml::scoring::scoring::*;

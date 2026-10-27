@@ -12,8 +12,7 @@ fn monomer_info() {
         AtomMonomerInfo::default().get_monomer_type(),
         AtomMonomerType::Unknown
     );
-    let params = AtomMonomerInfoParams { name: "N1".into() };
-    let mut info = AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap();
+    let mut info = AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "N1").unwrap();
     assert_eq!(info.get_name().unwrap(), "N1");
     info.set_name("C1");
     info.set_monomer_type(AtomMonomerType::Unknown).unwrap();
@@ -167,9 +166,9 @@ fn is_value<T>(result: rdkit_cxx::Result<T>) -> bool {
 #[test]
 fn plain_info_cannot_have_the_pdb_type() {
     assert!(is_value(AtomMonomerInfo::new(AtomMonomerType::Pdbresidue)));
-    assert!(is_value(AtomMonomerInfo::new_with_params(
+    assert!(is_value(AtomMonomerInfo::new_with_name(
         AtomMonomerType::Pdbresidue,
-        &AtomMonomerInfoParams::default()
+        ""
     )));
     let mut info = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
     assert!(is_value(info.set_monomer_type(AtomMonomerType::Pdbresidue)));
@@ -210,12 +209,9 @@ fn pdb_residue_info_changes_type_freely() {
 /// type byte is.
 fn marked_pickle() -> (Vec<u8>, usize) {
     let mut mol = mol_from_smiles("C").unwrap();
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type as a byte.
     let name = pkl

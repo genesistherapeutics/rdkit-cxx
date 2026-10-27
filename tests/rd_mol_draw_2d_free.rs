@@ -289,7 +289,23 @@ fn free_drawing_is_checked() {
         raw_coords: true,
         ..Default::default()
     };
-    assert_runtime_error(d.draw_arrow_with_params(&p(0.0, 0.0), &p(10.0, 0.0), &flat));
+    // RDKit 2024.09 has no precondition on the angle, as Python draws.
+    d.draw_arrow_with_params(&p(0.0, 0.0), &p(10.0, 0.0), &flat)
+        .unwrap();
+    // A right angle puts the head's points at infinity, and a huge frac far
+    // off the canvas, which the coordinate bounds refuse.
+    let right = DrawArrowParams {
+        angle: std::f64::consts::FRAC_PI_2,
+        raw_coords: true,
+        ..Default::default()
+    };
+    assert_value_error(d.draw_arrow_with_params(&p(0.0, 0.0), &p(10.0, 0.0), &right));
+    let huge = DrawArrowParams {
+        frac: 1e12,
+        raw_coords: true,
+        ..Default::default()
+    };
+    assert_value_error(d.draw_arrow_with_params(&p(0.0, 0.0), &p(10.0, 0.0), &huge));
     let one_segment = DrawWavyLineParams {
         n_segments: 1,
         raw_coords: true,
@@ -433,6 +449,20 @@ fn comic_mode_lines_need_length() {
         ..Default::default()
     };
     assert_value_error(d.draw_arrow_with_params(&p(10.0, 10.0), &p(10.0, 10.0), &raw));
+    // Without a polygon, the head's sides are lines too, of no length when
+    // frac is 0.
+    let no_head = DrawArrowParams {
+        frac: 0.0,
+        raw_coords: true,
+        ..Default::default()
+    };
+    assert_value_error(d.draw_arrow_with_params(&p(10.0, 200.0), &p(200.0, 200.0), &no_head));
+    let polygon = DrawArrowParams {
+        as_polygon: true,
+        ..no_head
+    };
+    d.draw_arrow_with_params(&p(10.0, 200.0), &p(200.0, 200.0), &polygon)
+        .unwrap();
     d.draw_triangle_with_raw_coords(&p(10.0, 10.0), &p(100.0, 10.0), &p(50.0, 50.0), true)
         .unwrap();
     d.draw_arrow_with_params(&p(10.0, 200.0), &p(200.0, 200.0), &raw)

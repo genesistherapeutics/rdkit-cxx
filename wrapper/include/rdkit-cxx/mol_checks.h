@@ -114,14 +114,12 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 // inside another format, calls it on the molecules it pickles.
 void check_picklable(const RDKit::ROMol &mol);
 
-// As check_picklable, for every molecule RDKit may make of some of mol's atoms
-// and at most max_part_bonds of its bonds, keeping the substance groups and
-// stereo groups within them and the atoms' and bonds' queries
-// (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
-// them, and, for parts of more than 256 bonds, whose bonds may be numbered
-// past 255, no group that names a bond. For the fragment catalog, whose
-// fragments no wrapper can reach.
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+// As check_picklable, for every molecule RDKit 2024.09 may make of some of
+// mol's atoms and bonds (Subgraphs::pathToSubmol), which keeps their queries
+// and properties but no substance or stereo groups: the queries, the
+// molecules of recursive queries, and the property counts. For the fragment
+// catalog, whose fragments no wrapper can reach.
+void check_picklable_parts(const RDKit::ROMol &mol);
 
 // check_picklable for each template of a reaction, which ReactionPickler
 // pickles as molecules.
@@ -156,8 +154,8 @@ constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
 // RDKit 2024.09's RWMol::removeBond and batchRemoveBonds leave the stereo
-// groups that hold the bond pointing at it, deleted (RDKit 2025.09 takes it
-// out of them, rdkit/rdkit#8558), for copying, pickling, and the writers to
+// groups that hold the bond pointing at it, deleted (RDKit 2025.03.3 takes
+// it out of them, rdkit/rdkit#8558), for copying, pickling, and the writers to
 // read. An atom's removal removes its bonds so, and then drops every group
 // left with no atoms, bonds or not. So a group's bond dangles after a removal
 // when the group keeps an atom. RDKit 2024.09's groups may also list an
@@ -180,6 +178,21 @@ enum class Removes {
   // group can hold.
   Guarded,
 };
+
+// RDKit 2024.09's Kekulize (Kekulize.cpp), when it cannot kekulize a fused
+// ring system, retries with each subset of the system's "question" atoms
+// (markDbondCands: dummy atoms of its rings that may take a double bond),
+// enumerated by QuestionEnumerator with `0x1u << d_questions.size()`, which
+// is undefined for 32 or more (2026.03 uses a dynamic_bitset). A fused
+// system is the rings (with at least one non-dummy atom) that share bonds,
+// so its atoms are joined by ring bonds; this counts, in each set of atoms
+// joined by ring bonds (bonds that are not bridges) and holding a non-dummy
+// atom, the dummy atoms, and throws ValueErrorException when one holds
+// MAX_KEKULIZE_QUESTIONS or more, in a molecule with an aromatic atom or
+// bond (Kekulize does nothing without one). For the wrappers that sanitize
+// (with SANITIZE_KEKULIZE) or kekulize a caller's molecule.
+constexpr unsigned MAX_KEKULIZE_QUESTIONS = 32;
+void check_kekulize_questions(const RDKit::ROMol &mol);
 
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
 // bonds from it (or a copy): check_bond_end_points,
@@ -258,7 +271,7 @@ class StereoGroupBondGuard {
 void check_proximity_hydrogens(const RDKit::ROMol &mol, bool without_bonds);
 
 // For the wrappers' own removals from a molecule (RWMol's removeAtom,
-// removeBond, and commitBatchEdit), as RDKit 2025.09 makes them: takes the
+// removeBond, and commitBatchEdit), as RDKit 2025.03.3 makes them: takes the
 // molecule's stereo groups out when it is made, so none is left pointing at
 // an atom or bond RDKit deletes, and when it is destroyed, even when the
 // call throws, rebuilds each group from its atoms and bonds still in the

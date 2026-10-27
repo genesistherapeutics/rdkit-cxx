@@ -8,9 +8,7 @@
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
-use rdkit_cxx::chem::{
-    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, Mol, mol_from_smiles, mol_to_smiles,
-};
+use rdkit_cxx::chem::{AtomMonomerInfo, AtomMonomerType, Mol, mol_from_smiles, mol_to_smiles};
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
 
@@ -428,12 +426,10 @@ fn libraries_and_strategies_move_between_threads() {
 #[test]
 fn loaded_libraries_read_the_pdb_type_as_pdb_residue_info() {
     let mut amine = smiles("CN");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    amine.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    amine
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let blocks = vec![group(&["CC(=O)O"]), vec![amine]];
     let lib = EnumerateLibrary::new(&amide(), &blocks).unwrap();
     let bytes = lib.serialize().unwrap();

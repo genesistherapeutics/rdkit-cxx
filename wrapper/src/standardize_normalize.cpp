@@ -59,8 +59,16 @@ std::unique_ptr<Normalizer> normalizer_default() {
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
-  return std::make_unique<Normalizer>(to_path(normalize_filename),
-                                      max_restarts);
+  auto name = to_path(normalize_filename);
+  if (name.empty()) {
+    return std::make_unique<Normalizer>(name, max_restarts);  // the defaults
+  }
+  // Read here, once, checked, and handed to RDKit as a stream, rather than
+  // letting RDKit open the file (and keep what it read for the name).
+  auto text = read_file(name);
+  check_transformation_lines(text);
+  std::istringstream in{text};
+  return std::make_unique<Normalizer>(in, max_restarts);
 }
 
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
@@ -74,8 +82,9 @@ std::unique_ptr<Normalizer> normalizer_from_data(
 
 std::unique_ptr<Normalizer> normalizer_from_params(
     const CleanupParametersData &params) {
-  return std::unique_ptr<Normalizer>(
-      MS::normalizerFromParams(to_cleanup_parameters(params)));
+  auto cleanup = to_cleanup_parameters(params);
+  read_normalizations(cleanup);
+  return std::unique_ptr<Normalizer>(MS::normalizerFromParams(cleanup));
 }
 
 // Normalizing runs reactions, and disconnecting metals matches patterns

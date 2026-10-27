@@ -392,8 +392,15 @@ class DocumentChecker {
             id && typ->second != RDKit::StereoGroupType::STEREO_ABSOLUTE) {
           uint_of(*id, "a stereo group's id");
         }
+        // RDKit 2024.09 keeps an atom listed twice, which dangles once the
+        // atom is removed (check_stereo_group_members in mol_checks.cpp).
+        std::set<unsigned> seen;
         for (const auto &atom : array_of(*ids, "a stereo group's atoms")) {
-          uint_of(atom, "a stereo group's atom");
+          if (!seen.insert(uint_of(atom, "a stereo group's atom")).second) {
+            refuse(
+                "gives a stereo group an atom twice, which RDKit 2024.09 "
+                "keeps, leaving it to dangle once removed");
+          }
         }
       }
     }
@@ -931,9 +938,9 @@ JSONWriteParametersData json_write_parameters_default() {
 }
 
 // RDKit 2024.09's readSubstanceGroups leaves an attachment point's lvIdx
-// uninitialized when the point has none, as RDKit's writer leaves out -1;
-// RDKit 2025.09 makes it -1. The checked document gets 4294967295 there,
-// which RDKit reads as -1 into AttachPoint's int.
+// uninitialized when the point has none, as RDKit's writer leaves out -1
+// (still so in RDKit 2026.09.1). The checked document gets 4294967295
+// there, which RDKit reads as -1 into AttachPoint's int.
 void fill_leaving_atoms(bj::value &doc) {
   if (!doc.is_object()) {
     return;

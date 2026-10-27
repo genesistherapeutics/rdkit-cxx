@@ -6,8 +6,11 @@
 #include "rdkit-cxx/file_checks.h"
 
 #include <algorithm>
+#include <climits>
 #include <fstream>
 #include <iterator>
+#include <map>
+#include <set>
 #include <sstream>
 #include <vector>
 
@@ -78,6 +81,41 @@ void check_bond_refs(const boost::property_tree::ptree &tree) {
       }
     }
     check_bond_refs(child);
+  }
+}
+
+// RDKit 2024.09's Marvin reader puts each atom with an mrvStereoGroup into
+// its group by the index of the first atom with its id (getAtomIndex), so two
+// atoms with one id list an atom twice, which dangles once removed
+// (check_stereo_group_members in mol_checks.cpp): say, when the reader
+// removes the hydrogens. Ids in an atom array must therefore differ.
+void check_atom_ids(const boost::property_tree::ptree &tree) {
+  for (const auto &[key, child] : tree) {
+    if (key == "atomArray") {
+      std::set<std::string> ids;
+      auto add = [&](const std::string &id) {
+        if (!ids.insert(id).second) {
+          throw RDKit::FileParseException(
+              "atom id " + id +
+              " appears twice in an atom array of the MRV file");
+        }
+      };
+      std::vector<std::string> compact;
+      boost::algorithm::split(
+          compact, child.get<std::string>("<xmlattr>.atomID", ""),
+          boost::algorithm::is_space(), boost::algorithm::token_compress_on);
+      for (const auto &id : compact) {
+        if (!id.empty()) {
+          add(id);
+        }
+      }
+      for (const auto &[akey, atom] : child) {
+        if (akey == "atom") {
+          add(atom.get<std::string>("<xmlattr>.id", ""));
+        }
+      }
+    }
+    check_atom_ids(child);
   }
 }
 
@@ -166,9 +204,59 @@ bool data_sgroup_overrun(std::string_view cx, std::size_t p) {
   return i < n && cx[i] == '(' && text_to(cx, i, ")") > n;
 }
 
+// RDKit 2024.09's parse_enhanced_stereo adds each atom index listed after
+// "a:", "o<n>:", or "&<n>:" to the group the type and number name, merging
+// sections by 10 * number + type, so a group can list an atom twice, which
+// leaves a dangling atom once the atom is removed (check_stereo_group_members
+// in mol_checks.cpp): say, when the parser removes the hydrogens. Every place
+// a section may start is read as one, which may refuse a few extensions where
+// such text is inside another section.
+void check_cx_stereo_groups(std::string_view cx) {
+  std::map<unsigned int, std::set<unsigned long long>> groups;
+  for (std::size_t p = 0; p < cx.size(); ++p) {
+    unsigned int type;
+    if (cx[p] == 'a') {
+      type = 0;
+    } else if (cx[p] == 'o') {
+      type = 1;
+    } else if (cx[p] == '&' && p + 1 < cx.size() && cx[p + 1] != '#') {
+      type = 2;
+    } else {
+      continue;
+    }
+    std::size_t q = p + 1;
+    unsigned int id = 0;
+    if (type != 0) {
+      for (; q < cx.size() && is_digit(cx[q]); ++q) {
+        id = id * 10 + static_cast<unsigned int>(cx[q] - '0');
+      }
+    }
+    if (q >= cx.size() || cx[q] != ':') {
+      continue;
+    }
+    auto &atoms = groups[10 * id + type];
+    for (++q; q < cx.size() && is_digit(cx[q]);) {
+      unsigned long long index = 0;
+      for (; q < cx.size() && is_digit(cx[q]); ++q) {
+        index = std::min(index * 10 + static_cast<unsigned>(cx[q] - '0'),
+                         static_cast<unsigned long long>(UINT_MAX) + 1);
+      }
+      if (!atoms.insert(index).second) {
+        throw ValueErrorException(
+            "a CXSMILES stereo group lists an atom twice, which RDKit 2024.09 "
+            "keeps, leaving it to dangle once the atom is removed");
+      }
+      if (q < cx.size() && cx[q] == ',') {
+        ++q;
+      }
+    }
+  }
+}
+
 }  // namespace
 
 void check_cx_extensions(std::string_view cx, bool strict) {
+  check_cx_stereo_groups(cx);
   for (auto p = cx.find("atomProp:"); p != std::string_view::npos;
        p = cx.find("atomProp:", p + 1)) {
     // parse_it takes it for an "atomProp:" block only with more after it.
@@ -261,6 +349,7 @@ void check_mrv(const std::string &text) {
   boost::property_tree::ptree tree;
   boost::property_tree::read_xml(in, tree);
   check_bond_refs(tree);
+  check_atom_ids(tree);
 }
 
 }  // namespace rdkit_cxx

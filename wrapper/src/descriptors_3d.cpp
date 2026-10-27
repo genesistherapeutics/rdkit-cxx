@@ -35,8 +35,8 @@ namespace Desc = RDKit::Descriptors;
 // otherwise RDKit's own precondition reports it.
 bool has_conformers(const RWMol &mol) { return mol.getNumConformers() > 0; }
 
-// AUTOCORR3D, WHIM, and GETAWAY take &v[0] of per-atom vectors, which is
-// undefined for a molecule without atoms (GETAWAY crashes).
+// AUTOCORR3D and WHIM take &v[0] of per-atom vectors, which is undefined
+// for a molecule without atoms.
 void check_has_atoms(const RWMol &mol) {
   if (mol.getNumAtoms() == 0) {
     throw ValueErrorException("these descriptors need at least one atom");
@@ -208,78 +208,6 @@ rust::Vec<double> calc_whim(const RWMol &mol, std::int32_t conf_id,
                           [&](std::vector<double> &res) {
                             Desc::WHIM(mol, res, conf_id, thresh, custom);
                           });
-}
-
-namespace {
-
-// GETAWAY sums over the atom pairs at each topological distance up to the
-// largest, Dmax, filling its per-distance terms for distances 0 to 8, and
-// reads all nine: RDKit 2024.09 reads uninitialized values when Dmax is below
-// 8 (RDKit 2026.03 zeroes them, rdkit/rdkit#9450). Atoms in separate
-// fragments are 1e8 apart (getDistanceMat), and RDKit loops over every
-// distance up to Dmax, building an atom-pair matrix for each. Distances here
-// are found by breadth-first search, which leaves RDKit's cached matrices
-// alone. (RDKit 2024.09's GetGeodesicMatrix also writes each matrix past the
-// end of a vector it only reserved, within its allocation, for every
-// molecule: rdkit/rdkit#8601.)
-void check_getaway_distances(const RWMol &mol) {
-  const unsigned n = mol.getNumAtoms();
-  unsigned dmax = 0;
-  std::vector<unsigned> dist(n);
-  std::vector<unsigned> queue;
-  queue.reserve(n);
-  for (unsigned start = 0; start < n; ++start) {
-    std::fill(dist.begin(), dist.end(), n);
-    dist[start] = 0;
-    queue.assign(1, start);
-    for (std::size_t head = 0; head < queue.size(); ++head) {
-      const auto *atom = mol.getAtomWithIdx(queue[head]);
-      for (const auto *nbr : mol.atomNeighbors(atom)) {
-        if (dist[nbr->getIdx()] == n) {
-          dist[nbr->getIdx()] = dist[atom->getIdx()] + 1;
-          queue.push_back(nbr->getIdx());
-        }
-      }
-    }
-    if (queue.size() != n) {
-      throw ValueErrorException(
-          "GETAWAY needs a connected molecule: RDKit counts a disconnected "
-          "one's distances to 10^8, building an atom-pair matrix for each");
-    }
-    dmax = std::max(dmax, dist[queue.back()]);
-  }
-  if (n > 0 && dmax < 8) {
-    throw ValueErrorException(
-        "GETAWAY needs a molecule at least 8 bonds across: RDKit 2024.09 reads "
-        "uninitialized values for a smaller one");
-  }
-}
-
-}  // namespace
-
-// GETAWAY converts the precision to unsigned int, which is undefined for a
-// negative, huge, or NaN value, and prints each leverage with that many
-// digits into a 32-byte buffer, which 25 or more overflow. It sorts the
-// atoms' leverages with std::sort, which is undefined for NaN, and divides
-// by the atoms' distances (coordinate_checks.h).
-rust::Vec<double> calc_getaway(const RWMol &mol, std::int32_t conf_id,
-                               double precision,
-                               rust::Str custom_atom_property) {
-  if (!(precision >= 0.0 && precision < 25.0)) {
-    throw ValueErrorException("GETAWAY's precision must be in [0, 25)");
-  }
-  std::string custom(custom_atom_property);
-  if (has_conformers(mol)) {
-    const auto &conf = mol.getConformer(conf_id);
-    check_finite_coordinates(conf, "GETAWAY");
-    check_distinct_positions(conf, "GETAWAY");
-    check_getaway_distances(mol);
-  }
-  return table_descriptor(
-      mol, custom, true, true, [&](std::vector<double> &res) {
-        Desc::GETAWAY(mol, res, conf_id, static_cast<unsigned int>(precision),
-                      custom);
-      });
 }
 
 rust::Vec<double> calc_coulomb_mat(const RWMol &mol, std::int32_t conf_id) {

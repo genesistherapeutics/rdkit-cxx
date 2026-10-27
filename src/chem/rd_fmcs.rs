@@ -582,9 +582,9 @@ pub struct MCSParameters {
     /// `canceled` set; 0 for no limit. Not enforced when a progress
     /// callback is set, as in Python.
     pub timeout: u32,
-    /// Prints statistics to standard output in Python; only `false` is
-    /// accepted (`true` is `Error::Value`), since RDKit 2024.09's verbose
-    /// output reads past an empty bond list and through a null query.
+    /// Prints statistics to standard output. With `store_all` it is
+    /// `Error::Value`: RDKit 2024.09 then dereferences a null query
+    /// molecule.
     pub verbose: bool,
     /// How atoms are matched.
     pub atom_compare_parameters: MCSAtomCompareParameters,

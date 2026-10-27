@@ -41,6 +41,8 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     `maxBestMCESs`; R-group decomposition's `allowMultipleCoresInSameMol`;
     `MolzipParams.alignCoordinates`; the depictor's `useRingTemplates` and
     `usePathAngleExpansion`; `DetermineBonds`' `maxIterations`;
+    `Kekulize`'s and `KekulizeIfPossible`'s `canonical` (kekulizing
+    backtracks up to 100 times, as Python's does);
     `GetSSSR`'s and `GetSymmSSSR`'s `includeHydrogenBonds`, `algorithm`,
     and `recalcSSSR`, and the legacy ring-finding setting;
     `CanonicalizeStereoGroups`' `maxStereoGroups`;
@@ -53,7 +55,16 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   `GetBestAlignmentTransform`, `GetAllConformerBestRMS`, and
   `MolMetadataToPNG*` take keyword arguments, so their parameter structs
   (`AddHsParams` and others) replace `AddHsParameters`,
-  `BestAlignmentParams`, and `PNGMetadataParams`; `AtomMonomerInfo` has a
+  `BestAlignmentParams`, and `PNGMetadataParams`; where 2024.09 leaves a
+  function one optional argument, a `_with_<param>` function takes it
+  rather than a parameters struct (CONVENTIONS.md A2):
+  `kekulize_with_clear_aromatic_flags`,
+  `kekulize_if_possible_with_clear_aromatic_flags`,
+  `get_sssr_with_include_dative_bonds`,
+  `get_symm_sssr_with_include_dative_bonds`,
+  `reapply_mol_block_wedging_with_all_bond_types`,
+  `canonicalize_stereo_groups_with_output_absolute_groups`, and
+  `AtomMonomerInfo::new_with_name`; `AtomMonomerInfo` has a
   type and a name, and the residue fields are `AtomPDBResidueInfo`'s;
   `DoubleCubicLatticeVolume` computes its results when it is made;
   `rd_shape_align` has `prepare_conformer`, `align_mol`, and
@@ -61,6 +72,8 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   `scaleVDW`, `doTriangleSmoothing`, and `useMacrocycle14config`.
 - `rdSynthonSpaceSearch`, new in RDKit 2024.09, is not bound: its readers
   and searches are not audited (U1). Later releases of the crate bind it.
+- `CalcGETAWAY` is not bound: RDKit 2024.09 writes through an empty
+  vector's `begin()` on every call (fixed in 2025.03.4, RDKit #8601).
 - `ReactionsFromCDXMLBlock` and `ReactionsFromCDXMLFile` are not bound:
   they run RDKit 2024.09's own CDXML parser, which reads atoms of fragments
   it has freed. Nor are `MolsFromCDXML` and `MolsFromCDXMLFile`.
@@ -84,12 +97,20 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - Stereo groups (RDKit #8558): RDKit 2024.09's bond removals leave a
     group that holds the bond pointing at it, and its groups may list an
     atom twice, which a removal takes out once. `RWMol`'s removals take the
-    bond out of the groups, as RDKit 2025.09 does; RDKit's own removals
+    bond out of the groups, as RDKit 2025.03.3 does; RDKit's own removals
     (the SMILES writer for several fragments, `get_mol_frags_as_mols`,
     `remove_hs`, the transforms, the standardizer, and the rest) refuse a
-    molecule whose groups they would leave dangling (`Error::Value`), and
-    the pickle readers and `set_stereo_groups` refuse groups that list an
-    atom or bond twice.
+    molecule whose groups they would leave dangling (`Error::Value`), or
+    that has an atom or bond in two ABS groups, which 2024.09's
+    `insertMol` (molzip, `replace_substructs`) merges into one group that
+    repeats it, and
+    the pickle readers, `set_stereo_groups`, and the CXSMILES, V3000,
+    Marvin, and JSON readers refuse groups that list an atom or bond twice
+    (the Marvin reader, two atoms with one id), since RDKit's readers
+    remove hydrogens before any later check could run.
+  - The V3000 reader refuses an enhanced-stereo collection with fewer atoms
+    than its count, for which RDKit 2024.09 reads an atom number no
+    extraction wrote (still so in 2026.09).
   - `fragment_on_bonds` refuses a repeated bond (#9430);
     `fragment_on_some_bonds` makes no fragments for more bonds than it is
     given (#9451).
@@ -102,7 +123,7 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - The PDB reader with proximity bonding, and `determine_connectivity`,
     refuse a hydrogen RDKit would bond to several atoms, whose extra bonds
     RDKit 2024.09 removes while it iterates over them (#9444).
-  - FMCS refuses `verbose` (#9040), RascalMCES any `max_frag_separation`
+  - FMCS refuses `verbose` with `store_all` (#9040), RascalMCES any `max_frag_separation`
     but -1 (#9424), and CoordGen double-bond stereo without two stereo
     atoms (#8415).
   - `molzip_fragments` with `generate_coordinates` refuses repeated R
@@ -116,6 +137,9 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     point `lvIdx` -1, which 2024.09 leaves uninitialized.
   - Pickling refuses more than 65,535 properties on a molecule, atom,
     bond, conformer, or substance group, which RDKit writes in two bytes.
+    The fragment catalog's generator checks only the queries and property
+    counts of the fragments it pickles, which RDKit 2024.09 makes without
+    substance or stereo groups.
   - `renumber_atoms` refuses anything but a permutation (#9450), and
     `DoubleCubicLatticeVolume` what 2024.09's reads unchecked (a dot
     density, monomer info of another type, short PDB atom names, huge
@@ -126,24 +150,44 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - The Maestro writer is made through a stream it may own, since RDKit
     2024.09's shared-pointer constructor always fails.
   - The CXSMILES readers (SMILES, SMARTS, reaction SMARTS, and the patterns
-    the standardizer, filters, MMPA, and depiction templates parse) refuse
-    an `atomProp` block that runs to the end of the text (#9361), which
-    RDKit 2024.09 reads past, and, without `strict_cxsmiles`, a
-    substance-group field that does.
-  - `calc_getaway` refuses a molecule of several fragments or less than 8
-    bonds across, for which RDKit 2024.09 reads uninitialized sums.
+    the standardizer, filters, MMPA, depiction templates, RascalMCES'
+    `equivalent_atoms`, scaffold-network bond breakers, SMILES mol holders,
+    and query definitions parse) refuse an `atomProp` block that runs to
+    the end of the text (#9361), which RDKit 2024.09 reads past, and,
+    without `strict_cxsmiles`, a substance-group field that does. Mol
+    blocks refuse `atomProp:` in the SMARTS RDKit parses from them (an
+    `M  MRV SMA` line, a data group's field), and a data field whose
+    `M  SCD` lines mix substance groups. A normalizations file, for
+    `Normalizer::new` or `CleanupParameters`, is read and checked by the
+    bindings and handed to RDKit as a stream or data, once; one with no
+    transformations is `Error::Value` for `CleanupParameters`.
   - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
     would read past or loop on.
-  - RascalMCES refuses a timeout below -1, and the query expanders a query
+  - `mol_from_smiles`, `sanitize_mol`, `kekulize`, and
+    `kekulize_if_possible` refuse a fused ring system of 32 or more
+    aromatic dummy atoms, whose subsets RDKit 2024.09's kekulization
+    enumerates in an `unsigned int`.
+  - The `ExtendedMurcko` hash refuses more than 4000 atoms: RDKit 2024.09
+    takes a byte of stack per atom with `alloca`, which past a page can
+    step over the stack's guard page.
+  - RascalMCES refuses any timeout but -1, which is its default here
+    (Python's is 60 seconds): when a search runs past it, RDKit 2024.09
+    reads its best cliques after clearing them (#9450). The clusterings
+    run their searches without one. The query expanders refuse a query
     atom or bond without a query.
 - Checks the bindings for RDKit 2026.03 made, as they stand for 2024.09:
   - `MolCatalogEntry::from_pickle` builds the entry as the catalog's reader
     does, since 2024.09's pickle constructor deletes an uninitialized
     pointer too.
-  - `assign_cip_labels` labels what RDKit 2024.09 labels, as Python does,
-    and leaves out (with any label it had) an atropisomer bond with a bare
-    end whose other end has two other bonds, for which 2024.09 reads past
-    its empty carriers.
+  - `assign_cip_labels` leaves out an atropisomer bond with a bare end,
+    clearing any label it had, as RDKit 2026.09 does, since 2024.09 reads
+    past its empty carriers for one, and refuses more than 64 stereo atoms
+    and bonds at a time, past which 2024.09's descriptor pairing shifts by
+    a negative count (`Error::Value`).
+  - `RingInfo.num_relevant_cycles` is `Error::Value` for more relevant
+    cycles than `u32` holds, which RDKit converts from RingDecomposerLib's
+    `double` unchecked (Python returns 33 for a ring of 33 diamonds, which
+    has 2^33 + 33).
   - `RingInfo.num_relevant_cycles` is `Error::Runtime` before the ring
     families are found, and every wrapper source reads `RDConfig.h` first,
     as for 2026.03.
@@ -151,6 +195,11 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - Drawing an atom of two bonds with a neighbor at its position is
     RDKit's `Error::Runtime`: 2024.09 normalizes the direction, and throws,
     where 2026.03 read an uninitialized bond type.
+  - `draw_arrow` checks the head RDKit 2024.09 draws: without a polygon
+    its sides are lines, drawn by hand in comic mode, which refuses sides
+    of no length; 2024.09 has no precondition on the angle, so a flat
+    arrow is drawn, as Python draws it. The reaction's arrow is drawn as
+    lines, with no miter, and comic mode checks its shaft as such.
   - The pickle-width checks (`check_picklable`) hold for 2024.09's
     MolPickler, which writes the same widths.
   - Only the embedder leaves RDKit's `SIGINT` handler installed in 2024.09;
@@ -159,7 +208,7 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
 ### Bindings
 
 - Binds RDKit's C++ API with the coverage of its Python wrappers, as
-  conda-forge builds them with Boost.Python: 3,080 of the 3,591 names they
+  conda-forge builds them with Boost.Python: 3,079 of the 3,591 names they
   expose. Each of the other 511 has a reason in `inventory/manifest.toml`:
   Python protocol methods and Boost.Python's container types, 67 names left
   unbound because RDKit's code cannot be made safe from outside, and

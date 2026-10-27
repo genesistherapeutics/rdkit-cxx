@@ -5,7 +5,7 @@
 
 // RDKit 2024.09's bond removals leave the stereo groups that hold the bond
 // pointing at it, deleted (rdkit/rdkit#8558). RWMol's own removals take the
-// bond out of the groups, as RDKit 2025.09 does, and RDKit's other removals
+// bond out of the groups, as RDKit 2025.03.3 does, and RDKit's other removals
 // refuse a molecule whose groups they would leave so.
 
 use rdkit_cxx::Error;
@@ -139,4 +139,37 @@ fn other_removals_refuse_groups_of_bonds() {
     let atoms_only = with_group(smiles("CCCO"), &[0], &[]);
     let deleted = delete_substructs(&atoms_only, &smiles("O")).unwrap();
     assert_eq!(groups(&deleted), [(vec![0], vec![])]);
+}
+
+#[test]
+fn combining_refuses_an_atom_in_two_abs_groups() {
+    // insertMol merges the target's ABS groups into one, which then lists
+    // the atom twice; molzip goes on to remove atoms.
+    let abs = |mol: &RWMol| {
+        let params = CreateStereoGroupParams {
+            atom_ids: vec![1],
+            ..Default::default()
+        };
+        create_stereo_group_with_params(StereoGroupType::StereoAbsolute, mol, &params).unwrap()
+    };
+    let mut twice = RWMol::from(smiles("[*:1][C@H](F)Cl"));
+    let group = abs(&twice);
+    twice.set_stereo_groups(&[group.clone(), group]).unwrap();
+    let partner = with_group(smiles("[*:1][C@H](Br)I"), &[1], &[]);
+    for result in [
+        molzip(&twice, &partner).map(|_| ()),
+        replace_substructs(&twice, &smiles("F"), &partner).map(|_| ()),
+    ] {
+        assert!(
+            matches!(&result, Err(Error::Value { message }) if message.contains("two ABS")),
+            "{result:?}"
+        );
+    }
+
+    let mut once = RWMol::from(smiles("[*:1][C@H](F)Cl"));
+    let group = abs(&once);
+    once.set_stereo_groups(&[group]).unwrap();
+    let zipped = molzip(&once, &partner).unwrap().unwrap();
+    assert_eq!(zipped.get_stereo_groups().len(), 2);
+    assert_groups_read(&zipped);
 }

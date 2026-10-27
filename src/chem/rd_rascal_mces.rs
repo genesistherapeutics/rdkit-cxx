@@ -51,7 +51,10 @@ pub struct RascalOptions {
     pub max_frag_separation: i32,
     /// Returns every MCES of the largest size, not just the first.
     pub all_best_mcess: bool,
-    /// Seconds to spend on one MCES; -1 for no limit.
+    /// Seconds to spend on one MCES; -1 for no limit, the only value
+    /// accepted and the default here (Python's is 60): RDKit 2024.09's
+    /// timeout path reads past an empty vector (`checkTimeout`), so any
+    /// other value is `Error::Value`.
     pub timeout: i32,
     /// Returns a result with the similarity estimates when they miss the
     /// threshold.

@@ -2560,8 +2560,6 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rd_mol_descriptors::calc_exact_mol_wt as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_exact_mol_wt_with_only_heavy as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_fraction_csp3 as _;
-    use rdkit_cxx::chem::rd_mol_descriptors::calc_getaway as _;
-    use rdkit_cxx::chem::rd_mol_descriptors::calc_getaway_with_params as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_hall_kier_alpha as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_hall_kier_alpha_with_outputs as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_inertial_shape_factor as _;
@@ -3289,7 +3287,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::set_name;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::default;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::new;
-    let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::new_with_params;
+    let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::new_with_name;
     let _: Option<rdkit_cxx::chem::rdchem::AtomMonomerType> = None;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerType>::Other;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerType>::Pdbresidue;
@@ -4582,7 +4580,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rdmolops::BondWedgingParameters>::default;
     let _ = |value: &rdkit_cxx::chem::rdmolops::BondWedgingParameters| { let _ = &value.wedge_two_bonds_if_possible; };
     use rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups as _;
-    use rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups_with_params as _;
+    use rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups_with_output_absolute_groups as _;
     use rdkit_cxx::chem::rdmolops::cleanup as _;
     use rdkit_cxx::chem::rdmolops::cleanup_atropisomers as _;
     use rdkit_cxx::chem::rdmolops::cleanup_chirality as _;
@@ -4644,17 +4642,17 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rdmolops::get_mol_frags_as_mols_with_sanitize_frags as _;
     use rdkit_cxx::chem::rdmolops::get_most_substituted_core_match as _;
     use rdkit_cxx::chem::rdmolops::get_sssr as _;
-    use rdkit_cxx::chem::rdmolops::get_sssr_with_params as _;
+    use rdkit_cxx::chem::rdmolops::get_sssr_with_include_dative_bonds as _;
     use rdkit_cxx::chem::rdmolops::get_shortest_path as _;
     use rdkit_cxx::chem::rdmolops::get_symm_sssr as _;
-    use rdkit_cxx::chem::rdmolops::get_symm_sssr_with_params as _;
+    use rdkit_cxx::chem::rdmolops::get_symm_sssr_with_include_dative_bonds as _;
     use rdkit_cxx::chem::rdmolops::get_use_legacy_stereo_perception as _;
     use rdkit_cxx::chem::rdmolops::haptic_bonds_to_dative as _;
     use rdkit_cxx::chem::rdmolops::has_query_hs as _;
     use rdkit_cxx::chem::rdmolops::kekulize as _;
-    use rdkit_cxx::chem::rdmolops::kekulize_with_params as _;
+    use rdkit_cxx::chem::rdmolops::kekulize_with_clear_aromatic_flags as _;
     use rdkit_cxx::chem::rdmolops::kekulize_if_possible as _;
-    use rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params as _;
+    use rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_clear_aromatic_flags as _;
     use rdkit_cxx::chem::rdmolops::layered_fingerprint as _;
     use rdkit_cxx::chem::rdmolops::layered_fingerprint_with_params as _;
     use rdkit_cxx::chem::rdmolops::layered_fingerprint_with_outputs as _;
@@ -4691,7 +4689,7 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rdmolops::rdk_fingerprint_with_params as _;
     use rdkit_cxx::chem::rdmolops::rdk_fingerprint_with_outputs as _;
     use rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging as _;
-    use rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_params as _;
+    use rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_all_bond_types as _;
     use rdkit_cxx::chem::rdmolops::remove_all_hs as _;
     use rdkit_cxx::chem::rdmolops::remove_all_hs_with_sanitize as _;
     use rdkit_cxx::chem::rdmolops::remove_hs as _;
