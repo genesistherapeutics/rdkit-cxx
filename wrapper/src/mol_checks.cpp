@@ -160,27 +160,26 @@ void check_enum_values(const RDKit::ROMol &mol, const std::string &which) {
   }
 }
 
-}  // namespace
+using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
+using BondQuery = RDKit::Bond::QUERYBOND_QUERY;
 
 // MolPickler pickles a recursive query's molecule as a whole molecule, and
-// reads it back the same way, so those molecules are checked too. Their
-// queries can nest without bound, so the walk keeps its own stack, and it
-// visits each query and molecule once.
-void check_pickled_mol(const RDKit::ROMol &mol) {
-  using AtomQuery = RDKit::Atom::QUERYATOM_QUERY;
+// reads it back the same way, so the checks of a pickled molecule cover those
+// molecules too. Their queries can nest without bound, so the walk keeps its
+// own stack. It calls visit(mol, nested) on the molecule (nested false) and
+// on each recursive query's molecule, and visit_query(query) on each node of
+// their atoms' queries, each once.
+template <class Visit, class VisitQuery>
+void walk_pickled(const RDKit::ROMol &mol, Visit visit,
+                  VisitQuery visit_query) {
   std::vector<const RDKit::ROMol *> mols{&mol};
   std::vector<const AtomQuery *> queries;
   std::unordered_set<const void *> seen{&mol};
   while (!mols.empty()) {
     const auto *current = mols.back();
     mols.pop_back();
-    const std::string where =
-        current == &mol ? "" : "a recursive query's molecule's ";
-    check_enum_values(*current, where);
-    const std::string which =
-        current == &mol ? "atom " : "atom of a recursive query's molecule, ";
+    visit(*current, current != &mol);
     for (const auto *atom : current->atoms()) {
-      check_monomer_info(*atom, which);
       if (atom->hasQuery() && seen.insert(atom->getQuery()).second) {
         queries.push_back(atom->getQuery());
       }
@@ -188,6 +187,7 @@ void check_pickled_mol(const RDKit::ROMol &mol) {
     while (!queries.empty()) {
       const auto *query = queries.back();
       queries.pop_back();
+      visit_query(*query);
       if (const auto *recursive =
               dynamic_cast<const RDKit::RecursiveStructureQuery *>(query)) {
         const auto *inner = recursive->getQueryMol();
@@ -203,6 +203,157 @@ void check_pickled_mol(const RDKit::ROMol &mol) {
       }
     }
   }
+}
+
+}  // namespace
+
+void check_pickled_mol(const RDKit::ROMol &mol) {
+  walk_pickled(
+      mol,
+      [](const RDKit::ROMol &current, bool nested) {
+        check_enum_values(current,
+                          nested ? "a recursive query's molecule's " : "");
+        const std::string which =
+            nested ? "atom of a recursive query's molecule, " : "atom ";
+        for (const auto *atom : current.atoms()) {
+          check_monomer_info(*atom, which);
+        }
+      },
+      [](const AtomQuery &) {});
+}
+
+namespace {
+
+// The largest count MolPickler writes in one byte.
+constexpr std::size_t MAX_ONE_BYTE = 255;
+
+void check_one_byte(std::size_t count, const std::string &what) {
+  if (count > MAX_ONE_BYTE) {
+    throw ValueErrorException(
+        what + " (" + std::to_string(count) +
+        ") cannot be pickled: MolPickler writes the count in one byte, and "
+        "cannot read back the pickle it writes past 255");
+  }
+}
+
+// pickleQuery writes a node's number of children in one byte, in a molecule
+// of any size.
+template <class Query>
+void check_children(const Query &query, const std::string &where) {
+  check_one_byte(query.endChildren() - query.beginChildren(),
+                 where + "query's number of children");
+}
+
+// Bond queries hold no recursive queries, so only their children are counted.
+void check_bond_queries(const RDKit::ROMol &mol, const std::string &where) {
+  std::vector<const BondQuery *> queries;
+  std::unordered_set<const BondQuery *> seen;
+  for (const auto *bond : mol.bonds()) {
+    if (bond->hasQuery() && seen.insert(bond->getQuery()).second) {
+      queries.push_back(bond->getQuery());
+    }
+  }
+  while (!queries.empty()) {
+    const auto *query = queries.back();
+    queries.pop_back();
+    check_children(*query, where + "bond ");
+    for (auto child = query->beginChildren(); child != query->endChildren();
+         ++child) {
+      if (seen.insert(child->get()).second) {
+        queries.push_back(child->get());
+      }
+    }
+  }
+}
+
+// MolPickler pickles a molecule with one-byte indices and counts (its
+// _pickle<unsigned char>) unless it has more than 255 atoms or bonds.
+bool pickles_one_byte(const RDKit::ROMol &mol) {
+  return mol.getNumAtoms() <= MAX_ONE_BYTE && mol.getNumBonds() <= MAX_ONE_BYTE;
+}
+
+template <class T>
+std::size_t num_distinct(const std::vector<T> &values) {
+  return std::unordered_set<T>(values.begin(), values.end()).size();
+}
+
+// The counts _pickleSubstanceGroup and _pickleStereo write with one-byte
+// indices, for the groups that keep(atoms, bonds) says are pickled, given
+// their numbers of distinct atoms and bonds.
+template <class Keep>
+void check_one_byte_groups(const RDKit::ROMol &mol, const std::string &where,
+                           Keep keep) {
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    const auto &sgroup = sgroups[i];
+    auto atoms = sgroup.getAtoms();
+    const auto &parents = sgroup.getParentAtoms();
+    atoms.insert(atoms.end(), parents.begin(), parents.end());
+    if (!keep(num_distinct(atoms), num_distinct(sgroup.getBonds()))) {
+      continue;
+    }
+    const auto at = where + "substance group " + std::to_string(i) + "'s ";
+    check_one_byte(sgroup.getAtoms().size(), at + "number of atoms");
+    check_one_byte(parents.size(), at + "number of parent atoms");
+    check_one_byte(sgroup.getBonds().size(), at + "number of bonds");
+    check_one_byte(sgroup.getBrackets().size(), at + "number of brackets");
+    check_one_byte(sgroup.getCStates().size(), at + "number of CStates");
+    check_one_byte(sgroup.getAttachPoints().size(),
+                   at + "number of attachment points");
+  }
+  std::size_t kept = 0;
+  for (const auto &group : mol.getStereoGroups()) {
+    // A stereo group holds each atom and bond once.
+    if (!keep(group.getAtoms().size(), group.getBonds().size())) {
+      continue;
+    }
+    ++kept;
+    check_one_byte(group.getAtoms().size(),
+                   where + "stereo group's number of atoms");
+    check_one_byte(group.getBonds().size(),
+                   where + "stereo group's number of bonds");
+  }
+  check_one_byte(kept, where + "number of stereo groups");
+}
+
+// What check_picklable checks of one molecule, apart from its atom queries.
+void check_picklable_mol(const RDKit::ROMol &mol, bool nested) {
+  const std::string where = nested ? "a recursive query's molecule's " : "";
+  if (pickles_one_byte(mol)) {
+    check_one_byte_groups(mol, where,
+                          [](std::size_t, std::size_t) { return true; });
+  }
+  check_bond_queries(mol, where);
+}
+
+void check_atom_query(const AtomQuery &query) {
+  check_children(query, "an atom ");
+}
+
+}  // namespace
+
+void check_picklable(const RDKit::ROMol &mol) {
+  walk_pickled(mol, check_picklable_mol, check_atom_query);
+}
+
+// A part of k bonds is a connected subgraph, so it has at most k + 1 atoms.
+void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
+  walk_pickled(
+      mol,
+      [max_part_bonds](const RDKit::ROMol &current, bool nested) {
+        if (nested) {
+          check_picklable_mol(current, nested);
+          return;
+        }
+        check_one_byte_groups(
+            current, "",
+            [max_part_bonds](std::size_t atoms, std::size_t bonds) {
+              return atoms <= std::size_t{max_part_bonds} + 1 &&
+                     bonds <= max_part_bonds;
+            });
+        check_bond_queries(current, "");
+      },
+      check_atom_query);
 }
 
 namespace {

@@ -226,7 +226,9 @@ file's line count.
   bundle, catalog, and query pickles, and PNG metadata), can't be checked:
   RDKit's pickle reader trusts the query trees and values it reads. Neither
   can Boost.Serialization archives. So the functions that read them are
-  `unsafe fn`s whose contract is "bytes RDKit wrote".
+  `unsafe fn`s whose contract is "bytes RDKit wrote". RDKit's pickler
+  truncates some counts to one byte, writing pickles it cannot read back,
+  so every function that pickles a molecule refuses those molecules first.
 - **Cached data:** RDKit caches distance matrices and descriptor results in
   a molecule's properties and reads stale ones past their end. Wrappers that
   compute them clear them before and after the call, so no molecule Rust

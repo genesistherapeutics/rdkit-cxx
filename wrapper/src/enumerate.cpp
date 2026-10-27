@@ -463,8 +463,15 @@ void enumerate_library_set_state(EnumerateLibrary &lib, rust::Str state) {
 
 void enumerate_library_reset_state(EnumerateLibrary &lib) { lib.resetState(); }
 
+// The archive holds the reaction's pickle and each building block's.
 rust::Vec<std::uint8_t> enumerate_library_serialize(
     const EnumerateLibrary &lib) {
+  check_picklable_templates(lib.getReaction());
+  for (const auto &reagents : lib.getReagents()) {
+    for (const auto &mol : reagents) {
+      check_picklable(*mol);
+    }
+  }
   auto text = lib.Serialize();
   rust::Vec<std::uint8_t> res;
   res.reserve(text.size());

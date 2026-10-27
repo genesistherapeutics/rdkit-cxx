@@ -38,6 +38,7 @@ std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
 
 rust::Vec<std::uint8_t> mol_to_binary(const RWMol &mol, bool has_flags,
                                       unsigned flags) {
+  check_picklable(mol);
   std::string res;
   if (has_flags) {
     RDKit::MolPickler::pickleMol(mol, res, flags);

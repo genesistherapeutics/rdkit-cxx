@@ -233,7 +233,8 @@ impl TautomerQuery {
 
     /// A pickle of the query, a Boost.Serialization text archive.
     /// `Error::Runtime` if RDKit was built without Boost.Serialization
-    /// (`tautomer_query_can_serialize`). Mirrors `TautomerQuery.ToBinary`.
+    /// (`tautomer_query_can_serialize`), and `Error::Value` for a template or
+    /// tautomer `Mol::to_binary` refuses. Mirrors `TautomerQuery.ToBinary`.
     pub fn to_binary(&self) -> Result<Vec<u8>> {
         Ok(ffi::tautomer_query_to_binary(self.as_ffi())?)
     }

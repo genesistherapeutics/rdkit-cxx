@@ -44,6 +44,9 @@
 //!   cycles, data substance groups with their fields, link nodes whose bonds
 //!   have length, and, with attachment points, a mean bond length of at
 //!   least 0.001.
+//! - On a Cairo drawer with `include_metadata` (the default), molecules and
+//!   reactions RDKit can pickle into the PNG's metadata and read back: what
+//!   `Mol::to_binary` and `ChemicalReaction::to_binary` refuse is refused.
 //! - Fonts (`font_file`) RDKit can size: not bitmap fonts, whose glyphs it
 //!   divides by zero to size.
 //! - Drawings RDKit can scale: each is first laid out as RDKit will (at

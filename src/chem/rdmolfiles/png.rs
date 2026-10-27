@@ -243,13 +243,16 @@ pub unsafe fn mols_from_png_file_with_params(
 }
 
 /// The PNG `png` with a molecule's pickle and CXSMILES added to its metadata.
-/// Mirrors `rdmolfiles.MolMetadataToPNGString`.
+/// `Error::Value` for a molecule `Mol::to_binary` refuses. Mirrors
+/// `rdmolfiles.MolMetadataToPNGString`.
 pub fn mol_metadata_to_png_string(mol: &Mol, png: &[u8]) -> Result<Vec<u8>> {
     mol_metadata_to_png_string_with_params(mol, png, &PNGMetadataParams::default())
 }
 
 /// Mirrors `rdmolfiles.MolMetadataToPNGString(mol, png, params)` and
 /// `MolMetadataToPNGString(mol, png, includePkl, includeSmiles, includeMol)`.
+/// With `include_pkl`, `Error::Value` for a molecule `Mol::to_binary`
+/// refuses.
 pub fn mol_metadata_to_png_string_with_params(
     mol: &Mol,
     png: &[u8],
@@ -263,13 +266,15 @@ pub fn mol_metadata_to_png_string_with_params(
 }
 
 /// The PNG in a file with a molecule's metadata added; the file is not
-/// changed. Mirrors `rdmolfiles.MolMetadataToPNGFile`.
+/// changed. `Error::Value` for a molecule `Mol::to_binary` refuses. Mirrors
+/// `rdmolfiles.MolMetadataToPNGFile`.
 pub fn mol_metadata_to_png_file(mol: &Mol, filename: impl AsRef<Path>) -> Result<Vec<u8>> {
     mol_metadata_to_png_file_with_params(mol, filename, &PNGMetadataParams::default())
 }
 
 /// Mirrors `rdmolfiles.MolMetadataToPNGFile(mol, filename, params)` and its
-/// keyword form.
+/// keyword form. With `include_pkl`, `Error::Value` for a molecule
+/// `Mol::to_binary` refuses.
 pub fn mol_metadata_to_png_file_with_params(
     mol: &Mol,
     filename: impl AsRef<Path>,

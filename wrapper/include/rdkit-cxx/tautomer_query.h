@@ -38,6 +38,9 @@ struct SubstructMatchParametersData;
 // tautomer_query_substruct_of is TautomerQuery::substructOf, whose caller
 // holds control_c_mutex (control_c_lock.h).
 void check_tautomer_query(const TautomerQuery &query);
+// check_picklable (mol_checks.h) on the template and every tautomer, which
+// the query's pickle holds as molecule pickles.
+void check_picklable_tautomer_query(const TautomerQuery &query);
 std::vector<RDKit::MatchVectType> tautomer_query_substruct_of(
     const TautomerQuery &query, const RDKit::ROMol &mol,
     const RDKit::SubstructMatchParameters &params,

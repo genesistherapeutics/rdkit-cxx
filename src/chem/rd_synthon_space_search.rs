@@ -540,8 +540,9 @@ impl SynthonSpace {
     /// Writes the space to a database file in RDKit's format, which
     /// `read_db_file` reads. RDKit opens the file itself and ignores a failed
     /// write, so the file is read back and checked: one that cannot be
-    /// written, or that does not hold the space, is `Error::Os`. Mirrors
-    /// `SynthonSpace.WriteDBFile`.
+    /// written, or that does not hold the space, is `Error::Os`. A synthon or
+    /// connector region `Mol::to_binary` refuses is `Error::Value`, before
+    /// the file is opened. Mirrors `SynthonSpace.WriteDBFile`.
     pub fn write_db_file<P: AsRef<Path>>(&self, out_file: P) -> Result<()> {
         Ok(ffi::synthon_space_write_db_file(
             &self.ptr,
@@ -632,8 +633,10 @@ impl SynthonSpace {
     /// atoms (so that, with their hydrogens, the embedder takes them), or the
     /// build is `Error::Value`: RDKit sorts samples by their first, and its
     /// shapes need volume. A space already built with `num_confs` conformers
-    /// is left as it is. Optimizers may land in other local optima on other
-    /// platforms, so the shapes may differ there.
+    /// is left as it is. With interim writes (`interim_file` and
+    /// `interim_writes`), a space `write_db_file` refuses is `Error::Value`
+    /// too. Optimizers may land in other local optima on other platforms, so
+    /// the shapes may differ there.
     pub fn build_synthon_shapes_with_py_params(
         &mut self,
         py_params: &ShapeBuildParams,

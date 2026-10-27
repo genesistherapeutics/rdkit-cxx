@@ -5,7 +5,7 @@
 
 use crate::Result;
 use crate::chem::rdchem::{Mol, RWMol};
-use crate::error::expect_ok;
+use crate::error::{expect_ok, picklable};
 use crate::ffi::mol::ffi;
 
 /// What a pickle includes, as bits. Mirrors `rdchem.PropertyPickleOptions`
@@ -101,13 +101,29 @@ impl Mol {
 
     /// The molecule as a pickle, with the default properties. Mirrors
     /// `Mol.ToBinary`.
+    ///
+    /// # Panics
+    ///
+    /// For a molecule RDKit's pickler would write but could not read back:
+    /// it writes some counts in one byte and truncates larger ones
+    /// (CONVENTIONS.md U2). That is a query node with more than 255
+    /// children, in a molecule of any size, and, in a molecule of at most 255
+    /// atoms and 255 bonds, more than 255 stereo groups, or a stereo group or
+    /// substance group with more than 255 of any of its lists (atoms, parent
+    /// atoms, bonds, brackets, CStates, attachment points), counting repeats;
+    /// the molecules of recursive queries are pickled, and checked, as
+    /// molecules. Python writes such a pickle, which it then cannot read.
     pub fn to_binary(&self) -> Vec<u8> {
-        expect_ok(ffi::mol_to_binary(self.as_ffi(), false, 0))
+        picklable(ffi::mol_to_binary(self.as_ffi(), false, 0))
     }
 
     /// Mirrors `Mol.ToBinary(propertyFlags)`.
+    ///
+    /// # Panics
+    ///
+    /// As `to_binary`.
     pub fn to_binary_with_property_flags(&self, property_flags: PropertyPickleOptions) -> Vec<u8> {
-        expect_ok(ffi::mol_to_binary(
+        picklable(ffi::mol_to_binary(
             self.as_ffi(),
             true,
             property_flags.bits(),

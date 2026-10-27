@@ -204,6 +204,8 @@ pub struct MolDrawOptions {
     /// Adds an "ABS" annotation when the chiral flag is set.
     pub include_chiral_flag_label: bool,
     /// Includes metadata that can rebuild the molecules and reactions drawn.
+    /// A Cairo drawer's metadata holds their pickles, so it then refuses what
+    /// `Mol::to_binary` and `ChemicalReaction::to_binary` refuse.
     pub include_metadata: bool,
     /// Includes radicals in the drawing.
     pub include_radicals: bool,

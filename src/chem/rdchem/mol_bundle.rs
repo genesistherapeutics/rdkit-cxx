@@ -56,7 +56,8 @@ impl MolBundle {
 
     /// A pickle of the molecules, without the bundle's properties. Mirrors
     /// `MolBundle.ToBinary`; `Error::Value` if RDKit was built without
-    /// Boost.Serialization (`mol_bundle_can_serialize`).
+    /// Boost.Serialization (`mol_bundle_can_serialize`), or for a molecule
+    /// `Mol::to_binary` refuses.
     pub fn to_binary(&self) -> Result<Vec<u8>> {
         Ok(self.with_ffi(ffi::mol_bundle_to_binary)?)
     }

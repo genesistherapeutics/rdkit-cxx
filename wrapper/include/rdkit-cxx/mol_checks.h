@@ -94,6 +94,47 @@ class DescriptorCacheGuard {
 // format, calls it on the molecules it read.
 void check_pickled_mol(const RDKit::ROMol &mol);
 
+// MolPickler writes some counts in one byte and truncates larger ones without
+// a word, so it writes a pickle it cannot read back: the reader takes the
+// rest of the list for the pickle's next fields, which can be bytes the
+// caller chose (a bracket's coordinates), and parses them unchecked (U2):
+// - every query node's number of children (pickleQuery), for atom and bond
+//   queries in a molecule of any size;
+// - in a molecule with at most 255 atoms and at most 255 bonds, which it
+//   pickles with one-byte indices: each substance group's numbers of atoms,
+//   parent atoms, bonds, brackets, CStates, and attachment points
+//   (_pickleSubstanceGroup), and the number of stereo groups and each one's
+//   numbers of atoms and bonds (_pickleStereo).
+// Throws ValueErrorException for a count past 255 in any of these, in the
+// molecule or in the molecules of its recursive queries, which MolPickler
+// pickles as molecules with their own one-byte rule. Every wrapper that hands
+// a molecule to MolPickler, alone or inside another format, calls it on the
+// molecules it will pickle (CONVENTIONS.md U2).
+void check_picklable(const RDKit::ROMol &mol);
+
+// check_picklable on a reaction's reactant, product, and agent templates,
+// which ReactionPickler pickles as molecules.
+template <class Reaction>
+void check_picklable_templates(const Reaction &rxn) {
+  for (const auto *templates :
+       {&rxn.getReactants(), &rxn.getProducts(), &rxn.getAgents()}) {
+    for (const auto &mol : *templates) {
+      check_picklable(*mol);
+    }
+  }
+}
+
+// As check_picklable, for the parts FragCatGenerator::addFragsFromMol makes
+// of the molecule and pickles in its catalog's entries: subgraphs of at most
+// max_part_bonds bonds, made with copyMolSubset, which keeps a substance or
+// stereo group only when the part holds all its atoms and bonds. So a part
+// has at most 255 atoms and bonds whenever max_part_bonds is below 255, and a
+// small part can come from a molecule of any size: the one-byte limits apply
+// to the molecule's own groups whatever its size, except to groups whose
+// distinct atoms or bonds no part has room for. Recursive queries' molecules
+// are pickled whole, and checked as check_picklable checks them.
+void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+
 // RWMol::removeAtom and batchRemoveAtoms (so commitBatchEdit too) rewrite
 // every bond's _MolFileBondEndPts, a property any caller can set: they read
 // the value's front() without checking that it is not empty, and for one in

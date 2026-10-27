@@ -551,13 +551,16 @@ pub unsafe fn reaction_from_png_file(fname: impl AsRef<Path>) -> Result<Chemical
 
 /// PNG data with the reaction added to its metadata, as a pickle and
 /// reaction SMILES. PNG data without a complete IEND chunk is
-/// `Error::Parse`. Mirrors `rdChemReactions.ReactionMetadataToPNGString`.
+/// `Error::Parse`, and a reaction `ChemicalReaction::to_binary` refuses
+/// `Error::Value`. Mirrors `rdChemReactions.ReactionMetadataToPNGString`.
 pub fn reaction_metadata_to_png_string(mol: &ChemicalReaction, pngdata: &[u8]) -> Result<Vec<u8>> {
     reaction_metadata_to_png_string_with_params(mol, pngdata, &Default::default())
 }
 
 /// Mirrors `rdChemReactions.ReactionMetadataToPNGString(mol, pngdata,
-/// includePkl, includeSmiles, includeSmarts, includeRxn)`.
+/// includePkl, includeSmiles, includeSmarts, includeRxn)`. With
+/// `include_pkl`, `Error::Value` for a reaction
+/// `ChemicalReaction::to_binary` refuses.
 pub fn reaction_metadata_to_png_string_with_params(
     mol: &ChemicalReaction,
     pngdata: &[u8],
@@ -574,7 +577,8 @@ pub fn reaction_metadata_to_png_string_with_params(
 }
 
 /// A PNG file's data with the reaction added to its metadata; the file is
-/// not changed. Mirrors `rdChemReactions.ReactionMetadataToPNGFile`.
+/// not changed. `Error::Value` for a reaction `ChemicalReaction::to_binary`
+/// refuses. Mirrors `rdChemReactions.ReactionMetadataToPNGFile`.
 pub fn reaction_metadata_to_png_file(
     mol: &ChemicalReaction,
     filename: impl AsRef<Path>,
@@ -583,7 +587,9 @@ pub fn reaction_metadata_to_png_file(
 }
 
 /// Mirrors `rdChemReactions.ReactionMetadataToPNGFile(mol, filename,
-/// includePkl, includeSmiles, includeSmarts, includeMol)`.
+/// includePkl, includeSmiles, includeSmarts, includeMol)`. With
+/// `include_pkl`, `Error::Value` for a reaction
+/// `ChemicalReaction::to_binary` refuses.
 pub fn reaction_metadata_to_png_file_with_params(
     mol: &ChemicalReaction,
     filename: impl AsRef<Path>,

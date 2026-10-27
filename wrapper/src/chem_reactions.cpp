@@ -349,6 +349,9 @@ rust::Vec<std::uint8_t> add_metadata(const ChemicalReaction &rxn,
   if (include_smiles) {
     check_template_removals(rxn);
   }
+  if (include_pkl) {
+    check_picklable_templates(rxn);
+  }
   // The rxn block is the V2000 writer's.
   std::unique_lock<std::mutex> lock;
   if (include_rxn) {
@@ -646,6 +649,7 @@ std::unique_ptr<ChemicalReaction> chemical_reaction_from_bin_str(
 rust::Vec<std::uint8_t> chemical_reaction_to_binary(const ChemicalReaction &rxn,
                                                     bool has_flags,
                                                     unsigned flags) {
+  check_picklable_templates(rxn);
   std::string res;
   RDKit::ReactionPickler::pickleReaction(
       rxn, res,

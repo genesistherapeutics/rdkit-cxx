@@ -292,7 +292,13 @@ impl FragCatGenerator {
     /// `FragCatGenerator.AddFragsFromMol`. `Error::Value` for a catalog
     /// without parameters, where Python's dereferences null, and for a
     /// molecule of more than 1000 bonds when the upper length is 2 or more:
-    /// RDKit then indexes its table of 1000 primes by bond index.
+    /// RDKit then indexes its table of 1000 primes by bond index. The
+    /// catalog's entries hold fragments, which serializing it pickles, so
+    /// `Error::Value` too for a molecule whose fragments could hold what
+    /// `Mol::to_binary` refuses, at whatever size: a query node with more
+    /// than 255 children, more than 255 stereo groups that fit in a
+    /// fragment, or a substance or stereo group that fits in one with more
+    /// than 255 of any of its lists.
     pub fn add_frags_from_mol(&self, mol: &Mol, fcat: &mut FragCatalog) -> Result<u32> {
         Ok(ffi::frag_cat_generator_add_frags_from_mol(
             mol.as_ffi(),

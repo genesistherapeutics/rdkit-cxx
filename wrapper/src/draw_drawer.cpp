@@ -251,6 +251,22 @@ class DrawingLocks {
 
 bool lacks_conformers(const RWMol &mol) { return !mol.getNumConformers(); }
 
+// With includeMetadata, MolDraw2DCairo::updateMetadata pickles each molecule
+// it draws, and each reaction, into the PNG's metadata (check_picklable;
+// MolDraw2DSVG's metadata holds no pickles). The molecule it pickles is the
+// copy DrawMol prepares, which adds hydrogens and drops stereo groups but
+// changes no substance group or query, so its counts are at most the given
+// molecule's, under the given molecule's one-byte rule or a looser one.
+bool pickles_metadata(const Drawer &d) {
+  return !d.svg && d.drawer->drawOptions().includeMetadata;
+}
+
+void check_metadata_mol(const Drawer &d, const RDKit::ROMol &mol) {
+  if (pickles_metadata(d)) {
+    check_picklable(mol);
+  }
+}
+
 // A molecule as DrawMol will draw it. DrawMol gives a molecule without
 // conformers 2D coordinates (initDrawMolecule), after
 // MolDraw2D::drawMolecule has symmetrized its rings (drawMoleculeWithHighlights
@@ -952,6 +968,7 @@ bool comic(const Drawer &d) { return d.drawer->drawOptions().comicMode; }
 void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
                    bool bonds_from_atoms) {
   check_usable(d);
+  check_metadata_mol(d, mol);
   const auto h = read_highlights(mol, data);
   const std::string legend(data.legend);
   DrawnMol drawn(mol);
@@ -1211,6 +1228,7 @@ DrawSize drawer_get_mol_size(Drawer &d, const RWMol &mol,
 void drawer_draw_molecule_with_highlights(
     Drawer &d, const RWMol &mol, const DrawMoleculeWithHighlightsData &data) {
   check_usable(d);
+  check_metadata_mol(d, mol);
   const auto &opts = d.drawer->drawOptions();
   auto h = read_multi_highlights(mol, data, opts);
   const std::string legend(data.legend);
@@ -1289,6 +1307,9 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
   bool depicts = false;
   for (const auto &m : list) {
     depicts = depicts || (m && !m->getNumConformers());
+    if (m) {
+      check_metadata_mol(d, *m);
+    }
   }
   const DrawingLocks locks(depicts, comic(d));
 
@@ -1436,6 +1457,11 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
     throw ValueErrorException(
         "DrawReaction lays out the reaction against every molecule the "
         "drawer holds; draw it on a new drawer");
+  }
+  // drawReaction draws the templates without updateMetadata, then pickles
+  // the reaction (pickles_metadata).
+  if (pickles_metadata(d)) {
+    check_picklable_templates(rxn);
   }
   std::vector<RDKit::DrawColour> cols;
   for (const auto &c : colours) {

@@ -96,8 +96,9 @@ impl FilterCatalogEntry {
 
     /// The entry as a Boost.Serialization archive. Mirrors
     /// `FilterCatalogEntry.Serialize`. `Error::Value` when a `SmartsMatcher`
-    /// in it has no pattern, which Python's dereferences, and for a
-    /// `CustomFilterMatcher`, whose class Boost does not know.
+    /// in it has no pattern, which Python's dereferences, or a pattern
+    /// `Mol::to_binary` refuses, and for a `CustomFilterMatcher`, whose class
+    /// Boost does not know.
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::filter_catalog_entry_serialize(self.raw())?)
     }
@@ -330,9 +331,9 @@ impl FilterCatalog {
 
     /// The catalog's entries as a Boost.Serialization archive. Mirrors
     /// `FilterCatalog.Serialize`. `Error::Value` when a `SmartsMatcher` in
-    /// it has no pattern, which Python's dereferences, and for a
-    /// `CustomFilterMatcher`, whose class Boost does not know;
-    /// `Error::Runtime` without Boost serialization
+    /// it has no pattern, which Python's dereferences, or a pattern
+    /// `Mol::to_binary` refuses, and for a `CustomFilterMatcher`, whose class
+    /// Boost does not know; `Error::Runtime` without Boost serialization
     /// (`filter_catalog_can_serialize`).
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::filter_catalog_serialize(self.raw())?)

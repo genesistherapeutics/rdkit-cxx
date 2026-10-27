@@ -19,7 +19,7 @@ use crate::chem::Mol;
 use crate::chem::rdchem::props::{prop_getters, prop_setters};
 use crate::chem::rdchem::{PropertyPickleOptions, SubstructMatchParameters};
 use crate::chem::rdmolops::{mol_list_into_vec, with_borrowed_mols_shared};
-use crate::error::{expect_ok, to_string};
+use crate::error::{expect_ok, picklable, to_string};
 use crate::ffi::chem_reactions::ffi;
 use crate::ffi::mol::ffi as mol_ffi;
 use crate::ffi::props::ffi::RDProps;
@@ -280,13 +280,21 @@ impl ChemicalReaction {
 
     /// The reaction as a pickle, with the default properties. Mirrors
     /// `ChemicalReaction.ToBinary`.
+    ///
+    /// # Panics
+    ///
+    /// For a template `Mol::to_binary` panics for.
     pub fn to_binary(&self) -> Vec<u8> {
-        expect_ok(ffi::chemical_reaction_to_binary(self.as_ffi(), false, 0))
+        picklable(ffi::chemical_reaction_to_binary(self.as_ffi(), false, 0))
     }
 
     /// Mirrors `ChemicalReaction.ToBinary(propertyFlags)`.
+    ///
+    /// # Panics
+    ///
+    /// As `to_binary`.
     pub fn to_binary_with_property_flags(&self, property_flags: PropertyPickleOptions) -> Vec<u8> {
-        expect_ok(ffi::chemical_reaction_to_binary(
+        picklable(ffi::chemical_reaction_to_binary(
             self.as_ffi(),
             true,
             property_flags.bits(),
