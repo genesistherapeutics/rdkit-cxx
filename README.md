@@ -455,10 +455,11 @@ workflow's branch choices.
 
 The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
 conda-forge daily and opens an issue, assigned to the repository owner, with
-the steps, when it has a `librdkit-dev` release newer than one
-`environment.yml` pins: a new series, or a patch release of the series `main`
-or a series' branch pins. A new patch release of a series needs a patch
-release of its crate line too: the build accepts it only once `wrapper/vendor/`
+the steps, when it has a `librdkit-dev` release newer than the one `main`'s
+`environment.yml` pins: a new series, or a patch release of `main`'s. The
+series' branches need no such check, since RDKit stops patching a series once
+the next one is out. A new patch release of the series needs a patch release
+of the crate too: the build accepts it only once `wrapper/vendor/`
 holds its headers ([`wrapper/vendor/`](wrapper/vendor/README.md)).
 
 ## License
