@@ -9615,7 +9615,7 @@ rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_fraction_csp3"]
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcGETAWAY"
-rust = ["rdkit_cxx::chem::rd_mol_descriptors::calc_getaway", "rdkit_cxx::chem::rd_mol_descriptors::calc_getaway_with_params"]
+reason = "not bound: RDKit 2024.09 writes past the end of a vector on every call (GETAWAY.cpp GetGeodesicMatrix reserves the geodesic matrix and std::transforms numAtoms^2 values through its begin(), then reads it back through a size-0 vector's data(); fixed in RDKit 2025.03.4, rdkit/rdkit#8601) and reads uninitialized doubles (GETAWAY fills its HATSk, Hk, Rk, and Rp arrays only up to the molecule's topological diameter and reads all nine lags, so any molecule of diameter below 8, such as ethanol); this binding cannot make it safe (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdMolDescriptors.CalcHallKierAlpha"

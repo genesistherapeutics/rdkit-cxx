@@ -35,8 +35,8 @@ inline void check_finite_coordinates(const RDKit::Conformer &conf,
   }
 }
 
-// GETAWAY and EEM divide by the distances between atoms and solve the
-// matrices they make, which two atoms at one position make infinite or NaN.
+// EEM divides by the distances between atoms and solves the matrices it
+// makes, which two atoms at one position make infinite or NaN.
 // Past 1e-6 those entries stay below about 1e6. Call after
 // check_finite_coordinates, which keeps the squared distances finite.
 inline void check_distinct_positions(const RDKit::Conformer &conf,

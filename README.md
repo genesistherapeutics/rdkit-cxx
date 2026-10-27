@@ -27,7 +27,7 @@ those bindings, and computes what Python computes: `rdkit.Chem.QED` is
 Coverage: every name in RDKit 2024.09's Python interface, in its compiled
 modules and its Python modules, has a Rust counterpart or a recorded reason it
 has none ([Parity](#parity)). Of the 3,591 names the compiled modules expose,
-3,080 are bound. Of the 2,604 its Python modules define, 1,008 are ported; the
+3,079 are bound. Of the 2,604 its Python modules define, 1,008 are ported; the
 rest are Python-ecosystem glue (pandas, Jupyter, PyMOL, Windows COM), legacy
 code whose replacement is bound (the sping canvases, the Python MCS search),
 command-line plumbing, Python protocol hooks, or deprecated.
@@ -326,9 +326,6 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **GETAWAY.** RDKit 2024.09's `GetGeodesicMatrix` writes the matrix past
-  the end of a vector it only reserved (rdkit/rdkit#8601), within the
-  allocation, for every molecule `calc_getaway` describes.
 - **RascalMCES' timeout.** When a search runs out of time, RDKit 2024.09
   clears its best cliques and then reads the first, within the vector's
   retained storage. A timeout below -1, due at once, is refused.

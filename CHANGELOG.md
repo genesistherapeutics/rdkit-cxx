@@ -64,6 +64,8 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   `scaleVDW`, `doTriangleSmoothing`, and `useMacrocycle14config`.
 - `rdSynthonSpaceSearch`, new in RDKit 2024.09, is not bound: its readers
   and searches are not audited (U1). Later releases of the crate bind it.
+- `CalcGETAWAY` is not bound: RDKit 2024.09 writes through an empty
+  vector's `begin()` on every call (fixed in 2025.03.4, RDKit #8601).
 - `ReactionsFromCDXMLBlock` and `ReactionsFromCDXMLFile` are not bound:
   they run RDKit 2024.09's own CDXML parser, which reads atoms of fragments
   it has freed. Nor are `MolsFromCDXML` and `MolsFromCDXMLFile`.
@@ -133,8 +135,6 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     an `atomProp` block that runs to the end of the text (#9361), which
     RDKit 2024.09 reads past, and, without `strict_cxsmiles`, a
     substance-group field that does.
-  - `calc_getaway` refuses a molecule of several fragments or less than 8
-    bonds across, for which RDKit 2024.09 reads uninitialized sums.
   - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
     would read past or loop on.
   - RascalMCES refuses a timeout below -1, and the query expanders a query
@@ -167,7 +167,7 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
 ### Bindings
 
 - Binds RDKit's C++ API with the coverage of its Python wrappers, as
-  conda-forge builds them with Boost.Python: 3,080 of the 3,591 names they
+  conda-forge builds them with Boost.Python: 3,079 of the 3,591 names they
   expose. Each of the other 511 has a reason in `inventory/manifest.toml`:
   Python protocol methods and Boost.Python's container types, 67 names left
   unbound because RDKit's code cannot be made safe from outside, and
