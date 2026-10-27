@@ -8,7 +8,6 @@ mod common;
 use std::path::PathBuf;
 
 use rdkit_cxx::Error;
-use rdkit_cxx::chem::rd_dist_geom::{embed_multiple_confs_with_params, etkdg_v3};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
@@ -18,12 +17,11 @@ use rdkit_cxx::chem::rd_generalized_substruct::{
 use rdkit_cxx::chem::rd_rascal_mces::RascalOptions;
 use rdkit_cxx::chem::rd_synthon_space_search::*;
 use rdkit_cxx::chem::*;
-use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 use common::{assert_close_to, temp_path};
 
-// Expected values come from Python's rdSynthonSpaceSearch, with the files in
-// tests/data.
+// Expected values come from RDKit 2025.03.6's Python rdSynthonSpaceSearch,
+// with the files in tests/data.
 
 fn data(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -85,21 +83,18 @@ fn search_params_defaults() {
     assert!(!p.random_sample);
     assert_eq!(p.random_seed, -1);
     assert!(p.build_hits);
+    assert_eq!(p.num_random_sweeps, 10);
     assert_eq!(p.similarity_cutoff, 0.5);
     assert_eq!(p.frag_similarity_adjuster, 0.1);
     assert_eq!(p.approx_similarity_adjuster, 0.1);
     assert_eq!(p.min_hit_heavy_atoms, 0);
     assert_eq!(p.max_hit_heavy_atoms, -1);
     assert_eq!(p.min_hit_mol_wt, 0.0);
-    assert_eq!(p.max_hit_mol_wt, -1.0);
+    assert_eq!(p.max_hit_mol_wt, 0.0);
     assert_eq!(p.min_hit_chiral_atoms, 0);
     assert_eq!(p.max_hit_chiral_atoms, -1);
     assert_eq!(p.time_out, 600);
-    assert_eq!(p.to_try_chunk_size, 2500000);
     assert_eq!(p.num_threads, 1);
-    assert_eq!(p.possible_hits_file, None);
-    assert_eq!(p.max_possible_hits_to_write, 10000000);
-    assert!(!p.write_possible_hits_and_stop);
     let s = SubstructureSearchParams::default();
     assert_eq!(
         s.substruct_match_params,
@@ -110,24 +105,21 @@ fn search_params_defaults() {
 
 #[test]
 fn read_text_files() {
-    for (file, reactions, synthons, products) in [
-        ("amide_space.txt", 1, 7, 12),
-        ("triazole_space.txt", 1, 6, 8),
-        ("extended_query.csv", 7, 28, 52),
-        ("doebner_miller_space.txt", 1, 7, 12),
+    for (file, reactions, products) in [
+        ("amide_space.txt", 1, 12),
+        ("triazole_space.txt", 1, 8),
+        ("extended_query.csv", 7, 52),
+        ("doebner_miller_space.txt", 1, 12),
     ] {
         let mut space = SynthonSpace::default();
         space.read_text_file(data(file)).unwrap();
         assert_eq!(space.get_num_reactions(), reactions, "{file}");
-        assert_eq!(space.get_num_synthons(), synthons, "{file}");
         assert_eq!(space.get_num_products(), products, "{file}");
-        assert_eq!(space.get_num_synthons_with_shapes(), 0);
         assert_eq!(space.get_synthon_fingerprint_type(), "");
     }
     let empty = SynthonSpace::default();
     assert_eq!(empty.get_num_reactions(), 0);
     amide_space().summarise();
-    amide_space().report_synthon_usage();
     assert!(matches!(
         SynthonSpace::default().read_text_file(temp_path("missing.txt")),
         Err(Error::Os { .. })
@@ -158,19 +150,18 @@ fn substructure_search() {
     assert_eq!(result.get_max_num_results(), 6);
     assert!(!result.get_timed_out());
     assert!(!result.get_cancelled());
-    assert!(result.get_best_hit().is_none());
 
     let mut params = SubstructureSearchParams::default();
     params.params.max_hits = 2;
     let page = space
         .substructure_search_with_params(&benzamide_query(), &params)
         .unwrap();
-    assert_eq!(result_names(&page), amides(&["1-1;2-1", "1-1;2-3"]));
+    assert_eq!(result_names(&page), amides(&["1-1;2-1", "1-1;2-2"]));
     params.params.hit_start = 2;
     let page = space
         .substructure_search_with_params(&benzamide_query(), &params)
         .unwrap();
-    assert_eq!(result_names(&page), amides(&["1-1;2-2", "1-3;2-1"]));
+    assert_eq!(result_names(&page), amides(&["1-1;2-3", "1-3;2-1"]));
 
     let mut params = SubstructureSearchParams::default();
     params.params.build_hits = false;
@@ -210,7 +201,7 @@ fn other_spaces() {
     assert_eq!(result_names(&result), expected);
 
     space.read_text_file(data("triazole_space.txt")).unwrap();
-    assert_eq!(space.get_num_synthons(), 6);
+    assert_eq!(space.get_num_products(), 8);
     let result = space
         .substructure_search(&mol_from_smarts("OCc1ncnn1").unwrap())
         .unwrap();
@@ -247,167 +238,6 @@ fn extended_query_search() {
         "4-2;5-1;react_3",
     ];
     assert_eq!(result_names(&result), expected);
-
-    let file = temp_path("synthon-ext-poss-hits.txt");
-    let mut params = SubstructureSearchParams::default();
-    params.params.max_hits = -1;
-    params.params.possible_hits_file = Some(file.clone());
-    params.params.write_possible_hits_and_stop = true;
-    let written = space
-        .substructure_search_extended_query_mol_with_params(&query, &params)
-        .unwrap();
-    assert!(written.get_hit_molecules().is_empty());
-    let checked = space
-        .substructure_search_extended_query_mol_lines_with_params(&query, 0, 10, &params)
-        .unwrap();
-    assert_eq!(checked.get_hit_molecules().len(), 10);
-    std::fs::remove_file(file).unwrap();
-}
-
-#[test]
-fn incremental_substructure_search() {
-    let mut space = amide_space();
-    let mut params = SubstructureSearchIncrementalParams::default();
-    params.params.to_try_chunk_size = 2;
-    let mut chunks = Vec::new();
-    let mut hits = Vec::new();
-    space
-        .substructure_search_incremental_with_params(
-            &benzamide_query(),
-            |chunk| {
-                chunks.push(chunk.len());
-                hits.extend(chunk);
-                Ok(false)
-            },
-            &params,
-        )
-        .unwrap();
-    assert_eq!(chunks, [2, 2, 2]);
-    assert_eq!(names(&hits), amides(&BENZAMIDES));
-
-    // True stops the search after the first batch.
-    let mut hits = Vec::new();
-    space
-        .substructure_search_incremental_with_params(
-            &benzamide_query(),
-            |chunk| {
-                hits.extend(chunk);
-                Ok(true)
-            },
-            &params,
-        )
-        .unwrap();
-    assert_eq!(hits.len(), 2);
-
-    // The closure's error ends the search and comes back as it was.
-    let mut calls = 0;
-    let err = space
-        .substructure_search_incremental_with_params(
-            &benzamide_query(),
-            |_| {
-                calls += 1;
-                Err(Error::Value {
-                    message: "stop here".into(),
-                })
-            },
-            &params,
-        )
-        .unwrap_err();
-    assert_eq!(calls, 1);
-    assert!(matches!(err, Error::Value { ref message } if message == "stop here"));
-
-    // A panic is caught at the boundary.
-    let err = space
-        .substructure_search_incremental(&benzamide_query(), |_| panic!("in the callback"))
-        .unwrap_err();
-    assert!(matches!(err, Error::Runtime { ref message } if message.contains("in the callback")));
-
-    // RDKit's Ctrl-C handler is installed while the closure runs, so it
-    // cannot match substructures.
-    let pattern = mol_from_smarts("C=O").unwrap();
-    let err = space
-        .substructure_search_incremental(&benzamide_query(), |chunk| {
-            chunk[0].has_substruct_match(&pattern)?;
-            Ok(false)
-        })
-        .unwrap_err();
-    assert!(matches!(err, Error::Runtime { .. }), "{err:?}");
-    // The lock is free again.
-    assert!(benzamide_query().has_substruct_match(&pattern).unwrap());
-}
-
-#[test]
-fn possible_hits_files() {
-    let mut space = amide_space();
-    let file = temp_path("synthon-poss-hits.txt");
-    let mut params = SubstructureSearchParams::default();
-    params.params.possible_hits_file = Some(file.clone());
-    params.params.write_possible_hits_and_stop = true;
-    let written = space
-        .substructure_search_with_params(&benzamide_query(), &params)
-        .unwrap();
-    assert!(written.get_hit_molecules().is_empty());
-    assert_eq!(written.get_max_num_results(), 6);
-    let text = std::fs::read_to_string(&file).unwrap();
-    assert_eq!(text.lines().count(), 6);
-    assert!(text.starts_with("c1ccccc1C(=O)[1*].[1*]N1CCCC1 1-1;2-1;amide-1\n"));
-
-    let all = space
-        .substructure_search_lines_with_params(&benzamide_query(), 0, 1000, &params)
-        .unwrap();
-    assert_eq!(result_names(&all), amides(&BENZAMIDES));
-    assert_eq!(all.get_max_num_results(), 6);
-    let some = space
-        .substructure_search_lines_with_params(&benzamide_query(), 1, 3, &params)
-        .unwrap();
-    assert_eq!(result_names(&some), amides(&["1-1;2-2", "1-1;2-3"]));
-    assert_eq!(some.get_max_num_results(), 2);
-    let none = space
-        .substructure_search_lines_with_params(&benzamide_query(), 100, 200, &params)
-        .unwrap();
-    assert!(none.get_hit_molecules().is_empty());
-    assert_eq!(none.get_max_num_results(), 0);
-    // RDKit's precondition.
-    assert!(matches!(
-        space.substructure_search_lines_with_params(&benzamide_query(), 3, 3, &params),
-        Err(Error::Runtime { .. })
-    ));
-    // With no file there is nothing to read.
-    let empty = space
-        .substructure_search_lines(&benzamide_query(), 0, 10)
-        .unwrap();
-    assert!(empty.get_hit_molecules().is_empty());
-
-    // RDKit dereferences the null molecule of a line that does not parse (a
-    // segfault in Python).
-    std::fs::write(&file, "C1CC( 1-1;2-1;amide-1\n").unwrap();
-    assert!(matches!(
-        space.substructure_search_lines_with_params(&benzamide_query(), 0, 10, &params),
-        Err(Error::Value { .. })
-    ));
-    // The bad line is outside these lines.
-    std::fs::write(
-        &file,
-        "c1ccccc1C(=O)[1*].[1*]N1CCCC1 1-1;2-1;amide-1\nC1CC( x;amide-1\n",
-    )
-    .unwrap();
-    let first = space
-        .substructure_search_lines_with_params(&benzamide_query(), 0, 1, &params)
-        .unwrap();
-    assert_eq!(result_names(&first), amides(&["1-1;2-1"]));
-    std::fs::remove_file(&file).unwrap();
-    // A missing file gives no results, as RDKit's does.
-    let missing = space
-        .substructure_search_lines_with_params(&benzamide_query(), 0, 10, &params)
-        .unwrap();
-    assert!(missing.get_hit_molecules().is_empty());
-
-    // RDKit ignores a file it cannot open for writing.
-    params.params.possible_hits_file = Some(std::env::temp_dir());
-    assert!(matches!(
-        space.substructure_search_with_params(&benzamide_query(), &params),
-        Err(Error::Os { .. })
-    ));
 }
 
 #[test]
@@ -479,8 +309,6 @@ fn fingerprint_search() {
     assert_eq!(names(&hits), amides(&["1-1;2-1"]));
     assert_close_to(hits[0].get_double_prop("Similarity").unwrap(), 1.0, 1e-6);
     assert_eq!(result.get_max_num_results(), 5);
-    let best = result.get_best_hit().unwrap();
-    assert_eq!(best.get_prop("_Name").unwrap(), "1-1;2-1;amide-1");
     assert_eq!(
         space.get_synthon_fingerprint_type(),
         generator.get_info_string().unwrap()
@@ -498,67 +326,44 @@ fn fingerprint_search() {
         amides(&["1-1;2-1", "1-1;2-3", "1-3;2-1"])
     );
 
-    let mut hits = Vec::new();
-    space
-        .fingerprint_search_incremental(&query, &generator, |chunk| {
-            hits.extend(chunk);
-            Ok(false)
-        })
-        .unwrap();
-    assert_eq!(names(&hits), amides(&["1-1;2-1"]));
-
-    // RDKit converts a negative fragment threshold times the bits to
-    // unsigned int.
+    // RDKit compares the fragment threshold as a double: below 0 it passes
+    // every fragment.
     let negative = SynthonSpaceSearchParams {
         similarity_cutoff: 0.05,
         ..Default::default()
     };
-    assert!(matches!(
-        space.fingerprint_search_with_params(&query, &generator, &negative),
-        Err(Error::Value { .. })
-    ));
-    let nan = SynthonSpaceSearchParams {
-        frag_similarity_adjuster: f64::NAN,
-        ..Default::default()
-    };
-    assert!(matches!(
-        space.fingerprint_search_with_params(&query, &generator, &nan),
-        Err(Error::Value { .. })
-    ));
-    // A threshold of 0 is RDKit's own case.
+    let result = space
+        .fingerprint_search_with_params(&query, &generator, &negative)
+        .unwrap();
+    assert_eq!(result.get_hit_molecules().len(), 12);
     let zero = SynthonSpaceSearchParams {
         similarity_cutoff: 0.1,
         ..Default::default()
     };
-    space
+    let result = space
         .fingerprint_search_with_params(&query, &generator, &zero)
         .unwrap();
-}
+    assert_eq!(result.get_hit_molecules().len(), 10);
 
-#[test]
-fn fingerprint_possible_hits() {
-    let mut space = amide_space();
-    let generator = morgan();
-    let query = mol_from_smiles("c1ccccc1C(=O)N1CCCC1").unwrap();
-    let file = temp_path("synthon-fp-poss-hits.txt");
-    let params = SynthonSpaceSearchParams {
-        similarity_cutoff: 0.3,
-        possible_hits_file: Some(file.clone()),
-        write_possible_hits_and_stop: true,
+    // Another generator's fingerprints are RDKit's error; building them
+    // replaces the space's.
+    let other = get_morgan_generator_with_params(&GetMorganGeneratorParams {
+        radius: 1,
+        fp_size: 1024,
         ..Default::default()
-    };
-    let written = space
-        .fingerprint_search_with_params(&query, &generator, &params)
-        .unwrap();
-    assert!(written.get_hit_molecules().is_empty());
-    let checked = space
-        .fingerprint_search_lines(&query, &generator, &params, 0, 100)
-        .unwrap();
+    })
+    .unwrap();
+    assert!(matches!(
+        space.fingerprint_search(&query, &other),
+        Err(Error::Runtime { .. })
+    ));
+    space.build_synthon_fingerprints(&other).unwrap();
     assert_eq!(
-        result_names(&checked),
-        amides(&["1-1;2-1", "1-1;2-3", "1-3;2-1"])
+        space.get_synthon_fingerprint_type(),
+        other.get_info_string().unwrap()
     );
-    std::fs::remove_file(file).unwrap();
+    let result = space.fingerprint_search(&query, &other).unwrap();
+    assert_eq!(result_names(&result), amides(&["1-1;2-1", "1-3;2-1"]));
 }
 
 #[test]
@@ -589,56 +394,22 @@ fn rascal_search() {
     let all = space.rascal_search(&query, &options).unwrap();
     assert_eq!(result_names(&all), amides(&BENZAMIDES));
 
-    let mut hits = Vec::new();
-    space
-        .rascal_search_incremental_with_params(
-            &query,
-            None,
-            |chunk| {
-                // The RASCAL search releases the lock for its closure.
-                assert!(chunk[0].has_substruct_match(&benzamide_query())?);
-                hits.extend(chunk);
-                Ok(false)
-            },
-            &params,
-        )
-        .unwrap();
-    assert_eq!(
-        names(&hits),
-        amides(&["1-1;2-1", "1-1;2-2", "1-1;2-3", "1-3;2-1"])
-    );
-
-    let file = temp_path("synthon-rascal-poss-hits.txt");
-    let write = SynthonSpaceSearchParams {
-        possible_hits_file: Some(file.clone()),
-        write_possible_hits_and_stop: true,
-        ..Default::default()
-    };
-    space
-        .rascal_search_with_params(&query, &options, &write)
-        .unwrap();
-    let checked = space
-        .rascal_search_lines(&query, &options, &write, 0, 3)
-        .unwrap();
-    assert_eq!(
-        result_names(&checked),
-        amides(&["1-1;2-1", "1-1;2-2", "1-1;2-3"])
-    );
-    // A reversed range is RDKit's length_error.
-    assert!(matches!(
-        space.rascal_search_lines(&query, &options, &write, 3, 1),
-        Err(Error::Runtime { .. })
-    ));
-    std::fs::remove_file(file).unwrap();
-
-    // RDKit divides by the fragment threshold, 0 here, and converts the
-    // quotient to unsigned int.
+    // A fragment threshold of 0 is fine in RDKit 2025.03; RASCAL casts its
+    // product with a NaN one to unsigned int.
     let zero = SynthonSpaceSearchParams {
         frag_similarity_adjuster: options.similarity_threshold,
         ..Default::default()
     };
+    let result = space
+        .rascal_search_with_params(&query, &options, &zero)
+        .unwrap();
+    assert_eq!(result_names(&result), amides(&BENZAMIDES));
+    let nan = SynthonSpaceSearchParams {
+        frag_similarity_adjuster: f64::NAN,
+        ..Default::default()
+    };
     assert!(matches!(
-        space.rascal_search_with_params(&query, &options, &zero),
+        space.rascal_search_with_params(&query, &options, &nan),
         Err(Error::Value { .. })
     ));
 }
@@ -652,7 +423,6 @@ fn database_files() {
     // SAFETY: write_db_file wrote it, and nothing changes it.
     unsafe { read.read_db_file(&file) }.unwrap();
     assert_eq!(read.get_num_reactions(), 1);
-    assert_eq!(read.get_num_synthons(), 7);
     assert_eq!(read.get_num_products(), 12);
     let result = read.substructure_search(&benzamide_query()).unwrap();
     assert_eq!(result_names(&result), amides(&BENZAMIDES));
@@ -665,7 +435,6 @@ fn database_files() {
         &converted,
         &ConvertTextToDBFileParams {
             fp_gen: Some(&generator),
-            ..Default::default()
         },
     )
     .unwrap();
@@ -676,6 +445,9 @@ fn database_files() {
         with_fps.get_synthon_fingerprint_type(),
         generator.get_info_string().unwrap()
     );
+    let query = mol_from_smiles("c1ccccc1C(=O)N1CCCC1").unwrap();
+    let result = with_fps.fingerprint_search(&query, &generator).unwrap();
+    assert_eq!(result_names(&result), amides(&["1-1;2-1"]));
     convert_text_to_db_file(data("amide_space.txt"), &converted).unwrap();
     // SAFETY: as above.
     unsafe { with_fps.read_db_file(&converted) }.unwrap();
@@ -708,7 +480,7 @@ fn database_files() {
     ));
     std::fs::remove_file(&short).unwrap();
     // The failed reads left the space as it was.
-    assert_eq!(read.get_num_synthons(), 7);
+    assert_eq!(read.get_num_products(), 12);
 
     // An empty space writes a file RDKit cannot read: it reads the first
     // reaction's offset regardless (a segfault in Python).
@@ -775,7 +547,7 @@ fn text_file_checks() {
         .read_text_file(data("amide_space_error.txt"))
         .unwrap_err();
     assert!(matches!(err, Error::Runtime { .. }), "{err:?}");
-    assert_eq!(space.get_num_synthons(), 7);
+    assert_eq!(space.get_num_products(), 12);
     let result = space.substructure_search(&benzamide_query()).unwrap();
     assert_eq!(result_names(&result).len(), 6);
 
@@ -884,12 +656,6 @@ fn substance_group_parents() {
             .substructure_search_extended_query_mol(&extended)
             .unwrap_err();
         assert!(matches!(err, Error::Value { .. }), "{err:?}");
-        let err = space.substructure_search_lines(query, 0, 10).unwrap_err();
-        assert!(matches!(err, Error::Value { .. }), "{err:?}");
-        let err = space
-            .substructure_search_incremental(query, |_| Ok(false))
-            .unwrap_err();
-        assert!(matches!(err, Error::Value { .. }), "{err:?}");
     }
     let mut cycle = mol_from_smiles("c1ccccc1C(=O)NC").unwrap();
     add_parents(&mut cycle, [2, 1]);
@@ -950,194 +716,4 @@ fn space_is_send() {
     fn send<T: Send>() {}
     send::<SynthonSpace>();
     send::<SubstructureResult>();
-}
-
-fn quick_shapes() -> ShapeBuildParams {
-    ShapeBuildParams {
-        num_confs: 5,
-        ..Default::default()
-    }
-}
-
-/// Conformers from the crate's embedder, as Python's test makes them.
-fn embedded(smiles: &str, num_confs: u32) -> Result<Option<Mol>, Error> {
-    let mut mol = add_hs(&mol_from_smiles(smiles)?)?;
-    let mut params = etkdg_v3();
-    params.random_seed = 0xdac;
-    embed_multiple_confs_with_params(&mut mol, num_confs, &mut params)?;
-    Ok(Some(remove_hs(&mol)?))
-}
-
-#[test]
-fn shape_build_params_defaults() {
-    let p = ShapeBuildParams::default();
-    assert_eq!(p.num_confs, 100);
-    assert_eq!(p.rms_threshold, 0.5);
-    assert_eq!(p.shape_sim_threshold, 0.95);
-    assert_eq!(p.num_threads, 1);
-    assert_eq!(p.random_seed, 0xdac);
-    assert!(p.stereo_enum_opts.try_embedding);
-    assert!(p.stereo_enum_opts.only_unassigned);
-    assert!(!p.stereo_enum_opts.only_stereo_groups);
-    assert!(p.stereo_enum_opts.unique);
-    assert_eq!(p.stereo_enum_opts.max_isomers, 0);
-    assert_eq!(p.stereo_enum_opts.random_seed, 0xdac);
-    assert_eq!(p.max_synthon_atoms, 0);
-    assert_eq!(p.max_embed_attempts, 10);
-    assert_eq!(p.time_out, 60);
-    assert_eq!(p.interim_file, None);
-    assert_eq!(p.interim_writes, 1000);
-}
-
-#[test]
-fn build_synthon_shapes() {
-    let mut space = amide_space();
-    space
-        .build_synthon_shapes_with_py_params(&quick_shapes())
-        .unwrap();
-    assert_eq!(space.get_num_synthons_with_shapes(), 7);
-    // Built already with this many conformers.
-    space
-        .build_synthon_shapes_with_py_params(&quick_shapes())
-        .unwrap();
-    assert_eq!(space.get_num_synthons_with_shapes(), 7);
-
-    let file = temp_path("synthon-shapes.spc");
-    space.write_db_file(&file).unwrap();
-    let mut read = SynthonSpace::default();
-    // SAFETY: write_db_file wrote it, and nothing changes it.
-    unsafe { read.read_db_file(&file) }.unwrap();
-    assert_eq!(read.get_num_synthons_with_shapes(), 7);
-    let converted = temp_path("synthon-converted-shapes.spc");
-    convert_text_to_db_file_with_params(
-        data("amide_space.txt"),
-        &converted,
-        &ConvertTextToDBFileParams {
-            py_shape_params: Some(quick_shapes()),
-            ..Default::default()
-        },
-    )
-    .unwrap();
-    // SAFETY: as above.
-    unsafe { read.read_db_file(&converted) }.unwrap();
-    assert_eq!(read.get_num_synthons_with_shapes(), 7);
-    std::fs::remove_file(&file).unwrap();
-    std::fs::remove_file(&converted).unwrap();
-
-    // The interim file holds the space as the build goes.
-    let interim = temp_path("synthon-interim.spc");
-    let params = ShapeBuildParams {
-        interim_file: Some(interim.clone()),
-        interim_writes: 3,
-        ..quick_shapes()
-    };
-    let mut space = amide_space();
-    space.build_synthon_shapes_with_py_params(&params).unwrap();
-    // SAFETY: as above.
-    unsafe { read.read_db_file(&interim) }.unwrap();
-    assert_eq!(read.get_num_synthons(), 7);
-    assert!(read.get_num_synthons_with_shapes() > 0);
-    std::fs::remove_file(&interim).unwrap();
-
-    // pruneShapes hands a NaN to the leader picker.
-    let nan = ShapeBuildParams {
-        shape_sim_threshold: f64::NAN,
-        ..quick_shapes()
-    };
-    assert!(matches!(
-        amide_space().build_synthon_shapes_with_py_params(&nan),
-        Err(Error::Value { .. })
-    ));
-
-    // The embedder casts a sum over the atoms of a product with its
-    // hydrogens to int.
-    let iron = format!("[1*]{}", "[FeH90]".repeat(48));
-    let path = write_text(
-        "synthon-iron.txt",
-        &[HEADER, &format!("{iron}\ta\t0\tr"), "[1*]C\tb\t1\tr"],
-    );
-    let mut heavy = SynthonSpace::default();
-    heavy.read_text_file(&path).unwrap();
-    std::fs::remove_file(path).unwrap();
-    let err = heavy.build_synthon_shapes().unwrap_err();
-    assert!(
-        matches!(err, Error::Value { ref message } if message.contains("4295")),
-        "{err:?}"
-    );
-
-    // A synthon without a connector would give a shape without volume.
-    let path = write_text("synthon-loose.txt", &[HEADER, "CCO\ta\t0\tr"]);
-    let mut loose = SynthonSpace::default();
-    loose.read_text_file(&path).unwrap();
-    std::fs::remove_file(path).unwrap();
-    assert!(matches!(
-        loose.build_synthon_shapes(),
-        Err(Error::Value { .. })
-    ));
-}
-
-#[test]
-fn user_conformer_generator() {
-    let mut params = quick_shapes();
-    let calls = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
-    let counted = calls.clone();
-    params.set_user_conformer_generator(move |smiles, num_confs| {
-        counted.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-        // The build's locks are released: the closure embeds and matches.
-        let mol = embedded(smiles, num_confs)?;
-        let pattern = mol_from_smarts("[#6]")?;
-        assert!(mol.as_ref().unwrap().has_substruct_match(&pattern)?);
-        Ok(mol)
-    });
-    let mut space = amide_space();
-    space.build_synthon_shapes_with_py_params(&params).unwrap();
-    assert_eq!(space.get_num_synthons_with_shapes(), 7);
-    assert!(calls.load(std::sync::atomic::Ordering::Relaxed) >= 7);
-    assert_eq!(space.get_num_reactions(), 1);
-    assert_eq!(space.get_num_products(), 12);
-
-    // None drops the isomer (Python's null is dereferenced).
-    params.set_user_conformer_generator(|_, _| Ok(None));
-    let mut space = amide_space();
-    space.build_synthon_shapes_with_py_params(&params).unwrap();
-    assert_eq!(space.get_num_synthons_with_shapes(), 0);
-
-    // An error, or a panic, ends the build.
-    params.set_user_conformer_generator(|_, _| {
-        Err(Error::Key {
-            key: "no conformers".into(),
-        })
-    });
-    let err = amide_space()
-        .build_synthon_shapes_with_py_params(&params)
-        .unwrap_err();
-    assert!(matches!(err, Error::Key { ref key } if key == "no conformers"));
-    params.set_user_conformer_generator(|_, _| panic!("no conformers"));
-    let err = amide_space()
-        .build_synthon_shapes_with_py_params(&params)
-        .unwrap_err();
-    assert!(matches!(err, Error::Runtime { .. }), "{err:?}");
-
-    // A molecule RDKit removes bonds from.
-    params.set_user_conformer_generator(|smiles, num_confs| {
-        let mut mol = embedded(smiles, num_confs)?.unwrap();
-        add_parents(&mut mol, [2, 1]);
-        Ok(Some(mol))
-    });
-    let err = amide_space()
-        .build_synthon_shapes_with_py_params(&params)
-        .unwrap_err();
-    assert!(matches!(err, Error::Value { .. }), "{err:?}");
-
-    // Coordinates the shapes' Gaussians cannot take.
-    params.set_user_conformer_generator(|smiles, num_confs| {
-        let mut mol = embedded(smiles, num_confs)?.unwrap();
-        mol.get_conformer_mut()?
-            .set_atom_position(0, Point3D::new(f64::NAN, 0.0, 0.0))?;
-        Ok(Some(mol))
-    });
-    let err = amide_space()
-        .build_synthon_shapes_with_py_params(&params)
-        .unwrap_err();
-    assert!(matches!(err, Error::Value { .. }), "{err:?}");
 }

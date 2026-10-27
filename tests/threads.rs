@@ -97,8 +97,9 @@ use rdkit_cxx::chem::rd_mol_processing::{
 use rdkit_cxx::chem::rd_r_group_decomposition::RGroupDecomposition;
 use rdkit_cxx::chem::rd_rascal_mces::{find_mces, rascal_cluster};
 use rdkit_cxx::chem::rd_reduced_graphs::get_erg_fingerprint;
+use rdkit_cxx::chem::rd_shape_align;
 use rdkit_cxx::chem::rd_substruct_library::{MolHolder, SubstructLibrary};
-use rdkit_cxx::chem::rd_synthon_space_search::{ShapeBuildParams, SynthonSpace};
+use rdkit_cxx::chem::rd_synthon_space_search::SynthonSpace;
 use rdkit_cxx::chem::rd_tautomer_query::TautomerQuery;
 use rdkit_cxx::chem::rdfiltercatalog::{FilterCatalog, FilterCatalogEntry, SmartsMatcher};
 use rdkit_cxx::chem::rdfragcatalog::{FragCatGenerator, FragCatParams, FragCatalog};
@@ -117,7 +118,6 @@ use rdkit_cxx::chem::{
     mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
     molzip_fragments_with_params, pattern_fingerprint,
 };
-use rdkit_cxx::chem::{rd_gaussian_shape, rd_shape_align};
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
     Point3D, UniformGrid3D, compute_grid_centroid, find_grid_terminal_points,
@@ -196,7 +196,6 @@ fn main() {
     phase(bounds_matrix_embedding(), random_smiles());
     phase(random_transforms(), random_smiles());
     phase(embedded_stereoisomers(), random_smiles());
-    phase(synthon_shapes(), random_smiles());
     // Comic-mode drawing draws its lines with std::rand, under the same
     // lock.
     phase(comic_drawing(), comic_drawing());
@@ -263,26 +262,23 @@ fn main() {
     phase(rgroups_decomposed(), substruct_matches());
     phase(scaffold_network(), substruct_matches());
     phase(pubchem_shape_alignment(), substruct_matches());
-    phase(gaussian_shapes(), substruct_matches());
     phase(mif_h_bonds(), substruct_matches());
     phase(mol_features(), substruct_matches());
     phase(condensed_abbreviations(), substruct_matches());
     phase(enumerated_link_nodes(), substruct_matches());
     phase(embedded_stereoisomers(), substruct_matches());
     phase(synthon_substructure_search(), substruct_matches());
+    phase(synthon_fingerprint_search(), substruct_matches());
     phase(synthon_rascal_search(), substruct_matches());
-    phase(synthon_shapes(), substruct_matches());
     phase(inchi_written(), substruct_matches());
     phase(inchi_read(), substruct_matches());
 
     // The rest: the grid centroids' cache, the property registry, DCLV's
-    // surface cache, the shape modules' globals, and Murtagh's statics.
+    // surface cache, PubChem shape's globals, and Murtagh's statics.
     phase(grid_centroids(), grid_centroids());
     phase(registered_property(), available_properties());
     phase(dclv_surfaces(), dclv_surfaces());
     phase(pubchem_shape_alignment(), pubchem_shape_inputs());
-    phase(gaussian_shapes(), gaussian_shapes());
-    phase(synthon_shapes(), gaussian_shapes());
     phase(murtagh_clusters(), hierarchical_picks());
     phase(cdxml_blocks(), cdxml_blocks());
 
@@ -1302,18 +1298,6 @@ fn pubchem_shape_inputs() -> Call<Mol> {
     }
 }
 
-// The Gaussian shapes fill a static list of feature patterns
-// (gaussian_shape_mutex) and match them.
-fn gaussian_shapes() -> Call<Mol> {
-    Call {
-        make: |_| embedded("Oc1ccccc1"),
-        run: |mol| {
-            let shape = rd_gaussian_shape::ShapeInput::new(&mol).unwrap();
-            assert!(shape.num_features() > 0);
-        },
-    }
-}
-
 // An H-bond field finds its special atoms with a serine pattern.
 fn mif_h_bonds() -> Call<Mol> {
     Call {
@@ -1403,8 +1387,7 @@ fn cdxml_blocks() -> Call<Mol> {
     }
 }
 
-/// A synthon space of benzamides, written by `main`. The second amine's
-/// unassigned stereocenter makes shape building enumerate its isomers.
+/// A synthon space of benzamides, written by `main`.
 const SYNTHONS: &str = "SMILES\tsynton_id\tsynton#\treaction_id
 c1ccccc1C(=O)[1*]\t1-1\t1\tamide
 [1*]N1CCCC1\t2-1\t2\tamide
@@ -1431,52 +1414,41 @@ fn synthon_substructure_search() -> Call<Mol> {
     }
 }
 
-// RASCAL matches substructures, and its incremental search releases the
-// Ctrl-C lock for the closure, which matches too.
-fn synthon_rascal_search() -> Call<(SynthonSpace, Mol, Mol)> {
+// The synthons' fingerprints, built before the search, use feature
+// invariants, which match their feature patterns.
+fn synthon_fingerprint_search() -> Call<(SynthonSpace, FingerprintGenerator64, Mol)> {
     Call {
         make: |_| {
             let mut space = SynthonSpace::default();
             space.read_text_file(synthons()).unwrap();
+            let features = GetMorganGeneratorParams {
+                atom_invariants_generator: Some(get_morgan_feature_atom_inv_gen()),
+                ..Default::default()
+            };
             (
                 space,
-                mol("c1ccccc1C(=O)NC(C)CC"),
-                mol_from_smarts("C(=O)N").unwrap(),
+                get_morgan_generator_with_params(&features).unwrap(),
+                mol("c1ccccc1C(=O)N1CCCC1"),
             )
         },
-        run: |(mut space, query, pattern)| {
-            let mut hits = 0;
-            space
-                .rascal_search_incremental(&query, None, |batch| {
-                    for hit in &batch {
-                        assert!(hit.has_substruct_match(&pattern)?);
-                    }
-                    hits += batch.len();
-                    Ok(false)
-                })
-                .unwrap();
-            assert!(hits > 0);
+        run: |(mut space, generator, query)| {
+            let hits = space.fingerprint_search(&query, &generator).unwrap();
+            assert!(!hits.get_hit_molecules().is_empty());
         },
     }
 }
 
-// Shape building embeds each sample product's stereoisomers without a seed
-// (from RDKit's generator) and its conformers, and fills and matches the
-// shapes' feature patterns (gaussian_shape_mutex).
-fn synthon_shapes() -> Call<SynthonSpace> {
+// RASCAL matches substructures.
+fn synthon_rascal_search() -> Call<(SynthonSpace, Mol)> {
     Call {
         make: |_| {
             let mut space = SynthonSpace::default();
             space.read_text_file(synthons()).unwrap();
-            space
+            (space, mol("c1ccccc1C(=O)NC(C)CC"))
         },
-        run: |mut space| {
-            let params = ShapeBuildParams {
-                num_confs: 2,
-                ..Default::default()
-            };
-            space.build_synthon_shapes_with_py_params(&params).unwrap();
-            assert_eq!(space.get_num_synthons_with_shapes(), 3);
+        run: |(mut space, query)| {
+            let hits = space.rascal_search(&query, &Default::default()).unwrap();
+            assert!(!hits.get_hit_molecules().is_empty());
         },
     }
 }

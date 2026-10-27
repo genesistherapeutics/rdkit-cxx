@@ -38,17 +38,13 @@ class SynthonSpace {
 // Python's SubstructureResult.
 using SearchResults = RDKit::SynthonSpaceSearch::SearchResults;
 
-// Shared structs and the Rust callback, defined by the bridges
-// (src/ffi/synthon_space_search.rs and the bridges they name).
+// Shared structs, defined by the bridges (src/ffi/synthon_space_search.rs
+// and the bridges they name).
 struct SynthonSpaceSearchParamsData;
 struct SubstructMatchParametersData;
 struct RascalOptionsData;
-struct SearchCallback;
-struct ShapeBuildParamsData;
-struct ConformerCallback;
 
 SynthonSpaceSearchParamsData synthon_space_search_params_default();
-ShapeBuildParamsData shape_build_params_default();
 
 std::unique_ptr<SynthonSpace> synthon_space_new();
 void synthon_space_read_text_file(SynthonSpace &space,
@@ -61,18 +57,11 @@ void synthon_space_write_enumerated_file(const SynthonSpace &space,
                                          rust::Slice<const std::uint8_t> path);
 std::uint64_t synthon_space_get_num_reactions(const SynthonSpace &space);
 std::uint64_t synthon_space_get_num_products(const SynthonSpace &space);
-std::uint64_t synthon_space_get_num_synthons(const SynthonSpace &space);
-std::uint64_t synthon_space_get_num_synthons_with_shapes(
-    const SynthonSpace &space);
 void synthon_space_summarise(const SynthonSpace &space);
-void synthon_space_report_synthon_usage(const SynthonSpace &space);
 std::unique_ptr<std::string> synthon_space_get_synthon_fingerprint_type(
     const SynthonSpace &space);
 void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
                                               const FpGenerator &gen);
-void synthon_space_build_synthon_shapes(SynthonSpace &space,
-                                        const ShapeBuildParamsData &params,
-                                        ConformerCallback &generator);
 
 std::unique_ptr<SearchResults> synthon_space_substructure_search(
     SynthonSpace &space, const RWMol &query,
@@ -82,44 +71,12 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended(
     SynthonSpace &space, const ExtendedQueryMol &query,
     const SubstructMatchParametersData &match_params,
     const SynthonSpaceSearchParamsData &params);
-std::unique_ptr<SearchResults> synthon_space_substructure_search_lines(
-    SynthonSpace &space, const RWMol &query,
-    const SubstructMatchParametersData &match_params,
-    const SynthonSpaceSearchParamsData &params, std::uint64_t start_line,
-    std::uint64_t finish_line);
-std::unique_ptr<SearchResults> synthon_space_substructure_search_extended_lines(
-    SynthonSpace &space, const ExtendedQueryMol &query,
-    const SubstructMatchParametersData &match_params,
-    const SynthonSpaceSearchParamsData &params, std::uint64_t start_line,
-    std::uint64_t finish_line);
-void synthon_space_substructure_search_incremental(
-    SynthonSpace &space, const RWMol &query, SearchCallback &callback,
-    const SubstructMatchParametersData &match_params,
-    const SynthonSpaceSearchParamsData &params);
-
 std::unique_ptr<SearchResults> synthon_space_fingerprint_search(
     SynthonSpace &space, const RWMol &query, const FpGenerator &gen,
     const SynthonSpaceSearchParamsData &params);
-std::unique_ptr<SearchResults> synthon_space_fingerprint_search_lines(
-    SynthonSpace &space, const RWMol &query, const FpGenerator &gen,
-    const SynthonSpaceSearchParamsData &params, std::uint64_t start_line,
-    std::uint64_t finish_line);
-void synthon_space_fingerprint_search_incremental(
-    SynthonSpace &space, const RWMol &query, const FpGenerator &gen,
-    SearchCallback &callback, const SynthonSpaceSearchParamsData &params);
-
 std::unique_ptr<SearchResults> synthon_space_rascal_search(
     SynthonSpace &space, const RWMol &query,
     const RascalOptionsData &rascal_options,
-    const SynthonSpaceSearchParamsData &params);
-std::unique_ptr<SearchResults> synthon_space_rascal_search_lines(
-    SynthonSpace &space, const RWMol &query,
-    const RascalOptionsData &rascal_options,
-    const SynthonSpaceSearchParamsData &params, std::uint64_t start_line,
-    std::uint64_t finish_line);
-void synthon_space_rascal_search_incremental(
-    SynthonSpace &space, const RWMol &query,
-    const RascalOptionsData &rascal_options, SearchCallback &callback,
     const SynthonSpaceSearchParamsData &params);
 
 std::unique_ptr<MolList> substructure_result_get_hit_molecules(
@@ -128,9 +85,6 @@ std::uint64_t substructure_result_get_max_num_results(
     const SearchResults &results);
 bool substructure_result_get_timed_out(const SearchResults &results);
 bool substructure_result_get_cancelled(const SearchResults &results);
-// Null when the search found no best hit.
-std::unique_ptr<RWMol> substructure_result_get_best_hit(
-    const SearchResults &results);
 
 std::unique_ptr<std::string> formatted_integer_string(std::int64_t value);
 
