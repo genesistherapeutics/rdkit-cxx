@@ -88,6 +88,8 @@ class DescriptorCacheGuard {
 //   hybridizations, bonds' types, directions, and stereo, and stereo
 //   groups' types to the enums unchecked, and the Rust enums have no
 //   variant for a value RDKit's lacks (U2).
+// - A stereo group may list an atom or bond twice, which RDKit 2024.03
+//   keeps (check_stereo_group_removals).
 // Throws ValueErrorException for any of these, in the molecule or in the
 // molecules of its recursive queries, which RDKit pickles as molecules.
 // Every wrapper that reads a molecule pickle, alone or inside another
@@ -101,20 +103,21 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 // the sizes of their atom and bond lists, and the bonds both name. A
 // truncated size leaves MolPickler's reader taking the rest of the list for
 // the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
-// writes a pickle it cannot read. Throws ValueErrorException for any of
+// writes a pickle it cannot read. Likewise it counts the properties of the
+// molecule, each conformer, atom, bond and substance group in two bytes, so
+// none may have more than 65535. Throws ValueErrorException for any of
 // these, in the molecule or in the molecules of its recursive queries, which
 // RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
 // inside another format, calls it on the molecules it pickles.
 void check_picklable(const RDKit::ROMol &mol);
 
-// As check_picklable, for every molecule RDKit may make of some of mol's atoms
-// and at most max_part_bonds of its bonds, keeping the substance groups and
-// stereo groups within them and the atoms' and bonds' queries
-// (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
-// them, and, for parts of more than 256 bonds, whose bonds may be numbered
-// past 255, no group that names a bond. For the fragment catalog, whose
+// As check_picklable, for every molecule RDKit 2024.03 may make of some of
+// mol's bonds and their atoms, copying the atoms and bonds with their
+// properties and queries but no substance or stereo groups
+// (Subgraphs::pathToSubmol): the queries' children, the recursive queries'
+// molecules, and the property counts. For the fragment catalog, whose
 // fragments no wrapper can reach.
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+void check_picklable_parts(const RDKit::ROMol &mol);
 
 // check_picklable for each template of a reaction, which ReactionPickler
 // pickles as molecules.
@@ -282,5 +285,15 @@ class StereoGroupBondGuard {
   // Each group's bond indices; empty when no group held a bond.
   std::vector<std::vector<unsigned>> d_bonds;
 };
+
+// RDKit 2024.03's proximity bonding (ConnectTheDots_Large in
+// ProximityBonds.cpp, which the PDB reader and determineConnectivity run)
+// then cuts all but one bond of each hydrogen with more, removing them while
+// it iterates over the hydrogen's neighbors, past the end of the edges left
+// (RDKit 2026.03 removes them in a batch, rdkit/rdkit#9444). This bonds the
+// molecule's first conformer as RDKit does, from its bonds (or none, with
+// `without_bonds`), and throws ValueErrorException if a hydrogen would have
+// several. Its coordinates must be checked first (within 1e7).
+void check_proximity_hydrogens(const RDKit::ROMol &mol, bool without_bonds);
 
 }  // namespace rdkit_cxx

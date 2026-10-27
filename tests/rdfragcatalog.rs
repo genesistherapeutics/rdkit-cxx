@@ -380,12 +380,9 @@ fn molecules_are_checked() {
     // that type, as Python does: PDBRESIDUE gives PDB residue info, and an
     // unknown type is RDKit's error.
     let mut mol = mol("CC");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut marked = mol.to_binary();
     let at = marked
         .windows(12)
@@ -411,4 +408,54 @@ fn molecules_are_checked() {
     marked[at] = 7;
     // SAFETY: as above; RDKit refuses the type.
     assert!(unsafe { FragCatalog::from_pickle(&splice(&marked)) }.is_err());
+}
+
+/// `smiles` with a substance group of `atoms` and their bonds, with `n`
+/// brackets.
+fn with_brackets(smiles: &str, atoms: u32, n: usize) -> Mol {
+    let mut mol = mol(smiles);
+    let mut sgroup = create_mol_substance_group(&mut mol, "GEN");
+    for idx in 0..atoms {
+        sgroup.add_atom_with_idx(idx).unwrap();
+    }
+    for idx in 0..atoms - 1 {
+        sgroup.add_bond_with_idx(idx).unwrap();
+    }
+    let bracket = [
+        rdkit_cxx::geometry::Point3D::default(),
+        rdkit_cxx::geometry::Point3D::new(1.0, 0.0, 0.0),
+    ];
+    for _ in 0..n {
+        sgroup.add_bracket(&bracket).unwrap();
+    }
+    mol
+}
+
+// RDKit 2024.03 makes the entries' fragments with Subgraphs::pathToSubmol,
+// which keeps no substance or stereo groups, so a group a pickle could not
+// hold does not reach them; the atoms keep their properties, which the
+// pickle counts in two bytes.
+#[test]
+fn fragments_are_picklable() {
+    let generator = FragCatGenerator;
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let small = with_brackets("OCC=CC(=O)O", 2, 256);
+    assert!(generator.add_frags_from_mol(&small, &mut catalog).unwrap() > 0);
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
+    assert_eq!(read.get_num_entries(), catalog.get_num_entries());
+
+    let mut many = mol("OCC=CC(=O)O");
+    {
+        let mut atom = many.get_atom_with_idx_mut(0).unwrap();
+        for i in 0..65536 {
+            atom.set_prop(&format!("p{i}"), "x");
+        }
+    }
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let Err(Error::Value { message }) = generator.add_frags_from_mol(&many, &mut catalog) else {
+        panic!("a fragment's pickle would wrap its atom's property count");
+    };
+    assert!(message.contains("properties"), "{message}");
+    assert_eq!(catalog.get_num_entries(), 0);
 }

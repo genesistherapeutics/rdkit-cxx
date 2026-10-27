@@ -253,12 +253,9 @@ fn pickled_monomer_types_are_read_as_rdkit_reads_them() {
     // changed to PDBRESIDUE reads as PDB residue info, as in Python, and an
     // unknown type is RDKit's error.
     let mut mol = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type.
     let at = pkl

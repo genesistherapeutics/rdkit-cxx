@@ -196,6 +196,36 @@ fn pickles_with_unknown_enum_values_are_refused() {
     }
 }
 
+// RDKit 2024.03's StereoGroup keeps an atom listed twice, which a removal
+// leaves dangling, so unpickling refuses a group that lists one twice. The
+// atom's byte is found by pickling two other groups.
+#[test]
+fn pickles_with_stereo_groups_listing_an_atom_twice_are_refused() {
+    let pickles: Vec<Vec<u8>> = [4, 3]
+        .into_iter()
+        .map(|second| {
+            let mut rw = RWMol::from(mol_from_smiles("C[C@H](F)C[C@H](O)C").unwrap());
+            let group = create_stereo_group(StereoGroupType::StereoOr, &rw, &[1, second]).unwrap();
+            rw.set_stereo_groups(&[group]).unwrap();
+            rw.to_binary_with_property_flags(PropertyPickleOptions::NoProps)
+        })
+        .collect();
+    let (at, four, _) = differing_byte(&pickles[0], &pickles[1]);
+    assert_eq!(four, 4);
+    // SAFETY: a pickle RDKit wrote.
+    unsafe { Mol::from_pkl_string(&pickles[0]) }.unwrap();
+    let mut pickle = pickles[0].clone();
+    pickle[at] = 1;
+    // SAFETY: a pickle RDKit wrote but for an atom index, which
+    // check_pickled_mol checks.
+    assert_eq!(
+        unsafe { Mol::from_pkl_string(&pickle) }.unwrap_err(),
+        Error::Value {
+            message: "Duplicate atom in StereoGroup".into()
+        }
+    );
+}
+
 // MolPickler writes these values in one byte, and its reader takes the rest
 // of a longer list for the pickle's next fields: Python's ToBinary writes
 // pickles it cannot read back ("Bad pickle format"). RDKit 2024.03 also

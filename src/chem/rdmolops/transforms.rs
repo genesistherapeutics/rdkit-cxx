@@ -303,7 +303,9 @@ pub fn add_recursive_query_with_preserve_existing_query(
 /// For each atom with the property `prop_name`, adds the queries it names
 /// (comma-separated, lowercased) as recursive queries. Mirrors
 /// `rdmolops.MolAddRecursiveQueries`. `Error::Key` for a name with no query
-/// that is not SMARTS either.
+/// that is not SMARTS either, and `Error::Value` for a value whose CXSMILES
+/// extension RDKit would read past the end of (as `mol_from_smarts` checks
+/// it), since RDKit parses a value that names no query as SMARTS.
 pub fn mol_add_recursive_queries(
     mol: &mut Mol,
     queries: &BTreeMap<String, Mol>,
@@ -345,8 +347,10 @@ impl Default for ParseMolQueryDefFileParams {
 }
 
 /// The named SMARTS queries in a file; lines whose SMARTS do not parse are
-/// skipped. Mirrors `rdmolops.ParseMolQueryDefFile(fileobj)` with a file
-/// name. `Error::Os` if the file cannot be opened.
+/// skipped. RDKit parses the SMARTS with CXSMILES on, so one RDKit 2024.03
+/// would read past the end of (as `mol_from_smarts` checks it) is
+/// `Error::Value`. Mirrors `rdmolops.ParseMolQueryDefFile(fileobj)` with a
+/// file name. `Error::Os` if the file cannot be opened.
 pub fn parse_mol_query_def_file(path: impl AsRef<Path>) -> Result<BTreeMap<String, Mol>> {
     parse_mol_query_def_file_with_params(path, &ParseMolQueryDefFileParams::default())
 }

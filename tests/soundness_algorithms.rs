@@ -78,18 +78,17 @@ fn fmcs_verbose_with_store_all() {
     );
 }
 
-// Seed::grow shifts 1uLL by a seed's new bonds, undefined for 64; a query
-// of fewer than 64 bonds never has that many.
+// Seed::grow shifts 1uLL by a seed's new bonds, undefined for exactly 64,
+// which on the supported CPUs leaves the seed ungrown (README, Known
+// limitations); queries of 64 or more bonds are searched, as in Python.
 #[test]
 fn fmcs_query_bonds() {
     let long = smiles(&"C".repeat(65));
-    assert!(is_value_error(&find_mcs(&[long.clone(), long.clone()])));
-    // 63 bonds, as in Python.
+    let result = find_mcs(&[long.clone(), long.clone()]).unwrap();
+    assert_eq!((result.num_atoms(), result.num_bonds()), (65, 64));
     let chain = smiles(&"C".repeat(64));
     let result = find_mcs(&[chain.clone(), chain]).unwrap();
     assert_eq!((result.num_atoms(), result.num_bonds()), (64, 63));
-    // Only the molecules RDKit may take as the query count: the one of
-    // fewest bonds, or with a threshold below 1 the first len - k.
     let mols = [smiles("CCC"), smiles("CCCC"), smiles(&"C".repeat(70))];
     let result = find_mcs(&mols).unwrap();
     assert_eq!(result.smarts_string(), "[#6]-[#6]-[#6]");
@@ -100,8 +99,9 @@ fn fmcs_query_bonds() {
     let result = find_mcs_with_params(&mols, &half).unwrap();
     assert_eq!((result.num_atoms(), result.num_bonds()), (4, 3));
     let mols = [smiles("CCC"), long.clone(), long];
-    assert!(find_mcs(&mols).is_ok());
-    assert!(is_value_error(&find_mcs_with_params(&mols, &half)));
+    assert_eq!(find_mcs(&mols).unwrap().smarts_string(), "[#6]-[#6]-[#6]");
+    let result = find_mcs_with_params(&mols, &half).unwrap();
+    assert_eq!((result.num_atoms(), result.num_bonds()), (65, 64));
 }
 
 // checkTimeout reads front() of a vector it has just cleared.

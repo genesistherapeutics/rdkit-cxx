@@ -183,10 +183,14 @@ its Boost.Python modules and its `.py` modules.
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
   read later. MolPickler writes some counts, and in RDKit 2024.03 a small
   molecule's bond indices, in one byte, and reads a larger value's pickle
-  out of step, so every wrapper that hands RDKit a molecule to pickle
-  (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
-  truncate: RDKit could not read the pickle back, as the contract and the
-  holders' safe reads assume. The wrappers still check what they checked before, for
+  out of step, so every wrapper that hands RDKit a molecule to pickle,
+  alone or inside another format (`git grep -l
+  'pickleMol\|MolPickler::pickle\|pickleReaction' Release_2024_03_6 --
+  Code` in RDKit's sources finds the calls), first calls `check_picklable`
+  (`rdkit-cxx/mol_checks.h`), or one of the variants beside it, on the
+  molecules it will pickle and refuses one RDKit would truncate: RDKit
+  could not read the pickle back, as the contract and the holders' safe
+  reads assume. The wrappers still check what they checked before, for
   pickles that meet the contract but come from another RDKit: a molecule
   pickle's enum values, which MolPickler casts unchecked (bond types,
   directions, and stereo, atoms' chiral tags and hybridizations, stereo
@@ -223,8 +227,9 @@ its Boost.Python modules and its `.py` modules.
   before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked; where RDKit reads a
-  file only by name (a synthon search's possible hits), it reads a private
-  copy of the checked lines.
+  file only by name, it is given the checked text or data instead (the
+  normalizations of a `Normalizer` or of `CleanupParameters`, read as
+  `normalizationData`).
 - **U3.** A sized object whose `int` arithmetic would overflow (more than
   `INT_MAX` bits or grid points) is refused at construction: constructors
   that return values panic, documented under `# Panics`, and fallible ones
@@ -235,14 +240,10 @@ its Boost.Python modules and its `.py` modules.
 - **U4.** Global state RDKit writes without a lock is guarded by a mutex in
   the wrapper (the grid-index cache in `GridUtils.cpp`, the BRICS patterns
   `fragmentOnBRICSBonds` fills on first use, the descriptor property
-  registry in `Property.cpp`, `DCLV.cpp`'s `recordCache`, and R-group
+  registry in `Property.cpp`, and R-group
   decomposition's random number singleton and fingerprint-variance scoring
-  static, under `rgroup_mutex()`, and the shape modules' pharmacophore
-  patterns and PubChem shape's overlap cutoffs, under `pubchem_shape_mutex()`
-  and `gaussian_shape_mutex()`, and the static work variables of Murtagh's
-  hierarchical clustering, under `murtagh_mutex()`, and the ChemDraw
-  library's attribute-name maps, which it fills behind an unlocked check,
-  under `chemdraw_mutex()`). State RDKit makes once,
+  static, under `rgroup_mutex()`, and the static work variables of Murtagh's
+  hierarchical clustering, under `murtagh_mutex()`). State RDKit makes once,
   on first use, is
   made under `std::call_once` before any other call (the MACCS patterns in
   `MACCS.cpp`). 2D depiction's settings and
@@ -391,9 +392,13 @@ its Boost.Python modules and its `.py` modules.
   line ends inside of: V3000 S-group values (`CSTATE`, `SAP`, `PARENT`,
   `COMPNO`, and counted arrays) cut short, and S-group lines without a
   leading number and two more tokens (or a block with fewer lines than its
-  `COUNTS` line names), whose ids it then reads uninitialized; and in the
-  "M  " lines it parses as CXSMILES SMARTS, the CXSMILES fields it reads
-  past the end of (`rdkit-cxx/file_checks.h`). A cut line is read as if it
+  `COUNTS` line names), whose ids it then reads uninitialized; V3000
+  enhanced-stereo collections that list an atom twice, or fewer atoms than
+  their count, whose first index it leaves unset; and the CXSMILES fields
+  it reads past the end of in the mol-block SMARTS it parses with
+  CXSMILES on (`rdkit-cxx/file_checks.h`): in `M  MRV SMA` lines, found by
+  replaying RDKit's reads, and in SMARTSQ data, which a stream cannot tell
+  from other S-group data, by the fields' names. A cut line is read as if it
   were whole, so a checked stream holds back the bytes of such a value or
   line until the next chunk shows it complete (at most 1 MiB), and refuses
   from its start. A checked stream stops delivering bytes before the
@@ -447,7 +452,10 @@ its Boost.Python modules and its `.py` modules.
   in two ABS groups), so a wrapper whose RDKit call removes atoms or bonds
   from a molecule, or from a copy of one, calls `check_removals`
   (`rdkit-cxx/mol_checks.h`) first, before any edit in place; it also
-  refuses stereo groups that hold bonds or repeat atoms. Calls whose only
+  refuses stereo groups that hold bonds or repeat atoms. Groups that repeat
+  an atom are also refused wherever they come in (CXSMILES, V3000, Marvin,
+  JSON, pickles, `set_stereo_groups`), since RDKit's parsers remove
+  hydrogens before a wrapper check can run. Calls whose only
   removals are `getMolFrags`' (the SMILES writers) use
   `check_fragment_removals`, which refuses only the groups those removals
   would leave dangling, and `SANITIZE_MERGEHS` uses

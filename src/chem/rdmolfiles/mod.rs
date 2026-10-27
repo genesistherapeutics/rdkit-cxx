@@ -313,9 +313,12 @@ pub fn mol_from_smiles(smiles: &str) -> Result<Mol> {
 /// `MolFromSmiles(SMILES, sanitize, replacements)`. With `allow_cxsmiles`, a
 /// CXSMILES extension whose data S-group (`SgD:`) has fewer than five
 /// `:`-ended fields, whose atom property (`atomProp:`) value runs to its end,
-/// or whose polymer S-group (`Sg:`) type does, is `Error::Value`: RDKit
-/// 2024.03 reads past the end of the text there (Python reads garbage).
-/// Terminated extensions (`C |atomProp:0.p.v|`, `C |SgD:0:x:y:|`) parse.
+/// or, without `strict_cxsmiles`, whose polymer S-group (`Sg:`) type does,
+/// is `Error::Value`: RDKit 2024.03 reads past the end of the text there
+/// (Python reads garbage). So is an enhanced-stereo group that lists an atom
+/// twice (`|&1:1,1|`), which RDKit 2024.03 keeps and a removal leaves
+/// dangling. Terminated extensions (`C |atomProp:0.p.v|`, `C |SgD:0:x:y:|`)
+/// parse.
 pub fn mol_from_smiles_with_params(smiles: &str, params: &SmilesParserParams) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::mol_from_smiles(
         smiles,
@@ -362,10 +365,14 @@ pub fn mol_to_smarts_with_params(mol: &Mol, params: &SmilesWriteParams) -> Resul
 /// `Error::Value`, as are V3000 S-group values RDKit 2024.03 misreads when
 /// the line ends inside them (`CSTATE=(`, `CSTATE=(4`, `SAP=(3 2 1`, an
 /// empty `PARENT=` or `COMPNO=`, an `ATOMS=(2` array whose nonzero count
-/// ends the line), and `"M  "` lines (an `M  MRV SMA` SMARTS, SMARTSQ data)
-/// holding the CXSMILES fields `SgD:`, `atomProp:`, or `Sg:`, which RDKit
-/// parses as SMARTS with CXSMILES on. The SD suppliers check their records
-/// the same way. Mirrors `rdmolfiles.MolFromMolBlock`.
+/// ends the line), an enhanced-stereo collection that lists an atom twice
+/// or fewer atoms than its count (`ATOMS=(3 1 1 2)`, `ATOMS=(1 )`), an
+/// `M  MRV SMA` SMARTS whose CXSMILES extension RDKit would read past the
+/// end of (as `mol_from_smarts` checks it), and SMARTSQ data (V2000
+/// `M  SCD` and `M  SED`, V3000 lines) holding the CXSMILES fields `SgD:` or
+/// `atomProp:`, which RDKit parses as SMARTS with CXSMILES on. The SD
+/// suppliers check their records the same way. Mirrors
+/// `rdmolfiles.MolFromMolBlock`.
 pub fn mol_from_mol_block(mol_block: &str) -> Result<Mol> {
     mol_from_mol_block_with_params(mol_block, &MolFromMolBlockParams::default())
 }

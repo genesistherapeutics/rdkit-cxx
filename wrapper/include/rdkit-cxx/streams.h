@@ -39,12 +39,17 @@
 //   them). A value after " CSTATE=", " SAP=", " PARENT=", " COMPNO=", or
 //   one of those arrays' names must give RDKit's reads something to read
 //   before the logical line ends (SgroupValue in streams.cpp).
-// - RDKit parses SMARTS in mol blocks, with CXSMILES on: the rest of an
-//   "M  MRV SMA" line and the data of a SMARTSQ data S-group (V2000 "M  SCD"
-//   and "M  SED" lines, V3000 FIELDDATA). A mol block's "M  " lines (V3000
-//   ones joined, V2000 SCD and SED data joined as RDKit joins them) may not
-//   hold "SgD:", "atomProp:", or "Sg:", the CXSMILES fields RDKit 2024.03
-//   reads past the end of (cx_extension_problem in file_checks.h).
+// - RDKit parses SMARTS in mol blocks, with CXSMILES on and strict: the
+//   rest of an "M  MRV SMA" line and the data of a SMARTSQ data S-group
+//   (V2000 "M  SCD" and "M  SED" lines, V3000 FIELDDATA). An "M  MRV SMA"
+//   line is refused where its SMARTS's extension holds a "SgD:" or
+//   "atomProp:" field RDKit 2024.03 reads past the end of
+//   (cx_extension_problem in file_checks.h); V3000 lines (joined) and
+//   V2000 SCD and SED data (joined as RDKit joins them), whichever S-group
+//   they belong to, may not hold either field name.
+// - RDKit 2024.03 reads a V3000 enhanced-stereo collection's atoms with
+//   unchecked extractions and keeps an atom listed twice
+//   (stereo_collection_error in streams.cpp), so such a line is refused.
 //
 // RDKit parses each line as soon as it has read it, and reads a line cut off
 // by the end of the input (or by a refusal) as a whole one. So a byte is
@@ -86,7 +91,7 @@ constexpr std::uint64_t kMaxHold = std::uint64_t{1} << 20;
 // value whose check is pending.
 constexpr std::uint64_t kMaxValueWindow = 4096;
 
-// Finds "SgD:", "atomProp:", and "Sg:" in a stream of bytes.
+// Finds "SgD:" and "atomProp:" in a stream of bytes.
 class CxTokenMatcher {
  public:
   // Takes the byte at `pos`; true if it ends a field name, whose start
@@ -209,6 +214,7 @@ class InputScanner {
   std::uint64_t logical_hold(bool dangers_only, const char **why) const;
   void mol_line_byte(char c, std::uint64_t pos);
   void end_logical_line();
+  std::string mrv_problem() const;
 
   std::string d_error;
   std::uint64_t d_lines = 0;
@@ -234,6 +240,13 @@ class InputScanner {
   // A "\r" in SCD or SED data, which getLine drops if it ends the line.
   bool d_data_cr = false;
   std::uint64_t d_data_cr_pos = 0;
+  // An "M  MRV " line: whether it is "M  MRV SMA", its bytes after the
+  // first seven (at most kMaxHold of them, and whether there were more), and
+  // the start of its first CXSMILES field name, or UINT64_MAX.
+  bool d_mrv = false;
+  bool d_mrv_long = false;
+  std::string d_mrv_line;
+  std::uint64_t d_mrv_danger = UINT64_MAX;
   // The logical V3000 line, joined across continuations.
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
@@ -256,6 +269,9 @@ class InputScanner {
   bool d_in_sgroups = false;
   bool d_sgroup_first = false;
   std::uint64_t d_sgroups_read = 0;
+  // Whether the logical line is in a collection block, whose stereo groups
+  // RDKit reads.
+  bool d_in_collection = false;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.

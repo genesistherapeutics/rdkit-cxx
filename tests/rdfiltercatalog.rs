@@ -737,12 +737,10 @@ fn loading_checks_matchers() {
     // 2024.03 reads into info of that type, as Python does: PDBRESIDUE gives
     // PDB residue info, and an unknown type is RDKit's error.
     let mut pattern = mol_from_smarts("[#6]").unwrap();
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    pattern.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    pattern
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut catalog = FilterCatalog::default();
     let matcher = SmartsMatcher::from_mol("marked", &pattern);
     catalog.add_entry(&FilterCatalogEntry::new("marked", &matcher).unwrap());

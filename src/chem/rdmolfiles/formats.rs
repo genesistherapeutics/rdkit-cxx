@@ -171,9 +171,11 @@ defaults! {
     }
 }
 
-/// Parses a Tripos Mol2 block with Corina atom types. Mirrors
-/// `rdmolfiles.MolFromMol2Block`, which returns `None` where this returns an
-/// error.
+/// Parses a Tripos Mol2 block with Corina atom types. A bond line naming an
+/// atom number outside the molecule's atoms is `Error::Value`: RDKit 2024.03
+/// refuses it only when both are (rdkit/rdkit#9417), and reads past its
+/// atom table for the other. Mirrors `rdmolfiles.MolFromMol2Block`, which
+/// returns `None` where this returns an error.
 pub fn mol_from_mol2_block(mol2_block: &str) -> Result<Mol> {
     mol_from_mol2_block_with_params(mol2_block, &MolFromMol2BlockParams::default())
 }
@@ -192,7 +194,9 @@ pub fn mol_from_mol2_block_with_params(
     )?))
 }
 
-/// Reads a Tripos Mol2 file. Mirrors `rdmolfiles.MolFromMol2File`.
+/// Reads a Tripos Mol2 file, read once and checked as
+/// `mol_from_mol2_block` checks a block. Mirrors
+/// `rdmolfiles.MolFromMol2File`.
 pub fn mol_from_mol2_file(mol2_file_name: impl AsRef<Path>) -> Result<Mol> {
     mol_from_mol2_file_with_params(mol2_file_name, &MolFromMol2FileParams::default())
 }
@@ -233,8 +237,9 @@ defaults! {
     }
 }
 
-/// Parses a Marvin document. A bond with fewer than two atom references is
-/// `Error::Parse`. Mirrors `rdmolfiles.MolFromMrvBlock`, which returns `None`
+/// Parses a Marvin document. A bond with fewer than two atom references, and
+/// an atom array with two atoms of one id (RDKit 2024.03 puts both in a
+/// stereo group as the first, listing it twice), are `Error::Parse`. Mirrors `rdmolfiles.MolFromMrvBlock`, which returns `None`
 /// where this returns an error.
 pub fn mol_from_mrv_block(mrv_block: &str) -> Result<Mol> {
     mol_from_mrv_block_with_params(mrv_block, &MolFromMrvBlockParams::default())

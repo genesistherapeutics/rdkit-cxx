@@ -13,8 +13,8 @@ use std::path::PathBuf;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
 use rdkit_cxx::chem::{
-    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, ChiralType, Mol, PropValue,
-    PropertyPickleOptions, SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
+    AtomMonomerInfo, AtomMonomerType, ChiralType, Mol, PropValue, PropertyPickleOptions,
+    SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
 };
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
@@ -504,64 +504,6 @@ fn marvin_bonds_need_two_atoms() {
 }
 
 #[test]
-fn cdxml() {
-    let rxns = reactions_from_cdxml_file(data("rxn1.cdxml")).unwrap();
-    assert_eq!(rxns.len(), 1);
-    assert_eq!(
-        reaction_to_smarts(&rxns[0]).unwrap(),
-        "[#6&D2:2]1:[#6&D2:3]:[#6&D2:4]:[#6&D3:1](:[#6&D2:5]:[#6&D2:6]:1)-[#17&D1].\
-         [#6&D3](-[#5&D2]-[#6&D3:7]1:[#6&D2:8]:[#6&D2:9]:[#6&D2:10]:[#6&D2:11]:[#6&D2:12]:1)\
-         (-[#8&D1])-[#8&D1]>>[#6&D2:1]1:[#6&D2:5]:[#6&D3:6](:[#6&D2:2]:[#6&D2:3]:[#6&D2:4]:1)\
-         -[#6&D3:7]1:[#6&D2:8]:[#6&D2:9]:[#6&D2:10]:[#6&D2:11]:[#6&D2:12]:1"
-    );
-    let text = std::fs::read_to_string(data("rxn1.cdxml")).unwrap();
-    assert_eq!(reactions_from_cdxml_block(&text).unwrap().len(), 1);
-    let params = ReactionsFromCDXMLBlockParams {
-        sanitize: true,
-        remove_hs: true,
-    };
-    assert_eq!(
-        reactions_from_cdxml_block_with_params(&text, &params)
-            .unwrap()
-            .len(),
-        1
-    );
-    assert_eq!(
-        reactions_from_cdxml_file_with_params(data("rxn1.cdxml"), &params)
-            .unwrap()
-            .len(),
-        1
-    );
-    assert!(matches!(
-        reactions_from_cdxml_file(common::temp_path("missing.cdxml")),
-        Err(Error::Os { .. })
-    ));
-    // The ChemDraw library appends to a step's atom map until memory runs
-    // out once a token fails to read as an int.
-    let auto = r#"ReactionStepAtomMapAuto="300 354 302"#;
-    assert!(text.contains(auto));
-    for token in ["x", "1.5", "2147483648", "4294967295", "5x", "&#52;"] {
-        let bad = text.replacen(
-            auto,
-            &format!(r#"ReactionStepAtomMapAuto="300 354 {token}"#),
-            1,
-        );
-        assert!(
-            matches!(reactions_from_cdxml_block(&bad), Err(Error::Parse { .. })),
-            "{token}"
-        );
-    }
-    for token in ["2147483647", "-1", "+7"] {
-        let fine = text.replacen(
-            auto,
-            &format!(r#"ReactionStepAtomMapAuto="300 354 {token}"#),
-            1,
-        );
-        assert!(reactions_from_cdxml_block(&fine).is_ok(), "{token}");
-    }
-}
-
-#[test]
 fn molecules_with_roles() {
     let rxn = amide();
     let mol = reaction_to_molecule(&rxn).unwrap();
@@ -1048,6 +990,27 @@ fn recursive_queries() {
             .unwrap(),
         [vec![], vec![]]
     );
+    // RDKit parses a label that names no query as SMARTS, with CXSMILES on:
+    // one whose extension RDKit 2024.03 would read past the end of is
+    // refused, and one it reads is a query.
+    let text = std::fs::read_to_string(data("boronic1.rxn")).unwrap();
+    for (label, refused) in [("[Br] |atomProp:0.p.v", true), ("[Br]", false)] {
+        let mut rxn = reaction_from_rxn_block(&text.replace(
+            "V    1 halogen.bromine.aromatic",
+            &format!("V    1 {label}"),
+        ))
+        .unwrap();
+        rxn.initialize().unwrap();
+        let mut params = params.clone();
+        params.queries.remove("halogen.bromine.aromatic");
+        let result = rxn.add_recursive_queries_to_reaction_with_params(&params);
+        assert_eq!(
+            matches!(&result, Err(Error::Value { message }) if message.contains("CXSMILES")),
+            refused,
+            "{label}: {result:?}"
+        );
+        assert_eq!(result.is_ok(), !refused, "{label}");
+    }
 }
 
 #[test]
@@ -1250,12 +1213,10 @@ fn long_stereo_group_lines_are_refused() {
 /// its pickle, and where the info's type is in it.
 fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    methane
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
     rxn.add_agent_template(&methane);
     let pkl = rxn.to_binary();

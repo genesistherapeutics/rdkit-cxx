@@ -45,14 +45,16 @@ std::unique_ptr<FragmentRemover> fragment_remover_default() {
 std::unique_ptr<FragmentRemover> fragment_remover_new(
     rust::Slice<const std::uint8_t> fragment_filename, bool leave_last,
     bool skip_if_all_match) {
-  check_file_cx_fields(to_path(fragment_filename), "the fragment file");
+  // RDKit's fragment reader parses no CXSMILES extension: it erases the
+  // spaces from the SMARTS it splits at tabs (read_transformation_lines in
+  // file_checks.h), so the file needs no check.
   return std::make_unique<FragmentRemover>(to_path(fragment_filename),
                                            leave_last, skip_if_all_match);
 }
 
 std::unique_ptr<FragmentRemover> fragment_remover_from_data(
     rust::Str fragment_data, bool leave_last, bool skip_if_all_match) {
-  check_text_cx_fields(std::string(fragment_data), "the fragment data");
+  // As fragment_remover_new, the data needs no check.
   std::istringstream in{std::string(fragment_data)};
   return std::make_unique<FragmentRemover>(in, leave_last, skip_if_all_match);
 }

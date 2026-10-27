@@ -76,10 +76,7 @@ fn kekulize_forms() {
     let mut benzene = mol_from_smiles("c1ccccc1").unwrap();
     kekulize(&mut benzene).unwrap();
     assert!(benzene.get_atoms().all(|a| a.get_is_aromatic()));
-    let clear = KekulizeParams {
-        clear_aromatic_flags: true,
-    };
-    kekulize_with_params(&mut benzene, &clear).unwrap();
+    kekulize_with_clear_aromatic_flags(&mut benzene, true).unwrap();
     assert!(benzene.get_atoms().all(|a| !a.get_is_aromatic()));
     let kekule = SmilesWriteParams {
         do_kekule: true,
@@ -91,12 +88,6 @@ fn kekulize_forms() {
     );
     assert!(matches!(kekulize(&mut unsanitized("c1cccc1")),
                      Err(Error::Kekulize { atom_indices, .. }) if atom_indices == [0, 1, 2, 3, 4]));
-    assert_eq!(
-        KekulizeParams::default(),
-        KekulizeParams {
-            clear_aromatic_flags: false
-        }
-    );
 }
 
 #[test]

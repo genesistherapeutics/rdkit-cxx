@@ -7,9 +7,10 @@
 //! with the RASCAL algorithm, and the clusterings built on its similarity.
 //!
 //! The wrapper checks what RDKit trusts (CONVENTIONS.md U1): a
-//! `max_frag_separation` below -1 and a NaN similarity threshold, which
-//! RDKit reads past a matrix and casts, and equivalent-atom SMARTS that do
-//! not parse, which RDKit dereferences. Molecules past the sizes RDKit's `int`
+//! `max_frag_separation` other than -1, with which RDKit 2024.03 reads a
+//! fragment it dropped through a null pointer, a NaN similarity threshold,
+//! which RDKit casts, and equivalent-atom SMARTS that do not parse, which
+//! RDKit dereferences. Molecules past the sizes RDKit's `int`
 //! arithmetic allows are refused. Each MCES matches substructures, so the
 //! clusterings run their pairs on the calling thread (CONVENTIONS.md U4),
 //! where an error is returned rather than ending the process.
@@ -43,8 +44,10 @@ pub struct RascalOptions {
     pub single_largest_frag: bool,
     /// The fewest atoms in a fragment of the MCES; -1 for no minimum.
     pub min_frag_size: i32,
-    /// The most bonds between fragments of the MCES; -1 for no limit, and
-    /// below -1 is `Error::Value`.
+    /// The most bonds between fragments of the MCES; -1 for no limit, the
+    /// only value accepted (any other is `Error::Value`): RDKit 2024.03
+    /// reads a fragment it dropped through a null pointer when it applies
+    /// one.
     pub max_frag_separation: i32,
     /// Returns every MCES of the largest size, not just the first.
     pub all_best_mcess: bool,

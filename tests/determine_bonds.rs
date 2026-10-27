@@ -426,11 +426,14 @@ fn monomer_info_connect_the_dots_would_misread() {
             },
         )
     };
-    // Python's results: with no residues the hydrogen keeps its first
-    // bond, and with PDB residues the bond within its residue.
+    // RDKit 2024.03 bonds the hydrogen to both carbons and then removes one
+    // of the bonds while it iterates over them (rdkit/rdkit#9444; Python
+    // gives (0, 1), by chance).
     let mut mol = atoms(BRIDGE);
-    determine_connectivity(&mut mol).unwrap();
-    assert_eq!(bonds(&mol), vec![(0, 1)]);
+    assert!(value(determine_connectivity(&mut mol)));
+    assert!(value(determine_bonds(&mut mol)));
+    // With PDB residues, the hydrogen is not bonded across residues: it has
+    // one bond, as in Python.
     let mut mol = atoms(BRIDGE);
     for (i, residue) in [1, 2, 2].into_iter().enumerate() {
         mol.get_atom_with_idx_mut(i as u32)
@@ -439,25 +442,35 @@ fn monomer_info_connect_the_dots_would_misread() {
     }
     determine_connectivity(&mut mol).unwrap();
     assert_eq!(bonds(&mol), vec![(1, 2)]);
+    // Two residues apart, the blacklisted pair is not bonded.
+    let mut mol = atoms(BRIDGE);
+    for (i, residue) in [1, 2, 3].into_iter().enumerate() {
+        let mut info = pdb(residue);
+        info.set_residue_name("HOH");
+        mol.get_atom_with_idx_mut(i as u32)
+            .unwrap()
+            .set_pdb_residue_info(&info);
+    }
+    determine_connectivity(&mut mol).unwrap();
+    assert!(bonds(&mol).is_empty());
+    // A hydrogen among four carbons, which RDKit's pruning leaves with two
+    // bonds (rdkit/rdkit#9444).
+    let mut mol =
+        mol_from_xyz_block("5\n\nH 0 0 0\nC 1 0 0\nC -1 0 0\nC 0 1 0\nC 0 -1 0\n").unwrap();
+    assert!(value(determine_connectivity(&mut mol)));
 
     // RDKit would read other monomer info as PDB residue info, past its
     // end, whatever its type (U10); the call hides it, and puts it back.
-    let mut mol = atoms(BRIDGE);
-    for (i, name) in ["A", "B", "C"].into_iter().enumerate() {
-        let info = AtomMonomerInfo::new_with_params(
-            AtomMonomerType::Other,
-            &AtomMonomerInfoParams {
-                name: name.to_owned(),
-            },
-        )
-        .unwrap();
+    let mut mol = atoms(METHYL);
+    for (i, name) in ["A", "B", "C", "D"].into_iter().enumerate() {
+        let info = AtomMonomerInfo::new_with_name(AtomMonomerType::Other, name).unwrap();
         mol.get_atom_with_idx_mut(i as u32)
             .unwrap()
             .set_monomer_info(&info);
     }
     determine_connectivity(&mut mol).unwrap();
-    assert_eq!(bonds(&mol), vec![(0, 1)]);
-    for (i, name) in ["A", "B", "C"].into_iter().enumerate() {
+    assert_eq!(bonds(&mol), vec![(0, 1), (0, 2), (0, 3)]);
+    for (i, name) in ["A", "B", "C", "D"].into_iter().enumerate() {
         let info = mol
             .get_atom_with_idx(i as u32)
             .unwrap()

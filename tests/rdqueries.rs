@@ -309,7 +309,10 @@ fn owned_bonds() {
     query.set_bond_type(BondType::Double);
     assert_eq!(query.get_bond_type(), BondType::Double);
     assert!(query.set_stereo_atoms(0, 1).is_err());
-    assert!(matches!(query.get_smarts(), Err(Error::Value { .. })));
+    // RDKit 2024.03 throws what Python reports as an "unidentifiable C++
+    // exception" (RuntimeError).
+    let smarts = query.get_smarts();
+    assert!(matches!(smarts, Err(Error::Runtime { .. })), "{smarts:?}");
     let mut m = RWMol::from(mol());
     m.get_bond_with_idx_mut(0)
         .unwrap()

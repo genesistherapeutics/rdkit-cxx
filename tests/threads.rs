@@ -151,9 +151,6 @@ fn main() {
         .unwrap()
         .draw_molecule(&depicted(ASPIRIN))
         .unwrap();
-    // And DCLV's (its icosahedron's vertices, a function-local static).
-    let dclv = dclv_surfaces();
-    (dclv.run)((dclv.make)(0));
     std::fs::write(
         templates(),
         "C1CC2CCC1C2 |(1.55254,0.75,;1.55254,-0.75,;0.125954,-1.21353,;-1.30063,-0.75,;\

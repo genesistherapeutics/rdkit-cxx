@@ -39,7 +39,7 @@ std::vector<MS::ChargeCorrection> checked(
   std::vector<MS::ChargeCorrection> result;
   for (const auto &cc : ccs) {
     std::string smarts = text(cc.smarts);
-    check_smiles_cx(smarts);
+    check_smiles_cx(smarts, true, true);
     std::unique_ptr<RDKit::ROMol> query(RDKit::SmartsToMol(smarts));
     if (!query) {
       throw ValueErrorException("charge correction SMARTS do not parse: " +
@@ -74,8 +74,10 @@ std::unique_ptr<Reionizer> reionizer_default() {
 std::unique_ptr<Reionizer> reionizer_new(
     rust::Slice<const std::uint8_t> acidbase_file,
     rust::Slice<const ChargeCorrectionData> ccs, bool default_ccs) {
+  // RDKit's acid-base reader parses no CXSMILES extension: it erases the
+  // spaces from the SMARTS it splits at tabs (read_transformation_lines in
+  // file_checks.h), so the file needs no check.
   auto name = to_path(acidbase_file);
-  check_file_cx_fields(name, "the acid-base file");
   if (default_ccs) {
     return std::make_unique<Reionizer>(name);
   }
@@ -84,8 +86,8 @@ std::unique_ptr<Reionizer> reionizer_new(
 
 std::unique_ptr<Reionizer> reionizer_from_data(
     rust::Str param_data, rust::Slice<const ChargeCorrectionData> ccs) {
+  // As reionizer_new, the data needs no check.
   auto corrections = checked(ccs);
-  check_text_cx_fields(std::string(param_data), "the acid-base data");
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Reionizer>(in, corrections);
 }

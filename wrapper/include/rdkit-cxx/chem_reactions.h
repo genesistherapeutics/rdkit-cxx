@@ -49,13 +49,6 @@ struct SmilesWriteParamsData;
 struct SubstructMatchParametersData;
 struct AdjustQueryParametersData;
 
-// Reactions RDKit returns in a list (the CDXML parsers), moved out one at a
-// time.
-class ReactionList {
- public:
-  std::vector<std::unique_ptr<ChemicalReaction>> items;
-};
-
 // Product sets from running a reaction: one list of products per match, each
 // with one product per product template.
 class ProductSets {
@@ -80,10 +73,6 @@ std::size_t product_sets_size(const ProductSets &sets);
 std::size_t product_sets_set_size(const ProductSets &sets, std::size_t i);
 std::unique_ptr<RWMol> product_sets_take(ProductSets &sets, std::size_t i,
                                          std::size_t j);
-
-std::size_t reaction_list_size(const ReactionList &list);
-std::unique_ptr<ChemicalReaction> reaction_list_take(ReactionList &list,
-                                                     std::size_t i);
 
 // The ChemicalReaction class. Templates are selected by `kind`: 0 for
 // reactants, 1 for products, 2 for agents.
@@ -160,11 +149,6 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs);
 bool mrv_block_is_reaction(rust::Str mrv);
 bool mrv_file_is_reaction(rust::Slice<const std::uint8_t> path);
-std::unique_ptr<ReactionList> reactions_from_cdxml_block(rust::Str cdxml,
-                                                         bool sanitize,
-                                                         bool remove_hs);
-std::unique_ptr<ReactionList> reactions_from_cdxml_file(
-    rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs);
 std::unique_ptr<std::string> reaction_to_rxn_block(const ChemicalReaction &rxn,
                                                    bool separate_agents,
                                                    bool force_v3000);

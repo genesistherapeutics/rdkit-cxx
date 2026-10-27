@@ -72,6 +72,24 @@ bool sums_charges(StandardizeOp op, bool skip_standardize) {
   }
 }
 
+// Whether the op makes a normalizer from its parameters (MolStandardize.cpp:
+// cleanupInPlace normalizes, and the parents call it unless they skip it,
+// the charge, tautomer, and super parents also after).
+bool reads_normalizations(StandardizeOp op, bool skip_standardize) {
+  switch (op) {
+    case StandardizeOp::Reionize:
+    case StandardizeOp::RemoveFragments:
+    case StandardizeOp::CanonicalTautomer:
+      return false;
+    case StandardizeOp::FragmentParent:
+    case StandardizeOp::StereoParent:
+    case StandardizeOp::IsotopeParent:
+      return !skip_standardize;
+    default:
+      return true;
+  }
+}
+
 // As canonicalTautomerInPlace in MolStandardize.cpp, with a checked
 // enumerator.
 void canonical_tautomer_in_place(RWMol &mol,
@@ -117,6 +135,9 @@ class Standardizer {
       : d_op(op),
         d_params(to_cleanup_parameters(data)),
         d_skip(skip_standardize) {
+    if (reads_normalizations(op, skip_standardize)) {
+      read_normalizations(d_params);
+    }
     switch (op) {
       case StandardizeOp::Normalize:
         d_normalizer.reset(MS::normalizerFromParams(d_params));
@@ -299,13 +320,10 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
   params.acidbaseFile = path(data.acidbase_file);
   params.fragmentFile = path(data.fragment_file);
   params.tautomerTransforms = path(data.tautomer_transforms);
-  // The standardizers read these files and the data below with RDKit's
-  // text-format readers (file_checks.h).
-  check_file_cx_fields(params.normalizations, "the normalizations file");
-  check_file_cx_fields(params.acidbaseFile, "the acid-base file");
-  check_file_cx_fields(params.fragmentFile, "the fragment file");
-  check_file_cx_fields(params.tautomerTransforms,
-                       "the tautomer transforms file");
+  // The standardizers read the data below with RDKit's text-format readers,
+  // which parse it with CXSMILES on (file_checks.h); of the files, only the
+  // normalizations can hold an extension, which read_normalizations checks
+  // where RDKit reads them.
   params.maxRestarts = data.max_restarts;
   params.preferOrganic = data.prefer_organic;
   params.doCanonical = data.do_canonical;
@@ -325,20 +343,43 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
   }
   for (const auto &e : data.fragment_data) {
     params.fragmentData.emplace_back(text(e.name), text(e.first));
-    check_smiles_cx(std::get<1>(params.fragmentData.back()));
+    check_smiles_cx(std::get<1>(params.fragmentData.back()), true, true);
   }
   for (const auto &e : data.acidbase_data) {
     params.acidbaseData.emplace_back(text(e.name), text(e.first),
                                      text(e.second));
-    check_smiles_cx(std::get<1>(params.acidbaseData.back()));
-    check_smiles_cx(std::get<2>(params.acidbaseData.back()));
+    check_smiles_cx(std::get<1>(params.acidbaseData.back()), true, true);
+    check_smiles_cx(std::get<2>(params.acidbaseData.back()), true, true);
   }
   for (const auto &e : data.tautomer_transform_data) {
     params.tautomerTransformData.emplace_back(text(e.name), text(e.first),
                                               text(e.second), text(e.third));
-    check_smiles_cx(std::get<1>(params.tautomerTransformData.back()));
+    check_smiles_cx(std::get<1>(params.tautomerTransformData.back()), true,
+                    true);
   }
   return params;
+}
+
+// RDKit reads a normalizations file it is named each time it makes a
+// normalizer from the parameters (normalizerFromParams, which cleanup calls
+// for each molecule), so a check of the file could be raced. This reads it
+// once, checks its reactions (check_transformation_lines), and hands RDKit
+// them as data, which RDKit reads as it reads the file's lines.
+void read_normalizations(CleanupParameters &params) {
+  if (params.normalizations.empty() || !params.normalizationData.empty()) {
+    return;  // RDKit's defaults, or the data, which RDKit reads instead
+  }
+  auto data = read_transformation_lines(read_file(params.normalizations));
+  for (const auto &entry : data) {
+    check_reaction_cx(entry.second);
+  }
+  if (data.empty()) {
+    // RDKit would read the file again for want of data.
+    throw ValueErrorException("the normalizations file " +
+                              params.normalizations +
+                              " holds no transformations");
+  }
+  params.normalizationData = std::move(data);
 }
 
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params) {
@@ -510,7 +551,8 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
 std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   std::string input(smiles);
-  check_smiles_cx(input);
+  // SmilesToMol's default parameters parse CXSMILES strictly.
+  check_smiles_cx(input, true, true);
   std::unique_ptr<RWMol> mol{RDKit::SmilesToMol(input, 0, false)};
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +
