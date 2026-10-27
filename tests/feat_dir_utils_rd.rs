@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Values from Python's rdkit.Chem.Features.FeatDirUtilsRD in RDKit
-// 2026.03.6, for every heavy atom of a molecule in tests/data, and the tests
+// 2025.03.6, for every heavy atom of a molecule in tests/data, and the tests
 // of UnitTestFeatDirUtilsRD.py.
 
 // Coordinates such as 0.3927 are not approximations of π/8.

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Ports RDKit's rdkit/Chem/UnitTestSpacialScore.py (RDKit 2026.03.6).
+// Ports RDKit's rdkit/Chem/UnitTestSpacialScore.py (RDKit 2025.03.6).
 
 use rdkit_cxx::chem::mol_from_smiles;
 use rdkit_cxx::chem::spacial_score::{sps, sps_with_normalize};

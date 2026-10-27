@@ -133,13 +133,14 @@ fn try_embedding() {
     assert_eq!(isomer.get_num_atoms(), 8);
     assert_eq!(isomer.get_num_conformers(), 1);
     assert!(isomer.get_conformer().unwrap().is_3d());
-    // Without stereo elements nothing is embedded.
+    // Without stereo elements RDKit 2025.03's enumerator still embeds the
+    // one molecule it returns, as Python's rdEnumerateStereoisomers does.
     let plain = StereoisomerEnumerator::new_with_params(&mol_from_smiles("CCO").unwrap(), &options)
         .unwrap()
         .next()
         .unwrap()
         .unwrap();
-    assert_eq!(plain.get_num_conformers(), 0);
+    assert_eq!(plain.get_num_conformers(), 1);
     // verbose defaults to true, as in Python.
     assert_eq!(StereoisomerEnumerator::new(&mol).unwrap().count(), 8);
 }

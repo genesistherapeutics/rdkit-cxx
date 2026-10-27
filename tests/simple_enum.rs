@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports SimpleEnum.Enumerator's doctests; values from Python's module in
-// RDKit 2026.03.6. The reactions with atom lists are inlined, their
+// RDKit 2025.03.6. The reactions with atom lists are inlined, their
 // fixed-width lines' trailing spaces escaped.
 
 mod common;
