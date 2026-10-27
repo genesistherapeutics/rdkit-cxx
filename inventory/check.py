@@ -26,7 +26,7 @@ import sys
 import tomllib
 
 HERE = pathlib.Path(__file__).parent
-DEFAULT_INVENTORIES = [HERE / "inventory-2026.03.json", HERE / "python-2026.03.json"]
+DEFAULT_INVENTORIES = [HERE / "inventory-2025.03.json", HERE / "python-2025.03.json"]
 DEFAULT_MANIFEST = HERE / "manifest.toml"
 
 # addlicense's BSD header, so the generated file matches what it writes.

@@ -37,8 +37,6 @@ pub(crate) mod ffi {
         fn mol_clear_property_cache(mol: Pin<&mut RWMol>) -> Result<()>;
         fn mol_needs_update_property_cache(mol: &RWMol) -> Result<bool>;
         fn mol_has_query(mol: &RWMol) -> Result<bool>;
-        fn mol_get_name(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
-        fn mol_set_name(mol: Pin<&mut RWMol>, name: &str) -> Result<()>;
         fn mol_debug(mol: &RWMol, use_stdout: bool) -> Result<()>;
         fn mol_get_aromatic_atoms(mol: &RWMol) -> Result<Vec<u32>>;
 

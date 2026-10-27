@@ -152,10 +152,6 @@ pub struct RGroupDecompositionParameters {
     /// Allows several R groups on an unlabeled core atom. Mirrors
     /// `RGroupDecompositionParameters.allowMultipleRGroupsOnUnlabelled`.
     pub allow_multiple_r_groups_on_unlabelled: bool,
-    /// Allows a core to match a molecule more than once, on different
-    /// atoms. Mirrors
-    /// `RGroupDecompositionParameters.allowMultipleCoresInSameMol`.
-    pub allow_multiple_cores_in_same_mol: bool,
     /// Matches the cores' tautomers. RDKit's tautomer matcher reads the
     /// matches of a recursive SMARTS (`$(...)`) as the core's, past their
     /// end, so a core with one is `Error::Value`. Mirrors
@@ -213,7 +209,6 @@ impl Default for RGroupDecompositionParameters {
             remove_hydrogens_post_match: d.remove_hydrogens_post_match,
             allow_non_terminal_r_groups: d.allow_non_terminal_r_groups,
             allow_multiple_r_groups_on_unlabelled: d.allow_multiple_r_groups_on_unlabelled,
-            allow_multiple_cores_in_same_mol: d.allow_multiple_cores_in_same_mol,
             do_tautomers: d.do_tautomers,
             do_enumeration: d.do_enumeration,
             include_target_mol_in_results: d.include_target_mol_in_results,
@@ -244,7 +239,6 @@ impl RGroupDecompositionParameters {
             remove_hydrogens_post_match: self.remove_hydrogens_post_match,
             allow_non_terminal_r_groups: self.allow_non_terminal_r_groups,
             allow_multiple_r_groups_on_unlabelled: self.allow_multiple_r_groups_on_unlabelled,
-            allow_multiple_cores_in_same_mol: self.allow_multiple_cores_in_same_mol,
             do_tautomers: self.do_tautomers,
             do_enumeration: self.do_enumeration,
             include_target_mol_in_results: self.include_target_mol_in_results,

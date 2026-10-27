@@ -5,13 +5,11 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::MolAlign::BestAlignmentParams`, with its atom maps flattened
-    /// (each map's length in `map_counts`), plus the keyword arguments the
-    /// functions that take it add.
+    /// The best-alignment functions' keyword arguments, with their atom maps
+    /// flattened (each map's length in `map_counts`).
     struct BestAlignmentParamsData {
         max_matches: i32,
         symmetrize_conjugated_terminal_groups: bool,
-        ignore_hs: bool,
         num_threads: i32,
         map_pairs: Vec<IndexPair>,
         map_counts: Vec<u32>,
@@ -45,8 +43,6 @@ pub(crate) mod ffi {
         type MMFFMolProperties = crate::ffi::force_field::ffi::MMFFMolProperties;
         type O3AHolder;
         type O3AList;
-
-        fn best_alignment_params_default() -> Result<BestAlignmentParamsData>;
 
         #[allow(clippy::too_many_arguments)]
         fn get_alignment_transform(

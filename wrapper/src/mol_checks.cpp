@@ -30,7 +30,7 @@ namespace rdkit_cxx {
 // names a caller can prefix, so they are found by type rather than by name.
 void clear_matrix_caches(const RDKit::ROMol &mol) {
   std::vector<std::string> keys;
-  for (const auto &pair : mol.getDict()) {
+  for (const auto &pair : mol.getDict().getData()) {
     if (RDKit::rdvalue_is<boost::shared_array<double>>(pair.val) ||
         RDKit::rdvalue_is<boost::shared_array<int>>(pair.val)) {
       keys.push_back(pair.key);

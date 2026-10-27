@@ -5,8 +5,8 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// pubchem_shape's `ShapeInputOptions`, with its pairs and triples as
-    /// parallel vectors (A7).
+    /// pubchem_shape's `ShapeInputOptions`, with its pairs as parallel
+    /// vectors (A7).
     struct ShapeInputOptionsData {
         use_colors: bool,
         include_dummies: bool,
@@ -15,20 +15,14 @@ pub(crate) mod ffi {
         not_color_atoms: Vec<u32>,
         atom_radii_atoms: Vec<u32>,
         atom_radii_values: Vec<f64>,
-        custom_feature_types: Vec<u32>,
-        custom_feature_positions: Vec<Point3D>,
-        custom_feature_radii: Vec<f64>,
-        normalize: bool,
     }
 
     unsafe extern "C++" {
         include!("rdkit-cxx/errors.h");
         include!("rdkit-cxx/shape_align.h");
-        include!("rdkit-cxx/ffi/geometry.rs.h");
 
         type RWMol = crate::ffi::mol::ffi::RWMol;
         type Conformer = crate::ffi::conformer::ffi::Conformer;
-        type Point3D = crate::ffi::geometry::ffi::Point3D;
         type PubChemShapeInput;
 
         fn pubchem_shape_input_options_default() -> Result<ShapeInputOptionsData>;
@@ -47,7 +41,6 @@ pub(crate) mod ffi {
             shape: &PubChemShapeInput,
         ) -> Result<Vec<u32>>;
         fn pubchem_shape_input_shift(shape: &PubChemShapeInput) -> Result<Vec<f64>>;
-        fn pubchem_shape_input_inertial_rot(shape: &PubChemShapeInput) -> Result<Vec<f64>>;
         fn pubchem_shape_input_sov(shape: &PubChemShapeInput) -> Result<f64>;
         fn pubchem_shape_input_sof(shape: &PubChemShapeInput) -> Result<f64>;
 
@@ -55,10 +48,9 @@ pub(crate) mod ffi {
         fn pubchem_align_mol(
             reference: &RWMol,
             probe: Pin<&mut RWMol>,
-            ref_opts: &ShapeInputOptionsData,
-            probe_opts: &ShapeInputOptionsData,
             ref_conf_id: i32,
             probe_conf_id: i32,
+            use_colors: bool,
             opt_param: f64,
             max_preiters: u32,
             max_postiters: u32,
@@ -83,30 +75,10 @@ pub(crate) mod ffi {
         ) -> Result<Vec<f64>>;
         fn pubchem_transform_conformer_to_shape(
             final_trans: &[f64],
-            final_rot: &[f64],
             matrix: &[f64],
             probe_shape: &PubChemShapeInput,
             probe_conformer: Pin<&mut Conformer>,
         ) -> Result<()>;
-        fn pubchem_score_mol(
-            mol1: &RWMol,
-            mol2: &RWMol,
-            mol1_opts: &ShapeInputOptionsData,
-            mol2_opts: &ShapeInputOptionsData,
-            mol1_conf_id: i32,
-            mol2_conf_id: i32,
-        ) -> Result<Vec<f64>>;
-        fn pubchem_score_mol_shape_input(
-            shape: &PubChemShapeInput,
-            mol: &RWMol,
-            mol_opts: &ShapeInputOptionsData,
-            mol_conf_id: i32,
-        ) -> Result<Vec<f64>>;
-        fn pubchem_score_shape(
-            shape1: &PubChemShapeInput,
-            shape2: &PubChemShapeInput,
-            use_colors: bool,
-        ) -> Result<Vec<f64>>;
     }
 }
 

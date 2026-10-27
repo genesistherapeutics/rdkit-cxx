@@ -600,8 +600,6 @@ pub struct MolzipParams {
     /// coordinates; those calls return `Error::Value` for a result the
     /// depictor would mishandle (see `chem::rd_depictor`).
     pub generate_coordinates: bool,
-    /// Aligns the inputs' coordinates along the new bonds.
-    pub align_coordinates: bool,
 }
 
 impl MolzipParams {
@@ -617,7 +615,6 @@ impl MolzipParams {
             atom_symbols: self.atom_symbols.clone(),
             enforce_valence_rules: self.enforce_valence_rules,
             generate_coordinates: self.generate_coordinates,
-            align_coordinates: self.align_coordinates,
         }
     }
 }
@@ -630,7 +627,6 @@ impl Default for MolzipParams {
             atom_symbols: data.atom_symbols,
             enforce_valence_rules: data.enforce_valence_rules,
             generate_coordinates: data.generate_coordinates,
-            align_coordinates: data.align_coordinates,
         }
     }
 }

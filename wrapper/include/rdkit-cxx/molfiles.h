@@ -18,6 +18,7 @@
 #include <vector>
 
 #include <GraphMol/FileParsers/CDXMLParser.h>
+#include <GraphMol/chemdraw.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
@@ -35,6 +36,7 @@ using RestoreBondDirOption = RDKit::RestoreBondDirOption;
 using SCSRTemplateNames = RDKit::v2::FileParsers::SCSRTemplateNames;
 using SCSRBaseHbondOptions = RDKit::v2::FileParsers::SCSRBaseHbondOptions;
 using CDXMLFormat = RDKit::v2::CDXMLParser::CDXMLFormat;
+using CDXFormat = RDKit::v2::CDXFormat;
 
 // Shared structs, defined by the bridge (src/ffi/molfiles.rs).
 struct SmilesParserParamsData;
@@ -104,8 +106,8 @@ rust::Vec<std::int32_t> canonical_rank_atoms_in_fragment(
     bool break_ties, bool include_chirality, bool include_isotopes,
     bool include_atom_maps, bool include_chiral_presence);
 void canonicalize_enhanced_stereo(RWMol &mol);
-void create_property_list(RWMol &mol, bool bonds, std::uint8_t kind,
-                          rust::Str prop_name, rust::Str missing_value_marker,
+void create_property_list(RWMol &mol, std::uint8_t kind, rust::Str prop_name,
+                          rust::Str missing_value_marker,
                           std::uint32_t line_size);
 
 std::unique_ptr<RWMol> mol_from_mol_block(rust::Str mol_block, bool sanitize,
@@ -194,7 +196,7 @@ std::unique_ptr<std::string> mol_to_fasta(const RWMol &mol);
 std::unique_ptr<std::string> mol_to_helm(const RWMol &mol);
 bool has_chem_draw_cdx_support();
 // Checks the coordinates RDKit converts to fixed point.
-rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
-                                           CDXMLFormat format);
+rust::Vec<std::uint8_t> mol_to_chem_draw_block(const RWMol &mol,
+                                               CDXFormat format);
 
 }  // namespace rdkit_cxx

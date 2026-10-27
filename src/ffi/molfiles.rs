@@ -106,6 +106,14 @@ pub(crate) mod ffi {
         Auto = 2,
     }
 
+    /// `RDKit::CDXFormat`, ChemDraw's writer's format; cxx checks the values.
+    #[repr(i32)]
+    #[allow(clippy::upper_case_acronyms)]
+    enum CDXFormat {
+        CDX = 1,
+        CDXML = 2,
+    }
+
     /// `MolFromSCSRParams`.
     struct MolFromSCSRParamsData {
         include_leaving_groups: bool,
@@ -125,6 +133,7 @@ pub(crate) mod ffi {
         type SCSRTemplateNames;
         type SCSRBaseHbondOptions;
         type CDXMLFormat;
+        type CDXFormat;
 
         fn smiles_parser_params_default() -> Result<SmilesParserParamsData>;
         fn smarts_parser_params_default() -> Result<SmartsParserParamsData>;
@@ -215,7 +224,6 @@ pub(crate) mod ffi {
         /// `kind` is 0 for int, 1 for double, 2 for bool, 3 for string.
         fn create_property_list(
             mol: Pin<&mut RWMol>,
-            bonds: bool,
             kind: u8,
             prop_name: &str,
             missing_value_marker: &str,
@@ -366,6 +374,6 @@ pub(crate) mod ffi {
         fn mol_to_fasta(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
         fn mol_to_helm(mol: &RWMol) -> Result<UniquePtr<CxxString>>;
         fn has_chem_draw_cdx_support() -> Result<bool>;
-        fn mol_to_cdxml_block(mol: &RWMol, format: CDXMLFormat) -> Result<Vec<u8>>;
+        fn mol_to_chem_draw_block(mol: &RWMol, format: CDXFormat) -> Result<Vec<u8>>;
     }
 }

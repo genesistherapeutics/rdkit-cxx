@@ -71,7 +71,7 @@ void wedge_bond(Bond &bond, std::uint32_t from_atom_idx, std::int32_t conf_id);
 BondWedgingParametersData bond_wedging_parameters_default();
 void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
                      const BondWedgingParametersData &params);
-void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify);
+void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types);
 
 // These settings live in environment variables, which RDKit sets with
 // setenv; the Rust setters are unsafe for that reason (CONVENTIONS.md U5).

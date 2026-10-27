@@ -689,11 +689,6 @@ impl MMFFMolProperties {
         ))
     }
 
-    /// Mirrors `MMFFMolProperties.GetMMFFDielectricModel`.
-    pub fn get_mmff_dielectric_model(&self) -> u8 {
-        expect_ok(ffi::mmff_mol_properties_get_dielectric_model(self.raw()))
-    }
-
     /// Sets the dielectric constant to 1. Mirrors
     /// `MMFFMolProperties.SetMMFFDielectricConstant()`.
     pub fn set_mmff_dielectric_constant(&mut self) {
@@ -712,21 +707,12 @@ impl MMFFMolProperties {
         )?)
     }
 
-    /// Mirrors `MMFFMolProperties.GetMMFFDielectricConstant`.
-    pub fn get_mmff_dielectric_constant(&self) -> f64 {
-        expect_ok(ffi::mmff_mol_properties_get_dielectric_constant(self.raw()))
-    }
-
     fn set_term(&mut self, term: ffi::MMFFTerm, state: bool) {
         expect_ok(ffi::mmff_mol_properties_set_term(
             self.raw_mut(),
             term,
             state,
         ))
-    }
-
-    fn get_term(&self, term: ffi::MMFFTerm) -> bool {
-        expect_ok(ffi::mmff_mol_properties_get_term(self.raw(), term))
     }
 
     /// Sets the MMFF variant. Mirrors `MMFFMolProperties.SetMMFFVariant()`,
@@ -747,12 +733,6 @@ impl MMFFMolProperties {
         )?)
     }
 
-    /// Mirrors `MMFFMolProperties.GetMMFFVariant`.
-    pub fn get_mmff_variant(&self) -> String {
-        to_string(expect_ok(ffi::mmff_mol_properties_get_variant(self.raw())))
-            .expect("RDKit's MMFF variants are ASCII")
-    }
-
     /// Turns printing off. Mirrors `MMFFMolProperties.SetMMFFVerbosity()`.
     pub fn set_mmff_verbosity(&mut self) {
         self.set_mmff_verbosity_with_verbosity(MMFFVerbosity::MmffVerbosityNone);
@@ -767,16 +747,11 @@ impl MMFFMolProperties {
     }
 }
 
-/// Defines the getter and setters for one MMFF term (A2).
+/// Defines the setters for one MMFF term (A2).
 macro_rules! mmff_terms {
-    ($($term:ident: $get:ident, $set:ident, $set_with:ident, $python:literal, $what:literal;)*) => {
+    ($($term:ident: $set:ident, $set_with:ident, $python:literal, $what:literal;)*) => {
         impl MMFFMolProperties {
             $(
-                #[doc = concat!("Whether the force field includes the ", $what, " term. Mirrors `MMFFMolProperties.GetMMFF", $python, "Term`.")]
-                pub fn $get(&self) -> bool {
-                    self.get_term(ffi::MMFFTerm::$term)
-                }
-
                 #[doc = concat!("Includes the ", $what, " term. Mirrors `MMFFMolProperties.SetMMFF", $python, "Term()`.")]
                 pub fn $set(&mut self) {
                     self.set_term(ffi::MMFFTerm::$term, true);
@@ -792,13 +767,13 @@ macro_rules! mmff_terms {
 }
 
 mmff_terms! {
-    Bond: get_mmff_bond_term, set_mmff_bond_term, set_mmff_bond_term_with_state, "Bond", "bond stretching";
-    Angle: get_mmff_angle_term, set_mmff_angle_term, set_mmff_angle_term_with_state, "Angle", "angle bending";
-    StretchBend: get_mmff_stretch_bend_term, set_mmff_stretch_bend_term, set_mmff_stretch_bend_term_with_state, "StretchBend", "stretch-bend";
-    Oop: get_mmff_oop_term, set_mmff_oop_term, set_mmff_oop_term_with_state, "Oop", "out-of-plane bending";
-    Torsion: get_mmff_torsion_term, set_mmff_torsion_term, set_mmff_torsion_term_with_state, "Torsion", "torsion";
-    VdW: get_mmff_vdw_term, set_mmff_vdw_term, set_mmff_vdw_term_with_state, "VdW", "van der Waals";
-    Ele: get_mmff_ele_term, set_mmff_ele_term, set_mmff_ele_term_with_state, "Ele", "electrostatic";
+    Bond: set_mmff_bond_term, set_mmff_bond_term_with_state, "Bond", "bond stretching";
+    Angle: set_mmff_angle_term, set_mmff_angle_term_with_state, "Angle", "angle bending";
+    StretchBend: set_mmff_stretch_bend_term, set_mmff_stretch_bend_term_with_state, "StretchBend", "stretch-bend";
+    Oop: set_mmff_oop_term, set_mmff_oop_term_with_state, "Oop", "out-of-plane bending";
+    Torsion: set_mmff_torsion_term, set_mmff_torsion_term_with_state, "Torsion", "torsion";
+    VdW: set_mmff_vdw_term, set_mmff_vdw_term_with_state, "VdW", "van der Waals";
+    Ele: set_mmff_ele_term, set_mmff_ele_term_with_state, "Ele", "electrostatic";
 }
 
 impl fmt::Debug for MMFFMolProperties {

@@ -260,16 +260,6 @@ impl Mol {
         expect_ok(ffi::mol_has_query(self.as_ffi()))
     }
 
-    /// The `_Name` property, or empty. Mirrors `Mol.GetName`.
-    pub fn get_name(&self) -> Result<String> {
-        to_string(ffi::mol_get_name(self.as_ffi())?)
-    }
-
-    /// Sets the `_Name` property. Mirrors `Mol.SetName`.
-    pub fn set_name(&mut self, name: &str) {
-        expect_ok(ffi::mol_set_name(self.pin_mut(), name))
-    }
-
     /// Prints the molecule's atoms, bonds, and properties to stdout. Mirrors
     /// `Mol.Debug`.
     pub fn debug(&self) {

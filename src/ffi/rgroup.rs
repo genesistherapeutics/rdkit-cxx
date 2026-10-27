@@ -63,7 +63,6 @@ pub(crate) mod ffi {
         remove_hydrogens_post_match: bool,
         allow_non_terminal_r_groups: bool,
         allow_multiple_r_groups_on_unlabelled: bool,
-        allow_multiple_cores_in_same_mol: bool,
         do_tautomers: bool,
         do_enumeration: bool,
         include_target_mol_in_results: bool,

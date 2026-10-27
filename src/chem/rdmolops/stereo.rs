@@ -520,16 +520,12 @@ pub fn wedge_mol_bonds_with_params(
 pub struct ReapplyMolBlockWedgingParams {
     /// Reapplies wedges to bonds other than single and aromatic ones too.
     pub all_bond_types: bool,
-    /// Reapplies wedges only where they make sense: single bonds to chiral
-    /// centers, or atropisomer bonds.
-    pub verify: bool,
 }
 
 impl Default for ReapplyMolBlockWedgingParams {
     fn default() -> ReapplyMolBlockWedgingParams {
         ReapplyMolBlockWedgingParams {
             all_bond_types: true,
-            verify: false,
         }
     }
 }
@@ -540,7 +536,7 @@ pub fn reapply_mol_block_wedging(mol: &mut Mol) -> Result<()> {
     reapply_mol_block_wedging_with_params(mol, &ReapplyMolBlockWedgingParams::default())
 }
 
-/// Mirrors `rdmolops.ReapplyMolBlockWedging(mol, allBondTypes, verify)`.
+/// Mirrors `rdmolops.ReapplyMolBlockWedging(mol, allBondTypes)`.
 pub fn reapply_mol_block_wedging_with_params(
     mol: &mut Mol,
     params: &ReapplyMolBlockWedgingParams,
@@ -548,7 +544,6 @@ pub fn reapply_mol_block_wedging_with_params(
     Ok(ffi::reapply_mol_block_wedging(
         mol.pin_mut(),
         params.all_bond_types,
-        params.verify,
     )?)
 }
 

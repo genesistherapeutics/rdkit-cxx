@@ -94,8 +94,7 @@ int thread_count(std::int32_t target) {
 // to RDKit as the map. Both steps match substructures, so both hold
 // control_c_mutex (control_c_lock.h), taken first.
 std::vector<MatchVectType> all_matches(const ROMol &prb, const ROMol &ref,
-                                       int max_matches, bool symmetrize,
-                                       bool ignore_hs) {
+                                       int max_matches, bool symmetrize) {
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::RWMol> symmetrized;
   if (symmetrize) {
@@ -123,13 +122,6 @@ std::vector<MatchVectType> all_matches(const ROMol &prb, const ROMol &ref,
         << " matches detected for molecule " << name << ", this may "
         << "lead to a performance slowdown." << std::endl;
   }
-  if (ignore_hs) {
-    for (auto &match : matches) {
-      std::erase_if(match, [&for_match](const auto &mi) {
-        return for_match.getAtomWithIdx(mi.first)->getAtomicNum() == 1;
-      });
-    }
-  }
   return matches;
 }
 
@@ -150,15 +142,16 @@ void check_weights(const std::vector<MatchVectType> &matches,
   }
 }
 
-// MolAlign::BestAlignmentParams, with its weights, and its map checked or
-// found here (all_matches).
+// The best-alignment functions' maps and weights, the map checked or found
+// here (all_matches).
 struct NativeBestParams {
   std::unique_ptr<RDNumeric::DoubleVector> weights;
-  MolAlign::BestAlignmentParams params;
+  std::vector<MatchVectType> map;
+  int num_threads;
 };
 
 NativeBestParams to_native(const BestAlignmentParamsData &data,
-                           const ROMol &prb, const ROMol &ref, bool ignore_hs) {
+                           const ROMol &prb, const ROMol &ref) {
   std::size_t total = 0;
   for (auto count : data.map_counts) {
     total += count;
@@ -167,26 +160,19 @@ NativeBestParams to_native(const BestAlignmentParamsData &data,
     throw ValueErrorException("the atom maps' lengths do not add up");
   }
   NativeBestParams native;
-  std::vector<MatchVectType> map;
   std::size_t at = 0;
   for (auto count : data.map_counts) {
-    map.push_back(to_match(data.map_pairs.data() + at, count, prb, ref));
+    native.map.push_back(to_match(data.map_pairs.data() + at, count, prb, ref));
     at += count;
   }
   native.weights = to_vector(
       rust::Slice<const double>(data.weights.data(), data.weights.size()));
-  if (map.empty()) {
-    map = all_matches(prb, ref, data.max_matches,
-                      data.symmetrize_conjugated_terminal_groups, ignore_hs);
+  if (native.map.empty()) {
+    native.map = all_matches(prb, ref, data.max_matches,
+                             data.symmetrize_conjugated_terminal_groups);
   }
-  check_weights(map, native.weights.get());
-  native.params.maxMatches = data.max_matches;
-  native.params.symmetrizeConjugatedTerminalGroups =
-      data.symmetrize_conjugated_terminal_groups;
-  native.params.ignoreHs = data.ignore_hs;
-  native.params.numThreads = thread_count(data.num_threads);
-  native.params.map = std::move(map);
-  native.params.weights = native.weights.get();
+  check_weights(native.map, native.weights.get());
+  native.num_threads = thread_count(data.num_threads);
   return native;
 }
 
@@ -301,10 +287,10 @@ std::unique_ptr<O3AList> run_o3a(RWMol &prb, const RWMol &ref, void *prb_prop,
 // minus 1, so an untyped atom (type 0) reads before it, and read the
 // properties by atom index. Missing properties are computed on a copy, so
 // MMFF's sanitization leaves the molecule as it is.
-const RDKit::MMFF::MMFFMolProperties *mmff_props(
+RDKit::MMFF::MMFFMolProperties *mmff_props(
     const RWMol &mol, const MMFFMolProperties *given,
     std::unique_ptr<RDKit::MMFF::MMFFMolProperties> &owned, const char *which) {
-  const RDKit::MMFF::MMFFMolProperties *props;
+  RDKit::MMFF::MMFFMolProperties *props;
   if (given) {
     if (given->num_atoms() != mol.getNumAtoms()) {
       throw ValueErrorException(std::string("the MMFF properties for the ") +
@@ -354,21 +340,6 @@ std::vector<double> crippen_contribs(const RWMol &mol, bool has_given,
 }
 
 }  // namespace
-
-BestAlignmentParamsData best_alignment_params_default() {
-  MolAlign::BestAlignmentParams params;
-  BestAlignmentParamsData data{};
-  data.max_matches = params.maxMatches;
-  data.symmetrize_conjugated_terminal_groups =
-      params.symmetrizeConjugatedTerminalGroups;
-  data.ignore_hs = params.ignoreHs;
-  data.num_threads = params.numThreads;
-  data.prb_cid = -1;
-  data.ref_cid = -1;
-  data.reflect = false;
-  data.max_iters = 50;
-  return data;
-}
 
 // As getMolAlignTransform in rdMolAlign.cpp, which checks the number of
 // weights.
@@ -420,12 +391,14 @@ double get_best_alignment_transform(const RWMol &prb_mol, const RWMol &ref_mol,
                                     const BestAlignmentParamsData &params,
                                     rust::Vec<double> &trans,
                                     rust::Vec<IndexPair> &best_match) {
-  auto native = to_native(params, prb_mol, ref_mol, params.ignore_hs);
+  auto native = to_native(params, prb_mol, ref_mol);
   RDGeom::Transform3D transform;
   MatchVectType match;
   double rmsd = MolAlign::getBestAlignmentTransform(
-      prb_mol, ref_mol, transform, match, native.params, params.prb_cid,
-      params.ref_cid, params.reflect, params.max_iters);
+      prb_mol, ref_mol, transform, match, params.prb_cid, params.ref_cid,
+      native.map, params.max_matches,
+      params.symmetrize_conjugated_terminal_groups, native.weights.get(),
+      params.reflect, params.max_iters, native.num_threads);
   trans = to_values(transform);
   best_match.clear();
   for (const auto &[p, r] : match) {
@@ -437,28 +410,32 @@ double get_best_alignment_transform(const RWMol &prb_mol, const RWMol &ref_mol,
 
 double get_best_rms(RWMol &prb_mol, const RWMol &ref_mol,
                     const BestAlignmentParamsData &params) {
-  auto native = to_native(params, prb_mol, ref_mol, params.ignore_hs);
-  return MolAlign::getBestRMS(prb_mol, ref_mol, native.params, params.prb_cid,
-                              params.ref_cid);
+  auto native = to_native(params, prb_mol, ref_mol);
+  return MolAlign::getBestRMS(prb_mol, ref_mol, params.prb_cid, params.ref_cid,
+                              native.map, params.max_matches,
+                              params.symmetrize_conjugated_terminal_groups,
+                              native.weights.get(), native.num_threads);
 }
 
 rust::Vec<double> get_all_conformer_best_rms(
     const RWMol &mol, const BestAlignmentParamsData &params) {
-  auto native = to_native(params, mol, mol, params.ignore_hs);
+  auto native = to_native(params, mol, mol);
   rust::Vec<double> result;
-  for (double v : MolAlign::getAllConformerBestRMS(mol, native.params)) {
+  for (double v : MolAlign::getAllConformerBestRMS(
+           mol, native.num_threads, native.map, params.max_matches,
+           params.symmetrize_conjugated_terminal_groups,
+           native.weights.get())) {
     result.push_back(v);
   }
   return result;
 }
 
-// CalcRMS finds its matches with the hydrogens. It takes the probe as
-// non-const, but only reads it.
+// CalcRMS takes the probe as non-const, but only reads it.
 double calc_rms(const RWMol &prb_mol, const RWMol &ref_mol,
                 const BestAlignmentParamsData &params) {
-  auto native = to_native(params, prb_mol, ref_mol, false);
+  auto native = to_native(params, prb_mol, ref_mol);
   return MolAlign::CalcRMS(const_cast<RWMol &>(prb_mol), ref_mol,
-                           params.prb_cid, params.ref_cid, native.params.map,
+                           params.prb_cid, params.ref_cid, native.map,
                            params.max_matches, false, native.weights.get());
 }
 
@@ -505,11 +482,9 @@ std::unique_ptr<O3AList> get_mmff_o3a(RWMol &prb_mol, const RWMol &ref_mol,
   auto constraints = to_constraints(options, prb_mol, ref_mol);
   check_o3a_conformers(prb_mol, ref_mol, for_probe_confs, options);
   std::unique_ptr<RDKit::MMFF::MMFFMolProperties> prb_owned, ref_owned;
-  const auto *prb = mmff_props(prb_mol, prb_props, prb_owned, "probe");
-  const auto *ref = mmff_props(ref_mol, ref_props, ref_owned, "reference");
-  return run_o3a(prb_mol, ref_mol,
-                 const_cast<RDKit::MMFF::MMFFMolProperties *>(prb),
-                 const_cast<RDKit::MMFF::MMFFMolProperties *>(ref),
+  auto *prb = mmff_props(prb_mol, prb_props, prb_owned, "probe");
+  auto *ref = mmff_props(ref_mol, ref_props, ref_owned, "reference");
+  return run_o3a(prb_mol, ref_mol, prb, ref,
                  MolAlign::O3A::MMFF94, for_probe_confs, options, constraints);
 }
 

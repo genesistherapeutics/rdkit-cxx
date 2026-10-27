@@ -15,6 +15,7 @@
 #include <GraphMol/Canon.h>
 #include <GraphMol/Depictor/RDDepictor.h>
 #include <GraphMol/FileParsers/CDXMLParser.h>
+#include <GraphMol/chemdraw.h>
 #include <GraphMol/FileParsers/FileParserUtils.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/FileParsers/FileWriters.h>
@@ -301,13 +302,9 @@ void check_first_list_value(Range items, const std::string &prop,
 }
 
 template <typename T>
-void check_property_list(RWMol &mol, bool bonds, const std::string &prop,
+void check_property_list(RWMol &mol, const std::string &prop,
                          const std::string &marker, unsigned line_size) {
-  if (bonds) {
-    check_first_list_value<T>(mol.bonds(), prop, marker, line_size);
-  } else {
-    check_first_list_value<T>(mol.atoms(), prop, marker, line_size);
-  }
+  check_first_list_value<T>(mol.atoms(), prop, marker, line_size);
 }
 
 }  // namespace
@@ -642,31 +639,27 @@ void canonicalize_enhanced_stereo(RWMol &mol) {
   RDKit::Canon::canonicalizeEnhancedStereo(mol);
 }
 
-void create_property_list(RWMol &mol, bool bonds, std::uint8_t kind,
-                          rust::Str prop_name, rust::Str missing_value_marker,
+void create_property_list(RWMol &mol, std::uint8_t kind, rust::Str prop_name,
+                          rust::Str missing_value_marker,
                           std::uint32_t line_size) {
   namespace FPU = RDKit::FileParserUtils;
   std::string prop(prop_name), marker(missing_value_marker);
   switch (kind) {
     case 0:
-      check_property_list<int>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondIntPropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomIntPropertyList(mol, prop, marker, line_size);
+      check_property_list<std::int64_t>(mol, prop, marker, line_size);
+      FPU::createAtomIntPropertyList(mol, prop, marker, line_size);
       break;
     case 1:
-      check_property_list<double>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondDoublePropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomDoublePropertyList(mol, prop, marker, line_size);
+      check_property_list<double>(mol, prop, marker, line_size);
+      FPU::createAtomDoublePropertyList(mol, prop, marker, line_size);
       break;
     case 2:
-      check_property_list<bool>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondBoolPropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomBoolPropertyList(mol, prop, marker, line_size);
+      check_property_list<bool>(mol, prop, marker, line_size);
+      FPU::createAtomBoolPropertyList(mol, prop, marker, line_size);
       break;
     default:
-      check_property_list<std::string>(mol, bonds, prop, marker, line_size);
-      bonds ? FPU::createBondStringPropertyList(mol, prop, marker, line_size)
-            : FPU::createAtomStringPropertyList(mol, prop, marker, line_size);
+      check_property_list<std::string>(mol, prop, marker, line_size);
+      FPU::createAtomStringPropertyList(mol, prop, marker, line_size);
       break;
   }
 }
@@ -1166,11 +1159,11 @@ void check_cdx_coordinates(const RDKit::ROMol &mol) {
 
 }  // namespace
 
-// As MolToCDXMLBlockHelper in Code/GraphMol/Wrap/rdmolfiles.cpp. The copy
+// As molToChemDrawBlock in External/ChemDraw/Wrap/rdChemDraw.cpp. The copy
 // is kekulized and given coordinates as MolToChemDrawBlock does, then checked
 // and written; RDKit's own copy of it then needs neither.
-rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
-                                           CDXMLFormat format) {
+rust::Vec<std::uint8_t> mol_to_chem_draw_block(const RWMol &mol,
+                                               CDXFormat format) {
   RDKit::RWMol copy(mol);
   RDKit::MolOps::Kekulize(copy);
   if (!copy.getNumConformers()) {
@@ -1180,7 +1173,7 @@ rust::Vec<std::uint8_t> mol_to_cdxml_block(const RWMol &mol,
   }
   check_cdx_coordinates(copy);
   std::lock_guard<std::mutex> chemdraw(chemdraw_mutex());
-  return to_bytes(RDKit::v2::CDXMLParser::MolToCDXMLBlock(copy, format));
+  return to_bytes(RDKit::v2::MolToChemDrawBlock(copy, format));
 }
 
 }  // namespace rdkit_cxx

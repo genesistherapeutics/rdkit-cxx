@@ -18,17 +18,6 @@ namespace rdkit_cxx {
 
 namespace {
 
-AtomCoordsMatcherData to_data(const RDKit::AtomCoordsMatchFunctor &matcher) {
-  return AtomCoordsMatcherData{matcher.d_refConfId, matcher.d_queryConfId,
-                               matcher.d_tol2};
-}
-
-RDKit::AtomCoordsMatchFunctor from_data(const AtomCoordsMatcherData &data) {
-  RDKit::AtomCoordsMatchFunctor matcher(data.ref_conf_id, data.query_conf_id);
-  matcher.d_tol2 = data.tol2;
-  return matcher;
-}
-
 RDKit::SubstructMatchParameters params_from(
     const SubstructMatchParametersData &data) {
   RDKit::SubstructMatchParameters params;
@@ -51,13 +40,6 @@ RDKit::SubstructMatchParameters params_from(
   }
   params.specifiedStereoQueryMatchesUnspecified =
       data.specified_stereo_query_matches_unspecified;
-  params.extraAtomCheckOverridesDefaultCheck =
-      data.extra_atom_check_overrides_default_check;
-  params.extraBondCheckOverridesDefaultCheck =
-      data.extra_bond_check_overrides_default_check;
-  if (data.has_atom_coords_matcher) {
-    params.extraAtomCheck = from_data(data.atom_coords_matcher);
-  }
   return params;
 }
 
@@ -121,10 +103,6 @@ SubstructMatchParametersData substruct_params_to_data(
   for (const auto &prop : p.bondProperties) {
     bond_properties.push_back(prop);
   }
-  // Only an AtomCoordsMatchFunctor has a Rust counterpart; other callables
-  // come from C++ alone.
-  const auto *matcher =
-      p.extraAtomCheck.target<RDKit::AtomCoordsMatchFunctor>();
   return SubstructMatchParametersData{
       p.useChirality,
       p.useEnhancedStereo,
@@ -139,11 +117,7 @@ SubstructMatchParametersData substruct_params_to_data(
       p.numThreads,
       std::move(atom_properties),
       std::move(bond_properties),
-      p.specifiedStereoQueryMatchesUnspecified,
-      p.extraAtomCheckOverridesDefaultCheck,
-      p.extraBondCheckOverridesDefaultCheck,
-      matcher != nullptr,
-      to_data(matcher ? *matcher : RDKit::AtomCoordsMatchFunctor())};
+      p.specifiedStereoQueryMatchesUnspecified};
 }
 
 RDKit::SubstructMatchParameters substruct_params_from_data(
@@ -153,21 +127,6 @@ RDKit::SubstructMatchParameters substruct_params_from_data(
 
 SubstructMatchParametersData substruct_match_parameters_default() {
   return substruct_params_to_data(RDKit::SubstructMatchParameters());
-}
-
-AtomCoordsMatcherData atom_coords_matcher_default() {
-  return to_data(RDKit::AtomCoordsMatchFunctor());
-}
-
-AtomCoordsMatcherData atom_coords_matcher_new(int ref_conf_id,
-                                              int query_conf_id, double tol) {
-  return to_data(
-      RDKit::AtomCoordsMatchFunctor(ref_conf_id, query_conf_id, tol));
-}
-
-bool atom_coords_matcher_call(const AtomCoordsMatcherData &matcher,
-                              const Atom &query_atom, const Atom &target_atom) {
-  return from_data(matcher)(query_atom, target_atom);
 }
 
 bool mol_has_substruct_match(const RWMol &target, const RWMol &query,

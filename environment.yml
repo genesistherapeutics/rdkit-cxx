@@ -9,6 +9,9 @@ channels:
 dependencies:
   - librdkit-dev 2025.03.6
   - libboost-devel
+  # RDKit 2025.03's CMake package finds Eigen3, which librdkit-dev does not
+  # install; its headers declare functions that take Eigen types.
+  - eigen 3.4.*
   - cxx-compiler
   - cmake >=3.22
   - python 3.12.*

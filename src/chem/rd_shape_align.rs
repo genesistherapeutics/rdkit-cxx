@@ -39,7 +39,6 @@ use crate::chem::Mol;
 use crate::chem::rdchem::AsConformerMut;
 use crate::error::expect_ok;
 use crate::ffi::shape_align::ffi;
-use crate::geometry::Point3D;
 
 /// How a molecule becomes a shape. Mirrors
 /// `rdShapeAlign.ShapeInputOptions` (A3).
@@ -57,11 +56,6 @@ pub struct ShapeInputOptions {
     pub not_color_atoms: Vec<u32>,
     /// Radii for some atoms, by atom index, instead of their elements'.
     pub atom_radii: Vec<(u32, f64)>,
-    /// Features to use instead of the default ones: (type, position,
-    /// radius).
-    pub custom_features: Vec<(u32, Point3D, f64)>,
-    /// Moves the shape to its principal axes, centered on the origin.
-    pub normalize: bool,
 }
 
 impl Default for ShapeInputOptions {
@@ -74,8 +68,6 @@ impl Default for ShapeInputOptions {
             atom_subset: data.atom_subset,
             not_color_atoms: data.not_color_atoms,
             atom_radii: Vec::new(),
-            custom_features: Vec::new(),
-            normalize: data.normalize,
         }
     }
 }
@@ -90,10 +82,6 @@ impl ShapeInputOptions {
             not_color_atoms: self.not_color_atoms.clone(),
             atom_radii_atoms: self.atom_radii.iter().map(|&(atom, _)| atom).collect(),
             atom_radii_values: self.atom_radii.iter().map(|&(_, radius)| radius).collect(),
-            custom_feature_types: self.custom_features.iter().map(|f| f.0).collect(),
-            custom_feature_positions: self.custom_features.iter().map(|f| f.1).collect(),
-            custom_feature_radii: self.custom_features.iter().map(|f| f.2).collect(),
-            normalize: self.normalize,
         }
     }
 }
@@ -150,12 +138,6 @@ impl ShapeInput {
     /// `ShapeInput.shift`.
     pub fn shift(&self) -> Vec<f64> {
         expect_ok(ffi::pubchem_shape_input_shift(&self.ptr))
-    }
-
-    /// The rotation, as 9 values by rows, that put the conformer in its
-    /// principal axes. Mirrors `ShapeInput.inertialRot`.
-    pub fn inertial_rot(&self) -> Vec<f64> {
-        expect_ok(ffi::pubchem_shape_input_inertial_rot(&self.ptr))
     }
 
     /// The shape's overlap with itself. Mirrors `ShapeInput.sov`.
@@ -261,87 +243,12 @@ pub fn align_mol_with_params(
     probe: &mut Mol,
     params: &AlignMolParams,
 ) -> Result<(f64, f64)> {
-    let opts = ShapeInputOptions {
-        use_colors: params.use_colors,
-        ..Default::default()
-    }
-    .to_ffi();
     Ok(pair(ffi::pubchem_align_mol(
         ref_.as_ffi(),
         probe.pin_mut(),
-        &opts,
-        &opts,
         params.ref_conf_id,
         params.probe_conf_id,
-        params.opt_param,
-        params.max_preiters,
-        params.max_postiters,
-    )?))
-}
-
-/// Parameters for `align_mol_shape_opts_with_params`, with Python's
-/// defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct AlignMolShapeOptsParams {
-    /// The reference's conformer; -1 for the first.
-    pub ref_conf_id: i32,
-    /// The probe's conformer; -1 for the first.
-    pub probe_conf_id: i32,
-    /// The weight of the shape score against the color score.
-    pub opt_param: f64,
-    /// The most optimization steps for every starting pose.
-    pub max_preiters: u32,
-    /// The most further steps for the best poses.
-    pub max_postiters: u32,
-}
-
-impl Default for AlignMolShapeOptsParams {
-    fn default() -> AlignMolShapeOptsParams {
-        AlignMolShapeOptsParams {
-            ref_conf_id: -1,
-            probe_conf_id: -1,
-            opt_param: 1.0,
-            max_preiters: 10,
-            max_postiters: 30,
-        }
-    }
-}
-
-/// `align_mol` with options for each molecule's shape; colors count only
-/// when both use them. Mirrors `rdShapeAlign.AlignMol(ref, probe,
-/// refShapeOpts, probeShapeOpts)`.
-pub fn align_mol_shape_opts(
-    ref_: &Mol,
-    probe: &mut Mol,
-    ref_shape_opts: &ShapeInputOptions,
-    probe_shape_opts: &ShapeInputOptions,
-) -> Result<(f64, f64)> {
-    align_mol_shape_opts_with_params(
-        ref_,
-        probe,
-        ref_shape_opts,
-        probe_shape_opts,
-        &AlignMolShapeOptsParams::default(),
-    )
-}
-
-/// Mirrors `rdShapeAlign.AlignMol(ref, probe, refShapeOpts,
-/// probeShapeOpts, refConfId, probeConfId, opt_param, max_preiters,
-/// max_postiters)`.
-pub fn align_mol_shape_opts_with_params(
-    ref_: &Mol,
-    probe: &mut Mol,
-    ref_shape_opts: &ShapeInputOptions,
-    probe_shape_opts: &ShapeInputOptions,
-    params: &AlignMolShapeOptsParams,
-) -> Result<(f64, f64)> {
-    Ok(pair(ffi::pubchem_align_mol(
-        ref_.as_ffi(),
-        probe.pin_mut(),
-        &ref_shape_opts.to_ffi(),
-        &probe_shape_opts.to_ffi(),
-        params.ref_conf_id,
-        params.probe_conf_id,
+        params.use_colors,
         params.opt_param,
         params.max_preiters,
         params.max_postiters,
@@ -457,124 +364,21 @@ pub fn align_shapes_with_params(
 }
 
 /// Moves the conformer the probe shape came from as `align_shapes` moved
-/// the shape (`matrix`), then by `final_rot` (9 values, by rows) and
-/// `final_trans`. Mirrors `rdShapeAlign.TransformConformer`.
+/// the shape (`matrix`), then back by `final_trans`. Mirrors
+/// `rdShapeAlign.TransformConformer`.
 ///
 /// Vectors of other lengths, and matrix values beyond `f32`, are
 /// `Error::Value`.
 pub fn transform_conformer(
     final_trans: &[f64],
-    final_rot: &[f64],
     matrix: &[f64],
     probe_shape: &ShapeInput,
     probe_conformer: &mut impl AsConformerMut,
 ) -> Result<()> {
     Ok(ffi::pubchem_transform_conformer_to_shape(
         final_trans,
-        final_rot,
         matrix,
         &probe_shape.ptr,
         probe_conformer.conformer_mut(),
     )?)
-}
-
-/// Parameters for `score_mol_with_params`, with Python's defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct ScoreMolParams {
-    /// The first molecule's conformer; -1 for the first.
-    pub mol1_conf_id: i32,
-    /// The second molecule's conformer; -1 for the first.
-    pub mol2_conf_id: i32,
-}
-
-impl Default for ScoreMolParams {
-    fn default() -> ScoreMolParams {
-        ScoreMolParams {
-            mol1_conf_id: -1,
-            mol2_conf_id: -1,
-        }
-    }
-}
-
-/// The shape and color scores of two molecules' first conformers, where
-/// they are; colors count only when both options use them. Mirrors
-/// `rdShapeAlign.ScoreMol`.
-pub fn score_mol(
-    mol1: &Mol,
-    mol2: &Mol,
-    mol1_shape_opts: &ShapeInputOptions,
-    mol2_shape_opts: &ShapeInputOptions,
-) -> Result<(f64, f64)> {
-    score_mol_with_params(
-        mol1,
-        mol2,
-        mol1_shape_opts,
-        mol2_shape_opts,
-        &ScoreMolParams::default(),
-    )
-}
-
-/// Mirrors `rdShapeAlign.ScoreMol(mol1, mol2, mol1ShapeOpts,
-/// mol2ShapeOpts, mol1ConfId, mol2ConfId)`.
-pub fn score_mol_with_params(
-    mol1: &Mol,
-    mol2: &Mol,
-    mol1_shape_opts: &ShapeInputOptions,
-    mol2_shape_opts: &ShapeInputOptions,
-    params: &ScoreMolParams,
-) -> Result<(f64, f64)> {
-    Ok(pair(ffi::pubchem_score_mol(
-        mol1.as_ffi(),
-        mol2.as_ffi(),
-        &mol1_shape_opts.to_ffi(),
-        &mol2_shape_opts.to_ffi(),
-        params.mol1_conf_id,
-        params.mol2_conf_id,
-    )?))
-}
-
-/// The scores of a shape, made without normalizing, and a molecule's first
-/// conformer, where it is. Mirrors `rdShapeAlign.ScoreMol(shape, mol,
-/// molShapeOpts)`.
-pub fn score_mol_shape_input(
-    shape: &ShapeInput,
-    mol: &Mol,
-    mol_shape_opts: &ShapeInputOptions,
-) -> Result<(f64, f64)> {
-    score_mol_shape_input_with_mol_conf_id(shape, mol, mol_shape_opts, -1)
-}
-
-/// Mirrors `rdShapeAlign.ScoreMol(shape, mol, molShapeOpts, molConfId)`.
-pub fn score_mol_shape_input_with_mol_conf_id(
-    shape: &ShapeInput,
-    mol: &Mol,
-    mol_shape_opts: &ShapeInputOptions,
-    mol_conf_id: i32,
-) -> Result<(f64, f64)> {
-    Ok(pair(ffi::pubchem_score_mol_shape_input(
-        &shape.ptr,
-        mol.as_ffi(),
-        &mol_shape_opts.to_ffi(),
-        mol_conf_id,
-    )?))
-}
-
-/// The shape score of two shapes where they are, made without
-/// normalizing; the color score is 0. Mirrors `rdShapeAlign.ScoreShape`.
-pub fn score_shape(shape1: &ShapeInput, shape2: &ShapeInput) -> (f64, f64) {
-    score_shape_with_use_colors(shape1, shape2, false)
-}
-
-/// Mirrors `rdShapeAlign.ScoreShape(shape1, shape2, useColors)`; with
-/// colors, the color score of the features of the types both shapes have.
-pub fn score_shape_with_use_colors(
-    shape1: &ShapeInput,
-    shape2: &ShapeInput,
-    use_colors: bool,
-) -> (f64, f64) {
-    pair(expect_ok(ffi::pubchem_score_shape(
-        &shape1.ptr,
-        &shape2.ptr,
-        use_colors,
-    )))
 }

@@ -340,9 +340,9 @@ std::unique_ptr<RWMol> tautomer_result_kekulized(
   if (tautomer.kekulized) {
     return copy_mol(*tautomer.kekulized);
   }
-  // As Tautomer::getKekulized, whose cache would be written through const.
+  // As the enumerator kekulizes each tautomer it keeps.
   auto kekulized = copy_mol(*tautomer.tautomer);
-  RDKit::MolOps::Kekulize(*kekulized, false, true);
+  RDKit::MolOps::Kekulize(*kekulized, false);
   return kekulized;
 }
 

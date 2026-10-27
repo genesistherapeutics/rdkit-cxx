@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/atom.h"
 
+#include <GraphMol/Chirality.h>
 #include <GraphMol/MolOps.h>
 #include <GraphMol/QueryAtom.h>
 #include <GraphMol/ROMol.h>
@@ -76,7 +77,7 @@ void atom_set_chiral_tag(Atom &atom, ChiralType what) {
   atom.setChiralTag(what);
 }
 
-unsigned atom_noatom() { return Atom::NOATOM; }
+unsigned atom_noatom() { return RDKit::Chirality::StereoInfo::NOATOM; }
 
 int atom_get_atom_map_num(const Atom &atom) { return atom.getAtomMapNum(); }
 

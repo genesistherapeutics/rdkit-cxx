@@ -106,11 +106,9 @@ void check_annotation(const std::string &text, bool freetype, const char *what);
 // '<'; such a label is refused too.
 void check_label(const std::string &label, bool freetype, const char *what);
 
-// A legend as DrawMol draws it: split at newlines into lines (or into
-// characters, for vertical text), each checked as check_annotation checks
-// it.
-void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
-                  bool freetype);
+// A legend as DrawMol draws it: split at newlines into lines, each checked
+// as check_annotation checks it.
+void check_legend(const std::string &legend, bool freetype);
 
 // Everything DrawMol reads from a molecule it draws with these options,
 // beyond what RDKit checks itself: its text (labels, notes, CIP labels,

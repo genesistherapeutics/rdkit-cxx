@@ -6,39 +6,26 @@
 #include "rdkit-cxx/dclv.h"
 
 #include <cmath>
-#include <mutex>
 #include <string>
-#include <vector>
 
+#include <GraphMol/Descriptors/DCLV.h>
 #include <GraphMol/MonomerInfo.h>
 #include <RDGeneral/Exceptions.h>
-#include <boost/dynamic_bitset.hpp>
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/dclv.rs.h"
-#include "rdkit-cxx/ffi/geometry.rs.h"
 
 namespace rdkit_cxx {
 
 namespace {
 
-// DCLV.cpp keeps the atom its last surface test hit in a global int,
-// recordCache, which every object reads and writes without a lock (U4), and
-// which one object's call can leave pointing past another's atoms. Each call
-// that tests points holds this lock; each resets recordCache first.
-std::mutex &record_cache_mutex() {
-  // A leaf: held for one RDKit call that takes no other lock, so a closure
-  // running under control_c_mutex (U4) can take it without deadlock. A
-  // wrapper that takes another lock while holding it must first call
-  // check_not_in_control_c_callback(), as rgroup_mutex() does.
-  static std::mutex mutex;
-  return mutex;
-}
-
-// The voxel grid casts scaled coordinates, radii, and the probe radius to
-// int and unsigned and indexes a 16x16x16 grid with them: undefined, or past
-// the grid, for values that are not finite or are huge. Coordinates within
-// 1e8 and radii within 1e6 keep every cast in range.
+// findNeighbours converts each atom's position, less the grid's corner and
+// the search radius, scaled by up to 160 voxels per unit, to int, and
+// createVoxelGrid scaled positions to unsigned voxel indices: undefined for
+// values that are not finite, or beyond int. An atom outside the grid's
+// box is searched too (HETATM atoms that includeLigand leaves out of the
+// grid), so every coordinate is bounded, and the probe radius with it:
+// within 1e6, every scaled value stays under 1e9.
 void check_finite_within(double value, double bound, const char *what) {
   if (!(std::abs(value) <= bound)) {
     throw ValueErrorException(std::string("DoubleCubicLatticeVolume needs ") +
@@ -46,149 +33,70 @@ void check_finite_within(double value, double bound, const char *what) {
   }
 }
 
-// checkExcludedAtoms static_casts any monomer info to AtomPDBResidueInfo,
-// which is undefined for a plain AtomMonomerInfo.
-void check_monomer_infos(const RWMol &mol) {
+// AtomRecord's constructor C-casts any monomer info to AtomPDBResidueInfo,
+// which is undefined for a plain AtomMonomerInfo, and getAtomElem reads the
+// atom name's second character, and with isProtein its third, without
+// checking its length.
+void check_monomer_infos(const RWMol &mol, bool is_protein) {
+  const std::size_t min_name = is_protein ? 2 : 1;
   for (const auto *atom : mol.atoms()) {
     const auto *info = atom->getMonomerInfo();
-    if (info && !dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
+    if (!info) {
+      continue;
+    }
+    if (!dynamic_cast<const RDKit::AtomPDBResidueInfo *>(info)) {
       throw ValueErrorException(
-          "with isProtein, DoubleCubicLatticeVolume needs PDB residue info "
-          "for every atom with monomer info; atom " +
+          "DoubleCubicLatticeVolume needs PDB residue info for every atom "
+          "with monomer info; atom " +
           std::to_string(atom->getIdx()) + " has other monomer info");
     }
-  }
-}
-
-// RDKit lists each atom's neighbors only for atoms with a nonzero radius,
-// but finds an atom's list at its atom index, so after an atom with radius
-// 0 every later atom reads another's list, and the last read past the end.
-// Atoms with radius 0 (or excluded as solvent) must therefore come last.
-void check_zero_radii_last(const DoubleCubicLatticeVolume &dclv) {
-  bool seen_zero = false;
-  for (std::size_t i = 0; i < dclv.radii_.size(); ++i) {
-    if (dclv.radii_[i] == 0.0) {
-      seen_zero = true;
-    } else if (seen_zero) {
+    if (info->getName().size() < min_name) {
       throw ValueErrorException(
-          "DoubleCubicLatticeVolume needs atoms with radius 0, and excluded "
-          "atoms, after all the others; atom " +
-          std::to_string(i) + " follows one");
+          "DoubleCubicLatticeVolume needs atom names of at least " +
+          std::to_string(min_name) + " characters" +
+          (is_protein ? " with isProtein" : "") + "; atom " +
+          std::to_string(atom->getIdx()) + "'s is shorter");
     }
   }
-}
-
-boost::dynamic_bitset<> atom_set(const DoubleCubicLatticeVolume &dclv,
-                                 rust::Slice<const std::uint32_t> indices) {
-  boost::dynamic_bitset<> atoms(dclv.mol.getNumAtoms());
-  for (auto idx : indices) {
-    check_index(idx, dclv.mol.getNumAtoms());
-    atoms.set(idx);
-  }
-  return atoms;
 }
 
 }  // namespace
 
-std::unique_ptr<DoubleCubicLatticeVolume> dclv_new(
-    const RWMol &mol, rust::Slice<const double> radii, bool is_protein,
-    bool include_ligand, double probe_radius, std::int32_t conf_id) {
-  // The constructor takes the largest radius with *std::max_element, which
-  // is undefined for no atoms.
-  if (mol.getNumAtoms() == 0) {
-    throw ValueErrorException("DoubleCubicLatticeVolume needs atoms");
-  }
-  // RDKit indexes the radii by atom without checking their number.
-  if (!radii.empty() && radii.size() != mol.getNumAtoms()) {
+DclvResults dclv_compute(const RWMol &mol, bool is_protein,
+                         bool include_ligand, double probe_radius,
+                         std::int32_t depth, std::int32_t dot_density) {
+  // With a dot density, generateElemPoints computes each element's dots
+  // and discards them, and calculateVolume divides by the standard dots'
+  // count, which only a dot density of 0 initializes; a negative density
+  // converts a negative dot count to unsigned long.
+  if (dot_density != 0) {
     throw ValueErrorException(
-        "DoubleCubicLatticeVolume needs a radius for each atom");
+        "DoubleCubicLatticeVolume's dotDensity must be 0: RDKit 2025.03 "
+        "reads an uninitialized count for any other");
   }
-  for (double radius : radii) {
-    check_finite_within(radius, 1e6, "finite radii within 1e6");
+  // A negative probe radius takes RDKit's default; NaN is kept.
+  if (!(probe_radius < 0.0)) {
+    check_finite_within(probe_radius, 1e6, "a finite probe radius within 1e6");
   }
-  check_finite_within(probe_radius, 1e6, "a finite probe radius within 1e6");
-  for (const auto &pos : mol.getConformer(conf_id).getPositions()) {
-    for (double v : {pos.x, pos.y, pos.z}) {
-      check_finite_within(v, 1e8, "finite coordinates within 1e8");
+  // RDKit measures the default conformer, of the molecule without its
+  // hydrogens, whose positions are the same.
+  if (mol.getNumConformers()) {
+    for (const auto &pos : mol.getConformer().getPositions()) {
+      for (double v : {pos.x, pos.y, pos.z}) {
+        check_finite_within(v, 1e6, "finite coordinates within 1e6");
+      }
     }
   }
-  if (is_protein) {
-    check_monomer_infos(mol);
-  }
-  auto dclv = std::make_unique<DoubleCubicLatticeVolume>(
-      mol, std::vector<double>(radii.begin(), radii.end()), is_protein,
-      include_ligand, probe_radius, conf_id);
-  check_zero_radii_last(*dclv);
-  return dclv;
-}
-
-#define RDKIT_CXX_DCLV(name, method)                        \
-  double name(DoubleCubicLatticeVolume &dclv) {             \
-    std::lock_guard<std::mutex> lock(record_cache_mutex()); \
-    return dclv.method();                                   \
-  }
-
-RDKIT_CXX_DCLV(dclv_get_surface_area, getSurfaceArea)
-RDKIT_CXX_DCLV(dclv_get_volume, getVolume)
-RDKIT_CXX_DCLV(dclv_get_vdw_volume, getVDWVolume)
-RDKIT_CXX_DCLV(dclv_get_compactness, getCompactness)
-RDKIT_CXX_DCLV(dclv_get_packing_density, getPackingDensity)
-
-#undef RDKIT_CXX_DCLV
-
-double dclv_get_atom_surface_area(DoubleCubicLatticeVolume &dclv,
-                                  std::uint32_t atom_idx) {
-  check_index(atom_idx, dclv.mol.getNumAtoms());
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  return dclv.getAtomSurfaceArea(atom_idx);
-}
-
-double dclv_get_polar_surface_area(DoubleCubicLatticeVolume &dclv,
-                                   bool include_s_and_p, bool include_hs) {
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  return dclv.getPolarSurfaceArea(include_s_and_p, include_hs);
-}
-
-double dclv_get_partial_surface_area(
-    DoubleCubicLatticeVolume &dclv,
-    rust::Slice<const std::uint32_t> atom_indices) {
-  auto atoms = atom_set(dclv, atom_indices);
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  return dclv.getPartialSurfaceArea(atoms);
-}
-
-void dclv_get_surface_points(DoubleCubicLatticeVolume &dclv,
-                             rust::Vec<std::uint32_t> &atoms,
-                             rust::Vec<std::uint32_t> &counts,
-                             rust::Vec<Point3D> &points) {
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  for (const auto &[atom, atom_points] : dclv.getSurfacePoints()) {
-    atoms.push_back(atom);
-    counts.push_back(static_cast<std::uint32_t>(atom_points.size()));
-    for (const auto &p : atom_points) {
-      points.push_back(Point3D{p.x, p.y, p.z});
-    }
-  }
-}
-
-double dclv_get_atom_volume(DoubleCubicLatticeVolume &dclv,
-                            std::uint32_t atom_idx, double solvent_radius) {
-  check_index(atom_idx, dclv.mol.getNumAtoms());
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  return dclv.getAtomVolume(atom_idx, solvent_radius);
-}
-
-double dclv_get_polar_volume(DoubleCubicLatticeVolume &dclv,
-                             bool include_s_and_p, bool include_hs) {
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  return dclv.getPolarVolume(include_s_and_p, include_hs);
-}
-
-double dclv_get_partial_volume(DoubleCubicLatticeVolume &dclv,
-                               rust::Slice<const std::uint32_t> atom_indices) {
-  auto atoms = atom_set(dclv, atom_indices);
-  std::lock_guard<std::mutex> lock(record_cache_mutex());
-  return dclv.getPartialVolume(atoms);
+  check_monomer_infos(mol, is_protein);
+  RDKit::Descriptors::DoubleCubicLatticeVolume dclv(
+      mol, is_protein, include_ligand, probe_radius, depth, dot_density);
+  DclvResults results;
+  results.surface_area = dclv.getSurfaceArea();
+  results.volume = dclv.getVolume();
+  results.vdw_volume = dclv.getVDWVolume();
+  results.compactness = dclv.getCompactness();
+  results.packing_density = dclv.getPackingDensity();
+  return results;
 }
 
 }  // namespace rdkit_cxx

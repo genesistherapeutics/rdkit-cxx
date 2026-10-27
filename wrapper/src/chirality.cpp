@@ -188,8 +188,8 @@ void wedge_mol_bonds(RWMol &mol, const Conformer &conformer,
   RDKit::Chirality::wedgeMolBonds(mol, &mol.getConformer(id), &params);
 }
 
-void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types, bool verify) {
-  RDKit::Chirality::reapplyMolBlockWedging(mol, all_bond_types, verify);
+void reapply_mol_block_wedging(RWMol &mol, bool all_bond_types) {
+  RDKit::Chirality::reapplyMolBlockWedging(mol, all_bond_types);
 }
 
 void set_allow_nontetrahedral_chirality(bool val) {

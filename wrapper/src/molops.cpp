@@ -33,8 +33,8 @@ std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
   return operation_that_failed;
 }
 
-void kekulize(RWMol &mol, bool clear_aromatic_flags, bool canonical) {
-  RDKit::MolOps::Kekulize(mol, clear_aromatic_flags, canonical);
+void kekulize(RWMol &mol, bool clear_aromatic_flags) {
+  RDKit::MolOps::Kekulize(mol, clear_aromatic_flags);
 }
 
 AddHsParametersData add_hs_parameters_default() {

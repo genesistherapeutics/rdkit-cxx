@@ -86,4 +86,4 @@ pub use substance_group::{
     create_mol_substance_group, get_mol_substance_group_with_idx,
     get_mol_substance_group_with_idx_mut, get_mol_substance_groups,
 };
-pub use substruct::{AtomCoordsMatcher, AtomCoordsMatcherParams, SubstructMatchParameters};
+pub use substruct::SubstructMatchParameters;

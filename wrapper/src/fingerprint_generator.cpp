@@ -22,8 +22,6 @@
 #include <GraphMol/Fingerprints/RDKitFPGenerator.h>
 #include <GraphMol/Fingerprints/TopologicalTorsionGenerator.h>
 #include <RDGeneral/Exceptions.h>
-#include <boost/property_tree/json_parser.hpp>
-#include <boost/property_tree/ptree.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -141,8 +139,8 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
                 const std::vector<std::uint32_t> *from_atoms,
                 const std::vector<std::uint32_t> *ignore_atoms,
                 const std::vector<std::uint32_t> *atom_invariants,
-                const std::vector<std::uint32_t> *bond_invariants, int conf_id,
-                bool atoms_per_bit) {
+                const std::vector<std::uint32_t> *bond_invariants,
+                int conf_id) {
   for (const auto *atoms : {from_atoms, ignore_atoms}) {
     if (atoms) {
       for (auto idx : *atoms) {
@@ -156,12 +154,10 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
   if (bond_invariants && bond_invariants->size() < mol.getNumBonds()) {
     throw ValueErrorException("customBondInvariants needs one per bond");
   }
-  // Atom pairs, and Morgan's atomsPerBit, read the n*n distance matrix.
+  // Atom pairs read the n*n distance matrix.
   bool atom_pairs =
       dynamic_cast<const AtomPairArguments *>(gen.getOptions()) != nullptr;
-  bool morgan =
-      dynamic_cast<const MorganArguments *>(gen.getOptions()) != nullptr;
-  if (atom_pairs || (morgan && atoms_per_bit)) {
+  if (atom_pairs) {
     check_matrix_size(mol);
   }
   if (uses_3d_distances(gen)) {
@@ -185,12 +181,8 @@ class Outputs {
     if (data.collect_atom_counts) {
       d_ao.allocateAtomCounts();
     }
-    if (data.collect_atoms_per_bit) {
-      d_ao.allocateAtomsPerBit();
-    }
     d_any = data.collect_atom_to_bits || data.collect_bit_info_map ||
-            data.collect_bit_paths || data.collect_atom_counts ||
-            data.collect_atoms_per_bit;
+            data.collect_bit_paths || data.collect_atom_counts;
   }
 
   RDKit::AdditionalOutput *get() { return d_any ? &d_ao : nullptr; }
@@ -216,8 +208,6 @@ class Outputs {
     if (d_ao.atomCounts) {
       data.atom_counts = to_vec(*d_ao.atomCounts);
     }
-    copy_lists(d_ao.atomsPerBit, data.atoms_per_bit_keys,
-               data.atoms_per_bit_counts, data.atoms_per_bit_values);
   }
 
  private:
@@ -258,8 +248,7 @@ auto with_args(const FpGenerator &gen, const RWMol &mol,
   auto bond_invariants = optional_list(data.has_custom_bond_invariants,
                                        data.custom_bond_invariants);
   check_call(gen, mol, from_atoms.get(), ignore_atoms.get(),
-             atom_invariants.get(), bond_invariants.get(), data.conf_id,
-             outputs.collect_atoms_per_bit);
+             atom_invariants.get(), bond_invariants.get(), data.conf_id);
   Outputs ao(outputs);
   RDKit::FingerprintFuncArguments args(
       from_atoms.get(), ignore_atoms.get(), data.conf_id, ao.get(),
@@ -317,7 +306,7 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
                                           int num_threads) {
   const auto &list = mols.mols();
   for (const auto &mol : list) {
-    check_call(gen, *mol, nullptr, nullptr, nullptr, nullptr, -1, false);
+    check_call(gen, *mol, nullptr, nullptr, nullptr, nullptr, -1);
   }
   auto result = std::make_unique<FingerprintList>();
   if (is_bits(output)) {
@@ -429,48 +418,6 @@ std::unique_ptr<FpGenerator> get_topological_torsion_generator(
           count_bounds(data.count_simulation, data.has_count_bounds,
                        data.count_bounds),
           true));
-}
-
-// generatorFromJSON passes null for a part the JSON leaves out, and the
-// generator dereferences it: the constructor the environment generator, and
-// the atom-pair and torsion environments the atom invariants (Python
-// segfaults on "{}"). Each environment generator also dynamic_casts the
-// options to its own type without checking. So the JSON must name all three
-// parts, with matching options and environment.
-void check_generator_json(const std::string &json) {
-  std::istringstream ss(json);
-  boost::property_tree::ptree pt;
-  boost::property_tree::read_json(ss, pt);
-  auto type = [&](const char *node) {
-    auto child = pt.get_child_optional(node);
-    auto typ = child ? child->get_optional<std::string>("type")
-                     : boost::optional<std::string>();
-    if (!typ) {
-      throw ValueErrorException(std::string("the generator JSON needs ") +
-                                node + " with a type");
-    }
-    return *typ;
-  };
-  auto args = type("fingerprintArguments");
-  auto env = type("atomEnvironmentGenerator");
-  type("atomInvariantsGenerator");
-  static const std::vector<std::pair<std::string, std::string>> pairs{
-      {"MorganArguments", "MorganEnvGenerator"},
-      {"RDKitFPArguments", "RDKitFPEnvGenerator"},
-      {"AtomPairArguments", "AtomPairEnvGenerator"},
-      {"TopologicalTorsionArguments", "TopologicalTorsionEnvGenerator"}};
-  if (std::find(pairs.begin(), pairs.end(), std::make_pair(args, env)) ==
-      pairs.end()) {
-    throw ValueErrorException("the generator JSON's " + args + " and " + env +
-                              " do not go together");
-  }
-}
-
-std::unique_ptr<FpGenerator> fingerprint_generator_from_json(rust::Str json) {
-  std::string text(json);
-  check_generator_json(text);
-  // The torsion length is checked before the generator reads it.
-  return checked(RDKit::generatorFromJSON(text).release());
 }
 
 std::unique_ptr<AtomInvGen> get_morgan_atom_inv_gen(
@@ -624,10 +571,6 @@ std::unique_ptr<std::string> fp_generator_info_string(const FpGenerator &gen) {
   return std::make_unique<std::string>(gen.infoString());
 }
 
-std::unique_ptr<std::string> fp_generator_to_json(const FpGenerator &gen) {
-  return std::make_unique<std::string>(RDKit::generatorToJSON(gen));
-}
-
 std::unique_ptr<BitVect> fp_generator_bits(const FpGenerator &gen,
                                            const RWMol &mol,
                                            FingerprintOutput output,
@@ -710,7 +653,7 @@ std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
 }
 
 void check_fingerprint_mol(const FpGenerator &gen, const RDKit::ROMol &mol) {
-  check_call(gen, mol, nullptr, nullptr, nullptr, nullptr, -1, false);
+  check_call(gen, mol, nullptr, nullptr, nullptr, nullptr, -1);
 }
 
 std::size_t fingerprint_list_size(const FingerprintList &list) {

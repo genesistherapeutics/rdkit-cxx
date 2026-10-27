@@ -180,8 +180,8 @@ impl Default for StereoInfo {
 }
 
 impl StereoInfo {
-    /// The marker for unset indices, `Atom::NOATOM`.
-    pub const NOATOM: u32 = Atom::NOATOM;
+    /// The marker for unset indices. Mirrors `StereoInfo.NOATOM`.
+    pub const NOATOM: u32 = u32::MAX;
 
     pub(crate) fn from_ffi(data: ffi::StereoInfoData) -> StereoInfo {
         StereoInfo {

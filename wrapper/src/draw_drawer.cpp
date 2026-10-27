@@ -940,7 +940,7 @@ void check_drawing(Drawer &d, const RWMol &mol, int conf_id,
   const auto &opts = d.drawer->drawOptions();
   check_draw_area(d.drawer->panelWidth(), d.drawer->panelHeight(), opts);
   check_font(d);
-  check_legend(legend, opts, d.freetype);
+  check_legend(legend, d.freetype);
   check_drawn_mol(mol, conf_id, opts, d.freetype, annotations, symmetrized);
 }
 

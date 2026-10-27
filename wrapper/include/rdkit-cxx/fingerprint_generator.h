@@ -63,7 +63,6 @@ std::unique_ptr<FpGenerator> get_rdkit_fp_generator(
 std::unique_ptr<FpGenerator> get_topological_torsion_generator(
     const TopologicalTorsionGeneratorData &data,
     std::unique_ptr<AtomInvGen> atom_inv_gen);
-std::unique_ptr<FpGenerator> fingerprint_generator_from_json(rust::Str json);
 
 std::unique_ptr<AtomInvGen> get_morgan_atom_inv_gen(
     bool include_ring_membership);
@@ -82,7 +81,6 @@ FingerprintOptionsData fp_generator_get_options(const FpGenerator &gen);
 void fp_generator_set_options(FpGenerator &gen,
                               const FingerprintOptionsData &data);
 std::unique_ptr<std::string> fp_generator_info_string(const FpGenerator &gen);
-std::unique_ptr<std::string> fp_generator_to_json(const FpGenerator &gen);
 
 // One fingerprint of the given kind; bit vectors come back in `bits`, count
 // vectors in `counts`, and the NumPy forms in `values`.

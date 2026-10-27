@@ -27,22 +27,11 @@ pub(crate) mod ffi {
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type AromaticityModel;
 
-        fn get_sssr(
-            mol: Pin<&mut RWMol>,
-            include_dative_bonds: bool,
-            include_hydrogen_bonds: bool,
-        ) -> Result<Vec<IndexList>>;
-        fn get_symm_sssr(
-            mol: Pin<&mut RWMol>,
-            include_dative_bonds: bool,
-            include_hydrogen_bonds: bool,
-        ) -> Result<Vec<IndexList>>;
+        fn get_sssr(mol: Pin<&mut RWMol>, include_dative_bonds: bool) -> Result<Vec<IndexList>>;
+        fn get_symm_sssr(mol: Pin<&mut RWMol>, include_dative_bonds: bool)
+        -> Result<Vec<IndexList>>;
         fn fast_find_rings(mol: Pin<&mut RWMol>) -> Result<()>;
-        fn find_ring_families(
-            mol: Pin<&mut RWMol>,
-            include_dative_bonds: bool,
-            include_hydrogen_bonds: bool,
-        ) -> Result<()>;
+        fn find_ring_families(mol: Pin<&mut RWMol>) -> Result<()>;
 
         fn cleanup(mol: Pin<&mut RWMol>) -> Result<()>;
         fn cleanup_chirality(mol: Pin<&mut RWMol>) -> Result<()>;
@@ -52,11 +41,7 @@ pub(crate) mod ffi {
         fn set_conjugation(mol: Pin<&mut RWMol>) -> Result<()>;
         fn set_hybridization(mol: Pin<&mut RWMol>) -> Result<()>;
         fn assign_radicals(mol: Pin<&mut RWMol>) -> Result<()>;
-        fn kekulize_if_possible(
-            mol: Pin<&mut RWMol>,
-            clear_aromatic_flags: bool,
-            canonical: bool,
-        ) -> Result<()>;
+        fn kekulize_if_possible(mol: Pin<&mut RWMol>, clear_aromatic_flags: bool) -> Result<()>;
         fn haptic_bonds_to_dative(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn dative_bonds_to_haptic(mol: &RWMol) -> Result<UniquePtr<RWMol>>;
         fn needs_hs(mol: &RWMol) -> Result<bool>;

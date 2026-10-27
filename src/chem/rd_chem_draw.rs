@@ -11,13 +11,9 @@
 
 use crate::Result;
 use crate::chem::Mol;
-use crate::chem::rdmolfiles::{CDXMLFormat, mol_to_cdxml_block, mol_to_cdxml_block_format};
+use crate::ffi::molfiles::ffi;
 
 /// A ChemDraw format. Mirrors `rdChemDraw.CDXFormat`.
-///
-/// RDKit's `MolToCDXMLBlock` writes through `MolToChemDrawBlock`, mapping
-/// `rdmolfiles.CDXMLFormat` onto this enum, so the writer here goes the other
-/// way, through `rdmolfiles`' checked writer.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[non_exhaustive]
 pub enum CDXFormat {
@@ -27,26 +23,30 @@ pub enum CDXFormat {
     Cdxml,
 }
 
-impl From<CDXFormat> for CDXMLFormat {
-    fn from(format: CDXFormat) -> CDXMLFormat {
-        match format {
-            CDXFormat::Cdx => CDXMLFormat::Cdx,
-            CDXFormat::Cdxml => CDXMLFormat::Cdxml,
+impl CDXFormat {
+    fn to_ffi(self) -> ffi::CDXFormat {
+        match self {
+            CDXFormat::Cdx => ffi::CDXFormat::CDX,
+            CDXFormat::Cdxml => ffi::CDXFormat::CDXML,
         }
     }
 }
 
-/// A CDXML document for a molecule, as `rdmolfiles::mol_to_cdxml_block`
-/// writes it: coordinates that do not fit ChemDraw's 32-bit fixed point, or
-/// a 2D molecule without bonds of nonzero length, are `Error::Value`.
-/// Mirrors `rdChemDraw.MolToChemDrawBlock`.
+/// A CDXML document for a molecule. RDKit writes coordinates as 32-bit fixed
+/// point, scaling 2D ones to ChemDraw's bond length, so coordinates that do
+/// not fit, or a 2D molecule without bonds of nonzero length, are
+/// `Error::Value`. Mirrors `rdChemDraw.MolToChemDrawBlock`.
 pub fn mol_to_chem_draw_block(mol: &Mol) -> Result<String> {
-    mol_to_cdxml_block(mol)
+    let bytes = mol_to_chem_draw_block_format(mol, CDXFormat::Cdxml)?;
+    String::from_utf8(bytes).map_err(|err| crate::Error::Value {
+        message: format!("invalid UTF-8 in a string from RDKit: {err}"),
+    })
 }
 
 /// A ChemDraw document in `format`, as bytes: binary for `Cdx`, text for
-/// `Cdxml`. Mirrors `rdChemDraw.MolToChemDrawBlock(mol, format)`, which
-/// returns `str` for either and so cannot decode a binary CDX document.
+/// `Cdxml`, with the errors of `mol_to_chem_draw_block`. Mirrors
+/// `rdChemDraw.MolToChemDrawBlock(mol, format)`, which returns `str` for
+/// either and so cannot decode a binary CDX document.
 pub fn mol_to_chem_draw_block_format(mol: &Mol, format: CDXFormat) -> Result<Vec<u8>> {
-    mol_to_cdxml_block_format(mol, format.into())
+    Ok(ffi::mol_to_chem_draw_block(mol.as_ffi(), format.to_ffi())?)
 }

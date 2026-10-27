@@ -47,7 +47,6 @@ class O3AList {
   std::vector<boost::shared_ptr<RDKit::MolAlign::O3A>> items;
 };
 
-BestAlignmentParamsData best_alignment_params_default();
 
 double get_alignment_transform(const RWMol &prb_mol, const RWMol &ref_mol,
                                std::int32_t prb_cid, std::int32_t ref_cid,

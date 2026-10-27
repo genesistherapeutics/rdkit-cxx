@@ -20,7 +20,6 @@ pub(crate) mod ffi {
         atom_symbols: Vec<String>,
         enforce_valence_rules: bool,
         generate_coordinates: bool,
-        align_coordinates: bool,
     }
 
     unsafe extern "C++" {

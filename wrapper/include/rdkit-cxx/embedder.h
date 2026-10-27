@@ -38,14 +38,10 @@ EmbedParametersData embed_parameters_preset(EmbedPreset preset);
 rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
                                              std::uint32_t num_confs,
                                              EmbedParametersData &params);
-std::unique_ptr<std::string> embed_parameters_to_json(
-    const EmbedParametersData &params);
-rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
-                                             const EmbedParametersData &params,
+rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol, bool set15bounds,
+                                             bool scale_vdw,
                                              bool do_triangle_smoothing,
-                                             bool scale_vdw, bool set15bounds,
-                                             bool set14bounds,
-                                             bool set13bounds);
+                                             bool use_macrocycle14config);
 rust::Vec<ExperimentalTorsionData> get_experimental_torsions(
     const RWMol &mol, bool use_exp_torsion_angle_prefs,
     bool use_small_ring_torsions, bool use_macrocycle_torsions,

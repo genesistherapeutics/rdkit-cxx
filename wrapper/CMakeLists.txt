@@ -120,7 +120,6 @@ set(RDKIT_CXX_SOURCES
   src/free_sasa.cpp
   src/mif.cpp
   src/shape_align.cpp
-  src/gaussian_shape.cpp
   src/metric_matrix_calc.cpp
   src/murtagh_checks.cpp
   src/cluster.cpp
@@ -192,7 +191,6 @@ set(RDKIT_CXX_RDKIT_TARGETS
   FreeSASALib
   MolInteractionFields
   PubChemShape
-  GaussianShape
   hc
   SimDivPickers
   InfoTheory
@@ -200,6 +198,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   EnumerateStereoisomers
   MolEnumerator
   MolInterchange
+  ChemDraw
   SynthonSpaceSearch
   RDInchiLib
 )
@@ -230,9 +229,7 @@ target_include_directories(rdkitcxx PRIVATE
   third_party
   ${RDKIT_CXX_GENERATED_INCLUDE_DIR}
   ${RDKit_INCLUDE_DIRS}
-  # Declarations RDKit's installed headers need (compat/maeparser), and
-  # names they include that RDKit installs elsewhere
-  # (compat/GraphMol/GaussianShape).
+  # Declarations RDKit's installed headers need (compat/maeparser).
   compat
   # RDKit's own copies, from the release found (vendor/<release>), of
   # headers its packages do not install. conda-forge's librdkit-dev 2025.03

@@ -62,26 +62,6 @@ macro_rules! monomer_getters {
                     self.monomer(),
                 )))
             }
-
-            /// Mirrors `GetResidueName`.
-            pub fn get_residue_name(&self) -> Result<String> {
-                to_string(ffi::monomer_info_get_residue_name(self.monomer())?)
-            }
-
-            /// Mirrors `GetResidueNumber`.
-            pub fn get_residue_number(&self) -> i32 {
-                expect_ok(ffi::monomer_info_get_residue_number(self.monomer()))
-            }
-
-            /// Mirrors `GetChainId`.
-            pub fn get_chain_id(&self) -> Result<String> {
-                to_string(ffi::monomer_info_get_chain_id(self.monomer())?)
-            }
-
-            /// Mirrors `GetMonomerClass`.
-            pub fn get_monomer_class(&self) -> Result<String> {
-                to_string(ffi::monomer_info_get_monomer_class(self.monomer())?)
-            }
         }
     };
 }
@@ -95,29 +75,6 @@ macro_rules! monomer_setters {
             pub fn set_name(&mut self, nm: &str) {
                 expect_ok(ffi::monomer_info_set_name(self.monomer_mut(), nm))
             }
-
-            /// Mirrors `SetResidueName`.
-            pub fn set_residue_name(&mut self, val: &str) {
-                expect_ok(ffi::monomer_info_set_residue_name(self.monomer_mut(), val))
-            }
-
-            /// Mirrors `SetResidueNumber`.
-            pub fn set_residue_number(&mut self, val: i32) {
-                expect_ok(ffi::monomer_info_set_residue_number(
-                    self.monomer_mut(),
-                    val,
-                ))
-            }
-
-            /// Mirrors `SetChainId`.
-            pub fn set_chain_id(&mut self, val: &str) {
-                expect_ok(ffi::monomer_info_set_chain_id(self.monomer_mut(), val))
-            }
-
-            /// Mirrors `SetMonomerClass`.
-            pub fn set_monomer_class(&mut self, val: &str) {
-                expect_ok(ffi::monomer_info_set_monomer_class(self.monomer_mut(), val))
-            }
         }
     };
 }
@@ -128,14 +85,6 @@ macro_rules! monomer_setters {
 pub struct AtomMonomerInfoParams {
     /// The atom's name in the monomer.
     pub name: String,
-    /// The residue's name.
-    pub residue_name: String,
-    /// The residue's number.
-    pub res_num: i32,
-    /// The chain's id.
-    pub chain_id: String,
-    /// The monomer's class.
-    pub monomer_class: String,
 }
 
 /// An atom's monomer information. Mirrors `rdchem.AtomMonomerInfo`.
@@ -175,8 +124,8 @@ impl AtomMonomerInfo {
         AtomMonomerInfo::new_with_params(typ, &AtomMonomerInfoParams::default())
     }
 
-    /// Mirrors `AtomMonomerInfo(type, name, residueName, resNum, chainId,
-    /// monomerClass)`; `Error::Value` for `Pdbresidue`.
+    /// Mirrors `AtomMonomerInfo(type, name)`; `Error::Value` for
+    /// `Pdbresidue`.
     pub fn new_with_params(
         typ: AtomMonomerType,
         params: &AtomMonomerInfoParams,
@@ -184,10 +133,6 @@ impl AtomMonomerInfo {
         Ok(AtomMonomerInfo::from_ffi(ffi::monomer_info_with(
             typ.to_ffi(),
             &params.name,
-            &params.residue_name,
-            params.res_num,
-            &params.chain_id,
-            &params.monomer_class,
         )?))
     }
 
@@ -252,8 +197,6 @@ pub struct AtomPDBResidueInfoParams {
     pub secondary_structure: u32,
     /// The segment's number.
     pub segment_number: u32,
-    /// The monomer's class.
-    pub monomer_class: String,
 }
 
 impl Default for AtomPDBResidueInfoParams {
@@ -270,7 +213,6 @@ impl Default for AtomPDBResidueInfoParams {
             is_hetero_atom: false,
             secondary_structure: 0,
             segment_number: 0,
-            monomer_class: String::new(),
         }
     }
 }
@@ -325,7 +267,6 @@ impl AtomPDBResidueInfo {
             p.is_hetero_atom,
             p.secondary_structure,
             p.segment_number,
-            &p.monomer_class,
         )))
     }
 
@@ -346,6 +287,21 @@ impl AtomPDBResidueInfo {
     /// Mirrors `AtomPDBResidueInfo.GetAltLoc`.
     pub fn get_alt_loc(&self) -> Result<String> {
         to_string(ffi::pdb_residue_info_get_alt_loc(self.raw())?)
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.GetResidueName`.
+    pub fn get_residue_name(&self) -> Result<String> {
+        to_string(ffi::pdb_residue_info_get_residue_name(self.raw())?)
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.GetResidueNumber`.
+    pub fn get_residue_number(&self) -> i32 {
+        expect_ok(ffi::pdb_residue_info_get_residue_number(self.raw()))
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.GetChainId`.
+    pub fn get_chain_id(&self) -> Result<String> {
+        to_string(ffi::pdb_residue_info_get_chain_id(self.raw())?)
     }
 
     /// Mirrors `AtomPDBResidueInfo.GetInsertionCode`.
@@ -386,6 +342,24 @@ impl AtomPDBResidueInfo {
     /// Mirrors `AtomPDBResidueInfo.SetAltLoc`.
     pub fn set_alt_loc(&mut self, val: &str) {
         expect_ok(ffi::pdb_residue_info_set_alt_loc(self.raw_mut(), val))
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.SetResidueName`.
+    pub fn set_residue_name(&mut self, val: &str) {
+        expect_ok(ffi::pdb_residue_info_set_residue_name(self.raw_mut(), val))
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.SetResidueNumber`.
+    pub fn set_residue_number(&mut self, val: i32) {
+        expect_ok(ffi::pdb_residue_info_set_residue_number(
+            self.raw_mut(),
+            val,
+        ))
+    }
+
+    /// Mirrors `AtomPDBResidueInfo.SetChainId`.
+    pub fn set_chain_id(&mut self, val: &str) {
+        expect_ok(ffi::pdb_residue_info_set_chain_id(self.raw_mut(), val))
     }
 
     /// Mirrors `AtomPDBResidueInfo.SetInsertionCode`.

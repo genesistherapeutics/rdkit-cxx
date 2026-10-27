@@ -25,13 +25,10 @@ namespace rdkit_cxx {
 // A C enum, which cxx checks against the bridge's values.
 using AromaticityModel = RDKit::MolOps::AromaticityModel;
 
-rust::Vec<IndexList> get_sssr(RWMol &mol, bool include_dative_bonds,
-                              bool include_hydrogen_bonds);
-rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds,
-                                   bool include_hydrogen_bonds);
+rust::Vec<IndexList> get_sssr(RWMol &mol, bool include_dative_bonds);
+rust::Vec<IndexList> get_symm_sssr(RWMol &mol, bool include_dative_bonds);
 void fast_find_rings(RWMol &mol);
-void find_ring_families(RWMol &mol, bool include_dative_bonds,
-                        bool include_hydrogen_bonds);
+void find_ring_families(RWMol &mol);
 
 void cleanup(RWMol &mol);
 void cleanup_chirality(RWMol &mol);
@@ -41,8 +38,7 @@ void set_aromaticity(RWMol &mol, AromaticityModel model);
 void set_conjugation(RWMol &mol);
 void set_hybridization(RWMol &mol);
 void assign_radicals(RWMol &mol);
-void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags,
-                          bool canonical);
+void kekulize_if_possible(RWMol &mol, bool clear_aromatic_flags);
 std::unique_ptr<RWMol> haptic_bonds_to_dative(const RWMol &mol);
 std::unique_ptr<RWMol> dative_bonds_to_haptic(const RWMol &mol);
 bool needs_hs(const RWMol &mol);

@@ -328,7 +328,8 @@ impl Default for GetSmartsParams {
     }
 }
 
-/// `Atom::NOATOM`, read from C++ for a test that pins the constant.
+/// `Chirality::StereoInfo::NOATOM`, read from C++ for a test that pins the
+/// constant.
 #[cfg(test)]
 pub(crate) fn noatom_for_tests() -> u32 {
     expect_ok(ffi::atom_noatom())
@@ -359,9 +360,6 @@ impl Atom {
     pub fn new(what: &str) -> Result<Atom> {
         Ok(Atom::from_ffi(ffi::atom_new(what)?))
     }
-
-    /// The index that marks "no atom". Mirrors `Atom.NOATOM`.
-    pub const NOATOM: u32 = u32::MAX;
 
     /// An atom with atomic number `num`. Mirrors `Atom(num)`.
     pub fn from_num(num: u32) -> Atom {
@@ -593,6 +591,6 @@ mod tests {
 
     #[test]
     fn noatom_matches_rdkit() {
-        assert_eq!(Atom::NOATOM, noatom_for_tests());
+        assert_eq!(crate::chem::rdchem::StereoInfo::NOATOM, noatom_for_tests());
     }
 }

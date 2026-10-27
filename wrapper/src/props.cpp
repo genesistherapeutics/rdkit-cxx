@@ -210,7 +210,7 @@ std::unique_ptr<std::string> props_get_prop(const RDProps &obj,
 PropValueData props_get_prop_auto_convert(const RDProps &obj,
                                           rust::Str key_str) {
   std::string key(key_str);
-  for (const auto &item : obj.getDict()) {
+  for (const auto &item : obj.getDict().getData()) {
     if (item.key != key) {
       continue;
     }
@@ -295,7 +295,7 @@ rust::Vec<PropValueData> props_get_props_as_dict(const RDProps &obj,
                                                  bool auto_convert_strings) {
   auto keys = obj.getPropList(include_private, include_computed);
   rust::Vec<PropValueData> result;
-  for (const auto &item : obj.getDict()) {
+  for (const auto &item : obj.getDict().getData()) {
     if (std::find(keys.begin(), keys.end(), item.key) == keys.end()) {
       continue;
     }

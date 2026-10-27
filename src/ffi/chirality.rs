@@ -115,7 +115,6 @@ pub(crate) mod ffi {
         fn reapply_mol_block_wedging(
             mol: Pin<&mut RWMol>,
             all_bond_types: bool,
-            verify: bool,
         ) -> Result<()>;
 
         fn set_allow_nontetrahedral_chirality(val: bool) -> Result<()>;

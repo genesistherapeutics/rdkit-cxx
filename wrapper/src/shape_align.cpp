@@ -7,6 +7,7 @@
 
 #include <cfloat>
 #include <cmath>
+#include <map>
 #include <mutex>
 #include <set>
 #include <sstream>
@@ -23,6 +24,33 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/shape_align.rs.h"
+
+// pubchem-align3d's overlaps, which PubChemShape.cpp computes with and
+// RDKit's library exports, but whose header RDKit does not install: the
+// declarations of shape_functions.hpp at the commit RDKit 2025.03 builds
+// (daefab3, public domain).
+namespace Align3D {
+double ComputeShapeOverlap(
+    const float *ref_coord, const std::vector<double> &alpha_ref_vector,
+    const std::vector<unsigned> &ref_volume_atom_index_vector,
+    const float *fit_coord, const std::vector<double> &alpha_fit_vector,
+    const std::vector<unsigned> &fit_volume_atom_index_vector);
+double ComputeFeatureOverlap(
+    const float *ref_coord, const std::vector<double> &alpha_ref_vector,
+    const std::map<unsigned, std::vector<unsigned>>
+        &ref_atom_type_to_index_vector_map,
+    const float *fit_coord, const std::vector<double> &alpha_fit_vector,
+    const std::map<unsigned, std::vector<unsigned>>
+        &fit_atom_type_to_index_vector_map);
+void getJointColorTypeSet(const unsigned *ref_atom_types,
+                          const unsigned ref_natom,
+                          const unsigned *fit_atom_types,
+                          const unsigned fit_natom,
+                          std::set<unsigned> &joint_color_atom_type_set);
+void restrictColorAtomType2IndexVectorMap(
+    std::map<unsigned, std::vector<unsigned>> &atom_type_to_index_vector_map,
+    const std::set<unsigned> &joint_color_atom_type_set);
+}  // namespace Align3D
 
 namespace rdkit_cxx {
 
@@ -44,10 +72,7 @@ std::mutex &pubchem_shape_mutex() {
 constexpr const char *kFeaturesProp = "PUBCHEM_PHARMACOPHORE_FEATURES";
 
 ShapeInputOptions to_options(const ShapeInputOptionsData &data) {
-  if (data.atom_radii_atoms.size() != data.atom_radii_values.size() ||
-      data.custom_feature_types.size() !=
-          data.custom_feature_positions.size() ||
-      data.custom_feature_types.size() != data.custom_feature_radii.size()) {
+  if (data.atom_radii_atoms.size() != data.atom_radii_values.size()) {
     throw ValueErrorException("mismatched ShapeInputOptions vectors");
   }
   ShapeInputOptions opts;
@@ -61,13 +86,6 @@ ShapeInputOptions to_options(const ShapeInputOptionsData &data) {
     opts.atomRadii.emplace_back(data.atom_radii_atoms[i],
                                 data.atom_radii_values[i]);
   }
-  for (std::size_t i = 0; i < data.custom_feature_types.size(); ++i) {
-    const auto &p = data.custom_feature_positions[i];
-    opts.customFeatures.emplace_back(data.custom_feature_types[i],
-                                     RDGeom::Point3D(p.x, p.y, p.z),
-                                     data.custom_feature_radii[i]);
-  }
-  opts.normalize = data.normalize;
   return opts;
 }
 
@@ -141,12 +159,6 @@ PubChemShapeInput prepare(const RDKit::ROMol &mol, int conf_id,
     check_coordinate(pos.y);
     check_coordinate(pos.z);
   }
-  for (const auto &feature : opts.customFeatures) {
-    const auto &pos = std::get<1>(feature);
-    check_coordinate(pos.x);
-    check_coordinate(pos.y);
-    check_coordinate(pos.z);
-  }
   std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
   // The color features come from substructure matches (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
@@ -188,6 +200,33 @@ void check_shape(const PubChemShapeInput &shape) {
 // makes some pose score above 0 at the end. ScoreShape computes those
 // scores with the same overlaps, exactly, since the flips only negate
 // coordinates.
+// The shape and color Tanimoto scores of two shapes where they are, as
+// RDKit 2026.03's ScoreShape (PubChemShape.cpp) computes them.
+std::pair<double, double> score_shape(const PubChemShapeInput &shape1,
+                                      const PubChemShapeInput &shape2,
+                                      bool use_colors) {
+  double shape_overlap = Align3D::ComputeShapeOverlap(
+      shape1.coord.data(), shape1.alpha_vector, shape1.volumeAtomIndexVector,
+      shape2.coord.data(), shape2.alpha_vector, shape2.volumeAtomIndexVector);
+  double shape = shape_overlap / (shape1.sov + shape2.sov - shape_overlap);
+  double color = 0.0;
+  if (use_colors) {
+    std::set<unsigned> joint;
+    Align3D::getJointColorTypeSet(
+        shape1.atom_type_vector.data(), shape1.atom_type_vector.size(),
+        shape2.atom_type_vector.data(), shape2.atom_type_vector.size(), joint);
+    auto map1 = shape1.colorAtomType2IndexVectorMap;
+    Align3D::restrictColorAtomType2IndexVectorMap(map1, joint);
+    auto map2 = shape2.colorAtomType2IndexVectorMap;
+    Align3D::restrictColorAtomType2IndexVectorMap(map2, joint);
+    double feature_overlap = Align3D::ComputeFeatureOverlap(
+        shape1.coord.data(), shape1.alpha_vector, map1, shape2.coord.data(),
+        shape2.alpha_vector, map2);
+    color = feature_overlap / (shape1.sof + shape2.sof - feature_overlap);
+  }
+  return {shape, color};
+}
+
 void check_alignable(const PubChemShapeInput &ref, const PubChemShapeInput &fit,
                      double opt_param) {
   check_shape(ref);
@@ -214,7 +253,7 @@ void check_alignable(const PubChemShapeInput &ref, const PubChemShapeInput &fit,
     for (std::size_t i = 0; i < posed.coord.size(); ++i) {
       posed.coord[i] *= flip[i % 3];
     }
-    auto [shape, color] = ScoreShape(ref, posed, colors);
+    auto [shape, color] = score_shape(ref, posed, colors);
     double fst = positive(shape);
     double fct = positive(color);
     double score = colors ? opt_param * (fst - fct) + fct : fst;
@@ -254,7 +293,9 @@ void check_size(std::size_t size, std::size_t expected, const char *what) {
 }
 
 // As AlignMolecule(refShape, fit, ...) in PubChemShape.cpp, step by step,
-// with the checks above between the steps.
+// with the checks above between the steps. With applyRefShift, RDKit
+// subtracts the reference's shift from the result, moving the probe back
+// into the reference molecule's frame.
 std::pair<double, double> align_molecule(
     const PubChemShapeInput &ref_shape, RWMol &fit,
     const ShapeInputOptions &opts, int fit_conf_id, double opt_param,
@@ -265,15 +306,10 @@ std::pair<double, double> align_molecule(
                       max_postiters);
   auto &conf = fit.getConformer(fit_conf_id);
   std::vector<double> final_trans{0.0, 0.0, 0.0};
-  std::vector<double> final_rot{1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
   if (apply_ref_shift) {
-    const auto &rot = ref_shape.inertialRot;
-    final_trans = {-ref_shape.shift[0], -ref_shape.shift[1],
-                   -ref_shape.shift[2]};
-    final_rot = {rot[0], rot[3], rot[6], rot[1], rot[4],
-                 rot[7], rot[2], rot[5], rot[8]};
+    final_trans = ref_shape.shift;
   }
-  TransformConformer(final_trans, final_rot, matrix, fit_shape, conf);
+  TransformConformer(final_trans, matrix, fit_shape, conf);
   fit.setProp("shape_align_shape_tanimoto", scores.first);
   fit.setProp("shape_align_color_tanimoto", scores.second);
   return scores;
@@ -304,7 +340,6 @@ ShapeInputOptionsData pubchem_shape_input_options_default() {
   data.use_colors = opts.useColors;
   data.include_dummies = opts.includeDummies;
   data.dummy_radius = opts.dummyRadius;
-  data.normalize = opts.normalize;
   return data;
 }
 
@@ -342,11 +377,6 @@ rust::Vec<double> pubchem_shape_input_shift(const PubChemShapeInput &shape) {
   return copy_vec<double>(shape.shift);
 }
 
-rust::Vec<double> pubchem_shape_input_inertial_rot(
-    const PubChemShapeInput &shape) {
-  return copy_vec<double>(shape.inertialRot);
-}
-
 double pubchem_shape_input_sov(const PubChemShapeInput &shape) {
   return shape.sov;
 }
@@ -355,22 +385,17 @@ double pubchem_shape_input_sof(const PubChemShapeInput &shape) {
   return shape.sof;
 }
 
-// As AlignMolecule(ref, fit, matrix, refShapeOpts, fitShapeOpts, ...).
-rust::Vec<double> pubchem_align_mol(
-    const RWMol &ref, RWMol &probe, const ShapeInputOptionsData &ref_opts,
-    const ShapeInputOptionsData &probe_opts, std::int32_t ref_conf_id,
-    std::int32_t probe_conf_id, double opt_param, std::uint32_t max_preiters,
-    std::uint32_t max_postiters) {
-  auto ref_options = to_options(ref_opts);
-  auto probe_options = to_options(probe_opts);
-  if (ref_options.useColors != probe_options.useColors) {
-    BOOST_LOG(rdWarningLog)
-        << "useColor values inconsistent between the reference and fit "
-           "molecules. Colors will not be used in the alignment."
-        << std::endl;
-  }
-  auto ref_shape = prepare(ref, ref_conf_id, ref_options);
-  return pair_vec(align_molecule(ref_shape, probe, probe_options, probe_conf_id,
+// As AlignMolecule(ref, fit, matrix, refConfId, fitConfId, useColors, ...).
+rust::Vec<double> pubchem_align_mol(const RWMol &ref, RWMol &probe,
+                                    std::int32_t ref_conf_id,
+                                    std::int32_t probe_conf_id, bool use_colors,
+                                    double opt_param,
+                                    std::uint32_t max_preiters,
+                                    std::uint32_t max_postiters) {
+  ShapeInputOptions opts;
+  opts.useColors = use_colors;
+  auto ref_shape = prepare(ref, ref_conf_id, opts);
+  return pair_vec(align_molecule(ref_shape, probe, opts, probe_conf_id,
                                  opt_param, max_preiters, max_postiters, true));
 }
 
@@ -400,15 +425,19 @@ rust::Vec<double> pubchem_align_shapes(const PubChemShapeInput &ref_shape,
   return result;
 }
 
+// As transformConformer in Wrap/cshapealign.cpp, which checks the sizes
+// RDKit indexes, and copies the shape, whose coordinates RDKit overwrites.
+// TransformConformer writes three coordinates per atom of the conformer's
+// molecule into the shape's, after growing them when the molecule has more
+// atoms than the shape has atoms (PrepareConformer gives each of those three
+// coordinates, so the vector holds enough), and reads the shift's three
+// values, which PrepareConformer sets and Rust cannot change.
 void pubchem_transform_conformer_to_shape(rust::Slice<const double> final_trans,
-                                          rust::Slice<const double> final_rot,
                                           rust::Slice<const double> matrix,
                                           const PubChemShapeInput &probe_shape,
                                           Conformer &probe_conformer) {
-  // As Python's TransformConformer, which checks the sizes RDKit indexes.
   check_size(matrix.size(), 12, "transformation matrix");
   check_size(final_trans.size(), 3, "final translation vector");
-  check_size(final_rot.size(), 9, "final rotation vector");
   std::vector<float> values;
   for (double v : matrix) {
     // A finite double beyond float's range does not convert.
@@ -418,46 +447,10 @@ void pubchem_transform_conformer_to_shape(rust::Slice<const double> final_trans,
     }
     values.push_back(static_cast<float>(v));
   }
+  auto shape = probe_shape;
   TransformConformer(
-      std::vector<double>(final_trans.begin(), final_trans.end()),
-      std::vector<double>(final_rot.begin(), final_rot.end()), values,
-      probe_shape, probe_conformer);
-}
-
-// As ScoreMolecule(mol1, mol2, ...): shapes left where they are.
-rust::Vec<double> pubchem_score_mol(const RWMol &mol1, const RWMol &mol2,
-                                    const ShapeInputOptionsData &mol1_opts,
-                                    const ShapeInputOptionsData &mol2_opts,
-                                    std::int32_t mol1_conf_id,
-                                    std::int32_t mol2_conf_id) {
-  auto opts1 = to_options(mol1_opts);
-  auto opts2 = to_options(mol2_opts);
-  bool use_colors = opts1.useColors && opts2.useColors;
-  opts1.normalize = false;
-  opts2.normalize = false;
-  auto shape1 = prepare(mol1, mol1_conf_id, opts1);
-  auto shape2 = prepare(mol2, mol2_conf_id, opts2);
-  std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  return pair_vec(ScoreShape(shape1, shape2, use_colors));
-}
-
-// As ScoreMolecule(shape, mol, ...).
-rust::Vec<double> pubchem_score_mol_shape_input(
-    const PubChemShapeInput &shape, const RWMol &mol,
-    const ShapeInputOptionsData &mol_opts, std::int32_t mol_conf_id) {
-  auto opts = to_options(mol_opts);
-  opts.normalize = false;
-  auto shape2 = prepare(mol, mol_conf_id, opts);
-  std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  return pair_vec(ScoreShape(shape, shape2, opts.useColors));
-}
-
-rust::Vec<double> pubchem_score_shape(const PubChemShapeInput &shape1,
-                                      const PubChemShapeInput &shape2,
-                                      bool use_colors) {
-  auto copy = shape2;  // ScoreShape takes it by non-const reference
-  std::lock_guard<std::mutex> lock(pubchem_shape_mutex());
-  return pair_vec(ScoreShape(shape1, copy, use_colors));
+      std::vector<double>(final_trans.begin(), final_trans.end()), values,
+      shape, probe_conformer);
 }
 
 }  // namespace rdkit_cxx
