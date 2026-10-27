@@ -760,6 +760,13 @@ fn mol2_bond_atoms_are_checked() {
     let path = common::temp_path("bad.mol2");
     std::fs::write(&path, ethanol_mol2("4")).unwrap();
     assert!(is_parse(mol_from_mol2_file(&path)));
+    // Without a BOND header RDKit reads the bond lines from the start of the
+    // text (valgrind shows Python reading past the atom table).
+    let good = ethanol_mol2("3");
+    let headless = format!("# 1 99 1\n{}", &good[..good.find("@<TRIPOS>BOND").unwrap()]);
+    assert!(is_parse(mol_from_mol2_block_with_params(
+        &headless, &params
+    )));
 }
 
 #[test]
