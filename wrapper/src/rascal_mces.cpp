@@ -256,7 +256,11 @@ std::vector<std::vector<unsigned int>> make_sub_clusters(
       auto m2 = tmpNbors[i]->d_res->getMcesMol();
       auto g_13 = g_ij(m2, clusOpts.a, clusOpts.b, clusOpts.minFragSize);
 
-      auto results = Rascal::rascalMCES(*m1, *m2);
+      // RDKit's default timeout is 60 seconds; RDKit 2025.03 reads an
+      // emptied list when a search times out (rascal_options_from).
+      Rascal::RascalOptions opts;
+      opts.timeout = -1;
+      auto results = Rascal::rascalMCES(*m1, *m2, opts);
       if (results.empty() || results.front().getBondMatches().empty()) {
         continue;
       }
