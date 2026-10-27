@@ -100,11 +100,15 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
     repeated fragments; `RenumberAtoms` needs a permutation;
     `FragmentOnBonds` refuses repeated bonds; `FragmentOnSomeBonds` of more
     than 63 bonds; `ReplaceCore` with an atom matched twice.
-  - CXSMILES blocks RDKit would read past, malformed V3000 `CSTATE` values,
-    CML of tetrahedral atoms with fewer than four neighbors, InChI of atoms
-    with more than 20 bonds or stereo it would overrun, and V3000 reaction
-    agents; V3000 S-group values RDKit 2024.03 reads uninitialized when
-    the line ends inside them.
+  - CXSMILES fields RDKit would read past the end of, wherever it parses
+    SMILES or SMARTS with CXSMILES on (the readers, FMCS's initial seed,
+    RASCAL's equivalent atoms, filter-catalog SMARTS, deprotections,
+    scaffold-network reactions, and the text the standardizers and feature
+    definitions read), CML of tetrahedral atoms with fewer than four
+    neighbors, InChI of atoms with more than 20 bonds or stereo it would
+    overrun, and V3000 reaction agents; V3000 S-group values and S-group
+    lines RDKit 2024.03 reads uninitialized when the line ends inside them
+    or lacks their ids.
   - CoordGen of double bonds marked E or Z without stereo atoms, the
     Hückel method where YAeHMOP cannot open the output files RDKit 2024.03
     writes in the current directory (`Error::Runtime`), FMCS's `Verbose`

@@ -387,7 +387,16 @@ its Boost.Python modules and its `.py` modules.
   past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
   run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
   value that is empty, or in parentheses holds anything but numbers below
-  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
+  2^32 between spaces, is refused too. RDKit 2024.03 also misreads what a
+  line ends inside of: V3000 S-group values (`CSTATE`, `SAP`, `PARENT`,
+  `COMPNO`, and counted arrays) cut short, and S-group lines without a
+  leading number and two more tokens (or a block with fewer lines than its
+  `COUNTS` line names), whose ids it then reads uninitialized; and in the
+  "M  " lines it parses as CXSMILES SMARTS, the CXSMILES fields it reads
+  past the end of (`rdkit-cxx/file_checks.h`). A cut line is read as if it
+  were whole, so a checked stream holds back the bytes of such a value or
+  line until the next chunk shows it complete (at most 1 MiB), and refuses
+  from its start. A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record
@@ -405,7 +414,11 @@ its Boost.Python modules and its `.py` modules.
   after every call: a failed write is `Error::Os` from then on.
 - **U13.** `RWMol::replaceBond` deletes the bond it replaces but, unlike
   `replaceAtom`, leaves the stereo groups that held it (an atropisomer's)
-  pointing at it, for copying, pickling, and the writers to read. So the
+  pointing at it, for copying, pickling, and the writers to read; RDKit
+  2024.03's bond removals (`removeBond`, and so `removeAtom` and
+  `commitBatchEdit`) do too. The RWMol wrappers take the atoms and bonds
+  they remove out of the groups first (`remove_from_stereo_groups`), as
+  2026.03 does, and RDKit's own removals are checked under P2. The
   wrappers replace bonds with `replace_bond` (`rdkit-cxx/mol_checks.h`),
   which points those groups at the new bond, and an RDKit call that replaces
   bonds of a molecule Rust will see runs under a `StereoGroupBondGuard`,
@@ -428,16 +441,23 @@ its Boost.Python modules and its `.py` modules.
   are input under U1. When RDKit removes atoms or bonds (`RWMol`'s removals
   and batch edits, and the RDKit calls built on them) it parses every
   bond's `_MolFileBondEndPts` without checks and follows the substance
-  groups' `PARENT` chains (by their `index`) with no end for a cycle, so a
-  wrapper whose RDKit call removes atoms or bonds from a molecule, or from
-  a copy of one, calls `check_removals` (`rdkit-cxx/mol_checks.h`) first,
-  before any edit in place. Such calls include, besides the removals and
+  groups' `PARENT` chains (by their `index`) with no end for a cycle, and
+  RDKit 2024.03 leaves its stereo groups pointing at removed bonds, and at
+  the second copy of an atom a group repeats (insertMol makes one of an atom
+  in two ABS groups), so a wrapper whose RDKit call removes atoms or bonds
+  from a molecule, or from a copy of one, calls `check_removals`
+  (`rdkit-cxx/mol_checks.h`) first, before any edit in place; it also
+  refuses stereo groups that hold bonds or repeat atoms. Calls whose only
+  removals are `getMolFrags`' (the SMILES writers) use
+  `check_fragment_removals`, which refuses only the groups those removals
+  would leave dangling, and `SANITIZE_MERGEHS` uses
+  `check_query_h_removals`. Such calls include, besides the removals and
   the functions named for them, everything that splits a molecule into its
   fragments (`getMolFrags` with molecules, and so the SMILES writer for a
   molecule of several fragments, and what writes SMILES: hashes, tautomer
   enumeration, SMILES holders), the standardizer, and the embedder. Where
   RDKit combines molecules before it removes from them (`molzip`,
-  `replaceSubstructs`, a synthon space's products), their chains are
+  `replaceSubstructs`), their chains are
   checked together, since RDKit does not renumber the groups' indices.
   The enumerator's link nodes (`_molLinkNodes`), position variation bonds,
   and SRU groups are checked in `mol_enumerator.cpp` as RDKit reads them.
