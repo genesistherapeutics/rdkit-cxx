@@ -10,11 +10,15 @@
 #include <cstring>
 #include <fstream>
 #include <random>
+#include <set>
 #include <sstream>
 #include <utility>
+#include <vector>
 
+#include <GraphMol/FileParsers/FileParserUtils.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/algorithm/string.hpp>
 
 namespace rdkit_cxx {
 
@@ -82,6 +86,249 @@ std::uint64_t siphash(const std::uint64_t key[2], const char *data,
   return v0 ^ v1 ^ v2 ^ v3;
 }
 
+// Replays how RDKit 2025.03 consumes one V3000 SGroup line, and its DEFAULT
+// line's labels (ParseV3000SGroupsBlock, ParseV3000ParseLabel, and the
+// parsers they call in MolSGroupParsing.cpp), on the same kind of stream,
+// without RDKit's side effects. It follows the lenient parse, which reads
+// at least as far as the strict one, and goes on where RDKit would stop at
+// a bookmark that is missing or a value it refuses (it does not have the
+// molecule), so it may refuse lines RDKit would stop reading in time.
+class SGroupReplay {
+ public:
+  SGroupReplay(std::string type, unsigned int atoms, unsigned int bonds)
+      : d_type(std::move(type)), d_atoms(atoms), d_bonds(bonds) {}
+
+  // Whether `s >> value` writes `value`: its sentry fails, and leaves it as
+  // it was, when the stream is not good or only whitespace is left. The
+  // sentry's whitespace is skipped as it would skip it.
+  static bool writes(std::istream &s) {
+    if (!s.good()) {
+      s.setstate(std::ios_base::failbit);
+      return false;
+    }
+    s >> std::ws;
+    if (s.eof()) {
+      s.setstate(std::ios_base::failbit);
+      return false;
+    }
+    return true;
+  }
+
+  // Replays the labels after the header, then the DEFAULT line's; the
+  // error, or an empty string.
+  std::string labels(std::stringstream &line, const std::string &defaults) {
+    std::set<std::string> parsed;
+    while (!line.eof() && !line.fail()) {
+      char spacer;
+      line.get(spacer);
+      if (line.gcount() == 0) {
+        continue;
+      }
+      if (spacer != ' ') {
+        return {};  // the SGroup is invalid; its defaults are not read
+      }
+      std::string label;
+      std::getline(line, label, '=');
+      if (!label_value(label, line)) {
+        return d_error;
+      }
+      parsed.insert(label);
+    }
+    std::stringstream stream(defaults);
+    while (!stream.eof() && !stream.fail()) {
+      char spacer;
+      stream.get(spacer);
+      if (stream.gcount() == 0) {
+        continue;
+      }
+      if (spacer != ' ') {
+        return {};
+      }
+      std::string label;
+      std::getline(stream, label, '=');
+      if (parsed.find(label) == parsed.end()) {
+        if (!label_value(label, stream)) {
+          return d_error;
+        }
+        continue;
+      }
+      spacer = static_cast<char>(stream.peek());
+      if (spacer == ' ') {
+        return {};
+      } else if (spacer == '(') {
+        std::getline(stream, label, ')');
+        stream.get(spacer);
+      } else if (spacer == '"') {
+        stream.get(spacer);
+        std::getline(stream, label, '"');
+      } else {
+        std::getline(stream, label, ' ');
+        stream.putback(' ');
+      }
+    }
+    return {};
+  }
+
+ private:
+  bool unset(const std::string &what) {
+    d_error = "a V3000 SGroup line has no " + what +
+              " where RDKit 2025.03 reads one, so it would read a value no "
+              "extraction wrote";
+    return false;
+  }
+
+  // ParseV3000Array: false if it reads its first value unwritten.
+  template <class T>
+  bool array(std::stringstream &s, int max_v, std::size_t *count_read) {
+    s.get();
+    unsigned int count = 0;
+    s >> count;
+    *count_read = 0;
+    if (max_v >= 0 && count > static_cast<unsigned int>(max_v)) {
+      return true;  // it warns and reads no values
+    }
+    *count_read = count;
+    T value;
+    bool written = false;
+    for (unsigned int i = 0; i < count; ++i) {
+      if (writes(s)) {
+        s >> value;
+        written = true;
+      } else if (!written) {
+        return unset("array value");
+      } else {
+        break;  // the rest repeat the last value, and read nothing
+      }
+    }
+    s.get();
+    return true;
+  }
+
+  // ParseV3000ParseLabel: false to stop, with d_error set if RDKit would
+  // read an unwritten value.
+  bool label_value(const std::string &label, std::stringstream &s) {
+    std::size_t count = 0;
+    if (label == "XBHEAD" || label == "XBCORR" || label == "CBONDS" ||
+        label == "XBONDS") {
+      return array<unsigned int>(s, static_cast<int>(d_bonds), &count);
+    }
+    if (label == "ATOMS" || label == "PATOMS") {
+      return array<unsigned int>(s, static_cast<int>(d_atoms), &count);
+    }
+    if (label == "BRKXYZ") {
+      // Any count but 9 throws, which stops the line.
+      return array<double>(s, 9, &count) && count == 9;
+    }
+    if (label == "CSTATE") {
+      s.get();
+      unsigned int number;
+      unsigned int bond;
+      if (!writes(s)) {
+        return unset("CSTATE count");
+      }
+      s >> number;
+      bool has_bond = writes(s);
+      if (has_bond) {
+        s >> bond;
+      }
+      if ((d_type != "SUP" && number != 1) ||
+          (d_type == "SUP" && number != 4)) {
+        return false;
+      }
+      if (!has_bond) {
+        return unset("CSTATE bond");
+      }
+      if (d_type == "SUP") {
+        double x = 0, y = 0, z = 0;
+        s >> x >> y >> z;
+      }
+      s.get();
+      return true;
+    }
+    if (label == "SAP") {
+      s.get();
+      unsigned int points = 0;
+      unsigned int mark = 0;
+      std::string leaving;
+      std::string id;
+      s >> points >> mark >> leaving >> id;
+      if (id.empty()) {
+        d_error =
+            "a V3000 SGroup SAP value has no identifier; RDKit 2025.03 "
+            "would remove the last character of an empty string";
+        return false;
+      }
+      return true;
+    }
+    if (label == "PARENT") {
+      if (s.eof()) {
+        return false;
+      }
+      unsigned int parent;
+      s >> parent;
+      return !s.fail();
+    }
+    if (label == "COMPNO") {
+      if (!writes(s)) {
+        return unset("COMPNO value");
+      }
+      unsigned int compno;
+      s >> compno;
+      return compno <= 256u;
+    }
+    // ParseV3000StringPropLabel.
+    std::string value;
+    auto next = s.peek();
+    if (next == ' ') {
+    } else if (next == '"') {
+      s.get();
+      char chr;
+      while (s.get(chr)) {
+        if (chr == '"') {
+          next = s.peek();
+          if (next != '"') {
+            break;
+          }
+          s.get();
+        }
+      }
+    } else if (next == '\'') {
+      std::getline(s, value, '\'');
+    } else {
+      s >> value;
+    }
+    return true;
+  }
+
+  std::string d_type;
+  unsigned int d_atoms;
+  unsigned int d_bonds;
+  std::string d_error;
+};
+
+// The error RDKit 2025.03's reading of an SGroup header line would make, or
+// an empty string.
+std::string sgroup_line_error(const std::string &line,
+                              const std::string &defaults, unsigned int atoms,
+                              unsigned int bonds) {
+  std::stringstream stream(line);
+  if (!SGroupReplay::writes(stream)) {
+    return "a V3000 SGroup line has no index where RDKit 2025.03 reads one, "
+           "so it would read a value no extraction wrote";
+  }
+  unsigned int index;
+  stream >> index;
+  std::string type;
+  stream >> type;
+  if (!SGroupReplay::writes(stream)) {
+    return "a V3000 SGroup line has no type and external index where RDKit "
+           "2025.03 reads them, so it would read a value no extraction wrote";
+  }
+  unsigned int external;
+  stream >> external;
+  return SGroupReplay(type, atoms, bonds).labels(stream, defaults);
+}
+
 }  // namespace
 
 bool InputScanner::fail(std::string why) {
@@ -95,6 +342,7 @@ bool InputScanner::fail(std::string why) {
 // or continuation "-". RDKit upper-cases the joined line before matching it.
 void InputScanner::confirm(char c) {
   ++d_logical;
+  d_line += c;
   if (d_prefix.size() < kStereoGroupPrefix) {
     d_prefix += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
   }
@@ -205,13 +453,127 @@ void InputScanner::end_line() {
     d_prefix.clear();
     d_end_points = EndPoints::kKey;
     d_key_matched = 0;
+    if (!v30) {
+      d_ctab = Ctab::kNone;  // RDKit's CTAB reader throws on such a line
+    } else if (d_error.empty()) {
+      v3000_line(d_line, true);
+    }
+    d_line.clear();
   }
+}
+
+// A logical V3000 line, as getV3000Line returns it. RDKit reads CTABs
+// (ParseV3000CTAB) as BEGIN CTAB, then COUNTS with the atom, bond, and
+// SGroup counts, then blocks; after BEGIN SGROUP (in any case), it reads
+// as many lines as COUNTS gives as SGroups, after a DEFAULT line if one
+// comes first. Unless `advance`, the line is only checked: the input ends
+// with it.
+bool InputScanner::v3000_line(const std::string &line, bool advance) {
+  if (d_ctab == Ctab::kSGroupStart && line.compare(0, 7, "DEFAULT") == 0 &&
+      line.size() > 8) {
+    if (advance) {
+      d_defaults = boost::trim_right_copy(line.substr(7));
+      d_ctab = Ctab::kSGroups;
+    }
+    return true;
+  }
+  if (d_ctab == Ctab::kSGroupStart || d_ctab == Ctab::kSGroups) {
+    // RDKit trims the right of each SGroup line but a first one.
+    auto error = sgroup_line_error(
+        d_ctab == Ctab::kSGroupStart ? line : boost::trim_right_copy(line),
+        d_defaults, d_atoms, d_bonds);
+    if (!error.empty()) {
+      d_refused_at = d_line_start;
+      return fail(error);
+    }
+    if (advance) {
+      d_ctab = --d_sgroups_left ? Ctab::kSGroups : Ctab::kCounted;
+    }
+    return true;
+  }
+  auto upper = boost::to_upper_copy(line);
+  if (upper.compare(0, 10, "BEGIN CTAB") == 0) {
+    if (advance) {
+      d_ctab = Ctab::kCtabStart;
+    }
+  } else if (d_ctab == Ctab::kCtabStart) {
+    if (!advance) {
+      return true;
+    }
+    // The line after BEGIN CTAB, which RDKit requires to be COUNTS.
+    d_ctab = Ctab::kNone;
+    if (upper.size() < 8 || upper.compare(0, 7, "COUNTS ") != 0) {
+      return true;
+    }
+    std::vector<std::string> counts;
+    auto trimmed = boost::trim_copy(upper.substr(7));
+    boost::split(counts, trimmed, boost::is_any_of(" \t"),
+                 boost::token_compress_on);
+    if (counts.size() < 2) {
+      return true;
+    }
+    try {
+      d_atoms = RDKit::FileParserUtils::toUnsigned(counts[0]);
+      d_bonds = RDKit::FileParserUtils::toUnsigned(counts[1]);
+      d_sgroups =
+          counts.size() > 2 ? RDKit::FileParserUtils::toUnsigned(counts[2]) : 0;
+    } catch (const std::exception &) {
+      return true;  // RDKit throws
+    }
+    d_ctab = Ctab::kCounted;
+  } else if (d_ctab == Ctab::kCounted && upper.size() >= 12 &&
+             upper.compare(0, 12, "BEGIN SGROUP") == 0) {
+    if (d_sgroups == 0) {
+      d_refused_at = d_line_start;
+      return fail(
+          "a V3000 CTAB has a BEGIN SGROUP line but its COUNTS line gives no "
+          "SGroups; RDKit 2025.03 reads the line again forever unless it "
+          "parses strictly");
+    }
+    if (advance) {
+      d_sgroups_left = d_sgroups;
+      d_defaults.clear();
+      d_ctab = Ctab::kSGroupStart;
+    }
+  }
+  return true;
+}
+
+void InputScanner::finish() {
+  if (!d_error.empty() || d_ctab == Ctab::kNone ||
+      (d_pos == 0 && !d_continuing)) {
+    return;
+  }
+  // RDKit reads the unfinished line as a whole one: getLine strips one "\r",
+  // and RDKit throws on a line that is not a V3000 one or ends in "-" (it
+  // reads the next).
+  if (d_pos < 7 || std::memcmp(d_head, kV30, 7) != 0) {
+    return;
+  }
+  std::string line = d_line;
+  line.append(d_pend, static_cast<std::size_t>(d_pending));
+  if (!line.empty() && line.back() == '\r') {
+    line.pop_back();
+  }
+  if (!line.empty() && line.back() == '-') {
+    return;
+  }
+  v3000_line(line, false);
 }
 
 std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
   if (!d_error.empty()) {
     return 0;
   }
+  // A limit broken at byte i refuses from there, unless a refused line's
+  // start was recorded.
+  auto broken = [&](std::size_t i) {
+    if (d_refused_at == UINT64_MAX) {
+      d_refused_at = d_fed + i;
+    }
+    d_fed += i;
+    return i;
+  };
   for (std::size_t i = 0; i < n; ++i) {
     char c = bytes[i];
     if (c == '\n') {
@@ -221,7 +583,10 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
              " lines; RDKit counts lines in int");
       }
       if (!d_error.empty()) {
-        return i;
+        return broken(i);
+      }
+      if (!d_continuing) {
+        d_line_start = d_fed + i + 1;
       }
       continue;
     }
@@ -237,17 +602,20 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
         d_pend[d_pending++] = c;
       }
       if (!d_error.empty()) {
-        return i;
+        return broken(i);
       }
     }
     ++d_pos;
   }
+  d_fed += n;
   return n;
 }
 
 void check_input_text(std::string_view text) {
   InputScanner scanner;
-  if (scanner.feed(text.data(), text.size()) < text.size()) {
+  scanner.feed(text.data(), text.size());
+  scanner.finish();
+  if (!scanner.error().empty()) {
     throw ValueErrorException(scanner.error());
   }
 }
@@ -301,6 +669,16 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
     d_loaded = chunk;
     d_have = 0;
   }
+  auto ahead = d_ahead.find(chunk);
+  if (ahead != d_ahead.end()) {
+    // Bytes read_ahead scanned, which a source that cannot seek back would
+    // not give again.
+    if (d_have == 0) {
+      std::memcpy(d_buffer.get(), ahead->second.data(), ahead->second.size());
+      d_have = ahead->second.size();
+    }
+    d_ahead.erase(ahead);
+  }
   if (d_have == kChunk) {
     return true;
   }
@@ -345,7 +723,7 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
     auto ok = d_scanner.feed(d_buffer.get() + seen, fresh);
     d_scanned += ok;
     if (ok < fresh) {
-      refuse(d_scanner.error(), d_scanned);
+      refuse(d_scanner.error(), d_scanner.refused_at());
     }
     if (d_scanned == base + kChunk) {
       d_hashes.push_back(siphash(d_key, d_buffer.get(), kChunk));
@@ -354,6 +732,60 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
                             static_cast<std::size_t>(d_scanned - base));
     }
   }
+  // The source ends here, for now; RDKit reads an unfinished line whole.
+  if (d_have < kChunk && d_scanned == base + d_have && d_scanned < d_limit) {
+    d_scanner.finish();
+    if (!d_scanner.error().empty()) {
+      refuse(d_scanner.error(), d_scanner.refused_at());
+    }
+  }
+  return true;
+}
+
+// Reads and scans chunk `chunk`, the next to scan, without the buffer, and
+// keeps it for fill. False if the source changed; d_scanned shows how far
+// it got.
+bool CheckedStreambuf::read_ahead(std::uint64_t chunk) {
+  using off = std::streambuf::off_type;
+  const std::uint64_t base = chunk * kChunk;
+  if (d_source_pos != base) {
+    if (d_source->pubseekpos(static_cast<off>(base), std::ios_base::in) ==
+        pos_type(off(-1))) {
+      d_source_pos = UINT64_MAX;
+      return true;  // nothing more to read
+    }
+    d_source_pos = base;
+  }
+  std::string bytes(kChunk, '\0');
+  std::size_t have = 0;
+  auto n = d_source->sgetn(bytes.data(), static_cast<std::streamsize>(kChunk));
+  if (n > 0) {
+    d_source_pos += static_cast<std::uint64_t>(n);
+    have = static_cast<std::size_t>(n);
+  }
+  bytes.resize(have);
+  if (have < kChunk && base + have < d_least_end) {
+    return false;  // it ends sooner than it did
+  }
+  d_least_end = std::max(d_least_end, base + have);
+  auto ok = d_scanner.feed(bytes.data(), have);
+  d_scanned += ok;
+  if (ok < have) {
+    refuse(d_scanner.error(), d_scanner.refused_at());
+  }
+  if (d_scanned == base + kChunk) {
+    d_hashes.push_back(siphash(d_key, bytes.data(), kChunk));
+  } else {
+    d_tail_hash = siphash(d_key, bytes.data(),
+                          static_cast<std::size_t>(d_scanned - base));
+  }
+  if (have < kChunk && d_scanned == base + have && d_scanned < d_limit) {
+    d_scanner.finish();
+    if (!d_scanner.error().empty()) {
+      refuse(d_scanner.error(), d_scanner.refused_at());
+    }
+  }
+  d_ahead[chunk] = std::move(bytes);
   return true;
 }
 
@@ -386,6 +818,19 @@ CheckedStreambuf::int_type CheckedStreambuf::underflow() {
   if (!fill(chunk)) {
     changed();
     return traits_type::eof();
+  }
+  // A CTAB line RDKit may read as an SGroup is scanned to its end (or the
+  // source's) before any of it is delivered, so that a refused one is cut
+  // before its first byte (InputScanner::refused_at): RDKit reads the part
+  // of a line it is given as a whole line.
+  for (std::uint64_t c = chunk + 1;
+       d_scanner.mid_ctab_line() && d_scanned == c * kChunk &&
+       d_scanned < d_limit;
+       ++c) {
+    if (!read_ahead(c)) {
+      changed();
+      return traits_type::eof();
+    }
   }
   const std::uint64_t base = chunk * kChunk;
   const std::uint64_t end = std::min(base + d_have, d_limit);

@@ -27,6 +27,17 @@
 //   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
 //   RDKit reads an END BOND line after it, so input that ends (or is cut
 //   off) before a value is checked is never parsed as a molecule.
+// - RDKit 2025.03 reads a V3000 SGroup line with stream extractions it does
+//   not check (ParseV3000SGroupsBlock and the label parsers in
+//   MolSGroupParsing.cpp): it reads the index, external index, CSTATE count
+//   and bond, COMPNO, and the first value of an array that an extraction
+//   left unwritten when the line ran out, and pops the last character of an
+//   empty SAP identifier. Each line it would read as an SGroup (as many as
+//   the COUNTS line gives, after BEGIN SGROUP and a DEFAULT line) is
+//   replayed as RDKit consumes it, going on where RDKit would stop at a
+//   missing bookmark or a value it refuses, and refused where RDKit would
+//   read such a value. Without strict parsing, RDKit loops forever on a
+//   BEGIN SGROUP line when COUNTS gives no SGroups, so that is refused too.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
@@ -40,6 +51,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <istream>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <streambuf>
@@ -61,7 +73,19 @@ class InputScanner {
   // the bytes before the first that breaks one, after which error() says
   // why).
   std::size_t feed(const char *bytes, std::size_t n);
+  // The input ends here: checks the unfinished line as RDKit would read it.
+  // Scanning may go on if the input turns out to go on.
+  void finish();
   const std::string &error() const { return d_error; }
+  // The offset of the first byte that may not be delivered: the start of a
+  // refused SGroup line, which RDKit must not read any of, or else the byte
+  // that broke a limit. UINT64_MAX while nothing is refused.
+  std::uint64_t refused_at() const { return d_refused_at; }
+  // Whether a line of a V3000 CTAB is unfinished, so that it must be
+  // scanned to its end before any of it is delivered.
+  bool mid_ctab_line() const {
+    return d_ctab != Ctab::kNone && (d_pos > 0 || d_continuing);
+  }
 
  private:
   void end_line();
@@ -89,6 +113,30 @@ class InputScanner {
   bool d_in_number = false;
   std::uint64_t d_number = 0;
   std::uint64_t d_numbers = 0;
+  // The logical V3000 line, and where it is in a CTAB: right after BEGIN
+  // CTAB, after its COUNTS line (with the atom, bond, and SGroup counts),
+  // right after BEGIN SGROUP, or among the SGroup lines, of which
+  // `d_sgroups_left` are left, with the DEFAULT line's labels. `d_line_start`
+  // is the offset of the logical line's first byte, of `d_fed` bytes fed before
+  // this call.
+  bool v3000_line(const std::string &line, bool advance);
+  std::string d_line;
+  std::uint64_t d_fed = 0;
+  std::uint64_t d_line_start = 0;
+  std::uint64_t d_refused_at = UINT64_MAX;
+  enum class Ctab : std::uint8_t {
+    kNone,
+    kCtabStart,
+    kCounted,
+    kSGroupStart,
+    kSGroups
+  };
+  Ctab d_ctab = Ctab::kNone;
+  unsigned int d_atoms = 0;
+  unsigned int d_bonds = 0;
+  unsigned int d_sgroups = 0;
+  unsigned int d_sgroups_left = 0;
+  std::string d_defaults;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.
@@ -121,6 +169,7 @@ class CheckedStreambuf : public std::streambuf {
 
  private:
   bool fill(std::uint64_t chunk);
+  bool read_ahead(std::uint64_t chunk);
   void refuse(const std::string &why, std::uint64_t at);
   int_type hit();
   void changed();
@@ -146,6 +195,9 @@ class CheckedStreambuf : public std::streambuf {
   std::vector<std::uint64_t> d_hashes;
   std::uint64_t d_tail_hash = 0;
   std::uint64_t d_key[2] = {};
+  // Chunks scanned ahead of the one in the buffer, kept until it is their
+  // turn, since the source may not seek back.
+  std::map<std::uint64_t, std::string> d_ahead;
   InputScanner d_scanner;
   std::atomic<bool> d_failed{false};
   mutable std::mutex d_error_mutex;

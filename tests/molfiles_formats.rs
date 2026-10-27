@@ -10,7 +10,9 @@
 mod common;
 
 use rdkit_cxx::Error;
-use rdkit_cxx::chem::rd_chem_draw::{CDXFormat, mol_to_chem_draw_block, mol_to_chem_draw_block_format};
+use rdkit_cxx::chem::rd_chem_draw::{
+    CDXFormat, mol_to_chem_draw_block, mol_to_chem_draw_block_format,
+};
 use rdkit_cxx::chem::*;
 use rdkit_cxx::geometry::Point3D;
 
@@ -568,6 +570,102 @@ fn mrv_bonds_need_two_atoms() {
     let path = common::temp_path("bad.mrv");
     std::fs::write(&path, bad).unwrap();
     assert!(is_parse(mol_from_mrv_file(&path)));
+}
+
+/// A V3000 block for ethanol with `count` SGroups in its COUNTS line and
+/// `lines` in its SGroup block.
+fn sgroup_block(count: u32, lines: &[&str]) -> String {
+    let lines: String = lines
+        .iter()
+        .map(|line| format!("M  V30 {line}\n"))
+        .collect();
+    format!(
+        "\n  Mrv\n\n  0  0  0     0  0            999 V3000\nM  V30 BEGIN CTAB\n\
+         M  V30 COUNTS 3 2 {count} 0 0\nM  V30 BEGIN ATOM\nM  V30 1 C 0 0 0 0\n\
+         M  V30 2 C 1.5 0 0 0\nM  V30 3 O 2 1 0 0\nM  V30 END ATOM\n\
+         M  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 2 1 2 3\nM  V30 END BOND\n\
+         M  V30 BEGIN SGROUP\n{lines}M  V30 END SGROUP\nM  V30 END CTAB\nM  END\n"
+    )
+}
+
+#[test]
+fn sgroup_lines_are_checked() {
+    let lax = MolFromMolBlockParams {
+        strict_parsing: false,
+        ..Default::default()
+    };
+    // As in Python.
+    for lines in [
+        &["1 SUP 0 ATOMS=(1 3) SAP=(3 3 2 1)"][..],
+        &["DEFAULT ATOMS=(1 3)", "1 SUP 0 SAP=(3 3 2 1)"],
+        &["1 SUP 0 ATOMS=(1 3) -\nM  V30 SAP=(3 3 2 1)"],
+        &["1 SUP 0 ATOMS=(1 3) XBONDS=(1 2) FIELDNAME=\"a SAP=(3\" CSTATE=(4 2 0 0 0)"],
+    ] {
+        let mol = mol_from_mol_block(&sgroup_block(1, lines)).unwrap();
+        assert_eq!(get_mol_substance_groups(&mol).len(), 1, "{lines:?}");
+    }
+    // RDKit 2025.03 would read a value no extraction wrote, or pop the last
+    // character of an empty SAP identifier; without strict parsing, it reads
+    // a BEGIN SGROUP line forever when COUNTS gives no SGroups.
+    for (count, lines) in [
+        (1, &["1 SUP 0 ATOMS=(1 3) SAP=(3 3 2"][..]),
+        (1, &["1 SUP 0 ATOMS=(1 3) SAP=(3 3 2 -\nM  V30 "]),
+        (1, &["DEFAULT SAP=(3 3 2", "1 SUP 0 ATOMS=(1 3)"]),
+        (1, &["1 SUP 0 ATOMS=(1"]),
+        (1, &["1 SUP 0 BRKXYZ=(9"]),
+        (1, &["1 SUP 0 CSTATE=(4"]),
+        (1, &["1 DAT 0 COMPNO="]),
+        (1, &["1 SUP"]),
+        (1, &["x"]),
+        (1, &[""]),
+        (2, &["1 SUP 0 ATOMS=(1 3)"]),
+        (0, &["1 SUP 0 ATOMS=(1 3)"]),
+    ] {
+        let block = sgroup_block(count, lines);
+        assert!(is_value(mol_from_mol_block(&block)), "{lines:?}");
+        assert!(
+            is_value(mol_from_mol_block_with_params(&block, &lax)),
+            "{lines:?}"
+        );
+    }
+    // A block that ends in such a line is read whole.
+    let block = sgroup_block(1, &["1 SUP 0 SAP=(3 3 2"]);
+    let cut = &block[..block.find("\nM  V30 END SGROUP").unwrap()];
+    assert!(is_value(mol_from_mol_block_with_params(cut, &lax)));
+    let path = common::temp_path("sap.mol");
+    std::fs::write(&path, cut).unwrap();
+    assert!(is_value(mol_from_mol_file(&path)));
+}
+
+fn ethanol_mol2(end: &str) -> String {
+    format!(
+        "@<TRIPOS>MOLECULE\nethanol\n 3 2 0 0 0\nSMALL\nGASTEIGER\n\n@<TRIPOS>ATOM\n\
+         \x20     1 C1          0.0000    0.0000    0.0000 C.3     1  UNL1        0.0000\n\
+         \x20     2 C2          1.5000    0.0000    0.0000 C.3     1  UNL1        0.0000\n\
+         \x20     3 O1          2.0000    1.4000    0.0000 O.3     1  UNL1        0.0000\n\
+         @<TRIPOS>BOND\n     1     1     2    1\n     2     2    {end}    1\n"
+    )
+}
+
+#[test]
+fn mol2_bond_atoms_are_checked() {
+    let params = MolFromMol2BlockParams {
+        sanitize: false,
+        ..Default::default()
+    };
+    let mol = mol_from_mol2_block_with_params(&ethanol_mol2("3"), &params).unwrap();
+    assert_eq!(mol.get_num_bonds(), 2);
+    // RDKit 2025.03 refuses a bond only when both its atoms are out of range,
+    // and looks the other up past the end of its table (Python crashes).
+    for end in ["4", "100000000", "0", "-1"] {
+        assert!(
+            is_parse(mol_from_mol2_block_with_params(&ethanol_mol2(end), &params)),
+            "{end}"
+        );
+    }
+    let path = common::temp_path("bad.mol2");
+    std::fs::write(&path, ethanol_mol2("4")).unwrap();
+    assert!(is_parse(mol_from_mol2_file(&path)));
 }
 
 #[test]

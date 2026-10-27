@@ -15,7 +15,6 @@
 #include <GraphMol/Canon.h>
 #include <GraphMol/Depictor/RDDepictor.h>
 #include <GraphMol/FileParsers/CDXMLParser.h>
-#include <GraphMol/chemdraw.h>
 #include <GraphMol/FileParsers/FileParserUtils.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/FileParsers/FileWriters.h>
@@ -25,6 +24,7 @@
 #include <GraphMol/SmilesParse/SmartsWrite.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
+#include <GraphMol/chemdraw.h>
 #include <GraphMol/new_canon.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
@@ -35,6 +35,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
@@ -888,24 +889,114 @@ FP::Mol2ParserParams mol2_params(bool sanitize, bool remove_hs,
   return params;
 }
 
+// RDKit 2025.03 checks a bond's atom numbers against the atom count with
+// || where it means && (ParseMol2FileBondLine), so one number past the end,
+// or 0, which it decrements to UINT_MAX, indexes its atom table out of
+// bounds. This finds the bond lines as MolFromMol2DataStream does and
+// refuses such numbers; whatever else is wrong RDKit reports itself.
+void check_mol2_bonds(const std::string &text) {
+  using tokenizer = boost::tokenizer<boost::char_separator<char>>;
+  boost::char_separator<char> sep(" \t\n");
+  std::istringstream in(text);
+  std::streampos mol_start = 0, atom_start = 0, bond_start = 0;
+  while (!in.eof() && !in.fail()) {
+    auto line = RDKit::getLine(in);
+    if (in.eof()) {
+      break;
+    }
+    if (line.empty() || line[0] != '@') {
+      continue;
+    }
+    tokenizer tokens(line, sep);
+    std::string first = *tokens.begin();
+    if (first == "@<TRIPOS>MOLECULE") {
+      if (mol_start) {
+        break;
+      }
+      mol_start = in.tellg();
+    } else if (first == "@<TRIPOS>ATOM") {
+      atom_start = in.tellg();
+    } else if (first == "@<TRIPOS>BOND") {
+      bond_start = in.tellg();
+    }
+  }
+  if (!mol_start || !atom_start) {
+    return;
+  }
+  in.clear();
+  in.seekg(mol_start, std::ios::beg);
+  RDKit::getLine(in);
+  auto counts = RDKit::getLine(in);
+  tokenizer count_tokens(counts, sep);
+  auto it = count_tokens.begin();
+  if (it == count_tokens.end()) {
+    return;
+  }
+  unsigned int num_atoms = 0, num_bonds = 0;
+  try {
+    num_atoms = boost::lexical_cast<unsigned int>(*it);
+    if (++it != count_tokens.end()) {
+      num_bonds = boost::lexical_cast<unsigned int>(*it);
+    }
+  } catch (const boost::bad_lexical_cast &) {
+    return;
+  }
+  in.seekg(bond_start, std::ios::beg);
+  for (unsigned int i = 0; i < num_bonds; ++i) {
+    auto line = RDKit::getLine(in);
+    if (in.eof()) {
+      return;
+    }
+    tokenizer tokens(line, sep);
+    std::vector<std::string> items(tokens.begin(), tokens.end());
+    if (items.size() < 4) {
+      return;
+    }
+    for (std::size_t which : {1, 2}) {
+      unsigned int idx;
+      try {
+        // As RDKit reads it: "-1" is UINT_MAX.
+        idx = boost::lexical_cast<unsigned int>(items[which]);
+      } catch (const boost::bad_lexical_cast &) {
+        return;
+      }
+      if (idx == 0 || idx > num_atoms) {
+        throw RDKit::FileParseException(
+            "Mol2 bond " + items[0] + " refers to atom " + items[which] +
+            ", not one of the " + std::to_string(num_atoms) +
+            " atoms; RDKit would look it up past the end of its atom table");
+      }
+    }
+  }
+}
+
+std::unique_ptr<RWMol> mol2_from_text(const std::string &text, bool sanitize,
+                                      bool remove_hs,
+                                      bool cleanup_substructures,
+                                      const std::string &what) {
+  check_mol2_bonds(text);
+  std::istringstream in(text);
+  return parsed(
+      FP::MolFromMol2DataStream(
+          in, mol2_params(sanitize, remove_hs, cleanup_substructures)),
+      what);
+}
+
 }  // namespace
 
 std::unique_ptr<RWMol> mol_from_mol2_block(rust::Str mol2_block, bool sanitize,
                                            bool remove_hs,
                                            bool cleanup_substructures) {
-  return parsed(FP::MolFromMol2Block(
-                    std::string(mol2_block),
-                    mol2_params(sanitize, remove_hs, cleanup_substructures)),
-                "Mol2 block");
+  return mol2_from_text(std::string(mol2_block), sanitize, remove_hs,
+                        cleanup_substructures, "Mol2 block");
 }
 
 std::unique_ptr<RWMol> mol_from_mol2_file(rust::Slice<const std::uint8_t> path,
                                           bool sanitize, bool remove_hs,
                                           bool cleanup_substructures) {
   auto name = to_path(path);
-  return parsed(FP::MolFromMol2File(name, mol2_params(sanitize, remove_hs,
-                                                      cleanup_substructures)),
-                "Mol2 file " + name);
+  return mol2_from_text(read_file(name), sanitize, remove_hs,
+                        cleanup_substructures, "Mol2 file " + name);
 }
 
 namespace {
