@@ -25,6 +25,8 @@ fn main() -> Result<()> {
     };
     let kekule = mol_to_smiles_with_params(&mol, &params)?;
     println!("{kekule}");
-    assert_eq!(kekule, "CN1C=CC=C1NC1=CC=CC=N1");
+    // RDKit 2025.09.6's (and Python's) Kekulé form; its kekulization is not
+    // canonical.
+    assert_eq!(kekule, "CN1C=CC=C1NC1=NC=CC=C1");
     Ok(())
 }

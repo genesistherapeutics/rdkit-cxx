@@ -425,27 +425,27 @@ std::vector<std::string> split_line(const std::string &str,
 
 // As deduceFormat in SynthonSpace.cpp, once a line's separators are checked.
 int deduce_format(const std::string &line) {
-  static const std::vector<std::vector<std::string>> first_line_opts{
+  const std::vector<std::vector<std::string>> first_line_opts{
       std::vector<std::string>{"SMILES", "synton_id", "synton#", "reaction_id"},
       std::vector<std::string>{"SMILES", "synton_id", "synton#", "reaction_id",
                                "release"},
       std::vector<std::string>{"SMILES", "synton_id", "synton_role",
                                "reaction_id"}};
-  static const std::regex regext("\\t");
+  const std::regex regext("\\t");
   auto parts = split_line(line, regext);
   for (std::size_t i = 0; i < first_line_opts.size(); ++i) {
     if (parts == first_line_opts[i]) {
       return static_cast<int>(i + 6);
     }
   }
-  static const std::regex regexws("\\s+");
+  const std::regex regexws("\\s+");
   parts = split_line(line, regexws);
   for (std::size_t i = 0; i < first_line_opts.size(); ++i) {
     if (parts == first_line_opts[i]) {
       return static_cast<int>(i);
     }
   }
-  static const std::regex regexc(",+");
+  const std::regex regexc(",+");
   parts = split_line(line, regexc);
   for (std::size_t i = 0; i < first_line_opts.size(); ++i) {
     if (parts == first_line_opts[i]) {
@@ -539,9 +539,12 @@ std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
 // Lines as std::getline gives them to readStream: split at '\n', with the
 // empty line after a final '\n', and as getLine strips a '\r' at the end.
 void check_synthon_text(std::string_view text) {
-  static const std::regex regext("\\t+");
-  static const std::regex regexws("\\s+");
-  static const std::regex regexc(",+");
+  // Compiled per call, not as function statics: their thread-safe
+  // initialization synchronizes through atomics and a futex that Valgrind's
+  // DRD cannot see, so the races job would report every read of them.
+  const std::regex regext("\\t+");
+  const std::regex regexws("\\s+");
+  const std::regex regexc(",+");
   int format = -1;
   std::uint64_t num_lines = 0;
   std::map<std::string, std::set<int>> sets;
