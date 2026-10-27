@@ -10,10 +10,12 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <vector>
 
 #include <GraphMol/ROMol.h>
 #include <GraphMol/RWMol.h>
+#include <GraphMol/SmilesParse/SmilesParse.h>
 
 namespace rdkit_cxx {
 
@@ -54,6 +56,52 @@ void check_matrix_size(const RDKit::ROMol &mol);
 // most headroom fit in int.
 void check_formal_charge_sum(const RDKit::ROMol &mol,
                              std::int64_t headroom = 0);
+
+// MolOps::symmetrizeSSSR's default algorithm, RDL, enumerates the relevant
+// cycles (RingInfo::atomRelevantCycles), first reserving RDL_getNofRC's
+// double, which it converts to size_t unchecked: undefined for a count of 2^64
+// or more and for RDL_INVALID_RC_COUNT (DBL_MAX), which RingDecomposerLib
+// returns for a count too large to compute. The count grows exponentially (a
+// ring of n diamonds, 3n atoms, has 2^n + n). Every relevant cycle then
+// becomes a ring, and the ring info stores ring indices as int, so the
+// wrappers refuse more than INT_MAX relevant cycles (U1): a count that fits
+// size_t but not int could not be enumerated in memory anyway.
+//
+// symmetrizeSSSR is reached from far more than the wrappers that call it:
+// sanitization's SANITIZE_SYMMRINGS step, aromaticity and stereo perception
+// on a molecule whose ring info is not a symmetrized SSSR, the depictor, and
+// much else. The wrappers check where README.md's "Known limitations" says.
+
+// Relevant cycles are distinct nonzero elements of the cycle space, so a
+// graph with c independent cycles (bonds - atoms + fragments) has at most
+// 2^c - 1 of them, and the checks count them only for a graph with more than
+// MAX_INDEPENDENT_CYCLES. Adding a bond adds at most one independent cycle,
+// so a bound on them with every bond bounds them for any subset of the bonds.
+constexpr unsigned MAX_INDEPENDENT_CYCLES = 31;
+
+// Throws ValueErrorException if symmetrizeSSSR, with these options, would
+// enumerate more than INT_MAX relevant cycles: those of the molecule's ring
+// families when it keeps them (they exist and recalc_sssr is false, or the
+// ring info is not initialized), otherwise those of its graph. RDKit's own
+// errors (RingDecomposerLib failing) are left to RDKit.
+void check_relevant_cycles(const RDKit::ROMol &mol,
+                           bool include_dative_bonds = false,
+                           bool include_hydrogen_bonds = false,
+                           bool recalc_sssr = true);
+
+// As check_relevant_cycles, for MolOps::sanitizeMol with these operations,
+// which finds the rings of the graph its cleanup steps leave (they can make
+// bonds dative), in SANITIZE_SYMMRINGS or in the later steps that perceive
+// rings.
+void check_sanitize_relevant_cycles(const RDKit::ROMol &mol,
+                                    unsigned sanitize_ops);
+
+// As check_sanitize_relevant_cycles, for SmilesToMol, which sanitizes what it
+// parses (removeHs only drops hydrogens on no ring). Text whose SMILES part
+// bounds the cycles is parsed once, by RDKit; other text is parsed first
+// without sanitizing, and that molecule checked.
+void check_smiles_relevant_cycles(const std::string &text,
+                                  const RDKit::SmilesParserParams &params);
 
 // RDKit's descriptors cache their results, and per-atom contributions, in a
 // molecule's computed properties, and read them back unless forced, after

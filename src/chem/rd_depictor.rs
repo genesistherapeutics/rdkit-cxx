@@ -19,7 +19,9 @@
 //! 46340 atoms (its distance matrix is computed in `int`) or, with an
 //! explicit hydrogen, above 21474 (so are its atom ranks), a square-planar
 //! atom without neighbors, and a trigonal-bipyramidal atom with more than
-//! three equatorial neighbors (RDKit reads past its tables for both).
+//! three equatorial neighbors (RDKit reads past its tables for both), and
+//! molecules with more than `i32::MAX` relevant cycles, counting dative
+//! bonds (it symmetrizes the SSSR, which enumerates them).
 //! Through CoordGen, when it is preferred, they refuse molecules whose
 //! Morgan scores overflow CoordGen's `int`, such as a chain of 40 carbons,
 //! or whose formal charges do (U9); `force_rdkit` depicts those with

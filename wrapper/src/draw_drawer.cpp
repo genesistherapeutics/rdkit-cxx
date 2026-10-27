@@ -281,6 +281,7 @@ class DrawnMol {
       d_copy = std::make_unique<RWMol>(mol);
       MatrixCacheGuard guard(*d_copy);
       if (symmetrize && !d_copy->getRingInfo()->isSymmSssr()) {
+        check_relevant_cycles(*d_copy);
         RDKit::MolOps::symmetrizeSSSR(*d_copy);
       }
       check_compute_2d_coords_mol(*d_copy, false);
@@ -490,6 +491,7 @@ Size check_layout(Drawer &d, const RWMol &mol, const std::string &legend,
   set_up_text_drawer(d);
   RDKit::ROMol copy(mol);
   if (!mol.getRingInfo()->isSymmSssr()) {
+    check_relevant_cycles(copy);
     RDKit::MolOps::symmetrizeSSSR(copy);
   }
   detail::DrawMol probe(copy, legend, d.drawer->panelWidth(),

@@ -1290,6 +1290,18 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
     // Checked before the first step edits the reaction.
     check_template_removals(rxn);
   }
+  // adjustQueryProperties symmetrizes each template's SSSR, enumerating its
+  // relevant cycles; checked here so that too many throw even with
+  // catch_errors, as in sanitize_mol.
+  for (auto [op, templates] :
+       {std::pair{RxnOps::SANITIZE_ADJUST_REACTANTS, &rxn.getReactants()},
+        std::pair{RxnOps::SANITIZE_ADJUST_PRODUCTS, &rxn.getProducts()}}) {
+    if (sanitize_ops & op) {
+      for (const auto &templ : *templates) {
+        check_relevant_cycles(*templ);
+      }
+    }
+  }
   unsigned int failed = RxnOps::SANITIZE_NONE;
   try {
     // RxnOps::sanitizeRxn's steps, with fixAtomMaps checked first.
@@ -1325,6 +1337,12 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
 }
 
 void sanitize_rxn_as_mols(ChemicalReaction &rxn, std::uint32_t sanitize_ops) {
+  for (const auto *templates :
+       {&rxn.getReactants(), &rxn.getAgents(), &rxn.getProducts()}) {
+    for (const auto &templ : *templates) {
+      check_sanitize_relevant_cycles(*templ, sanitize_ops);
+    }
+  }
   // RDKit dereferences dynamic_cast<RWMol *> of each template, which
   // normalize_templates makes valid.
   RDKit::RxnOps::sanitizeRxnAsMols(rxn, sanitize_ops);

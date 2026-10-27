@@ -307,7 +307,9 @@ impl Default for MolFromMolFileParams {
 
 /// Parses a SMILES string, sanitizing the result. Mirrors
 /// `rdmolfiles.MolFromSmiles`, which returns `None` where this returns
-/// `Error::Parse` or a sanitization error (E2).
+/// `Error::Parse` or a sanitization error (E2). `Error::Value` for a
+/// molecule with more than `i32::MAX` relevant cycles, which sanitization
+/// would enumerate (`sanitize_mol`).
 pub fn mol_from_smiles(smiles: &str) -> Result<Mol> {
     mol_from_smiles_with_params(smiles, &SmilesParserParams::default())
 }

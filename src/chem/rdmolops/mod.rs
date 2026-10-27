@@ -166,13 +166,17 @@ impl AddHsParameters {
 }
 
 /// Sanitizes a molecule in place, returning `SANITIZE_NONE`. Mirrors
-/// `rdmolops.SanitizeMol`.
+/// `rdmolops.SanitizeMol`. `Error::Value`, before any step runs, for a
+/// molecule with more than `i32::MAX` relevant cycles: the symmetrized SSSR
+/// enumerates them, and RDKit converts their count to `size_t` unchecked
+/// (Python runs out of memory).
 pub fn sanitize_mol(mol: &mut Mol) -> Result<SanitizeFlags> {
     sanitize_mol_with_params(mol, &SanitizeMolParams::default())
 }
 
 /// Runs the chosen operations. With `catch_errors`, a failure returns the
-/// operation that failed rather than an error. Mirrors
+/// operation that failed rather than an error, but too many relevant cycles
+/// (`sanitize_mol`) are still `Error::Value`. Mirrors
 /// `rdmolops.SanitizeMol(mol, sanitizeOps, catchErrors)`.
 pub fn sanitize_mol_with_params(
     mol: &mut Mol,

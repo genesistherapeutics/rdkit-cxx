@@ -461,7 +461,8 @@ method_validation!(DisallowedAtomsValidation);
 /// What `MolVSValidation::default()` finds wrong with a molecule parsed from
 /// SMILES, reporting every failure. `Error::Value` for SMILES that do not
 /// parse, as in Python, and sanitization's errors (`Error::AtomValence` and
-/// the like) for a molecule that does not sanitize. Mirrors
+/// the like) for a molecule that does not sanitize, or `Error::Value` for one
+/// with too many relevant cycles (`sanitize_mol`). Mirrors
 /// `rdMolStandardize.ValidateSmiles`.
 pub fn validate_smiles(smiles: &str) -> Result<Vec<String>> {
     messages(ffi::validate_smiles(smiles)?)
