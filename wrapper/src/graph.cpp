@@ -291,8 +291,8 @@ std::unique_ptr<RWMol> renumber_atoms(
   std::vector<char> seen(new_order.size(), 0);
   for (auto idx : new_order) {
     if (idx >= new_order.size() || seen[idx]) {
-      throw ValueErrorException(
-          "newOrder must hold each atom index once: " + std::to_string(idx));
+      throw ValueErrorException("newOrder must hold each atom index once: " +
+                                std::to_string(idx));
     }
     seen[idx] = 1;
   }

@@ -210,8 +210,7 @@ void check_coord_gen_mol(const RDKit::ROMol &mol,
   for (const auto *bond : mol.bonds()) {
     auto stereo = bond->getStereo();
     if (bond->getBondType() == RDKit::Bond::DOUBLE &&
-        stereo > RDKit::Bond::STEREOANY &&
-        stereo <= RDKit::Bond::STEREOTRANS &&
+        stereo > RDKit::Bond::STEREOANY && stereo <= RDKit::Bond::STEREOTRANS &&
         bond->getStereoAtoms().size() < 2) {
       throw ValueErrorException(
           "bond " + std::to_string(bond->getIdx()) +

@@ -98,8 +98,8 @@ rust::Vec<std::int32_t> canonical_rank_atoms_in_fragment(
     bool break_ties, bool include_chirality, bool include_isotopes,
     bool include_atom_maps, bool include_chiral_presence);
 void canonicalize_enhanced_stereo(RWMol &mol);
-void create_property_list(RWMol &mol, std::uint8_t kind,
-                          rust::Str prop_name, rust::Str missing_value_marker,
+void create_property_list(RWMol &mol, std::uint8_t kind, rust::Str prop_name,
+                          rust::Str missing_value_marker,
                           std::uint32_t line_size);
 
 std::unique_ptr<RWMol> mol_from_mol_block(rust::Str mol_block, bool sanitize,

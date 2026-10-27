@@ -6,8 +6,8 @@
 #include "rdkit-cxx/molfiles.h"
 
 #include <climits>
-#include <fstream>
 #include <cmath>
+#include <fstream>
 #include <map>
 #include <mutex>
 #include <optional>
@@ -611,8 +611,8 @@ void canonicalize_enhanced_stereo(RWMol &mol) {
   RDKit::Canon::canonicalizeEnhancedStereo(mol);
 }
 
-void create_property_list(RWMol &mol, std::uint8_t kind,
-                          rust::Str prop_name, rust::Str missing_value_marker,
+void create_property_list(RWMol &mol, std::uint8_t kind, rust::Str prop_name,
+                          rust::Str missing_value_marker,
                           std::uint32_t line_size) {
   namespace FPU = RDKit::FileParserUtils;
   std::string prop(prop_name), marker(missing_value_marker);
@@ -841,8 +841,7 @@ void check_mol2_bonds(const std::string &text) {
   if (!num_atoms || !num_bonds) {
     return;
   }
-  for (std::size_t i = 0; i < *num_bonds && bonds_at + i < lines.size();
-       ++i) {
+  for (std::size_t i = 0; i < *num_bonds && bonds_at + i < lines.size(); ++i) {
     auto tokens = mol2_tokens(lines[bonds_at + i]);
     if (tokens.size() < 4) {
       return;
@@ -870,8 +869,8 @@ std::unique_ptr<RWMol> mol_from_mol2_block(rust::Str mol2_block, bool sanitize,
                                            bool cleanup_substructures) {
   std::string text(mol2_block);
   check_mol2_bonds(text);
-  return parsed(FP::MolFromMol2Block(
-                    text, mol2_params(sanitize, remove_hs, cleanup_substructures)),
+  return parsed(FP::MolFromMol2Block(text, mol2_params(sanitize, remove_hs,
+                                                       cleanup_substructures)),
                 "Mol2 block");
 }
 
@@ -891,8 +890,8 @@ std::unique_ptr<RWMol> mol_from_mol2_file(rust::Slice<const std::uint8_t> path,
   contents << file.rdbuf();
   std::string text = contents.str();
   check_mol2_bonds(text);
-  return parsed(FP::MolFromMol2Block(
-                    text, mol2_params(sanitize, remove_hs, cleanup_substructures)),
+  return parsed(FP::MolFromMol2Block(text, mol2_params(sanitize, remove_hs,
+                                                       cleanup_substructures)),
                 "Mol2 file " + name);
 }
 

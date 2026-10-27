@@ -242,16 +242,14 @@ std::unique_ptr<AbbreviationList> abbreviation_list_new() {
 void abbreviation_list_push(AbbreviationList &list, rust::Str label,
                             rust::Str display_label,
                             rust::Str display_label_w) {
-  list.defs.push_back(
-      definition(label, display_label, display_label_w));
+  list.defs.push_back(definition(label, display_label, display_label_w));
 }
 
 void abbreviation_list_push_with_mol(AbbreviationList &list, rust::Str label,
                                      rust::Str display_label,
                                      rust::Str display_label_w,
                                      const RWMol &mol) {
-  auto def =
-      definition(label, display_label, display_label_w);
+  auto def = definition(label, display_label, display_label_w);
   // RDKit only reads the definitions' molecules (and records recursive
   // queries' matches in them, under their own locks).
   def.mol.reset(const_cast<RWMol *>(&mol), [](RDKit::ROMol *) {});

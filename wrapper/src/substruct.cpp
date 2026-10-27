@@ -102,20 +102,19 @@ SubstructMatchParametersData substruct_params_to_data(
   for (const auto &prop : p.bondProperties) {
     bond_properties.push_back(prop);
   }
-  return SubstructMatchParametersData{
-      p.useChirality,
-      p.useEnhancedStereo,
-      p.aromaticMatchesConjugated,
-      p.useGenericMatchers,
-      p.useQueryQueryMatches,
-      p.recursionPossible,
-      p.uniquify,
-      p.maxMatches,
-      p.maxRecursiveMatches,
-      p.numThreads,
-      std::move(atom_properties),
-      std::move(bond_properties),
-      p.specifiedStereoQueryMatchesUnspecified};
+  return SubstructMatchParametersData{p.useChirality,
+                                      p.useEnhancedStereo,
+                                      p.aromaticMatchesConjugated,
+                                      p.useGenericMatchers,
+                                      p.useQueryQueryMatches,
+                                      p.recursionPossible,
+                                      p.uniquify,
+                                      p.maxMatches,
+                                      p.maxRecursiveMatches,
+                                      p.numThreads,
+                                      std::move(atom_properties),
+                                      std::move(bond_properties),
+                                      p.specifiedStereoQueryMatchesUnspecified};
 }
 
 RDKit::SubstructMatchParameters substruct_params_from_data(

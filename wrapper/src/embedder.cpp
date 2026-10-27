@@ -344,8 +344,8 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
 
 // As getMolBoundsMatrix in rdDistGeom.cpp, which sizes its copy in unsigned
 // int. setTopolBounds reads the distance matrix (U6).
-rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
-                                             bool set15bounds, bool scale_vdw,
+rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol, bool set15bounds,
+                                             bool scale_vdw,
                                              bool do_triangle_smoothing,
                                              bool use_macrocycle14config) {
   check_matrix_size(mol);

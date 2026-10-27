@@ -31,7 +31,7 @@
 //! and links RDKit's shared libraries; it reimplements none of RDKit's C++.
 //! What RDKit implements only in Python (QED, BRICS, `Draw`, Butina
 //! clustering, and more) is ported to Rust on top of the bindings, and
-//! computes what Python computes. Every name in RDKit 2026.03's Python
+//! computes what Python computes. Every name in RDKit 2024.09's Python
 //! interface has a Rust counterpart or a recorded reason it has none.
 //!
 //! # From Python to Rust
@@ -90,7 +90,7 @@
 //!
 //! # Building and linking
 //!
-//! Depend on the crate with a tilde requirement, `rdkit-cxx = "~2026.3"`,
+//! Depend on the crate with a tilde requirement, `rdkit-cxx = "~2024.9"`,
 //! which stays within one RDKit series. Each crate version supports one
 //! RDKit release series, and within it the releases it has checked: the
 //! build finds RDKit through `CONDA_PREFIX` (or `RDKIT_PREFIX`), in an

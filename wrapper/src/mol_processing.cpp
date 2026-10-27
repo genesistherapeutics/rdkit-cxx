@@ -349,7 +349,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
   // callbacks that write this call's state. Nothing can stop them, so the
   // process ends.
   auto read_threaded_or_abort = [&](auto suppl, std::mutex &mutex,
-                                   ByRecord &by_record) {
+                                    ByRecord &by_record) {
     try {
       return read_threaded(*suppl, mutex, by_record);
     } catch (const std::system_error &e) {
@@ -410,7 +410,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
   if (threaded) {
     auto suppl = checked(in, [&] {
       return std::make_unique<
-            DrainedSupplier<FP::MultithreadedSmilesMolSupplier>>(
+          DrainedSupplier<FP::MultithreadedSmilesMolSupplier>>(
           StopOn{in.checked.get()}, in.stream(), false, params, parse_params);
     });
     return read_threaded_or_abort(std::move(suppl), mutex, by_record);

@@ -18,8 +18,8 @@
 #include <vector>
 
 #include <GraphMol/MolOps.h>
-#include <GraphMol/PeriodicTable.h>
 #include <GraphMol/MonomerInfo.h>
+#include <GraphMol/PeriodicTable.h>
 #include <GraphMol/QueryOps.h>
 #include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
@@ -315,8 +315,7 @@ void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
 
 void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
   check_prop_count(mol, where.substr(0, where.size() - 3));
-  for (auto conf = mol.beginConformers(); conf != mol.endConformers();
-       ++conf) {
+  for (auto conf = mol.beginConformers(); conf != mol.endConformers(); ++conf) {
     check_prop_count(**conf,
                      where + "conformer " + std::to_string((*conf)->getId()));
   }
@@ -328,7 +327,8 @@ void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
   }
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
-    check_prop_count(sgroups[i], where + "substance group " + std::to_string(i));
+    check_prop_count(sgroups[i],
+                     where + "substance group " + std::to_string(i));
   }
 }
 
@@ -788,8 +788,8 @@ StereoGroupRemovalGuard::StereoGroupRemovalGuard(RDKit::RWMol &mol)
     return it->second;
   };
   for (const auto &group : mol.getStereoGroups()) {
-    Group record{group.getGroupType(), group.getReadId(), group.getWriteId(),
-                 {}, {}};
+    Group record{
+        group.getGroupType(), group.getReadId(), group.getWriteId(), {}, {}};
     for (auto *atom : group.getAtoms()) {
       record.atoms.push_back(tag(*atom, atom));
     }
@@ -825,13 +825,15 @@ StereoGroupRemovalGuard::~StereoGroupRemovalGuard() {
     std::set<unsigned> seen;
     std::vector<RDKit::Atom *> group_atoms;
     for (auto idx : group.atoms) {
-      if (auto it = atoms.find(idx); it != atoms.end() && seen.insert(idx).second) {
+      if (auto it = atoms.find(idx);
+          it != atoms.end() && seen.insert(idx).second) {
         group_atoms.push_back(it->second);
       }
     }
     std::vector<RDKit::Bond *> group_bonds;
     for (auto idx : group.bonds) {
-      if (auto it = bonds.find(idx); it != bonds.end() && seen.insert(idx).second) {
+      if (auto it = bonds.find(idx);
+          it != bonds.end() && seen.insert(idx).second) {
         group_bonds.push_back(it->second);
       }
     }
@@ -893,7 +895,8 @@ const RDKit::AtomPDBResidueInfo *pdb_info(const RDKit::Atom *atom) {
       atom->getMonomerInfo());
 }
 
-bool proximity_blacklisted_pair(const RDKit::Atom *beg, const RDKit::Atom *end) {
+bool proximity_blacklisted_pair(const RDKit::Atom *beg,
+                                const RDKit::Atom *end) {
   const auto *b = pdb_info(beg);
   const auto *e = pdb_info(end);
   if (!b || b->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {

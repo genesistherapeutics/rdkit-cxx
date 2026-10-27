@@ -17,7 +17,7 @@
 use crate::Result;
 use crate::chem::{Mol, SubstructMatchParameters, mol_from_smarts};
 
-/// `Data/FragmentDescriptors.csv` from RDKit 2026.03.6: a code, a
+/// `Data/FragmentDescriptors.csv` from RDKit 2024.09.6: a code, a
 /// description, a SMARTS pattern, and notes per tab-separated line.
 const FRAGMENT_DESCRIPTORS: &str =
     include_str!("../../wrapper/third_party/rdkit/Data/FragmentDescriptors.csv");

@@ -63,10 +63,6 @@ int monomer_info_get_monomer_type(const AtomMonomerInfo &info) {
   return info.getMonomerType();
 }
 
-
-
-
-
 void monomer_info_set_name(AtomMonomerInfo &info, rust::Str nm) {
   info.setName(std::string(nm));
 }
@@ -79,10 +75,6 @@ void monomer_info_set_monomer_type(AtomMonomerInfo &info, int typ) {
   }
   info.setMonomerType(type);
 }
-
-
-
-
 
 std::unique_ptr<AtomPDBResidueInfo> pdb_residue_info_new() {
   return std::make_unique<AtomPDBResidueInfo>();

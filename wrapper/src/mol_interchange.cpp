@@ -148,8 +148,7 @@ const bj::array &array_of_at_least(const bj::value &v, std::size_t n,
                                    const std::string &what) {
   const auto &list = array_of(v, what);
   if (list.size() < n) {
-    refuse("gives " + what + " of fewer than " + std::to_string(n) +
-           " values");
+    refuse("gives " + what + " of fewer than " + std::to_string(n) + " values");
   }
   return list;
 }
@@ -338,9 +337,9 @@ class DocumentChecker {
       const auto &bond = object_of(bond_value, "a bond");
       // readBond reads aids[0] and aids[1] without checking that they
       // exist; RWMol::addBond checks the atoms they name.
-      const auto &ends = array_of_at_least(
-          present(member(bond, "atoms"), "a bond's atoms"), 2,
-          "a bond's atoms");
+      const auto &ends =
+          array_of_at_least(present(member(bond, "atoms"), "a bond's atoms"), 2,
+                            "a bond's atoms");
       int_of(ends[0], "a bond's atom");
       int_of(ends[1], "a bond's atom");
       auto s = bond_stereo(bond);
@@ -406,16 +405,14 @@ class DocumentChecker {
     if (const auto *sgroups = member(mol, "substanceGroups")) {
       for (const auto &sgroup_value :
            array_of(*sgroups, "a molecule's substance groups")) {
-        check_substance_group(
-            object_of(sgroup_value, "a substance group"), num_atoms,
-            num_bonds);
+        check_substance_group(object_of(sgroup_value, "a substance group"),
+                              num_atoms, num_bonds);
       }
     }
 
     if (d_params.parseConformers) {
       if (const auto *confs = member(mol, "conformers")) {
-        for (const auto &conf :
-             array_of(*confs, "a molecule's conformers")) {
+        for (const auto &conf : array_of(*confs, "a molecule's conformers")) {
           check_conformer(object_of(conf, "a conformer"));
         }
       }
@@ -484,8 +481,8 @@ class DocumentChecker {
     string_of(*type, "a substance group's TYPE");
     for (const char *key : {"atoms", "bonds", "parentAtoms"}) {
       if (const auto *ids = member(sgroup, key)) {
-        for (const auto &id : array_of(
-                 *ids, std::string("a substance group's ") + key)) {
+        for (const auto &id :
+             array_of(*ids, std::string("a substance group's ") + key)) {
           uint_of(id, std::string("a substance group's ") + key);
         }
       }
@@ -539,9 +536,9 @@ class DocumentChecker {
       for (const auto &point_value :
            array_of(*points, "a substance group's attachment points")) {
         const auto &point = object_of(point_value, "an attachment point");
-        if (uint_of(present(member(point, "aIdx"),
-                            "an attachment point's aIdx"),
-                    "an attachment point's aIdx") >= num_atoms) {
+        if (uint_of(
+                present(member(point, "aIdx"), "an attachment point's aIdx"),
+                "an attachment point's aIdx") >= num_atoms) {
           refuse(
               "gives a substance group an attachment point at an "
               "atom the molecule lacks");
@@ -579,8 +576,7 @@ class DocumentChecker {
     if (!coords) {
       rdkit_throws();
     }
-    for (const auto &point_value :
-         array_of(*coords, "a conformer's coords")) {
+    for (const auto &point_value : array_of(*coords, "a conformer's coords")) {
       const auto &point = array_of(point_value, "a conformer's coordinate");
       if (point.size() != static_cast<std::size_t>(dim)) {
         rdkit_throws();
@@ -648,7 +644,8 @@ class DocumentChecker {
       }
       bool atoms = key == std::string("atomQueries");
       std::size_t idx = 0;
-      for (const auto &query : array_of(*queries, std::string("an extension's ") + key)) {
+      for (const auto &query :
+           array_of(*queries, std::string("an extension's ") + key)) {
         if (!query.is_object()) {
           rdkit_throws();
         }
@@ -727,9 +724,9 @@ class DocumentChecker {
   // finishQuery's description, which it reads without checking that it is
   // there for a recursive or ring query, and its type and negation.
   static std::string check_finish(const bj::object &query) {
-    auto descr = string_of(
-        present(member(query, "descr"), "a query's description"),
-        "a query's description");
+    auto descr =
+        string_of(present(member(query, "descr"), "a query's description"),
+                  "a query's description");
     if (const auto *type = member(query, "type")) {
       string_of(*type, "a query's type");
     }
@@ -883,8 +880,8 @@ class DocumentChecker {
       known = tag == MolPickler::QUERY_OR;
     }
     if (!known) {
-      refuse("gives a bond a query RDKit does not make: description '" +
-             descr + "' with tag " + std::to_string(tag) +
+      refuse("gives a bond a query RDKit does not make: description '" + descr +
+             "' with tag " + std::to_string(tag) +
              (in_and_or ? " in an AND or OR query" : ""));
     }
     check_values(query, tag);
@@ -946,8 +943,9 @@ void fill_leaving_atoms(bj::value &doc) {
     return;
   }
   for (auto &mol : mols->as_array()) {
-    auto *sgroups = mol.is_object() ? mol.as_object().if_contains("substanceGroups")
-                                    : nullptr;
+    auto *sgroups = mol.is_object()
+                        ? mol.as_object().if_contains("substanceGroups")
+                        : nullptr;
     if (!sgroups || !sgroups->is_array()) {
       continue;
     }

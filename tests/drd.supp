@@ -26,3 +26,16 @@
    drd:CondErr
    fun:pthread_cond_destroy*
 }
+
+# RDKit 2024.09's DoubleCubicLatticeVolume reads its icosahedron's vertices
+# from a function-local static (generateStandardDots in DCLV.cpp), which C++
+# initializes once under a guard. The compiler checks the guard inline and
+# calls __cxa_guard_acquire, which DRD intercepts, only before the first
+# initialization, so a thread that finds it done reads the vertices without
+# DRD seeing the acquire that orders it after the initializing thread.
+{
+   drd-dclv-icosahedron-static-init
+   drd:ConflictingAccess
+   ...
+   fun:_ZN5RDKit11Descriptors5State9tesselate*
+}

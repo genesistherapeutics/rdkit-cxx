@@ -42,8 +42,8 @@ double pubchem_shape_input_sof(const PubChemShapeInput &shape);
 // The scores, shape then color.
 rust::Vec<double> pubchem_align_mol(const RWMol &ref, RWMol &probe,
                                     std::int32_t ref_conf_id,
-                                    std::int32_t probe_conf_id,
-                                    bool use_colors, double opt_param,
+                                    std::int32_t probe_conf_id, bool use_colors,
+                                    double opt_param,
                                     std::uint32_t max_preiters,
                                     std::uint32_t max_postiters);
 rust::Vec<double> pubchem_align_mol_shape_input(

@@ -77,9 +77,7 @@ void atom_set_chiral_tag(Atom &atom, ChiralType what) {
   atom.setChiralTag(what);
 }
 
-unsigned stereo_info_noatom() {
-  return RDKit::Chirality::StereoInfo::NOATOM;
-}
+unsigned stereo_info_noatom() { return RDKit::Chirality::StereoInfo::NOATOM; }
 
 int atom_get_atom_map_num(const Atom &atom) { return atom.getAtomMapNum(); }
 

@@ -267,8 +267,7 @@ rust::Vec<T> copy_vec(const std::vector<U> &v) {
 
 std::unique_ptr<PubChemShapeInput> pubchem_prepare_conformer(
     const RWMol &mol, std::int32_t conf_id, bool use_colors) {
-  return std::make_unique<PubChemShapeInput>(
-      prepare(mol, conf_id, use_colors));
+  return std::make_unique<PubChemShapeInput>(prepare(mol, conf_id, use_colors));
 }
 
 std::unique_ptr<PubChemShapeInput> pubchem_shape_input_clone(
@@ -311,8 +310,8 @@ double pubchem_shape_input_sof(const PubChemShapeInput &shape) {
 // aligns the fit to it.
 rust::Vec<double> pubchem_align_mol(const RWMol &ref, RWMol &probe,
                                     std::int32_t ref_conf_id,
-                                    std::int32_t probe_conf_id,
-                                    bool use_colors, double opt_param,
+                                    std::int32_t probe_conf_id, bool use_colors,
+                                    double opt_param,
                                     std::uint32_t max_preiters,
                                     std::uint32_t max_postiters) {
   auto ref_shape = prepare(ref, ref_conf_id, use_colors);

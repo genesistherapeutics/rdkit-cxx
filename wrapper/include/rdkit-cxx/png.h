@@ -31,7 +31,6 @@ class PNGMetadata {
   std::vector<std::pair<std::string, std::string>> items;
 };
 
-
 // Checks the chunk structure RDKit walks without checking it (check_png in
 // png.cpp); the file forms read the file once and check those bytes (U2).
 std::unique_ptr<RWMol> mol_from_png_string(

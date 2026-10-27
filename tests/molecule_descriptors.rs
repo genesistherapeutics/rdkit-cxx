@@ -79,7 +79,7 @@ fn matches_python() {
             "Number of Hydrogen Bond Donors",
             "Number of N functional groups attached to aromatics",
             "N/A",
-            "CalcFractionCSP3( (rdkit.Chem.rdchem.Mol)mol) -> float : returns the fraction of C \
+            "CalcFractionCSP3( (Mol)mol) -> float : returns the fraction of C \
              atoms that are SP3 hybridized",
         ]
     );
