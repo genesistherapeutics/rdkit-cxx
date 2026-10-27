@@ -929,6 +929,43 @@ fn sgroup_fields_across_chunks() {
     std::fs::remove_file(&path).unwrap();
 }
 
+/// A reader that cannot seek and hands out at most 4093 bytes a read, as a
+/// decompressing reader may.
+struct Trickle(std::io::Cursor<Vec<u8>>);
+
+impl std::io::Read for Trickle {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
+        let n = buf.len().min(4093);
+        self.0.read(&mut buf[..n])
+    }
+}
+
+// The scanner holds back a CTAB line until it ends, reading the next chunk
+// ahead into its own store, so a source that cannot seek back gives every
+// byte once: a field straddling the 64 KiB boundary reads as from a file.
+#[test]
+fn sgroup_fields_across_chunks_of_unseekable_readers() {
+    let read = |text: String| {
+        let reader = Trickle(std::io::Cursor::new(text.into_bytes()));
+        let mut suppl = ForwardSDMolSupplier::from_fileobj(reader).unwrap();
+        suppl.mols().collect::<Vec<_>>()
+    };
+    for before in [1, 2, 4, 8, 11, 13] {
+        let mols = read(straddling_sd_file("SAP=(3 2 1 1)", before));
+        assert_eq!(mols.len(), 2, "{before}");
+        let second = mols[1].as_ref().unwrap();
+        assert_eq!(attach_points(second), [(1, 0, "1".to_string())], "{before}");
+        let results = read(straddling_sd_file("COMPNO=", before));
+        assert!(results[0].is_ok(), "{before}");
+        assert!(
+            results
+                .iter()
+                .any(|r| matches!(r, Err(Error::Value { .. }))),
+            "{before}"
+        );
+    }
+}
+
 #[test]
 fn sgroup_headers_are_checked() {
     let lax = MolFromMolBlockParams {
