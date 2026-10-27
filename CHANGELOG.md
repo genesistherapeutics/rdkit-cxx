@@ -62,6 +62,18 @@ A program built against one release stops when it loads with another.
     `DetermineBondOrders`, and synthon search leave RDKit's `SIGINT` handler
     installed; the wrappers restore the process's after each call.
 
+### Fixes beyond 2026.9.0
+
+Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
+2026.09.1 too, and `main` gets those in its next release:
+
+- The V3000 readers (mol blocks and files, the SD suppliers, and every other
+  reader of V3000 text) refuse an SGroup's `COMPNO=` with no value, and an
+  enhanced-stereo collection with fewer atoms than its count (`ATOMS=(2 )`),
+  with `Error::Value`: RDKit reads each with a stream extraction it does not
+  check, into an uninitialized `unsigned int`. A refused line is cut before
+  any of it reaches RDKit, wherever it falls in a stream's 64 KiB chunks.
+
 ### Bindings
 
 - Binds RDKit's C++ API with the coverage of its Python wrappers, as
