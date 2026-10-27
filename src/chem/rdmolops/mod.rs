@@ -105,18 +105,10 @@ impl Default for SanitizeMolParams {
 }
 
 /// Parameters for `kekulize_with_params`, with Python's defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct KekulizeParams {
     /// Clears the aromatic flags on atoms and bonds.
     pub clear_aromatic_flags: bool,
-}
-
-impl Default for KekulizeParams {
-    fn default() -> KekulizeParams {
-        KekulizeParams {
-            clear_aromatic_flags: false,
-        }
-    }
 }
 
 /// Parameters for `add_hs_with_params`, with Python's defaults (A2).

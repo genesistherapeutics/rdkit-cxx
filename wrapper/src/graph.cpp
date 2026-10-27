@@ -279,13 +279,25 @@ std::unique_ptr<MolList> split_mol_by_pdb_chain_id(
 // As renumberAtomsHelper in Code/GraphMol/Wrap/MolOps.cpp, which rejects a
 // short newOrder and values past the atoms, and (pythonObjectToVect in
 // Code/RDBoost/Wrap.h treating an empty list as None) an empty one even for a
-// molecule without atoms. Here newOrder needs one entry per atom, and
-// renumberAtoms checks the values.
+// molecule without atoms. Here newOrder needs one entry per atom, each an
+// atom's index, and each atom once: RDKit 2024.03's renumberAtoms refuses
+// only values past the atom count, so a value equal to it writes past its
+// reverse order, and it accepts repeated atoms.
 std::unique_ptr<RWMol> renumber_atoms(
     const RWMol &mol, rust::Slice<const std::uint32_t> new_order) {
   if (new_order.size() != mol.getNumAtoms()) {
     throw ValueErrorException(
         "newOrder must have one entry for each atom in the molecule");
+  }
+  std::vector<bool> seen(new_order.size(), false);
+  for (auto idx : new_order) {
+    if (idx >= new_order.size()) {
+      throw ValueErrorException("newOrder has an index past the atoms");
+    }
+    if (seen[idx]) {
+      throw ValueErrorException("newOrder names an atom more than once");
+    }
+    seen[idx] = true;
   }
   std::unique_ptr<RDKit::ROMol> result(
       RDKit::MolOps::renumberAtoms(mol, to_vector(new_order)));
