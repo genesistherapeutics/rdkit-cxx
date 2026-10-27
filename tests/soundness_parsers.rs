@@ -461,3 +461,62 @@ fn readers_of_smarts_text_refuse_cx_fields() {
     assert!(!SmartsMatcher::from_smarts("m", "C |SgD:0:x").is_valid());
     assert!(SmartsMatcher::from_smarts("m", "C").is_valid());
 }
+
+const SGROUP_BLOCK: &str = "
+     RDKit          2D
+
+  0  0  0  0  0  0  0  0  0  0999 V3000
+M  V30 BEGIN CTAB
+M  V30 COUNTS 3 2 NSG 0 0
+M  V30 BEGIN ATOM
+M  V30 1 C 0.000000 0.000000 0.000000 0
+M  V30 2 C 1.299038 0.750000 0.000000 0
+M  V30 3 O 2.598076 -0.000000 0.000000 0
+M  V30 END ATOM
+M  V30 BEGIN BOND
+M  V30 1 1 1 2
+M  V30 2 1 2 3
+M  V30 END BOND
+M  V30 BEGIN SGROUP
+LINES
+M  V30 END SGROUP
+M  V30 END CTAB
+M  END
+";
+
+fn sgroup_block(num: &str, lines: &str) -> String {
+    SGROUP_BLOCK.replace("NSG", num).replace("LINES\n", lines)
+}
+
+// ParseV3000SGroupsBlock reads each S-group line's ids into variables it
+// never initializes, which a line without a number, a type, and a number
+// leaves unread, as does a block with fewer lines than COUNTS names.
+#[test]
+fn sgroup_lines_without_ids_are_refused() {
+    let ok = sgroup_block("1", "M  V30 1 SUP 0 ATOMS=(1 3) LABEL=OH\n");
+    let mol = mol_from_mol_block(&ok).unwrap();
+    assert_eq!(mol.get_num_atoms(), 3);
+    let with_default = sgroup_block(
+        "1",
+        "M  V30 DEFAULT CLASS=AA\nM  V30 1 SUP 0 ATOMS=(1 3) LABEL=OH\n",
+    );
+    mol_from_mol_block(&with_default).unwrap();
+    // A third token that is not a number reads as 0.
+    mol_from_mol_block(&sgroup_block("1", "M  V30 1 SUP x ATOMS=(1 3)\n")).unwrap();
+    for (num, lines) in [
+        ("1", "M  V30 1\n"),
+        ("1", "M  V30 1 SUP\n"),
+        ("1", "M  V30 SUP 1 0\n"),
+        ("1", "M  V30 DEFAULT\n"),
+        ("2", "M  V30 1 SUP 0 ATOMS=(1 3) LABEL=OH\n"),
+    ] {
+        assert!(
+            is_value_error(mol_from_mol_block(&sgroup_block(num, lines))),
+            "{num} {lines}"
+        );
+    }
+    // A cut line is refused too, from an SD file of it.
+    let cut = sgroup_block("1", "M  V30 1 SUP 0 ATOMS=(1 3) LABEL=OH\n");
+    let cut = &cut[..cut.find("M  V30 1 SUP").unwrap() + 10];
+    assert!(mol_from_mol_block(cut).is_err());
+}

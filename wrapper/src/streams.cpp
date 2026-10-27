@@ -12,6 +12,7 @@
 #include <random>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
@@ -360,6 +361,78 @@ void SgroupValue::close() {
   d_label_long = false;
 }
 
+constexpr char kSgroupHeader[] =
+    "a V3000 S-group line does not start with a number and two more tokens "
+    "(or the block has fewer S-group lines than the COUNTS line names); "
+    "RDKit 2024.03 then reads the S-group's ids uninitialized";
+
+bool SgroupHeader::push(char c) {
+  const bool space = c == ' ' || c == '\t';
+  const bool digit = is_digit(c);
+  const bool sign = c == '+' || c == '-';
+  switch (d_state) {
+    case kDefault:
+      // tempStr.substr(0, 7) == "DEFAULT" && tempStr.length() > 8.
+      if (d_default_matched < 7) {
+        if (c == "DEFAULT"[d_default_matched]) {
+          ++d_default_matched;
+          return true;
+        }
+        if (d_default_matched > 0) {
+          return false;  // a line that starts with "D" is no S-group
+        }
+        d_state = kLead;
+        return push(c);
+      }
+      if (++d_default_matched >= 9) {
+        d_is_default = true;
+        d_active = false;
+      }
+      return true;
+    case kLead:
+      if (space) {
+        return true;
+      }
+      if (digit || sign) {
+        d_state = digit ? kFirst : kLeadSign;
+        return true;
+      }
+      return false;
+    case kLeadSign:
+      if (!digit) {
+        return false;
+      }
+      d_state = kFirst;
+      return true;
+    case kFirst:
+      if (!digit) {
+        // The number ends; the type starts with this byte or after spaces.
+        d_state = space ? kBeforeType : kType;
+      }
+      return true;
+    case kBeforeType:
+      if (!space) {
+        d_state = kType;
+      }
+      return true;
+    case kType:
+      if (space) {
+        d_state = kBeforeId;
+      }
+      return true;
+    case kBeforeId:
+      // Once a third token starts, the extraction runs, and one that fails
+      // stores 0 (as any extraction after the stream's sentry passes).
+      if (!space) {
+        d_state = kDone;
+      }
+      return true;
+    case kDone:
+      return true;
+  }
+  return true;
+}
+
 bool InputScanner::fail(std::string why) {
   if (d_error.empty()) {
     d_error = std::move(why);
@@ -411,11 +484,19 @@ std::uint64_t InputScanner::logical_hold(bool dangers_only,
       *why = kCxField;
       return checks.tokens.start();
     }
+    if (checks.header.active() && !checks.header.push(d_pend[i])) {
+      *why = kSgroupHeader;
+      return d_logical_start;
+    }
   }
   std::uint64_t result = kNone;
   if (checks.value.open()) {
     *why = checks.value.why();
     result = checks.value.start();
+  }
+  if (checks.header.open() && d_logical_start < result) {
+    *why = kSgroupHeader;
+    result = d_logical_start;
   }
   if (!dangers_only) {
     result = std::min(result, checks.tokens.partial());
@@ -488,12 +569,57 @@ void InputScanner::confirm(char c, std::uint64_t pos) {
          " characters; RDKit matches it with a regex that recurses once per "
          "character");
   }
+  // A COUNTS line's numbers fit; longer lines need only their keyword.
+  if (d_line.size() < 256) {
+    d_line += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+  }
   end_points(c);
   if (!d_checks.value.push(c, pos)) {
     fail_at(d_checks.value.why(), d_checks.value.start());
   } else if (d_checks.tokens.push(c, pos)) {
     fail_at(kCxField, d_checks.tokens.start());
+  } else if (d_checks.header.active() && !d_checks.header.push(c)) {
+    fail_at(kSgroupHeader, d_logical_start);
   }
+}
+
+// At the end of a logical V3000 line: the block structure, as
+// ParseV3000CTAB reads it (MolFileParser.cpp): the COUNTS line's third
+// number is the S-groups a "BEGIN SGROUP" block must then hold, each line of
+// which ParseV3000SGroupsBlock reads as one.
+void InputScanner::end_logical_line() {
+  if (d_checks.header.open()) {
+    fail_at(kSgroupHeader, d_logical_start);
+  }
+  if (d_line.compare(0, 10, "BEGIN CTAB") == 0) {
+    d_num_sgroups = 0;
+    d_in_sgroups = false;
+  } else if (d_line.compare(0, 7, "COUNTS ") == 0) {
+    // As ParseV3000CTAB: the third number, if any; one RDKit cannot read
+    // (toUnsigned) is its error.
+    std::vector<std::string> fields;
+    std::string trimmed = boost::trim_copy(d_line.substr(7));
+    boost::split(fields, trimmed, boost::is_any_of(" \t"),
+                 boost::token_compress_on);
+    d_num_sgroups = 0;
+    if (fields.size() > 2 && !fields[2].empty() &&
+        std::all_of(fields[2].begin(), fields[2].end(), is_digit)) {
+      d_num_sgroups = std::stoull(fields[2].substr(0, 19));
+    }
+  } else if (d_line.compare(0, 12, "BEGIN SGROUP") == 0) {
+    d_in_sgroups = d_num_sgroups > 0;
+    d_sgroup_first = true;
+    d_sgroups_read = 0;
+  } else if (d_line.compare(0, 10, "END SGROUP") == 0 ||
+             d_line.compare(0, 8, "END CTAB") == 0) {
+    d_in_sgroups = false;
+  } else if (d_in_sgroups) {
+    if (!d_checks.header.is_default()) {
+      ++d_sgroups_read;
+    }
+    d_sgroup_first = false;
+  }
+  d_line.clear();
 }
 
 // A byte of the logical V3000 line, for the ENDPTS values in it. Values are
@@ -597,8 +723,10 @@ void InputScanner::end_line() {
     if (d_checks.value.open()) {
       fail_at(d_checks.value.why(), d_checks.value.start());
     }
+    end_logical_line();
     d_checks.value.reset();
     d_checks.tokens.reset();
+    d_checks.header = SgroupHeader();
     d_logical = 0;
     d_prefix.clear();
     d_end_points = EndPoints::kKey;
@@ -624,6 +752,12 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
         return i;
       }
       continue;
+    }
+    if (d_pos == 0 && !d_continuing) {
+      d_logical_start = pos;
+      if (d_in_sgroups && d_sgroups_read < d_num_sgroups) {
+        d_checks.header.start(d_sgroup_first);
+      }
     }
     if (d_pos < 7) {
       d_head[d_pos] = c;

@@ -137,10 +137,51 @@ class SgroupValue {
   const char *d_why = "";
 };
 
+// The start of a V3000 S-group line, which RDKit 2024.03 reads as
+// `lineStream >> sequenceId >> type >> externalId`
+// (ParseV3000SGroupsBlock in MolSGroupParsing.cpp) into variables it never
+// initializes: an extraction that fails stores 0 but leaves every later one
+// unread, and one at the end of the line reads nothing, so a line that does
+// not start with a number and two more tokens (or a cut one) leaves the ids
+// uninitialized, and RDKit stores and compares them.
+// The block's first line may instead be its DEFAULT line.
+class SgroupHeader {
+ public:
+  void start(bool first) {
+    *this = SgroupHeader();
+    d_active = true;
+    d_state = first ? kDefault : kLead;
+  }
+  // Takes a byte of the logical line; false if RDKit would misread the ids.
+  bool push(char c);
+  // Whether a line ending here leaves RDKit ids it misreads.
+  bool open() const { return d_active && d_state != kDone; }
+  // Whether the line was the block's DEFAULT line, not an S-group.
+  bool is_default() const { return d_is_default; }
+  bool active() const { return d_active; }
+
+ private:
+  enum State : std::uint8_t {
+    kDefault,
+    kLead,
+    kLeadSign,
+    kFirst,
+    kBeforeType,
+    kType,
+    kBeforeId,
+    kDone
+  };
+  bool d_active = false;
+  bool d_is_default = false;
+  std::uint8_t d_default_matched = 0;
+  State d_state = kLead;
+};
+
 // What a V3000 logical line holds that a cut-off line could misread.
 struct LogicalChecks {
   SgroupValue value;
   CxTokenMatcher tokens;
+  SgroupHeader header;
 };
 
 // Scans text in order, one byte at a time across calls.
@@ -167,6 +208,7 @@ class InputScanner {
   bool fail_at(std::string why, std::uint64_t start);
   std::uint64_t logical_hold(bool dangers_only, const char **why) const;
   void mol_line_byte(char c, std::uint64_t pos);
+  void end_logical_line();
 
   std::string d_error;
   std::uint64_t d_lines = 0;
@@ -204,6 +246,16 @@ class InputScanner {
   bool d_in_number = false;
   std::uint64_t d_number = 0;
   std::uint64_t d_numbers = 0;
+  // Where the logical line began, its first bytes (for the block keywords),
+  // and the S-group block it is in: the S-groups the CTAB's COUNTS line
+  // names, whether a BEGIN SGROUP line opened a block of them, and how many
+  // S-group lines have been read.
+  std::uint64_t d_logical_start = 0;
+  std::string d_line;
+  std::uint64_t d_num_sgroups = 0;
+  bool d_in_sgroups = false;
+  bool d_sgroup_first = false;
+  std::uint64_t d_sgroups_read = 0;
 };
 
 // Throws ValueErrorException if `text` breaks the limits above.
