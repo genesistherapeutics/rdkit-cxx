@@ -330,17 +330,27 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **Integer undefined behavior RDKit 2026.03 fixed.** Kekulizing an
-  aromatic system with more than 31 dummy atoms whose electrons it must
-  guess shifts an `unsigned int` by their number (`QuestionEnumerator`),
-  and the CIP labeler shifts by a negative amount once a ranking compares
-  more than 64 descriptors (`PairList`). Every sanitization can kekulize, so
-  the input cannot be checked before RDKit sees it. x86-64 and arm64 take
-  the shift count modulo the width, so the effect is a wrong (or, for
-  kekulization, very long) result, not a memory error. The AMBER and GROMOS
-  trajectory readers add each snapshot through `Trajectory::insertSnapshot`,
-  which subtracts an iterator its own `insert` may have invalidated; the
-  result is an index RDKit ignores.
+- **Shifts RDKit 2026.03 fixed.** Kekulizing a fused ring system with 32
+  or more dummy atoms whose bonds it must guess shifts an `unsigned int` by
+  their number (`QuestionEnumerator`). `mol_from_smiles`, `sanitize_mol`,
+  `kekulize`, and `kekulize_if_possible` refuse such molecules, but RDKit's
+  other parsers and the calls that sanitize or kekulize inside RDKit are
+  not checked. The CIP labeler shifts by a negative amount once a ranking
+  compares more than 64 descriptors (`PairList`); `assign_cip_labels`
+  refuses more than 64 stereo atoms and bonds, but in fused ring systems
+  one atom can stand for several of the labeler's digraph nodes, and a
+  bound that covered that would refuse common molecules (steroids, taxol).
+  FMCS shifts a 64-bit one by a seed's new external bonds, undefined when
+  there are exactly 64 (RDKit throws for more). x86-64 and arm64 take the
+  shift count modulo the width, so the effect is a wrong (or, for
+  kekulization, very long) result, not a memory error.
+- **Iterators RDKit invalidates.** The AMBER and GROMOS trajectory readers
+  add each snapshot through `Trajectory::insertSnapshot`, which subtracts
+  an iterator its own `insert` may have invalidated; the result is an index
+  RDKit ignores. R-group decomposition with `include_target_mol_in_results`
+  inserts a vector's range into itself when an R group has several
+  fragments (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies
+  from storage the insert leaves in place.
 
 Other limits:
 
