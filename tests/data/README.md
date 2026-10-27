@@ -29,8 +29,9 @@ From RDKit's source tree, under RDKit's BSD license:
   with trailing whitespace trimmed
 - `witch-salts.sdf`, `c6h6-cdk.smi`, `4DJU_lig.pdb`, `4FTR_lig.mol`, `NCI_5K_TPSA.csv`:
   `rdkit/Chem/test_data`, with trailing whitespace trimmed
-- `Crippen.csv`, `PP_descrs_regress.csv`, `descriptors_multiconf.sdf`:
-  `rdkit/Chem/test_data`
+- `Crippen.csv`, `PP_descrs_regress.csv`: `rdkit/Chem/test_data`
+- `descriptors_multiconf.sdf`: `rdkit/Chem/test_data` in RDKit 2026.03.6,
+  which RDKit 2025.09.6 lacks
 - `EState_VSA.csv`: `rdkit/Chem/EState/test_data`
 - `NCI_200_qed.csv`: `rdkit/Chem/test_data/QED`
 - `first_200.tpsa.csv`: `Data/NCI`
@@ -48,5 +49,5 @@ Made from RDKit's source tree with its Python package (RDKit 2026.09.1):
   pickled in `rdkit/Chem/Pharm3D/test_data/cdk2-syn-clip100.pkl.gz`, written by
   `Chem.MolToSmiles`; each SMILES reads back to the same SMILES and atom count
 - `calc_mol_descriptors.tsv`: `Descriptors.CalcMolDescriptors` of a set of
-  molecules in RDKit 2026.03.6, one row each, with the `repr` of each value as
+  molecules in RDKit 2025.09.6, one row each, with the `repr` of each value as
   a float and `None` where a descriptor failed (`tests/descriptors.rs`)

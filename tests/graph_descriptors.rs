@@ -5,7 +5,7 @@
 
 // Ports RDKit's rdkit/Chem/UnitTestGraphDescriptors_2.py, whose values come
 // from the papers it cites and from tests/data/PP_descrs_regress.csv, and
-// pins values from Python's rdkit.Chem.GraphDescriptors in RDKit 2026.03.6.
+// pins values from Python's rdkit.Chem.GraphDescriptors in RDKit 2025.09.6.
 
 use rdkit_cxx::chem::graph_descriptors::*;
 use rdkit_cxx::chem::{

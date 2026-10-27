@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports rdkit/Chem/Scaffolds/UnitTestMurckoScaffold.py and the module's
-// doctests; values from Python's MurckoScaffold in RDKit 2026.03.6.
+// doctests; values from Python's MurckoScaffold in RDKit 2025.09.6.
 
 use rdkit_cxx::Result;
 use rdkit_cxx::chem::rd_chem_reactions::reaction_to_smarts;

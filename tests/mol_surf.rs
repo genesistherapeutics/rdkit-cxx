@@ -7,7 +7,7 @@
 // their reference files tests/data/first_200.tpsa.csv (RDKit's
 // Data/NCI/first_200.tpsa.csv), PP_descrs_regress.csv, and Crippen.csv, and
 // pins values from Python's rdkit.Chem.MolSurf and rdkit.Chem.Crippen in
-// RDKit 2026.03.6, each computed on a new molecule, since Python reads the
+// RDKit 2025.09.6, each computed on a new molecule, since Python reads the
 // results of earlier calls back from the molecule.
 
 use rdkit_cxx::chem::crippen::*;

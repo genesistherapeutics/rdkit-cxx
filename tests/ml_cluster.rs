@@ -5,7 +5,9 @@
 
 // Ports rdkit/ML/Cluster/UnitTestButina.py, UnitTestCluster.py, and
 // murtagh_test.py, with values from Python's rdkit.ML.Cluster modules in
-// RDKit 2026.03.6.
+// RDKit 2025.09.6. Its FindClusterCentroidFromDists and ShowMetricMat raise
+// TypeError (they index with `/`, a float); their values are RDKit
+// 2026.03.6's, which uses `//`, as the ports' docs say.
 
 // Python's test data, 3.14, is not pi.
 #![allow(clippy::approx_constant)]

@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Checks the port of rdkit.RDRandom against Python's random module in
-// Python 3.12, which RDKit 2026.03.6's RDRandom draws from.
+// Python 3.12, which RDKit 2025.09.6's RDRandom draws from.
 
 use rdkit_cxx::Error;
 use rdkit_cxx::rd_random::{self, Random};
@@ -24,7 +24,7 @@ fn generator_matches_python() {
 #[test]
 fn shuffles_match_python() {
     // `random.shuffle(x)`: RDRandom.shuffle(x) itself raises AttributeError
-    // in RDKit 2026.03.6, reading a `random._randbelow` that Python 3.12
+    // in RDKit 2025.09.6, reading a `random._randbelow` that Python 3.12
     // lacks.
     let mut x: Vec<u32> = (0..12).collect();
     Random::new(5).shuffle(&mut x);
