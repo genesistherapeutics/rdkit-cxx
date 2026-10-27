@@ -189,8 +189,8 @@ fn rdkit_prefix() -> PathBuf {
     }
 }
 
-/// The RDKit release series this crate version supports: crate 2026.3.x
-/// supports RDKit 2026.03.
+/// The RDKit release series this crate version supports: crate 2024.3.x
+/// supports RDKit 2024.03.
 fn supported_series() -> String {
     let major = env::var("CARGO_PKG_VERSION_MAJOR").unwrap();
     let minor: u32 = env::var("CARGO_PKG_VERSION_MINOR")
