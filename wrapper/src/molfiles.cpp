@@ -128,7 +128,9 @@ std::unique_lock<std::mutex> random_lock(bool random) {
 // (TplFileParser.cpp), which indexes the second token of the counts line and
 // of the CONFS line without checking that the line has one: a counts line or
 // a CONFS line with a single token reads past the end of the token vector.
-void check_tpl(const std::string &text) {
+// Returns the block's bond count, a bound on its independent cycles (0 where
+// RDKit fails before it builds the molecule).
+std::uint64_t check_tpl(const std::string &text) {
   std::istringstream in(text);
   auto line = [&in]() { return RDKit::getLine(in); };
   auto tokens = [](const std::string &s) {
@@ -145,19 +147,19 @@ void check_tpl(const std::string &text) {
   for (int i = 0; i < 3; ++i) {
     tempStr = line();
     if (in.eof()) {
-      return;
+      return 0;
     }
   }
   if (tempStr.size() >= 4 && tempStr.substr(0, 4) == "NAME") {
     tempStr = line();
     if (in.eof()) {
-      return;
+      return 0;
     }
   }
   if (tempStr.size() >= 4 && tempStr.substr(0, 4) == "PROP") {
     tempStr = line();
     if (in.eof()) {
-      return;
+      return 0;
     }
   }
   auto counts = tokens(tempStr);
@@ -171,7 +173,7 @@ void check_tpl(const std::string &text) {
     nBonds =
         RDKit::FileParserUtils::stripSpacesAndCast<unsigned int>(counts[1]);
   } catch (const boost::bad_lexical_cast &) {
-    return;  // RDKit throws the same cast error
+    return 0;  // RDKit throws the same cast error
   }
   // RDKit reads one line per atom and bond, stopping with an error at EOF.
   // It sizes a conformer for nAtoms first, so missing atom lines are refused
@@ -183,17 +185,18 @@ void check_tpl(const std::string &text) {
       if (i < nAtoms) {
         throw RDKit::FileParseException("EOF hit while reading atoms.");
       }
-      return;
+      return nBonds;
     }
   }
   tempStr = line();
   if (in.eof()) {
-    return;
+    return nBonds;
   }
   if (tempStr.size() >= 5 && tempStr.substr(0, 5) == "CONFS" &&
       tokens(tempStr).size() < 2) {
     too_few();
   }
+  return nBonds;
 }
 
 // RDKit's SVG reader (ptreeToMol in SVGParser.cpp) subtracts 1 from each
@@ -417,6 +420,7 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
 std::unique_ptr<std::string> mol_to_smiles(const RWMol &mol,
                                            const SmilesWriteParamsData &data) {
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   auto lock = random_lock(data.do_random);
   return str(RDKit::MolToSmiles(mol, write_params(data)));
 }
@@ -442,6 +446,7 @@ std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
 // needs no random_mutex.
 std::unique_ptr<std::string> mol_to_smarts(const RWMol &mol,
                                            const SmilesWriteParamsData &data) {
+  check_smarts_relevant_cycles(mol);
   return str(RDKit::MolToSmarts(mol, write_params(data)));
 }
 
@@ -489,6 +494,7 @@ std::unique_ptr<std::string> mol_to_cx_smiles(
     const RWMol &mol, const SmilesWriteParamsData &data, std::uint32_t flags,
     RestoreBondDirOption restore_bond_dirs) {
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   auto lock = random_lock(data.do_random);
   return str(
       RDKit::MolToCXSmiles(mol, write_params(data), flags, restore_bond_dirs));
@@ -496,6 +502,7 @@ std::unique_ptr<std::string> mol_to_cx_smiles(
 
 std::unique_ptr<std::string> mol_to_cx_smarts(const RWMol &mol,
                                               bool isomeric_smiles) {
+  check_smarts_relevant_cycles(mol);
   return str(RDKit::MolToCXSmarts(mol, isomeric_smiles));
 }
 
@@ -536,6 +543,7 @@ std::unique_ptr<std::string> mol_fragment_to_smiles(
   auto params = write_params(data);
   // Without bonds, a root atom has RDKit split the molecule into fragments.
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   auto lock = random_lock(data.do_random);
   const auto *b = bonds ? &*bonds : nullptr;
   const auto *as = asymbols ? &*asymbols : nullptr;
@@ -560,6 +568,7 @@ std::unique_ptr<std::string> mol_fragment_to_smarts(
     bonds = bond_indices(mol, bonds_to_use);
   }
   const auto *b = bonds ? &*bonds : nullptr;
+  check_smarts_relevant_cycles(mol);
   return str(cx ? RDKit::MolFragmentToCXSmarts(mol, atoms, b, isomeric_smarts)
                 : RDKit::MolFragmentToSmarts(mol, atoms, b, isomeric_smarts));
 }
@@ -569,6 +578,7 @@ std::unique_ptr<std::vector<std::string>> mol_to_random_smiles_vect(
     bool isomeric_smiles, bool kekule_smiles, bool all_bonds_explicit,
     bool all_hs_explicit) {
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   // RDKit seeds the global generator and draws from it for each SMILES.
   std::lock_guard<std::mutex> lock(random_mutex());
   return std::make_unique<std::vector<std::string>>(
@@ -676,7 +686,8 @@ void create_property_list(RWMol &mol, bool bonds, std::uint8_t kind,
 }
 
 // The mol-block readers check their input as U12 describes (streams.h); a file
-// is read through a checked stream, so RDKit reads only checked bytes.
+// is read through a checked stream, so RDKit reads only checked bytes. Both
+// follow the block's relevant cycles (MolRecordScanner).
 std::unique_ptr<RWMol> mol_from_mol_block(rust::Str mol_block, bool sanitize,
                                           bool remove_hs, bool strict_parsing) {
   FP::MolFileParserParams params;
@@ -684,7 +695,7 @@ std::unique_ptr<RWMol> mol_from_mol_block(rust::Str mol_block, bool sanitize,
   params.removeHs = remove_hs;
   params.strictParsing = strict_parsing;
   std::string text(mol_block);
-  check_input_text(text);
+  check_input_text(text, InputScanner::mol_records(params, false));
   return parsed(FP::MolFromMolBlock(text, params), "mol block");
 }
 
@@ -697,7 +708,8 @@ std::unique_ptr<RWMol> mol_from_mol_file(rust::Slice<const std::uint8_t> path,
   params.removeHs = remove_hs;
   params.strictParsing = strict_parsing;
   auto name = to_path(path);
-  auto in = open_checked_file(name, false);
+  auto in =
+      open_checked_file(name, false, InputScanner::mol_records(params, false));
   unsigned int line = 0;
   std::unique_ptr<RWMol> mol;
   try {
@@ -726,8 +738,11 @@ std::unique_lock<std::mutex> lock_if_depicting(const RWMol &mol,
   return {};
 }
 
+// The mol-block writers also write complex query atoms as SMARTS
+// (GetMolFileQueryInfo).
 std::unique_lock<std::mutex> lock_if_depicting(
     const RWMol &mol, const MolWriterParamsData &data) {
+  check_smarts_relevant_cycles(mol, false);
   return lock_if_depicting(mol, data.include_stereo);
 }
 
@@ -812,6 +827,7 @@ std::unique_ptr<RWMol> scsr_from_text(const std::string &text, bool sanitize,
   auto params = scsr_mol_params(sanitize, remove_hs);
   auto scsr = scsr_params(data);
   check_scsr_hbonds(text, params, scsr);
+  check_scsr_relevant_cycles(text, params, scsr);
   std::istringstream in(text);
   unsigned int line = 0;
   // With Auto, RDKit finds the bases' hydrogen-bond sites by substructure
@@ -847,12 +863,27 @@ namespace {
 std::unique_ptr<RWMol> tpl_from_text(const std::string &text, bool sanitize,
                                      bool skip_first_conf,
                                      const std::string &what) {
-  check_tpl(text);
+  auto bonds = check_tpl(text);
+  FP::TPLParserParams params;
+  params.skipFirstConf = skip_first_conf;
+  // RDKit reads the molecule, perceiving nothing, then sanitizes it.
+  if (sanitize && bonds > MAX_INDEPENDENT_CYCLES) {
+    params.sanitize = false;
+    std::istringstream in(text);
+    unsigned int line = 0;
+    std::unique_ptr<RWMol> raw;
+    try {
+      raw = FP::MolFromTPLDataStream(in, line, params);
+    } catch (...) {
+      raw.reset();  // RDKit fails the same way before it sanitizes
+    }
+    if (raw) {
+      check_parsed_relevant_cycles(*raw, true, false);
+    }
+  }
   std::istringstream in(text);
   unsigned int line = 0;
-  FP::TPLParserParams params;
   params.sanitize = sanitize;
-  params.skipFirstConf = skip_first_conf;
   return parsed(FP::MolFromTPLDataStream(in, line, params), what);
 }
 
@@ -899,24 +930,48 @@ FP::Mol2ParserParams mol2_params(bool sanitize, bool remove_hs,
   return params;
 }
 
+// RDKit's Mol2 reader (MolFromMol2DataStream) symmetrizes, when it
+// sanitizes, the graph it read, less hydrogens with one bond: it skips the
+// organometallic cleanup, and SANITIZE_CLEANUP changes only single and
+// double bonds. Its bonds bound the cycles (mol2_cycle_bound); a block over
+// the bound is read first without sanitizing, which perceives nothing.
+std::unique_ptr<RWMol> mol2_from_text(const std::string &text, bool sanitize,
+                                      bool remove_hs,
+                                      bool cleanup_substructures,
+                                      const std::string &what) {
+  if (sanitize && mol2_cycle_bound(text) > MAX_INDEPENDENT_CYCLES) {
+    std::unique_ptr<RWMol> raw;
+    try {
+      raw = FP::MolFromMol2Block(
+          text, mol2_params(false, false, cleanup_substructures));
+    } catch (...) {
+      raw.reset();  // RDKit fails the same way before it sanitizes
+    }
+    if (raw) {
+      check_graph_relevant_cycles(*raw);
+    }
+  }
+  return parsed(FP::MolFromMol2Block(text, mol2_params(sanitize, remove_hs,
+                                                       cleanup_substructures)),
+                what);
+}
+
 }  // namespace
 
 std::unique_ptr<RWMol> mol_from_mol2_block(rust::Str mol2_block, bool sanitize,
                                            bool remove_hs,
                                            bool cleanup_substructures) {
-  return parsed(FP::MolFromMol2Block(
-                    std::string(mol2_block),
-                    mol2_params(sanitize, remove_hs, cleanup_substructures)),
-                "Mol2 block");
+  return mol2_from_text(std::string(mol2_block), sanitize, remove_hs,
+                        cleanup_substructures, "Mol2 block");
 }
 
+// The file is read once and checked; RDKit parses those bytes (U2).
 std::unique_ptr<RWMol> mol_from_mol2_file(rust::Slice<const std::uint8_t> path,
                                           bool sanitize, bool remove_hs,
                                           bool cleanup_substructures) {
   auto name = to_path(path);
-  return parsed(FP::MolFromMol2File(name, mol2_params(sanitize, remove_hs,
-                                                      cleanup_substructures)),
-                "Mol2 file " + name);
+  return mol2_from_text(read_file(name), sanitize, remove_hs,
+                        cleanup_substructures, "Mol2 file " + name);
 }
 
 namespace {
@@ -924,6 +979,7 @@ namespace {
 std::unique_ptr<RWMol> mrv_from_text(const std::string &text, bool sanitize,
                                      bool remove_hs, const std::string &what) {
   check_mrv(text);
+  check_mrv_relevant_cycles(text, sanitize, remove_hs);
   std::istringstream in(text);
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
@@ -1007,6 +1063,22 @@ std::unique_ptr<RWMol> pdb_from_text(const std::string &text, bool sanitize,
       check_pdb_coordinates(*probe);
     }
   }
+  // RDKit builds the molecule, perceiving nothing, then removes its
+  // hydrogens or sanitizes it; it derives the bonds (proximity bonding,
+  // residue templates), so the molecule is read first without either.
+  if (sanitize) {
+    std::istringstream in(text);
+    std::unique_ptr<RWMol> raw;
+    try {
+      raw = FP::MolFromPDBDataStream(
+          in, pdb_params(false, false, flavor, proximity_bonding));
+    } catch (...) {
+      raw.reset();  // RDKit fails the same way before it sanitizes
+    }
+    if (raw) {
+      check_parsed_relevant_cycles(*raw, true, remove_hs);
+    }
+  }
   std::istringstream in(text);
   return parsed(
       FP::MolFromPDBDataStream(
@@ -1064,16 +1136,36 @@ std::unique_ptr<RWMol> mol_from_rdkit_svg(rust::Str svg, bool sanitize,
                                           bool remove_hs) {
   std::string text(svg);
   check_svg(text);
+  check_svg_relevant_cycles(text, sanitize, remove_hs);
   return parsed(
       std::unique_ptr<RWMol>(RDKit::RDKitSVGToMol(text, sanitize, remove_hs)),
       "RDKit SVG");
 }
 
+namespace {
+
+// RDKit's sequence and HELM readers build the molecule, perceiving nothing,
+// then sanitize it (SequenceToMol, HELMToMol), so the molecule is built
+// without sanitizing, checked, and sanitized here, as RDKit would.
+template <class F>
+RWMol *built_then_sanitized(bool sanitize, F &&build) {
+  std::unique_ptr<RWMol> mol(build());
+  if (mol && sanitize) {
+    check_parsed_relevant_cycles(*mol, true, false);
+    RDKit::MolOps::sanitizeMol(*mol);
+  }
+  return mol.release();
+}
+
+}  // namespace
+
 std::unique_ptr<RWMol> mol_from_sequence(rust::Str text, bool sanitize,
                                          std::int32_t flavor) {
-  return parsed(std::unique_ptr<RWMol>(
-                    RDKit::SequenceToMol(std::string(text), sanitize, flavor)),
-                "sequence");
+  std::string seq(text);
+  return parsed(
+      std::unique_ptr<RWMol>(built_then_sanitized(
+          sanitize, [&] { return RDKit::SequenceToMol(seq, false, flavor); })),
+      "sequence");
 }
 
 // RDKit's FASTAToMol (SequenceParsers.cpp) sets the title on SequenceToMol's
@@ -1091,7 +1183,8 @@ std::unique_ptr<RWMol> mol_from_fasta(rust::Str text, bool sanitize,
     }
   }
   auto mol = parsed(
-      std::unique_ptr<RWMol>(RDKit::SequenceToMol(ptr, sanitize, flavor)),
+      std::unique_ptr<RWMol>(built_then_sanitized(
+          sanitize, [&] { return RDKit::SequenceToMol(ptr, false, flavor); })),
       "FASTA");
   if (!title.empty()) {
     mol->setProp(RDKit::common_properties::_Name, title);
@@ -1100,9 +1193,10 @@ std::unique_ptr<RWMol> mol_from_fasta(rust::Str text, bool sanitize,
 }
 
 std::unique_ptr<RWMol> mol_from_helm(rust::Str text, bool sanitize) {
-  return parsed(
-      std::unique_ptr<RWMol>(RDKit::HELMToMol(std::string(text), sanitize)),
-      "HELM");
+  std::string helm(text);
+  return parsed(std::unique_ptr<RWMol>(built_then_sanitized(
+                    sanitize, [&] { return RDKit::HELMToMol(helm, false); })),
+                "HELM");
 }
 
 std::unique_ptr<std::string> mol_to_sequence(const RWMol &mol) {

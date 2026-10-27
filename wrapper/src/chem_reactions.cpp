@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/chem_reactions.h"
 
+#include <algorithm>
 #include <climits>
 #include <cmath>
 #include <cstring>
@@ -114,6 +115,16 @@ const MOL_SPTR_VECT &templates(const ChemicalReaction &rxn, std::uint8_t kind) {
   }
 }
 
+// Checks every template's relevant cycles (relevant_cycles.h) with `check`.
+template <class Check>
+void check_templates(const ChemicalReaction &rxn, Check check) {
+  for (std::uint8_t kind = 0; kind < 3; ++kind) {
+    for (const auto &mol : templates(rxn, kind)) {
+      check(*mol);
+    }
+  }
+}
+
 void normalize(MOL_SPTR_VECT::iterator begin, MOL_SPTR_VECT::iterator end,
                const char *what) {
   for (auto it = begin; it != end; ++it) {
@@ -210,6 +221,11 @@ bool any_template_without_conformer(const ChemicalReaction &rxn) {
 // templates' CTABs without depicting them.
 std::unique_lock<std::mutex> lock_if_depicting(const ChemicalReaction &rxn,
                                                bool force_v3000) {
+  // Both write complex query atoms as SMARTS (GetMolFileQueryInfo, and
+  // moveAdditionalPropertiesToSGroups for V3000).
+  check_templates(rxn, [](const RDKit::ROMol &mol) {
+    check_smarts_relevant_cycles(mol, false);
+  });
   if (force_v3000 || !any_template_without_conformer(rxn)) {
     return {};
   }
@@ -333,6 +349,8 @@ std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
       rxn = RP::ReactionFromSmarts(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnRxnTag)) {
       check_input_text(value);
+      check_rxn_block_relevant_cycles(
+          value, RDKit::v2::FileParsers::MolFileParserParams());
       rxn = RP::ReactionFromRxnBlock(value);
     } else {
       continue;
@@ -349,6 +367,12 @@ rust::Vec<std::uint8_t> add_metadata(const ChemicalReaction &rxn,
   check_png_for_metadata(png);
   if (include_smiles) {
     check_template_removals(rxn);
+    check_templates(rxn, check_stereo_relevant_cycles);
+  }
+  if (include_smarts) {
+    check_templates(rxn, [](const RDKit::ROMol &mol) {
+      check_smarts_relevant_cycles(mol);
+    });
   }
   if (include_pkl) {
     check_picklable_templates(rxn);
@@ -752,6 +776,7 @@ std::unique_ptr<ProductSets> chemical_reaction_run_reactants(
     copies.emplace_back(new RWMol(*mol));
   }
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  check_products_relevant_cycles(rxn, copies, max_products, false);
   return to_product_sets(rxn.runReactants(copies, max_products));
 }
 
@@ -763,6 +788,7 @@ std::unique_ptr<ProductSets> chemical_reaction_run_reactant(
   check_index(reaction_idx, rxn.getNumReactantTemplates());
   ROMOL_SPTR copy(new RWMol(reactant));
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  check_products_relevant_cycles(rxn, {copy}, 0, false, reaction_idx);
   return to_product_sets(rxn.runReactant(copy, reaction_idx));
 }
 
@@ -860,6 +886,8 @@ std::unique_lock<std::mutex> random_lock(const SmilesWriteParamsData &params) {
 
 std::unique_ptr<std::string> reaction_to_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
+  check_templates(
+      rxn, [](const RDKit::ROMol &mol) { check_smarts_relevant_cycles(mol); });
   auto lock = random_lock(params);
   return own(RDKit::ChemicalReactionToRxnSmarts(rxn, write_params(params)));
 }
@@ -867,6 +895,7 @@ std::unique_ptr<std::string> reaction_to_smarts(
 std::unique_ptr<std::string> reaction_to_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params) {
   check_template_removals(rxn);
+  check_templates(rxn, check_stereo_relevant_cycles);
   auto lock = random_lock(params);
   return own(RDKit::ChemicalReactionToRxnSmiles(rxn, write_params(params)));
 }
@@ -874,6 +903,8 @@ std::unique_ptr<std::string> reaction_to_smiles(
 std::unique_ptr<std::string> reaction_to_cx_smarts(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
+  check_templates(
+      rxn, [](const RDKit::ROMol &mol) { check_smarts_relevant_cycles(mol); });
   auto lock = random_lock(params);
   return own(
       RDKit::ChemicalReactionToCXRxnSmarts(rxn, write_params(params), flags));
@@ -883,6 +914,7 @@ std::unique_ptr<std::string> reaction_to_cx_smiles(
     const ChemicalReaction &rxn, const SmilesWriteParamsData &params,
     std::uint32_t flags) {
   check_template_removals(rxn);
+  check_templates(rxn, check_stereo_relevant_cycles);
   auto lock = random_lock(params);
   return own(
       RDKit::ChemicalReactionToCXRxnSmiles(rxn, write_params(params), flags));
@@ -903,6 +935,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_rxn_block(rust::Str rxn_block,
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
   params.strictParsing = strict_parsing;
+  check_rxn_block_relevant_cycles(text, params);
   return finish(RDKit::v2::ReactionParser::ReactionFromRxnBlock(text, params),
                 "the rxn block");
 }
@@ -919,6 +952,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_rxn_file(
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
   params.strictParsing = strict_parsing;
+  check_rxn_block_relevant_cycles(text, params);
   return finish(RDKit::v2::ReactionParser::ReactionFromRxnBlock(text, params),
                 "the rxn file " + to_std(path));
 }
@@ -928,6 +962,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_block(rust::Str mrv,
                                                           bool remove_hs) {
   std::string text(mrv);
   check_mrv(text);
+  check_mrv_reaction_relevant_cycles(text, sanitize, remove_hs);
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
@@ -940,6 +975,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_mrv_file(
   // Read here so the parser reads exactly what was checked.
   auto text = read_path(path);
   check_mrv(text);
+  check_mrv_reaction_relevant_cycles(text, sanitize, remove_hs);
   RDKit::v2::MarvinParser::MrvParserParams params;
   params.sanitize = sanitize;
   params.removeHs = remove_hs;
@@ -1039,6 +1075,7 @@ std::unique_ptr<ReactionList> reactions_from_cdxml_block(rust::Str cdxml,
                                                          bool remove_hs) {
   std::string text(cdxml);
   check_cdxml_atom_maps(text);
+  check_cdxml_relevant_cycles(text, sanitize, remove_hs);
   return to_reaction_list(
       RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }
@@ -1048,6 +1085,7 @@ std::unique_ptr<ReactionList> reactions_from_cdxml_file(
   // RDKit returns no reactions for a file it cannot open.
   auto text = read_path(path);
   check_cdxml_atom_maps(text);
+  check_cdxml_relevant_cycles(text, sanitize, remove_hs);
   return to_reaction_list(
       RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }
@@ -1062,6 +1100,7 @@ std::unique_ptr<std::string> reaction_to_rxn_block(const ChemicalReaction &rxn,
 
 std::unique_ptr<std::string> reaction_to_v3k_rxn_block(
     const ChemicalReaction &rxn, bool separate_agents) {
+  auto lock = lock_if_depicting(rxn, true);
   return own(RDKit::ChemicalReactionToV3KRxnBlock(rxn, separate_agents));
 }
 
@@ -1082,6 +1121,8 @@ void reaction_to_mrv_file(const ChemicalReaction &rxn,
 // (getMolFrags), removing atoms from copies of it.
 std::unique_ptr<ChemicalReaction> reaction_from_molecule(const RWMol &mol) {
   check_removals(mol);
+  // It sanitizes each fragment.
+  check_frags_sanitize_relevant_cycles(mol);
   return finish(
       std::unique_ptr<ChemicalReaction>(RDKit::RxnMolToChemicalReaction(mol)),
       "the molecule");
@@ -1167,6 +1208,8 @@ std::unique_ptr<SparseIntVect> create_difference_fingerprint_for_reaction(
   auto guards =
       guard_templates(rxn, params.fpType == FingerprintType::AtomPairFP);
   check_difference_fingerprint(rxn, params);
+  // The fingerprint generators perceive each template's stereochemistry.
+  check_templates(rxn, check_stereo_relevant_cycles);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   std::unique_ptr<RDKit::SparseIntVect<std::uint32_t>> fp(
       RDKit::DifferenceFingerprintChemReaction(rxn, params));
@@ -1177,6 +1220,7 @@ std::unique_ptr<BitVect> create_structural_fingerprint_for_reaction(
     const ChemicalReaction &rxn, const ReactionFingerprintParamsData &data) {
   auto params = fp_params_from(data);
   check_structural_fingerprint(params);
+  check_templates(rxn, check_stereo_relevant_cycles);
   auto guards =
       guard_templates(rxn, params.fpType == FingerprintType::AtomPairFP);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
@@ -1299,7 +1343,7 @@ std::uint32_t sanitize_rxn(ChemicalReaction &rxn, std::uint32_t sanitize_ops,
         std::pair{RxnOps::SANITIZE_ADJUST_PRODUCTS, &rxn.getProducts()}}) {
     if (sanitize_ops & op) {
       for (const auto &templ : *templates) {
-        check_relevant_cycles(*templ);
+        check_graph_relevant_cycles(*templ);
       }
     }
   }

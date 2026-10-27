@@ -24,6 +24,7 @@
 #include "rdkit-cxx/ffi/chem_reactions.rs.h"
 #include "rdkit-cxx/ffi/enumerate.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 // RDKit builds EvenSamplePairsStrategy into its library but does not install
 // its header; this is RDKit 2026.09's (CMake checks the release series).
 #include "rdkit-cxx/vendor/EvenSamplePairs.h"
@@ -359,6 +360,30 @@ bool enumerate_library_can_serialize() {
   return RDKit::EnumerateLibraryCanSerialize();
 }
 
+namespace {
+
+// With sanePartialProducts, the library's construction drops the building
+// blocks whose products for their template do not sanitize
+// (removeNonmatchingReagents), running the reaction on each and sanitizing
+// the products. The caller holds control_c_mutex().
+void check_partial_products(const ChemicalReaction &rxn, const BBS &bbs,
+                            const RDKit::EnumerationParams &params) {
+  if (!params.sanePartialProducts) {
+    return;
+  }
+  ChemicalReaction initialized(rxn);
+  initialized.initReactantMatchers(true);
+  for (std::size_t i = 0;
+       i < bbs.size() && i < initialized.getNumReactantTemplates(); ++i) {
+    for (const auto &bb : bbs[i]) {
+      check_products_relevant_cycles(initialized, {bb}, 0, true,
+                                     static_cast<unsigned>(i));
+    }
+  }
+}
+
+}  // namespace
+
 std::unique_ptr<EnumerateLibrary> enumerate_library_new() {
   return std::make_unique<EnumerateLibrary>();
 }
@@ -370,9 +395,11 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_params(
   // Python's library shares Python's molecules without keeping them alive;
   // this one owns copies. Construction drops the building blocks the
   // reaction does not match, and running it matches too (control_c_lock.h).
+  auto params = params_from(data);
+  auto bbs = to_bbs(mols, group_sizes, true);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  return std::make_unique<EnumerateLibrary>(
-      rxn, to_bbs(mols, group_sizes, true), params_from(data));
+  check_partial_products(rxn, bbs, params);
+  return std::make_unique<EnumerateLibrary>(rxn, bbs, params);
 }
 
 std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_enumerator(
@@ -387,6 +414,7 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_new_with_enumerator(
   ChemicalReaction initialized(rxn);
   initialized.initReactantMatchers(true);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  check_partial_products(rxn, bbs, params);
   check_initialize(strategy,
                    RDKit::getSizesFromBBs(RDKit::removeNonmatchingReagents(
                        initialized, bbs, params)));
@@ -442,7 +470,8 @@ std::unique_ptr<ProductSets> enumerate_library_next(EnumerateLibrary &lib) {
     reactants.push_back(bbs[i][indices[i]]);
   }
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  return to_product_sets(lib.getReaction().runReactants(reactants));
+  check_products_relevant_cycles(lib.getReaction(), reactants, 1000, false);
+  return to_product_sets(lib.getReaction().runReactants(reactants, 1000));
 }
 
 std::unique_ptr<std::string> enumerate_library_get_state(
