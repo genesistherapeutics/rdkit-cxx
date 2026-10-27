@@ -237,6 +237,21 @@ void check_bond_query(const RDKit::Bond::QUERYBOND_QUERY *root,
   }
 }
 
+template <class T>
+std::size_t num_distinct(const std::vector<T> &values) {
+  return std::unordered_set<T>(values.begin(), values.end()).size();
+}
+
+// Whether some part of at most max_part_bonds bonds can hold all of the
+// substance group's distinct atoms, parent atoms, and bonds.
+bool fits_part(const RDKit::SubstanceGroup &sgroup, unsigned max_part_bonds) {
+  auto atoms = sgroup.getAtoms();
+  const auto &parents = sgroup.getParentAtoms();
+  atoms.insert(atoms.end(), parents.begin(), parents.end());
+  return num_distinct(atoms) <= std::size_t{max_part_bonds} + 1 &&
+         num_distinct(sgroup.getBonds()) <= max_part_bonds;
+}
+
 // The fields _pickle<unsigned char> writes in one byte, which MolPickler
 // uses for a molecule of at most 255 atoms whatever its bond count (RDKit
 // 2026.09 also counts bonds, rdkit/rdkit#9563): every atom index fits, but
@@ -265,6 +280,14 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
     const auto &sgroup = sgroups[i];
+    // copyMolSubset keeps a substance group only in a part that holds all
+    // its atoms, parent atoms, and bonds, and a part of k bonds has at most
+    // k + 1 atoms, so a group no part has room for is never pickled. (It
+    // keeps a stereo group that shares one atom with the part, so every
+    // stereo group counts.)
+    if (parts && !fits_part(sgroup, max_part_bonds)) {
+      continue;
+    }
     const auto at = where + "substance group " + std::to_string(i) + "'s ";
     check_pickle_byte(sgroup.getAtoms().size(), at + "number of atoms");
     check_pickle_byte(sgroup.getParentAtoms().size(),
