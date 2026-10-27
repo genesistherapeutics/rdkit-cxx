@@ -115,7 +115,7 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - The PDB reader with proximity bonding, and `determine_connectivity`,
     refuse a hydrogen RDKit would bond to several atoms, whose extra bonds
     RDKit 2024.09 removes while it iterates over them (#9444).
-  - FMCS refuses `verbose` (#9040), RascalMCES any `max_frag_separation`
+  - FMCS refuses `verbose` with `store_all` (#9040), RascalMCES any `max_frag_separation`
     but -1 (#9424), and CoordGen double-bond stereo without two stereo
     atoms (#8415).
   - `molzip_fragments` with `generate_coordinates` refuses repeated R

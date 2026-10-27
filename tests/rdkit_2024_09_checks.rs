@@ -172,13 +172,37 @@ fn proximity_bonding_refuses_shared_hydrogens() {
 }
 
 #[test]
-fn mcs_verbose_output_is_refused() {
+fn mcs_verbose_output_with_store_all_is_refused() {
     let mols = [smiles("CCO"), smiles("CCN")];
+    let both = MCSParameters {
+        verbose: true,
+        store_all: true,
+        ..Default::default()
+    };
+    assert!(is_value(find_mcs_with_params(&mols, &both)));
     let verbose = MCSParameters {
         verbose: true,
         ..Default::default()
     };
-    assert!(is_value(find_mcs_with_params(&mols, &verbose)));
+    assert_eq!(
+        find_mcs_with_params(&mols, &verbose).unwrap().num_atoms(),
+        2
+    );
+    // A seed of one atom ends the search before verbose output reads its
+    // bonds.
+    let seeded = MCSParameters {
+        verbose: true,
+        initial_seed: "[#6]".to_string(),
+        ..Default::default()
+    };
+    find_mcs_with_params(&mols, &seeded).unwrap();
+    let one_atom = [smiles("C"), smiles("CO")];
+    assert_eq!(
+        find_mcs_with_params(&one_atom, &verbose)
+            .unwrap()
+            .num_atoms(),
+        1
+    );
     assert_eq!(find_mcs(&mols).unwrap().num_atoms(), 2);
 }
 

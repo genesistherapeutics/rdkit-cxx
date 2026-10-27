@@ -393,16 +393,7 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   params.MaximizeBonds = data.maximize_bonds;
   params.Threshold = data.threshold;
   params.Timeout = data.timeout;
-  // RDKit 2024.09's verbose output reports the first bond of each MCS it
-  // finds, read from a list that is empty for an MCS of one atom, and
-  // matches the result's query against each target, null when StoreAll
-  // finds several (RDKit 2026.03 checks both, rdkit/rdkit#9040).
-  if (data.verbose) {
-    throw ValueErrorException(
-        "Verbose is not supported: RDKit 2024.09's verbose output reads past "
-        "an empty bond list and through a null query");
-  }
-  params.Verbose = false;
+  params.Verbose = data.verbose;
   params.AtomCompareParameters =
       atom_params_from_data(data.atom_compare_parameters);
   params.BondCompareParameters =
@@ -411,6 +402,17 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   params.setMCSBondTyperFromEnum(data.bond_typer);
   params.InitialSeed = std::string(data.initial_seed);
   params.StoreAll = data.store_all;
+  // RDKit 2024.09's MaximumCommonSubgraph::find matches every target against
+  // res.QueryMol when Verbose is set, but with StoreAll it never sets
+  // QueryMol, so that is a null dereference (rdkit/rdkit#9040). (Its verbose
+  // report of each MCS found reads McsIdx.Bonds.front(), which no MCS of one
+  // atom reaches: growSeeds stops before growing when the seeds' bonds match
+  // the MCS's, both 0 for a seed of one atom.)
+  if (params.Verbose && params.StoreAll) {
+    throw ValueErrorException(
+        "Verbose with StoreAll dereferences a null query molecule in RDKit "
+        "2024.09; set only one");
+  }
 
   // MaximumCommonSubgraph::find converts ceil(n * Threshold) to int, which
   // is undefined for NaN (Python passes it through) and for values past
