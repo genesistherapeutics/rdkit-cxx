@@ -263,7 +263,6 @@ fn pickled_monomer_types_are_read_as_rdkit_reads_them() {
     let mut mol = smiles("C");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),

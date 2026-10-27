@@ -430,7 +430,6 @@ fn loaded_libraries_read_monomer_types_as_rdkit_reads_them() {
     let mut amine = smiles("CN");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     amine.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),

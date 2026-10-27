@@ -1252,7 +1252,6 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
@@ -1301,7 +1300,6 @@ fn reaction_pickles_read_monomer_types_as_rdkit_reads_them() {
     );
     assert!(
         // SAFETY: as above.
-        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) }
-            .is_err()
+        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) }.is_err()
     );
 }

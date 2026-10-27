@@ -279,10 +279,61 @@ pub fn get_all_combinations_with_no_dups<T: Clone + PartialEq>(
 
 /// The distinct combinations of one element from each of `choices`
 /// without repeated elements, each as its elements paired with their
-/// choice's class and sorted, in sorted order. Choices and classes of
-/// different lengths are `Error::Value`. Mirrors
+/// choice's class and sorted, in the order they are first found: the first
+/// choice's elements in turn, each with the combinations of the rest.
+/// No choices give no combinations, and the last choice's elements are not
+/// deduplicated (one choice gives each of its elements, repeats included).
+/// Choices and classes of different lengths are `Error::Value`. Mirrors
 /// `Utils.GetUniqueCombinations`.
 pub fn get_unique_combinations<T: Clone + Ord>(
+    choices: &[Vec<T>],
+    classes: &[usize],
+) -> Result<Vec<Vec<(usize, T)>>> {
+    if choices.len() != classes.len() {
+        return Err(Error::Value {
+            message: "choices and classes must have the same length".to_owned(),
+        });
+    }
+    fn recurse<T: Clone + Ord>(
+        choices: &[Vec<T>],
+        classes: &[usize],
+        which: usize,
+    ) -> Vec<Vec<(usize, T)>> {
+        if which >= choices.len() {
+            return Vec::new();
+        }
+        if which == choices.len() - 1 {
+            return choices[which]
+                .iter()
+                .map(|x| vec![(classes[which], x.clone())])
+                .collect();
+        }
+        let tmp = recurse(choices, classes, which + 1);
+        let mut res: Vec<Vec<(usize, T)>> = Vec::new();
+        for thing in &choices[which] {
+            for other in &tmp {
+                if !other.iter().any(|x| x.1 == *thing) {
+                    let mut new_l = vec![(classes[which], thing.clone())];
+                    new_l.extend(other.iter().cloned());
+                    new_l.sort();
+                    if !res.contains(&new_l) {
+                        res.push(new_l);
+                    }
+                }
+            }
+        }
+        res
+    }
+    Ok(recurse(choices, classes, 0))
+}
+
+/// The distinct combinations of one element from each of `choices`
+/// without repeated elements, each as its elements paired with their
+/// choice's class and sorted, in sorted order; no choices give one empty
+/// combination. Choices and classes of different lengths are
+/// `Error::Value`. Mirrors `Utils.GetUniqueCombinations_new`, which RDKit
+/// 2024.03 keeps beside `GetUniqueCombinations` but does not use.
+pub fn get_unique_combinations_new<T: Clone + Ord>(
     choices: &[Vec<T>],
     classes: &[usize],
 ) -> Result<Vec<Vec<(usize, T)>>> {

@@ -16,8 +16,7 @@ use rdkit_cxx::chem::rd_fingerprint_generator::{
     get_morgan_generator_with_params,
 };
 use rdkit_cxx::chem::{
-    Mol, RDKFingerprintParams, mol_from_png_string, mol_from_smiles,
-    rdk_fingerprint_with_outputs,
+    Mol, RDKFingerprintParams, mol_from_png_string, mol_from_smiles, rdk_fingerprint_with_outputs,
 };
 
 fn sha1(text: &str) -> String {
