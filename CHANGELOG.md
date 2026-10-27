@@ -125,6 +125,36 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     otherwise calls a pure virtual method or waits forever.
   - The Maestro writer is made through a stream it may own, since RDKit
     2024.09's shared-pointer constructor always fails.
+  - The CXSMILES readers (SMILES, SMARTS, reaction SMARTS, and the patterns
+    the standardizer, filters, MMPA, and depiction templates parse) refuse
+    an `atomProp` block that runs to the end of the text (#9361), which
+    RDKit 2024.09 reads past, and, without `strict_cxsmiles`, a
+    substance-group field that does.
+  - `calc_getaway` refuses a molecule of several fragments or less than 8
+    bonds across, for which RDKit 2024.09 reads uninitialized sums.
+  - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
+    would read past or loop on.
+  - RascalMCES refuses a timeout below -1, and the query expanders a query
+    atom or bond without a query.
+- Checks the bindings for RDKit 2026.03 made, as they stand for 2024.09:
+  - `MolCatalogEntry::from_pickle` builds the entry as the catalog's reader
+    does, since 2024.09's pickle constructor deletes an uninitialized
+    pointer too.
+  - `assign_cip_labels` labels what RDKit 2024.09 labels, as Python does,
+    and leaves out (with any label it had) an atropisomer bond with a bare
+    end whose other end has two other bonds, for which 2024.09 reads past
+    its empty carriers.
+  - `RingInfo.num_relevant_cycles` is `Error::Runtime` before the ring
+    families are found, and every wrapper source reads `RDConfig.h` first,
+    as for 2026.03.
+  - A multithreaded supplier's queues hold at most 2^20 records.
+  - Drawing an atom of two bonds with a neighbor at its position is
+    RDKit's `Error::Runtime`: 2024.09 normalizes the direction, and throws,
+    where 2026.03 read an uninitialized bond type.
+  - The pickle-width checks (`check_picklable`) hold for 2024.09's
+    MolPickler, which writes the same widths.
+  - Only the embedder leaves RDKit's `SIGINT` handler installed in 2024.09;
+    the wrappers restore the process's after it.
 
 ### Bindings
 
@@ -149,8 +179,8 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   writes without a lock is locked. Readers of molecule pickles, of the
   formats that carry them (reaction, bundle, catalog, and query pickles, and
   PNG metadata), and of Boost.Serialization archives are `unsafe fn`s whose
-  contract is bytes RDKit wrote. One gap remains in RDKit itself; see the
-  README's "Known limitations".
+  contract is bytes RDKit wrote. Some gaps remain in RDKit itself, none of
+  which corrupts memory; see the README's "Known limitations".
 
 ### Where the bindings differ from Python
 

@@ -1252,3 +1252,12 @@ fn reaction_pickles_read_the_pdb_type_as_pdb_residue_info() {
         assert_eq!(info.get_name().unwrap(), "MARK");
     }
 }
+
+// The reaction parsers parse the text from its first '|' as the
+// extension.
+#[test]
+fn reaction_cxsmiles_extensions_that_run_to_the_end() {
+    let err = reaction_from_smarts("[C:1]>>[C:1] |atomProp:0.p.v").unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
+    reaction_from_smarts("[C:1]>>[C:1] |atomProp:0.p.v|").unwrap();
+}

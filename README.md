@@ -250,12 +250,12 @@ file's line count.
   call (U4):
   - **Random number generator:** `random_mutex()`.
   - **2D depiction settings and CoordGen templates:** `lock_depiction()`.
-  - **Ctrl-C handler:** every substructure match constructs a
-    `ControlCHandler`, which swaps the `SIGINT` handler through static
-    variables. Every wrapper that can match therefore holds
-    `control_c_mutex()`. RDKit 2024.09 leaves its handler installed after
-    a match, so the mutex restores the process's handler when it is
-    released.
+  - **Ctrl-C handler:** later RDKit releases construct a `ControlCHandler`,
+    which swaps the `SIGINT` handler through static variables, in every
+    substructure match; RDKit 2024.09's embedder installs RDKit's handler
+    (`ControlCHandler::reset`) and leaves it. The wrappers that can match or
+    embed hold `control_c_mutex()`, which restores the process's handler
+    when it is released.
   - **Single modules:** some modules' statics have their own locks, such as
     BRICS, R-group decomposition, the shape modules, and Murtagh's
     clustering.
@@ -295,8 +295,8 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in one way. It does
-not corrupt memory on the supported platforms, and it needs a fix in RDKit:
+Safe Rust can still reach undefined behavior in RDKit in these ways. None
+corrupts memory on the supported platforms, and each needs a fix in RDKit:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
@@ -306,11 +306,29 @@ not corrupt memory on the supported platforms, and it needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
+- **GETAWAY.** RDKit 2024.09's `GetGeodesicMatrix` writes the matrix past
+  the end of a vector it only reserved (rdkit/rdkit#8601), within the
+  allocation, for every molecule `calc_getaway` describes.
+- **RascalMCES' timeout.** When a search runs out of time, RDKit 2024.09
+  clears its best cliques and then reads the first, within the vector's
+  retained storage. A timeout below -1, due at once, is refused.
+- **Shifts.** RDKit 2024.09's kekulization shifts 1 by the number of
+  ambiguous atoms in a fused system that ordinary kekulization fails
+  (aromatic dummy atoms), undefined from 32, and FMCS by a seed's new bonds,
+  undefined at 64 (a search that would first run 2^63 steps). Neither result
+  reaches memory.
+- **R-group decomposition** with `include_target_mol_in_results` inserts a
+  range of a vector into itself when an R group has several fragments
+  (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies from storage
+  the insert leaves in place.
+- **Reaction files RDKit reads itself.** The normalizer made from a file,
+  and `CleanupParameters`' normalization file, are read by RDKit; their
+  reaction SMARTS lines are not checked for the CXSMILES extensions RDKit
+  2024.09 reads past (text and data are).
 
 Other limits:
 
-- Substructure matching runs one call at a time across the process, since
-  every match swaps RDKit's `SIGINT` handler through static variables
+- Substructure matching runs one call at a time across the process
   (`control_c_mutex()`), so matching does not scale across threads.
 - Some inputs abort the process by overflowing the stack, which cannot
   corrupt memory: an SLN string with a `{` followed by about 100,000

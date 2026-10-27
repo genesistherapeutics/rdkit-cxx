@@ -21,6 +21,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/filter_catalog.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
@@ -475,6 +476,7 @@ std::unique_ptr<FilterMatcherHandle> smarts_matcher_new_mol(
 std::unique_ptr<FilterMatcherHandle> smarts_matcher_new_smarts(
     rust::Str name, rust::Str smarts, std::uint32_t min_count,
     std::uint32_t max_count) {
+  check_smiles_cx(std::string(smarts), true, true);
   return handle(boost::make_shared<SmartsMatcher>(
       std::string(name), std::string(smarts), min_count, max_count));
 }
@@ -495,6 +497,7 @@ void smarts_matcher_set_pattern_mol(FilterMatcherHandle &matcher,
 
 void smarts_matcher_set_pattern_smarts(FilterMatcherHandle &matcher,
                                        rust::Str smarts) {
+  check_smiles_cx(std::string(smarts), true, true);
   as<SmartsMatcher>(matcher).setPattern(std::string(smarts));
 }
 
@@ -864,6 +867,7 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
   texts.reserve(smiles.size());
   for (auto text : smiles) {
     texts.emplace_back(text);
+    check_smiles_cx(texts.back(), true, true);
   }
   std::vector<std::vector<FilterCatalog::CONST_SENTRY>> results(texts.size());
   // More threads than SMILES would have nothing to do.

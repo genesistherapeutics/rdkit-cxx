@@ -65,6 +65,11 @@ void atom_expand_query(Atom &atom, const Atom &other, int how,
   auto &self = as_query<RDKit::QueryAtom>(atom, "atom");
   const auto &query = as_query<const RDKit::QueryAtom>(other, "atom");
   auto how_ = composite(how);
+  // RDKit 2024.09's expandQuery reads its own query unchecked (RDKit 2026.03
+  // checks it).
+  if (!self.hasQuery()) {
+    throw ValueErrorException("Can't expand empty query");
+  }
   if (query.hasQuery()) {
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }
@@ -91,6 +96,11 @@ void bond_expand_query(Bond &bond, const Bond &other, int how,
   auto &self = as_query<RDKit::QueryBond>(bond, "bond");
   const auto &query = as_query<const RDKit::QueryBond>(other, "bond");
   auto how_ = composite(how);
+  // RDKit 2024.09's expandQuery reads its own query unchecked (RDKit 2026.03
+  // checks it).
+  if (!self.hasQuery()) {
+    throw ValueErrorException("Can't expand empty query");
+  }
   if (query.hasQuery()) {
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }

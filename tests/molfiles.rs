@@ -209,3 +209,48 @@ fn mol_block_depiction_refuses_what_the_depictor_would_mishandle() {
         ));
     }
 }
+
+/// RDKit 2024.09's CXSMILES parser reads past the end of the text for an
+/// atomProp block that runs to it (rdkit/rdkit#9361), and, without
+/// strictCXSMILES, copies the text past its end when a substance group's
+/// field runs to it (both found with valgrind under Python).
+#[test]
+fn cxsmiles_extensions_that_run_to_the_end() {
+    for smiles in [
+        "C |atomProp:0.prop.value",
+        "C |atomProp:0.prop.value:",
+        "C |atomProp:x",
+        "C |atomProp:0.a|b.c",
+    ] {
+        let err = mol_from_smiles(smiles).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
+        let err = mol_from_smarts(smiles).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
+    }
+    let mol = mol_from_smiles("C |atomProp:0.prop.value|").unwrap();
+    assert_eq!(
+        mol.get_atom_with_idx(0).unwrap().get_prop("prop").unwrap(),
+        "value"
+    );
+    mol_from_smiles("C |atomProp:0.p.v,$X$|").unwrap();
+
+    let loose = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    for smiles in ["C |SgD:0:name:data|", "C |SgD:0:abc", "C |Sg:n"] {
+        let err = mol_from_smiles_with_params(smiles, &loose).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
+        // Strict, RDKit's own parse error.
+        assert!(mol_from_smiles(smiles).is_err(), "{smiles}");
+    }
+    mol_from_smiles_with_params("C |SgD:0:name:data::::|", &loose).unwrap();
+
+    // Without allowCXSMILES the text after the space is the name.
+    let plain = SmilesParserParams {
+        allow_cxsmiles: false,
+        ..Default::default()
+    };
+    let mol = mol_from_smiles_with_params("C |atomProp:0.p.v", &plain).unwrap();
+    assert_eq!(mol.get_prop("_Name").unwrap(), "|atomProp:0.p.v");
+}

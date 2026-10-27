@@ -184,7 +184,7 @@ macro_rules! ring_info_getters {
             }
 
             /// Needs the ring families: `Error::Runtime` before they are found,
-            /// where RDKit 2026.03 converts RingDecomposerLib's failure value
+            /// where RDKit 2024.09 converts RingDecomposerLib's failure value
             /// out of `unsigned int`'s range, and `Error::Value` for more
             /// relevant cycles than `u32` holds. Mirrors
             /// `RingInfo.NumRelevantCycles`.

@@ -25,6 +25,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_pipeline.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize_normalize.h"
 #include "rdkit-cxx/streams.h"
@@ -64,6 +65,7 @@ MS::PipelineOptions to_options(const PipelineOptionsData &data) {
 }
 
 void check_metal_smarts(const std::string &smarts, const char *what) {
+  check_smiles_cx(smarts, true, true);
   std::unique_ptr<RDKit::ROMol> query(RDKit::SmartsToMol(smarts));
   if (!query) {
     throw ValueErrorException(std::string(what) +
@@ -238,6 +240,7 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
   auto options = to_options(data);
   check_metal_smarts(options.metalNof, "metalNof");
   check_metal_smarts(options.metalNon, "metalNon");
+  check_transformation_lines(options.normalizerData);
   auto pipeline = std::make_unique<Pipeline>(options);
   auto steps = MS::Operations::standardizationSteps;
   bool replaced = false;

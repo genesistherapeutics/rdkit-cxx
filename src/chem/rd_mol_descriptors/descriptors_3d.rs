@@ -289,9 +289,10 @@ custom_property_params! {
 
 /// The 273 GETAWAY descriptors. `Error::Value` for a molecule without atoms
 /// (where RDKit crashes), for the coordinates the module refuses, and above
-/// 46340 atoms (U3).
-/// For a disconnected molecule RDKit loops to its distance between
-/// fragments, 10^8, which takes seconds even for two atoms. Mirrors
+/// 46340 atoms (U3), and for a molecule of several fragments or less than 8
+/// bonds across: RDKit 2024.09 loops to its distance between fragments,
+/// 10^8, and reads sums it leaves uninitialized past the molecule's
+/// largest distance (Python gives values like 5.5e294 for ethanol). Mirrors
 /// `rdMolDescriptors.CalcGETAWAY`.
 pub fn calc_getaway(mol: &Mol) -> Result<Vec<f64>> {
     calc_getaway_with_params(mol, &CalcGETAWAYParams::default())

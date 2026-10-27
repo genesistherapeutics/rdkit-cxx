@@ -24,6 +24,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
@@ -311,19 +312,27 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
       data.largest_fragment_chooser_use_atom_count;
   params.largestFragmentChooserCountHeavyAtomsOnly =
       data.largest_fragment_chooser_count_heavy_atoms_only;
+  // RDKit parses these as they are: the normalizations as reactions, the
+  // rest as SMARTS (file_checks.h).
   for (const auto &e : data.normalization_data) {
     params.normalizationData.emplace_back(text(e.name), text(e.first));
+    check_reaction_cx(params.normalizationData.back().second, true);
   }
   for (const auto &e : data.fragment_data) {
     params.fragmentData.emplace_back(text(e.name), text(e.first));
+    check_smiles_cx(params.fragmentData.back().second, true, true);
   }
   for (const auto &e : data.acidbase_data) {
     params.acidbaseData.emplace_back(text(e.name), text(e.first),
                                      text(e.second));
+    check_smiles_cx(std::get<1>(params.acidbaseData.back()), true, true);
+    check_smiles_cx(std::get<2>(params.acidbaseData.back()), true, true);
   }
   for (const auto &e : data.tautomer_transform_data) {
     params.tautomerTransformData.emplace_back(text(e.name), text(e.first),
                                               text(e.second), text(e.third));
+    check_smiles_cx(std::get<1>(params.tautomerTransformData.back()), true,
+                    true);
   }
   return params;
 }
@@ -497,6 +506,7 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
 std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   std::string input(smiles);
+  check_smiles_cx(input, true, true);
   std::unique_ptr<RWMol> mol{RDKit::SmilesToMol(input, 0, false)};
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +

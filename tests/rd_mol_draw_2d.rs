@@ -814,23 +814,6 @@ fn comic_mode_needs_bonds_with_length() {
     assert_value_error(d.draw_molecule(&m));
 }
 
-/// RDKit 2026.03 reads an uninitialized bond type for an atom of two bonds
-/// with a neighbor at its position (isLinearAtom); an atom of three draws.
-#[test]
-fn atoms_of_two_bonds_need_their_neighbors_apart() {
-    let at_atom_0 = |smiles: &str| {
-        let mut m = depicted(smiles);
-        let p = m.get_conformer().unwrap().get_atom_position(0).unwrap();
-        m.get_conformer_mut()
-            .unwrap()
-            .set_atom_position(1, p)
-            .unwrap();
-        m
-    };
-    assert_value_error(svg().draw_molecule(&at_atom_0("CCO")));
-    svg().draw_molecule(&at_atom_0("CC(C)C")).unwrap();
-}
-
 /// RDKit's hand-drawn lines never end for a line of no length, and a small
 /// canvas gives a reaction's plus signs and arrow no length.
 #[test]
@@ -1203,5 +1186,53 @@ fn acs1996_drawings() {
         conf.set_atom_position(1, Point3D::new(len, 0.0, 0.0))
             .unwrap();
         assert_value_error(mol_to_acs1996_svg(&tiny));
+    }
+}
+
+/// RDKit 2024.09's isLinearAtom normalizes the direction from an atom of two
+/// bonds to each neighbor, and throws for a neighbor at its position, as
+/// Python raises; an atom of three draws.
+#[test]
+fn atoms_of_two_bonds_with_a_neighbor_at_their_position() {
+    let at_atom_0 = |smiles: &str| {
+        let mut m = depicted(smiles);
+        let p = m.get_conformer().unwrap().get_atom_position(0).unwrap();
+        m.get_conformer_mut()
+            .unwrap()
+            .set_atom_position(1, p)
+            .unwrap();
+        m
+    };
+    let err = svg().draw_molecule(&at_atom_0("CCO")).unwrap_err();
+    assert!(matches!(err, Error::Runtime { .. }), "{err:?}");
+    svg().draw_molecule(&at_atom_0("CC(C)C")).unwrap();
+}
+
+/// RDKit 2024.09's AtomSymbol::adjustColons reads the rect after a colon
+/// that is its label's last drawn character when markup follows it (every
+/// literal label has some), and loops forever on a '>' before the next '<'
+/// (Python segfaults for the first three and hangs for the last).
+#[test]
+fn colons_in_labels() {
+    for (label, ok) in [
+        ("C:", false),
+        ("<sub>2</sub>C:", false),
+        ("C<sub>2</sub>:", false),
+        ("a>b<c:", false),
+        ("C:x", true),
+        ("C:<sub>2</sub>", true),
+        ("C:<x", true),
+        ("[CH2;X2:4]", true),
+    ] {
+        let mut m = depicted("CCO");
+        m.get_atom_with_idx_mut(0)
+            .unwrap()
+            .set_prop("atomLabel", label);
+        let result = svg().draw_molecule(&m);
+        if ok {
+            result.unwrap();
+        } else {
+            assert_value_error(result);
+        }
     }
 }

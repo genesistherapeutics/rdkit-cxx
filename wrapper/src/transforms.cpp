@@ -20,6 +20,8 @@
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <GraphMol/Substruct/SubstructUtils.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
@@ -28,6 +30,7 @@
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/transforms.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
@@ -366,6 +369,7 @@ void add_recursive_queries(RWMol &mol, BorrowedMols &queries,
   for (std::size_t i = 0; i < queries.names().size(); ++i) {
     map[queries.names()[i]] = queries.mols()[i];
   }
+  check_query_props(mol, std::string(prop_name));
   RDKit::addRecursiveQueries(mol, map, std::string(prop_name));
 }
 
@@ -373,8 +377,28 @@ std::unique_ptr<MolList> parse_mol_query_def_file(
     rust::Slice<const std::uint8_t> path, bool standardize, rust::Str delimiter,
     rust::Str comment, std::uint32_t name_column, std::uint32_t smarts_column) {
   std::map<std::string, RDKit::ROMOL_SPTR> defs;
-  RDKit::parseQueryDefFile(to_path(path), defs, standardize,
-                           std::string(delimiter), std::string(comment),
+  // Read once and checked as parseQueryDefFile reads each line's SMARTS
+  // field, which it parses as CXSMILES (file_checks.h).
+  const auto text = read_file(to_path(path));
+  std::istringstream lines(text);
+  std::string line;
+  const std::string delim(delimiter);
+  const std::string comment_text(comment);
+  boost::char_separator<char> sep(delim.c_str());
+  while (std::getline(lines, line)) {
+    if (line.empty() || line.find(comment_text) == 0) {
+      continue;
+    }
+    boost::tokenizer<boost::char_separator<char>> tokens(line, sep);
+    std::uint32_t pos = 0;
+    for (auto token = tokens.begin(); token != tokens.end(); ++token, ++pos) {
+      if (pos == smarts_column) {
+        check_smiles_cx(boost::trim_copy_if(*token, boost::is_any_of(" \t")),
+                        true, true);
+      }
+    }
+  }
+  RDKit::parseQueryDefText(text, defs, standardize, delim, comment_text,
                            name_column, smarts_column);
   auto list = std::make_unique<MolList>();
   for (const auto &[name, mol] : defs) {

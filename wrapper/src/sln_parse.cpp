@@ -45,7 +45,7 @@ std::unique_ptr<RWMol> mol_from_query_sln(rust::Str sln, bool merge_hs,
 #else
 
 // RDKit built without its SLN parser, as conda-forge's macOS build of RDKit
-// 2026.03.6 is (CMakeLists.txt).
+// 2024.09.6 is (CMakeLists.txt).
 namespace {
 
 [[noreturn]] void no_sln_parser() {

@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_normalize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -65,6 +66,7 @@ std::unique_ptr<Normalizer> normalizer_new(
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
+  check_transformation_lines(std::string(param_data));
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Normalizer>(
       in, to_cleanup_parameters(params).maxRestarts);

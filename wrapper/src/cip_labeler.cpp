@@ -35,48 +35,23 @@ boost::dynamic_bitset<> to_bitset(rust::Slice<const std::uint32_t> indices,
   return result;
 }
 
-// As isValidCarrier in RDKit 2026.09's Sp2Bond.cpp: a neighbor of focus
-// other than the bond's other atom.
-bool is_carrier(const Atom &focus, const Atom &other, int idx) {
-  const auto &mol = focus.getOwningMol();
-  return idx >= 0 && static_cast<unsigned>(idx) < mol.getNumAtoms() &&
-         static_cast<unsigned>(idx) != focus.getIdx() &&
-         static_cast<unsigned>(idx) != other.getIdx() &&
-         mol.getBondBetweenAtoms(focus.getIdx(), idx);
-}
-
-// RDKit 2026.03's Sp2Bond::label reads each end's first neighbor other than
-// the bond's other atom, and AtropisomerBond::label its two carriers,
-// without checking that they exist: a double bond whose stereo atom is not
-// a neighbor of its own end (the other end atom, say), or an atropisomer
-// bond with an end of no other bonds, reads past an empty vector. RDKit
-// 2026.09 checks both (rdkit/rdkit#9577) and leaves such bonds unlabeled;
-// so does the wrapper, clearing a stale label as RDKit clears each bond's
-// before labeling it. Bonds RDKit's own checks reject (findStereoAtoms's
-// preconditions, its two stereo atoms) are left for RDKit to report.
+// RDKit 2024.09's AtropisomerBond leaves its carriers empty for a bond with
+// an end of no other bonds (getAtropisomerAtomsAndBonds fails), and its label
+// reads carriers[0] or carriers[1] when an end has more than one edge past the
+// bond (one per other bond at most, rdkit/rdkit#9577). The wrapper leaves
+// such a bond out unless neither end has two other bonds, keeping its labels
+// as RDKit keeps those of a bond it cannot label. 2024.09's Sp2Bond reads no
+// neighbor of its own, so double bonds are left to RDKit.
 bool labelable(const Bond &bond) {
-  switch (bond.getStereo()) {
-    case Bond::STEREOE:
-    case Bond::STEREOZ:
-    case Bond::STEREOCIS:
-    case Bond::STEREOTRANS: {
-      if (bond.getBondType() != Bond::DOUBLE) {
-        return true;
-      }
-      auto atoms = RDKit::Chirality::findStereoAtoms(&bond);
-      return atoms.size() != 2 ||
-             (is_carrier(*bond.getBeginAtom(), *bond.getEndAtom(), atoms[0]) &&
-              is_carrier(*bond.getEndAtom(), *bond.getBeginAtom(), atoms[1]));
-    }
-    case Bond::STEREOATROPCW:
-    case Bond::STEREOATROPCCW: {
-      RDKit::Atropisomers::AtropAtomAndBondVec atoms_and_bonds[2];
-      return RDKit::Atropisomers::getAtropisomerAtomsAndBonds(
-          &bond, atoms_and_bonds, bond.getOwningMol());
-    }
-    default:
-      return true;
+  if (bond.getStereo() != Bond::STEREOATROPCW &&
+      bond.getStereo() != Bond::STEREOATROPCCW) {
+    return true;
   }
+  RDKit::Atropisomers::AtropAtomAndBondVec atoms_and_bonds[2];
+  return RDKit::Atropisomers::getAtropisomerAtomsAndBonds(
+             &bond, atoms_and_bonds, bond.getOwningMol()) ||
+         (bond.getBeginAtom()->getDegree() <= 2 &&
+          bond.getEndAtom()->getDegree() <= 2);
 }
 
 }  // namespace
@@ -93,13 +68,12 @@ void assign_cip_labels(RWMol &mol, bool has_atoms,
   }
   for (auto idx = bond_set.find_first(); idx != bond_set.npos;
        idx = bond_set.find_next(idx)) {
-    auto *bond = mol.getBondWithIdx(idx);
-    if (!labelable(*bond)) {
+    if (!labelable(*mol.getBondWithIdx(idx))) {
       bond_set.reset(idx);
-      bond->clearProp(RDKit::common_properties::_CIPCode);
     }
   }
-  // assignCIPLabels constructs a ControlCHandler (CIPLabeler.cpp).
+  // RDKit 2026.03's assignCIPLabels resets ControlCHandler; 2024.09's does
+  // not, and the lock costs it only concurrency (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::CIPLabeler::assignCIPLabels(mol, atom_set, bond_set,
                                      max_recursive_iterations);

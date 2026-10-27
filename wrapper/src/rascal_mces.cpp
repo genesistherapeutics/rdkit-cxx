@@ -516,6 +516,10 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 //   measure distances from it, through the null it left (RDKit 2026.03 checks
 //   it, rdkit/rdkit#9424). Whether it does depends on the MCES found, so no
 //   other value is accepted.
+// - RDKit 2024.09's checkTimeout, once the run is past the timeout, can
+//   clear its best cliques and then read the first (RDKit 2026.03 checks,
+//   rdkit/rdkit#9450). A timeout below -1 is past from the start; one of 0
+//   or more is past only after that many seconds, and is left to RDKit.
 // - calcLowerBound casts a product with similarityThreshold to unsigned
 //   int; a NaN threshold passes every comparison before it.
 // - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
@@ -542,6 +546,11 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
     throw ValueErrorException(
         "maxFragSeparation must be -1: RDKit 2024.09 reads a fragment it "
         "dropped, through a null pointer, when it applies another value");
+  }
+  if (o.timeout < -1) {
+    throw ValueErrorException(
+        "timeout must be -1 (none) or at least 0: RDKit 2024.09 reads a "
+        "result it cleared when the time is up");
   }
   if (std::isnan(o.similarityThreshold)) {
     throw ValueErrorException("similarityThreshold is NaN");

@@ -927,3 +927,31 @@ fn double_cubic_lattice_volume_in_threads() {
         assert_close(volume, 411.9602195996842, 1e-9);
     }
 }
+
+fn with_coords(smiles: &str) -> Mol {
+    let mut mol = mol_from_smiles(smiles).unwrap();
+    let n = mol.get_num_atoms();
+    let mut conf = Conformer::new(n);
+    for i in 0..n {
+        let x = f64::from(i);
+        conf.set_atom_position(i, Point3D::new(1.5 * x, 0.3 * (x % 2.0), 0.1 * x))
+            .unwrap();
+    }
+    mol.add_conformer(&conf).unwrap();
+    mol
+}
+
+/// RDKit 2024.09's GETAWAY reads uninitialized sums for a molecule less than
+/// 8 bonds across (Python gives values like 5.5e294 for ethanol, changing
+/// between calls), and counts the distance between fragments as 1e8, looping
+/// that many times.
+#[test]
+fn getaway_needs_a_connected_molecule_8_bonds_across() {
+    for smiles in ["CCO", "C", "CCCCCCCC", "CCCCCCCCC.C"] {
+        let err = calc_getaway(&with_coords(smiles)).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{smiles}: {err:?}");
+    }
+    // Nine atoms in a chain are 8 bonds across.
+    assert_eq!(calc_getaway(&with_coords("CCCCCCCCC")).unwrap().len(), 273);
+    assert_eq!(calc_getaway(&apap()).unwrap().len(), 273);
+}

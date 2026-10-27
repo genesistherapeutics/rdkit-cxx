@@ -119,24 +119,43 @@ fn indices_that_rdkit_trusts() {
     }
 }
 
-// RDKit 2026.03 reads past an empty vector for these bonds, and Python
-// crashes; RDKit 2026.09 leaves them unlabeled, as here.
+// RDKit 2024.09's Sp2Bond reads no neighbor of its own, so the double bond
+// whose stereo atom is its other end is labeled as Python labels it, and a
+// label is never cleared. Its AtropisomerBond has no carriers for a bond
+// with a bare end and reads them once the other end has two other bonds
+// (Python segfaults for "CC(C)O"); such a bond is left out, label and all.
 #[test]
 fn bonds_without_carriers() {
-    // The bare end's stereo atom is the bond's other atom. The other double
-    // bond is still labeled, and the stale label cleared.
     let mut mol = mol_from_smiles("[C]=CC/C=C/C").unwrap();
     let mut bond = mol.get_bond_with_idx_mut(0).unwrap();
     bond.set_stereo_atoms(1, 2).unwrap();
     bond.set_stereo(BondStereo::Stereocis);
-    bond.set_prop("_CIPCode", "Z");
+    bond.set_prop("_CIPCode", "X");
     assign_cip_labels(&mut mol).unwrap();
-    assert_eq!(bond_labels(&mol), [(3, "E".to_string())]);
+    assert_eq!(
+        bond_labels(&mol),
+        [(0, "Z".to_string()), (3, "E".to_string())]
+    );
 
-    // An atropisomer bond whose ends have no other bonds.
-    let mut mol = mol_from_smiles("CC").unwrap();
-    let mut bond = mol.get_bond_with_idx_mut(0).unwrap();
-    bond.set_stereo(BondStereo::Stereoatropcw);
-    assign_cip_labels(&mut mol).unwrap();
-    assert!(bond_labels(&mol).is_empty());
+    // Bare ends with at most one other bond at the other end: RDKit reads
+    // no carrier and labels the bond.
+    for smiles in ["CC", "CCO"] {
+        let mut mol = mol_from_smiles(smiles).unwrap();
+        let mut bond = mol.get_bond_with_idx_mut(0).unwrap();
+        bond.set_stereo(BondStereo::Stereoatropcw);
+        assign_cip_labels(&mut mol).unwrap();
+        assert_eq!(bond_labels(&mol), [(0, "P".to_string())], "{smiles}");
+    }
+
+    // Two other bonds at the far end: left out, its label kept. ("CC(C)C"
+    // ties, so Python leaves it so too.)
+    for smiles in ["CC(C)O", "CC(C)C", "OC(C)C"] {
+        let mut mol = mol_from_smiles(smiles).unwrap();
+        let idx = if smiles == "OC(C)C" { 2 } else { 0 };
+        let mut bond = mol.get_bond_with_idx_mut(idx).unwrap();
+        bond.set_stereo(BondStereo::Stereoatropcw);
+        bond.set_prop("_CIPCode", "X");
+        assign_cip_labels(&mut mol).unwrap();
+        assert_eq!(bond_labels(&mol), [(idx, "X".to_string())], "{smiles}");
+    }
 }

@@ -380,3 +380,22 @@ fn results_move_between_threads() {
     let handle = std::thread::spawn(move || results[0].smarts_string());
     assert_eq!(handle.join().unwrap(), "c1:c:c:c:c:c:1");
 }
+
+/// RDKit 2024.09's checkTimeout reads a result it cleared; a timeout below -1
+/// is due at the first check.
+#[test]
+fn rascal_timeout_below_minus_one() {
+    let opts = RascalOptions {
+        timeout: -2,
+        ..Default::default()
+    };
+    let err = find_mces_with_opts(&smiles("c1ccccc1Cl"), &smiles("c1ccccc1F"), &opts).unwrap_err();
+    assert!(matches!(err, Error::Value { .. }), "{err:?}");
+    for timeout in [-1, 0, 60] {
+        let opts = RascalOptions {
+            timeout,
+            ..Default::default()
+        };
+        find_mces_with_opts(&smiles("c1ccccc1Cl"), &smiles("c1ccccc1F"), &opts).unwrap();
+    }
+}

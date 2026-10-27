@@ -30,6 +30,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/depictor.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
@@ -145,6 +146,7 @@ void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
   // As CoordinateTemplates::loadTemplatesFromPath, which stops at the first
   // line it cannot parse.
   while (std::getline(lines, line)) {
+    check_smiles_cx(line, true, true);
     std::unique_ptr<RDKit::ROMol> mol(RDKit::SmartsToMol(line));
     if (!mol) {
       break;

@@ -223,8 +223,15 @@ std::vector<std::string> label_pieces(const std::string &label, char orient,
   return res;
 }
 
-// AtomSymbol::adjustColons strips <...> from a label with a colon, in a loop
-// that never ends once a '>' comes before the next '<'.
+// RDKit 2024.09's AtomSymbol::adjustColons strips each <...> from a label
+// with a colon, in a loop that never ends once the next '<' has no '>' after
+// it or a '>' before it. It then reads the rects of the colon's position in
+// what is left, of the character before it, and, unless the colon is the
+// label's last byte (counting its markup), of the character after it,
+// having checked only that the colon is at most one past the last rect
+// (RDKit 2026.03 checks both, rdkit/rdkit#9450). There is a rect for each
+// character atomLabelToPieces keeps but the <sub>, <sup>, </sub>, and </sup>
+// markup getStringRects skips (setStringDrawMode in DrawText.cpp).
 void check_colon_markup(const std::string &label, const char *what) {
   if (label.find(':') == std::string::npos) {
     return;
@@ -233,18 +240,39 @@ void check_colon_markup(const std::string &label, const char *what) {
   while (true) {
     const auto lt = tmp.find('<');
     if (lt == std::string::npos) {
-      return;
+      break;
     }
     const auto gt = tmp.find('>');
-    if (gt == std::string::npos) {
-      return;
-    }
-    if (gt < lt) {
+    if (gt == std::string::npos || gt < lt) {
       refuse(std::string(what) +
-             " has a colon and a '>' before a '<', which RDKit's label "
-             "layout loops on forever");
+             " has a colon and a '<' without a '>' after it, which RDKit "
+             "2024.09's label layout loops on forever");
     }
     tmp = tmp.substr(0, lt) + tmp.substr(gt + 1);
+  }
+  const auto colon = tmp.find(':');
+  if (colon == std::string::npos) {
+    return;
+  }
+  std::size_t rects = 0;
+  for (const auto &piece : label_pieces(label, 'N', what)) {
+    for (std::size_t i = 0; i < piece.size(); ++i) {
+      if (piece.compare(i, 5, "<sub>") == 0 ||
+          piece.compare(i, 5, "<sup>") == 0) {
+        i += 4;
+      } else if (piece.compare(i, 6, "</sub>") == 0 ||
+                 piece.compare(i, 6, "</sup>") == 0) {
+        i += 5;
+      } else {
+        ++rects;
+      }
+    }
+  }
+  if (colon <= rects &&
+      (colon == rects || (colon + 1 >= rects && colon + 1 < label.size()))) {
+    refuse(std::string(what) +
+           " has a colon where RDKit 2024.09's label layout reads a character "
+           "past the label's last");
   }
 }
 
@@ -590,31 +618,6 @@ void check_comic_bonds(const RDKit::ROMol &mol,
   }
 }
 
-// isLinearAtom (DrawMol.cpp), which labels an atom of two bonds in a line,
-// reads each neighbor's bond type into an uninitialized array, skips a
-// neighbor whose direction from the atom directionVector cannot normalize,
-// and compares both types: RDKit 2026.03 reads an uninitialized value for a
-// neighbor at the atom's position (RDKit 2026.09 sets both,
-// rdkit/rdkit#9550). It reads the coordinates DrawMol extracts.
-void check_linear_atoms(const RDKit::ROMol &mol,
-                        const std::vector<RDGeom::Point2D> &coords) {
-  for (const auto atom : mol.atoms()) {
-    if (atom->getDegree() != 2) {
-      continue;
-    }
-    const auto &at = coords[atom->getIdx()];
-    for (const auto nbr : mol.atomNeighbors(atom)) {
-      try {
-        at.directionVector(coords[nbr->getIdx()]);
-      } catch (const std::runtime_error &) {
-        refuse("atom " + std::to_string(atom->getIdx()) +
-               " has two bonds and a neighbor at its position, where RDKit "
-               "2026.03 reads an uninitialized bond type");
-      }
-    }
-  }
-}
-
 }  // namespace
 
 void check_colour(const RDKit::DrawColour &colour, const char *what) {
@@ -898,9 +901,9 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
   if (!coords.empty() && opts.comicMode) {
     check_comic_bonds(mol, coords);
   }
-  if (!coords.empty()) {
-    check_linear_atoms(mol, coords);
-  }
+  // An atom of two bonds with a neighbor at its position is left to RDKit:
+  // 2024.09's isLinearAtom normalizes the direction to each neighbor and
+  // throws for it (RDKit 2026.03 skips it and reads a bond type it never set).
 
   // Text.
   using RDKit::common_properties::atomNote;

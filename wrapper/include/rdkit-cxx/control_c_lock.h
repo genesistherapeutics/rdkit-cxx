@@ -31,6 +31,12 @@
 // ControlCHandler (RDKit 2026.09, rdkit/rdkit#9393) leaves it. A handler
 // another thread installs while such a call runs is replaced by the one
 // before.
+//
+// RDKit 2024.09 constructs no ControlCHandler outside its Python wrappers:
+// only the embedder (EmbedMultipleConfs, Embedder.cpp) and the synthon
+// search, which is not bound, call reset(), so of the calls above only the
+// embedder changes SIGINT's handler. The others hold the mutex as RDKit
+// 2026.03's need, which costs them only their concurrency.
 
 #pragma once
 

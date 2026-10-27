@@ -19,6 +19,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_tautomer.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -59,7 +60,7 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
   rust::Box<TautomerCallback> d_callback;
 };
 
-// RDKit 2026.03's setCallback takes ownership of a raw pointer, so each
+// RDKit 2024.09's setCallback takes ownership of a raw pointer, so each
 // enumerator gets its own forwarder to a handle's callback, which handles
 // and enumerators share (as Python's setCallbackHelper gives each a new
 // PyTautomerEnumeratorCallback).
@@ -405,6 +406,9 @@ std::int32_t score_substructs_with_terms(
           "RDKit adds substructure scores times their match counts (up to "
           "1000) in int, which overflows for these terms");
     }
+    check_smiles_cx(to_std(rust::Slice<const std::uint8_t>(term.smarts.data(),
+                                                           term.smarts.size())),
+                    true, true);
     terms.emplace_back(to_std(rust::Slice<const std::uint8_t>(
                            term.name.data(), term.name.size())),
                        to_std(rust::Slice<const std::uint8_t>(
