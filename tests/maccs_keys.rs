@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.MACCSkeys in RDKit 2026.03.6, and its
+// Values from Python's rdkit.Chem.MACCSkeys in RDKit 2024.09.6, and its
 // doctests.
 
 use rdkit_cxx::chem::maccs_keys::{maccs_keys, smarts_patts};

@@ -5,7 +5,7 @@
 
 // Ports RDKit's rdkit/Chem/UnitTestQED.py, with its reference file
 // tests/data/NCI_200_qed.csv (rdkit/Chem/test_data/QED), and the doctests of
-// rdkit.Chem.QED in RDKit 2026.03.6.
+// rdkit.Chem.QED in RDKit 2024.09.6.
 
 use rdkit_cxx::chem::qed::*;
 use rdkit_cxx::chem::{Mol, add_hs, mol_from_smiles};

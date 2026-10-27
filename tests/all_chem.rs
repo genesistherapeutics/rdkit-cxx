@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // AllChem's helpers, with its doctests; values from Python's AllChem in
-// RDKit 2026.03.6, run on these same mol blocks. Alignment and
+// RDKit 2024.09.6, run on these same mol blocks. Alignment and
 // optimization are compared with tolerances, since their floating point can
 // differ across platforms.
 
