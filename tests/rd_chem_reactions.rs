@@ -583,6 +583,37 @@ fn cdxml() {
         );
         assert!(reactions_from_cdxml_block(&fine).is_ok(), "{token}");
     }
+    // RDKit 2025.03 joins a nickname's bonds to its fragment's connection
+    // points by their place in its BondOrdering, reading past the end of
+    // fewer points.
+    let node = "<n\n  id=\"300\"";
+    assert!(text.contains(node));
+    let with = |attrs: &str| text.replacen(node, &format!("<n\n  {attrs}\n  id=\"300\""), 1);
+    assert!(reactions_from_cdxml_block(&with("BondOrdering=\"1 2 3\"")).is_ok());
+    for attrs in [
+        "NodeType=\"Nickname\" BondOrdering=\"1 2 3\"",
+        "NodeType=\"Fragment\" BondOrdering=\"7\"",
+        "NodeType=\"ExternalConnectionPoint\" BondOrdering=\"7\"",
+    ] {
+        assert!(
+            matches!(
+                reactions_from_cdxml_block(&with(attrs)),
+                Err(Error::Parse { .. })
+            ),
+            "{attrs}"
+        );
+    }
+    // Binary CDX, which the reader would take for it, and entity
+    // declarations, which its XML parser would expand.
+    for bad in [
+        format!("VjCD0100{text}"),
+        text.replacen("<CDXML", "<!DOCTYPE CDXML [<!ENTITY x \"1\">]><CDXML", 1),
+    ] {
+        assert!(matches!(
+            reactions_from_cdxml_block(&bad),
+            Err(Error::Parse { .. })
+        ));
+    }
 }
 
 #[test]

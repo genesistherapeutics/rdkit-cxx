@@ -8,6 +8,7 @@
 #include <climits>
 #include <cmath>
 #include <cstring>
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -1023,6 +1024,80 @@ void check_cdxml_atom_maps(const std::string &text) {
   }
 }
 
+// RDKit 2025.03's ChemDraw reader replaces a nickname or fragment node
+// that has a BondOrdering by the fragment it contains (replaceFragments in
+// External/ChemDraw/utils.cpp), joining each of the node's bonds to the
+// fragment atom at the bond's position in the ordering, without checking
+// that there is one there (2026.03 does): the fragment atoms are at least
+// the ExternalConnectionPoint nodes of the node's own fragments, so an
+// ordering longer than that is refused, as is an ExternalConnectionPoint
+// with an ordering of its own, whose replacement has no such bound. The
+// reader also takes text that starts with CDX's binary header for CDX,
+// which it reads with the ChemDraw library's binary reader; that reader is
+// not audited here, so such text is refused, as are XML entity
+// declarations, which the reader's expat would expand and this parse would
+// not see.
+void check_cdxml_fragments(const std::string &text) {
+  if (text.compare(0, 8, "VjCD0100") == 0) {
+    throw RDKit::FileParseException(
+        "the text starts with CDX's binary header, which RDKit would read as "
+        "binary CDX");
+  }
+  if (text.find("<!ENTITY") != std::string::npos) {
+    throw RDKit::FileParseException(
+        "the CDXML declares an XML entity, which RDKit's reader would expand");
+  }
+  boost::property_tree::ptree tree;
+  try {
+    std::istringstream in(text);
+    boost::property_tree::read_xml(in, tree);
+  } catch (const boost::property_tree::ptree_error &e) {
+    throw RDKit::FileParseException(std::string("the CDXML is not XML: ") +
+                                    e.what());
+  }
+  auto attr = [](const boost::property_tree::ptree &node, const char *name) {
+    return node.get<std::string>(std::string("<xmlattr>.") + name, "");
+  };
+  std::function<void(const boost::property_tree::ptree &)> walk =
+      [&](const boost::property_tree::ptree &tree) {
+        for (const auto &[key, child] : tree) {
+          if (key == "n") {
+            auto type = attr(child, "NodeType");
+            auto ordering = attr(child, "BondOrdering");
+            if (!ordering.empty()) {
+              std::istringstream tokens(ordering);
+              std::size_t length = 0;
+              for (std::string token; tokens >> token;) {
+                ++length;
+              }
+              std::size_t points = 0;
+              for (const auto &[fkey, fragment] : child) {
+                if (fkey != "fragment") {
+                  continue;
+                }
+                for (const auto &[nkey, node] : fragment) {
+                  points += nkey == "n" &&
+                            attr(node, "NodeType") == "ExternalConnectionPoint";
+                }
+              }
+              if (type == "ExternalConnectionPoint" ||
+                  ((type == "Nickname" || type == "Fragment") &&
+                   length > points)) {
+                throw RDKit::FileParseException(
+                    "a CDXML " + type + " node orders " +
+                    std::to_string(length) + " bonds over " +
+                    std::to_string(points) +
+                    " fragment connection points; RDKit 2025.03 would read "
+                    "past the end of its fragment atoms");
+              }
+            }
+          }
+          walk(child);
+        }
+      };
+  walk(tree);
+}
+
 std::unique_ptr<ReactionList> to_reaction_list(
     std::vector<std::unique_ptr<ChemicalReaction>> rxns) {
   auto res = std::make_unique<ReactionList>();
@@ -1041,6 +1116,7 @@ std::unique_ptr<ReactionList> reactions_from_cdxml_block(rust::Str cdxml,
                                                          bool remove_hs) {
   std::string text(cdxml);
   check_cdxml_atom_maps(text);
+  check_cdxml_fragments(text);
   return to_reaction_list(
       RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }
@@ -1050,6 +1126,7 @@ std::unique_ptr<ReactionList> reactions_from_cdxml_file(
   // RDKit returns no reactions for a file it cannot open.
   auto text = read_path(path);
   check_cdxml_atom_maps(text);
+  check_cdxml_fragments(text);
   return to_reaction_list(
       RDKit::CDXMLToChemicalReactions(text, sanitize, remove_hs));
 }
