@@ -166,6 +166,9 @@ ProxGraph build_proximity_graph(const std::vector<const RDKit::ROMol *> &mols,
   std::vector<std::pair<unsigned int, unsigned int>> toDo;
   Rascal::RascalOptions opts;
   opts.similarityThreshold = clusOpts.similarityCutoff;
+  // RDKit 2025.09 reads an emptied list when a search times out
+  // (rascal_options_from), so the pairs run without RDKit's 60 seconds.
+  opts.timeout = -1;
   for (unsigned int i = 0; i < mols.size() - 1; ++i) {
     for (unsigned int j = i + 1; j < mols.size(); ++j) {
       toDo.emplace_back(i, j);
@@ -253,7 +256,10 @@ std::vector<std::vector<unsigned int>> make_sub_clusters(
       auto m2 = tmpNbors[i]->d_res->getMcesMol();
       auto g_13 = g_ij(m2, clusOpts.a, clusOpts.b, clusOpts.minFragSize);
 
-      auto results = Rascal::rascalMCES(*m1, *m2);
+      // Without RDKit's 60 seconds, as build_proximity_graph's.
+      Rascal::RascalOptions opts;
+      opts.timeout = -1;
+      auto results = Rascal::rascalMCES(*m1, *m2, opts);
       if (results.empty() || results.front().getBondMatches().empty()) {
         continue;
       }
@@ -521,7 +527,7 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 // - RDKit 2025.09's checkTimeout, when the time is up and the clique in hand
 //   is larger than those kept, clears them and reads the first (RDKit 2026.03
 //   checks, rdkit/rdkit#9450), so any timeout that fires can read an empty
-//   vector. The search runs without one: the timeout is not honored.
+//   vector. Only -1, no timeout, is taken, as on the rdkit-2025.03 line.
 // - RDKit 2025.09's RascalResult prunes fragments farther apart than
 //   maxFragSeparation by resetting one of a pair and going on to measure
 //   from it (a null dereference with three or more fragments; RDKit 2026.03
@@ -542,7 +548,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   o.maxFragSeparation = d.max_frag_separation;
   o.allBestMCESs = d.all_best_mcess;
   o.maxBestMCESs = d.max_best_mcess;
-  o.timeout = -1;
+  o.timeout = d.timeout;
   o.returnEmptyMCES = d.return_empty_mces;
   o.maxBondMatchPairs = d.max_bond_match_pairs;
   o.equivalentAtoms = std::string(d.equivalent_atoms);
@@ -554,6 +560,11 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
     throw ValueErrorException(
         "maxFragSeparation must be -1: RDKit 2025.09 dereferences a fragment "
         "it pruned for any other value");
+  }
+  if (o.timeout != -1) {
+    throw ValueErrorException(
+        "timeout must be -1: RDKit 2025.09 reads an emptied list of cliques "
+        "when a search times out");
   }
   if (std::isnan(o.similarityThreshold)) {
     throw ValueErrorException("similarityThreshold is NaN");
@@ -595,8 +606,11 @@ void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols) {
   }
 }
 
+// RDKit's default timeout is 60 seconds, which rascal_options_from refuses.
 RascalOptionsData rascal_options_default() {
-  return to_data(Rascal::RascalOptions());
+  auto data = to_data(Rascal::RascalOptions());
+  data.timeout = -1;
+  return data;
 }
 
 RascalClusterOptionsData rascal_cluster_options_default() {

@@ -59,10 +59,12 @@ A program built against one release stops when it loads with another.
   bond's order as its `BondType`'s number (17 for a dative bond),
   `fr_Ar_COO`'s description is 2025.09's, and `CalculateTorsionLists` checks
   only a bond's end atom for heavy neighbors.
-- RASCAL's `timeout` is not honored, and a `max_frag_separation` other than
-  -1 is `Error::Value`: RDKit 2025.09 reads an empty vector when a timeout
-  fires, and measures fragment separation from a fragment it has just
-  pruned.
+- RASCAL's `timeout` and `max_frag_separation` take only -1, as on the
+  rdkit-2025.03 line, and other values are `Error::Value`: RDKit 2025.09
+  reads an emptied list of cliques when a search times out, and measures
+  fragment separation from a fragment it has just pruned. The timeout's
+  default is -1, not Python's 60 seconds, and the clusterings run their
+  searches without one.
 - Checks for what newer RDKit releases fixed (each refused input is
   `Error::Value`):
   - `renumber_atoms` takes only a permutation: RDKit 2025.09 writes past its
