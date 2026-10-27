@@ -26,6 +26,11 @@
   molecules they cannot predict refuse inputs past that bound (README,
   "Known limitations"). Only molecule pickles older than format 4.0 remain
   unchecked.
+- A normalizations file (`CleanupParameters::normalizations_file`,
+  `Normalizer::new`) is read once and given to RDKit as data or a stream,
+  so RDKit never reopens a file the wrapper read. A cleanup normalizations
+  file with no transformations is `Error::Value`: RDKit takes empty data
+  to mean the file, and would open it again.
 - Molecules RDKit's pickler would write but could not read back are
   refused wherever a molecule is pickled: `Error::Value`, or a panic from
   `Mol::to_binary` and `ChemicalReaction::to_binary`, which stay

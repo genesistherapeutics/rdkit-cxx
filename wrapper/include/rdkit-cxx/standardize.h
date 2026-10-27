@@ -37,8 +37,12 @@ using CleanupParameters = RDKit::MolStandardize::CleanupParameters;
 CleanupParameters to_cleanup_parameters(const CleanupParametersData &data);
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params);
 
-// What the normalizations the parameters name do to cycles
-// (check_standardize_relevant_cycles).
+// Reads the parameters' normalization file, when they have no normalization
+// data, into that data, so RDKit does not open it itself (standardize.cpp).
+void read_normalizations(CleanupParameters &params);
+
+// What the parameters' normalizations, as data or RDKit's defaults, do to
+// cycles (check_standardize_relevant_cycles).
 TransformCycles normalization_cycles(const CleanupParameters &params);
 
 // Takes ownership of a molecule an RDKit object returned, which may be an
