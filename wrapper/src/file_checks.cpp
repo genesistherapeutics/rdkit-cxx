@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/file_checks.h"
 
+#include <algorithm>
 #include <climits>
 #include <fstream>
 #include <iterator>
@@ -273,17 +274,45 @@ void check_cx_stereo_groups(std::string_view ext) {
   }
 }
 
-void check_cx_extension(std::string_view ext) {
-  check_cx_stereo_groups(ext);
-  constexpr std::string_view key = "atomProp:";
-  for (auto at = ext.find(key); at != std::string_view::npos;
-       at = ext.find(key, at + 1)) {
-    if (atom_props_overrun(ext, at + key.size())) {
-      throw ValueErrorException(
-          "a CXSMILES atomProp list runs to the end of the extension without "
-          "a \"|\" or \",\", where RDKit 2025.03 reads past its end");
+// Where read_text_to (CXSmilesOps.cpp) stops reading `cx` from `i`: at the
+// first of `delims`, or one past the end, having read the terminator there.
+// Its "&#N;" escapes hold only digits, none of the delimiters given here.
+std::size_t text_to(std::string_view cx, std::size_t i, const char *delims) {
+  auto k = cx.find_first_of(delims, i);
+  return k == std::string_view::npos ? cx.size() + 1 : k;
+}
+
+// Replays parse_data_sgroup on `cx` from `p`, at "SgD:": whether a field or
+// its coordinates run past the end, after which RDKit steps once more.
+bool data_sgroup_overrun(std::string_view cx, std::size_t p) {
+  const std::size_t n = cx.size();
+  if (p + 3 >= n || cx[p + 3] != ':') {
+    return false;
+  }
+  std::size_t i = p + 4;
+  while (true) {
+    while (i < n && digit(cx[i])) {
+      ++i;
+    }
+    if (i >= n || cx[i] != ',') {
+      break;
+    }
+    ++i;
+  }
+  ++i;
+  for (int field = 0; field < 5; ++field) {
+    if (i >= n) {
+      return false;  // parse_data_sgroup_attr's precondition throws
+    }
+    if (cx[i] != '|') {
+      i = text_to(cx, i, ":");
+      if (i > n) {
+        return true;
+      }
+      ++i;
     }
   }
+  return i < n && cx[i] == '(' && text_to(cx, i, ")") > n;
 }
 
 // RDKit's trim (boost::trim_copy, in the classic locale).
@@ -303,19 +332,121 @@ std::string_view trimmed(std::string_view text) {
 
 }  // namespace
 
-// As preprocessSmiles in SmilesParse.cpp.
-void check_cx_smiles(std::string_view smiles) {
-  auto split = smiles.find_first_of(" \t");
-  if (split != std::string_view::npos && split != 0) {
-    check_cx_extension(trimmed(smiles.substr(split)));
+// RDKit 2025.03's CXSMILES parser (CXSmilesOps.cpp, unchanged here since
+// 2024.09) reads past the end of the extension in two places:
+// - an "atomProp:" list (parse_atom_props) that runs to the end without a
+//   "|" or "," reads the byte after the text's terminator, whatever
+//   strictCXSMILES says (rdkit/rdkit#9361);
+// - a data substance group's ("SgD:") field without a ":" after it, its
+//   coordinates without a ")", and a polymer group's ("Sg:") type without a
+//   ":" step past the end, and the parse fails there; without
+//   strictCXSMILES, MolFromSmiles and MolFromSmarts then copy the text up to
+//   where it stopped into _CXSMILES_Data, past the terminator.
+// Each such block is read from wherever it appears in the extension, as the
+// parser would read it there, which covers wherever the parser does. Stereo
+// groups that list an atom twice are refused too (check_cx_stereo_groups).
+void check_cx_extensions(std::string_view cx, bool strict) {
+  check_cx_stereo_groups(cx);
+  constexpr std::string_view key = "atomProp:";
+  for (auto at = cx.find(key); at != std::string_view::npos;
+       at = cx.find(key, at + 1)) {
+    if (atom_props_overrun(cx, at + key.size())) {
+      throw ValueErrorException(
+          "a CXSMILES atomProp list runs to the end of the extension without "
+          "a \"|\" or \",\", where RDKit 2025.03 reads past its end");
+    }
+  }
+  if (strict) {
+    return;
+  }
+  for (auto p = cx.find("Sg"); p != std::string_view::npos;
+       p = cx.find("Sg", p + 1)) {
+    bool overrun = false;
+    if (p + 2 < cx.size() && cx[p + 2] == 'D') {
+      overrun = data_sgroup_overrun(cx, p);
+    } else if (p + 2 < cx.size() && cx[p + 2] == ':') {
+      overrun = text_to(cx, p + 3, ":") > cx.size();
+    }
+    if (overrun) {
+      throw ValueErrorException(
+          "a CXSMILES substance group's fields must each end with \":\" (and "
+          "its coordinates with \")\") when strictCXSMILES is off: RDKit "
+          "2025.03 copies the text past its end otherwise");
+    }
   }
 }
 
-// As DaylightParserUtils::reactionFromSmarts in DaylightParser.cpp.
-void check_cx_reaction(std::string_view text) {
+// As preprocessSmiles in SmilesParse.cpp.
+void check_smiles_cx(std::string_view text, bool allow_cx, bool strict) {
+  if (!allow_cx) {
+    return;
+  }
+  auto split = text.find_first_of(" \t");
+  if (split == std::string_view::npos || split == 0) {
+    return;
+  }
+  auto cx = trimmed(text.substr(split));
+  if (!cx.empty() && cx.front() == '|') {
+    check_cx_extensions(cx, strict);
+  }
+}
+
+// As DaylightParserUtils::reactionFromSmarts in DaylightParser.cpp, which
+// parses the extension strictly and throws when it fails.
+void check_reaction_cx(std::string_view text, bool allow_cx) {
+  if (!allow_cx) {
+    return;
+  }
   auto split = text.find('|');
   if (split != std::string_view::npos && split != 0) {
-    check_cx_extension(trimmed(text.substr(split)));
+    check_cx_extensions(trimmed(text.substr(split)), true);
+  }
+}
+
+// As readTransformations in TransformCatalogUtils.cpp.
+std::vector<std::pair<std::string, std::string>> transformation_data(
+    const std::string &text) {
+  std::vector<std::pair<std::string, std::string>> data;
+  std::istringstream in(text);
+  char line[512];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, sizeof(line), '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    std::vector<std::string> fields;
+    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
+    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
+    if (fields.size() < 2) {
+      throw ValueErrorException(
+          "a transformation line needs a name and a reaction SMARTS, "
+          "separated by a tab");
+    }
+    boost::erase_all(fields[0], " ");
+    boost::erase_all(fields[1], " ");
+    data.emplace_back(std::move(fields[0]), std::move(fields[1]));
+  }
+  return data;
+}
+
+// As readTransformations in TransformCatalogUtils.cpp.
+void check_transformation_lines(const std::string &text) {
+  std::istringstream in(text);
+  char line[512];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, sizeof(line), '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    std::vector<std::string> fields;
+    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
+    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
+    if (fields.size() >= 2) {
+      boost::erase_all(fields[1], " ");
+      check_reaction_cx(fields[1], true);
+    }
   }
 }
 

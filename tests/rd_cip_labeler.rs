@@ -143,3 +143,32 @@ fn bonds_without_carriers() {
     assign_cip_labels(&mut mol).unwrap();
     assert!(bond_labels(&mol).is_empty());
 }
+
+// A chain of `centers` tetrahedral stereo atoms.
+fn stereo_chain(centers: usize) -> String {
+    format!("C{}C", "[C@H](Cl)".repeat(centers))
+}
+
+#[test]
+fn labeling_refuses_more_than_64_descriptors() {
+    // RDKit 2025.03's PairList shifts a 64-bit pairing by the number of
+    // descriptors it holds, which is undefined past 64.
+    let mut mol = without_labels(&stereo_chain(65));
+    assert!(matches!(
+        assign_cip_labels(&mut mol),
+        Err(Error::Value { .. })
+    ));
+    // Asking for fewer of them labels those.
+    assign_cip_labels_with_params(
+        &mut mol,
+        &AssignCIPLabelsParams {
+            atoms_to_label: Some((1..=64).collect()),
+            bonds_to_label: Some(vec![]),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let mut mol = without_labels(&stereo_chain(64));
+    assign_cip_labels(&mut mol).unwrap();
+    assert_eq!(atom_labels(&mol).len(), 64);
+}

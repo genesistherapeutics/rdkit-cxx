@@ -256,7 +256,11 @@ std::vector<std::vector<unsigned int>> make_sub_clusters(
       auto m2 = tmpNbors[i]->d_res->getMcesMol();
       auto g_13 = g_ij(m2, clusOpts.a, clusOpts.b, clusOpts.minFragSize);
 
-      auto results = Rascal::rascalMCES(*m1, *m2);
+      // RDKit's default timeout is 60 seconds; RDKit 2025.03 reads an
+      // emptied list when a search times out (rascal_options_from).
+      Rascal::RascalOptions opts;
+      opts.timeout = -1;
+      auto results = Rascal::rascalMCES(*m1, *m2, opts);
       if (results.empty() || results.front().getBondMatches().empty()) {
         continue;
       }
@@ -573,7 +577,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
     for (const auto &smarts : classes) {
       // Each class is parsed as CXSMARTS (file_checks.h).
-      check_cx_smiles(smarts);
+      check_smiles_cx(smarts);
       if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
         throw RDKit::SmilesParse::SmilesParseException(
             "could not parse the equivalentAtoms SMARTS '" + smarts + "'");

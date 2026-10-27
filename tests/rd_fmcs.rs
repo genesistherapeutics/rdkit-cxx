@@ -116,6 +116,16 @@ fn finds_the_mcs() {
         )
     );
 
+    // RDKit 2025.03 dereferences the null query molecule StoreAll leaves
+    // when Verbose is set too (Python crashes; rdkit/rdkit#9040).
+    let both = with(|p| {
+        p.verbose = true;
+        p.store_all = true;
+    });
+    assert!(matches!(
+        find_mcs_with_params(&mols(&["CCOC", "CNCC"]), &both),
+        Err(rdkit_cxx::Error::Value { .. })
+    ));
     // StoreAll keeps both MCSs of the largest size, and no single one.
     let result = mcs(&pair, &with(|p| p.store_all = true));
     assert_eq!(summary(&result), (8, 8, "", false));

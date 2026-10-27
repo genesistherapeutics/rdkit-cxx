@@ -19,8 +19,13 @@ namespace rdkit_cxx {
 
 // As sanitizeMol in Code/GraphMol/Wrap/MolOps.cpp: with catch_errors, a
 // failure returns the operation that failed instead of throwing.
+// RDKit 2025.03's kekulization shifts past an unsigned int's width for a
+// ring system of many dummy atoms (check_kekulize_questions).
 std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
                            bool catch_errors) {
+  if (sanitize_ops & RDKit::MolOps::SANITIZE_KEKULIZE) {
+    check_kekulize_questions(mol);
+  }
   unsigned int operation_that_failed = 0;
   if (catch_errors) {
     try {
@@ -34,6 +39,7 @@ std::uint32_t sanitize_mol(RWMol &mol, std::uint32_t sanitize_ops,
 }
 
 void kekulize(RWMol &mol, bool clear_aromatic_flags) {
+  check_kekulize_questions(mol);
   RDKit::MolOps::Kekulize(mol, clear_aromatic_flags);
 }
 

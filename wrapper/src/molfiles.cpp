@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/molfiles.h"
 
+#include <algorithm>
 #include <climits>
 #include <cmath>
 #include <map>
@@ -62,6 +63,15 @@ std::map<std::string, std::string> replacements(
     result[std::string(keys[i])] = std::string(values[i]);
   }
   return result;
+}
+
+std::size_t count_substrings(const std::string &text, const std::string &part) {
+  std::size_t count = 0;
+  for (auto pos = text.find(part); pos != std::string::npos;
+       pos = text.find(part, pos + 1)) {
+    ++count;
+  }
+  return count;
 }
 
 // Python returns None where these return null (E2).
@@ -403,7 +413,23 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
   std::string text(smiles);
   std::map<std::string, std::string> repl;
   auto params = smiles_parser_params(data, repl);
-  check_cx_smiles(text);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
+  // Sanitizing kekulizes, which RDKit 2025.03 cannot do safely for a ring
+  // system of 32 or more dummy atoms (check_kekulize_questions), so text
+  // that may hold that many ('*' or "#0" each, before any replacements) is
+  // parsed unsanitized and checked first.
+  if (params.sanitize &&
+      (!repl.empty() || std::count(text.begin(), text.end(), '*') +
+                                count_substrings(text, "#0") >=
+                            MAX_KEKULIZE_QUESTIONS)) {
+    auto probe = params;
+    probe.sanitize = false;
+    probe.removeHs = false;
+    std::unique_ptr<RDKit::RWMol> unsanitized(RDKit::SmilesToMol(text, probe));
+    if (unsanitized) {
+      check_kekulize_questions(*unsanitized);
+    }
+  }
   return parsed(RDKit::SmilesToMol(text, params), "SMILES", text);
 }
 
@@ -430,7 +456,7 @@ std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
   params.strictCXSMILES = data.strict_cxsmiles;
   params.mergeHs = data.merge_hs;
   params.replacements = &repl;
-  check_cx_smiles(text);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   return parsed(RDKit::SmartsToMol(text, params), "SMARTS", text);
 }
 
@@ -1087,6 +1113,7 @@ std::unique_ptr<RWMol> pdb_from_text(const std::string &text, bool sanitize,
         FP::MolFromPDBDataStream(in, pdb_params(false, false, flavor, false));
     if (probe) {
       check_pdb_coordinates(*probe);
+      check_proximity_hydrogens(*probe, kCtdIgnoreHHContacts, false);
     }
   }
   std::istringstream in(text);

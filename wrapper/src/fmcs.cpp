@@ -413,11 +413,20 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   if (params.Threshold < -1.0) {
     params.Threshold = -1.0;
   }
+  // RDKit 2025.03's MaximumCommonSubgraph::find matches every target
+  // against res.QueryMol when Verbose is set, but with StoreAll it never sets
+  // QueryMol, so that is a null dereference (Python crashes; rdkit/rdkit#9040,
+  // fixed in 2025.09.5).
+  if (params.Verbose && params.StoreAll) {
+    throw ValueErrorException(
+        "Verbose with StoreAll dereferences a null query molecule in RDKit "
+        "2025.03; set only one");
+  }
   // makeInitialSeeds dereferences SmartsToMol's result without a check, so
   // a seed that does not parse would be a null dereference (Python
   // crashes); it is parsed here first, the same way.
   if (!params.InitialSeed.empty()) {
-    check_cx_smiles(params.InitialSeed);
+    check_smiles_cx(params.InitialSeed);
     std::unique_ptr<RDKit::RWMol> seed(RDKit::SmartsToMol(params.InitialSeed));
     if (!seed) {
       throw RDKit::SmilesParse::SmilesParseException(

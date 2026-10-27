@@ -53,7 +53,7 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
   // SMARTS is dereferenced, and each match's first two atoms are read as
   // the bond to cut.
   std::string smarts(pattern);
-  check_cx_smiles(smarts);
+  check_smiles_cx(smarts);
   std::unique_ptr<RDKit::RWMol> query(RDKit::SmartsToMol(smarts));
   if (!query) {
     throw RDKit::SmilesParse::SmilesParseException(

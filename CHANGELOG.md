@@ -129,18 +129,60 @@ A program built against one release stops when it loads with another.
   - `DoubleCubicLatticeVolume` refuses a nonzero dot density, whose dot
     counts RDKit 2025.03 leaves uninitialized, monomer info other than PDB
     residue info, which it casts to that, and probe radii and coordinates
-    beyond 1e6.
+    beyond 1e6, and, with `is_protein` and without the ligand, a molecule
+    with no atom of a standard residue, whose grid RDKit 2025.03 leaves
+    uninitialized.
   - Parsers refuse what RDKit 2025.03 misreads: Mol2 bonds naming atom 0
     or an atom past the end; V3000 SGroup lines it would read unset values
     from or pop an empty SAP id from, and `BEGIN SGROUP` with no SGroups in
     COUNTS (checked streams hand RDKit no part of a refused line); CXSMILES
-    `atomProp:` lists with no `|` or `,` after them; stereo groups that list
+    `atomProp:` lists that run to the end of the text (#9361), and, without
+    `strict_cxsmiles`, data and polymer substance groups whose fields do;
+    stereo groups that list
     an atom or bond twice (from Rust, pickles, CXSMILES, V3000, Marvin, and
     JSON), which RDKit uses after freeing; any MolInterchange JSON value
     RDKit 2025.03's RapidJSON reader takes without a type check (a Parse
-    error); and in CDXML reactions, a fragment's bond ordering longer than
+    error), and a ranged `AtomRingSize` query, which it casts to an
+    equality query (#9172); and in CDXML reactions, a fragment's bond ordering longer than
     its connection points, binary CDX passed as text, and XML entity
     declarations.
+  - The CXSMILES checks run wherever RDKit parses SMILES, SMARTS, or
+    reactions a caller hands it: the parsers (with their own
+    `allow_cxsmiles` and `strict_cxsmiles`), deprotections, normalizer data
+    and files, `CleanupParameters`' normalization, fragment, acid-base, and
+    tautomer data and its normalization file, query definition files and
+    text, tautomer scoring terms, SMILES holders, scaffold network bond
+    breakers, and RASCAL's equivalent atoms. Files RDKit would open are read
+    once by the wrapper, so RDKit never reads one that changed after the
+    check; as in Python, only the calls that normalize read a
+    `CleanupParameters`' normalization file, and one that holds no
+    transformations is refused there (`Error::Value`), since RDKit would
+    open it again. Mol2 text without a BOND header, whose bond lines RDKit
+    2025.03 reads from the start of the text, is checked the same way.
+  - Proximity bonding (`determine_connectivity` and the PDB reader)
+    refuses a hydrogen it would bond to three or more atoms, for which
+    RDKit 2025.03 reads past the hydrogen's neighbor list (#9444).
+  - Calls that remove atoms or bonds (`molzip`, `replace_substructs`, and
+    the rest) refuse a molecule with an atom or bond in two ABS stereo
+    groups, which RDKit 2025.03's molecule combining makes and its removals
+    then leave dangling.
+  - Pickling (`Mol::to_binary`, which panics, and the cached holders, PNG
+    metadata, reactions, and catalogs) refuses a molecule, conformer, atom,
+    bond, or substance group of more than 65,535 properties, whose count
+    RDKit 2025.03 writes in two bytes. The fragment catalog checks only
+    what its fragments carry, so substance and stereo groups no longer
+    refuse a molecule there.
+  - `json_to_mols` gives an attachment point without `lvIdx` -1, which
+    RDKit 2025.03 leaves uninitialized.
+  - FMCS refuses `verbose` with `store_all`, for which RDKit 2025.03 matches
+    against a null query molecule (#9040).
+  - `mol_hash`'s `ExtendedMurcko` refuses more than 4,000 atoms, for which
+    RDKit 2025.03 allocates its arrays on the stack.
+  - `mol_from_smiles`, `sanitize_mol`, `kekulize`, and
+    `kekulize_if_possible` refuse 32 or more dummy atoms in one aromatic
+    ring system, and `assign_cip_labels` more than 64 stereo atoms and
+    bonds, which RDKit 2025.03 counts with shifts past the width of their
+    masks (README, Known limitations).
   - `mol_to_cml_block` and `mol_to_cml_file` refuse a tetrahedral atom with
     fewer than four neighbors, whose missing neighbor RDKit 2025.03 reads
     (add hydrogens first), and drawing refuses atom labels whose last drawn

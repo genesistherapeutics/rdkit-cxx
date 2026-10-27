@@ -94,3 +94,15 @@ fn tautomer_hashes() {
         "C[C]([O])[CH][CH][N]_2_0"
     );
 }
+
+// RDKit 2025.03 takes alloca(numAtoms) bytes of stack for the ExtendedMurcko
+// hash, which the wrapper keeps within a page.
+#[test]
+fn extended_murcko_atom_cap() {
+    let chain = |n: usize| mol_from_smiles(&"C".repeat(n)).unwrap();
+    assert!(mol_hash(&chain(4000), HashFunction::ExtendedMurcko).is_ok());
+    assert!(matches!(
+        mol_hash(&chain(4001), HashFunction::ExtendedMurcko),
+        Err(rdkit_cxx::Error::Value { .. })
+    ));
+}

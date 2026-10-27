@@ -245,3 +245,29 @@ fn added_rings_are_cycles() {
         4
     );
 }
+
+// A ring of one carbon and `dummies` aromatic dummy atoms.
+fn dummy_ring(dummies: usize) -> String {
+    format!("c1{}:1", ":*".repeat(dummies))
+}
+
+#[test]
+fn kekulizing_refuses_32_question_atoms() {
+    // RDKit 2025.03 enumerates the dummies' subsets in an unsigned int.
+    fn value<T>(r: rdkit_cxx::Result<T>) -> bool {
+        matches!(r, Err(Error::Value { .. }))
+    }
+    assert!(value(mol_from_smiles(&dummy_ring(32))));
+    assert!(value(mol_from_smiles(&dummy_ring(40))));
+    let mut mol = unsanitized(&dummy_ring(32));
+    assert!(value(sanitize_mol(&mut mol)));
+    let mut mol = unsanitized(&dummy_ring(32));
+    assert!(value(kekulize(&mut mol)));
+    let mut mol = unsanitized(&dummy_ring(32));
+    assert!(value(kekulize_if_possible(&mut mol)));
+
+    // Fewer dummies, or as many outside one ring system, are kekulized.
+    assert_eq!(smiles(&dummy_ring(30)).get_num_atoms(), 31);
+    smiles(&format!("{}.{}", dummy_ring(20), dummy_ring(20)));
+    smiles(&format!("c1ccccc1{}", "*".repeat(40)));
+}

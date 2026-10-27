@@ -13,6 +13,8 @@
 
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace rdkit_cxx {
 
@@ -47,14 +49,39 @@ void check_debug_parse(int debug_parse);
 // malformed XML, and checks every bond.
 void check_mrv(const std::string &text);
 
-// RDKit 2025.03's CXSMILES parser reads the list after an "atomProp:"
-// (parse_atom_props in CXSmilesOps.cpp) until a "|" or ",", and when the
-// extension ends first, it reads the byte after the end of its string. These
-// throw ValueErrorException if it would, for the extension RDKit splits
-// from a SMILES or SMARTS string (after its first space or tab, trimmed) or
-// from a reaction's (from its first "|", trimmed). RDKit's SMILES and TDT
-// suppliers parse no CXSMILES.
-void check_cx_smiles(std::string_view smiles);
-void check_cx_reaction(std::string_view text);
+// RDKit 2025.03's CXSMILES parser (CXSmilesOps.cpp) reads past the end of
+// an extension's text for an "atomProp:" list without a "|" or "," after
+// it, and, when strictCXSMILES is off, copies past it for a data or polymer
+// substance group whose fields run to the end; it also keeps a stereo group
+// that lists an atom twice (check_cx_stereo_groups). check_cx_extensions
+// throws ValueErrorException for the extension `cx` (from its "|") if RDKit
+// would. RDKit's SMILES and TDT suppliers parse no CXSMILES.
+void check_cx_extensions(std::string_view cx, bool strict);
+
+// The extension MolFromSmiles and MolFromSmarts parse (preprocessSmiles in
+// SmilesParse.cpp): after the text's first space or tab, trimmed, if it
+// starts with "|" and allowCXSMILES is set.
+void check_smiles_cx(std::string_view text, bool allow_cx = true,
+                     bool strict = true);
+
+// The extension the reaction SMARTS and SMILES parsers parse (parseReaction
+// in DaylightParser.cpp): from the text's first "|" after its start,
+// trimmed, parsed strictly.
+void check_reaction_cx(std::string_view text, bool allow_cx = true);
+
+// The reactions MolStandardize's transformation readers parse from text
+// (readTransformations in TransformCatalogUtils.cpp, which the Normalizer's
+// stream constructor uses): the second tab-separated field of each line, of
+// at most 511 characters, without spaces. (Its fragment, acid-base, and
+// tautomer readers erase the spaces from their SMARTS too, and a SMARTS
+// without spaces or tabs has no extension.)
+void check_transformation_lines(const std::string &text);
+
+// The (name, reaction SMARTS) pairs readTransformations would read from
+// `text`, for RDKit's data constructors. A line with a name and no reaction,
+// whose second field RDKit reads from a finished tokenizer, is refused
+// (ValueErrorException).
+std::vector<std::pair<std::string, std::string>> transformation_data(
+    const std::string &text);
 
 }  // namespace rdkit_cxx

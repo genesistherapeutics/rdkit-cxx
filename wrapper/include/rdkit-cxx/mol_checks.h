@@ -110,20 +110,22 @@ void check_stereo_group_members(const std::vector<RDKit::Atom *> &atoms,
 // the sizes of their atom and bond lists, and the bonds both name. A
 // truncated size leaves MolPickler's reader taking the rest of the list for
 // the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
-// writes a pickle it cannot read. Throws ValueErrorException for any of
+// writes a pickle it cannot read. So does a molecule, conformer, atom, bond,
+// or substance group with more than 65535 properties, whose count MolPickler
+// writes in a std::uint16_t. Throws ValueErrorException for any of
 // these, in the molecule or in the molecules of its recursive queries, which
 // RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
 // inside another format, calls it on the molecules it pickles.
 void check_picklable(const RDKit::ROMol &mol);
 
-// As check_picklable, for every molecule RDKit may make of some of mol's atoms
-// and at most max_part_bonds of its bonds, keeping the substance groups and
-// stereo groups within them and the atoms' and bonds' queries
-// (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
-// them, and, for parts of more than 256 bonds, whose bonds may be numbered
-// past 255, no group that names a bond. For the fragment catalog, whose
-// fragments no wrapper can reach.
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+// As check_picklable, for every molecule RDKit 2025.03's pathToSubmol may
+// make of some of mol's atoms and bonds: copies of them alone, with their
+// queries and properties, and no substance or stereo groups, conformers or
+// properties of its own. So only the atoms' and bonds' property counts, the
+// queries' numbers of children, and the recursive queries' molecules (whole)
+// are checked. For the fragment catalog, whose fragments no wrapper can
+// reach.
+void check_picklable_parts(const RDKit::ROMol &mol);
 
 // check_picklable for each template of a reaction, which ReactionPickler
 // pickles as molecules.
@@ -158,8 +160,10 @@ constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
-// bonds from it (or a copy): check_bond_end_points and
-// check_substance_group_parents.
+// bonds from it (or a copy): check_bond_end_points,
+// check_substance_group_parents, and that no stereo group repeats an atom or
+// bond and no two ABS groups share one (which RDKit merges into a group that
+// repeats it when it combines molecules).
 void check_removals(const RDKit::ROMol &mol);
 
 // As check_removals, for an RDKit call that combines the molecules
@@ -220,5 +224,37 @@ class StereoGroupBondGuard {
   // Each group's bond indices; empty when no group held a bond.
   std::vector<std::vector<unsigned>> d_bonds;
 };
+
+// RDKit 2025.03's Kekulize (Kekulize.cpp), when it cannot kekulize a fused
+// ring system, retries with each subset of the system's "question" atoms
+// (markDbondCands: dummy atoms of its rings that may take a double bond),
+// enumerated by QuestionEnumerator with `0x1u << d_questions.size()`, which
+// is undefined for 32 or more (2026.03 uses a dynamic_bitset). A fused
+// system is the rings (with at least one non-dummy atom) that share bonds,
+// so its atoms are joined by ring bonds; this counts, in each set of atoms
+// joined by ring bonds (bonds that are not bridges) and holding a non-dummy
+// atom, the dummy atoms, and throws ValueErrorException when one holds
+// MAX_KEKULIZE_QUESTIONS or more, in a molecule with an aromatic atom or
+// bond (Kekulize does nothing without one). For every wrapper that
+// sanitizes (with SANITIZE_KEKULIZE) or kekulizes.
+constexpr unsigned MAX_KEKULIZE_QUESTIONS = 32;
+void check_kekulize_questions(const RDKit::ROMol &mol);
+
+// RDKit 2025.03's proximity bonding (ConnectTheDots_Large in
+// ProximityBonds.cpp, unchanged in 2025.09), for a hydrogen it leaves bonded to
+// several atoms, removes all but the closest bond while it iterates over the
+// hydrogen's neighbors, so the iteration reads past the end of the shrunken
+// neighbor list once a hydrogen has three or more (RDKit 2026.03 batches the
+// removals). This throws ValueErrorException for a molecule with a hydrogen
+// that could have three: its bonds (none when `bonds_removed`, as
+// determineConnectivity removes them first) and every atom RDKit's bonding
+// test, with `flags`, would bond to it, less the one bond to a hydrogen that
+// ctdQUICKREMOVE_H_H_CONTACTS removes.
+void check_proximity_hydrogens(const RDKit::ROMol &mol, unsigned flags,
+                               bool bonds_removed);
+// ConnectTheDots' flags, from ProximityBonds.h, which conda-forge's
+// librdkit-dev does not install.
+constexpr unsigned kCtdIgnoreHHContacts = 0x1;
+constexpr unsigned kCtdQuickRemoveHHContacts = 0x2;
 
 }  // namespace rdkit_cxx

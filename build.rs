@@ -180,8 +180,8 @@ fn rdkit_prefix() -> PathBuf {
             // backtrace.
             eprintln!(
                 "rdkit-cxx: no RDKit install found. Activate a conda environment with \
-                 librdkit-dev, libboost-devel, cxx-compiler, and cmake, or set \
-                 RDKIT_PREFIX to an RDKit install prefix."
+                 librdkit-dev, libboost-devel, eigen, cxx-compiler, and cmake, or \
+                 set RDKIT_PREFIX to an RDKit install prefix."
             );
             std::process::exit(1);
         }

@@ -56,6 +56,24 @@ bool uses_tautomers(StandardizeOp op) {
          op == StandardizeOp::SuperParent;
 }
 
+// Whether the op normalizes (normalizerFromParams), directly or through
+// cleanupInPlace, as MolStandardize.cpp's functions do; only those read the
+// normalization file, as in Python.
+bool normalizes(StandardizeOp op, bool skip_standardize) {
+  switch (op) {
+    case StandardizeOp::Reionize:
+    case StandardizeOp::RemoveFragments:
+    case StandardizeOp::CanonicalTautomer:
+      return false;
+    case StandardizeOp::FragmentParent:
+    case StandardizeOp::StereoParent:
+    case StandardizeOp::IsotopeParent:
+      return !skip_standardize;
+    default:
+      return true;
+  }
+}
+
 // Whether the op reionizes or uncharges the molecule, which sums its charges.
 bool sums_charges(StandardizeOp op, bool skip_standardize) {
   switch (op) {
@@ -117,6 +135,9 @@ class Standardizer {
       : d_op(op),
         d_params(to_cleanup_parameters(data)),
         d_skip(skip_standardize) {
+    if (normalizes(op, skip_standardize)) {
+      read_normalizations(d_params);
+    }
     switch (op) {
       case StandardizeOp::Normalize:
         d_normalizer.reset(MS::normalizerFromParams(d_params));
@@ -292,7 +313,8 @@ std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol) {
   return result;
 }
 
-CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
+CleanupParameters to_cleanup_parameters(const CleanupParametersData &data,
+                                        bool for_use) {
   CleanupParameters params;
   params.rdbase = text(data.rdbase);
   params.normalizations = path(data.normalizations);
@@ -326,7 +348,46 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
     params.tautomerTransformData.emplace_back(text(e.name), text(e.first),
                                               text(e.second), text(e.third));
   }
+  if (!for_use) {
+    return params;
+  }
+  // RDKit parses these as they are: the normalizations as reactions, the
+  // other SMARTS as molecules, with their CXSMILES extensions
+  // (file_checks.h). (The fragment, acid-base, and tautomer files erase
+  // spaces from their SMARTS, so they carry no extension.)
+  for (const auto &e : params.normalizationData) {
+    check_reaction_cx(e.second);
+  }
+  for (const auto &e : params.fragmentData) {
+    check_smiles_cx(e.second);
+  }
+  for (const auto &e : params.acidbaseData) {
+    check_smiles_cx(std::get<1>(e));
+    check_smiles_cx(std::get<2>(e));
+  }
+  for (const auto &e : params.tautomerTransformData) {
+    check_smiles_cx(std::get<1>(e));
+  }
   return params;
+}
+
+// Without normalization data, normalizerFromParams (Normalize.h) reads the
+// normalization file itself, whose reactions this could not check. The file
+// is read once here and given to RDKit as data, the transformations its
+// reader would make of it (transformation_data). A file of no
+// transformations is refused: RDKit takes empty data to mean the file, and
+// would open it again unchecked.
+void read_normalizations(CleanupParameters &params) {
+  if (params.normalizationData.empty() && !params.normalizations.empty()) {
+    auto file = read_file(params.normalizations);
+    check_transformation_lines(file);
+    params.normalizationData = transformation_data(file);
+    if (params.normalizationData.empty()) {
+      throw ValueErrorException("the normalizations file " +
+                                params.normalizations +
+                                " holds no transformations");
+    }
+  }
 }
 
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params) {
@@ -445,7 +506,7 @@ CleanupParametersData cleanup_parameters_default() {
 
 CleanupParametersData update_params_from_json(const CleanupParametersData &data,
                                               rust::Str json) {
-  auto params = to_cleanup_parameters(data);
+  auto params = to_cleanup_parameters(data, false);
   MS::updateCleanupParamsFromJSON(params, std::string(json));
   return from_cleanup_parameters(params);
 }
@@ -498,7 +559,7 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
 std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   std::string input(smiles);
-  check_cx_smiles(input);
+  check_smiles_cx(input);
   std::unique_ptr<RWMol> mol{RDKit::SmilesToMol(input, 0, false)};
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +

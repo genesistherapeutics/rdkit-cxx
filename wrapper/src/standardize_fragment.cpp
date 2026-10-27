@@ -11,6 +11,7 @@
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -44,8 +45,16 @@ std::unique_ptr<FragmentRemover> fragment_remover_default() {
 std::unique_ptr<FragmentRemover> fragment_remover_new(
     rust::Slice<const std::uint8_t> fragment_filename, bool leave_last,
     bool skip_if_all_match) {
-  return std::make_unique<FragmentRemover>(to_path(fragment_filename),
-                                           leave_last, skip_if_all_match);
+  // Read once, as every parameter file is: RDKit reads the text from a
+  // stream, as FragmentRemover's file constructor would read the file.
+  auto path = to_path(fragment_filename);
+  if (path.empty()) {
+    // RDKit's default fragments, read from no file.
+    return std::make_unique<FragmentRemover>(path, leave_last,
+                                             skip_if_all_match);
+  }
+  std::istringstream in(read_file(path));
+  return std::make_unique<FragmentRemover>(in, leave_last, skip_if_all_match);
 }
 
 std::unique_ptr<FragmentRemover> fragment_remover_from_data(

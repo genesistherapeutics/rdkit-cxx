@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_normalize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -55,25 +56,37 @@ std::unique_ptr<Normalizer> normalizer_default() {
   return std::make_unique<Normalizer>();
 }
 
+// The file is read once and checked as its reactions are parsed
+// (check_transformation_lines); RDKit reads that text from a stream, as
+// Normalizer's file constructor would read the file.
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
-  return std::make_unique<Normalizer>(to_path(normalize_filename),
-                                      max_restarts);
+  auto path = to_path(normalize_filename);
+  if (path.empty()) {
+    // RDKit's default transformations, read from no file.
+    return std::make_unique<Normalizer>(path, max_restarts);
+  }
+  auto text = read_file(path);
+  check_transformation_lines(text);
+  std::istringstream in(std::move(text));
+  return std::make_unique<Normalizer>(in, max_restarts);
 }
 
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
+  check_transformation_lines(std::string(param_data));
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Normalizer>(
-      in, to_cleanup_parameters(params).maxRestarts);
+      in, to_cleanup_parameters(params, false).maxRestarts);
 }
 
 std::unique_ptr<Normalizer> normalizer_from_params(
     const CleanupParametersData &params) {
-  return std::unique_ptr<Normalizer>(
-      MS::normalizerFromParams(to_cleanup_parameters(params)));
+  auto data = to_cleanup_parameters(params);
+  read_normalizations(data);
+  return std::unique_ptr<Normalizer>(MS::normalizerFromParams(data));
 }
 
 // Normalizing runs reactions, and disconnecting metals matches patterns
