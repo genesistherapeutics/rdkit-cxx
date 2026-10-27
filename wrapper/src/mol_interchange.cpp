@@ -392,8 +392,15 @@ class DocumentChecker {
             id && typ->second != RDKit::StereoGroupType::STEREO_ABSOLUTE) {
           uint_of(*id, "a stereo group's id");
         }
+        // RDKit 2024.09 keeps an atom listed twice, which dangles once the
+        // atom is removed (check_stereo_group_members in mol_checks.cpp).
+        std::set<unsigned> seen;
         for (const auto &atom : array_of(*ids, "a stereo group's atoms")) {
-          uint_of(atom, "a stereo group's atom");
+          if (!seen.insert(uint_of(atom, "a stereo group's atom")).second) {
+            refuse(
+                "gives a stereo group an atom twice, which RDKit 2024.09 "
+                "keeps, leaving it to dangle once removed");
+          }
         }
       }
     }

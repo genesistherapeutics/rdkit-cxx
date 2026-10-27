@@ -15,6 +15,7 @@
 #include <sstream>
 #include <utility>
 
+#include <GraphMol/FileParsers/FileParserUtils.h>
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
 #include <boost/algorithm/string.hpp>
@@ -299,6 +300,99 @@ std::string check_sgroup_line(const std::string &line,
   return sgroup_labels(d, type, limits, ignored, &parsed);
 }
 
+// RDKit 2024.09's parseEnhancedStereo (MolFileParser.cpp) matches each
+// line of a collection block, upper-cased, with
+//   MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *
+// which this matches by hand, without std::regex, whose lazily built tables
+// DRD (the races job) cannot see ordered between threads.
+bool match_stereo_collection(const std::string &line, std::string &type,
+                             std::string &count, std::string &atoms) {
+  auto digit = [](char c) { return c >= '0' && c <= '9'; };
+  if (line.compare(0, kStereoGroupPrefix, kStereoGroup) != 0 ||
+      line.size() < kStereoGroupPrefix + 3) {
+    return false;
+  }
+  std::size_t pos = kStereoGroupPrefix;
+  type = line.substr(pos, 3);
+  pos += 3;
+  while (pos < line.size() && digit(line[pos])) {
+    ++pos;
+  }
+  const auto spaces = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  static constexpr std::string_view atoms_tag = "ATOMS=(";
+  if (pos == spaces || line.compare(pos, atoms_tag.size(), atoms_tag) != 0) {
+    return false;
+  }
+  pos += atoms_tag.size();
+  const auto count_start = pos;
+  while (pos < line.size() && digit(line[pos])) {
+    ++pos;
+  }
+  if (pos == count_start) {
+    return false;
+  }
+  count = line.substr(count_start, pos - count_start);
+  const auto count_end = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  if (pos == count_end) {
+    return false;
+  }
+  auto end = line.find_last_not_of(' ');
+  if (end == std::string::npos || end < pos || line[end] != ')') {
+    return false;
+  }
+  atoms = line.substr(pos, end - pos);
+  return true;
+}
+
+// The error RDKit 2024.09's reading of an enhanced-stereo collection line
+// would make, or an empty string. It reads the count's atom numbers with
+// unchecked extractions, so the first may be unset (still so in RDKit
+// 2026.09) and the rest repeat the last, and it keeps an atom listed twice,
+// which then dangles once removed (check_stereo_group_members in
+// mol_checks.cpp): say, when the reader removes the hydrogens.
+std::string stereo_collection_error(const std::string &line) {
+  std::string type;
+  std::string count_text;
+  std::string atoms;
+  if (!match_stereo_collection(line, type, count_text, atoms) ||
+      (type != "ABS" && type != "REL" && type != "RAC")) {
+    return {};
+  }
+  unsigned int count;
+  try {
+    count = RDKit::FileParserUtils::toUnsigned(count_text, true);
+  } catch (const std::exception &) {
+    return {};  // RDKit throws
+  }
+  std::stringstream stream(atoms);
+  std::set<unsigned int> seen;
+  unsigned int index = 0;
+  bool written = false;
+  for (unsigned int i = 0; i < count; ++i) {
+    if (sgroup_readable(stream)) {
+      stream >> index;
+      written = true;
+    } else if (!written) {
+      return "a V3000 enhanced-stereo collection has fewer atoms than its "
+             "count, so RDKit 2024.09 would read an atom number no extraction "
+             "wrote";
+    }
+    if (!seen.insert(index).second) {
+      return "a V3000 enhanced-stereo collection lists an atom twice (or "
+             "fewer atoms than its count, which RDKit 2024.09 reads as the "
+             "last repeated); RDKit keeps the duplicate, which dangles once "
+             "the atom is removed";
+    }
+  }
+  return {};
+}
+
 }  // namespace
 
 bool InputScanner::fail(std::string why) {
@@ -337,7 +431,17 @@ bool InputScanner::within_sgroup_line(std::uint64_t pos) const {
 // ParseV3000CTAB and ParseV3000SGroupsBlock read them.
 void InputScanner::end_logical_line() {
   std::string upper = boost::to_upper_copy(d_line);
-  if (d_groups_left > 0) {
+  if (d_collection) {
+    if (upper.compare(0, 3, "END") == 0) {
+      d_collection = false;
+    } else if (auto error = stereo_collection_error(upper); !error.empty()) {
+      fail_line(error);
+    }
+  } else if (d_line.size() > 15 && d_line.compare(0, 5, "BEGIN") == 0 &&
+             d_line.compare(6, 10, "COLLECTION") == 0) {
+    // As ParseV3000CTAB, after the counted blocks.
+    d_collection = true;
+  } else if (d_groups_left > 0) {
     if (d_block_start && d_line.compare(0, 7, "DEFAULT") == 0 &&
         d_line.size() > 8) {
       d_defaults = boost::trim_right_copy(d_line.substr(7));
@@ -526,6 +630,7 @@ void InputScanner::end_line() {
       d_sgroups = 0;
       d_groups_left = 0;
       d_block_start = false;
+      d_collection = false;
     }
     d_logical = 0;
     d_prefix.clear();

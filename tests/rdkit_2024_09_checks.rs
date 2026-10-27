@@ -241,3 +241,56 @@ fn dropping_a_multithreaded_supplier_mid_read_is_safe() {
         drop(suppl);
     }
 }
+
+#[test]
+fn stereo_groups_listing_an_atom_twice_are_refused() {
+    // RDKit 2024.09 keeps the duplicate, which dangles once the atom is
+    // removed: removing hydrogens, Python crashes on the second.
+    for text in [
+        "C[C@H](F)Cl |&1:1,1|",
+        "[H][C@](C)(F)Cl |&1:0,0,1|",
+        "C[C@H](F)C[C@H](F)Cl |o1:1,o1:4,o1:1|",
+        "C[C@H](F)Cl |a:1,a:1|",
+    ] {
+        assert!(is_value(mol_from_smiles(text)), "{text}");
+    }
+    for text in ["C[C@H](F)Cl |&1:1,&2:1|", "C[C@H](F)Cl |a:1,o1:1|"] {
+        assert!(mol_from_smiles(text).is_ok(), "{text}");
+    }
+
+    let block = mol_to_v3k_mol_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    assert!(mol_from_mol_block(&block).is_ok());
+    // A list shorter than its count repeats its last atom, or reads one
+    // unset (still so in RDKit 2026.09).
+    for atoms in ["(2 2 2)", "(2 2)", "(1 )", "(2 )"] {
+        let bad = block.replace("ATOMS=(1 2)", &format!("ATOMS={atoms}"));
+        assert_ne!(bad, block);
+        assert!(is_value(mol_from_mol_block(&bad)), "{atoms}");
+    }
+    let two = mol_to_v3k_mol_block(&smiles("C[C@H](F)[C@H](F)Cl |&1:1,3|")).unwrap();
+    assert!(two.contains("ATOMS=(2 2 4)"), "{two}");
+    assert!(mol_from_mol_block(&two).is_ok());
+    let repeated = two.replace("ATOMS=(2 2 4)", "ATOMS=(3 2 2 4)");
+    assert!(is_value(mol_from_mol_block(&repeated)));
+    // Only a collection block's lines are read as stereo groups.
+    let elsewhere = block.replace(
+        "M  V30 END CTAB",
+        "M  V30 BEGIN OBJ3D\nM  V30 MDLV30/STERAC1 ATOMS=(1 )\nM  V30 END OBJ3D\nM  V30 END CTAB",
+    );
+    assert_ne!(elsewhere, block);
+    assert!(mol_from_mol_block(&elsewhere).is_ok());
+
+    let mrv = mol_to_mrv_block(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    let twice = mrv.replace(
+        "</atomArray>",
+        "<atom id=\"a2\" elementType=\"Br\" x2=\"3\" y2=\"3\" mrvStereoGroup=\"and1\"/></atomArray>",
+    );
+    assert_ne!(twice, mrv);
+    assert!(is_parse(mol_from_mrv_block(&twice)));
+
+    let json = mol_to_json(&smiles("C[C@H](F)Cl |&1:1|")).unwrap();
+    let doubled = json.replace("\"atoms\":[1]", "\"atoms\":[1,1]");
+    assert_ne!(doubled, json);
+    assert!(is_value(json_to_mols(&doubled)));
+    assert_eq!(json_to_mols(&json).unwrap().len(), 1);
+}

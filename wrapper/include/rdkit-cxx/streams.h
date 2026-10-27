@@ -114,6 +114,9 @@ class InputScanner {
   bool d_first_group = false;
   std::string d_defaults;
   std::uint64_t d_groups_left = 0;
+  // Whether the lines are a collection block's, which RDKit reads for
+  // enhanced stereo (parseEnhancedStereo).
+  bool d_collection = false;
   // The lines RDKit reads as groups', from their first byte to their last
   // newline (UINT64_MAX while open).
   std::vector<std::pair<std::uint64_t, std::uint64_t>> d_sgroup_lines;

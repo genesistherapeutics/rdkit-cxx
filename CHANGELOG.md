@@ -96,8 +96,13 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     that has an atom or bond in two ABS groups, which 2024.09's
     `insertMol` (molzip, `replace_substructs`) merges into one group that
     repeats it, and
-    the pickle readers and `set_stereo_groups` refuse groups that list an
-    atom or bond twice.
+    the pickle readers, `set_stereo_groups`, and the CXSMILES, V3000,
+    Marvin, and JSON readers refuse groups that list an atom or bond twice
+    (the Marvin reader, two atoms with one id), since RDKit's readers
+    remove hydrogens before any later check could run.
+  - The V3000 reader refuses an enhanced-stereo collection with fewer atoms
+    than its count, for which RDKit 2024.09 reads an atom number no
+    extraction wrote (still so in 2026.09).
   - `fragment_on_bonds` refuses a repeated bond (#9430);
     `fragment_on_some_bonds` makes no fragments for more bonds than it is
     given (#9451).
