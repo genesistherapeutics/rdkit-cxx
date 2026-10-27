@@ -71,7 +71,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string(&smiles("CO"), PNG).unwrap();
     assert_eq!(
         keys(&png),
-        ["rdkitPKL rdkit 2026.03.6", "SMILES rdkit 2026.03.6"]
+        ["rdkitPKL rdkit 2025.09.6", "SMILES rdkit 2025.09.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -101,7 +101,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string_with_params(&smiles("CO"), PNG, &mol_block).unwrap();
     assert_eq!(
         keys(&png),
-        ["SMILES rdkit 2026.03.6", "MOL rdkit 2026.03.6"]
+        ["SMILES rdkit 2025.09.6", "MOL rdkit 2025.09.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -262,22 +262,23 @@ fn depiction_refuses_what_the_depictor_would_mishandle() {
 
 #[test]
 fn pickles_cannot_give_plain_info_the_pdb_type() {
-    // A pickle recorded in the metadata goes through the monomer-type checks
-    // that molecule pickles do (U10): RDKit casts any info of type PDBRESIDUE
-    // to AtomPDBResidueInfo, reading past the end of a plain one.
+    // A pickle recorded in the metadata is read as molecule pickles are:
+    // RDKit 2025.09 writes a monomer info's type in 32 bits, reads PDBRESIDUE as
+    // AtomPDBResidueInfo (whose fields then follow), and refuses a type its enum
+    // lacks; a type of 3 is an error.
     let mut mol = smiles("C");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
     );
     let mut pkl = mol.to_binary();
-    // The info's name (a u32 length, then its bytes), then its type as a byte.
+    // The info's name (a u32 length, then its bytes), then its type, in 32
+    // bits low byte first.
     let at = pkl
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap()
         + 8;
     let chunk = |pkl: &[u8]| {
@@ -294,16 +295,11 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
         .get_monomer_info()
         .unwrap();
     assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
-    pkl[at] = 1;
+    pkl[at] = 3;
     let png = chunk(&pkl);
-    assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
-        unsafe { mol_from_png_string(&png) },
-        Err(Error::Value { .. })
-    ));
-    assert!(matches!(
-        // SAFETY: as above.
-        unsafe { mols_from_png_string(&png) },
-        Err(Error::Value { .. })
-    ));
+    // SAFETY: a pickle RDKit wrote but for a monomer type, which RDKit 2025.09
+    // refuses.
+    assert!(unsafe { mol_from_png_string(&png) }.is_err());
+    // SAFETY: as above.
+    assert!(unsafe { mols_from_png_string(&png) }.is_err());
 }

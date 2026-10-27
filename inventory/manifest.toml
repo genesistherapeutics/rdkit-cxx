@@ -12239,7 +12239,6 @@ rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_bonds", "rdkit_cxx::chem::rdchem:
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetBoolProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_bool_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_bool_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_bool_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetChiralTag"
@@ -12252,7 +12251,6 @@ rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_degree", "rdkit_cxx::chem::rdchem
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_double_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_double_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_double_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetExplicitBitVectProp"
@@ -12281,7 +12279,6 @@ reason = "deprecated in RDKit: use get_valence(ValenceType::Implicit)"
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_int_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_int_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_int_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetIsAromatic"
@@ -12330,7 +12327,6 @@ rust = ["rdkit_cxx::chem::rdchem::Atom::get_pdb_residue_info", "rdkit_cxx::chem:
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_prop", "rdkit_cxx::chem::rdchem::Atom::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::AtomRef::get_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::AtomMut::get_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_prop_auto_convert"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetPropNames"
@@ -12367,7 +12363,6 @@ rust = ["rdkit_cxx::chem::rdchem::AtomRef::get_total_valence", "rdkit_cxx::chem:
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::Atom::get_unsigned_prop", "rdkit_cxx::chem::rdchem::AtomRef::get_unsigned_prop", "rdkit_cxx::chem::rdchem::AtomMut::get_unsigned_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Atom.GetValence"
@@ -12719,12 +12714,10 @@ rust = ["rdkit_cxx::chem::rdchem::Bond::get_bond_type_as_double", "rdkit_cxx::ch
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetBoolProp"
 rust = ["rdkit_cxx::chem::rdchem::Bond::get_bool_prop", "rdkit_cxx::chem::rdchem::BondRef::get_bool_prop", "rdkit_cxx::chem::rdchem::BondMut::get_bool_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::Bond::get_double_prop", "rdkit_cxx::chem::rdchem::BondRef::get_double_prop", "rdkit_cxx::chem::rdchem::BondMut::get_double_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetEndAtom"
@@ -12741,7 +12734,6 @@ rust = ["rdkit_cxx::chem::rdchem::Bond::get_idx", "rdkit_cxx::chem::rdchem::Bond
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::Bond::get_int_prop", "rdkit_cxx::chem::rdchem::BondRef::get_int_prop", "rdkit_cxx::chem::rdchem::BondMut::get_int_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetIsAromatic"
@@ -12766,7 +12758,6 @@ rust = ["rdkit_cxx::chem::rdchem::BondRef::get_owning_mol", "rdkit_cxx::chem::rd
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetProp"
 rust = ["rdkit_cxx::chem::rdchem::Bond::get_prop", "rdkit_cxx::chem::rdchem::Bond::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::BondRef::get_prop", "rdkit_cxx::chem::rdchem::BondRef::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::BondMut::get_prop", "rdkit_cxx::chem::rdchem::BondMut::get_prop_auto_convert"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetPropNames"
@@ -12791,7 +12782,6 @@ rust = ["rdkit_cxx::chem::rdchem::Bond::get_stereo_atoms", "rdkit_cxx::chem::rdc
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::Bond::get_unsigned_prop", "rdkit_cxx::chem::rdchem::BondRef::get_unsigned_prop", "rdkit_cxx::chem::rdchem::BondMut::get_unsigned_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Bond.GetValenceContrib"
@@ -13178,12 +13168,10 @@ rust = ["rdkit_cxx::chem::rdchem::Conformer::get_atom_position", "rdkit_cxx::che
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetBoolProp"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::get_bool_prop", "rdkit_cxx::chem::rdchem::ConformerRef::get_bool_prop", "rdkit_cxx::chem::rdchem::ConformerMut::get_bool_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::get_double_prop", "rdkit_cxx::chem::rdchem::ConformerRef::get_double_prop", "rdkit_cxx::chem::rdchem::ConformerMut::get_double_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetId"
@@ -13192,7 +13180,6 @@ rust = ["rdkit_cxx::chem::rdchem::Conformer::get_id", "rdkit_cxx::chem::rdchem::
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::get_int_prop", "rdkit_cxx::chem::rdchem::ConformerRef::get_int_prop", "rdkit_cxx::chem::rdchem::ConformerMut::get_int_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetNumAtoms"
@@ -13209,7 +13196,6 @@ rust = ["rdkit_cxx::chem::rdchem::Conformer::get_positions", "rdkit_cxx::chem::r
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetProp"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::get_prop", "rdkit_cxx::chem::rdchem::Conformer::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::ConformerRef::get_prop", "rdkit_cxx::chem::rdchem::ConformerRef::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::ConformerMut::get_prop", "rdkit_cxx::chem::rdchem::ConformerMut::get_prop_auto_convert"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetPropNames"
@@ -13222,7 +13208,6 @@ rust = ["rdkit_cxx::chem::rdchem::Conformer::get_props_as_dict", "rdkit_cxx::che
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.GetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::Conformer::get_unsigned_prop", "rdkit_cxx::chem::rdchem::ConformerRef::get_unsigned_prop", "rdkit_cxx::chem::rdchem::ConformerMut::get_unsigned_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Conformer.HasOwningMol"
@@ -13507,7 +13492,6 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_bonds"]
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetBoolProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_bool_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetConformer"
@@ -13520,12 +13504,10 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_conformers"]
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_double_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_int_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetNumAtoms"
@@ -13547,7 +13529,6 @@ rust = ["rdkit_cxx::chem::rdchem::Mol::get_num_heavy_atoms"]
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_prop", "rdkit_cxx::chem::rdchem::Mol::get_prop_auto_convert"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetPropNames"
@@ -13578,7 +13559,6 @@ overloads_note = "the params forms cover the keyword forms"
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.GetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::Mol::get_unsigned_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.Mol.HasProp"
@@ -14522,7 +14502,6 @@ rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_bonds", "rdkit_cxx::che
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetBoolProp"
 rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_bool_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_bool_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetBrackets"
@@ -14535,7 +14514,6 @@ rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_c_states", "rdkit_cxx::
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetDoubleProp"
 rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_double_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_double_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetIndexInMol"
@@ -14544,7 +14522,6 @@ rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_index_in_mol", "rdkit_c
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetIntProp"
 rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_int_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_int_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetOwningMol"
@@ -14557,7 +14534,6 @@ rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_parent_atoms", "rdkit_c
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetProp"
 rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_prop_auto_convert", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_prop_auto_convert"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetPropNames"
@@ -14574,7 +14550,6 @@ rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_string_vect_prop", "rdk
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetUnsignedProp"
 rust = ["rdkit_cxx::chem::rdchem::SubstanceGroupRef::get_unsigned_prop", "rdkit_cxx::chem::rdchem::SubstanceGroupMut::get_unsigned_prop"]
-overloads_note = "the default= overload is not bound: has_prop covers it (P1)"
 
 [[entry]]
 python = "rdkit.Chem.rdchem.SubstanceGroup.GetUnsignedVectProp"
@@ -20710,7 +20685,7 @@ rust = ["rdkit_cxx::ml::data::data_utils::init_random_numbers"]
 
 [[entry]]
 python = "rdkit.ML.Data.DataUtils.RandomizeActivities"
-rust = ["rdkit_cxx::ml::data::data_utils::randomize_activities", "rdkit_cxx::ml::data::data_utils::randomize_activities_with_shuffle"]
+rust = ["rdkit_cxx::ml::data::data_utils::randomize_activities_with_shuffle"]
 
 [[entry]]
 python = "rdkit.ML.Data.DataUtils.ReadGeneralExamples"

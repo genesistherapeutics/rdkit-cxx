@@ -425,20 +425,12 @@ fn randomize_activities_matches_python() {
     randomize_activities_with_shuffle(&mut d, true).unwrap();
     let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
     assert_eq!(last, [F(2.1), F(1.1), F(3.1), F(4.1), F(5.1)]);
+    // RDKit 2025.09.6's Python raises NameError without shuffle.
     let mut d = build_data_set(dat("randomize_activities_matches_python")).unwrap();
-    init_random_numbers((23, 42));
-    randomize_activities(&mut d).unwrap();
-    let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
-    assert_eq!(
-        last,
-        [
-            F(4.799461006503781),
-            F(4.894423111972708),
-            F(4.669733376194317),
-            F(1.4342027073227346),
-            F(3.4681089075429408)
-        ]
-    );
+    assert!(matches!(
+        randomize_activities_with_shuffle(&mut d, false),
+        Err(Error::Value { .. })
+    ));
 }
 
 #[test]

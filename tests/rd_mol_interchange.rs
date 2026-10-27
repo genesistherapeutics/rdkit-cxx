@@ -56,7 +56,7 @@ fn is_value(result: Result<Vec<Mol>, Error>) -> bool {
     matches!(result, Err(Error::Value { .. }))
 }
 
-const STYRENE: &str = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"atoms":[{"impHs":3},{"impHs":1},{"impHs":1},{},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1}],"bonds":[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"trans","stereoAtoms":[0,3]},{"atoms":[2,3]},{"bo":2,"atoms":[3,4]},{"atoms":[4,5]},{"bo":2,"atoms":[5,6]},{"atoms":[6,7]},{"bo":2,"atoms":[7,8]},{"atoms":[8,3]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6","aromaticAtoms":[3,4,5,6,7,8],"aromaticBonds":[3,4,5,6,7,8],"cipRanks":[0,1,4,6,5,3,2,3,5],"atomRings":[[3,8,7,6,5,4]]}]}]}"#;
+const STYRENE: &str = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"atoms":[{"impHs":3},{"impHs":1},{"impHs":1},{},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1}],"bonds":[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"trans","stereoAtoms":[0,3]},{"atoms":[2,3]},{"bo":2,"atoms":[3,4]},{"atoms":[4,5]},{"bo":2,"atoms":[5,6]},{"atoms":[6,7]},{"bo":2,"atoms":[7,8]},{"atoms":[8,3]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.09.6","aromaticAtoms":[3,4,5,6,7,8],"aromaticBonds":[3,4,5,6,7,8],"cipRanks":[0,1,4,6,5,3,2,3,5],"atomRings":[[3,8,7,6,5,4]]}]}]}"#;
 
 #[test]
 fn defaults_match_python() {
@@ -100,8 +100,8 @@ fn writes_json() {
     assert_eq!(
         mols_to_json(&two).unwrap(),
         doc(&[
-            r#"{"atoms":[{"impHs":4}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6"}]}"#.to_string(),
-            r#"{"atoms":[{"z":8,"impHs":2}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6"}]}"#.to_string(),
+            r#"{"atoms":[{"impHs":4}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.09.6"}]}"#.to_string(),
+            r#"{"atoms":[{"z":8,"impHs":2}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.09.6"}]}"#.to_string(),
         ])
     );
     assert_eq!(mols_to_json(&[]).unwrap(), doc(&[]));
@@ -176,12 +176,12 @@ fn parse_parameters() {
     assert_eq!(
         types,
         [
-            BondType::Single,
             BondType::Double,
             BondType::Single,
             BondType::Double,
             BondType::Single,
-            BondType::Double
+            BondType::Double,
+            BondType::Single
         ]
     );
     assert!(kekule.get_bonds().all(|b| b.get_is_aromatic()));
@@ -232,7 +232,7 @@ fn smiles_of(json: &str) -> Vec<String> {
 
 #[test]
 fn substance_groups() {
-    let json = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"name":"","atoms":[{"impHs":3},{"impHs":2},{"z":8,"impHs":1}],"bonds":[{"atoms":[0,1]},{"atoms":[1,2]}],"substanceGroups":[{"properties":{"TYPE":"SUP","index":1,"LABEL":"CO"},"atoms":[1,2],"bonds":[0],"brackets":[[[5E-1,0E0,0E0],[5E-1,1E0,0E0],[0E0,0E0,0E0]]],"cstates":[{"bond":0,"vector":[5E-1,0E0,0E0]}],"attachPoints":[{"aIdx":1,"lvIdx":0,"id":"1"}]}],"conformers":[{"dim":2,"coords":[[0E0,0E0],[1E0,0E0],[2E0,0E0]]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6"}]}]}"#;
+    let json = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"name":"","atoms":[{"impHs":3},{"impHs":2},{"z":8,"impHs":1}],"bonds":[{"atoms":[0,1]},{"atoms":[1,2]}],"substanceGroups":[{"properties":{"TYPE":"SUP","index":1,"LABEL":"CO"},"atoms":[1,2],"bonds":[0],"brackets":[[[5E-1,0E0,0E0],[5E-1,1E0,0E0],[0E0,0E0,0E0]]],"cstates":[{"bond":0,"vector":[5E-1,0E0,0E0]}],"attachPoints":[{"aIdx":1,"lvIdx":0,"id":"1"}]}],"conformers":[{"dim":2,"coords":[[0E0,0E0],[1E0,0E0],[2E0,0E0]]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.09.6"}]}]}"#;
     let mol = json_to_mols(json).unwrap().remove(0);
     let groups = get_mol_substance_groups(&mol);
     assert_eq!(groups.len(), 1);
@@ -272,7 +272,9 @@ fn queries_round_trip() {
         ("[+,-]", "[+,-]"),
         ("[2H]", "[#1&2*]"),
         ("[13C@@H](F)Cl", "F[C@@&13*&H1]Cl"),
-        ("[k5]", "[k5]"),
+        // 2026.03's [k5] (AtomRingSize) is not in RDKit 2025.09's SMARTS;
+        // [r5] (AtomMinRingSize) is the nearest primitive it has.
+        ("[r5]", "[r5]"),
         ("[R]@[R]", "[R]@[R]"),
         ("[z2]", "[z2]"),
         ("[Z1]", "[Z1]"),
@@ -502,6 +504,8 @@ fn queries_rdkit_does_not_make_are_refused() {
         r#"{"descr":"AtomNull","tag":33,"val":0}"#.to_string(),
         r#"{"descr":"less_AtomTotalDegree","tag":38,"lower":1,"upper":2}"#.to_string(),
         r#"{"descr":"range_AtomNull","tag":38,"lower":1,"upper":2}"#.to_string(),
+        // A ring-size range, which RDKit 2025.09 reads as an EqualityQuery.
+        r#"{"descr":"range_AtomRingSize","tag":38,"lower":5,"upper":6}"#.to_string(),
         r#"{"descr":"HasProp","tag":40}"#.to_string(),
         r#"{"descr":"Foo","tag":33,"val":1}"#.to_string(),
         // A recursive query without atoms, whose match reads its first.

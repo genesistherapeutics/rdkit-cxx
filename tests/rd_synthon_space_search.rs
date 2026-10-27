@@ -89,7 +89,7 @@ fn search_params_defaults() {
     assert_eq!(p.min_hit_heavy_atoms, 0);
     assert_eq!(p.max_hit_heavy_atoms, -1);
     assert_eq!(p.min_hit_mol_wt, 0.0);
-    assert_eq!(p.max_hit_mol_wt, -1.0);
+    assert_eq!(p.max_hit_mol_wt, 0.0);
     assert_eq!(p.min_hit_chiral_atoms, 0);
     assert_eq!(p.max_hit_chiral_atoms, -1);
     assert_eq!(p.time_out, 600);
@@ -156,12 +156,12 @@ fn substructure_search() {
     let page = space
         .substructure_search_with_params(&benzamide_query(), &params)
         .unwrap();
-    assert_eq!(result_names(&page), amides(&["1-1;2-1", "1-1;2-3"]));
+    assert_eq!(result_names(&page), amides(&["1-1;2-1", "1-1;2-2"]));
     params.params.hit_start = 2;
     let page = space
         .substructure_search_with_params(&benzamide_query(), &params)
         .unwrap();
-    assert_eq!(result_names(&page), amides(&["1-1;2-2", "1-3;2-1"]));
+    assert_eq!(result_names(&page), amides(&["1-1;2-3", "1-3;2-1"]));
 
     let mut params = SubstructureSearchParams::default();
     params.params.build_hits = false;
@@ -514,7 +514,6 @@ fn database_files() {
         &converted,
         &ConvertTextToDBFileParams {
             fp_gen: Some(&generator),
-            ..Default::default()
         },
     )
     .unwrap();

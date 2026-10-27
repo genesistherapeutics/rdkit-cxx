@@ -214,7 +214,6 @@ fn marked_pickle() -> (Vec<u8>, usize) {
     let mut mol = mol_from_smiles("C").unwrap();
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),

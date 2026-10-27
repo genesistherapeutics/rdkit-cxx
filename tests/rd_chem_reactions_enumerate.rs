@@ -420,15 +420,13 @@ fn libraries_and_strategies_move_between_threads() {
     assert_eq!(strategy.type_(), "EvenSamplePairsStrategy");
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo; a
-/// library's reaction and building blocks are molecule pickles, which RDKit
-/// writes with such a type for a plain info Python gave it (U10).
+/// A library's reaction and building blocks are molecule pickles: RDKit
+/// 2025.09 refuses a monomer type its enum lacks in them.
 #[test]
 fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
     let mut amine = smiles("CN");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     amine.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
@@ -439,17 +437,20 @@ fn loaded_libraries_cannot_give_plain_info_the_pdb_type() {
     let mut loaded = EnumerateLibrary::default();
     // SAFETY: the bytes came from serialize.
     unsafe { loaded.init_from_string(&bytes) }.unwrap();
-    // The info's name (a u32 length, then its bytes), then its type.
+    // The info's name (a u32 length, then its bytes), then its type, in 32
+    // bits low byte first.
     let at = bytes
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap()
         + 8;
     let mut changed = bytes.clone();
-    changed[at] = 1;
+    changed[at] = 3;
     let mut loaded = EnumerateLibrary::default();
-    // SAFETY: serialize's bytes with one byte changed inside a molecule
-    // pickle, as RDKit writes them for a molecule whose plain info has the
-    // PDB type; Boost's framing is serialize's.
-    assert!(is_value(unsafe { loaded.init_from_string(&changed) }));
+    // SAFETY: serialize's bytes with a monomer type changed inside a
+    // molecule pickle, which RDKit 2025.09 refuses; Boost's framing is
+    // serialize's.
+    assert!(Result::is_err(&unsafe {
+        loaded.init_from_string(&changed)
+    }));
 }

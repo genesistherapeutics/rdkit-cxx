@@ -143,7 +143,7 @@ fn presets() {
             r#""optimizerForceTol":"0.001","pruneRmsThresh":"-1","randNegEig":"true","#,
             r#""randomSeed":"-1","symmetrizeConjugatedTerminalGroupsForPruning":"true","#,
             r#""timeout":"0","trackFailures":"false","useBasicKnowledge":"true","#,
-            r#""useExpTorsionAnglePrefs":"true","useLegacyImplementation":"true","#,
+            r#""useExpTorsionAnglePrefs":"true","#,
             r#""useMacrocycle14config":"true","useMacrocycleTorsions":"true","#,
             r#""useRandomCoords":"false","useSmallRingTorsions":"false","#,
             r#""useSymmetryForPruning":"true","verbose":"false"}"#
@@ -232,7 +232,7 @@ fn embedding_updates_the_parameters() {
     );
     assert_eq!(params.max_iterations, 90);
     assert_eq!(params.basin_thresh, 1e8);
-    assert_eq!(params.get_failure_counts().len(), 15);
+    assert_eq!(params.get_failure_counts().len(), 12);
 
     // maxIterations comes from the first fragment.
     let mut mol = with_hs("CC.O");

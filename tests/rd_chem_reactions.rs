@@ -1265,7 +1265,6 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
@@ -1273,16 +1272,17 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
     rxn.add_agent_template(&methane);
     let pkl = rxn.to_binary();
-    // The info's name (a u32 length, then its bytes), then its type.
+    // The info's name (a u32 length, then its bytes), then its type, in 32
+    // bits low byte first.
     let name = pkl
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap();
     (rxn, pkl, name + 8)
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo,
-/// and a reaction pickle's templates are molecule pickles (U10).
+/// A reaction pickle's templates are molecule pickles: RDKit 2025.09 refuses
+/// a monomer type its enum lacks in them.
 #[test]
 fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
     let (_, pkl, at) = marked_reaction_pickle();
@@ -1291,15 +1291,12 @@ fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
     // SAFETY: as above.
     unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)) }.unwrap();
     let mut changed = pkl.clone();
-    changed[at] = 1;
-    assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
-        unsafe { ChemicalReaction::from_bin_str(&changed) },
-        Err(Error::Value { .. })
-    ));
-    assert!(matches!(
-        // SAFETY: as above.
-        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) },
-        Err(Error::Value { .. })
-    ));
+    changed[at] = 3;
+    // SAFETY: a pickle RDKit wrote but for a monomer type, which RDKit 2025.09
+    // refuses.
+    assert!(unsafe { ChemicalReaction::from_bin_str(&changed) }.is_err());
+    // SAFETY: as above.
+    assert!(
+        unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) }.is_err()
+    );
 }

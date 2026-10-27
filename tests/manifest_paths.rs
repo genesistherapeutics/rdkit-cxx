@@ -5801,7 +5801,6 @@ fn manifest_paths_exist() {
     use rdkit_cxx::ml::data::data_utils::filter_data_indices_only as _;
     use rdkit_cxx::ml::data::data_utils::filter_data_indices_only_with_params as _;
     use rdkit_cxx::ml::data::data_utils::init_random_numbers as _;
-    use rdkit_cxx::ml::data::data_utils::randomize_activities as _;
     use rdkit_cxx::ml::data::data_utils::randomize_activities_with_shuffle as _;
     use rdkit_cxx::ml::data::data_utils::read_general_examples as _;
     use rdkit_cxx::ml::data::data_utils::read_quant_examples as _;

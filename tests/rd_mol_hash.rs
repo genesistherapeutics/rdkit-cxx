@@ -82,28 +82,27 @@ fn cx_smiles() {
 }
 
 #[test]
-fn exclude_from_tautomerism() {
-    assert_eq!(
-        exclude_from_tautomerism_prop(),
-        "_MolHashExcludeFromTautomerism"
-    );
-    let mut mol = mol_from_smiles("CC(=O)C=CN").unwrap();
+fn het_atom_tautomer_hashes() {
+    // Python's values.
+    let mol = mol_from_smiles("CC(=O)C=CN").unwrap();
     assert_eq!(
         mol_hash(&mol, HashFunction::HetAtomTautomerv2).unwrap(),
         "[C]:[C](:[O]):[C]:[C]:[N]_7_0"
-    );
-    for idx in 0..mol.get_num_atoms() {
-        mol.get_atom_with_idx_mut(idx)
-            .unwrap()
-            .set_bool_prop(exclude_from_tautomerism_prop(), true);
-    }
-    // Python's values.
-    assert_eq!(
-        mol_hash(&mol, HashFunction::HetAtomTautomerv2).unwrap(),
-        "[CH3]-[C](=[O])-[CH]=[CH]-[NH2]_0_0"
     );
     assert_eq!(
         mol_hash(&mol, HashFunction::HetAtomTautomer).unwrap(),
         "C[C]([O])[CH][CH][N]_2_0"
     );
+}
+
+#[test]
+fn extended_murcko_atom_limit() {
+    // RDKit 2025.09 takes a byte per atom from the stack for this hash.
+    let mol = mol_from_smiles(&"C".repeat(4095)).unwrap();
+    assert_eq!(mol_hash(&mol, HashFunction::ExtendedMurcko).unwrap(), "");
+    let mol = mol_from_smiles(&"C".repeat(4096)).unwrap();
+    assert!(matches!(
+        mol_hash(&mol, HashFunction::ExtendedMurcko),
+        Err(rdkit_cxx::Error::Value { .. })
+    ));
 }

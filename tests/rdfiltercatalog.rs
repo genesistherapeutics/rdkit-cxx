@@ -733,13 +733,11 @@ fn loading_checks_matchers() {
     let cycle = unsafe { FilterCatalog::from_pickle(&hex(CYCLE_ARCHIVE)) };
     assert!(is_value(cycle));
 
-    // A pattern whose atom has plain monomer info of type PDBRESIDUE, which
-    // RDKit's pickler would read as PDB residue info (U10). Python's
-    // Serialize reads past the info.
+    // A pattern whose atom has monomer info of type 3, which AtomMonomerType
+    // lacks and RDKit 2025.09's pickler refuses.
     let mut pattern = mol_from_smarts("[#6]").unwrap();
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     pattern.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
@@ -749,15 +747,17 @@ fn loading_checks_matchers() {
     catalog.add_entry(&FilterCatalogEntry::new("marked", &matcher).unwrap());
     let mut archive = catalog.serialize().unwrap();
     let at = archive
-        .windows(9)
-        .position(|w| w == b"\x04\0\0\0MARK\x02")
+        .windows(12)
+        .position(|w| w == b"\x04\0\0\0MARK\x02\0\0\0")
         .unwrap();
     // SAFETY: bytes serialize wrote.
     assert!(unsafe { FilterCatalog::from_pickle(&archive) }.is_ok());
-    archive[at + 8] = 1;
+    archive[at + 8] = 3;
     // SAFETY: bytes serialize wrote, but for the type byte of a molecule
     // pickle inside, which RDKit's pickler reads as it reads any.
-    assert!(is_value(unsafe { FilterCatalog::from_pickle(&archive) }));
+    assert!(Result::is_err(&unsafe {
+        FilterCatalog::from_pickle(&archive)
+    }));
 }
 
 /// Matches molecules with oxygen by calling functions that match: a

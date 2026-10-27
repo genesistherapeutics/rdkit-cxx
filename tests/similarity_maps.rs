@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // The ported rdkit.Chem.Draw.SimilarityMaps against Python's in RDKit
-// 2026.03.6, whose SVGs it reproduces byte for byte (by SHA-1), after
+// 2025.09.6, whose SVGs it reproduces byte for byte (by SHA-1), after
 // UnitTestSimilarityMaps.py. Python's tests of the atom-pair, torsion, and
 // Morgan fingerprint functions, which are not ported, are ported with the
 // RDKit fingerprint and a Morgan generator.
@@ -174,7 +174,7 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.18541345659989728);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "1b1601ab2912b00eb0816da7cbd659b9424cdafe",
+        "6d197e25cf936baff107508d6e9229d5d8098bcc",
         &probe(),
     );
     assert!(!d.draw_options().clear_background);
@@ -187,7 +187,7 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.12255947497949138);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "975f39c5a5f04cff58915d50ab794051cbbab92b",
+        "e0da63514daf947ffb31654733ee905a5f639963",
         &probe(),
     );
 
@@ -228,7 +228,7 @@ fn similarity_maps_match_python() {
     assert_eq!(max_weight, 0.08955961037179305);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "57b43737e5b18813d2cf7901907c108049a82813",
+        "684bc4ed6d21877b6f39767a45ddb6341744d40b",
         &probe(),
     );
 }
@@ -631,7 +631,7 @@ fn morgan_similarity_map_matches_python() {
     assert_eq!(max_weight, 0.12255947497949138);
     assert_map(
         &d.get_drawing_text().unwrap(),
-        "f560ccf41475bf4ce2fa7afbc6aed41c07feb361",
+        "bdab35ab7e1d641b82a9cf50175f52e935df409b",
         &probe(),
     );
 }

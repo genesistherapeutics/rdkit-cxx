@@ -74,7 +74,10 @@ pub fn get_nodes_down_to_centroids(cluster: &mut Cluster) -> Vec<&Cluster> {
 /// to the others, by the condensed distance matrix `dists` (the distance
 /// between points `i < j` at `j * (j - 1) / 2 + i`), or -1 when every sum
 /// reaches 1e24. Each point's data is its index into `dists`. Mirrors
-/// `ClusterUtils.FindClusterCentroidFromDists`.
+/// `ClusterUtils.FindClusterCentroidFromDists`, which in RDKit 2025.09.6
+/// raises `TypeError` for a cluster of two or more points (it indexes
+/// `dists` with `/`, a float; RDKit 2026.03 uses `//`); this returns what
+/// the fixed function does.
 ///
 /// `Error::Value` for a point whose data is not a whole number from zero up
 /// (Python indexes from the end for negative numbers, and fails for others);

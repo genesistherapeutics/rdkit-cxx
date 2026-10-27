@@ -439,7 +439,7 @@ fn mmff_force_fields() {
 #[test]
 fn mmff_properties() {
     let mut mol = ethanol();
-    let mut props = mmff_get_molecule_properties(&mut mol).unwrap().unwrap();
+    let props = mmff_get_molecule_properties(&mut mol).unwrap().unwrap();
     let types: Vec<u32> = (0..9)
         .map(|i| props.get_mmff_atom_type(i).unwrap())
         .collect();
@@ -506,7 +506,14 @@ fn mmff_properties() {
     );
 
     // RDKit 2025.09's Python has no getters for the settings, so the
-    // setters are seen in the force field's energy.
+    // setters are seen in the force field's energy, of ethylene glycol,
+    // whose oxygens' charges meet across four bonds (ethanol has no
+    // electrostatic term).
+    let mut mol = add_hs(&mol_from_smiles("OCCO").unwrap()).unwrap();
+    let mut seeded = rdkit_cxx::chem::rd_dist_geom::etkdg_v3();
+    seeded.random_seed = 42;
+    rdkit_cxx::chem::rd_dist_geom::embed_molecule_with_params(&mut mol, &mut seeded).unwrap();
+    let mut props = mmff_get_molecule_properties(&mut mol).unwrap().unwrap();
     let energy = |mol: &mut Mol, props: &MMFFMolProperties| {
         mmff_get_molecule_force_field(mol, props)
             .unwrap()
@@ -557,7 +564,7 @@ fn mmff_properties() {
         set_on(&mut props);
         assert_eq!(energy(&mut mol, &props), e0);
     }
-    // Ethanol has no out-of-plane terms.
+    // Glycol has no out-of-plane terms.
     props.set_mmff_oop_term_with_state(false);
     assert_eq!(energy(&mut mol, &props), e0);
     props.set_mmff_oop_term();
