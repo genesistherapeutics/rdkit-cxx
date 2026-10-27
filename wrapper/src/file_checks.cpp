@@ -297,6 +297,36 @@ void check_reaction_cx(const std::string &text, bool allow_cxsmiles) {
   }
 }
 
+void check_text_cx_fields(std::string_view text, const char *what) {
+  const auto bar = text.find('|');
+  if (bar == std::string_view::npos) {
+    return;
+  }
+  for (std::string_view field : {"SgD:", "atomProp:", "Sg:"}) {
+    if (text.find(field, bar) != std::string_view::npos) {
+      throw ValueErrorException(
+          std::string(what) +
+          " holds a CXSMILES field (SgD:, atomProp:, or Sg:) after a '|'; "
+          "RDKit 2024.03 reads past the end of one that ends the SMARTS it "
+          "parses there, so such fields are refused in text RDKit's readers "
+          "parse");
+    }
+  }
+}
+
+void check_file_cx_fields(const std::string &path, const char *what) {
+  if (path.empty()) {
+    return;
+  }
+  std::ifstream in(path, std::ios::binary);
+  if (!in) {
+    return;  // RDKit's own open fails, or reads nothing.
+  }
+  std::string text((std::istreambuf_iterator<char>(in)),
+                   std::istreambuf_iterator<char>());
+  check_text_cx_fields(text, what);
+}
+
 void check_mrv(const std::string &text) {
   std::istringstream in(text);
   boost::property_tree::ptree tree;

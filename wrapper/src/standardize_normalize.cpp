@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_normalize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -58,6 +59,7 @@ std::unique_ptr<Normalizer> normalizer_default() {
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
+  check_file_cx_fields(to_path(normalize_filename), "the normalizations file");
   return std::make_unique<Normalizer>(to_path(normalize_filename),
                                       max_restarts);
 }
@@ -65,6 +67,7 @@ std::unique_ptr<Normalizer> normalizer_new(
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
+  check_text_cx_fields(std::string(param_data), "the normalizations");
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Normalizer>(
       in, to_cleanup_parameters(params).maxRestarts);

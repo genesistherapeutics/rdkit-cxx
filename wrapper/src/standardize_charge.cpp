@@ -75,6 +75,7 @@ std::unique_ptr<Reionizer> reionizer_new(
     rust::Slice<const std::uint8_t> acidbase_file,
     rust::Slice<const ChargeCorrectionData> ccs, bool default_ccs) {
   auto name = to_path(acidbase_file);
+  check_file_cx_fields(name, "the acid-base file");
   if (default_ccs) {
     return std::make_unique<Reionizer>(name);
   }
@@ -84,6 +85,7 @@ std::unique_ptr<Reionizer> reionizer_new(
 std::unique_ptr<Reionizer> reionizer_from_data(
     rust::Str param_data, rust::Slice<const ChargeCorrectionData> ccs) {
   auto corrections = checked(ccs);
+  check_text_cx_fields(std::string(param_data), "the acid-base data");
   std::istringstream in{std::string(param_data)};
   return std::make_unique<Reionizer>(in, corrections);
 }

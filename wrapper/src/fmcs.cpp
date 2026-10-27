@@ -22,6 +22,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/fmcs.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 
 namespace rdkit_cxx {
@@ -458,6 +459,8 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   // a seed that does not parse would be a null dereference (Python
   // crashes); it is parsed here first, the same way.
   if (!params.InitialSeed.empty()) {
+    // SmartsToMol reads CX extensions (file_checks.h).
+    check_smiles_cx(params.InitialSeed);
     std::unique_ptr<RDKit::RWMol> seed(RDKit::SmartsToMol(params.InitialSeed));
     if (!seed) {
       throw RDKit::SmilesParse::SmilesParseException(

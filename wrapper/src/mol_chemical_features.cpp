@@ -19,6 +19,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
+#include "rdkit-cxx/file_checks.h"
 
 namespace rdkit_cxx {
 
@@ -137,6 +138,7 @@ std::unique_ptr<MolChemicalFeatureFactory> build_feature_factory_from_string(
     rust::Str fdef) {
   std::string text(fdef);
   check_feature_defs_end(text);
+  check_text_cx_fields(text, "the feature definitions");
   std::unique_ptr<MolChemicalFeatureFactory> factory;
   try {
     factory.reset(RDKit::buildFeatureFactory(text));

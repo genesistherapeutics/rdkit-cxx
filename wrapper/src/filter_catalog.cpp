@@ -474,8 +474,18 @@ std::unique_ptr<FilterMatcherHandle> smarts_matcher_new_mol(
 std::unique_ptr<FilterMatcherHandle> smarts_matcher_new_smarts(
     rust::Str name, rust::Str smarts, std::uint32_t min_count,
     std::uint32_t max_count) {
-  return handle(boost::make_shared<SmartsMatcher>(
-      std::string(name), std::string(smarts), min_count, max_count));
+  // SmartsToMol reads CX extensions (file_checks.h); a SMARTS whose
+  // extension RDKit would read past the end of gives a matcher without a
+  // pattern, as one that does not parse does.
+  const std::string text(smarts);
+  if (!smiles_cx_problem(text).empty()) {
+    auto matcher = boost::make_shared<SmartsMatcher>(std::string(name));
+    matcher->setMinCount(min_count);
+    matcher->setMaxCount(max_count);
+    return handle(matcher);
+  }
+  return handle(boost::make_shared<SmartsMatcher>(std::string(name), text,
+                                                  min_count, max_count));
 }
 
 std::unique_ptr<RWMol> smarts_matcher_get_pattern(
@@ -494,7 +504,14 @@ void smarts_matcher_set_pattern_mol(FilterMatcherHandle &matcher,
 
 void smarts_matcher_set_pattern_smarts(FilterMatcherHandle &matcher,
                                        rust::Str smarts) {
-  as<SmartsMatcher>(matcher).setPattern(std::string(smarts));
+  // As smarts_matcher_new_smarts: a refused SMARTS leaves no pattern, as
+  // one that does not parse does.
+  const std::string text(smarts);
+  if (!smiles_cx_problem(text).empty()) {
+    as<SmartsMatcher>(matcher).setPattern(RDKit::ROMOL_SPTR());
+    return;
+  }
+  as<SmartsMatcher>(matcher).setPattern(text);
 }
 
 std::uint32_t smarts_matcher_get_min_count(const FilterMatcherHandle &matcher) {

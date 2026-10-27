@@ -79,6 +79,17 @@ void check_smiles_cx(const std::string &text, bool allow_cxsmiles = true);
 // the first "|", when it is not the first character, trimmed.
 void check_reaction_cx(const std::string &text, bool allow_cxsmiles = true);
 
+// RDKit's text-format readers (the standardizer's normalization, fragment,
+// acid-base, and tautomer files and data, deprotections, and the like) parse
+// fields of their text as SMARTS or reaction SMARTS with CXSMILES on, each
+// field ending where the reader splits it. Rather than split each format as
+// its reader does, check_text_cx_fields refuses a text in which one of the
+// three fields above follows a '|', with ValueErrorException naming `what`;
+// check_file_cx_fields reads a file RDKit will read and checks its text
+// (one that does not open is left to RDKit).
+void check_text_cx_fields(std::string_view text, const char *what);
+void check_file_cx_fields(const std::string &path, const char *what);
+
 // RDKit's Marvin reader (MarvinMolBase::parseAtomsAndBonds in
 // MarvinDefs.cpp), which reads molecules and reactions alike, copies the
 // second atom reference of each bond before it checks that there are two,

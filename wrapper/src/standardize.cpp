@@ -299,6 +299,13 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
   params.acidbaseFile = path(data.acidbase_file);
   params.fragmentFile = path(data.fragment_file);
   params.tautomerTransforms = path(data.tautomer_transforms);
+  // The standardizers read these files and the data below with RDKit's
+  // text-format readers (file_checks.h).
+  check_file_cx_fields(params.normalizations, "the normalizations file");
+  check_file_cx_fields(params.acidbaseFile, "the acid-base file");
+  check_file_cx_fields(params.fragmentFile, "the fragment file");
+  check_file_cx_fields(params.tautomerTransforms,
+                       "the tautomer transforms file");
   params.maxRestarts = data.max_restarts;
   params.preferOrganic = data.prefer_organic;
   params.doCanonical = data.do_canonical;
@@ -314,17 +321,22 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
       data.largest_fragment_chooser_count_heavy_atoms_only;
   for (const auto &e : data.normalization_data) {
     params.normalizationData.emplace_back(text(e.name), text(e.first));
+    check_reaction_cx(std::get<1>(params.normalizationData.back()));
   }
   for (const auto &e : data.fragment_data) {
     params.fragmentData.emplace_back(text(e.name), text(e.first));
+    check_smiles_cx(std::get<1>(params.fragmentData.back()));
   }
   for (const auto &e : data.acidbase_data) {
     params.acidbaseData.emplace_back(text(e.name), text(e.first),
                                      text(e.second));
+    check_smiles_cx(std::get<1>(params.acidbaseData.back()));
+    check_smiles_cx(std::get<2>(params.acidbaseData.back()));
   }
   for (const auto &e : data.tautomer_transform_data) {
     params.tautomerTransformData.emplace_back(text(e.name), text(e.first),
                                               text(e.second), text(e.third));
+    check_smiles_cx(std::get<1>(params.tautomerTransformData.back()));
   }
   return params;
 }

@@ -11,6 +11,7 @@
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -44,12 +45,14 @@ std::unique_ptr<FragmentRemover> fragment_remover_default() {
 std::unique_ptr<FragmentRemover> fragment_remover_new(
     rust::Slice<const std::uint8_t> fragment_filename, bool leave_last,
     bool skip_if_all_match) {
+  check_file_cx_fields(to_path(fragment_filename), "the fragment file");
   return std::make_unique<FragmentRemover>(to_path(fragment_filename),
                                            leave_last, skip_if_all_match);
 }
 
 std::unique_ptr<FragmentRemover> fragment_remover_from_data(
     rust::Str fragment_data, bool leave_last, bool skip_if_all_match) {
+  check_text_cx_fields(std::string(fragment_data), "the fragment data");
   std::istringstream in{std::string(fragment_data)};
   return std::make_unique<FragmentRemover>(in, leave_last, skip_if_all_match);
 }

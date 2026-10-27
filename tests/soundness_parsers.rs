@@ -382,3 +382,82 @@ fn inchi_neighbor_overflows_are_refused() {
     let ok = mol_to_inchi(&mol_from_smiles("C[C@](F)(Cl)Br").unwrap()).unwrap();
     assert_eq!(ok.inchi, "InChI=1S/C2H3BrClF/c1-2(3,4)5/h1H3/t2-/m1/s1");
 }
+
+// RDKit's text-format readers and the options that take SMARTS parse them
+// with CXSMILES on, so text holding a field RDKit could read past the end
+// of is refused (or, for a filter matcher, gives no pattern).
+#[test]
+fn readers_of_smarts_text_refuse_cx_fields() {
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::*;
+    use rdkit_cxx::chem::rd_deprotect::DeprotectData;
+    use rdkit_cxx::chem::rd_fmcs::{MCSParameters, find_mcs_with_params};
+    use rdkit_cxx::chem::rd_mol_chemical_features::build_feature_factory_from_string;
+    use rdkit_cxx::chem::rd_rascal_mces::{RascalOptions, find_mces_with_opts};
+    use rdkit_cxx::chem::rdfiltercatalog::SmartsMatcher;
+    use rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams;
+
+    let params = CleanupParameters::default();
+    assert!(is_value_error(normalizer_from_data(
+        "n\t[C:1]>>[N:1] |SgD:0:x",
+        &params
+    )));
+    normalizer_from_data("n\t[C:1]>>[N:1]", &params).unwrap();
+    let with_data = CleanupParameters {
+        normalization_data: vec![("n".into(), "[C:1]>>[N:1] |atomProp:0.p.v".into())],
+        ..Default::default()
+    };
+    assert!(is_value_error(normalizer_from_params(&with_data)));
+    assert!(is_value_error(fragment_remover_from_data("x\tC |Sg:n")));
+    fragment_remover_from_data("x\tC").unwrap();
+    assert!(is_value_error(reionizer_from_data(
+        "a\tC(=O)[OH] |SgD:\tC(=O)[O-]"
+    )));
+    assert!(is_value_error(DeprotectData::new(
+        "c",
+        "[C:1]>>[N:1] |SgD:0:x",
+        "a",
+        "f"
+    )));
+    assert!(is_value_error(ScaffoldNetworkParams::new(&[
+        "[!#0;R:1]-!@[!#0:2]>>[*:1]-[#0].[#0]-[*:2] |atomProp:0.p.v"
+    ])));
+    assert!(is_value_error(build_feature_factory_from_string(
+        "DefineFeature D [N,O;!H0] |SgD:0:x\n  Family Donor\n  Weights 1\nEndFeature\n"
+    )));
+    let mols = [
+        mol_from_smiles("CCO").unwrap(),
+        mol_from_smiles("CCN").unwrap(),
+    ];
+    let mcs = MCSParameters {
+        initial_seed: "CC |SgD:0:x".into(),
+        ..Default::default()
+    };
+    assert!(is_value_error(find_mcs_with_params(&mols, &mcs)));
+    let rascal = RascalOptions {
+        equivalent_atoms: "[N,O]\t|SgD:0:x".into(),
+        ..Default::default()
+    };
+    assert!(is_value_error(find_mces_with_opts(
+        &mols[0], &mols[1], &rascal
+    )));
+    // The same texts without the fields read.
+    reionizer_from_data("a\tC(=O)[OH]\tC(=O)[O-]").unwrap();
+    DeprotectData::new("c", "[C:1]>>[N:1]", "a", "f").unwrap();
+    ScaffoldNetworkParams::new(&["[!#0;R:1]-!@[!#0:2]>>[*:1]-[#0].[#0]-[*:2]"]).unwrap();
+    build_feature_factory_from_string(
+        "DefineFeature D [N,O;!H0]\n  Family Donor\n  Weights 1\nEndFeature\n",
+    )
+    .unwrap();
+    let seeded = MCSParameters {
+        initial_seed: "CC".into(),
+        ..Default::default()
+    };
+    find_mcs_with_params(&mols, &seeded).unwrap();
+    let equivalent = RascalOptions {
+        equivalent_atoms: "[N,O]".into(),
+        ..Default::default()
+    };
+    find_mces_with_opts(&mols[0], &mols[1], &equivalent).unwrap();
+    assert!(!SmartsMatcher::from_smarts("m", "C |SgD:0:x").is_valid());
+    assert!(SmartsMatcher::from_smarts("m", "C").is_valid());
+}

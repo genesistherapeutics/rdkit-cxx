@@ -26,6 +26,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/util.h"
@@ -309,6 +310,8 @@ std::unique_ptr<TautomerQuery> tautomer_query_clone(
 std::unique_ptr<TautomerQuery> tautomer_query_from_mol(
     const RWMol &mol, rust::Slice<const std::uint8_t> tautomer_transform_file) {
   // An empty path reads RDKit's default transforms.
+  check_file_cx_fields(to_path(tautomer_transform_file),
+                       "the tautomer transforms file");
   MolStandardize::TautomerCatalogParams params(
       to_path(tautomer_transform_file));
   check_transforms(params);
