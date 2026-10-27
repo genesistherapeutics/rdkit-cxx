@@ -259,12 +259,9 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
     // RDKit 2024.09 reads info of type PDBRESIDUE as AtomPDBResidueInfo, its
     // fields from the bytes that follow, and refuses unknown types.
     let mut mol = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type as a byte.
     let at = pkl

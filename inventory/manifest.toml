@@ -11721,7 +11721,7 @@ rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_name"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerInfo.__init__"
-rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_params"]
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_name"]
 overloads_note = "type PDBRESIDUE, which Python allows, is Error::Value: only AtomPDBResidueInfo has it (U10)"
 
 [[entry]]
@@ -16017,7 +16017,7 @@ rust_kind = "field"
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.CanonicalizeStereoGroups"
-rust = ["rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups", "rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups", "rdkit_cxx::chem::rdmolops::canonicalize_stereo_groups_with_output_absolute_groups"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.Cleanup"
@@ -16161,7 +16161,7 @@ rust = ["rdkit_cxx::chem::rdmolops::get_most_substituted_core_match"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetSSSR"
-rust = ["rdkit_cxx::chem::rdmolops::get_sssr", "rdkit_cxx::chem::rdmolops::get_sssr_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::get_sssr", "rdkit_cxx::chem::rdmolops::get_sssr_with_include_dative_bonds"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetShortestPath"
@@ -16169,7 +16169,7 @@ rust = ["rdkit_cxx::chem::rdmolops::get_shortest_path"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetSymmSSSR"
-rust = ["rdkit_cxx::chem::rdmolops::get_symm_sssr", "rdkit_cxx::chem::rdmolops::get_symm_sssr_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::get_symm_sssr", "rdkit_cxx::chem::rdmolops::get_symm_sssr_with_include_dative_bonds"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.GetUseLegacyStereoPerception"
@@ -16185,11 +16185,11 @@ rust = ["rdkit_cxx::chem::rdmolops::has_query_hs"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.Kekulize"
-rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_clear_aromatic_flags"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.KekulizeIfPossible"
-rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_clear_aromatic_flags"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.LayeredFingerprint"
@@ -16282,7 +16282,7 @@ rust = ["rdkit_cxx::chem::rdmolops::rdk_fingerprint", "rdkit_cxx::chem::rdmolops
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.ReapplyMolBlockWedging"
-rust = ["rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging", "rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging", "rdkit_cxx::chem::rdmolops::reapply_mol_block_wedging_with_all_bond_types"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.RemoveAllHs"

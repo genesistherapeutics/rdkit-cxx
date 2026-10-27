@@ -79,14 +79,6 @@ macro_rules! monomer_setters {
     };
 }
 
-/// Parameters for `AtomMonomerInfo::new_with_params`, with Python's defaults
-/// (A2).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct AtomMonomerInfoParams {
-    /// The atom's name in the monomer.
-    pub name: String,
-}
-
 /// An atom's monomer information. Mirrors `rdchem.AtomMonomerInfo`.
 ///
 /// Atoms hand out copies (`get_monomer_info`) and take copies
@@ -121,18 +113,15 @@ impl AtomMonomerInfo {
     /// `AtomMonomerInfo(type)`; `Error::Value` for `Pdbresidue`, for which
     /// `AtomPDBResidueInfo::new` makes PDB residue info.
     pub fn new(typ: AtomMonomerType) -> Result<AtomMonomerInfo> {
-        AtomMonomerInfo::new_with_params(typ, &AtomMonomerInfoParams::default())
+        AtomMonomerInfo::new_with_name(typ, "")
     }
 
     /// Mirrors `AtomMonomerInfo(type, name)`; `Error::Value` for
     /// `Pdbresidue`.
-    pub fn new_with_params(
-        typ: AtomMonomerType,
-        params: &AtomMonomerInfoParams,
-    ) -> Result<AtomMonomerInfo> {
+    pub fn new_with_name(typ: AtomMonomerType, name: &str) -> Result<AtomMonomerInfo> {
         Ok(AtomMonomerInfo::from_ffi(ffi::monomer_info_with(
             typ.to_ffi(),
-            &params.name,
+            name,
         )?))
     }
 

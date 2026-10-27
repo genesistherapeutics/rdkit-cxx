@@ -41,9 +41,8 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     `maxBestMCESs`; R-group decomposition's `allowMultipleCoresInSameMol`;
     `MolzipParams.alignCoordinates`; the depictor's `useRingTemplates` and
     `usePathAngleExpansion`; `DetermineBonds`' `maxIterations`;
-    `Kekulize`'s and `KekulizeIfPossible`'s `canonical` (`KekulizeParams`
-    has `clear_aromatic_flags` alone, and kekulizing backtracks up to 100
-    times, as Python's does);
+    `Kekulize`'s and `KekulizeIfPossible`'s `canonical` (kekulizing
+    backtracks up to 100 times, as Python's does);
     `GetSSSR`'s and `GetSymmSSSR`'s `includeHydrogenBonds`, `algorithm`,
     and `recalcSSSR`, and the legacy ring-finding setting;
     `CanonicalizeStereoGroups`' `maxStereoGroups`;
@@ -56,7 +55,16 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   `GetBestAlignmentTransform`, `GetAllConformerBestRMS`, and
   `MolMetadataToPNG*` take keyword arguments, so their parameter structs
   (`AddHsParams` and others) replace `AddHsParameters`,
-  `BestAlignmentParams`, and `PNGMetadataParams`; `AtomMonomerInfo` has a
+  `BestAlignmentParams`, and `PNGMetadataParams`; where 2024.09 leaves a
+  function one optional argument, a `_with_<param>` function takes it
+  rather than a parameters struct (CONVENTIONS.md A2):
+  `kekulize_with_clear_aromatic_flags`,
+  `kekulize_if_possible_with_clear_aromatic_flags`,
+  `get_sssr_with_include_dative_bonds`,
+  `get_symm_sssr_with_include_dative_bonds`,
+  `reapply_mol_block_wedging_with_all_bond_types`,
+  `canonicalize_stereo_groups_with_output_absolute_groups`, and
+  `AtomMonomerInfo::new_with_name`; `AtomMonomerInfo` has a
   type and a name, and the residue fields are `AtomPDBResidueInfo`'s;
   `DoubleCubicLatticeVolume` computes its results when it is made;
   `rd_shape_align` has `prepare_conformer`, `align_mol`, and

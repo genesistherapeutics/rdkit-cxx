@@ -381,12 +381,9 @@ fn pdb_typed_molecules_are_read() {
     // 2024.09's pickler reads as PDB residue info (U10), as Python's
     // FragCatalog does.
     let mut mol = mol("CC");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut marked = mol.to_binary();
     let at = marked
         .windows(9)
