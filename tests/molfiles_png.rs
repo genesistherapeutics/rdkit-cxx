@@ -71,7 +71,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string(&smiles("CO"), PNG).unwrap();
     assert_eq!(
         keys(&png),
-        ["rdkitPKL rdkit 2026.03.6", "SMILES rdkit 2026.03.6"]
+        ["rdkitPKL rdkit 2025.03.6", "SMILES rdkit 2025.03.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.
@@ -101,7 +101,7 @@ fn molecules() {
     let png = mol_metadata_to_png_string_with_params(&smiles("CO"), PNG, &mol_block).unwrap();
     assert_eq!(
         keys(&png),
-        ["SMILES rdkit 2026.03.6", "MOL rdkit 2026.03.6"]
+        ["SMILES rdkit 2025.03.6", "MOL rdkit 2025.03.6"]
     );
     assert_eq!(
         // SAFETY: a pickle RDKit wrote.

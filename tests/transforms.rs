@@ -402,7 +402,6 @@ fn molzip_pairs() {
             atom_symbols: vec![],
             enforce_valence_rules: true,
             generate_coordinates: false,
-            align_coordinates: false,
         }
     );
 }

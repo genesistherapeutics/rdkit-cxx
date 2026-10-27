@@ -456,12 +456,11 @@ fn monomer_info_connect_the_dots_would_misread() {
     // RDKit would read other monomer info as PDB residue info, past its
     // end, whatever its type (U10); the call hides it, and puts it back.
     let mut mol = atoms(BRIDGE);
-    for (i, residue) in [1, 2, 2].into_iter().enumerate() {
+    for (i, name) in ["A", "B", "C"].into_iter().enumerate() {
         let info = AtomMonomerInfo::new_with_params(
             AtomMonomerType::Other,
             &AtomMonomerInfoParams {
-                res_num: residue,
-                ..Default::default()
+                name: name.to_owned(),
             },
         )
         .unwrap();
@@ -471,13 +470,13 @@ fn monomer_info_connect_the_dots_would_misread() {
     }
     determine_connectivity(&mut mol).unwrap();
     assert_eq!(bonds(&mol), vec![(0, 1)]);
-    for (i, residue) in [1, 2, 2].into_iter().enumerate() {
+    for (i, name) in ["A", "B", "C"].into_iter().enumerate() {
         let info = mol
             .get_atom_with_idx(i as u32)
             .unwrap()
             .get_monomer_info()
             .unwrap();
-        assert_eq!(info.get_residue_number(), residue);
+        assert_eq!(info.get_name().unwrap(), name);
         assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
     }
 }

@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 use crate::Result;
-use crate::chem::rdchem::{AsAtom, Mol, MolBundle};
+use crate::chem::rdchem::{Mol, MolBundle};
 use crate::error::expect_ok;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::substruct::ffi;

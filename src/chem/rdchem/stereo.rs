@@ -5,7 +5,7 @@
 
 use crate::Result;
 use crate::chem::rdchem::{
-    Atom, Mol, RWMol, StereoDescriptor, StereoGroupType, StereoSpecified, StereoType,
+    Mol, RWMol, StereoDescriptor, StereoGroupType, StereoSpecified, StereoType,
 };
 use crate::error::expect_ok;
 use crate::ffi::stereo::ffi;

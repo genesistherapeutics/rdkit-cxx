@@ -434,17 +434,14 @@ fn draw_standardized(
     Ok(max_weight)
 }
 
-/// The atoms that set each bit, as `AdditionalOutput::get_atoms_per_bit`
-/// gives them.
-type AtomsPerBit = BTreeMap<u64, Vec<Vec<u32>>>;
-
-/// The probe's fingerprint and the atoms that set each of its bits.
+/// The probe's fingerprint and the bits each atom sets in it, once for
+/// each atom pair or torsion path the atom is in.
 fn probe_fingerprint<T>(
     probe_mol: &Mol,
     get: impl FnOnce(&Mol, &GetFingerprintParams) -> Result<(T, AdditionalOutput)>,
-) -> Result<(T, AtomsPerBit)> {
+) -> Result<(T, Vec<Vec<u64>>)> {
     let mut probe_ao = AdditionalOutput::default();
-    probe_ao.allocate_atoms_per_bit();
+    probe_ao.allocate_atom_to_bits();
     let (fp, outputs) = get(
         probe_mol,
         &GetFingerprintParams {
@@ -452,220 +449,14 @@ fn probe_fingerprint<T>(
             ..Default::default()
         },
     )?;
-    let atoms_per_bit = outputs.get_atoms_per_bit().cloned().unwrap_or_default();
-    Ok((fp, atoms_per_bit))
+    let atom_bits = outputs.get_atom_to_bits().map(<[_]>::to_vec).unwrap_or_default();
+    Ok((fp, atom_bits))
 }
 
 fn bit_index(bit: u64) -> Result<u32> {
     u32::try_from(bit).map_err(|_| Error::Value {
         message: format!("bit {bit} is past the fingerprint's end"),
     })
-}
-
-/// Each atom's weight: how much Dice similarity between the reference's
-/// and the probe's fingerprints from `fpg` drops without the bits the atom
-/// sets. Mirrors
-/// `SimilarityMaps.GetAtomicWeightsForFingerprintGenerator`.
-pub fn get_atomic_weights_for_fingerprint_generator(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-) -> Result<Vec<f64>> {
-    get_atomic_weights_for_fingerprint_generator_with_metric(
-        ref_mol,
-        probe_mol,
-        fpg,
-        dice_similarity::<ExplicitBitVect>,
-    )
-}
-
-/// As `get_atomic_weights_for_fingerprint_generator`, with a metric.
-/// Mirrors `SimilarityMaps.GetAtomicWeightsForFingerprintGenerator(refMol,
-/// probeMol, fpg, metric=...)`.
-pub fn get_atomic_weights_for_fingerprint_generator_with_metric(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-    metric: impl Fn(&ExplicitBitVect, &ExplicitBitVect) -> Result<f64>,
-) -> Result<Vec<f64>> {
-    let ref_fp = fpg.get_fingerprint(ref_mol)?;
-    let (probe_fp, atoms_per_bit) =
-        probe_fingerprint(probe_mol, |m, p| fpg.get_fingerprint_with_outputs(m, p))?;
-    let base_similarity = metric(&ref_fp, &probe_fp)?;
-    let mut atom_fps = vec![probe_fp; probe_mol.get_num_atoms() as usize];
-    for (&bit, entries) in &atoms_per_bit {
-        for entry in entries {
-            for &aid in entry {
-                atom_fps[aid as usize].un_set_bit(bit_index(bit)?)?;
-            }
-        }
-    }
-    atom_fps
-        .iter()
-        .map(|fp| Ok(base_similarity - metric(&ref_fp, fp)?))
-        .collect()
-}
-
-/// As `get_atomic_weights_for_fingerprint_generator`, with count
-/// fingerprints, each atom taking one from each count it adds to. Mirrors
-/// `SimilarityMaps.GetAtomicWeightsForFingerprintGenerator(refMol,
-/// probeMol, fpg, useCounts=True)`.
-pub fn get_atomic_weights_for_fingerprint_generator_use_counts(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-) -> Result<Vec<f64>> {
-    get_atomic_weights_for_fingerprint_generator_use_counts_with_metric(
-        ref_mol,
-        probe_mol,
-        fpg,
-        crate::data_structs::dice_similarity_sparse_int_vect::<UIntSparseIntVect>,
-    )
-}
-
-/// As `get_atomic_weights_for_fingerprint_generator_use_counts`, with a
-/// metric. Mirrors
-/// `SimilarityMaps.GetAtomicWeightsForFingerprintGenerator(refMol,
-/// probeMol, fpg, useCounts=True, metric=...)`.
-pub fn get_atomic_weights_for_fingerprint_generator_use_counts_with_metric(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-    metric: impl Fn(&UIntSparseIntVect, &UIntSparseIntVect) -> Result<f64>,
-) -> Result<Vec<f64>> {
-    let ref_fp = fpg.get_count_fingerprint(ref_mol)?;
-    let (probe_fp, atoms_per_bit) = probe_fingerprint(probe_mol, |m, p| {
-        fpg.get_count_fingerprint_with_outputs(m, p)
-    })?;
-    let base_similarity = metric(&ref_fp, &probe_fp)?;
-    let mut atom_fps = vec![probe_fp; probe_mol.get_num_atoms() as usize];
-    for (&bit, entries) in &atoms_per_bit {
-        let bit = bit_index(bit)?;
-        for entry in entries {
-            for &aid in entry {
-                let fp = &mut atom_fps[aid as usize];
-                let val = fp.get_val(bit)?;
-                fp.set_val(bit, val - 1)?;
-            }
-        }
-    }
-    atom_fps
-        .iter()
-        .map(|fp| Ok(base_similarity - metric(&ref_fp, fp)?))
-        .collect()
-}
-
-/// Parameters for `get_similarity_map_for_fingerprint_generator_with_params`
-/// and its `use_counts` form, with Python's defaults (A2): the metric, and
-/// the drawing's parameters.
-#[derive(Clone)]
-pub struct GetSimilarityMapForFingerprintGeneratorParams<'a, F> {
-    /// The similarity metric; any function or closure will do.
-    pub metric: &'a dyn Fn(&F, &F) -> Result<f64>,
-    /// The parameters of `get_similarity_map_from_weights_with_params`.
-    pub map: GetSimilarityMapFromWeightsParams,
-}
-
-impl<F> fmt::Debug for GetSimilarityMapForFingerprintGeneratorParams<'_, F> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("GetSimilarityMapForFingerprintGeneratorParams")
-            .field("map", &self.map)
-            .finish_non_exhaustive()
-    }
-}
-
-impl Default for GetSimilarityMapForFingerprintGeneratorParams<'_, ExplicitBitVect> {
-    fn default() -> Self {
-        GetSimilarityMapForFingerprintGeneratorParams {
-            metric: &dice_similarity::<ExplicitBitVect>,
-            map: GetSimilarityMapFromWeightsParams::default(),
-        }
-    }
-}
-
-impl Default for GetSimilarityMapForFingerprintGeneratorParams<'_, UIntSparseIntVect> {
-    fn default() -> Self {
-        GetSimilarityMapForFingerprintGeneratorParams {
-            metric: &crate::data_structs::dice_similarity_sparse_int_vect::<UIntSparseIntVect>,
-            map: GetSimilarityMapFromWeightsParams::default(),
-        }
-    }
-}
-
-/// Draws the probe's similarity map against the reference
-/// (`get_atomic_weights_for_fingerprint_generator`, standardized) on
-/// `draw2d`, and returns the largest weight's magnitude. Mirrors
-/// `SimilarityMaps.GetSimilarityMapForFingerprintGenerator`, which returns
-/// `draw2d` with it.
-pub fn get_similarity_map_for_fingerprint_generator(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-    draw2d: &mut MolDraw2D,
-) -> Result<f64> {
-    get_similarity_map_for_fingerprint_generator_with_params(
-        ref_mol,
-        probe_mol,
-        fpg,
-        draw2d,
-        &GetSimilarityMapForFingerprintGeneratorParams::default(),
-    )
-}
-
-/// Mirrors `SimilarityMaps.GetSimilarityMapForFingerprintGenerator(refMol,
-/// probeMol, fpg, draw2d, metric, **kwargs)`, whose keywords are
-/// `GetSimilarityMapFromWeights`'.
-pub fn get_similarity_map_for_fingerprint_generator_with_params(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-    draw2d: &mut MolDraw2D,
-    params: &GetSimilarityMapForFingerprintGeneratorParams<ExplicitBitVect>,
-) -> Result<f64> {
-    let weights = get_atomic_weights_for_fingerprint_generator_with_metric(
-        ref_mol,
-        probe_mol,
-        fpg,
-        params.metric,
-    )?;
-    draw_standardized(probe_mol, &weights, draw2d, &params.map)
-}
-
-/// As `get_similarity_map_for_fingerprint_generator`, with count
-/// fingerprints. Mirrors
-/// `SimilarityMaps.GetSimilarityMapForFingerprintGenerator(refMol,
-/// probeMol, fpg, draw2d, useCounts=True)`.
-pub fn get_similarity_map_for_fingerprint_generator_use_counts(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-    draw2d: &mut MolDraw2D,
-) -> Result<f64> {
-    get_similarity_map_for_fingerprint_generator_use_counts_with_params(
-        ref_mol,
-        probe_mol,
-        fpg,
-        draw2d,
-        &GetSimilarityMapForFingerprintGeneratorParams::default(),
-    )
-}
-
-/// Mirrors `SimilarityMaps.GetSimilarityMapForFingerprintGenerator(refMol,
-/// probeMol, fpg, draw2d, metric, useCounts=True, **kwargs)`.
-pub fn get_similarity_map_for_fingerprint_generator_use_counts_with_params(
-    ref_mol: &Mol,
-    probe_mol: &Mol,
-    fpg: &FingerprintGenerator64,
-    draw2d: &mut MolDraw2D,
-    params: &GetSimilarityMapForFingerprintGeneratorParams<UIntSparseIntVect>,
-) -> Result<f64> {
-    let weights = get_atomic_weights_for_fingerprint_generator_use_counts_with_metric(
-        ref_mol,
-        probe_mol,
-        fpg,
-        params.metric,
-    )?;
-    draw_standardized(probe_mol, &weights, draw2d, &params.map)
 }
 
 /// Draws the probe's map of a model's predictions
@@ -885,18 +676,7 @@ impl GetAPFingerprintParams {
                 ..self.clone()
             },
         );
-        let full = probe_memo(mol, key, || {
-            let (fp, atoms_per_bit) = probe_fingerprint(mol, get)?;
-            let mut atom_bits = vec![Vec::new(); mol.get_num_atoms() as usize];
-            for (&bit, entries) in &atoms_per_bit {
-                for entry in entries {
-                    for &aid in entry {
-                        atom_bits[aid as usize].push(bit);
-                    }
-                }
-            }
-            Ok((fp, atom_bits))
-        })?;
+        let full = probe_memo(mol, key, || probe_fingerprint(mol, get))?;
         Some((atom_id, full))
     }
 }

@@ -8,12 +8,12 @@ use rdkit_cxx::rd_base;
 
 #[test]
 fn rdkit_version_is_the_supported_series() {
-    assert!(rd_base::rdkit_version().starts_with("2026.03."));
+    assert!(rd_base::rdkit_version().starts_with("2025.03."));
 }
 
 #[test]
 fn boost_version_is_empty_or_boost_lib_version() {
-    // RDKit fills this from CMake's Boost_LIB_VERSION ("1_90"), which a
+    // RDKit fills this from CMake's Boost_LIB_VERSION ("1_86"), which a
     // CONFIG-mode find_package(Boost) leaves unset, as in conda-forge's build.
     let version = rd_base::boost_version();
     assert!(version.is_empty() || version.contains('_'), "{version}");

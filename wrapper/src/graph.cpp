@@ -291,7 +291,9 @@ std::unique_ptr<RWMol> renumber_atoms(
   }
   std::vector<bool> seen(mol.getNumAtoms());
   for (auto idx : new_order) {
-    check_index(idx, mol.getNumAtoms());
+    if (idx >= mol.getNumAtoms()) {
+      throw ValueErrorException("idx value exceeds numAtoms");
+    }
     if (seen[idx]) {
       throw ValueErrorException("newOrder has atom " + std::to_string(idx) +
                                 " more than once");

@@ -95,8 +95,7 @@ fn kekulize_forms() {
     assert_eq!(
         KekulizeParams::default(),
         KekulizeParams {
-            clear_aromatic_flags: false,
-            canonical: true
+            clear_aromatic_flags: false
         }
     );
 }

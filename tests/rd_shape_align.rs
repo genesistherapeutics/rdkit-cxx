@@ -12,10 +12,9 @@ use rdkit_cxx::chem::rd_shape_align::*;
 use rdkit_cxx::chem::*;
 use rdkit_cxx::geometry::Point3D;
 
-// Expected values come from Python's rdShapeAlign on the same molecules.
-// Alignments optimize, and a shape's principal axes can differ in sign
-// between platforms, so their scores are compared to 0.02 and their poses
-// by invariants; scores of shapes left in place are compared closely.
+// Expected values come from RDKit 2025.03.6's Python rdShapeAlign on the
+// same molecules. Alignments optimize, so their scores are compared to 0.02
+// and their poses by invariants; shapes are compared closely.
 
 /// Phenol with hydrogens, as RDKit's embedder placed it with seed 42.
 const PHENOL: &str = "
@@ -85,13 +84,6 @@ fn assert_pair(actual: (f64, f64), expected: (f64, f64), tol: f64) {
     assert_close_to(actual.1, expected.1, tol);
 }
 
-fn not_normalized() -> ShapeInputOptions {
-    ShapeInputOptions {
-        normalize: false,
-        ..Default::default()
-    }
-}
-
 #[test]
 fn option_defaults() {
     let opts = ShapeInputOptions::default();
@@ -101,8 +93,6 @@ fn option_defaults() {
     assert!(opts.atom_subset.is_empty());
     assert!(opts.not_color_atoms.is_empty());
     assert!(opts.atom_radii.is_empty());
-    assert!(opts.custom_features.is_empty());
-    assert!(opts.normalize);
     let prepare = PrepareConformerParams::default();
     assert_eq!(prepare.conf_id, -1);
     assert_eq!(prepare.opts, opts);
@@ -115,12 +105,6 @@ fn option_defaults() {
             align.opt_param
         ),
         (-1, -1, true, 1.0)
-    );
-    assert_eq!((align.max_preiters, align.max_postiters), (10, 30));
-    let align = AlignMolShapeOptsParams::default();
-    assert_eq!(
-        (align.ref_conf_id, align.probe_conf_id, align.opt_param),
-        (-1, -1, 1.0)
     );
     assert_eq!((align.max_preiters, align.max_postiters), (10, 30));
     let align = AlignMolShapeInputParams::default();
@@ -139,8 +123,6 @@ fn option_defaults() {
         (align.opt_param, align.max_preiters, align.max_postiters),
         (1.0, 10, 30)
     );
-    let score = ScoreMolParams::default();
-    assert_eq!((score.mol1_conf_id, score.mol2_conf_id), (-1, -1));
 }
 
 #[test]
@@ -158,25 +140,19 @@ fn prepares_shapes() {
     }
     assert_eq!(shape.atom_type_vector(), [0, 0, 0, 1, 2]);
     assert_eq!(shape.volume_atom_index_vector(), [0, 1, 2]);
-    assert_close_to(shape.sov(), 85.41806267650645, 1e-6);
+    assert_close_to(shape.sov(), 85.41806213981589, 1e-6);
     assert_close_to(shape.sof(), 10.14849439791215, 1e-6);
     let shift = shape.shift();
     for (v, expected) in shift
         .iter()
-        .zip([-0.2546, -0.016066666666666666, -0.2055333333333334])
+        .zip([-0.2546, -0.016066666666666674, -0.20553333333333335])
     {
         assert_close_to(*v, expected, 1e-6);
     }
-    // The rotation is orthonormal, and the shape centered on its atoms.
-    let rot = shape.inertial_rot();
-    for i in 0..3 {
-        for j in 0..3 {
-            let dot: f64 = (0..3).map(|k| rot[3 * i + k] * rot[3 * j + k]).sum();
-            assert_close_to(dot, if i == j { 1.0 } else { 0.0 }, 1e-6);
-        }
-    }
+    // The shape is centered on its atoms.
     let coord = shape.coord();
     assert_eq!(coord.len(), 15);
+    assert_close_to(coord[0], -1.2186000347137451, 1e-6);
     for axis in 0..3 {
         let center: f64 = (0..3).map(|atom| coord[3 * atom + axis]).sum::<f64>() / 3.0;
         assert_close_to(center, 0.0, 1e-6);
@@ -187,8 +163,9 @@ fn prepares_shapes() {
     let shape = prepare_conformer(&phenol()).unwrap();
     assert_eq!(shape.atom_type_vector(), [0, 0, 0, 0, 0, 0, 0, 1, 2, 3]);
     assert_eq!(shape.volume_atom_index_vector(), [0, 1, 2, 3, 4, 5, 6]);
-    assert_close_to(shape.sov(), 286.7241720744157, 1e-6);
+    assert_close_to(shape.sov(), 286.72416514419785, 1e-6);
     assert_close_to(shape.sof(), 15.222741596868225, 1e-6);
+    assert_close_to(shape.coord()[0], 2.370971441268921, 1e-6);
 
     let no_colors = PrepareConformerParams {
         opts: ShapeInputOptions {
@@ -200,14 +177,6 @@ fn prepares_shapes() {
     let shape = prepare_conformer_with_params(&phenol(), &no_colors).unwrap();
     assert_eq!(shape.alpha_vector().len(), 7);
     assert_eq!(shape.sof(), 0.0);
-
-    let in_place = PrepareConformerParams {
-        opts: not_normalized(),
-        ..Default::default()
-    };
-    let shape = prepare_conformer_with_params(&phenol(), &in_place).unwrap();
-    assert_close_to(shape.coord()[0], 2.4811, 1e-6);
-    assert_eq!(shape.shift(), [0.0, 0.0, 0.0]);
 }
 
 #[test]
@@ -223,21 +192,14 @@ fn shape_options() {
     });
     assert_eq!(shape.atom_type_vector(), [0, 0, 0]);
     assert_close(shape.alpha_vector()[0], 0.5860571713512801);
-    assert_close_to(shape.sov(), 107.23191404563786, 1e-6);
-    let o = mol.get_conformer().unwrap().get_atom_position(2).unwrap();
-    let shape = prepare(ShapeInputOptions {
-        custom_features: vec![(1, o, 1.0)],
-        ..Default::default()
-    });
-    assert_eq!(shape.atom_type_vector(), [0, 0, 0, 1]);
-    assert_close(shape.alpha_vector()[3], 2.3442286854051204);
-    assert_close_to(shape.sof(), 3.9985946443425298, 1e-6);
+    assert_close_to(shape.sov(), 107.23191337296689, 1e-6);
     let shape = prepare(ShapeInputOptions {
         atom_subset: vec![0, 1],
         ..Default::default()
     });
     assert_eq!(shape.atom_type_vector(), [0, 0]);
-    assert_close_to(shape.sov(), 54.617889844240196, 1e-6);
+    assert_close_to(shape.sov(), 54.617890545023215, 1e-6);
+    assert_close_to(shape.shift()[0], 0.22995, 1e-6);
 
     // PubChem's own features, from an SD property.
     let mut featured = ethanol();
@@ -252,7 +214,7 @@ fn aligns_molecules() {
     let reference = ethanol();
     let mut probe = ethanol2();
     let scores = align_mol(&reference, &mut probe).unwrap();
-    assert_pair(scores, (0.9991690898742055, 0.9936910163187939), 0.02);
+    assert_pair(scores, (0.9962729073701257, 0.9758271088349679), 0.02);
     assert_close(
         probe.get_double_prop("shape_align_shape_tanimoto").unwrap(),
         scores.0,
@@ -279,13 +241,13 @@ fn aligns_molecules() {
     };
     assert_pair(
         align_mol_with_params(&reference, &mut probe, &no_colors).unwrap(),
-        (0.9991690898742055, 0.0),
+        (0.9962729073701257, 0.0),
         0.02,
     );
     let mut probe = phenol();
     assert_pair(
         align_mol(&reference, &mut probe).unwrap(),
-        (0.6013854649493497, 3.38e-7),
+        (0.6013704215976929, 3.907557049983984e-7),
         0.02,
     );
     let mut probe = phenol();
@@ -295,34 +257,7 @@ fn aligns_molecules() {
     };
     assert_pair(
         align_mol_with_params(&reference, &mut probe, &half).unwrap(),
-        (0.6007828818635875, 0.0878088435769019),
-        0.02,
-    );
-    let mut probe = phenol();
-    let colorless = ShapeInputOptions {
-        use_colors: false,
-        ..Default::default()
-    };
-    assert_pair(
-        align_mol_shape_opts(
-            &reference,
-            &mut probe,
-            &ShapeInputOptions::default(),
-            &colorless,
-        )
-        .unwrap(),
-        (0.6013854649493497, 0.0),
-        0.02,
-    );
-    let mut probe = phenol();
-    let params = AlignMolShapeOptsParams {
-        opt_param: 0.5,
-        ..Default::default()
-    };
-    let opts = ShapeInputOptions::default();
-    assert_pair(
-        align_mol_shape_opts_with_params(&reference, &mut probe, &opts, &opts, &params).unwrap(),
-        (0.6007828818635875, 0.0878088435769019),
+        (0.599743900555401, 0.08672677808897558),
         0.02,
     );
 }
@@ -333,7 +268,7 @@ fn aligns_to_shapes() {
     let mut probe = phenol();
     assert_pair(
         align_mol_shape_input(&reference, &mut probe).unwrap(),
-        (0.6013854649493497, 3.38e-7),
+        (0.6013704215976929, 3.907557049983984e-7),
         0.02,
     );
     // With the reference's shift, the probe moves to the reference
@@ -353,7 +288,7 @@ fn aligns_to_shapes() {
     let mut shape = prepare_conformer(&phenol()).unwrap();
     let before = shape.coord();
     let (st, ct, matrix) = align_shapes(&reference, &mut shape).unwrap();
-    assert_close_to(st, 0.6013854649493497, 0.02);
+    assert_close_to(st, 0.6013704215976929, 0.02);
     assert!(ct.abs() < 0.02);
     assert_eq!(matrix.len(), 12);
     assert_ne!(shape.coord(), before);
@@ -365,9 +300,8 @@ fn aligns_to_shapes() {
     // Moving the conformer the probe shape came from as the shape moved.
     let mut mol = phenol();
     let probe = prepare_conformer(&phenol()).unwrap();
-    let identity = [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
     let mut conf = mol.get_conformer_mut().unwrap();
-    transform_conformer(&[0.0; 3], &identity, &matrix, &probe, &mut conf).unwrap();
+    transform_conformer(&[0.0; 3], &matrix, &probe, &mut conf).unwrap();
     let moved = conf.get_positions();
     let coord = shape.coord();
     // The shape's points are the heavy atoms in order.
@@ -376,89 +310,19 @@ fn aligns_to_shapes() {
         assert_close_to(p.y, coord[3 * i + 1], 1e-3);
         assert_close_to(p.z, coord[3 * i + 2], 1e-3);
     }
+    // The probe shape is unchanged.
+    assert_eq!(probe.coord(), prepare_conformer(&phenol()).unwrap().coord());
     // As in Python, the sizes are checked.
-    assert_value_error(transform_conformer(
-        &[0.0; 2], &identity, &matrix, &probe, &mut conf,
-    ));
+    assert_value_error(transform_conformer(&[0.0; 2], &matrix, &probe, &mut conf));
     assert_value_error(transform_conformer(
         &[0.0; 3],
-        &identity[1..],
-        &matrix,
-        &probe,
-        &mut conf,
-    ));
-    assert_value_error(transform_conformer(
-        &[0.0; 3],
-        &identity,
         &matrix[1..],
         &probe,
         &mut conf,
     ));
     let mut huge = matrix.clone();
     huge[0] = 1e39;
-    assert_value_error(transform_conformer(
-        &[0.0; 3], &identity, &huge, &probe, &mut conf,
-    ));
-}
-
-#[test]
-fn scores_in_place() {
-    let opts = not_normalized();
-    let (eth, eth2, ph) = (ethanol(), ethanol2(), phenol());
-    assert_pair(
-        score_mol(&eth, &eth2, &opts, &opts).unwrap(),
-        (0.9778684334759725, 0.8266801576709915),
-        1e-6,
-    );
-    assert_pair(
-        score_mol(&eth, &eth, &opts, &opts).unwrap(),
-        (1.0, 1.0),
-        1e-9,
-    );
-    let defaults = ShapeInputOptions::default();
-    assert_pair(
-        score_mol(&eth, &ph, &defaults, &defaults).unwrap(),
-        (0.548365151695113, 0.03525365216249537),
-        1e-6,
-    );
-    let shape = prepare_conformer_with_params(
-        &eth,
-        &PrepareConformerParams {
-            conf_id: -1,
-            opts: opts.clone(),
-        },
-    )
-    .unwrap();
-    assert_pair(
-        score_mol_shape_input(&shape, &eth2, &opts).unwrap(),
-        (0.9778684334759725, 0.8266801576709915),
-        1e-6,
-    );
-    assert_pair(
-        score_mol_shape_input_with_mol_conf_id(&shape, &eth2, &opts, -1).unwrap(),
-        (0.9778684334759725, 0.8266801576709915),
-        1e-6,
-    );
-    let shape2 =
-        prepare_conformer_with_params(&eth2, &PrepareConformerParams { conf_id: -1, opts })
-            .unwrap();
-    assert_pair(
-        score_shape(&shape, &shape2),
-        (0.9778684334759725, 0.0),
-        1e-6,
-    );
-    assert_pair(
-        score_shape_with_use_colors(&shape, &shape2, true),
-        (0.9778684334759725, 0.8266801576709915),
-        1e-6,
-    );
-    let missing = ScoreMolParams {
-        mol1_conf_id: 3,
-        mol2_conf_id: -1,
-    };
-    assert_value_error(score_mol_with_params(
-        &eth, &eth2, &defaults, &defaults, &missing,
-    ));
+    assert_value_error(transform_conformer(&[0.0; 3], &huge, &probe, &mut conf));
 }
 
 #[test]
@@ -480,14 +344,6 @@ fn conformers_are_checked() {
             .unwrap();
         assert_value_error(prepare_conformer(&odd));
     }
-    let far_feature = PrepareConformerParams {
-        opts: ShapeInputOptions {
-            custom_features: vec![(1, Point3D::new(1e300, 0.0, 0.0), 1.0)],
-            ..Default::default()
-        },
-        ..Default::default()
-    };
-    assert_value_error(prepare_conformer_with_params(&ethanol(), &far_feature));
 }
 
 // RDKit allocates the counts in PUBCHEM_PHARMACOPHORE_FEATURES before it
@@ -521,7 +377,7 @@ fn alignments_need_overlap() {
     };
     let params = PrepareConformerParams {
         conf_id: -1,
-        opts: hydrogens.clone(),
+        opts: hydrogens,
     };
     let empty = prepare_conformer_with_params(&reference, &params).unwrap();
     assert!(empty.alpha_vector().is_empty());
@@ -531,45 +387,27 @@ fn alignments_need_overlap() {
     let mut probe = full.clone();
     assert_value_error(align_shapes(&empty, &mut probe));
     let mut probe = ethanol2();
-    assert_value_error(align_mol_shape_opts(
-        &reference,
-        &mut probe,
-        &ShapeInputOptions::default(),
-        &hydrogens,
-    ));
-    // Scores of an empty shape are defined.
-    let (shape, _) = score_shape(&full, &empty);
-    assert_eq!(shape, 0.0);
+    assert_value_error(align_mol_shape_input(&empty, &mut probe));
 
-    // Shapes left far apart overlap in no starting pose.
-    let mut far = ethanol2();
-    let moved: Vec<Point3D> = far
-        .get_conformer()
-        .unwrap()
-        .get_positions()
-        .iter()
-        .map(|p| Point3D::new(p.x + 50.0, p.y + 50.0, p.z + 50.0))
-        .collect();
-    far.get_conformer_mut()
-        .unwrap()
-        .set_positions(&moved)
+    // Shapes far apart overlap in no starting pose. PrepareConformer
+    // centers the shapes, so the far one is a shape whose atoms are spread
+    // far apart: dihydrogen's two atoms, 100 apart, as dummies.
+    let mut far = mol_from_smiles("*.*").unwrap();
+    let mut conf = Conformer::new(2);
+    conf.set_atom_position(1, Point3D::new(100.0, 0.0, 0.0))
         .unwrap();
-    let opts = not_normalized();
-    let before = far.get_conformer().unwrap().get_positions();
-    assert_value_error(align_mol_shape_opts(&reference, &mut far, &opts, &opts));
-    assert_eq!(far.get_conformer().unwrap().get_positions(), before);
-    let mut shape =
-        prepare_conformer_with_params(&far, &PrepareConformerParams { conf_id: -1, opts }).unwrap();
-    let ref_shape = prepare_conformer_with_params(
-        &reference,
-        &PrepareConformerParams {
-            conf_id: -1,
-            opts: not_normalized(),
+    conf.set_3d(true);
+    far.add_conformer(&conf).unwrap();
+    let dummies = PrepareConformerParams {
+        conf_id: -1,
+        opts: ShapeInputOptions {
+            include_dummies: true,
+            ..Default::default()
         },
-    )
-    .unwrap();
+    };
+    let mut shape = prepare_conformer_with_params(&far, &dummies).unwrap();
     let coord = shape.coord();
-    assert_value_error(align_shapes(&ref_shape, &mut shape));
+    assert_value_error(align_shapes(&full, &mut shape));
     assert_eq!(shape.coord(), coord);
 
     // With colors in common, the color weight must lie in (0, 1].
@@ -590,28 +428,21 @@ fn alignments_need_overlap() {
     };
     assert_pair(
         align_mol_with_params(&reference, &mut probe, &params).unwrap(),
-        (0.999, 0.0),
+        (0.9962729073701257, 0.0),
         0.02,
     );
 
     // Radii so small that the overlaps' exponential approximation breaks.
-    let tiny = ShapeInputOptions {
-        atom_radii: vec![(0, 0.01)],
-        ..Default::default()
+    let tiny = PrepareConformerParams {
+        conf_id: -1,
+        opts: ShapeInputOptions {
+            atom_radii: vec![(0, 0.01)],
+            ..Default::default()
+        },
     };
-    let mut probe = ethanol2();
-    assert_value_error(align_mol_shape_opts(&reference, &mut probe, &tiny, &tiny));
-    let zero_dummies = ShapeInputOptions {
-        custom_features: vec![(1, Point3D::new(0.0, 0.0, 0.0), 0.0)],
-        ..Default::default()
-    };
-    let mut probe = ethanol2();
-    assert_value_error(align_mol_shape_opts(
-        &reference,
-        &mut probe,
-        &zero_dummies,
-        &zero_dummies,
-    ));
+    let tiny = prepare_conformer_with_params(&reference, &tiny).unwrap();
+    let mut probe = tiny.clone();
+    assert_value_error(align_shapes(&tiny, &mut probe));
 }
 
 // The global state PubChem's code writes is locked; alignments in threads

@@ -318,11 +318,10 @@ Highlights read_highlights(const RWMol &mol, const DrawMoleculeData &data) {
 }
 
 // RDKit lays a drawing out from its extents, which DrawMol::findExtremes
-// takes from the shapes, labels, and annotations drawingExtentsInclude
-// names; DrawMol leaves out bonds shorter than 0.01, so a molecule that
-// small, or extents that leave out everything drawn, have none, and
-// findExtremes leaves the extremes at +-DBL_MAX / 2, from which every drawn
-// coordinate is measured. A flexible canvas takes its size from the
+// takes from the shapes, labels, and annotations; DrawMol leaves out bonds
+// shorter than 0.01, so a molecule that small has none, and findExtremes
+// leaves the extremes at +-DBL_MAX / 2, from which every drawn coordinate is
+// measured. A flexible canvas takes its size from the
 // extents: DrawMol::calculateScale sets the width to scalingFactor times
 // the extent (plus padding) in whole pixels, and the scale to the pixels
 // left over the extent, so a drawing under a pixel or so gets a scale of
@@ -350,8 +349,7 @@ void checked_scale(detail::DrawMol &dm) {
     if (!(std::abs(v) <= 1e12)) {
       throw ValueErrorException(
           "nothing of the drawing is left to size it by: its bonds are "
-          "shorter than 0.01 (which RDKit does not draw), or "
-          "drawingExtentsInclude leaves out what is drawn");
+          "shorter than 0.01 (which RDKit does not draw)");
     }
   }
   // calculateScale converts scalingFactor times each extent, with padding,

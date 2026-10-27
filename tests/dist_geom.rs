@@ -88,7 +88,6 @@ fn default_parameters() {
         use_small_ring_torsions: false,
         use_macrocycle_torsions: false,
         use_macrocycle14config: false,
-        use_legacy_implementation: true,
         bounds_mat_force_scaling: 1.0,
         use_symmetry_for_pruning: true,
         force_trans_amides: true,
@@ -108,19 +107,6 @@ fn default_parameters() {
             scale_vdw: false,
             do_triangle_smoothing: true,
             use_macrocycle14config: false,
-            force_trans_amides: true,
-            set14bounds: true,
-            set13bounds: true,
-        }
-    );
-    assert_eq!(
-        GetMoleculeBoundsMatrixEmbedParametersParams::default(),
-        GetMoleculeBoundsMatrixEmbedParametersParams {
-            do_triangle_smoothing: true,
-            scale_vdw: false,
-            set15bounds: true,
-            set14bounds: true,
-            set13bounds: true,
         }
     );
 }
@@ -128,7 +114,7 @@ fn default_parameters() {
 #[test]
 fn presets() {
     // (use_exp_torsion_angle_prefs, use_basic_knowledge, et_version,
-    // use_small_ring_torsions, use_macrocycle_torsions, use_legacy_implementation)
+    // use_small_ring_torsions, use_macrocycle_torsions, use_macrocycle14config)
     let summary = |p: EmbedParameters| {
         (
             p.use_exp_torsion_angle_prefs,
@@ -137,46 +123,28 @@ fn presets() {
             p.use_small_ring_torsions,
             p.use_macrocycle_torsions,
             p.use_macrocycle14config,
-            p.use_legacy_implementation,
         )
     };
-    assert_eq!(summary(etkdg()), (true, true, 1, false, false, false, true));
+    assert_eq!(summary(etkdg()), (true, true, 1, false, false, false));
     assert_eq!(
         summary(etkdg_v2()),
-        (true, true, 2, false, false, false, true)
+        (true, true, 2, false, false, false)
     );
     assert_eq!(
         summary(etkdg_v3()),
-        (true, true, 2, false, true, true, true)
+        (true, true, 2, false, true, true)
     );
     assert_eq!(
         summary(sr_etkdg_v3()),
-        (true, true, 2, true, false, false, true)
+        (true, true, 2, true, false, false)
     );
-    assert_eq!(summary(etdg()), (true, false, 1, false, false, false, true));
+    assert_eq!(summary(etdg()), (true, false, 1, false, false, false));
     assert_eq!(
         summary(etdg_v2()),
-        (true, false, 2, false, false, false, true)
+        (true, false, 2, false, false, false)
     );
-    assert_eq!(summary(kdg()), (false, true, 1, false, false, false, true));
-    assert_eq!(summary(dg()), (false, false, 2, false, false, false, true));
-    assert_eq!(
-        embed_parameters_to_json(&etkdg_v3()).unwrap(),
-        concat!(
-            r#"{"basinThresh":"5","boundsMatForceScaling":"1","boxSizeMult":"2","#,
-            r#""clearConfs":"true","embedFragmentsSeparately":"true","#,
-            r#""enableSequentialRandomSeeds":"false","enforceChirality":"true","ETversion":"2","#,
-            r#""forceTransAmides":"true","ignoreSmoothingFailures":"false","maxIterations":"0","#,
-            r#""numThreads":"1","numZeroFail":"1","onlyHeavyAtomsForRMS":"true","#,
-            r#""optimizerForceTol":"0.001","pruneRmsThresh":"-1","randNegEig":"true","#,
-            r#""randomSeed":"-1","symmetrizeConjugatedTerminalGroupsForPruning":"true","#,
-            r#""timeout":"0","trackFailures":"false","useBasicKnowledge":"true","#,
-            r#""useExpTorsionAnglePrefs":"true","useLegacyImplementation":"true","#,
-            r#""useMacrocycle14config":"true","useMacrocycleTorsions":"true","#,
-            r#""useRandomCoords":"false","useSmallRingTorsions":"false","#,
-            r#""useSymmetryForPruning":"true","verbose":"false"}"#
-        )
-    );
+    assert_eq!(summary(kdg()), (false, true, 1, false, false, false));
+
 }
 
 #[test]
@@ -260,7 +228,7 @@ fn embedding_updates_the_parameters() {
     );
     assert_eq!(params.max_iterations, 90);
     assert_eq!(params.basin_thresh, 1e8);
-    assert_eq!(params.get_failure_counts().len(), 15);
+    assert_eq!(params.get_failure_counts().len(), 12);
 
     // maxIterations comes from the first fragment.
     let mut mol = with_hs("CC.O");
@@ -489,25 +457,10 @@ fn bounds_matrices() {
         },
     )
     .unwrap();
-    let with_params = get_molecule_bounds_matrix_embed_parameters(&butane, &etkdg_v3()).unwrap();
-    for row in [&unsmoothed[0], &with_params[0]] {
-        for (a, e) in row.iter().zip([0.0, 1.524, 2.5128, 3.8107]) {
-            assert!((a - e).abs() < 1e-4, "{row:?}");
-        }
+    let row = &unsmoothed[0];
+    for (a, e) in row.iter().zip([0.0, 1.524, 2.5128, 3.8107]) {
+        assert!((a - e).abs() < 1e-4, "{row:?}");
     }
-    assert_eq!(
-        get_molecule_bounds_matrix_embed_parameters_with_params(
-            &butane,
-            &etkdg_v3(),
-            &GetMoleculeBoundsMatrixEmbedParametersParams {
-                do_triangle_smoothing: false,
-                ..Default::default()
-            },
-        )
-        .unwrap()
-        .len(),
-        4
-    );
     assert!(matches!(
         get_molecule_bounds_matrix(&Mol::default()),
         Err(Error::Value { .. })
@@ -555,40 +508,3 @@ fn experimental_torsions() {
     ));
 }
 
-#[test]
-fn ordered_failure_causes() {
-    use EmbedFailureCauses as E;
-    assert_eq!(
-        ordered_embed_failure_causes(),
-        vec![
-            (E::InitialCoords, 0),
-            (E::FirstMinimization, 1),
-            (E::CheckTetrahedralCenters, 2),
-            (E::CheckChiralCenters, 3),
-            (E::MinimizeFourthDimension, 4),
-            (E::EtkMinimization, 5),
-            (E::LinearDoubleBond, 8),
-            (E::CheckChiralCenters2, 10),
-            (E::FinalChiralBounds, 6),
-            (E::FinalCenterInVolume, 7),
-            (E::BadDoubleBondStereo, 9),
-            (E::ExceededTimeout, 11),
-        ]
-    );
-    assert_eq!(
-        ordered_embed_failure_causes_with_legacy_implementation(false),
-        vec![
-            (E::InitialCoords, 0),
-            (E::Minimization, 12),
-            (E::KtermViolation, 13),
-            (E::CheckTetrahedralCenters, 2),
-            (E::CheckChiralCenters, 3),
-            (E::FinalChiralBounds, 6),
-            (E::FinalCenterInVolume, 7),
-            (E::BadDoubleBondStereo, 9),
-            (E::Clash, 14),
-            (E::LinearDoubleBond, 9),
-            (E::ExceededTimeout, 11),
-        ]
-    );
-}

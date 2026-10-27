@@ -191,6 +191,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   FreeSASALib
   MolInteractionFields
   PubChemShape
+  pubchem_align3d
   hc
   SimDivPickers
   InfoTheory
@@ -198,7 +199,7 @@ set(RDKIT_CXX_RDKIT_TARGETS
   EnumerateStereoisomers
   MolEnumerator
   MolInterchange
-  ChemDraw
+  RDChemDrawLib
   SynthonSpaceSearch
   RDInchiLib
 )

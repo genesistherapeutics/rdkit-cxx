@@ -842,6 +842,14 @@ void check_legend(const std::string &legend, bool freetype) {
     return;
   }
   check_text_size(legend, "legend");
+  // RDKit 2025.03's extractLegend splits the legend at newlines, drops the
+  // empty pieces, and reads the last of them with legends_.back(), past an
+  // empty vector when nothing is left (Python crashes; RDKit 2026.03 draws
+  // no legend).
+  if (legend.find_first_not_of('\n') == std::string::npos) {
+    throw ValueErrorException(
+        "a legend needs a character other than a newline");
+  }
   std::vector<std::string> lines;
   boost::split(lines, legend, boost::is_any_of("\n"));
   for (const auto &line : lines) {

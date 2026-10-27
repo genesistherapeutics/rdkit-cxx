@@ -10,8 +10,6 @@ use std::collections::BTreeMap;
 use super::mol_list_into_map;
 use crate::Result;
 use crate::chem::Mol;
-use crate::chem::rdchem::enums::rdkit_enum;
-use crate::error::expect_ok;
 use crate::ffi::chirality::ffi::IndexPair;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::graph::ffi;

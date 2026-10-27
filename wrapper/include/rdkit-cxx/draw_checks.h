@@ -107,7 +107,7 @@ void check_annotation(const std::string &text, bool freetype, const char *what);
 void check_label(const std::string &label, bool freetype, const char *what);
 
 // A legend as DrawMol draws it: split at newlines into lines, each checked
-// as check_annotation checks it.
+// as check_annotation checks it, at least one of them not empty.
 void check_legend(const std::string &legend, bool freetype);
 
 // Everything DrawMol reads from a molecule it draws with these options,

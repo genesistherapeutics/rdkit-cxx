@@ -10,6 +10,7 @@
 mod common;
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_chem_draw::{CDXFormat, mol_to_chem_draw_block, mol_to_chem_draw_block_format};
 use rdkit_cxx::chem::*;
 use rdkit_cxx::geometry::Point3D;
 
@@ -249,20 +250,9 @@ fn property_lists() {
     };
     create_atom_int_property_list_with_params(&mut mol, "n", &wrapped).unwrap();
     assert_eq!(mol.get_prop("atom.iprop.n").unwrap(), "[x]\nx 1\n2 3");
-    for i in 0..3 {
-        mol.get_bond_with_idx_mut(i)
-            .unwrap()
-            .set_double_prop("d", 1.5);
-    }
-    create_bond_double_property_list(&mut mol, "d").unwrap();
-    assert_eq!(mol.get_prop("bond.dprop.d").unwrap(), "1.5 1.5 1.5");
-    create_bond_string_property_list(&mut mol, "missing").unwrap();
-    assert_eq!(mol.get_prop("bond.prop.missing").unwrap(), "n/a n/a n/a");
     create_atom_bool_property_list(&mut mol, "missing").unwrap();
     create_atom_double_property_list(&mut mol, "missing").unwrap();
     create_atom_string_property_list(&mut mol, "missing").unwrap();
-    create_bond_int_property_list(&mut mol, "missing").unwrap();
-    create_bond_bool_property_list(&mut mol, "missing").unwrap();
 }
 
 #[test]
@@ -660,20 +650,20 @@ fn sequences() {
 #[test]
 fn chem_draw() {
     assert!(has_chem_draw_cdx_support());
-    let cdxml = mol_to_cdxml_block(&smiles("CO")).unwrap();
+    let cdxml = mol_to_chem_draw_block(&smiles("CO")).unwrap();
     assert!(cdxml.starts_with("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"));
-    let cdx = mol_to_cdxml_block_format(&smiles("CO"), CDXMLFormat::Cdx).unwrap();
+    let cdx = mol_to_chem_draw_block_format(&smiles("CO"), CDXFormat::Cdx).unwrap();
     assert!(cdx.starts_with(b"VjCD0100"));
     // RDKit scales 2D coordinates by the mean bond length, which a molecule
     // without bonds lacks, and casts them to 32-bit fixed point.
-    assert!(is_value(mol_to_cdxml_block(&smiles("C"))));
+    assert!(is_value(mol_to_chem_draw_block(&smiles("C"))));
     let mut far = methanol_3d();
     far.get_conformer_mut()
         .unwrap()
         .set_atom_position(0, Point3D::new(1e6, 0.0, 0.0))
         .unwrap();
-    assert!(is_value(mol_to_cdxml_block(&far)));
-    assert!(mol_to_cdxml_block(&methanol_3d()).is_ok());
+    assert!(is_value(mol_to_chem_draw_block(&far)));
+    assert!(mol_to_chem_draw_block(&methanol_3d()).is_ok());
 }
 
 #[test]
@@ -700,7 +690,7 @@ fn depicting_writers_run_on_many_threads() {
         mol_to_v2k_mol_block(&mol).unwrap(),
         mol_to_v3k_mol_block(&mol).unwrap(),
         mol_to_mrv_block(&mol).unwrap(),
-        mol_to_cdxml_block(&mol).unwrap(),
+        mol_to_chem_draw_block(&mol).unwrap(),
     );
     std::thread::scope(|scope| {
         for _ in 0..4 {
@@ -710,7 +700,7 @@ fn depicting_writers_run_on_many_threads() {
                     assert_eq!(mol_to_v2k_mol_block(&mol).unwrap(), expected.0);
                     assert_eq!(mol_to_v3k_mol_block(&mol).unwrap(), expected.1);
                     assert_eq!(mol_to_mrv_block(&mol).unwrap(), expected.2);
-                    assert_eq!(mol_to_cdxml_block(&mol).unwrap(), expected.3);
+                    assert_eq!(mol_to_chem_draw_block(&mol).unwrap(), expected.3);
                 }
             });
         }

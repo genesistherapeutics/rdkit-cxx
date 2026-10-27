@@ -113,7 +113,7 @@ use rdkit_cxx::chem::{
     fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
     mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cdxml_block, mol_to_cx_smiles_with_params, mol_to_mol_block,
+    mol_to_cx_smiles_with_params, mol_to_mol_block,
     mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
     molzip_fragments_with_params, pattern_fingerprint,
 };
@@ -280,7 +280,7 @@ fn main() {
     phase(grid_centroids(), grid_centroids());
     phase(registered_property(), available_properties());
     phase(dclv_surfaces(), dclv_surfaces());
-    phase(pubchem_shape_alignment(), pubchem_shape_scores());
+    phase(pubchem_shape_alignment(), pubchem_shape_inputs());
     phase(gaussian_shapes(), gaussian_shapes());
     phase(synthon_shapes(), gaussian_shapes());
     phase(murtagh_clusters(), hierarchical_picks());
@@ -1292,13 +1292,12 @@ fn pubchem_shape_alignment() -> Call<(Mol, Mol)> {
     }
 }
 
-fn pubchem_shape_scores() -> Call<(Mol, Mol)> {
+fn pubchem_shape_inputs() -> Call<Mol> {
     Call {
-        make: |_| (embedded("CCO"), embedded("CCN")),
-        run: |(mol1, mol2)| {
-            let opts = rd_shape_align::ShapeInputOptions::default();
-            let (shape, _) = rd_shape_align::score_mol(&mol1, &mol2, &opts, &opts).unwrap();
-            assert!(shape > 0.0);
+        make: |_| embedded("Oc1ccccc1"),
+        run: |mol| {
+            let shape = rd_shape_align::prepare_conformer(&mol).unwrap();
+            assert!(shape.sov() > 0.0);
         },
     }
 }
@@ -1397,7 +1396,10 @@ fn inchi_read() -> Call<String> {
 fn cdxml_blocks() -> Call<Mol> {
     Call {
         make: |_| depicted("CCO"),
-        run: |mol| assert!(mol_to_cdxml_block(&mol).unwrap().contains("BondLength")),
+        run: |mol| {
+            let block = rdkit_cxx::chem::rd_chem_draw::mol_to_chem_draw_block(&mol).unwrap();
+            assert!(block.contains("BondLength"));
+        },
     }
 }
 
@@ -1551,7 +1553,7 @@ fn available_properties() -> Call<()> {
     }
 }
 
-// DCLV's surface tests share a global cache.
+// DCLV keeps its state in each call in RDKit 2025.03, so calls run at once.
 fn dclv_surfaces() -> Call<Mol> {
     Call {
         make: |_| {
@@ -1566,9 +1568,9 @@ fn dclv_surfaces() -> Call<Mol> {
             mol
         },
         run: |mol| {
-            let mut dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
+            let dclv = DoubleCubicLatticeVolume::new(&mol).unwrap();
             assert!(dclv.get_surface_area() > 0.0);
-            assert!(dclv.get_polar_surface_area() > 0.0);
+            assert!(dclv.get_volume() > 0.0);
         },
     }
 }

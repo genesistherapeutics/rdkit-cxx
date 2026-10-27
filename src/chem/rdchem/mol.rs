@@ -15,7 +15,7 @@ use crate::chem::rdchem::{
     AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoMut,
     RingInfoRef,
 };
-use crate::error::{expect_ok, to_string};
+use crate::error::expect_ok;
 use crate::ffi::conformer::ffi as conformer_ffi;
 use crate::ffi::mol::ffi;
 use crate::ffi::props::ffi::{RDProps, mol_as_props, mol_clear_computed_props};

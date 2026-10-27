@@ -20,7 +20,7 @@ use crate::Result;
 use crate::chem::Mol;
 use crate::chem::rdchem::enums::rdkit_enum;
 use crate::chem::rdtrajectory::Snapshot;
-use crate::error::{expect_ok, to_string};
+use crate::error::expect_ok;
 use crate::ffi::force_field::ffi;
 use crate::geometry::Point3D;
 
@@ -779,7 +779,6 @@ mmff_terms! {
 impl fmt::Debug for MMFFMolProperties {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("MMFFMolProperties")
-            .field("variant", &self.get_mmff_variant())
             .field("valid", &self.is_valid())
             .finish()
     }

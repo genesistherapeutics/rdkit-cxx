@@ -12,26 +12,10 @@ fn monomer_info() {
         AtomMonomerInfo::default().get_monomer_type(),
         AtomMonomerType::Unknown
     );
-    let params = AtomMonomerInfoParams {
-        name: "N1".into(),
-        residue_name: "GLY".into(),
-        res_num: 4,
-        chain_id: "A".into(),
-        monomer_class: "AA".into(),
-    };
+    let params = AtomMonomerInfoParams { name: "N1".into() };
     let mut info = AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap();
     assert_eq!(info.get_name().unwrap(), "N1");
-    assert_eq!(info.get_residue_name().unwrap(), "GLY");
-    assert_eq!(
-        (info.get_residue_number(), info.get_chain_id().unwrap()),
-        (4, "A".to_string())
-    );
-    assert_eq!(info.get_monomer_class().unwrap(), "AA");
     info.set_name("C1");
-    info.set_residue_name("ALA");
-    info.set_residue_number(5);
-    info.set_chain_id("B");
-    info.set_monomer_class("LINK");
     info.set_monomer_type(AtomMonomerType::Unknown).unwrap();
     let copy = info.clone();
     assert_eq!(copy.get_name().unwrap(), "C1");
