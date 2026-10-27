@@ -43,7 +43,6 @@ fn create_and_set_stereo_groups() {
     let params = CreateStereoGroupParams {
         atom_ids: vec![1],
         read_id: 5,
-        ..Default::default()
     };
     let with_id =
         create_stereo_group_with_params(StereoGroupType::StereoAnd, &rw, &params).unwrap();
