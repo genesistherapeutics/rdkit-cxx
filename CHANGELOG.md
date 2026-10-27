@@ -1,73 +1,137 @@
 # Changelog
 
-## 2026.3.0
+## 2024.9.0
 
-The first release for RDKit 2026.03: the bindings and ports of 2026.9.0, for
-RDKit 2026.03.6 (see Compared with 2026.9.0, below). It
-supports RDKit 2026.03.6 from conda-forge on Linux (x86-64 and arm64) and
-macOS (arm64), and builds with Rust 1.88 or newer. The build refuses other
-RDKit releases: the wrapper compiles against copies of headers RDKit does not
-install, whose layouts can change between patch releases (`wrapper/vendor/`).
-A program built against one release stops when it loads with another.
+The first release for RDKit 2024.09: the bindings and ports of 2026.9.0, for
+RDKit 2024.09.6 (see Compared with 2026.9.0, below). It supports RDKit
+2024.09.6 from conda-forge on Linux (x86-64 and arm64) and macOS (arm64),
+and builds with Rust 1.88 or newer. The build refuses other RDKit releases:
+the wrapper compiles against copies of headers RDKit does not install, whose
+layouts can change between patch releases (`wrapper/vendor/`). A program
+built against one release stops when it loads with another. RDKit 2024.09's
+CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
 
 ### Compared with 2026.9.0
 
-- conda-forge's macOS build of RDKit 2026.03.6 ships no SLN parser (and no
+- conda-forge's macOS build of RDKit 2024.09.6 ships no SLN parser (and no
   `rdSLNParse` for Python), so on macOS `rd_sln_parse`'s functions are
   `Error::Value`; its Linux builds have the parser.
-- What RDKit 2026.03 lacks is not bound: the embedder's initial-embedding
-  modes, embedding force field, `onlyInitialEmbedding`, `ETKDGv4`, and
-  Gaussian torsion terms; `GetSymmSSSR`'s `algorithm` and `recalcSSSR`, the
-  legacy ring-finding setting, and the attachment-point label helpers;
-  `Compute2DCoords`' `usePathAngleExpansion`; `GetSurfacePoints`'
-  `allPoints`; `GetAllConformerBestRMSToRef`; and
-  `MolCatalogEntry.Serialize` (an entry still pickles through `serialize`).
-- Results are RDKit 2026.03.6's: its 2D depictions (and the drawings and mol
-  blocks made from them), conformers, bounds matrices, and ring atom orders
-  differ from 2026.09's. Parsing does not find ring families.
-- RDKit 2026.03 behaviors the bindings keep, as Python has them: the
-  `Properties` registry computes `chi2v` and `chi2n` as `chi3v` and `chi3n`
-  (RDKit #9643), and `DoubleCubicLatticeVolume.get_surface_points` returns
-  the points the surface-area methods tested, once per call.
-- The ports follow RDKit 2026.03.6's Python: `BertzCT` takes a non-aromatic
-  bond's order as its `BondType`'s number (17 for a dative bond), and
-  `fr_Ar_COO`'s description is 2026.03's.
-- Checks for what RDKit 2026.09 fixed in RDKit:
-  - Every wrapper source reads `RDConfig.h` first, since `RingInfo.h`
-    declares its ring-family members only under a macro it does not
-    include.
-  - `RingInfo.num_relevant_cycles` is `Error::Runtime` before the ring
-    families are found, where RDKit 2026.03 converts RingDecomposerLib's
-    failure value out of range, and `Error::Value` for more relevant cycles
-    than `u32` holds.
-  - `MolCatalogEntry::from_pickle` builds the entry as the catalog's reader
-    does: RDKit 2026.03's pickle constructor deletes an uninitialized
-    pointer.
-  - `assign_cip_labels` leaves unlabeled, as RDKit 2026.09 does, a double
-    bond whose stereo atom is not a neighbor of its own end and an
-    atropisomer bond with an end of no other bonds, where RDKit 2026.03
-    reads past an empty vector.
-  - A molecule of at most 255 atoms whose substance groups or stereo groups
-    name a bond past 255, which RDKit 2026.03 pickles truncated, is refused
-    wherever it would be pickled (`Error::Value`; `Mol::to_binary` and
-    `ChemicalReaction::to_binary` panic). So are a substance group or stereo
-    group list of more than 255 entries, more than 255 stereo groups, and a
-    query of more than 255 children, which RDKit 2026.09 pickles truncated
-    too: RDKit writes these pickles and cannot read them back.
-  - A multithreaded supplier's queues hold at most 2^20 records: RDKit
-    2026.03 dereferences null when it cannot allocate one.
-  - Drawing refuses an atom of two bonds with a neighbor at its position,
-    for which RDKit 2026.03 reads an uninitialized bond type.
-  - RDKit 2026.03's substructure matches, embedder, CIP labeler,
-    `DetermineBondOrders`, and synthon search leave RDKit's `SIGINT` handler
-    installed; the wrappers restore the process's after each call.
+- What RDKit 2024.09 lacks is not bound:
+  - Modules: `rdGaussianShape`, `rdEnumerateStereoisomers` (the Python
+    `EnumerateStereoisomers` port stays), and `rdChemDraw`, with the
+    ChemDraw writer.
+  - Functions: the SCSR readers, the bond property lists, `CopyMolSubset`,
+    `CleanupStereoGroups`, `ComputeAtomCIPRanks`, `CaptureErrorLog`,
+    `GetInchiVersion`, `inchi.MolFromInchiAndAuxInfo`, the
+    `ClearPropertyCache` methods, `Mol.GetName` and `SetName`,
+    `AtomCoordsMatcher`, `Draw.MolToSVG` and `DrawMolWithMatches`, the
+    fingerprint generators' JSON and similarity maps,
+    `OrderedEmbedFailureCauses`, `EmbedParametersToJSON`, the `ETDGv2` and
+    `DG` presets, `GetAllConformerBestRMSToRef`, the attachment-point label
+    helpers, and `MolCatalogEntry.Serialize` (an entry still pickles
+    through `serialize`).
+  - Values: `Atom.NOATOM`, `CX_ZERO_BONDS`, and the embedding failure
+    causes after `EXCEEDED_TIMEOUT`.
+  - Options: the drawing's legend position, drawing extents, stereo group
+    labels, and single-colour bonds; contours' fill thresholds and the
+    similarity maps' grid options; the embedder's initial-embedding modes,
+    embedding force field, `onlyInitialEmbedding`, `ETKDGv4`, Gaussian
+    torsion terms, and legacy implementation; MMFF's term, variant, and
+    dielectric getters; RascalMCES' `completeSmallestRings` and
+    `maxBestMCESs`; R-group decomposition's `allowMultipleCoresInSameMol`;
+    `MolzipParams.alignCoordinates`; the depictor's `useRingTemplates` and
+    `usePathAngleExpansion`; `DetermineBonds`' `maxIterations`;
+    `GetSSSR`'s and `GetSymmSSSR`'s `includeHydrogenBonds`, `algorithm`,
+    and `recalcSSSR`, and the legacy ring-finding setting;
+    `CanonicalizeStereoGroups`' `maxStereoGroups`;
+    `ReapplyMolBlockWedging`'s `verify`;
+    `AbbreviationDefinition.includesXBonds`; `SubstructMatchParameters`'
+    extra checks and `aromaticMatchesSingleOrDouble`; MolHash's
+    `excludeFromTautomerismProp`; and `GetSurfacePoints`.
+- API in 2024.09's forms: `Atom.GetExplicitValence` and
+  `GetImplicitValence` (no `GetValence`); `AddHs`, `GetBestRMS`,
+  `GetBestAlignmentTransform`, `GetAllConformerBestRMS`, and
+  `MolMetadataToPNG*` take keyword arguments, so their parameter structs
+  (`AddHsParams` and others) replace `AddHsParameters`,
+  `BestAlignmentParams`, and `PNGMetadataParams`; `AtomMonomerInfo` has a
+  type and a name, and the residue fields are `AtomPDBResidueInfo`'s;
+  `DoubleCubicLatticeVolume` computes its results when it is made;
+  `rd_shape_align` has `prepare_conformer`, `align_mol`, and
+  `align_mol_shape_input`; `GetMoleculeBoundsMatrix` takes `set15bounds`,
+  `scaleVDW`, `doTriangleSmoothing`, and `useMacrocycle14config`.
+- `rdSynthonSpaceSearch`, new in RDKit 2024.09, is not bound: its readers
+  and searches are not audited (U1). Later releases of the crate bind it.
+- `ReactionsFromCDXMLBlock` and `ReactionsFromCDXMLFile` are not bound:
+  they run RDKit 2024.09's own CDXML parser, which reads atoms of fragments
+  it has freed. Nor are `MolsFromCDXML` and `MolsFromCDXMLFile`.
+- Results are RDKit 2024.09.6's: depictions, conformers, drawings, pickles,
+  descriptor values, and the ports' outputs, where they differ from
+  2026.09's. RDKit 2024.09 behaviors the bindings keep, as Python has them:
+  the `Properties` registry computes `chi2v` and `chi2n` as `chi3v` and
+  `chi3n` (RDKit #9643); the unpickler reads monomer type 1 as PDB residue
+  info and refuses unknown types; the SD suppliers read the text after the
+  last `$$$$` as a record; and `fr_prisulfonamd` matches nothing.
+- The ports follow RDKit 2024.09.6's Python: `CalcMolDescriptors3D`
+  ignores `confId`; legacy `FindMolChiralCenters` keeps
+  `_ChiralityPossible`; `EnumerateStereoisomers` clears only
+  `EITHERDOUBLE` bond directions and sets no chiral flag;
+  `RegistrationHash` canonicalizes enhanced stereo whatever the flags;
+  TorsionFingerprints' weights test only a bond's end atom for a terminal
+  bond; `RandomizeActivities` without shuffling, which raises `NameError`,
+  is `Error::Value`; and `BertzCT` takes a non-aromatic bond's order as its
+  `BondType`'s number (17 for a dative bond).
+- Checks for what later RDKit releases fixed:
+  - Stereo groups (RDKit #8558): RDKit 2024.09's bond removals leave a
+    group that holds the bond pointing at it, and its groups may list an
+    atom twice, which a removal takes out once. `RWMol`'s removals take the
+    bond out of the groups, as RDKit 2025.09 does; RDKit's own removals
+    (the SMILES writer for several fragments, `get_mol_frags_as_mols`,
+    `remove_hs`, the transforms, the standardizer, and the rest) refuse a
+    molecule whose groups they would leave dangling (`Error::Value`), and
+    the pickle readers and `set_stereo_groups` refuse groups that list an
+    atom or bond twice.
+  - `fragment_on_bonds` refuses a repeated bond (#9430);
+    `fragment_on_some_bonds` makes no fragments for more bonds than it is
+    given (#9451).
+  - The CML writer refuses a tetrahedral atom of fewer than four neighbors
+    (#9472), and the Mol2 reader a bond line that names an atom the
+    molecule lacks (#9417).
+  - The input scanner reads each V3000 substance-group line as RDKit does
+    and refuses a field that would leave a value uninitialized or pop an
+    empty string (#9417).
+  - The PDB reader with proximity bonding, and `determine_connectivity`,
+    refuse a hydrogen RDKit would bond to several atoms, whose extra bonds
+    RDKit 2024.09 removes while it iterates over them (#9444).
+  - FMCS refuses `verbose` (#9040), RascalMCES any `max_frag_separation`
+    but -1 (#9424), and CoordGen double-bond stereo without two stereo
+    atoms (#8415).
+  - `molzip_fragments` with `generate_coordinates` refuses repeated R
+    groups and `FragmentOnBonds` with several molecules, and returns `None`
+    where RDKit would read a null molecule; `replace_core` refuses a match
+    missing a shared core atom's neighbor (#9450).
+  - Drawing refuses a legend of only newlines.
+  - RDKit 2024.09 reads JSON with rapidjson, its assertions off:
+    `json_to_mols` refuses every value of another type, missing key, and
+    short array it would read unchecked, and gives a missing attachment
+    point `lvIdx` -1, which 2024.09 leaves uninitialized.
+  - Pickling refuses more than 65,535 properties on a molecule, atom,
+    bond, conformer, or substance group, which RDKit writes in two bytes.
+  - `renumber_atoms` refuses anything but a permutation (#9450), and
+    `DoubleCubicLatticeVolume` what 2024.09's reads unchecked (a dot
+    density, monomer info of another type, short PDB atom names, huge
+    coordinates, and a protein without its ligand or a standard residue).
+  - A multithreaded supplier stops its input and drains its queues before
+    RDKit's destructor joins its threads (#8556); dropping one mid-read
+    otherwise calls a pure virtual method or waits forever.
+  - The Maestro writer is made through a stream it may own, since RDKit
+    2024.09's shared-pointer constructor always fails.
 
 ### Bindings
 
 - Binds RDKit's C++ API with the coverage of its Python wrappers, as
-  conda-forge builds them with Boost.Python: 3,442 of the 4,011 names they
-  expose. Each of the other 569 has a reason in `inventory/manifest.toml`:
-  Python protocol methods and Boost.Python's container types, 50 names left
+  conda-forge builds them with Boost.Python: 3,080 of the 3,591 names they
+  expose. Each of the other 511 has a reason in `inventory/manifest.toml`:
+  Python protocol methods and Boost.Python's container types, 67 names left
   unbound because RDKit's code cannot be made safe from outside, and
   deprecated names.
 - Module paths follow Python's in Rust spelling:
@@ -103,17 +167,15 @@ A program built against one release stops when it loads with another.
   `includeChiralPresence` where RDKit takes `includeAtomMaps`, so Python
   ranks by atom maps only with `includeChiralPresence` and never by chiral
   presence. The crate passes each option where RDKit takes it.
-- `rdGaussianShape.ShapeInput` takes the C++ constructor's defaults; Python's
-  binding requires all four arguments.
 - `PointND.Distance`, which Python binds to `Point3D`'s function so that it
   always raises, is not bound.
 
 ### Ports of Python-only functionality
 
 Much of what RDKit offers only in Python is ported to Rust on top of the
-bindings and computes what Python computes: 1,016 of the 2,606 names RDKit's
+bindings and computes what Python computes: 1,008 of the 2,604 names RDKit's
 Python modules define. The ported modules' Python tests are ported with them,
-with expected values from RDKit 2026.03.6.
+with expected values from RDKit 2024.09.6.
 
 - **Descriptors:** `Descriptors` (`desc_list` in Python's order,
   `calc_mol_descriptors`), `Descriptors3D`, `Crippen`, `MolSurf`,
@@ -157,7 +219,7 @@ plumbing, and Python protocol hooks.
   ported, and results are `f64`.
 - Functions returning PIL images return PNG bytes, Python callables are Rust
   closures, and generators are iterators or lists.
-- Some Python functions are broken in RDKit 2026.03.6; the ports implement
+- Some Python functions are broken in RDKit 2024.09.6; the ports implement
   what they intend:
   - Under NumPy 2 or Python 3.12: `ML.InfoTheory` `BitRank`,
     `ML.Data.Stats.StandardizeMatrix` on 2-D input,

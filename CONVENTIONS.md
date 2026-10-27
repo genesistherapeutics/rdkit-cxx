@@ -181,9 +181,9 @@ its Boost.Python modules and its `.py` modules.
   extended-query pickles, extended-query JSON (which holds molecule
   pickles in base64), catalog pickles, PNG metadata, and
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
-  read later. MolPickler writes some counts, and in RDKit 2026.03 a small
-  molecule's bond indices, in one byte, and reads a larger value's pickle
-  out of step, so every wrapper that hands RDKit a molecule to pickle
+  read later. MolPickler writes some counts, and in RDKit 2024.09 a small
+  molecule's bond indices, in one byte, and the property counts in two, and
+  reads a larger value's pickle out of step, so every wrapper that hands RDKit a molecule to pickle
   (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
   truncate: RDKit could not read the pickle back, as the contract and the
   holders' safe reads assume. The wrappers still check what they checked before, for
@@ -205,18 +205,28 @@ its Boost.Python modules and its `.py` modules.
   bytes can still get wrong (a state from another library; matchers that
   RDKit dereferences null in or recurses through forever, and patterns'
   monomer infos).
-  RDKit's JSON reader (`MolInterchange/Parser.cpp`), which
-  no fuzzer covers, trusts the indices, counts, and query trees it reads,
-  so `json_to_mols` parses the document first, with the same boost::json
-  parser, checks what RDKit would read unchecked (`DocumentChecker` in
-  `mol_interchange.cpp`, which follows RDKit's reads and leaves RDKit's own
-  errors to RDKit), and hands RDKit the checked document serialized again.
-  Its queries must be ones RDKit makes, since RDKit takes a query's class
-  from its tag and its meaning from its description, while the code that
-  reads queries takes the description to imply the class: each
-  description with a class RDKit gives it, AND, OR, and XOR with two or
-  more children, and no bond XOR or null bond in an AND or OR, which
-  RDKit's own bond matcher and SMARTS writer cast. Text a wrapper checks
+  RDKit's JSON reader (`MolInterchange/Parser.cpp`), which no fuzzer
+  covers, reads with rapidjson (1.1.0, `RAPIDJSON_ASSERT` compiled out,
+  default parse flags) and trusts the types, indices, counts, and query
+  trees it reads: rapidjson gives a null value for a missing key, and its
+  `Get*`, member lookups, and indexing read a value of another type, or an
+  element past an array's end, as if it were one. RDKit 2024.09 does not
+  install rapidjson, so `json_to_mols` parses the document first with
+  boost::json, checks what RDKit would read unchecked (`DocumentChecker` in
+  `mol_interchange.cpp`, which follows RDKit's reads, types each value as
+  rapidjson will, and leaves RDKit's own errors to RDKit), and hands RDKit
+  the checked document serialized again, which rapidjson reads as the same
+  values: integers as digits typed by their value, doubles always with an
+  exponent, strings escaped, and an infinity as a number rapidjson refuses.
+  An attachment point without `lvIdx`, which RDKit 2024.09 leaves
+  uninitialized, is given 4294967295 (-1) first. Its queries must be ones
+  RDKit makes, since RDKit takes a query's class from its tag and its
+  meaning from its description, while the code that reads queries takes the
+  description to imply the class: each description with a class RDKit
+  gives it (no range query of ring size, which RDKit 2024.09 reads as an
+  equality query), AND, OR, and XOR with two or more children, and no bond
+  XOR or null bond in an AND or OR, which RDKit's own bond matcher and
+  SMARTS writer cast. Text a wrapper checks
   before RDKit parses it
   is read once: a file is read through a checked stream (U12) or into
   memory, so RDKit parses the bytes that were checked.
@@ -381,7 +391,13 @@ its Boost.Python modules and its `.py` modules.
   past 4000 characters. RWMol's atom removals (`removeHs`, which the readers
   run) rewrite each V3000 bond's `ENDPTS` value without checking it, so a
   value that is empty, or in parentheses holds anything but numbers below
-  2^32 between spaces, is refused too. A checked stream stops delivering bytes before the
+  2^32 between spaces, is refused too. RDKit 2024.09 reads a V3000
+  substance group's fields with unchecked `operator>>` reads, so each line
+  it reads as a group's is read as RDKit reads it and refused, from its
+  first byte, when a field would leave a value uninitialized or pop an empty
+  string; since RDKit parses whatever line its input ends in, a stream
+  refused within such a line first delivers values for any field RDKit may
+  then read (`kSGroupSuffix`). A checked stream stops delivering bytes before the
   first one past a limit, and the wrapper throws `ValueErrorException` once
   RDKit asks for that byte, from that call and every later one: RDKit's
   readers trust the positions they record, and a cut-off read can record
@@ -406,6 +422,14 @@ its Boost.Python modules and its `.py` modules.
   which takes the bonds out of the groups and puts back those then at the
   same indices (or on a copy whose groups hold no bonds, if nothing returns
   it); `mol_checks.h` lists RDKit's calls and why the others need neither.
+  RDKit 2024.09's bond removals (`removeBond`, `batchRemoveBonds`) leave
+  the groups that hold a removed bond pointing at it too, and its groups
+  may list an atom twice, which an atom's removal takes out once. RWMol's
+  own removals from Rust run under a `StereoGroupRemovalGuard`, which
+  rebuilds the groups from the atoms and bonds still in the molecule, as
+  RDKit 2025.09 leaves them, and `check_removals` refuses, for RDKit's own
+  removals, a molecule whose groups they would leave dangling, by what they
+  remove (`Removes`).
 
 ## Properties
 
