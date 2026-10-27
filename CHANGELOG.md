@@ -156,6 +156,19 @@ A program built against one release stops when it loads with another.
     once by the wrapper, so RDKit never reads one that changed after the
     check; a `CleanupParameters` naming a normalization file that cannot be
     read is an error wherever it is used.
+  - Proximity bonding (`determine_connectivity` and the PDB reader)
+    refuses a hydrogen it would bond to three or more atoms, for which
+    RDKit 2025.03 reads past the hydrogen's neighbor list (#9444).
+  - Calls that remove atoms or bonds (`molzip`, `replace_substructs`, and
+    the rest) refuse a molecule with an atom or bond in two ABS stereo
+    groups, which RDKit 2025.03's molecule combining makes and its removals
+    then leave dangling.
+  - Pickling (`Mol::to_binary`, which panics, and the cached holders, PNG
+    metadata, reactions, and catalogs) refuses a molecule, conformer, atom,
+    bond, or substance group of more than 65,535 properties, whose count
+    RDKit 2025.03 writes in two bytes. The fragment catalog checks only
+    what its fragments carry, so substance and stereo groups no longer
+    refuse a molecule there.
   - `json_to_mols` gives an attachment point without `lvIdx` -1, which
     RDKit 2025.03 leaves uninitialized.
   - FMCS refuses `verbose` with `store_all`, for which RDKit 2025.03 matches
