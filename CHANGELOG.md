@@ -154,6 +154,11 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - Drawing an atom of two bonds with a neighbor at its position is
     RDKit's `Error::Runtime`: 2024.09 normalizes the direction, and throws,
     where 2026.03 read an uninitialized bond type.
+  - `draw_arrow` checks the head RDKit 2024.09 draws: without a polygon
+    its sides are lines, drawn by hand in comic mode, which refuses sides
+    of no length; 2024.09 has no precondition on the angle, so a flat
+    arrow is drawn, as Python draws it. The reaction's arrow is drawn as
+    lines, with no miter, and comic mode checks its shaft as such.
   - The pickle-width checks (`check_picklable`) hold for 2024.09's
     MolPickler, which writes the same widths.
   - Only the embedder leaves RDKit's `SIGINT` handler installed in 2024.09;

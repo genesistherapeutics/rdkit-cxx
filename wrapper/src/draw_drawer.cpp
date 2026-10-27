@@ -690,12 +690,12 @@ class ReactionLayout {
   // The canvas's size once drawReaction has sized it.
   Size canvas_size() const { return d_canvas; }
 
-  // Comic mode draws the plus signs and the arrow's shaft by hand, which
-  // never ends for a line of no length (kMinComicLineLength). A plus's
-  // strokes are plusWidth / 3 pixels long, in int, and drawArrow pulls the
-  // shaft's end back by its mitre, 0.5 * lineWidth / sin(pi / 6), with
-  // the line width the last component's scale gives (getDrawLineWidth).
-  void check_comic(const RDKit::MolDraw2D &drawer) const {
+  // Comic mode draws the plus signs and the arrow by hand, which never ends
+  // for a line of no length (kMinComicLineLength). A plus's strokes are
+  // plusWidth / 3 pixels long, in int, and the arrow, which drawReaction
+  // draws as lines rather than a polygon, has a shaft of the arrow's length
+  // and sides of at least 5 pixels (its frac's minimum).
+  void check_comic() const {
     const bool plus = d_final_plus_width != 0 &&
                       (d_reagents.size() > 1 || d_products.size() > 1);
     const auto stroke = d_final_plus_width > 30 ? 10 : d_final_plus_width / 3;
@@ -704,14 +704,7 @@ class ReactionLayout {
           "comicMode cannot draw the reaction's plus signs on a canvas this "
           "small: they would be lines of no length");
     }
-    double line_width = drawer.lineWidth();
-    if (drawer.drawOptions().scaleBondWidth) {
-      line_width = std::max(0.0, line_width * last_drawn().getScale() * 0.02);
-    }
-    const double shaft =
-        d_arrow_length > 1.0e-6
-            ? std::abs(d_arrow_length - 0.5 * line_width / std::sin(M_PI / 6))
-            : 0.0;
+    const double shaft = d_arrow_length;
     if (!(shaft >= kMinComicLineLength)) {
       throw ValueErrorException(
           "comicMode cannot draw the reaction's arrow on a canvas this small: "
@@ -895,18 +888,6 @@ class ReactionLayout {
                            dm->getScale();
       checked_set_scale(*dm, scale, scale, true);
     }
-  }
-
-  // The last component drawReaction draws, whose scale is the drawer's when
-  // it draws the arrow.
-  const detail::DrawMol &last_drawn() const {
-    if (!d_products.empty()) {
-      return *d_products.back();
-    }
-    if (!d_agents.empty()) {
-      return *d_agents.back();
-    }
-    return *d_reagents.back();
   }
 
   double first_scale() const {
@@ -1489,7 +1470,7 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
                               has_conf_ids ? &ids : nullptr);
   check_canvas_fits(d, layout.canvas_size());
   if (comic(d)) {
-    layout.check_comic(*d.drawer);
+    layout.check_comic();
   }
   const auto components = static_cast<int>(layout.num_components());
   drawing_call(d, [&] {
@@ -1798,11 +1779,6 @@ void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
   check_canvas(d);
   check_line_width(d);
   const auto col = checked_colour(colour, "color");
-  // RDKit's PRECONDITION.
-  if (!(angle > 1.0e-6)) {
-    throw std::runtime_error(
-        "Arrow angle must be positive and greater than 0.0.");
-  }
   if (!std::isfinite(frac) || !std::isfinite(angle)) {
     throw ValueErrorException("an arrow's frac and angle must be finite");
   }
@@ -1810,16 +1786,21 @@ void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
   const auto end = to_rdkit(cds2);
   drawn_point(d, begin, raw_coords);
   drawn_point(d, end, raw_coords);
-  // The head, as drawArrow computes it: the line ends short of the tip by
-  // the miter, and the head's sides divide by the angle's sine and cosine.
+  // The head, as drawArrow computes it: a polygon's line ends short of the
+  // tip by an allowance for the miter, and the head's sides divide by the
+  // angle's cosine. Without a polygon, RDKit draws the head's sides as two
+  // more lines, by hand in comic mode.
   auto tip = end;
   RDGeom::Point2D p1, p2;
-  detail::calcArrowHead(tip, p1, p2, begin, frac, d.drawer->getDrawLineWidth(),
-                        angle);
+  detail::calcArrowHead(tip, p1, p2, begin, as_polygon, frac, angle);
   for (const auto &p : {tip, p1, p2}) {
     drawn_point(d, p, raw_coords);
   }
   check_comic_line(d, begin, tip);
+  if (!as_polygon) {
+    check_comic_line(d, tip, p1);
+    check_comic_line(d, tip, p2);
+  }
   const auto random = comic_lock(d);
   d.drawer->drawArrow(begin, end, as_polygon, frac, angle, col, raw_coords);
 }
