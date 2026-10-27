@@ -92,7 +92,7 @@ void check_mol_element(const bpt::ptree &elem) {
   }
   auto smiles = elem.get<std::string>("smiles", "");
   if (!smiles.empty()) {
-    check_cx_smiles(smiles);
+    check_smiles_cx(smiles);
     std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(smiles));
     if (!mol) {
       throw RDKit::SmilesParse::SmilesParseException(
@@ -102,7 +102,7 @@ void check_mol_element(const bpt::ptree &elem) {
   }
   // A missing "smarts" is RDKit's error.
   if (auto smarts = elem.get_optional<std::string>("smarts")) {
-    check_cx_smiles(*smarts);
+    check_smiles_cx(*smarts);
     std::unique_ptr<RDKit::RWMol> mol(RDKit::SmartsToMol(*smarts));
     if (!mol) {
       throw RDKit::SmilesParse::SmilesParseException(

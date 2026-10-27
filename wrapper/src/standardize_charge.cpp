@@ -39,7 +39,7 @@ std::vector<MS::ChargeCorrection> checked(
   std::vector<MS::ChargeCorrection> result;
   for (const auto &cc : ccs) {
     std::string smarts = text(cc.smarts);
-    check_cx_smiles(smarts);
+    check_smiles_cx(smarts);
     std::unique_ptr<RDKit::ROMol> query(RDKit::SmartsToMol(smarts));
     if (!query) {
       throw ValueErrorException("charge correction SMARTS do not parse: " +

@@ -21,7 +21,10 @@
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <GraphMol/Substruct/SubstructUtils.h>
 #include <RDGeneral/Exceptions.h>
+#include <RDGeneral/StreamOps.h>
+#include <boost/algorithm/string.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
@@ -30,6 +33,7 @@
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/transforms.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
@@ -389,12 +393,52 @@ void add_recursive_queries(RWMol &mol, BorrowedMols &queries,
   RDKit::addRecursiveQueries(mol, map, std::string(prop_name));
 }
 
+namespace {
+
+// As parseQueryDefFile (ChemTransforms.cpp) reads each line's SMARTS field,
+// which SmartsToMol parses with its CXSMILES extension (file_checks.h).
+void check_query_defs(const std::string &text, const std::string &delimiter,
+                      const std::string &comment, std::uint32_t name_column,
+                      std::uint32_t smarts_column) {
+  std::istringstream in(text);
+  boost::char_separator<char> sep(delimiter.c_str());
+  while (!in.eof() && !in.fail()) {
+    auto line = RDKit::getLine(in);
+    if (line.empty() || line.find(comment) == 0) {
+      continue;
+    }
+    boost::tokenizer<boost::char_separator<char>> tokens(line, sep);
+    std::string name;
+    std::string smarts;
+    std::uint32_t pos = 0;
+    for (auto token = tokens.begin(); token != tokens.end(); ++token, ++pos) {
+      if (pos == name_column) {
+        name = *token;
+      } else if (pos == smarts_column) {
+        smarts = *token;
+      }
+    }
+    boost::trim_if(name, boost::is_any_of(" \t"));
+    boost::trim_if(smarts, boost::is_any_of(" \t"));
+    if (!name.empty() && !smarts.empty()) {
+      check_smiles_cx(smarts);
+    }
+  }
+}
+
+}  // namespace
+
+// The file is read once and checked; RDKit parses that text
+// (parseQueryDefText reads it from a stream as parseQueryDefFile would).
 std::unique_ptr<MolList> parse_mol_query_def_file(
     rust::Slice<const std::uint8_t> path, bool standardize, rust::Str delimiter,
     rust::Str comment, std::uint32_t name_column, std::uint32_t smarts_column) {
   std::map<std::string, RDKit::ROMOL_SPTR> defs;
-  RDKit::parseQueryDefFile(to_path(path), defs, standardize,
-                           std::string(delimiter), std::string(comment),
+  const auto text = read_file(to_path(path));
+  const std::string delim(delimiter);
+  const std::string comment_text(comment);
+  check_query_defs(text, delim, comment_text, name_column, smarts_column);
+  RDKit::parseQueryDefText(text, defs, standardize, delim, comment_text,
                            name_column, smarts_column);
   auto list = std::make_unique<MolList>();
   for (const auto &[name, mol] : defs) {
@@ -407,6 +451,8 @@ std::unique_ptr<MolList> parse_mol_query_def_text(
     rust::Str text, bool standardize, rust::Str delimiter, rust::Str comment,
     std::uint32_t name_column, std::uint32_t smarts_column) {
   std::map<std::string, RDKit::ROMOL_SPTR> defs;
+  check_query_defs(std::string(text), std::string(delimiter),
+                   std::string(comment), name_column, smarts_column);
   RDKit::parseQueryDefText(std::string(text), defs, standardize,
                            std::string(delimiter), std::string(comment),
                            name_column, smarts_column);

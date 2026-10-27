@@ -65,7 +65,7 @@ MS::PipelineOptions to_options(const PipelineOptionsData &data) {
 }
 
 void check_metal_smarts(const std::string &smarts, const char *what) {
-  check_cx_smiles(smarts);
+  check_smiles_cx(smarts);
   std::unique_ptr<RDKit::ROMol> query(RDKit::SmartsToMol(smarts));
   if (!query) {
     throw ValueErrorException(std::string(what) +

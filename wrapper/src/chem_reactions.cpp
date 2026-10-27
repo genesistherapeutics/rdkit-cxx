@@ -328,10 +328,10 @@ std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
       rxn = std::make_unique<ChemicalReaction>(value);
       check_reaction_monomer_types(*rxn);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmilesTag)) {
-      check_cx_reaction(value);
+      check_reaction_cx(value);
       rxn = RP::ReactionFromSmiles(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmartsTag)) {
-      check_cx_reaction(value);
+      check_reaction_cx(value);
       rxn = RP::ReactionFromSmarts(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnRxnTag)) {
       check_input_text(value);
@@ -843,7 +843,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_smarts(
         std::string(replacement_values[i]);
   }
   std::string text(smarts);
-  check_cx_reaction(text);
+  check_reaction_cx(text);
   return finish(
       std::unique_ptr<ChemicalReaction>(
           RDKit::RxnSmartsToChemicalReaction(text, &replacements, use_smiles)),

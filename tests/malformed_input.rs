@@ -597,3 +597,99 @@ fn failing_reader() {
         .unwrap_or_else(|| panic!("no error: {results:?}"));
     assert!(err.to_string().contains("the connection dropped"), "{err}");
 }
+
+// CX extensions in text RDKit parses from caller input: an atomProp list
+// that runs to the end reads past it (rdkit#9361), wherever the text comes
+// from.
+#[test]
+fn cx_extensions_in_parameters() {
+    use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::*;
+    use rdkit_cxx::chem::rd_deprotect::DeprotectData;
+    use rdkit_cxx::chem::rd_substruct_library::{
+        CachedSmilesMolHolder, CachedTrustedSmilesMolHolder,
+    };
+    use rdkit_cxx::chem::scaffolds::rd_scaffold_network::ScaffoldNetworkParams;
+    use rdkit_cxx::chem::{parse_mol_query_def_file, parse_mol_query_def_file_text};
+
+    let rxn = "[C:1]-[O:2]>>[C:1].[O:2] |atomProp:0.p.v";
+    let smarts = "[C]-[O] |atomProp:0.p.v";
+    assert!(is_value(DeprotectData::new("x", rxn, "x", "x")));
+    assert!(is_value(ScaffoldNetworkParams::new(&[rxn])));
+
+    let lines = format!("// comment\nok\t[C:1]>>[C:1]\nbad\t{rxn}\n");
+    let defaults = CleanupParameters::default();
+    assert!(is_value(normalizer_from_data(&lines, &defaults)));
+    let dir = std::env::temp_dir().join(format!("rdkit-cxx-cx-params-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let normalizations = dir.join("normalizations.txt");
+    std::fs::write(&normalizations, &lines).unwrap();
+    assert!(is_value(Normalizer::new(&normalizations, 200)));
+    let params = CleanupParameters {
+        normalizations_file: normalizations.clone(),
+        ..Default::default()
+    };
+    assert!(is_value(normalizer_from_params(&params)));
+    let params = CleanupParameters {
+        normalization_data: vec![("bad".to_string(), rxn.to_string())],
+        ..Default::default()
+    };
+    assert!(is_value(normalizer_from_params(&params)));
+    let params = CleanupParameters {
+        tautomer_transform_data: vec![(
+            "bad".to_string(),
+            smarts.to_string(),
+            String::new(),
+            String::new(),
+        )],
+        ..Default::default()
+    };
+    assert!(is_value(TautomerEnumerator::new(&params)));
+    // Without the overrun, the same files still work.
+    std::fs::write(&normalizations, "ok\t[C:1]>>[C:1] |atomProp:0.p.v|\n").unwrap();
+    assert!(Normalizer::new(&normalizations, 200).is_ok());
+
+    let queries = format!("ok\t[C]-[O]\nbad\t{smarts}\n");
+    assert!(is_value(parse_mol_query_def_file_text(&queries)));
+    let query_file = dir.join("queries.txt");
+    std::fs::write(&query_file, &queries).unwrap();
+    assert!(is_value(parse_mol_query_def_file(&query_file)));
+    std::fs::write(&query_file, "ok\t[C]-[O] |atomProp:0.p.v|\n").unwrap();
+    assert_eq!(parse_mol_query_def_file(&query_file).unwrap().len(), 1);
+    std::fs::remove_dir_all(&dir).unwrap();
+
+    let mol = rdkit_cxx::chem::rdmolfiles::mol_from_smiles("CO").unwrap();
+    let terms = [SubstructTerm::new("bad", smarts, 1)];
+    assert!(is_value(score_substructs_with_terms(&mol, &terms)));
+
+    let mut holder = CachedSmilesMolHolder::default();
+    assert!(is_value(holder.add_smiles("CO |atomProp:0.p.v")));
+    assert_eq!(holder.add_smiles("CO |atomProp:0.p.v|").unwrap(), 0);
+    let mut holder = CachedTrustedSmilesMolHolder::default();
+    assert!(is_value(holder.add_smiles("CO |atomProp:0.p.v")));
+}
+
+// Without strictCXSMILES, a substance group whose fields run to the end is
+// copied into _CXSMILES_Data from past the end of the text.
+#[test]
+fn cx_substance_groups_not_strict() {
+    use rdkit_cxx::chem::rdmolfiles::*;
+    let lax = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    for text in ["CO |SgD:0:field", "CO |SgD:0:f:v::::(1,2", "CO |Sg:n"] {
+        assert!(is_value(mol_from_smiles_with_params(text, &lax)), "{text}");
+    }
+    let lax_smarts = SmartsParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    assert!(is_value(mol_from_smarts_with_params(
+        "CO |SgD:0:field",
+        &lax_smarts
+    )));
+    assert!(mol_from_smiles_with_params("CO |SgD:0:f:v::::|", &lax).is_ok());
+    // Strictly, RDKit refuses them itself.
+    let strict = SmilesParserParams::default();
+    assert!(mol_from_smiles_with_params("CO |SgD:0:field", &strict).is_err());
+}

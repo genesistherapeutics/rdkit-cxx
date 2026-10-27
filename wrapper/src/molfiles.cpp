@@ -413,7 +413,7 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
   std::string text(smiles);
   std::map<std::string, std::string> repl;
   auto params = smiles_parser_params(data, repl);
-  check_cx_smiles(text);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   // Sanitizing kekulizes, which RDKit 2025.03 cannot do safely for a ring
   // system of 32 or more dummy atoms (check_kekulize_questions), so text
   // that may hold that many ('*' or "#0" each, before any replacements) is
@@ -456,7 +456,7 @@ std::unique_ptr<RWMol> mol_from_smarts(rust::Str smarts,
   params.strictCXSMILES = data.strict_cxsmiles;
   params.mergeHs = data.merge_hs;
   params.replacements = &repl;
-  check_cx_smiles(text);
+  check_smiles_cx(text, params.allowCXSMILES, params.strictCXSMILES);
   return parsed(RDKit::SmartsToMol(text, params), "SMARTS", text);
 }
 

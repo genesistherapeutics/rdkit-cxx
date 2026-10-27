@@ -19,6 +19,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_tautomer.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -405,11 +406,13 @@ std::int32_t score_substructs_with_terms(
           "RDKit adds substructure scores times their match counts (up to "
           "1000) in int, which overflows for these terms");
     }
+    auto smarts = to_std(rust::Slice<const std::uint8_t>(term.smarts.data(),
+                                                         term.smarts.size()));
+    // SubstructTerm's constructor parses the SMARTS (file_checks.h).
+    check_smiles_cx(smarts);
     terms.emplace_back(to_std(rust::Slice<const std::uint8_t>(
                            term.name.data(), term.name.size())),
-                       to_std(rust::Slice<const std::uint8_t>(
-                           term.smarts.data(), term.smarts.size())),
-                       term.score);
+                       std::move(smarts), term.score);
   }
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return TSF::scoreSubstructs(mol, terms);

@@ -147,7 +147,7 @@ void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
   // As CoordinateTemplates::loadTemplatesFromPath, which stops at the first
   // line it cannot parse.
   while (std::getline(lines, line)) {
-    check_cx_smiles(line);
+    check_smiles_cx(line);
     std::unique_ptr<RDKit::ROMol> mol(RDKit::SmartsToMol(line));
     if (!mol) {
       break;

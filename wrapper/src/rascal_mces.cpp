@@ -577,7 +577,7 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
     for (const auto &smarts : classes) {
       // Each class is parsed as CXSMARTS (file_checks.h).
-      check_cx_smiles(smarts);
+      check_smiles_cx(smarts);
       if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
         throw RDKit::SmilesParse::SmilesParseException(
             "could not parse the equivalentAtoms SMARTS '" + smarts + "'");
