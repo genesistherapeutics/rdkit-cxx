@@ -136,7 +136,9 @@ A program built against one release stops when it loads with another.
     or an atom past the end; V3000 SGroup lines it would read unset values
     from or pop an empty SAP id from, and `BEGIN SGROUP` with no SGroups in
     COUNTS (checked streams hand RDKit no part of a refused line); CXSMILES
-    `atomProp:` lists with no `|` or `,` after them; stereo groups that list
+    `atomProp:` lists that run to the end of the text (#9361), and, without
+    `strict_cxsmiles`, data and polymer substance groups whose fields do;
+    stereo groups that list
     an atom or bond twice (from Rust, pickles, CXSMILES, V3000, Marvin, and
     JSON), which RDKit uses after freeing; any MolInterchange JSON value
     RDKit 2025.03's RapidJSON reader takes without a type check (a Parse
@@ -144,6 +146,16 @@ A program built against one release stops when it loads with another.
     equality query (#9172); and in CDXML reactions, a fragment's bond ordering longer than
     its connection points, binary CDX passed as text, and XML entity
     declarations.
+  - The CXSMILES checks run wherever RDKit parses SMILES, SMARTS, or
+    reactions a caller hands it: the parsers (with their own
+    `allow_cxsmiles` and `strict_cxsmiles`), deprotections, normalizer data
+    and files, `CleanupParameters`' normalization, fragment, acid-base, and
+    tautomer data and its normalization file, query definition files and
+    text, tautomer scoring terms, SMILES holders, scaffold network bond
+    breakers, and RASCAL's equivalent atoms. Files RDKit would open are read
+    once by the wrapper, so RDKit never reads one that changed after the
+    check; a `CleanupParameters` naming a normalization file that cannot be
+    read is an error wherever it is used.
   - `json_to_mols` gives an attachment point without `lvIdx` -1, which
     RDKit 2025.03 leaves uninitialized.
   - FMCS refuses `verbose` with `store_all`, for which RDKit 2025.03 matches

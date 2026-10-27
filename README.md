@@ -349,11 +349,6 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   range of a vector into itself when an R group has several fragments
   (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies from storage
   the insert leaves in place.
-- **SMARTS in parameter files.** RDKit parses the SMARTS in fragment-catalog
-  parameter files, standardizer parameter files, and deprotection data
-  itself; a CXSMARTS `atomProp:` list there can read a byte past the
-  string, which the crate checks everywhere it passes SMARTS to RDKit.
-
 Other limits:
 
 - Substructure matching runs one call at a time across the process, under
