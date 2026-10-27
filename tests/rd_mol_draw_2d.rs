@@ -674,7 +674,7 @@ fn module_functions() {
         .get_bonds()
         .map(|b| b.get_bond_type_as_double().unwrap())
         .collect();
-    assert_eq!(orders, [1.0, 2.0, 1.0, 2.0, 1.0, 2.0]);
+    assert_eq!(orders, [2.0, 1.0, 2.0, 1.0, 2.0, 1.0]);
     let params = PrepareMolForDrawingParams {
         kekulize: false,
         add_chiral_hs: false,
@@ -1028,7 +1028,7 @@ fn grids() {
     d.finish_drawing();
     let text = d.get_drawing_text().unwrap();
     // Python's counts.
-    assert_eq!(text.matches("class='bond-0").count(), 7);
+    assert_eq!(text.matches("class='bond-0").count(), 8);
     assert_eq!(text.matches("#FF7F7F").count(), 4);
     // A drawer that has drawn holds molecules RDKit would lay out again.
     assert_value_error(d.draw_molecules(&mols));
@@ -1175,7 +1175,7 @@ fn acs1996_drawings() {
             text.matches("<path").count(),
             text.matches("#FF7F7F").count()
         ),
-        ((58, 30), 23, 4)
+        ((58, 47), 23, 4)
     );
     let mut d = MolDraw2DSVG::new(-1, -1).unwrap();
     draw_molecule_acs1996(&mut d, &m).unwrap();

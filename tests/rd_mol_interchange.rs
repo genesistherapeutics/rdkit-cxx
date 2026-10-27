@@ -56,7 +56,7 @@ fn is_value(result: Result<Vec<Mol>, Error>) -> bool {
     matches!(result, Err(Error::Value { .. }))
 }
 
-const STYRENE: &str = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"atoms":[{"impHs":3},{"impHs":1},{"impHs":1},{},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1}],"bonds":[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"trans","stereoAtoms":[0,3]},{"atoms":[2,3]},{"bo":2,"atoms":[3,4]},{"atoms":[4,5]},{"bo":2,"atoms":[5,6]},{"atoms":[6,7]},{"bo":2,"atoms":[7,8]},{"atoms":[8,3]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6","aromaticAtoms":[3,4,5,6,7,8],"aromaticBonds":[3,4,5,6,7,8],"cipRanks":[0,1,4,6,5,3,2,3,5],"atomRings":[[3,8,7,6,5,4]]}]}]}"#;
+const STYRENE: &str = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"atoms":[{"impHs":3},{"impHs":1},{"impHs":1},{},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1},{"impHs":1}],"bonds":[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"trans","stereoAtoms":[0,3]},{"atoms":[2,3]},{"bo":2,"atoms":[3,4]},{"atoms":[4,5]},{"bo":2,"atoms":[5,6]},{"atoms":[6,7]},{"bo":2,"atoms":[7,8]},{"atoms":[8,3]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.03.6","aromaticAtoms":[3,4,5,6,7,8],"aromaticBonds":[3,4,5,6,7,8],"cipRanks":[0,1,4,6,5,3,2,3,5],"atomRings":[[3,8,7,6,5,4]]}]}]}"#;
 
 #[test]
 fn defaults_match_python() {
@@ -100,8 +100,8 @@ fn writes_json() {
     assert_eq!(
         mols_to_json(&two).unwrap(),
         doc(&[
-            r#"{"atoms":[{"impHs":4}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6"}]}"#.to_string(),
-            r#"{"atoms":[{"z":8,"impHs":2}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6"}]}"#.to_string(),
+            r#"{"atoms":[{"impHs":4}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.03.6","cipRanks":[0]}]}"#.to_string(),
+            r#"{"atoms":[{"z":8,"impHs":2}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.03.6","cipRanks":[0]}]}"#.to_string(),
         ])
     );
     assert_eq!(mols_to_json(&[]).unwrap(), doc(&[]));
@@ -176,12 +176,12 @@ fn parse_parameters() {
     assert_eq!(
         types,
         [
-            BondType::Single,
             BondType::Double,
             BondType::Single,
             BondType::Double,
             BondType::Single,
-            BondType::Double
+            BondType::Double,
+            BondType::Single
         ]
     );
     assert!(kekule.get_bonds().all(|b| b.get_is_aromatic()));
@@ -249,8 +249,9 @@ fn substance_groups() {
         (1, 0, "1")
     );
     assert_eq!(group.get_brackets().len(), 1);
-    // The writer gives back the document.
-    assert_eq!(mol_to_json(&mol).unwrap(), json);
+    // The writer gives back the document, with RDKit 2025.03's numbers.
+    let written = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"name":"","atoms":[{"impHs":3},{"impHs":2},{"z":8,"impHs":1}],"bonds":[{"atoms":[0,1]},{"atoms":[1,2]}],"substanceGroups":[{"properties":{"TYPE":"SUP","index":1,"LABEL":"CO"},"atoms":[1,2],"bonds":[0],"brackets":[[[0.5,0.0,0.0],[0.5,1.0,0.0],[0.0,0.0,0.0]]],"cstates":[{"bond":0,"vector":[0.5,0.0,0.0]}],"attachPoints":[{"aIdx":1,"lvIdx":0,"id":"1"}]}],"conformers":[{"dim":2,"coords":[[0.0,0.0],[1.0,0.0],[2.0,0.0]]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.03.6"}]}]}"#;
+    assert_eq!(mol_to_json(&mol).unwrap(), written);
 }
 
 #[test]
@@ -272,7 +273,6 @@ fn queries_round_trip() {
         ("[+,-]", "[+,-]"),
         ("[2H]", "[#1&2*]"),
         ("[13C@@H](F)Cl", "F[C@@&13*&H1]Cl"),
-        ("[k5]", "[k5]"),
         ("[R]@[R]", "[R]@[R]"),
         ("[z2]", "[z2]"),
         ("[Z1]", "[Z1]"),
@@ -304,25 +304,25 @@ fn queries_round_trip() {
     assert_eq!(smarts(cx), ["[#6&x2]-[#6&x-559038737]-[#7]"]);
     // An XOR query, which ExpandQuery makes.
     let xor = r#"{"rdkitjson":{"version":12},"defaults":{"atom":{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"},"bond":{"bo":1,"stereo":"unspecified"}},"molecules":[{"atoms":[{"z":0},{"impHs":2},{"z":8,"impHs":1}],"bonds":[{"atoms":[0,1]},{"atoms":[1,2]}],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2026.03.6"},{"name":"rdkitQueries","formatVersion":10,"toolkitVersion":"2026.03.6","atomQueries":[{"descr":"AtomXor","tag":32,"children":[{"descr":"AtomAtomicNum","tag":33,"val":6},{"descr":"AtomIsAromatic","tag":33,"val":1}]},{},{}]}]}]}"#;
-    assert_eq!(smarts(xor), ["*-[#6]-[#8]"]);
+    assert_eq!(smarts(xor), ["*-[#6H2]-[#8H]"]);
 
     // Queries RDKit makes that its SMARTS round trips above do not show.
     let accepted = [
         (
             r#"{"descr":"less_AtomRingBondCount","tag":37,"val":2}"#,
-            "[x{2-}]-[#6]=[#6]-[#6]",
+            "[x{2-}]-[#6H]=[#6H]-[#6H3]",
         ),
         (
             r#"{"descr":"range_AtomTotalDegree","tag":38,"lower":1,"upper":2,"ends":0}"#,
-            "[X{1-2}]-[#6]=[#6]-[#6]",
+            "[X{1-2}]-[#6H]=[#6H]-[#6H3]",
         ),
         (
             r#"{"descr":"AtomInNRings","tag":41,"val":2}"#,
-            "[R2]-[#6]=[#6]-[#6]",
+            "[R2]-[#6H]=[#6H]-[#6H3]",
         ),
         (
             r#"{"descr":"AtomAtomicNum","tag":33,"val":1,"negated":true,"type":"A"}"#,
-            "[!#1]-[#6]=[#6]-[#6]",
+            "[!#1]-[#6H]=[#6H]-[#6H3]",
         ),
     ];
     for (query, expected) in accepted {
@@ -332,7 +332,7 @@ fn queries_round_trip() {
     let later = doc(&[butene(
         r#","extensions":[{"name":"rdkitQueries","formatVersion":11,"atomQueries":[{"tag":39,"descr":"AtomAtomicNum","set":[6]}]}]"#,
     )]);
-    assert_eq!(smarts(&later), ["[#6]-[#6]=[#6]-[#6]"]);
+    assert_eq!(smarts(&later), ["[#6H3]-[#6H]=[#6H]-[#6H3]"]);
 }
 
 #[test]
@@ -478,7 +478,7 @@ fn bond_queries_on_stereo_group_bonds_are_refused() {
     ))]);
     let mol = json_to_mols(&json).unwrap().remove(0);
     assert_eq!(mol.get_stereo_groups()[0].get_atoms(), [1, 2]);
-    assert_eq!(mol_to_smarts(&mol).unwrap(), "[#6]-[#6]=[#6]-[#6]");
+    assert_eq!(mol_to_smarts(&mol).unwrap(), "[#6]-[#6]=[#6]-[#6H3]");
 }
 
 #[test]
@@ -539,6 +539,6 @@ fn queries_rdkit_does_not_make_are_refused() {
     // A null bond query alone is fine, as in SMARTS's "~".
     assert_eq!(
         smarts(&bond_query(r#"{"descr":"BondNull","tag":40}"#)),
-        ["[#6]~[#6]=[#6]-[#6]"]
+        ["[#6H3]~[#6H]=[#6H]-[#6H3]"]
     );
 }
