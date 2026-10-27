@@ -137,6 +137,9 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     substance-group field that does.
   - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
     would read past or loop on.
+  - The `ExtendedMurcko` hash refuses more than 4000 atoms: RDKit 2024.09
+    takes a byte of stack per atom with `alloca`, which past a page can
+    step over the stack's guard page.
   - RascalMCES refuses any timeout but -1, which is its default here
     (Python's is 60 seconds): when a search runs past it, RDKit 2024.09
     reads its best cliques after clearing them (#9450). The clusterings
