@@ -139,10 +139,17 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - The Maestro writer is made through a stream it may own, since RDKit
     2024.09's shared-pointer constructor always fails.
   - The CXSMILES readers (SMILES, SMARTS, reaction SMARTS, and the patterns
-    the standardizer, filters, MMPA, and depiction templates parse) refuse
-    an `atomProp` block that runs to the end of the text (#9361), which
-    RDKit 2024.09 reads past, and, without `strict_cxsmiles`, a
-    substance-group field that does.
+    the standardizer, filters, MMPA, depiction templates, RascalMCES'
+    `equivalent_atoms`, scaffold-network bond breakers, SMILES mol holders,
+    and query definitions parse) refuse an `atomProp` block that runs to
+    the end of the text (#9361), which RDKit 2024.09 reads past, and,
+    without `strict_cxsmiles`, a substance-group field that does. Mol
+    blocks refuse `atomProp:` in the SMARTS RDKit parses from them (an
+    `M  MRV SMA` line, a data group's field), and a data field whose
+    `M  SCD` lines mix substance groups. A normalizations file, for
+    `Normalizer::new` or `CleanupParameters`, is read and checked by the
+    bindings and handed to RDKit as a stream or data, once; one with no
+    transformations is `Error::Value` for `CleanupParameters`.
   - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
     would read past or loop on.
   - The `ExtendedMurcko` hash refuses more than 4000 atoms: RDKit 2024.09

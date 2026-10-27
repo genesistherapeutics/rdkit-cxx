@@ -8,7 +8,11 @@
 // the nearest well-formed input still works.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::*;
 use rdkit_cxx::chem::rd_fmcs::*;
+use rdkit_cxx::chem::rd_rascal_mces::*;
+use rdkit_cxx::chem::rd_substruct_library::*;
+use rdkit_cxx::chem::scaffolds::rd_scaffold_network::*;
 use rdkit_cxx::chem::*;
 
 mod common;
@@ -293,4 +297,128 @@ fn stereo_groups_listing_an_atom_twice_are_refused() {
     assert_ne!(doubled, json);
     assert!(is_value(json_to_mols(&doubled)));
     assert_eq!(json_to_mols(&json).unwrap().len(), 1);
+}
+
+// RDKit 2024.09's CXSMILES parser reads past the end of the text for an
+// atomProp block whose last value ends it (#9361); every entry point that
+// parses caller text as SMILES or SMARTS with CX extensions checks it.
+// ("|atomProp:0.a", a name without a value, RDKit refuses.)
+const OVERRUN: &str = "|atomProp:0.p.v";
+
+#[test]
+fn cx_extensions_are_checked_at_every_entry_point() {
+    let rascal = RascalOptions {
+        equivalent_atoms: format!("[#6]\t{OVERRUN}"),
+        ..Default::default()
+    };
+    assert!(is_value(find_mces_with_opts(
+        &smiles("CCO"),
+        &smiles("CCN"),
+        &rascal
+    )));
+    let fine = RascalOptions {
+        equivalent_atoms: "[#6] [#7]".to_string(),
+        ..Default::default()
+    };
+    find_mces_with_opts(&smiles("CCO"), &smiles("CCN"), &fine).unwrap();
+
+    let breaker = "[!#0;R:1]-!@[!#0:2]>>[*:1]-[#0].[#0]-[*:2]";
+    assert!(is_value(ScaffoldNetworkParams::new(&[&format!(
+        "{breaker}{OVERRUN}"
+    )])));
+    ScaffoldNetworkParams::new(&[breaker]).unwrap();
+
+    let mut holder = CachedSmilesMolHolder::default();
+    assert!(is_value(holder.add_smiles(&format!("CC {OVERRUN}"))));
+    holder.add_smiles("CC |$_AV:a;b$|").unwrap();
+
+    assert!(is_value(parse_mol_query_def_file_text(&format!(
+        "Alkyl\tC {OVERRUN}\n"
+    ))));
+    assert_eq!(
+        parse_mol_query_def_file_text("Alkyl\t[CX4]\n")
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn mol_block_smarts_are_checked() {
+    let block = mol_to_mol_block(&smiles("CC")).unwrap();
+    let with = |line: &str| block.replace("M  END", &format!("{line}\nM  END"));
+    // An "M  MRV SMA" line's SMARTS, from its 16th byte.
+    assert!(is_value(mol_from_mol_block(&with(&format!(
+        "M  MRV SMA   1 C {OVERRUN}"
+    )))));
+    let sma = mol_from_mol_block(&with("M  MRV SMA   1 [#6]")).unwrap();
+    assert_eq!(sma.get_num_atoms(), 2);
+    // A data group's field, which a SMARTSQ query parses, also when it runs
+    // across an SCD line into the SED's.
+    let data = |fields: &[&str]| {
+        let mut lines = vec![
+            "M  STY  1   1 DAT".to_string(),
+            "M  SAL   1  1   1".to_string(),
+            "M  SDT   1 MRV_QUERY                 F".to_string(),
+        ];
+        lines.extend(fields.iter().map(|f| f.to_string()));
+        with(&lines.join("\n"))
+    };
+    assert!(is_value(mol_from_mol_block(&data(&[&format!(
+        "M  SED   1 C {OVERRUN}"
+    )]))));
+    assert!(is_value(mol_from_mol_block(&data(&[
+        &format!("M  SCD   1 {} |atomP", "C".repeat(62)),
+        "M  SED   1 rop:0.p.v",
+    ]))));
+    mol_from_mol_block(&data(&["M  SED   1 [#6]"])).unwrap();
+    // Lines of another group within a field would be skipped by RDKit.
+    assert!(is_value(mol_from_mol_block(&data(&[
+        "M  SCD   1 C",
+        "M  SED   2 C",
+    ]))));
+    // A V3000 FIELDDATA value.
+    let v3k = v3000(
+        1,
+        &[&format!(
+            "1 DAT 0 ATOMS=(1 1) FIELDNAME=MRV_QUERY QUERYTYPE=SMARTSQ FIELDDATA=\"C {OVERRUN}\""
+        )],
+    );
+    assert!(is_value(mol_from_mol_block(&v3k)));
+    let v3k = v3000(
+        1,
+        &["1 DAT 0 ATOMS=(1 1) FIELDNAME=MRV_QUERY QUERYTYPE=SMARTSQ FIELDDATA=\"[#6]\""],
+    );
+    mol_from_mol_block(&v3k).unwrap();
+}
+
+#[test]
+fn normalization_files_are_read_and_checked_once() {
+    let path = common::temp_path("normalizations.txt");
+    std::fs::write(&path, format!("Bad\t[C:1]>>[N:1]{OVERRUN}\n")).unwrap();
+    assert!(is_value(Normalizer::new(&path, 200)));
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    assert!(is_value(normalize_with_params(&smiles("CCO"), &params)));
+    assert!(is_value(cleanup_with_params(&smiles("CCO"), &params)));
+    assert!(is_value(normalizer_from_params(&params)));
+    // The ops that do not normalize do not read it.
+    reionize_with_params(&smiles("CC(=O)O"), &params).unwrap();
+
+    std::fs::write(&path, "// a comment\nAmine\t[O:1]>>[N:1]\n").unwrap();
+    let normalizer = Normalizer::new(&path, 200).unwrap();
+    assert_eq!(
+        mol_to_smiles(&normalizer.normalize(&smiles("CCO")).unwrap()).unwrap(),
+        "CCN"
+    );
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    let normalized = normalize_with_params(&smiles("CCO"), &params).unwrap();
+    assert_eq!(mol_to_smiles(&normalized).unwrap(), "CCN");
+    std::fs::write(&path, "// nothing\n").unwrap();
+    assert!(is_value(normalize_with_params(&smiles("CCO"), &params)));
 }

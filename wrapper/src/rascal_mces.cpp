@@ -26,6 +26,7 @@
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/rascal_mces.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
 
@@ -571,7 +572,12 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
                boost::token_compress_on);
   if (!o.equivalentAtoms.empty() && classes.size() <= 9) {
     for (const auto &smarts : classes) {
-      if (!smarts.empty() && !RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
+      if (smarts.empty()) {
+        continue;
+      }
+      // MolFromSmarts reads CX extensions, which a tab can start.
+      check_smiles_cx(smarts, true, true);
+      if (!RDKit::v2::SmilesParse::MolFromSmarts(smarts)) {
         throw RDKit::SmilesParse::SmilesParseException(
             "could not parse the equivalentAtoms SMARTS '" + smarts + "'");
       }

@@ -373,17 +373,15 @@ void add_recursive_queries(RWMol &mol, BorrowedMols &queries,
   RDKit::addRecursiveQueries(mol, map, std::string(prop_name));
 }
 
-std::unique_ptr<MolList> parse_mol_query_def_file(
-    rust::Slice<const std::uint8_t> path, bool standardize, rust::Str delimiter,
-    rust::Str comment, std::uint32_t name_column, std::uint32_t smarts_column) {
-  std::map<std::string, RDKit::ROMOL_SPTR> defs;
-  // Read once and checked as parseQueryDefFile reads each line's SMARTS
-  // field, which it parses as CXSMILES (file_checks.h).
-  const auto text = read_file(to_path(path));
+namespace {
+
+// As parseQueryDefFile (ChemTransforms.cpp) reads each line's SMARTS field,
+// which it parses with SmartsToMol, reading CX extensions (file_checks.h).
+void check_query_defs(const std::string &text, const std::string &delim,
+                      const std::string &comment_text,
+                      std::uint32_t smarts_column) {
   std::istringstream lines(text);
   std::string line;
-  const std::string delim(delimiter);
-  const std::string comment_text(comment);
   boost::char_separator<char> sep(delim.c_str());
   while (std::getline(lines, line)) {
     if (line.empty() || line.find(comment_text) == 0) {
@@ -398,6 +396,15 @@ std::unique_ptr<MolList> parse_mol_query_def_file(
       }
     }
   }
+}
+
+std::unique_ptr<MolList> query_defs(const std::string &text, bool standardize,
+                                    const std::string &delim,
+                                    const std::string &comment_text,
+                                    std::uint32_t name_column,
+                                    std::uint32_t smarts_column) {
+  check_query_defs(text, delim, comment_text, smarts_column);
+  std::map<std::string, RDKit::ROMOL_SPTR> defs;
   RDKit::parseQueryDefText(text, defs, standardize, delim, comment_text,
                            name_column, smarts_column);
   auto list = std::make_unique<MolList>();
@@ -407,18 +414,23 @@ std::unique_ptr<MolList> parse_mol_query_def_file(
   return list;
 }
 
+}  // namespace
+
+std::unique_ptr<MolList> parse_mol_query_def_file(
+    rust::Slice<const std::uint8_t> path, bool standardize, rust::Str delimiter,
+    rust::Str comment, std::uint32_t name_column, std::uint32_t smarts_column) {
+  // Read once, checked, and parsed from the text, rather than letting
+  // parseQueryDefFile open the file again.
+  return query_defs(read_file(to_path(path)), standardize,
+                    std::string(delimiter), std::string(comment), name_column,
+                    smarts_column);
+}
+
 std::unique_ptr<MolList> parse_mol_query_def_text(
     rust::Str text, bool standardize, rust::Str delimiter, rust::Str comment,
     std::uint32_t name_column, std::uint32_t smarts_column) {
-  std::map<std::string, RDKit::ROMOL_SPTR> defs;
-  RDKit::parseQueryDefText(std::string(text), defs, standardize,
-                           std::string(delimiter), std::string(comment),
-                           name_column, smarts_column);
-  auto list = std::make_unique<MolList>();
-  for (const auto &[name, mol] : defs) {
-    list->push_named(name, std::make_unique<RWMol>(*mol));
-  }
-  return list;
+  return query_defs(std::string(text), standardize, std::string(delimiter),
+                    std::string(comment), name_column, smarts_column);
 }
 
 std::unique_ptr<RWMol> fragment_on_bonds(

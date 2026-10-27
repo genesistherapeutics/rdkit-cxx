@@ -9,6 +9,8 @@
 #include <climits>
 #include <exception>
 #include <mutex>
+#include <sstream>
+#include <string>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -20,6 +22,8 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/algorithm/string.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -48,6 +52,22 @@ CleanupDataEntry entry(const std::string &name, const std::string &first,
                        const std::string &third = {}) {
   return CleanupDataEntry{to_bytes(name), to_bytes(first), to_bytes(second),
                           to_bytes(third)};
+}
+
+// Whether the op normalizes the molecule (cleanup normalizes it first).
+bool normalizes(StandardizeOp op, bool skip_standardize) {
+  switch (op) {
+    case StandardizeOp::Cleanup:
+    case StandardizeOp::Normalize:
+    case StandardizeOp::SuperParent:
+      return true;
+    case StandardizeOp::Reionize:
+    case StandardizeOp::RemoveFragments:
+    case StandardizeOp::CanonicalTautomer:
+      return false;
+    default:
+      return !skip_standardize;
+  }
 }
 
 bool uses_tautomers(StandardizeOp op) {
@@ -117,6 +137,9 @@ class Standardizer {
       : d_op(op),
         d_params(to_cleanup_parameters(data)),
         d_skip(skip_standardize) {
+    if (normalizes(op, skip_standardize)) {
+      read_normalizations(d_params);
+    }
     switch (op) {
       case StandardizeOp::Normalize:
         d_normalizer.reset(MS::normalizerFromParams(d_params));
@@ -274,6 +297,34 @@ RWMol &as_rwmol(RDKit::ROMol &mol) {
   return *rwmol;
 }
 
+// The (name, reaction SMARTS) pairs readTransformations
+// (TransformCatalogUtils.cpp) reads from a normalizations file, which
+// getReaction then parses as the data's: lines of up to 511 characters
+// (getline stops the read at a longer one), with comments and empty lines
+// skipped, split at tabs, and with the spaces taken out. A missing field
+// reads as empty, as boost's tokenizer leaves it past the end.
+std::vector<std::pair<std::string, std::string>> normalization_pairs(
+    const std::string &text) {
+  std::vector<std::pair<std::string, std::string>> pairs;
+  std::istringstream in(text);
+  char line[512];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, sizeof(line), '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    boost::char_separator<char> sep("\t");
+    boost::tokenizer<boost::char_separator<char>> tokens(tmp, sep);
+    std::vector<std::string> fields(tokens.begin(), tokens.end());
+    fields.resize(std::max<std::size_t>(fields.size(), 2));
+    boost::erase_all(fields[0], " ");
+    boost::erase_all(fields[1], " ");
+    pairs.emplace_back(fields[0], fields[1]);
+  }
+  return pairs;
+}
+
 }  // namespace
 
 std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol) {
@@ -318,6 +369,7 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
     params.normalizationData.emplace_back(text(e.name), text(e.first));
     check_reaction_cx(params.normalizationData.back().second, true);
   }
+
   for (const auto &e : data.fragment_data) {
     params.fragmentData.emplace_back(text(e.name), text(e.first));
     check_smiles_cx(params.fragmentData.back().second, true, true);
@@ -335,6 +387,27 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
                     true);
   }
   return params;
+}
+
+// RDKit reads a normalizations file it is given only without data
+// (normalizerFromParams), and keeps what it read for the name, so the file
+// is read here, once, checked, and handed to RDKit as the data it holds.
+void read_normalizations(CleanupParameters &params) {
+  if (!params.normalizationData.empty() || params.normalizations.empty()) {
+    return;
+  }
+  params.normalizationData =
+      normalization_pairs(read_file(params.normalizations));
+  if (params.normalizationData.empty()) {
+    throw ValueErrorException(
+        "the normalizations file " + params.normalizations +
+        " holds no transformations, which the bindings cannot hand RDKit as "
+        "normalization data");
+  }
+  for (const auto &pair : params.normalizationData) {
+    check_reaction_cx(pair.second, true);
+  }
+  params.normalizations.clear();
 }
 
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params) {

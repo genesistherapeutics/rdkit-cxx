@@ -20,6 +20,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/ffi/substruct_library.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_checks.h"
@@ -203,6 +204,8 @@ std::uint32_t mol_holder_add_binary(MolHolderHandle &holder,
 std::uint32_t mol_holder_add_smiles(MolHolderHandle &holder, rust::Str smiles) {
   check_room(holder.ptr->size());
   std::string text(smiles);
+  // The holder parses it later, with CXSMILES on (check_smiles_cx).
+  check_smiles_cx(text, true, true);
   if (auto *h = dynamic_cast<CachedSmilesMolHolder *>(holder.ptr.get())) {
     return h->addSmiles(text);
   }

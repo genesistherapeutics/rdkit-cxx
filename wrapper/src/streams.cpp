@@ -30,6 +30,10 @@ constexpr char kStereoGroup[] = "MDLV30/STE";
 constexpr std::size_t kStereoGroupPrefix = sizeof(kStereoGroup) - 1;
 constexpr char kEndPoints[] = "ENDPTS=";
 constexpr std::size_t kEndPointsKey = sizeof(kEndPoints) - 1;
+const char *const kCxField =
+    "a mol block holds \"atomProp:\" in a line or data field RDKit 2024.09 "
+    "parses as SMARTS (\"M  MRV SMA\", a data group's field), whose CXSMILES "
+    "atomProp block it reads past the end of when it ends the text";
 const char *const kBadEndPoints =
     "a V3000 ENDPTS value is empty, or starts with \"(\" but is not numbers "
     "below 2^32 between spaces and a \")\" that ends the token; RWMol reads it "
@@ -395,6 +399,88 @@ std::string stereo_collection_error(const std::string &line) {
 
 }  // namespace
 
+bool CxTokenMatcher::push(char c) {
+  static constexpr std::string_view token = "atomProp:";
+  if (d_size == kLongest) {
+    std::memmove(d_tail, d_tail + 1, kLongest - 1);
+    --d_size;
+  }
+  d_tail[d_size++] = c;
+  return d_size == token.size() && std::string_view(d_tail, d_size) == token;
+}
+
+// A byte of a physical line that is not V3000 content, at d_pos (before it
+// is counted). RDKit's getLine drops a final "\r".
+void InputScanner::m_line_byte(char c) {
+  if (d_m_line == MLine::kUnknown) {
+    d_m_head += c;
+    if (d_m_head.size() < 10) {
+      return;
+    }
+    if (d_m_head == "M  MRV SMA") {
+      d_m_line = MLine::kSmarts;
+      d_m_tokens.clear();
+    } else if (d_m_head.compare(0, 6, "M  SCD") == 0 ||
+               d_m_head.compare(0, 6, "M  SED") == 0) {
+      // ParseSGroupV2000SCDSEDLine skips a line of a group the open field is
+      // not for, so the field RDKit builds would skip it too: such lines
+      // are refused, and the field is the lines' text in order.
+      auto group = d_m_head.substr(6, 4);
+      if (d_data_open && group != d_data_group) {
+        fail_line(
+            "a mol block's data field continues (M  SCD) with a line of "
+            "another substance group before its M  SED line");
+        return;
+      }
+      d_data_open = true;
+      d_data_group = group;
+      d_m_sed = d_m_head.compare(0, 6, "M  SED") == 0;
+      d_m_line = MLine::kData;
+    } else {
+      if (d_m_head.compare(0, 6, "M  END") == 0 ||
+          d_m_head.compare(0, 4, "$$$$") == 0) {
+        d_data_open = false;
+        d_data_tokens.clear();
+      }
+      d_m_line = MLine::kNone;
+    }
+    return;
+  }
+  if (d_m_line != MLine::kSmarts && d_m_line != MLine::kData) {
+    return;
+  }
+  if (d_m_line == MLine::kData && (d_pos < 11 || d_pos > 79)) {
+    return;
+  }
+  auto push = [&](char b) {
+    auto &tokens = d_m_line == MLine::kData ? d_data_tokens : d_m_tokens;
+    if (tokens.push(b)) {
+      fail_line(kCxField);
+    }
+  };
+  if (d_m_cr) {
+    d_m_cr = false;
+    push('\r');
+  }
+  if (c == '\r') {
+    d_m_cr = true;
+  } else {
+    push(c);
+  }
+}
+
+// The physical line ended.
+void InputScanner::end_m_line() {
+  if (d_m_line == MLine::kData && d_m_sed) {
+    d_data_open = false;
+    d_data_tokens.clear();
+  }
+  d_m_head.clear();
+  d_m_line = MLine::kUnknown;
+  d_m_sed = false;
+  d_m_cr = false;
+}
+
 bool InputScanner::fail(std::string why) {
   if (d_error.empty()) {
     d_error = std::move(why);
@@ -501,6 +587,7 @@ void InputScanner::finish() {
     return;
   }
   d_finished = true;
+  end_m_line();
   bool v30 = d_pos >= 7 && std::memcmp(d_head, kV30, 7) == 0;
   if (v30 || d_continuing) {
     end_line();
@@ -512,6 +599,9 @@ void InputScanner::finish() {
 void InputScanner::confirm(char c) {
   ++d_logical;
   d_line += c;
+  if (d_v30_tokens.push(c)) {
+    fail_line(kCxField);
+  }
   if (d_prefix.size() < kStereoGroupPrefix) {
     d_prefix += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
   }
@@ -634,6 +724,7 @@ void InputScanner::end_line() {
     }
     d_logical = 0;
     d_prefix.clear();
+    d_v30_tokens.clear();
     d_end_points = EndPoints::kKey;
     d_key_matched = 0;
   }
@@ -652,6 +743,7 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
       }
     }
     if (c == '\n') {
+      end_m_line();
       end_line();
       if (++d_lines > kMaxInputLines) {
         fail("the input has more than " + std::to_string(kMaxInputLines) +
@@ -662,6 +754,10 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
       }
       ++d_offset;
       continue;
+    }
+    m_line_byte(c);
+    if (!d_error.empty()) {
+      return i;
     }
     if (d_pos < 7) {
       d_head[d_pos] = c;

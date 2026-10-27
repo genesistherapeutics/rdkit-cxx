@@ -341,10 +341,6 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   range of a vector into itself when an R group has several fragments
   (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies from storage
   the insert leaves in place.
-- **Reaction files RDKit reads itself.** The normalizer made from a file,
-  and `CleanupParameters`' normalization file, are read by RDKit; their
-  reaction SMARTS lines are not checked for the CXSMILES extensions RDKit
-  2024.09 reads past (text and data are).
 
 Other limits:
 
