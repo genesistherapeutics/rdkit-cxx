@@ -145,7 +145,13 @@ A program built against one release stops when it loads with another.
   - `assign_cip_labels` leaves unlabeled, as RDKit 2026.09 does, a double
     bond whose stereo atom is not a neighbor of its own end and an
     atropisomer bond with an end of no other bonds, where RDKit 2025.09
-    reads past an empty vector.
+    reads past an empty vector. It refuses more than 64 stereo atoms and
+    bonds (`Error::Value`): RDKit 2025.09 pairs their descriptors in a
+    64-bit mask, by a shift that is undefined past 64.
+  - `mol_from_smiles`, `sanitize_mol`, `kekulize`, and `kekulize_if_possible`
+    refuse a fused ring system of 32 or more dummy atoms in an aromatic
+    molecule: RDKit 2025.09's kekulization enumerates their subsets with
+    `0x1u << count`, which is undefined from 32.
   - A molecule of at most 255 atoms whose substance groups or stereo groups
     name a bond past 255, which RDKit 2025.09 pickles truncated, is refused
     wherever it would be pickled (`Error::Value`; `Mol::to_binary` and

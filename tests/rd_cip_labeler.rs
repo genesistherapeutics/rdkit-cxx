@@ -140,3 +140,28 @@ fn bonds_without_carriers() {
     assign_cip_labels(&mut mol).unwrap();
     assert!(bond_labels(&mol).is_empty());
 }
+
+/// A chain of `n` stereocenters.
+fn stereocenters(n: usize) -> Mol {
+    mol_from_smiles(&format!("C{}C", "[C@H](F)".repeat(n))).unwrap()
+}
+
+// RDKit 2025.09 pairs the descriptors of a branch's stereo atoms and bonds
+// in a 64-bit mask, by a shift that is undefined past 64.
+#[test]
+fn at_most_64_stereo_atoms_and_bonds() {
+    let mut mol = stereocenters(64);
+    assign_cip_labels(&mut mol).unwrap();
+    assert_eq!(atom_labels(&mol).len(), 64);
+    let mut mol = stereocenters(65);
+    match assign_cip_labels(&mut mol) {
+        Err(Error::Value { message }) => assert!(message.contains("past 64"), "{message}"),
+        other => panic!("{other:?}"),
+    }
+    // Only the ones asked for count.
+    let params = AssignCIPLabelsParams {
+        atoms_to_label: Some((1..65).collect()),
+        ..Default::default()
+    };
+    assign_cip_labels_with_params(&mut mol, &params).unwrap();
+}

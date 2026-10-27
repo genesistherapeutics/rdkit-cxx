@@ -158,6 +158,23 @@ void check_substance_group_parents(const RDKit::ROMol &mol);
 // a group with a duplicate.
 void check_stereo_group_duplicates(const RDKit::ROMol &mol);
 
+// RDKit 2025.09's Kekulize (Kekulize.cpp), when it cannot kekulize a fused
+// ring system, retries with each subset of the system's "question" atoms
+// (markDbondCands: dummy atoms of its rings that may take a double bond),
+// enumerated by QuestionEnumerator with `0x1u << d_questions.size()`, which
+// is undefined for 32 or more (2026.03 uses a dynamic_bitset). A fused
+// system is the rings (with at least one non-dummy atom) that share bonds,
+// so its atoms are joined by ring bonds; this counts, in each set of atoms
+// joined by ring bonds (bonds that are not bridges) and holding a non-dummy
+// atom, the dummy atoms, and throws ValueErrorException when one holds
+// MAX_KEKULIZE_QUESTIONS or more, in a molecule with an aromatic atom or
+// bond (Kekulize does nothing without one), as rdkit-2024.03's does. For
+// mol_from_smiles, sanitize_mol, kekulize and kekulize_if_possible; the
+// other wrappers that kekulize are listed in the README's Known
+// limitations.
+constexpr unsigned MAX_KEKULIZE_QUESTIONS = 32;
+void check_kekulize_questions(const RDKit::ROMol &mol);
+
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
 // bonds from it (or a copy): check_bond_end_points,
 // check_substance_group_parents, and check_stereo_group_duplicates.
