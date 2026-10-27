@@ -77,8 +77,7 @@ rust::Vec<IndexList> get_mol_frags(const RWMol &mol) {
 std::unique_ptr<MolList> get_mol_frags_as_mols(const RWMol &mol,
                                                bool sanitize_frags) {
   check_removals(mol);
-  std::vector<std::unique_ptr<RDKit::ROMol>> frags;
-  RDKit::MolOps::getMolFrags(mol, frags, sanitize_frags);
+  auto frags = RDKit::MolOps::getMolFrags(mol, sanitize_frags);
   auto list = std::make_unique<MolList>();
   for (const auto &frag : frags) {
     list->push(std::make_unique<RWMol>(*frag));

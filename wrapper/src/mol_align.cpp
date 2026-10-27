@@ -289,10 +289,11 @@ std::unique_ptr<O3AList> run_o3a(RWMol &prb, const RWMol &ref, void *prb_prop,
 // minus 1, so an untyped atom (type 0) reads before it, and read the
 // properties by atom index. Missing properties are computed on a copy, so
 // MMFF's sanitization leaves the molecule as it is.
-const RDKit::MMFF::MMFFMolProperties *mmff_props(
+// RDKit 2024.03 declares the properties' getters without const.
+RDKit::MMFF::MMFFMolProperties *mmff_props(
     const RWMol &mol, const MMFFMolProperties *given,
     std::unique_ptr<RDKit::MMFF::MMFFMolProperties> &owned, const char *which) {
-  const RDKit::MMFF::MMFFMolProperties *props;
+  RDKit::MMFF::MMFFMolProperties *props;
   if (given) {
     if (given->num_atoms() != mol.getNumAtoms()) {
       throw ValueErrorException(std::string("the MMFF properties for the ") +
@@ -499,12 +500,10 @@ std::unique_ptr<O3AList> get_mmff_o3a(RWMol &prb_mol, const RWMol &ref_mol,
   auto constraints = to_constraints(options, prb_mol, ref_mol);
   check_o3a_conformers(prb_mol, ref_mol, for_probe_confs, options);
   std::unique_ptr<RDKit::MMFF::MMFFMolProperties> prb_owned, ref_owned;
-  const auto *prb = mmff_props(prb_mol, prb_props, prb_owned, "probe");
-  const auto *ref = mmff_props(ref_mol, ref_props, ref_owned, "reference");
-  return run_o3a(prb_mol, ref_mol,
-                 const_cast<RDKit::MMFF::MMFFMolProperties *>(prb),
-                 const_cast<RDKit::MMFF::MMFFMolProperties *>(ref),
-                 MolAlign::O3A::MMFF94, for_probe_confs, options, constraints);
+  auto *prb = mmff_props(prb_mol, prb_props, prb_owned, "probe");
+  auto *ref = mmff_props(ref_mol, ref_props, ref_owned, "reference");
+  return run_o3a(prb_mol, ref_mol, prb, ref, MolAlign::O3A::MMFF94,
+                 for_probe_confs, options, constraints);
 }
 
 std::unique_ptr<O3AList> get_crippen_o3a(RWMol &prb_mol, const RWMol &ref_mol,

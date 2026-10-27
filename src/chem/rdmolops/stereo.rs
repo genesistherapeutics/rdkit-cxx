@@ -5,22 +5,11 @@
 
 //! Stereochemistry perception, wedging, and enhanced stereo.
 
-use crate::chem::rdchem::enums::rdkit_enum;
 use crate::chem::rdmolops::SanitizeFlags;
 use crate::chem::{BondMut, Conformer, Mol, StereoGroupType};
 use crate::error::{decode, expect_ok};
 use crate::ffi::chirality::ffi;
 use crate::{Error, Result};
-
-rdkit_enum! {
-    /// Whether `canonicalize_stereo_groups` adds an absolute group. Mirrors
-    /// `rdmolops.StereoGroupAbsOptions`.
-    StereoGroupAbsOptions: ffi::StereoGroupAbsOptions {
-        OnlyIncludeWhenOtherGroupsExist = OnlyIncludeWhenOtherGroupsExist,
-        NeverInclude = NeverInclude,
-        AlwaysInclude = AlwaysInclude,
-    }
-}
 
 /// Parameters for `assign_stereochemistry_with_params`, with Python's
 /// defaults (A2).
@@ -228,12 +217,6 @@ pub fn set_bond_stereo_from_directions(mol: &mut Mol) -> Result<()> {
     Ok(ffi::set_bond_stereo_from_directions(mol.pin_mut())?)
 }
 
-/// Each atom's CIP rank, which it also stores as the `_CIPRank` atom
-/// property. Mirrors `rdmolops.ComputeAtomCIPRanks`.
-pub fn compute_atom_cip_ranks(mol: &mut Mol) -> Result<Vec<u32>> {
-    Ok(ffi::compute_atom_cip_ranks(mol.pin_mut())?)
-}
-
 /// Parameters for `find_meso_centers_with_params`, with Python's defaults
 /// (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -272,50 +255,6 @@ pub fn find_meso_centers_with_params(
     .into_iter()
     .map(|pair| (pair.first, pair.second))
     .collect())
-}
-
-/// Parameters for `canonicalize_stereo_groups_with_params`, with Python's
-/// defaults (A2).
-#[derive(Clone, Debug, PartialEq)]
-pub struct CanonicalizeStereoGroupsParams {
-    /// Whether the result gets an absolute group.
-    pub output_absolute_groups: StereoGroupAbsOptions,
-    /// The most stereo groups to canonicalize; more is `Error::Runtime`.
-    pub max_stereo_groups: u32,
-}
-
-impl Default for CanonicalizeStereoGroupsParams {
-    fn default() -> CanonicalizeStereoGroupsParams {
-        CanonicalizeStereoGroupsParams {
-            output_absolute_groups: StereoGroupAbsOptions::OnlyIncludeWhenOtherGroupsExist,
-            max_stereo_groups: 12,
-        }
-    }
-}
-
-/// A copy whose stereo groups are canonical, so equivalent molecules write
-/// the same SMILES. Mirrors `rdmolops.CanonicalizeStereoGroups`.
-pub fn canonicalize_stereo_groups(mol: &Mol) -> Result<Mol> {
-    canonicalize_stereo_groups_with_params(mol, &CanonicalizeStereoGroupsParams::default())
-}
-
-/// Mirrors `rdmolops.CanonicalizeStereoGroups(mol, outputAbsoluteGroups,
-/// maxStereoGroups)`.
-pub fn canonicalize_stereo_groups_with_params(
-    mol: &Mol,
-    params: &CanonicalizeStereoGroupsParams,
-) -> Result<Mol> {
-    Ok(Mol::from_ffi(ffi::canonicalize_stereo_groups(
-        mol.as_ffi(),
-        params.output_absolute_groups.to_ffi(),
-        params.max_stereo_groups,
-    )?))
-}
-
-/// Removes atoms without specified chirality from the stereo groups. Mirrors
-/// `rdmolops.CleanupStereoGroups`.
-pub fn cleanup_stereo_groups(mol: &mut Mol) -> Result<()> {
-    Ok(ffi::cleanup_stereo_groups(mol.pin_mut())?)
 }
 
 /// When every specified stereocenter is in one AND or OR group, notes the

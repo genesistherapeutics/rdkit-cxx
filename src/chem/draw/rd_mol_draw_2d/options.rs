@@ -60,17 +60,6 @@ impl From<(f64, f64, f64, f64)> for DrawColour {
 }
 
 rdkit_enum! {
-    /// Where a molecule's legend goes. Mirrors
-    /// `rdMolDraw2D.LegendPosition`.
-    LegendPosition: ffi::LegendPosition {
-        Bottom = Bottom,
-        Top = Top,
-        Left = Left,
-        Right = Right,
-    }
-}
-
-rdkit_enum! {
     /// How `draw_molecule_with_highlights` draws several colors on one
     /// atom or bond. Mirrors `rdMolDraw2D.MultiColourHighlightStyle`.
     MultiColourHighlightStyle: ffi::MultiColourHighlightStyle {
@@ -78,39 +67,6 @@ rdkit_enum! {
         Lasso = LASSO,
     }
 }
-
-/// Parts of a drawing, as bits, for `MolDrawOptions::drawing_extents_include`.
-/// Mirrors `rdMolDraw2D.DrawElement` (CONVENTIONS.md F1); the constants keep
-/// Python's spelling.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub struct DrawElement(u32);
-
-macro_rules! draw_elements {
-    ($($name:ident),* $(,)?) => {
-        impl DrawElement {
-            $(
-                #[doc = concat!("Mirrors `DrawElement.", stringify!($name), "`.")]
-                pub const $name: DrawElement = DrawElement(ffi::DrawElement::$name.repr);
-            )*
-
-            const NAMES: &[(&str, DrawElement)] = &[$((stringify!($name), DrawElement::$name)),*];
-        }
-    };
-}
-
-draw_elements!(
-    NONE,
-    PRESHAPES,
-    BONDS,
-    ATOMLABELS,
-    HIGHLIGHTS,
-    ANNOTATIONS,
-    RADICALS,
-    POSTSHAPES,
-    ALL,
-);
-
-crate::flags::flag_ops!(DrawElement);
 
 /// Drawing options. Mirrors `rdMolDraw2D.MolDrawOptions` (A7): a drawer's
 /// options are read with `MolDraw2D::draw_options` and replaced with
@@ -127,8 +83,6 @@ pub struct MolDrawOptions {
     pub add_bond_indices: bool,
     /// Adds R/S and E/Z labels to drawings.
     pub add_stereo_annotation: bool,
-    /// Adds the enhanced stereo group labels.
-    pub add_stereo_group_annotation: bool,
     /// Additional padding around atom labels, as a fraction of the font
     /// size.
     pub additional_atom_label_padding: f64,
@@ -143,8 +97,6 @@ pub struct MolDrawOptions {
     pub atom_label_deuterium_tritium: bool,
     /// Replacement labels for atoms, by index.
     pub atom_labels: BTreeMap<u32, String>,
-    /// The color of atom indices and notes.
-    pub atom_note_colour: DrawColour,
     /// Groups of atoms to outline.
     pub atom_regions: Vec<Vec<u32>>,
     /// The background color.
@@ -153,10 +105,6 @@ pub struct MolDrawOptions {
     pub base_font_size: f64,
     /// The line width for bonds, in pixels.
     pub bond_line_width: f64,
-    /// The color of bond indices and notes.
-    pub bond_note_colour: DrawColour,
-    /// Puts brackets around atom lists in query atoms.
-    pub brackets_around_atom_lists: bool,
     /// Moves each molecule's center to the origin before drawing.
     pub centre_molecules_before_drawing: bool,
     /// Draws circles under highlighted atoms.
@@ -169,8 +117,6 @@ pub struct MolDrawOptions {
     pub continuous_highlight: bool,
     /// Draws every molecule of a grid at one scale.
     pub draw_mols_same_scale: bool,
-    /// The parts of a drawing its extent includes.
-    pub drawing_extents_include: DrawElement,
     /// Draws breaks at dummy atoms.
     pub dummies_are_attachments: bool,
     /// Adds isotope labels to dummy atoms.
@@ -217,10 +163,6 @@ pub struct MolDrawOptions {
     pub legend_font_size: i32,
     /// The fraction of a panel the legend takes.
     pub legend_fraction: f64,
-    /// Where the legend goes.
-    pub legend_position: LegendPosition,
-    /// Draws a legend on the left or right one character per line.
-    pub legend_vertical_text: bool,
     /// The largest font size, in pixels; -1 for no limit.
     pub max_font_size: i32,
     /// The smallest font size, in pixels; -1 for no limit.
@@ -239,9 +181,6 @@ pub struct MolDrawOptions {
     pub prepare_mols_before_drawing: bool,
     /// The color of query bonds.
     pub query_colour: DrawColour,
-    /// The fraction of empty space around each component of a reaction
-    /// (`componentPadding` in C++).
-    pub reagent_padding: f64,
     /// Rotates molecules about their centers by this many degrees.
     pub rotate: f64,
     /// Scales bond widths with the drawing.
@@ -251,25 +190,13 @@ pub struct MolDrawOptions {
     /// Pixels per unit of molecule coordinates when the canvas is sized to
     /// the drawing.
     pub scaling_factor: f64,
-    /// Shows every CIP code, including those of OR and AND stereo groups.
-    pub show_all_cip_codes: bool,
     /// Shows one molecule-level label when every stereocenter is in one
     /// stereo group.
     pub simplified_stereo_group_label: bool,
-    /// Draws every bond in the symbol color.
-    pub single_colour_bonds: bool,
     /// Draws wedged and dashed bonds in the symbol color.
     pub single_colour_wedge_bonds: bool,
     /// Splits bonds into a segment per atom.
     pub split_bonds: bool,
-    /// Draws highlighted heteroatoms in their usual colors.
-    pub standard_colours_for_highlighted_atoms: bool,
-    /// The label of ABS stereo groups.
-    pub stereo_group_abs_label: String,
-    /// The label of AND stereo groups.
-    pub stereo_group_and_label: String,
-    /// The label of OR stereo groups.
-    pub stereo_group_or_label: String,
     /// The color of symbols and arrows in reactions.
     pub symbol_colour: DrawColour,
     /// Draws double bonds with unspecified stereo crossed and possible
@@ -287,8 +214,7 @@ pub struct MolDrawOptions {
     /// What the bond width is multiplied by for variable attachment points.
     pub variable_bond_width_multiplier: i32,
     /// The colors of atoms and bonds by atomic number, -1 for the default
-    /// (`atomColourPalette` in C++; Python reads and writes it with
-    /// `getAtomPalette` and `setAtomPalette`).
+    /// (`atomColourPalette` in C++; Python writes it with `setAtomPalette`).
     pub atom_colour_palette: BTreeMap<i32, DrawColour>,
 }
 
@@ -328,9 +254,7 @@ macro_rules! colour_accessors {
 
 colour_accessors! {
     annotation_colour, get_annotation_colour, set_annotation_colour, "AnnotationColour";
-    atom_note_colour, get_atom_note_colour, set_atom_note_colour, "AtomNoteColour";
     background_colour, get_background_colour, set_background_colour, "BackgroundColour";
-    bond_note_colour, get_bond_note_colour, set_bond_note_colour, "BondNoteColour";
     highlight_colour, get_highlight_colour, set_highlight_colour, "HighlightColour";
     legend_colour, get_legend_colour, set_legend_colour, "LegendColour";
     query_colour, get_query_colour, set_query_colour, "QueryColour";
@@ -361,12 +285,6 @@ impl MolDrawOptions {
     /// `MolDrawOptions.useCDKAtomPalette`.
     pub fn use_cdk_atom_palette(&mut self) {
         self.preset(3);
-    }
-
-    /// The atom palette, by atomic number (-1 for the default). Mirrors
-    /// `MolDrawOptions.getAtomPalette`.
-    pub fn get_atom_palette(&self) -> BTreeMap<i32, DrawColour> {
-        self.atom_colour_palette.clone()
     }
 
     /// Replaces the atom palette. Mirrors `MolDrawOptions.setAtomPalette`.
@@ -408,27 +326,22 @@ impl MolDrawOptions {
             add_atom_indices: data.add_atom_indices,
             add_bond_indices: data.add_bond_indices,
             add_stereo_annotation: data.add_stereo_annotation,
-            add_stereo_group_annotation: data.add_stereo_group_annotation,
             additional_atom_label_padding: data.additional_atom_label_padding,
             annotation_colour: data.annotation_colour,
             annotation_font_scale: data.annotation_font_scale,
             atom_highlights_are_circles: data.atom_highlights_are_circles,
             atom_label_deuterium_tritium: data.atom_label_deuterium_tritium,
             atom_labels,
-            atom_note_colour: data.atom_note_colour,
             atom_regions: data.atom_regions.into_iter().map(|r| r.indices).collect(),
             background_colour: data.background_colour,
             base_font_size: data.base_font_size,
             bond_line_width: data.bond_line_width,
-            bond_note_colour: data.bond_note_colour,
-            brackets_around_atom_lists: data.brackets_around_atom_lists,
             centre_molecules_before_drawing: data.centre_molecules_before_drawing,
             circle_atoms: data.circle_atoms,
             clear_background: data.clear_background,
             comic_mode: data.comic_mode,
             continuous_highlight: data.continuous_highlight,
             draw_mols_same_scale: data.draw_mols_same_scale,
-            drawing_extents_include: DrawElement(data.drawing_extents_include),
             dummies_are_attachments: data.dummies_are_attachments,
             dummy_isotope_labels: data.dummy_isotope_labels,
             explicit_methyl: data.explicit_methyl,
@@ -449,8 +362,6 @@ impl MolDrawOptions {
             legend_colour: data.legend_colour,
             legend_font_size: data.legend_font_size,
             legend_fraction: data.legend_fraction,
-            legend_position: LegendPosition::from_ffi(data.legend_position),
-            legend_vertical_text: data.legend_vertical_text,
             max_font_size: data.max_font_size,
             min_font_size: data.min_font_size,
             multi_colour_highlight_style: MultiColourHighlightStyle::from_ffi(
@@ -461,20 +372,13 @@ impl MolDrawOptions {
             padding: data.padding,
             prepare_mols_before_drawing: data.prepare_mols_before_drawing,
             query_colour: data.query_colour,
-            reagent_padding: data.reagent_padding,
             rotate: data.rotate,
             scale_bond_width: data.scale_bond_width,
             scale_highlight_bond_width: data.scale_highlight_bond_width,
             scaling_factor: data.scaling_factor,
-            show_all_cip_codes: data.show_all_cip_codes,
             simplified_stereo_group_label: data.simplified_stereo_group_label,
-            single_colour_bonds: data.single_colour_bonds,
             single_colour_wedge_bonds: data.single_colour_wedge_bonds,
             split_bonds: data.split_bonds,
-            standard_colours_for_highlighted_atoms: data.standard_colours_for_highlighted_atoms,
-            stereo_group_abs_label: text(data.stereo_group_abs_label, "stereoGroupAbsLabel")?,
-            stereo_group_and_label: text(data.stereo_group_and_label, "stereoGroupAndLabel")?,
-            stereo_group_or_label: text(data.stereo_group_or_label, "stereoGroupOrLabel")?,
             symbol_colour: data.symbol_colour,
             unspecified_stereo_is_unknown: data.unspecified_stereo_is_unknown,
             use_complex_query_atom_symbols: data.use_complex_query_atom_symbols,
@@ -513,11 +417,8 @@ impl MolDrawOptions {
             annotation_font_scale: self.annotation_font_scale,
             font_file: self.font_file.as_bytes().to_vec(),
             legend_colour: self.legend_colour,
-            legend_position: self.legend_position.to_ffi(),
-            legend_vertical_text: self.legend_vertical_text,
             multiple_bond_offset: self.multiple_bond_offset,
             padding: self.padding,
-            reagent_padding: self.reagent_padding,
             additional_atom_label_padding: self.additional_atom_label_padding,
             atom_label_keys: self.atom_labels.keys().copied().collect(),
             atom_label_values: self
@@ -535,8 +436,6 @@ impl MolDrawOptions {
                 .collect(),
             symbol_colour: self.symbol_colour,
             annotation_colour: self.annotation_colour,
-            atom_note_colour: self.atom_note_colour,
-            bond_note_colour: self.bond_note_colour,
             bond_line_width: self.bond_line_width,
             scale_bond_width: self.scale_bond_width,
             scale_highlight_bond_width: self.scale_highlight_bond_width,
@@ -552,11 +451,9 @@ impl MolDrawOptions {
             isotope_labels: self.isotope_labels,
             dummy_isotope_labels: self.dummy_isotope_labels,
             add_stereo_annotation: self.add_stereo_annotation,
-            show_all_cip_codes: self.show_all_cip_codes,
             atom_highlights_are_circles: self.atom_highlights_are_circles,
             multi_colour_highlight_style: self.multi_colour_highlight_style.to_ffi(),
             centre_molecules_before_drawing: self.centre_molecules_before_drawing,
-            drawing_extents_include: self.drawing_extents_include.bits(),
             explicit_methyl: self.explicit_methyl,
             include_radicals: self.include_radicals,
             include_metadata: self.include_metadata,
@@ -566,20 +463,13 @@ impl MolDrawOptions {
             variable_attachment_colour: self.variable_attachment_colour,
             include_chiral_flag_label: self.include_chiral_flag_label,
             simplified_stereo_group_label: self.simplified_stereo_group_label,
-            stereo_group_and_label: self.stereo_group_and_label.as_bytes().to_vec(),
-            stereo_group_or_label: self.stereo_group_or_label.as_bytes().to_vec(),
-            stereo_group_abs_label: self.stereo_group_abs_label.as_bytes().to_vec(),
-            add_stereo_group_annotation: self.add_stereo_group_annotation,
             unspecified_stereo_is_unknown: self.unspecified_stereo_is_unknown,
             single_colour_wedge_bonds: self.single_colour_wedge_bonds,
-            single_colour_bonds: self.single_colour_bonds,
             use_mol_block_wedging: self.use_mol_block_wedging,
             scaling_factor: self.scaling_factor,
             base_font_size: self.base_font_size,
             draw_mols_same_scale: self.draw_mols_same_scale,
             use_complex_query_atom_symbols: self.use_complex_query_atom_symbols,
-            brackets_around_atom_lists: self.brackets_around_atom_lists,
-            standard_colours_for_highlighted_atoms: self.standard_colours_for_highlighted_atoms,
         }
     }
 }

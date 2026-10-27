@@ -15,7 +15,7 @@ use crate::chem::rdchem::{
     AtomMut, AtomRef, BondMut, BondRef, Conformer, ConformerMut, ConformerRef, RingInfoMut,
     RingInfoRef,
 };
-use crate::error::{expect_ok, to_string};
+use crate::error::expect_ok;
 use crate::ffi::conformer::ffi as conformer_ffi;
 use crate::ffi::mol::ffi;
 use crate::ffi::props::ffi::{RDProps, mol_as_props, mol_clear_computed_props};
@@ -44,11 +44,6 @@ impl Mol {
 
     pub(crate) fn as_ffi(&self) -> &ffi::RWMol {
         self.ptr.as_ref().unwrap()
-    }
-
-    /// Gives the molecule to the C++ wrappers.
-    pub(crate) fn into_ffi(self) -> UniquePtr<ffi::RWMol> {
-        self.ptr
     }
 
     pub(crate) fn pin_mut(&mut self) -> std::pin::Pin<&mut ffi::RWMol> {
@@ -244,11 +239,6 @@ impl Mol {
         RingInfoMut::new(self)
     }
 
-    /// Forgets every atom's computed valences. Mirrors `Mol.ClearPropertyCache`.
-    pub fn clear_property_cache(&mut self) {
-        expect_ok(ffi::mol_clear_property_cache(self.pin_mut()))
-    }
-
     /// Whether any atom's valences need recomputing. Mirrors
     /// `Mol.NeedsUpdatePropertyCache`.
     pub fn needs_update_property_cache(&self) -> bool {
@@ -258,16 +248,6 @@ impl Mol {
     /// Whether any atom or bond has a query. Mirrors `Mol.HasQuery`.
     pub fn has_query(&self) -> bool {
         expect_ok(ffi::mol_has_query(self.as_ffi()))
-    }
-
-    /// The `_Name` property, or empty. Mirrors `Mol.GetName`.
-    pub fn get_name(&self) -> Result<String> {
-        to_string(ffi::mol_get_name(self.as_ffi())?)
-    }
-
-    /// Sets the `_Name` property. Mirrors `Mol.SetName`.
-    pub fn set_name(&mut self, name: &str) {
-        expect_ok(ffi::mol_set_name(self.pin_mut(), name))
     }
 
     /// Prints the molecule's atoms, bonds, and properties to stdout. Mirrors

@@ -140,25 +140,12 @@ macro_rules! unit_validation {
     };
 }
 
-/// Checks that each atom has a valence RDKit allows, and that the molecule
-/// has atoms (unless empty molecules are allowed). Mirrors
-/// `rdMolStandardize.RDKitValidation`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct RDKitValidation {
-    /// Allows molecules with no atoms. Mirrors
-    /// `RDKitValidation.allowEmptyMolecules`.
-    pub allow_empty_molecules: bool,
-}
-
-impl From<RDKitValidation> for ValidationMethod {
-    fn from(validation: RDKitValidation) -> ValidationMethod {
-        ValidationMethod::from_ffi(expect_ok(ffi::validation_rdkit(
-            validation.allow_empty_molecules,
-        )))
-    }
-}
-
-validate_methods!(RDKitValidation);
+unit_validation!(
+    /// Checks that each atom has a valence RDKit allows. Mirrors
+    /// `rdMolStandardize.RDKitValidation`.
+    RDKitValidation,
+    validation_rdkit
+);
 
 unit_validation!(
     /// Checks that the molecule has atoms. Mirrors
@@ -184,148 +171,10 @@ unit_validation!(
 );
 
 unit_validation!(
-    /// Reports atoms with unpaired electrons, except the radicals of nitric
-    /// oxide and aminoxyls. Mirrors
-    /// `rdMolStandardize.DisallowedRadicalValidation`.
-    DisallowedRadicalValidation,
-    validation_disallowed_radical
+    /// Reports isotopes. Mirrors `rdMolStandardize.IsotopeValidation`.
+    IsotopeValidation,
+    validation_isotope
 );
-
-unit_validation!(
-    /// Checks the wedged and dashed bonds of stereocenters against the 2D
-    /// layout. Mirrors `rdMolStandardize.StereoValidation`.
-    StereoValidation,
-    validation_stereo
-);
-
-/// Reports isotopes: every one, or with `strict`, those RDKit's periodic
-/// table does not know. Mirrors `rdMolStandardize.IsotopeValidation`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct IsotopeValidation {
-    /// Reports only unknown isotopes. Mirrors `IsotopeValidation.strict`.
-    pub strict: bool,
-}
-
-impl From<IsotopeValidation> for ValidationMethod {
-    fn from(validation: IsotopeValidation) -> ValidationMethod {
-        ValidationMethod::from_ffi(expect_ok(ffi::validation_isotope(validation.strict)))
-    }
-}
-
-validate_methods!(IsotopeValidation);
-
-/// Reports features a molecule may not have: query atoms and bonds, dummy
-/// atoms, atom aliases, aromatic or dative bonds, enhanced stereo. Mirrors
-/// `rdMolStandardize.FeaturesValidation`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct FeaturesValidation {
-    /// Mirrors `FeaturesValidation.allowEnhancedStereo`.
-    pub allow_enhanced_stereo: bool,
-    /// Mirrors `FeaturesValidation.allowAromaticBondType`.
-    pub allow_aromatic_bond_type: bool,
-    /// Mirrors `FeaturesValidation.allowDativeBondType`.
-    pub allow_dative_bond_type: bool,
-    /// Mirrors `FeaturesValidation.allowQueries`.
-    pub allow_queries: bool,
-    /// Mirrors `FeaturesValidation.allowDummies`.
-    pub allow_dummies: bool,
-    /// Mirrors `FeaturesValidation.allowAtomAliases`.
-    pub allow_atom_aliases: bool,
-}
-
-impl From<FeaturesValidation> for ValidationMethod {
-    fn from(validation: FeaturesValidation) -> ValidationMethod {
-        ValidationMethod::from_ffi(expect_ok(ffi::validation_features(
-            &ffi::FeaturesValidationData {
-                allow_enhanced_stereo: validation.allow_enhanced_stereo,
-                allow_aromatic_bond_type: validation.allow_aromatic_bond_type,
-                allow_dative_bond_type: validation.allow_dative_bond_type,
-                allow_queries: validation.allow_queries,
-                allow_dummies: validation.allow_dummies,
-                allow_atom_aliases: validation.allow_atom_aliases,
-            },
-        )))
-    }
-}
-
-validate_methods!(FeaturesValidation);
-
-/// Checks that the molecule has 2D coordinates: a conformer, without Z
-/// coordinates above the threshold, whose atoms are not all at one point.
-/// Mirrors `rdMolStandardize.Is2DValidation`.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Is2DValidation {
-    /// The largest Z coordinate, and the smallest X or Y extent, taken as 0.
-    /// Mirrors `Is2DValidation.threshold`.
-    pub threshold: f64,
-}
-
-/// Mirrors `Is2DValidation()`.
-impl Default for Is2DValidation {
-    fn default() -> Is2DValidation {
-        Is2DValidation { threshold: 1e-3 }
-    }
-}
-
-impl From<Is2DValidation> for ValidationMethod {
-    fn from(validation: Is2DValidation) -> ValidationMethod {
-        ValidationMethod::from_ffi(expect_ok(ffi::validation_is_2d(validation.threshold)))
-    }
-}
-
-validate_methods!(Is2DValidation);
-
-/// Checks a 2D layout: for atoms too close to other atoms or to bonds, and
-/// bonds too long, relative to the median bond length. Mirrors
-/// `rdMolStandardize.Layout2DValidation`.
-#[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Layout2DValidation {
-    /// The closest atoms may come, as a fraction of the median bond length.
-    /// Mirrors `Layout2DValidation.clashLimit`.
-    pub clash_limit: f64,
-    /// The longest a bond may be, as a multiple of the median bond length.
-    /// Mirrors `Layout2DValidation.bondLengthLimit`.
-    pub bond_length_limit: f64,
-    /// Allows long bonds in rings. Mirrors
-    /// `Layout2DValidation.allowLongBondsInRings`.
-    pub allow_long_bonds_in_rings: bool,
-    /// Exempts long ring bonds from the atom-bond clash check. Mirrors
-    /// `Layout2DValidation.allowAtomBondClashExemption`.
-    pub allow_atom_bond_clash_exemption: bool,
-    /// The shortest the median bond length may be. Mirrors
-    /// `Layout2DValidation.minMedianBondLength`.
-    pub min_median_bond_length: f64,
-}
-
-/// Mirrors `Layout2DValidation()`, whose `minMedianBondLength` is 0 in
-/// Python (the C++ default is 0.001).
-impl Default for Layout2DValidation {
-    fn default() -> Layout2DValidation {
-        Layout2DValidation {
-            clash_limit: 0.15,
-            bond_length_limit: 25.0,
-            allow_long_bonds_in_rings: true,
-            allow_atom_bond_clash_exemption: true,
-            min_median_bond_length: 0.0,
-        }
-    }
-}
-
-impl From<Layout2DValidation> for ValidationMethod {
-    fn from(validation: Layout2DValidation) -> ValidationMethod {
-        ValidationMethod::from_ffi(expect_ok(ffi::validation_layout_2d(
-            &ffi::Layout2DValidationData {
-                clash_limit: validation.clash_limit,
-                bond_length_limit: validation.bond_length_limit,
-                allow_long_bonds_in_rings: validation.allow_long_bonds_in_rings,
-                allow_atom_bond_clash_exemption: validation.allow_atom_bond_clash_exemption,
-                min_median_bond_length: validation.min_median_bond_length,
-            },
-        )))
-    }
-}
-
-validate_methods!(Layout2DValidation);
 
 /// A validation that holds other validation methods, or RDKit's atoms, and
 /// so is a `ValidationMethod` itself.

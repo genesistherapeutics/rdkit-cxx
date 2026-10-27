@@ -3,15 +3,13 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-//! rdmolops's graph matrices, paths, subgraphs, and subsets.
+//! rdmolops's graph matrices, paths, and subgraphs.
 
 use std::collections::BTreeMap;
 
 use super::mol_list_into_map;
 use crate::Result;
 use crate::chem::Mol;
-use crate::chem::rdchem::enums::rdkit_enum;
-use crate::error::expect_ok;
 use crate::ffi::chirality::ffi::IndexPair;
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::graph::ffi;
@@ -421,7 +419,8 @@ pub struct PathToSubmolOutputs {
 }
 
 /// The submolecule the bonds and their atoms make. Mirrors
-/// `rdmolops.PathToSubmol`; bond indices past the end are skipped.
+/// `rdmolops.PathToSubmol`; a bond index past the end is `Error::Index`,
+/// where Python raises `RuntimeError`.
 pub fn path_to_submol(mol: &Mol, path: &[u32]) -> Result<Mol> {
     path_to_submol_with_use_query(mol, path, false)
 }
@@ -520,159 +519,4 @@ pub fn split_mol_by_pdb_chain_id_with_params(
 /// order.
 pub fn renumber_atoms(mol: &Mol, new_order: &[u32]) -> Result<Mol> {
     Ok(Mol::from_ffi(ffi::renumber_atoms(mol.as_ffi(), new_order)?))
-}
-
-rdkit_enum! {
-    /// How `copy_mol_subset` reads its indices. Mirrors
-    /// `rdmolops.SubsetMethod`.
-    SubsetMethod: ffi::SubsetMethod {
-        BondsBetweenAtoms = BONDS_BETWEEN_ATOMS,
-        Bonds = BONDS,
-    }
-}
-
-/// What `copy_mol_subset` copies. Mirrors `rdmolops.SubsetOptions` (A3).
-#[derive(Clone, Debug, PartialEq)]
-pub struct SubsetOptions {
-    /// Sanitizes the subset.
-    pub sanitize: bool,
-    /// Clears the subset's computed properties.
-    pub clear_computed_props: bool,
-    /// Copies the atoms and bonds as queries.
-    pub copy_as_query: bool,
-    /// Copies the conformers' coordinates.
-    pub copy_coordinates: bool,
-    /// The conformer to copy; −1 for all. Python's value is unsigned, so its
-    /// default reads 4294967295.
-    pub conformer_idx: i32,
-    /// How the indices are read.
-    pub method: SubsetMethod,
-}
-
-impl SubsetOptions {
-    fn to_ffi(&self) -> ffi::SubsetOptionsData {
-        ffi::SubsetOptionsData {
-            sanitize: self.sanitize,
-            clear_computed_props: self.clear_computed_props,
-            copy_as_query: self.copy_as_query,
-            copy_coordinates: self.copy_coordinates,
-            conformer_idx: self.conformer_idx,
-            method: self.method.to_ffi(),
-        }
-    }
-}
-
-impl Default for SubsetOptions {
-    fn default() -> SubsetOptions {
-        let data = expect_ok(ffi::subset_options_default());
-        SubsetOptions {
-            sanitize: data.sanitize,
-            clear_computed_props: data.clear_computed_props,
-            copy_as_query: data.copy_as_query,
-            copy_coordinates: data.copy_coordinates,
-            conformer_idx: data.conformer_idx,
-            method: SubsetMethod::from_ffi(data.method),
-        }
-    }
-}
-
-/// Where `copy_mol_subset` put each atom and bond. Mirrors
-/// `rdmolops.SubsetInfo`, which Python passes as an output argument (A9).
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct SubsetInfo {
-    /// Each copied atom's index in the molecule and in the subset.
-    pub atom_mapping: BTreeMap<u32, u32>,
-    /// Each copied bond's index in the molecule and in the subset.
-    pub bond_mapping: BTreeMap<u32, u32>,
-}
-
-impl SubsetInfo {
-    fn ffi() -> ffi::SubsetInfoData {
-        ffi::SubsetInfoData {
-            atom_mapping: Vec::new(),
-            bond_mapping: Vec::new(),
-        }
-    }
-
-    fn from_ffi(data: ffi::SubsetInfoData) -> SubsetInfo {
-        SubsetInfo {
-            atom_mapping: to_map(data.atom_mapping),
-            bond_mapping: to_map(data.bond_mapping),
-        }
-    }
-}
-
-/// A copy of the atoms (or with `SubsetMethod::Bonds`, the bonds) in `path`
-/// and what connects them. Mirrors `rdmolops.CopyMolSubset(mol, path)`;
-/// indices past the end are skipped.
-pub fn copy_mol_subset(mol: &Mol, path: &[u32]) -> Result<Mol> {
-    copy_mol_subset_with_params(mol, path, &SubsetOptions::default())
-}
-
-/// Mirrors `rdmolops.CopyMolSubset(mol, path, options)` (A3).
-pub fn copy_mol_subset_with_params(
-    mol: &Mol,
-    path: &[u32],
-    options: &SubsetOptions,
-) -> Result<Mol> {
-    Ok(copy_mol_subset_with_outputs(mol, path, options)?.0)
-}
-
-/// The subset and its `SubsetInfo` (A9). Mirrors
-/// `rdmolops.CopyMolSubset(mol, path, subsetInfo, options)`.
-pub fn copy_mol_subset_with_outputs(
-    mol: &Mol,
-    path: &[u32],
-    options: &SubsetOptions,
-) -> Result<(Mol, SubsetInfo)> {
-    let mut info = SubsetInfo::ffi();
-    let subset = ffi::copy_mol_subset(mol.as_ffi(), path, &options.to_ffi(), &mut info)?;
-    Ok((Mol::from_ffi(subset), SubsetInfo::from_ffi(info)))
-}
-
-/// A copy of exactly these atoms and bonds; a bond is kept only with both
-/// of its atoms. Mirrors `rdmolops.CopyMolSubset(mol, atomIndices,
-/// bondIndices)` (A5). `Error::Index` for an index past the end.
-pub fn copy_mol_subset_atoms_bonds(
-    mol: &Mol,
-    atom_indices: &[u32],
-    bond_indices: &[u32],
-) -> Result<Mol> {
-    copy_mol_subset_atoms_bonds_with_params(
-        mol,
-        atom_indices,
-        bond_indices,
-        &SubsetOptions::default(),
-    )
-}
-
-/// Mirrors `rdmolops.CopyMolSubset(mol, atomIndices, bondIndices, options)`
-/// (A3).
-pub fn copy_mol_subset_atoms_bonds_with_params(
-    mol: &Mol,
-    atom_indices: &[u32],
-    bond_indices: &[u32],
-    options: &SubsetOptions,
-) -> Result<Mol> {
-    Ok(copy_mol_subset_atoms_bonds_with_outputs(mol, atom_indices, bond_indices, options)?.0)
-}
-
-/// The subset and its `SubsetInfo` (A9). Mirrors
-/// `rdmolops.CopyMolSubset(mol, atomIndices, bondIndices, subsetInfo,
-/// options)`.
-pub fn copy_mol_subset_atoms_bonds_with_outputs(
-    mol: &Mol,
-    atom_indices: &[u32],
-    bond_indices: &[u32],
-    options: &SubsetOptions,
-) -> Result<(Mol, SubsetInfo)> {
-    let mut info = SubsetInfo::ffi();
-    let subset = ffi::copy_mol_subset_atoms_bonds(
-        mol.as_ffi(),
-        atom_indices,
-        bond_indices,
-        &options.to_ffi(),
-        &mut info,
-    )?;
-    Ok((Mol::from_ffi(subset), SubsetInfo::from_ffi(info)))
 }

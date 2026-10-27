@@ -181,9 +181,3 @@ pub fn mol_to_inchi_key_with_options(mol: &Mol, options: &str) -> Result<String>
 pub fn inchi_to_inchi_key(inchi: &str) -> String {
     to_string(expect_ok(ffi::inchi_to_inchi_key(inchi))).expect("an InChI key is ASCII")
 }
-
-/// The version of the InChI library, such as `"1.07.3"`. Mirrors
-/// `rdinchi.GetInchiVersion`.
-pub fn get_inchi_version() -> String {
-    to_string(expect_ok(ffi::get_inchi_version())).expect("the InChI version is ASCII")
-}

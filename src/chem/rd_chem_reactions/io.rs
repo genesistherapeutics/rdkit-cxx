@@ -28,30 +28,6 @@ pub struct ReactionFromSmartsParams {
     pub use_smiles: bool,
 }
 
-/// Parameters for `reaction_to_cx_smarts_with_params`: Python's
-/// `SmilesWriteParams` overload and its `flags` (A3).
-#[derive(Clone, Debug, PartialEq)]
-pub struct ReactionToCXSmartsParams {
-    /// How to write each template.
-    pub params: SmilesWriteParams,
-    /// Which CXSMILES extensions to write: `CXSmilesFields` bits, all by
-    /// default.
-    pub flags: u32,
-}
-
-impl Default for ReactionToCXSmartsParams {
-    fn default() -> ReactionToCXSmartsParams {
-        ReactionToCXSmartsParams {
-            params: SmilesWriteParams::default(),
-            flags: expect_ok(ffi::cx_smiles_fields_all()),
-        }
-    }
-}
-
-/// Parameters for `reaction_to_cx_smiles_with_params`: those of the SMARTS
-/// form. A Rust addition (A2).
-pub type ReactionToCXSmilesParams = ReactionToCXSmartsParams;
-
 /// Parameters for `reaction_from_rxn_block_with_params`, with Python's
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
@@ -204,25 +180,6 @@ pub fn reaction_from_smarts_with_params(
     ))
 }
 
-/// Parses reaction SMILES. Mirrors `rdChemReactions.ReactionFromSmiles`.
-pub fn reaction_from_smiles(smiles: &str) -> Result<ChemicalReaction> {
-    reaction_from_smiles_with_replacements(smiles, &BTreeMap::new())
-}
-
-/// Mirrors `rdChemReactions.ReactionFromSmiles(SMILES, replacements)`.
-pub fn reaction_from_smiles_with_replacements(
-    smiles: &str,
-    replacements: &BTreeMap<String, String>,
-) -> Result<ChemicalReaction> {
-    reaction_from_smarts_with_params(
-        smiles,
-        &ReactionFromSmartsParams {
-            replacements: replacements.clone(),
-            use_smiles: true,
-        },
-    )
-}
-
 fn non_canonical() -> SmilesWriteParams {
     SmilesWriteParams {
         canonical: false,
@@ -262,49 +219,6 @@ pub fn reaction_to_smiles_with_params(
     to_string(ffi::reaction_to_smiles(
         reaction.as_ffi(),
         &params.to_ffi(),
-    )?)
-}
-
-/// Reaction SMARTS with CXSMILES extensions. Mirrors
-/// `rdChemReactions.ReactionToCXSmarts`.
-pub fn reaction_to_cx_smarts(reaction: &ChemicalReaction) -> Result<String> {
-    reaction_to_cx_smarts_with_params(
-        reaction,
-        &ReactionToCXSmartsParams {
-            params: non_canonical(),
-            ..Default::default()
-        },
-    )
-}
-
-/// Mirrors `rdChemReactions.ReactionToCXSmarts(reaction, params, flags)`.
-pub fn reaction_to_cx_smarts_with_params(
-    reaction: &ChemicalReaction,
-    params: &ReactionToCXSmartsParams,
-) -> Result<String> {
-    to_string(ffi::reaction_to_cx_smarts(
-        reaction.as_ffi(),
-        &params.params.to_ffi(),
-        params.flags,
-    )?)
-}
-
-/// Canonical reaction SMILES with CXSMILES extensions. Mirrors
-/// `rdChemReactions.ReactionToCXSmiles`.
-pub fn reaction_to_cx_smiles(reaction: &ChemicalReaction) -> Result<String> {
-    reaction_to_cx_smiles_with_params(reaction, &ReactionToCXSmilesParams::default())
-}
-
-/// Mirrors `rdChemReactions.ReactionToCXSmiles(reaction, params, flags)` and
-/// `ReactionToCXSmiles(reaction, canonical)`.
-pub fn reaction_to_cx_smiles_with_params(
-    reaction: &ChemicalReaction,
-    params: &ReactionToCXSmilesParams,
-) -> Result<String> {
-    to_string(ffi::reaction_to_cx_smiles(
-        reaction.as_ffi(),
-        &params.params.to_ffi(),
-        params.flags,
     )?)
 }
 

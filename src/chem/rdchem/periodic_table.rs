@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 use crate::Result;
-use crate::error::{expect_ok, to_string};
+use crate::error::to_string;
 use crate::ffi::periodic_table::ffi;
 
 /// RDKit's periodic table. Mirrors `rdchem.PeriodicTable`.

@@ -10,8 +10,7 @@ use std::path::Path;
 
 use crate::Result;
 use crate::chem::Mol;
-use crate::chem::rdchem::enums::rdkit_enum;
-use crate::error::{expect_ok, to_string};
+use crate::error::to_string;
 use crate::ffi::molfiles::ffi;
 use crate::util::path_bytes;
 
@@ -711,37 +710,4 @@ pub fn mol_to_fasta(mol: &Mol) -> Result<String> {
 /// info. Mirrors `rdmolfiles.MolToHELM`.
 pub fn mol_to_helm(mol: &Mol) -> Result<String> {
     to_string(ffi::mol_to_helm(mol.as_ffi())?)
-}
-
-rdkit_enum! {
-    /// A ChemDraw format. Mirrors `rdmolfiles.CDXMLFormat`.
-    CDXMLFormat: ffi::CDXMLFormat {
-        Cdxml = CDXML,
-        Cdx = CDX,
-        Auto = Auto,
-    }
-}
-
-/// Whether RDKit was built with ChemDraw's library, which reads and writes
-/// binary CDX. Mirrors `rdmolfiles.HasChemDrawCDXSupport`.
-pub fn has_chem_draw_cdx_support() -> bool {
-    expect_ok(ffi::has_chem_draw_cdx_support())
-}
-
-/// A CDXML document for a molecule. RDKit writes coordinates as 32-bit fixed
-/// point, scaling 2D ones to ChemDraw's bond length, so coordinates that do
-/// not fit, or a 2D molecule without bonds of nonzero length, are
-/// `Error::Value`. Mirrors `rdmolfiles.MolToCDXMLBlock`.
-pub fn mol_to_cdxml_block(mol: &Mol) -> Result<String> {
-    let bytes = mol_to_cdxml_block_format(mol, CDXMLFormat::Cdxml)?;
-    String::from_utf8(bytes).map_err(|err| crate::Error::Value {
-        message: format!("invalid UTF-8 in a string from RDKit: {err}"),
-    })
-}
-
-/// A ChemDraw document in `format`, as bytes: binary for `Cdx`, text
-/// otherwise. Mirrors `rdmolfiles.MolToCDXMLBlock(mol, format)`, which returns
-/// `bytes` for `CDX` and `str` otherwise.
-pub fn mol_to_cdxml_block_format(mol: &Mol, format: CDXMLFormat) -> Result<Vec<u8>> {
-    Ok(ffi::mol_to_cdxml_block(mol.as_ffi(), format.to_ffi())?)
 }
