@@ -265,11 +265,12 @@ its Boost.Python modules and its `.py` modules.
   random SMILES, the depictor's sampling (`nFlipsPerSample` and random bond
   flips, in `Compute2DCoordsForReaction` too; the writers' default depiction
   never draws), the embedder without a seed, DistGeom's `EmbedBoundsMatrix`,
-  and MolAlign's `RandomTransform`. RDKit's Ctrl-C handler (`ControlCHandler`, which swaps
-  the SIGINT handler through static variables) has its own lock,
-  `control_c_mutex()` in `rdkit-cxx/control_c_lock.h`, held for the whole call
-  by every wrapper whose RDKit call constructs one. Every substructure match
-  does (`Substruct/vf2.hpp`), so that is the match methods and every wrapper
+  and MolAlign's `RandomTransform`. Newer RDKit's Ctrl-C handler (`ControlCHandler`, which
+  swaps the SIGINT handler through static variables, and which RDKit 2024.03
+  lacks) has its own lock, `control_c_mutex()` in
+  `rdkit-cxx/control_c_lock.h`; this line holds it for the whole call where
+  the newer lines do, and it orders RDKit's log-flag writers. Every
+  substructure match takes it, so that is the match methods and every wrapper
   whose RDKit call matches patterns: the transforms that match, reactions,
   alignment, the force-field builders, Crippen and the other descriptors and
   fingerprints that type atoms by SMARTS, depiction with templates,

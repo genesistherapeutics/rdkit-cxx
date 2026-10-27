@@ -5,46 +5,32 @@
  * license that can be found in the LICENSE file.
  */
 
-// RDKit::ControlCHandler (RDGeneral/ControlCHandler.h) swaps the process's
-// SIGINT handler and keeps the previous one, and its flag, in plain static
-// variables, so two calls that construct one at once race, and can leave
-// RDKit's handler installed after both. Every substructure match constructs one
-// (boost::vf2 and vf2_all in Substruct/vf2.hpp), so it is reached from the
-// match methods and the transforms that match, from descriptors and
-// fingerprints that type atoms by patterns (Crippen, the SMARTS counts, MACCS,
-// pattern fingerprints, feature invariants), from reactions, alignment,
-// force-field builders, depiction with templates, standardization, the
-// catalogs, and MCS; the embedder, DetermineBondOrders, and the CIP labeler
-// construct one directly, and so does the fingerprint code that runs the CIP
-// labeler for chirality. Every wrapper call that can construct one holds this
-// mutex for the whole RDKit call, and runs RDKit's own threads, which the mutex
-// cannot order, on the calling thread instead (CONVENTIONS.md U4). A wrapper
-// that also needs random_mutex() (global_state.h) takes this one first.
-//
-// In RDKit 2026.03 the matches, the embedder, DetermineBondOrders, the CIP
-// labeler, and the synthon search do not construct one but call the static
-// ControlCHandler::reset(), which installs RDKit's handler and keeps nothing
-// to restore; RDKit's handler swallows the next SIGINT and installs whatever
-// handler a ControlCHandler last saved. The mutex therefore saves SIGINT's
-// disposition when it is taken and restores it when it is released, so the
-// process's own handler is back after every call that holds it, as a scoped
-// ControlCHandler (RDKit 2026.09, rdkit/rdkit#9393) leaves it. A handler
-// another thread installs while such a call runs is replaced by the one
-// before.
+// The lock the crate's RDKit 2026 lines take for RDKit::ControlCHandler,
+// which swaps the process's SIGINT handler through static variables and which
+// every substructure match constructs. RDKit 2024.03 has no ControlCHandler
+// and leaves SIGINT alone, but this line keeps the lock where the newer lines
+// take it: every wrapper call that can match substructures (the match methods
+// and the transforms that match, descriptors and fingerprints that type atoms
+// by patterns, reactions, alignment, force-field builders, depiction with
+// templates, standardization, the catalogs, MCS), the embedder,
+// DetermineBondOrders, and the CIP labeler hold it for the whole RDKit call,
+// and run RDKit's own threads, which the mutex cannot order, on the calling
+// thread instead (CONVENTIONS.md U4). Several of those calls write RDKit's
+// log flags, which the lock orders with one another, and keeping it keeps
+// U4's lock order, the callback rules below, and the race check
+// (tests/threads.rs) the same across the lines. A wrapper that also needs
+// random_mutex() (global_state.h) takes this one first.
 
 #pragma once
 
 #include <mutex>
 #include <stdexcept>
 
-#include <signal.h>
-
 namespace rdkit_cxx {
 
 // Set while this thread runs a Rust closure that RDKit calls from inside a
-// substructure match (FMCS's final match checks run inside vf2), so with a
-// ControlCHandler alive: the thread holds control_c_mutex, which it cannot
-// release for the closure. A wrapper the closure calls that would take the
+// substructure match (FMCS's final match checks run inside vf2): the thread
+// holds control_c_mutex, which it cannot release mid-match for the closure. A wrapper the closure calls that would take the
 // mutex again (undefined for a std::mutex the thread owns), or a lock that
 // comes before it in U4's order (which could deadlock with a thread waiting
 // for this one), fails with this check instead.
@@ -79,20 +65,14 @@ class ControlCMutex {
     return true;
   }
   void unlock() {
-    sigaction(SIGINT, &d_sigint, nullptr);
     control_c_held = false;
     d_mutex.unlock();
   }
 
  private:
-  void taken() {
-    control_c_held = true;
-    sigaction(SIGINT, nullptr, &d_sigint);
-  }
+  void taken() { control_c_held = true; }
 
   std::mutex d_mutex;
-  // SIGINT's disposition when the mutex was taken.
-  struct sigaction d_sigint{};
 };
 
 // Defined inline so every wrapper source shares one mutex. Every lock site
@@ -107,8 +87,7 @@ inline ControlCMutex &control_c_mutex() {
 // hold it: Rust closures, which may call wrappers that take it, and steps
 // that take a lock ordered before it. A ReleaseControlC around such code
 // releases the lock the thread's innermost HoldControlC holds, if it holds
-// it, and takes it back after. RDKit runs such code between matches, when
-// no ControlCHandler is alive. When the thread holds the mutex through
+// it, and takes it back after. RDKit runs such code between matches. When the thread holds the mutex through
 // another lock, which a ReleaseControlC cannot release, the code inside runs
 // as in_control_c_callback, so a wrapper it calls that would take the mutex
 // again fails instead.
