@@ -270,6 +270,7 @@ fn main() {
     phase(enumerated_link_nodes(), substruct_matches());
     phase(embedded_stereoisomers(), substruct_matches());
     phase(synthon_substructure_search(), substruct_matches());
+    phase(synthon_fingerprint_search(), substruct_matches());
     phase(synthon_rascal_search(), substruct_matches());
     phase(synthon_shapes(), substruct_matches());
     phase(inchi_written(), substruct_matches());
@@ -1425,6 +1426,32 @@ fn synthon_substructure_search() -> Call<Mol> {
             space.read_text_file(synthons()).unwrap();
             let hits = space.substructure_search(&query).unwrap();
             assert_eq!(hits.get_hit_molecules().len(), 2);
+        },
+    }
+}
+
+// The fingerprint search clears the Ctrl-C flag (ControlCHandler::reset and
+// the wrapper's ControlCFlagGuard), and the synthons' fingerprints, built
+// first, use feature invariants, which match their feature patterns.
+fn synthon_fingerprint_search() -> Call<(SynthonSpace, FingerprintGenerator64, Mol)> {
+    Call {
+        make: |_| {
+            let mut space = SynthonSpace::default();
+            space.read_text_file(synthons()).unwrap();
+            let features = GetMorganGeneratorParams {
+                atom_invariants_generator: Some(get_morgan_feature_atom_inv_gen()),
+                ..Default::default()
+            };
+            (
+                space,
+                get_morgan_generator_with_params(&features).unwrap(),
+                mol("c1ccccc1C(=O)N1CCCC1"),
+            )
+        },
+        run: |(mut space, generator, query)| {
+            space.build_synthon_fingerprints(&generator).unwrap();
+            let hits = space.fingerprint_search(&query, &generator).unwrap();
+            assert!(!hits.get_hit_molecules().is_empty());
         },
     }
 }
