@@ -8,8 +8,8 @@ From RDKit's source tree, under RDKit's BSD license:
 - `reaction1.no_metadata.png`: `Code/GraphMol/ChemReactions/testData`
 - `rxn1.cdxml`: `Code/GraphMol/test_data/CDXML`
 - `AlexRxn.mrv`: `Code/GraphMol/MarvinParse/test_data`
-- `RiboseFullname.mol`: `Code/GraphMol/FileParsers/test_data/macromols`, with
-  trailing whitespace trimmed
+- `DnaTest.mol`: `Code/GraphMol/FileParsers/test_data/macromols` (RDKit
+  2025.03.6), with trailing whitespace trimmed
 - `cip_max_iterations.mol`: the mol block of the "Test early termination of
   CIP calculation" test in `Code/GraphMol/CIPLabeler/catch_tests.cpp`
 - `amide_space.txt`, `amide_space_error.txt`, `triazole_space.txt`,

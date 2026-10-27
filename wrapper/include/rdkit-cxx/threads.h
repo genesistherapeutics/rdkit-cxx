@@ -25,7 +25,7 @@ unsigned num_threads_to_use(int target);
 inline constexpr unsigned kMaxSupplierThreads = 1024;
 
 // The largest queue a caller may ask RDKit's MultithreadedMolSupplier for.
-// RDKit 2026.03 allocates both queues in the supplier's constructor, and if
+// RDKit 2025.03 allocates both queues in the supplier's constructor, and if
 // either allocation throws, the base destructor's close() dereferences the
 // output queue it never made (RDKit 2026.09 checks it, rdkit/rdkit#9462).
 // A queue this size takes tens of megabytes, which Rust code treats as an

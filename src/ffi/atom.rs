@@ -5,7 +5,7 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::Atom::HybridizationType`; cxx checks the values. RDKit 2026.03 fixes
+    /// `RDKit::Atom::HybridizationType`; cxx checks the values. RDKit 2025.03 fixes
     /// no underlying type, so it is `unsigned int`.
     #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]
@@ -21,7 +21,7 @@ pub(crate) mod ffi {
         OTHER,
     }
 
-    /// `RDKit::Atom::ChiralType`; cxx checks the values. RDKit 2026.03 fixes
+    /// `RDKit::Atom::ChiralType`; cxx checks the values. RDKit 2025.03 fixes
     /// no underlying type, so it is `unsigned int`.
     #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]

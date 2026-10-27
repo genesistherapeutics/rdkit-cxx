@@ -152,7 +152,7 @@ H 1.8339 1.0320 0.4595
 
 /// An RNA dimer whose base templates SCSR's Auto option matches to find
 /// their hydrogen-bond sites.
-const RIBOSE_SCSR: &str = include_str!("data/RiboseFullname.mol");
+const DNA_SCSR: &str = include_str!("data/DnaTest.mol");
 
 fn main() {
     // RDKit fills some static data on first use (the periodic table, the
@@ -1052,7 +1052,7 @@ fn scsr_hbonds() -> Call<()> {
                 scsr_base_hbond_options: SCSRBaseHbondOptions::Auto,
                 ..Default::default()
             };
-            mol_from_scsr_block_with_params(RIBOSE_SCSR, &auto).unwrap();
+            mol_from_scsr_block_with_params(DNA_SCSR, &auto).unwrap();
         },
     }
 }

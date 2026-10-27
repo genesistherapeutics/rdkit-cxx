@@ -5,7 +5,7 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::Bond::BondType`; cxx checks the values. RDKit 2026.03 fixes no
+    /// `RDKit::Bond::BondType`; cxx checks the values. RDKit 2025.03 fixes no
     /// underlying type, so it is `unsigned int`.
     #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]
@@ -34,7 +34,7 @@ pub(crate) mod ffi {
         ZERO,
     }
 
-    /// `RDKit::Bond::BondDir`; cxx checks the values. RDKit 2026.03 fixes no
+    /// `RDKit::Bond::BondDir`; cxx checks the values. RDKit 2025.03 fixes no
     /// underlying type, so it is `unsigned int`.
     #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]
@@ -48,7 +48,7 @@ pub(crate) mod ffi {
         UNKNOWN,
     }
 
-    /// `RDKit::Bond::BondStereo`; cxx checks the values. RDKit 2026.03 fixes no
+    /// `RDKit::Bond::BondStereo`; cxx checks the values. RDKit 2025.03 fixes no
     /// underlying type, so it is `unsigned int`.
     #[repr(u32)]
     #[allow(clippy::upper_case_acronyms)]
