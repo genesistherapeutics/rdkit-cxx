@@ -92,15 +92,13 @@ bool is_empty_node(const FilterMatcherBase &matcher) {
   return node && !part<NodeMatcher>(*node);
 }
 
-// Every substructure match constructs a ControlCHandler, so the wrappers
-// whose RDKit call can match hold control_c_mutex for the whole call
-// through HoldControlC (control_c_lock.h, CONVENTIONS.md U4). A Rust
-// matcher's methods may call such wrappers themselves, and RDKit calls them
-// only between its matches, with no ControlCHandler alive (one lives only
-// inside a SubstructMatch, which calls no matcher), so each runs inside a
-// ReleaseControlC, which releases the lock and takes it back after, even
-// when they throw. A callback can run while it is already released: one
-// that calls a wrapper that does not match (filter_matcher_is_valid) on
+// The wrappers whose RDKit call can match substructures hold control_c_mutex
+// for the whole call through HoldControlC (control_c_lock.h, CONVENTIONS.md
+// U4). A Rust matcher's methods may call such wrappers themselves, and RDKit
+// calls them only between its matches (a SubstructMatch calls no matcher), so
+// each runs inside a ReleaseControlC, which releases the lock and takes it back
+// after, even when they throw. A callback can run while it is already released:
+// one that calls a wrapper that does not match (filter_matcher_is_valid) on
 // another Rust matcher.
 
 // A Rust callback gets its own copy of the molecule, as a Rust molecule,
@@ -852,7 +850,7 @@ bool filter_catalog_can_serialize() {
 // negates a nonpositive thread count in int (undefined for INT_MIN) and
 // steps each thread's index in unsigned int, which wraps for 2^32 SMILES, so
 // threads process the same SMILES at once, and its threads' matches would
-// race on ControlCHandler's statics, which control_c_mutex cannot order.
+// run outside control_c_mutex, which RDKit's threads cannot take.
 // Here each thread parses its SMILES and matches each molecule holding
 // control_c_mutex, so only the parsing runs in parallel. As RDKit's, a
 // SMILES that does not parse gets the "no valid RDKit molecule" entry, and

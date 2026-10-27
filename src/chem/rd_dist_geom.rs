@@ -7,8 +7,8 @@
 //!
 //! The embedding runs on the calling thread whatever `num_threads` asks for,
 //! and one embedding at a time runs in the process: RDKit's own threads race
-//! on state they share, and every call swaps the process's SIGINT handler
-//! through static variables. Each conformer's random seed depends only on
+//! on state they share, and every call holds the crate's matching lock
+//! (CONVENTIONS.md U4). Each conformer's random seed depends only on
 //! its index, so a seeded embedding gives the conformers RDKit's threads
 //! would.
 

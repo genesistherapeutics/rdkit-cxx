@@ -302,8 +302,8 @@ EmbedParametersData embed_parameters_preset(EmbedPreset preset) {
 // maxIterations and basinThresh each thread sets; and, without a seed, on
 // RDKit's global random generator. The embedding therefore runs on the
 // calling thread, which gives the conformers RDKit's threads would, since
-// each conformer's seed depends only on its index. Each call also swaps the
-// process's SIGINT handler (control_c_mutex), and pruning symmetrizes
+// each conformer's seed depends only on its index. Each call also holds
+// control_c_mutex (control_c_lock.h), and pruning symmetrizes
 // terminal groups (symmetrize_mutex).
 rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
                                              std::uint32_t num_confs,
@@ -340,8 +340,8 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
 
 // As getMolBoundsMatrix in rdDistGeom.cpp, which sizes its copy in unsigned
 // int. setTopolBounds reads the distance matrix (U6).
-rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol,
-                                             bool set15bounds, bool scale_vdw,
+rust::Vec<double> get_molecule_bounds_matrix(const RWMol &mol, bool set15bounds,
+                                             bool scale_vdw,
                                              bool do_triangle_smoothing,
                                              bool use_macrocycle14config) {
   check_matrix_size(mol);

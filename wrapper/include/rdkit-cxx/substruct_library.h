@@ -18,8 +18,8 @@
 // sanitize, a fingerprint index past the fingerprint holder's end) unwinds
 // internalGetMatches, which destroys the threads' result vectors before the
 // futures that wait for the other threads, so those threads write freed
-// memory (Python aborts with heap corruption). Each thread would also
-// construct a ControlCHandler, which control_c_mutex cannot order. The
+// memory (Python aborts with heap corruption). Each thread would also match
+// outside control_c_mutex, which RDKit's threads cannot take. The
 // wrappers therefore always ask RDKit for one thread, which searches on the
 // calling thread under control_c_mutex.
 

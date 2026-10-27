@@ -173,7 +173,7 @@ const FmcsState &state_of(const void *user_data) {
   return *static_cast<const FmcsState *>(user_data);
 }
 
-// Calls a closure RDKit calls with no ControlCHandler alive (the typers,
+// Calls a closure RDKit calls outside any match (the typers,
 // from MaximumCommonSubgraph::init; the progress callback, between seeds;
 // the acceptance check, after its matches), with control_c_mutex released
 // (ReleaseControlC) so the closure may call wrappers that take it.
@@ -183,8 +183,8 @@ bool unlocked(Call &&call) {
   return call();
 }
 
-// Marks a closure RDKit may call from inside vf2, with a ControlCHandler
-// alive, so the lock stays held: wrappers the closure calls that would take
+// Marks a closure RDKit may call from inside vf2, mid-match, so the lock
+// stays held: wrappers the closure calls that would take
 // it fail (control_c_lock.h).
 class InControlCCallback {
  public:

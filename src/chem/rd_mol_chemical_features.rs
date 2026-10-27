@@ -27,7 +27,7 @@ fn text(value: std::result::Result<UniquePtr<cxx::CxxString>, cxx::Exception>) -
 /// molecules, by matching the SMARTS patterns of its feature definitions.
 /// Mirrors `rdMolChemicalFeatures.MolChemicalFeatureFactory`.
 ///
-/// It is `Send` and `Sync`: its matches hold the crate's Ctrl-C lock, so
+/// It is `Send` and `Sync`: its matches hold the crate's matching lock, so
 /// threads that share one match one at a time.
 pub struct MolChemicalFeatureFactory {
     /// Never null.

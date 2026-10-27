@@ -85,7 +85,7 @@ pub struct GetSubstructMatchesParams {
     /// The most matches to return.
     pub max_matches: u32,
     /// Accepted for parity: the match runs on the calling thread, since
-    /// RDKit's threads would each swap the process's SIGINT handler
+    /// RDKit's threads would match outside the crate's matching lock
     /// (CONVENTIONS.md U4).
     pub num_threads: i32,
 }

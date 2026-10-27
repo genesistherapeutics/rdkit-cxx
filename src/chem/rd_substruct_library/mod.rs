@@ -11,9 +11,8 @@
 //! them.
 //!
 //! Every search runs on the calling thread, whatever its `num_threads`,
-//! which is accepted for parity. RDKit's search threads each construct a
-//! `ControlCHandler`, which the wrappers' lock cannot order
-//! (CONVENTIONS.md U4), and an exception in one of them (a stored SMILES
+//! which is accepted for parity. RDKit's search threads would match outside
+//! the wrappers' matching lock (CONVENTIONS.md U4), and an exception in one of them (a stored SMILES
 //! that does not sanitize, a library with fewer fingerprints than
 //! molecules) unwinds into freed memory while the others still run; Python
 //! aborts with heap corruption, or segfaults. The results are RDKit's for

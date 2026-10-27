@@ -301,10 +301,9 @@ bool is_bits(FingerprintOutput output) {
 // threads without catching: an exception in one (an invalid conformer, a
 // count-bounds check) would call std::terminate. Here each thread keeps its
 // first exception, and the call rethrows it. Each molecule is read by one
-// thread only, as RDKit's own split does. RDKit's threads would each
-// construct a ControlCHandler when they match feature patterns or run the
-// CIP labeler, so a call that may (lock_control_c_for) runs on this thread
-// alone.
+// thread only, as RDKit's own split does. RDKit's threads would match
+// feature patterns or run the CIP labeler outside control_c_mutex, so a call
+// that may (lock_control_c_for) runs on this thread alone.
 std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
                                           BorrowedMols &mols,
                                           FingerprintOutput output,
@@ -352,7 +351,7 @@ std::unique_ptr<FingerprintList> run_bulk(const FpGenerator &gen,
 
 }  // namespace
 
-// Holds control_c_mutex while the generator may construct a ControlCHandler:
+// Holds control_c_mutex while the generator may match substructures:
 // always for feature invariants, which MorganFeatureAtomInvGenerator finds
 // by substructure matches (a generator that has one names it in its info
 // string), and otherwise when it may run the CIP labeler

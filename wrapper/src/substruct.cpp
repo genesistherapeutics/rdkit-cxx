@@ -100,19 +100,18 @@ SubstructMatchParametersData substruct_params_to_data(
   for (const auto &prop : p.bondProperties) {
     bond_properties.push_back(prop);
   }
-  return SubstructMatchParametersData{
-      p.useChirality,
-      p.useEnhancedStereo,
-      p.aromaticMatchesConjugated,
-      p.useGenericMatchers,
-      p.useQueryQueryMatches,
-      p.recursionPossible,
-      p.uniquify,
-      p.maxMatches,
-      p.maxRecursiveMatches,
-      p.numThreads,
-      std::move(atom_properties),
-      std::move(bond_properties)};
+  return SubstructMatchParametersData{p.useChirality,
+                                      p.useEnhancedStereo,
+                                      p.aromaticMatchesConjugated,
+                                      p.useGenericMatchers,
+                                      p.useQueryQueryMatches,
+                                      p.recursionPossible,
+                                      p.uniquify,
+                                      p.maxMatches,
+                                      p.maxRecursiveMatches,
+                                      p.numThreads,
+                                      std::move(atom_properties),
+                                      std::move(bond_properties)};
 }
 
 RDKit::SubstructMatchParameters substruct_params_from_data(
@@ -217,8 +216,8 @@ rust::Vec<IndexList> resonance_mol_supplier_get_substruct_matches(
   params.useChirality = use_chirality;
   params.useQueryQueryMatches = use_query_query_matches;
   params.maxMatches = max_matches;
-  // RDKit's threads would each construct a ControlCHandler, which the lock
-  // cannot order, so the match runs on this thread.
+  // RDKit's threads would match outside control_c_mutex, which they cannot
+  // take, so the match runs on this thread.
   (void)num_threads;
   params.numThreads = 1;
   rust::Vec<IndexList> result;

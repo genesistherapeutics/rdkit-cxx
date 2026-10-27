@@ -107,7 +107,7 @@ std::unique_ptr<FingerprintList> fp_generator_bulk(const FpGenerator &gen,
 std::unique_ptr<FingerprintList> fp_type_bulk(BorrowedMols &mols,
                                               FPType fp_type,
                                               FingerprintOutput output);
-// Holds control_c_mutex while the generator may construct a ControlCHandler
+// Holds control_c_mutex while the generator may match substructures
 // (control_c_lock.h): for feature invariants, which it finds by substructure
 // matches, and when it may run the CIP labeler (lock_control_c_for_cip).
 std::unique_lock<ControlCMutex> lock_control_c_for(const FpGenerator &gen);

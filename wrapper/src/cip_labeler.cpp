@@ -99,7 +99,8 @@ void assign_cip_labels(RWMol &mol, bool has_atoms,
       bond->clearProp(RDKit::common_properties::_CIPCode);
     }
   }
-  // assignCIPLabels constructs a ControlCHandler (CIPLabeler.cpp).
+  // Held where the newer lines' assignCIPLabels constructs a ControlCHandler
+  // (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::CIPLabeler::assignCIPLabels(mol, atom_set, bond_set,
                                      max_recursive_iterations);

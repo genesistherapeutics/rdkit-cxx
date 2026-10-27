@@ -32,10 +32,8 @@
 //! element, at least one electron and at most two per orbital, at most 46340
 //! orbitals, and a parameter file it reads safely.
 //!
-//! Finding bond orders swaps the process's SIGINT handler for RDKit's, so
-//! one such call runs at a time in the process. RDKit's handler stops the
-//! search at a Ctrl-C, which then leaves the bond orders unassigned without
-//! an error.
+//! Finding bond orders holds the crate's matching lock (CONVENTIONS.md U4),
+//! so one such call runs at a time in the process.
 
 use crate::Result;
 use crate::chem::Mol;

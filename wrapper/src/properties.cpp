@@ -38,8 +38,8 @@ std::mutex &registry_mutex() {
 // RDKit's own functors include descriptors that match substructures
 // (control_c_lock.h), so computing properties holds control_c_mutex
 // (HoldControlC). A Rust functor among them runs a closure that may call
-// wrappers that take it, so it releases the lock while the closure runs; no
-// ControlCHandler is alive between two functors.
+// wrappers that take it, so it releases the lock while the closure runs;
+// RDKit matches nothing between two functors.
 
 // Set at exit, before RDKit's registry is destroyed: closures still in it
 // are leaked then rather than dropped, since Rust's thread-locals on the
@@ -218,8 +218,8 @@ std::int32_t properties_register_property(
       replaced = registered;
     }
   }
-  auto idx = Properties::registerProperty(
-      new ForwardingPropertyFunctor(functor.ptr));
+  auto idx =
+      Properties::registerProperty(new ForwardingPropertyFunctor(functor.ptr));
   return idx;
 }
 
