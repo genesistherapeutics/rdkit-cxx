@@ -595,9 +595,9 @@ impl MolDraw2D {
     }
 
     /// As `draw_arrow`, with the head's shape and color. Mirrors
-    /// `MolDraw2D.DrawArrow`; `Error::Runtime` for an angle not above 1e-6
-    /// (RDKit's check), and `Error::Value` for a head whose points come out
-    /// beyond the coordinate bounds.
+    /// `MolDraw2D.DrawArrow`; `Error::Value` for a head whose points come
+    /// out beyond the coordinate bounds (as for an angle of 90 degrees,
+    /// whose cosine RDKit divides by).
     pub fn draw_arrow_with_params(
         &mut self,
         cds1: &Point2D,

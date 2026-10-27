@@ -223,8 +223,15 @@ std::vector<std::string> label_pieces(const std::string &label, char orient,
   return res;
 }
 
-// AtomSymbol::adjustColons strips <...> from a label with a colon, in a loop
-// that never ends once a '>' comes before the next '<'.
+// AtomSymbol::adjustColons (AtomSymbol.cpp) strips <...> from a label with a
+// colon, in a loop that never ends once a '>' comes before the next '<', or
+// when a '<' has no '>' after it (RDKit 2024.03 then appends the whole string
+// to itself). It then indexes the label's character rects, one per drawn
+// character, by the colon's position in the stripped label: it writes
+// rects_[colon], and reads rects_[colon + 1] when the colon is not the last
+// byte of the label with its markup. Markup the stripping removes but the
+// layout draws, or </lit> inside a literal label, which ends what the layout
+// draws, puts the colon past the rects.
 void check_colon_markup(const std::string &label, const char *what) {
   if (label.find(':') == std::string::npos) {
     return;
@@ -233,11 +240,13 @@ void check_colon_markup(const std::string &label, const char *what) {
   while (true) {
     const auto lt = tmp.find('<');
     if (lt == std::string::npos) {
-      return;
+      break;
     }
     const auto gt = tmp.find('>');
     if (gt == std::string::npos) {
-      return;
+      refuse(std::string(what) +
+             " has a colon and a '<' with no '>' after it, which RDKit's "
+             "label layout loops on forever");
     }
     if (gt < lt) {
       refuse(std::string(what) +
@@ -245,6 +254,28 @@ void check_colon_markup(const std::string &label, const char *what) {
              "layout loops on forever");
     }
     tmp = tmp.substr(0, lt) + tmp.substr(gt + 1);
+  }
+  const auto colon = tmp.find(':');
+  if (colon == std::string::npos) {
+    return;
+  }
+  // The characters getStringRects lays out: the pieces' characters without
+  // their sub- and superscript markup.
+  std::size_t drawn = 0;
+  auto mode = TextMode::Normal;
+  for (const auto &piece : label_pieces(label, 'E', what)) {
+    for (std::size_t i = 0; i < piece.size(); ++i) {
+      if (piece[i] == '<' && read_markup(piece, i, mode)) {
+        continue;
+      }
+      ++drawn;
+    }
+  }
+  if (colon >= drawn || (colon + 1 >= drawn && colon + 1 < label.size())) {
+    refuse(std::string(what) +
+           " has a colon whose place without the label's markup is past "
+           "the characters RDKit draws, which its label layout indexes out "
+           "of bounds");
   }
 }
 
@@ -355,7 +386,7 @@ void check_note(const std::string &note, bool freetype, const char *what) {
   }
 }
 
-// MolDraw2D_detail::getSGroupDataLabels (MolDraw2DDetails.cpp), for a data
+// DrawMol::extractSGroupData (DrawMol.cpp), for a data
 // substance group: it joins DATAFIELDS with '|' and drops the last
 // character, which an empty list makes pop_back on an empty string; it
 // reads FIELDDISP[25], past the end of a shorter string, and positions the
@@ -590,31 +621,6 @@ void check_comic_bonds(const RDKit::ROMol &mol,
   }
 }
 
-// isLinearAtom (DrawMol.cpp), which labels an atom of two bonds in a line,
-// reads each neighbor's bond type into an uninitialized array, skips a
-// neighbor whose direction from the atom directionVector cannot normalize,
-// and compares both types: RDKit 2026.03 reads an uninitialized value for a
-// neighbor at the atom's position (RDKit 2026.09 sets both,
-// rdkit/rdkit#9550). It reads the coordinates DrawMol extracts.
-void check_linear_atoms(const RDKit::ROMol &mol,
-                        const std::vector<RDGeom::Point2D> &coords) {
-  for (const auto atom : mol.atoms()) {
-    if (atom->getDegree() != 2) {
-      continue;
-    }
-    const auto &at = coords[atom->getIdx()];
-    for (const auto nbr : mol.atomNeighbors(atom)) {
-      try {
-        at.directionVector(coords[nbr->getIdx()]);
-      } catch (const std::runtime_error &) {
-        refuse("atom " + std::to_string(atom->getIdx()) +
-               " has two bonds and a neighbor at its position, where RDKit "
-               "2026.03 reads an uninitialized bond type");
-      }
-    }
-  }
-}
-
 }  // namespace
 
 void check_colour(const RDKit::DrawColour &colour, const char *what) {
@@ -703,10 +709,13 @@ void check_json_options(const std::string &json) {
   boost::property_tree::ptree pt;
   std::istringstream ss(json);
   boost::property_tree::read_json(ss, pt);
-  static const char *const kColourKeys[] = {
-      "highlightColour", "backgroundColour", "queryColour",
-      "legendColour",    "symbolColour",     "annotationColour",
-      "atomNoteColour",  "bondNoteColour",   "variableAttachmentColour"};
+  static const char *const kColourKeys[] = {"highlightColour",
+                                            "backgroundColour",
+                                            "queryColour",
+                                            "legendColour",
+                                            "symbolColour",
+                                            "annotationColour",
+                                            "variableAttachmentColour"};
   auto check_rgba = [](const boost::property_tree::ptree &node,
                        const std::string &what) {
     if (node.size() < 3) {
@@ -842,10 +851,17 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
   check_text_size(legend, "legend");
   std::vector<std::string> lines;
   boost::split(lines, legend, boost::is_any_of("\n"));
+  bool drawn = false;
   for (const auto &line : lines) {
     if (!line.empty()) {
       check_run(line, freetype, "legend");
+      drawn = true;
     }
+  }
+  // RDKit 2024.03's DrawMol::extractLegend splits the legend into its
+  // nonempty lines and reads the last of them unchecked.
+  if (!drawn) {
+    refuse("a legend must have a character other than a newline");
   }
 }
 
@@ -853,7 +869,7 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
                      const RDKit::MolDrawOptions &opts, bool freetype,
                      bool annotations, bool symmetrized) {
   // Coordinates: DrawMol draws conf_id, and positions data substance groups
-  // from the first conformer (getSGroupDataLabels).
+  // from the first conformer (extractSGroupData).
   std::vector<RDGeom::Point2D> coords;
   if (mol.getNumConformers()) {
     const auto *conf = find_conformer(mol, conf_id);
@@ -887,9 +903,6 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
   }
   if (!coords.empty() && opts.comicMode) {
     check_comic_bonds(mol, coords);
-  }
-  if (!coords.empty()) {
-    check_linear_atoms(mol, coords);
   }
 
   // Text.

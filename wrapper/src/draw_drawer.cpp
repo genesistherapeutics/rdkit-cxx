@@ -318,9 +318,8 @@ Highlights read_highlights(const RWMol &mol, const DrawMoleculeData &data) {
 }
 
 // RDKit lays a drawing out from its extents, which DrawMol::findExtremes
-// takes from the shapes, labels, and annotations drawingExtentsInclude
-// names; DrawMol leaves out bonds shorter than 0.01, so a molecule that
-// small, or extents that leave out everything drawn, have none, and
+// takes from the shapes, labels, and annotations; DrawMol leaves out bonds
+// shorter than 0.01, so a molecule that small has none, and
 // findExtremes leaves the extremes at +-DBL_MAX / 2, from which every drawn
 // coordinate is measured. A flexible canvas takes its size from the
 // extents: DrawMol::calculateScale sets the width to scalingFactor times
@@ -350,8 +349,7 @@ void checked_scale(detail::DrawMol &dm) {
     if (!(std::abs(v) <= 1e12)) {
       throw ValueErrorException(
           "nothing of the drawing is left to size it by: its bonds are "
-          "shorter than 0.01 (which RDKit does not draw), or "
-          "drawingExtentsInclude leaves out what is drawn");
+          "shorter than 0.01 (which RDKit does not draw)");
     }
   }
   // calculateScale converts scalingFactor times each extent, with padding,
@@ -611,9 +609,9 @@ std::int64_t reaction_width(
 // MolDraw2D::drawReaction lays its reactants, products, and agents out, each
 // as a DrawMol of the panel's height and a width of its own (with no
 // padding), scales them to the smallest scale of their group, shrinks them
-// to fit, scales them down again to fit the canvas's width
-// (calcReactionOffsets), and once more for the component padding
-// (drawReactionPart), all in pixels it keeps in int. The layout is repeated
+// to fit, and scales them down again to fit the canvas's width
+// (calcReactionOffsets; RDKit 2024.03 fits the canvas, not the panel), all
+// in pixels it keeps in int. The layout is repeated
 // here, on a copy of the reaction, with each scale and size checked before
 // RDKit divides by it or converts it to int. It reads every DrawMol the
 // drawer holds, so a reaction is drawn on a drawer that has drawn nothing
@@ -692,10 +690,10 @@ class ReactionLayout {
 
   // Comic mode draws the plus signs and the arrow's shaft by hand, which
   // never ends for a line of no length (kMinComicLineLength). A plus's
-  // strokes are plusWidth / 3 pixels long, in int, and drawArrow pulls the
-  // shaft's end back by its mitre, 0.5 * lineWidth / sin(pi / 6), with
-  // the line width the last component's scale gives (getDrawLineWidth).
-  void check_comic(const RDKit::MolDraw2D &drawer) const {
+  // strokes are plusWidth / 3 pixels long, in int, and the arrow, which
+  // drawReaction draws as lines rather than a polygon, has a shaft of the
+  // arrow's length.
+  void check_comic() const {
     const bool plus = d_final_plus_width != 0 &&
                       (d_reagents.size() > 1 || d_products.size() > 1);
     const auto stroke = d_final_plus_width > 30 ? 10 : d_final_plus_width / 3;
@@ -704,14 +702,7 @@ class ReactionLayout {
           "comicMode cannot draw the reaction's plus signs on a canvas this "
           "small: they would be lines of no length");
     }
-    double line_width = drawer.lineWidth();
-    if (drawer.drawOptions().scaleBondWidth) {
-      line_width = std::max(0.0, line_width * last_drawn().getScale() * 0.02);
-    }
-    const double shaft =
-        d_arrow_length > 1.0e-6
-            ? std::abs(d_arrow_length - 0.5 * line_width / std::sin(M_PI / 6))
-            : 0.0;
+    const double shaft = d_arrow_length;
     if (!(shaft >= kMinComicLineLength)) {
       throw ValueErrorException(
           "comicMode cannot draw the reaction's arrow on a canvas this small: "
@@ -815,14 +806,11 @@ class ReactionLayout {
     }
     const std::int64_t arrow_mult = 2;
     std::int64_t plus_width = d_plus_width;
-    std::int64_t width_to_use =
-        d.panelWidth() == -1 ? d.width() : d.panelWidth();
+    std::int64_t width_to_use = d.width();
     if (width_to_use == -1) {
       width_to_use = reaction_width(d_reagents, d_products, d_agents,
                                     opts.padding, arrow_mult, plus_width);
-      if (d.width() == -1) {
-        d_canvas.first = static_cast<int>(width_to_use);
-      }
+      d_canvas.first = static_cast<int>(width_to_use);
     }
     auto tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
                               arrow_mult, plus_width);
@@ -880,23 +868,10 @@ class ReactionLayout {
       }
       d_arrow_length = double(length);
     }
-    // With room to spare, plusWidth grows by 5.
     tot = reaction_width(d_reagents, d_products, d_agents, opts.padding,
-                         arrow_mult, plus_width + 5);
-    check_pixels(double(width_to_use) + d.offset().x);
+                         arrow_mult, d_final_plus_width);
+    check_pixels(double(width_to_use));
     check_pixels(tot / (1 + 2.0 * opts.padding));
-  }
-
-  // The last component drawReaction draws, whose scale is the drawer's when
-  // it draws the arrow.
-  const detail::DrawMol &last_drawn() const {
-    if (!d_products.empty()) {
-      return *d_products.back();
-    }
-    if (!d_agents.empty()) {
-      return *d_agents.back();
-    }
-    return *d_reagents.back();
   }
 
   double first_scale() const {
@@ -1474,12 +1449,17 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
     check_picklable_templates(rxn);
   }
   set_up_text_drawer(d);
+  // drawReaction never sets up its text drawer, so it lays out with the font
+  // set_up_text_drawer and check_font left, and its own minimum font size,
+  // which it leaves set.
+  d.text->text_drawer().setMinFontSize(
+      std::max(d.drawer->drawOptions().minFontSize, 12));
   const ReactionLayout layout(d, rxn, highlight_by_reactant,
                               has_colours ? &cols : nullptr,
                               has_conf_ids ? &ids : nullptr);
   check_canvas_fits(d, layout.canvas_size());
   if (comic(d)) {
-    layout.check_comic(*d.drawer);
+    layout.check_comic();
   }
   const auto components = static_cast<int>(layout.num_components());
   drawing_call(d, [&] {
@@ -1523,7 +1503,8 @@ namespace {
 // to float undefined).
 constexpr double kMaxFreeCoordinate = 1e9;
 
-// Point2D::normalize's zero_tolerance: it throws for a shorter vector.
+// The shortest vector the wrappers let RDKit normalize: Point2D::normalize
+// divides by the length, so a vector of none gives NaN coordinates.
 constexpr double kZeroTolerance = 1e-16;
 
 // The most segments a wavy line takes. getWavyLineSegments rounds an odd
@@ -1659,7 +1640,8 @@ void check_wavy_line(const Drawer &d, const RDGeom::Point2D &a,
   check_free_coordinate(a.y);
   check_free_coordinate(b.x);
   check_free_coordinate(b.y);
-  // getWavyLineSegments normalizes the line's perpendicular.
+  // getWavyLineSegments normalizes the line's perpendicular, which for a
+  // line of no length gives NaN segment points, which RDKit converts to int.
   if (!((b - a).length() >= kZeroTolerance)) {
     throw ValueErrorException("a wavy line needs length");
   }
@@ -1788,11 +1770,6 @@ void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
   check_canvas(d);
   check_line_width(d);
   const auto col = checked_colour(colour, "color");
-  // RDKit's PRECONDITION.
-  if (!(angle > 1.0e-6)) {
-    throw std::runtime_error(
-        "Arrow angle must be positive and greater than 0.0.");
-  }
   if (!std::isfinite(frac) || !std::isfinite(angle)) {
     throw ValueErrorException("an arrow's frac and angle must be finite");
   }
@@ -1800,16 +1777,21 @@ void drawer_draw_arrow(Drawer &d, const Point2D &cds1, const Point2D &cds2,
   const auto end = to_rdkit(cds2);
   drawn_point(d, begin, raw_coords);
   drawn_point(d, end, raw_coords);
-  // The head, as drawArrow computes it: the line ends short of the tip by
-  // the miter, and the head's sides divide by the angle's sine and cosine.
+  // The head, as drawArrow computes it: a polygon's line ends short of the
+  // tip by an allowance for the miter, and the head's sides divide by the
+  // angle's cosine. Without a polygon, RDKit draws the head's sides as two
+  // more lines, by hand in comic mode.
   auto tip = end;
   RDGeom::Point2D p1, p2;
-  detail::calcArrowHead(tip, p1, p2, begin, frac, d.drawer->getDrawLineWidth(),
-                        angle);
+  detail::calcArrowHead(tip, p1, p2, begin, as_polygon, frac, angle);
   for (const auto &p : {tip, p1, p2}) {
     drawn_point(d, p, raw_coords);
   }
   check_comic_line(d, begin, tip);
+  if (!as_polygon) {
+    check_comic_line(d, tip, p1);
+    check_comic_line(d, tip, p2);
+  }
   const auto random = comic_lock(d);
   d.drawer->drawArrow(begin, end, as_polygon, frac, angle, col, raw_coords);
 }
