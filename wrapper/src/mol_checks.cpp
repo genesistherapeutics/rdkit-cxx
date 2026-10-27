@@ -293,6 +293,42 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
   }
 }
 
+// streamWriteProps counts the properties it writes in a std::uint16_t for
+// the molecule, each conformer, atom and bond (with the property flags, or
+// for a recursive query's molecule the default flags), and each substance
+// group (always): past 65535 the count wraps, and the reader takes the rest
+// of the properties for the pickle's next fields. Counts every property,
+// whether or not the flags write it, which is at least as many.
+constexpr std::size_t kPickleCountMax = 65535;
+
+void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
+  auto count = props.getDict().size();
+  if (count > kPickleCountMax) {
+    throw ValueErrorException(
+        what + " has " + std::to_string(count) +
+        " properties, more than a molecule pickle counts (65535)");
+  }
+}
+
+void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
+  check_prop_count(mol, where.substr(0, where.size() - 3));
+  for (auto conf = mol.beginConformers(); conf != mol.endConformers(); ++conf) {
+    check_prop_count(**conf,
+                     where + "conformer " + std::to_string((*conf)->getId()));
+  }
+  for (const auto *atom : mol.atoms()) {
+    check_prop_count(*atom, where + "atom " + std::to_string(atom->getIdx()));
+  }
+  for (const auto *bond : mol.bonds()) {
+    check_prop_count(*bond, where + "bond " + std::to_string(bond->getIdx()));
+  }
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    check_prop_count(sgroups[i],
+                     where + "substance group " + std::to_string(i));
+  }
+}
+
 }  // namespace
 
 void check_pickled_mol(const RDKit::ROMol &mol) {
@@ -323,6 +359,7 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
         check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        check_prop_counts(current, where);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
             check_bond_query(

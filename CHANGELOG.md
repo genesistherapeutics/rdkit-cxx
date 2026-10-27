@@ -82,6 +82,13 @@ Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
   their `)`), and a polymer group (`Sg:`) whose type does: RDKit's parser
   reads through the text's end, and then copies up to 2 bytes past it into
   the `_CXSMILES_Data` property.
+- Wherever a molecule is pickled, a molecule, conformer, atom, bond, or
+  substance group with more than 65,535 properties is refused
+  (`Error::Value`; `Mol::to_binary` and `ChemicalReaction::to_binary`
+  panic): RDKit counts them in two bytes, and the reader takes the rest for
+  the pickle's next fields. Substance groups' properties are always
+  pickled. In Python, `ToBinary` with 65,536 molecule properties writes a
+  pickle that fails with "ENDPROPS tag not found".
 
 ### Bindings
 

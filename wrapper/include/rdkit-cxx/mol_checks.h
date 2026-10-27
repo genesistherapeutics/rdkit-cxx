@@ -101,7 +101,9 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 // the sizes of their atom and bond lists, and the bonds both name. A
 // truncated size leaves MolPickler's reader taking the rest of the list for
 // the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
-// writes a pickle it cannot read. Throws ValueErrorException for any of
+// writes a pickle it cannot read. Likewise it counts the properties of the
+// molecule, each conformer, atom, bond and substance group in two bytes, so
+// none may have more than 65535. Throws ValueErrorException for any of
 // these, in the molecule or in the molecules of its recursive queries, which
 // RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
 // inside another format, calls it on the molecules it pickles.
