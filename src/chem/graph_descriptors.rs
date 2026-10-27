@@ -413,7 +413,7 @@ fn assign_symmetry_classes(bd_mat: &[Vec<f64>], num_atoms: usize, cutoff: i32) -
 /// Bertz's complexity index (S. H. Bertz, J. Am. Chem. Soc. 103,
 /// 3599-3601 (1981)), from the connections between bonds and the
 /// distribution of elements, with aromatic bonds of order 1.5 and the others
-/// of their `BondType`'s number, as RDKit 2026.03's Python takes them (so a
+/// of their `BondType`'s number, as RDKit 2024.03's Python takes them (so a
 /// dative bond is of order 17). 0 for fewer than two atoms. Mirrors
 /// `GraphDescriptors.BertzCT`.
 pub fn bertz_ct(mol: &Mol) -> Result<f64> {

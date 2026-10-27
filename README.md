@@ -321,6 +321,13 @@ platforms, and the last needs the system to run out of threads:
   stand for several of the labeler's digraph nodes, and a bound that covers
   that would refuse common molecules (cholesterol, taxol). A shift past 31
   needs more than 32 descriptors in one comparison.
+- **Kekulizing 32 or more dummy atoms in one ring system.** RDKit 2024.03's
+  kekulization enumerates a fused ring system's dummy "question" atoms with
+  `1u << count`, undefined from 32. `mol_from_smiles`, `sanitize_mol`,
+  `kekulize`, and `kekulize_if_possible` refuse such molecules, but RDKit's
+  other parsers and the calls that sanitize inside RDKit are not checked:
+  the shift is masked on the supported CPUs, so kekulization gives up on
+  such a system rather than overrunning memory.
 - **A multithreaded supplier whose threads cannot all start.** RDKit 2024.03's
   multithreaded suppliers start their threads in the constructor. When the
   system refuses a thread, the constructor throws and the base class's

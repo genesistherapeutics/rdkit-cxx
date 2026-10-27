@@ -15,6 +15,9 @@
 
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/algorithm/string.hpp>
+
+#include "rdkit-cxx/file_checks.h"
 
 namespace rdkit_cxx {
 
@@ -30,6 +33,17 @@ const char *const kBadEndPoints =
     "a V3000 ENDPTS value is empty, or starts with \"(\" but is not numbers "
     "below 2^32 between spaces and a \")\" that ends the token; RWMol reads it "
     "unchecked when it removes atoms";
+
+const char *const kCxField =
+    "a mol block's \"M  \" line holds a CXSMILES field (SgD:, atomProp:, or "
+    "Sg:) that RDKit 2024.03 would read past the end of if it ended the "
+    "SMARTS it parses there";
+constexpr std::uint64_t kNone = UINT64_MAX;
+
+bool is_space(char c) {
+  return c == ' ' || c == '\t' || c == '\r' || c == '\v' || c == '\f';
+}
+bool is_digit(char c) { return c >= '0' && c <= '9'; }
 
 std::uint64_t rotl(std::uint64_t x, int b) {
   return (x << b) | (x >> (64 - b));
@@ -84,16 +98,381 @@ std::uint64_t siphash(const std::uint64_t key[2], const char *data,
 
 }  // namespace
 
-bool InputScanner::fail(std::string why) {
-  if (d_error.empty()) {
-    d_error = std::move(why);
+bool CxTokenMatcher::push(char c, std::uint64_t pos) {
+  if (d_size == kLongest) {
+    std::memmove(d_tail, d_tail + 1, kLongest - 1);
+    std::memmove(d_pos, d_pos + 1, (kLongest - 1) * sizeof(std::uint64_t));
+    --d_size;
+  }
+  d_tail[d_size] = c;
+  d_pos[d_size] = pos;
+  ++d_size;
+  for (std::string_view name : {"SgD:", "atomProp:", "Sg:"}) {
+    if (d_size >= name.size() &&
+        std::string_view(d_tail + d_size - name.size(), name.size()) == name) {
+      d_start = d_pos[d_size - name.size()];
+      return true;
+    }
   }
   return false;
 }
 
+std::uint64_t CxTokenMatcher::partial() const {
+  for (std::size_t k = d_size; k > 0; --k) {
+    std::string_view tail(d_tail + d_size - k, k);
+    for (std::string_view name : {"SgD:", "atomProp:", "Sg:"}) {
+      if (k < name.size() && name.substr(0, k) == tail) {
+        return d_pos[d_size - k];
+      }
+    }
+  }
+  return kNone;
+}
+
+// The labels whose values are checked, and how RDKit 2024.03 reads each
+// (ParseV3000ParseLabel in MolSGroupParsing.cpp). Each reads with
+// operator>>, which leaves its variable as it was when it finds the end of
+// the line before anything to read (and sets it to 0 when what it finds is
+// not a number):
+// - CSTATE (ParseV3000CStateLabel): one character, then the uninitialized
+//   count and bond. The count must have something after its spaces, and,
+//   when it is a number, the bond too.
+// - SAP (ParseV3000SAPLabel): one character, two unsigned numbers, and two
+//   strings, the last of which it pops a character from: a failed read,
+//   of a number that is not digits or does not fit, leaves it empty.
+// - PARENT and COMPNO: an uninitialized unsigned, with no other character.
+// - ATOMS, PATOMS, CBONDS, XBONDS, XBHEAD, XBCORR, and BRKXYZ
+//   (ParseV3000Array): one character and a count, then as many values
+//   into one uninitialized variable: a nonzero count that ends the line
+//   leaves the first one unread.
+// A cut-off line is a line too, so the value is held from where a cut
+// would leave a misread (the label's last character for the first three,
+// the count's first nonzero digit for arrays) until it is safe.
+bool SgroupValue::push(char c, std::uint64_t pos) {
+  if (d_open != kNone && ++d_window > kMaxValueWindow) {
+    return fail(
+        "a V3000 S-group value has more white space than the scanner holds "
+        "while it checks it");
+  }
+  switch (d_kind) {
+    case Kind::kNone:
+      break;
+    case Kind::kCState:
+      switch (d_state) {
+        case 0:
+          d_state = 1;
+          return true;
+        case 1:
+          if (is_space(c)) {
+            return true;
+          }
+          if (is_digit(c) || c == '+' || c == '-') {
+            d_state = 2;
+          } else {
+            close();
+          }
+          return true;
+        case 2:
+          if (is_digit(c)) {
+            return true;
+          }
+          if (is_space(c)) {
+            d_state = 3;
+          } else {
+            close();
+          }
+          return true;
+        default:
+          if (!is_space(c)) {
+            close();
+          }
+          return true;
+      }
+    case Kind::kSap: {
+      const char *bad =
+          "a V3000 SAP value is not a character, two unsigned numbers, and "
+          "two words; RDKit 2024.03 then reads past a string it left empty";
+      switch (d_state) {
+        case 0:
+          d_state = 1;
+          return true;
+        case 1:
+        case 3:
+          if (is_space(c)) {
+            return true;
+          }
+          if (!is_digit(c)) {
+            return fail(bad);
+          }
+          d_number = static_cast<std::uint64_t>(c - '0');
+          ++d_state;
+          return true;
+        case 2:
+        case 4:
+          if (is_digit(c)) {
+            d_number = d_number * 10 + static_cast<std::uint64_t>(c - '0');
+            if (d_number > UINT32_MAX) {
+              return fail(bad);
+            }
+            return true;
+          }
+          if (!is_space(c)) {
+            return fail(bad);
+          }
+          ++d_state;
+          return true;
+        case 5:
+          if (!is_space(c)) {
+            d_state = 6;
+          }
+          return true;
+        case 6:
+          if (is_space(c)) {
+            d_state = 7;
+          }
+          return true;
+        default:
+          if (!is_space(c)) {
+            close();
+          }
+          return true;
+      }
+    }
+    case Kind::kScalar:
+      if (!is_space(c)) {
+        close();
+      }
+      return true;
+    case Kind::kArray:
+      switch (d_state) {
+        case 0:
+          d_state = 1;
+          return true;
+        case 1:
+          if (is_space(c)) {
+            return true;
+          }
+          if (is_digit(c) || c == '+' || c == '-') {
+            d_state = 2;
+            if (c != '0') {
+              d_open = pos;
+            }
+          } else {
+            close();
+          }
+          return true;
+        case 2:
+          if (is_digit(c)) {
+            if (c != '0' && d_open == kNone) {
+              d_open = pos;
+            }
+            return true;
+          }
+          if (is_space(c)) {
+            d_state = 3;
+          } else {
+            close();
+          }
+          return true;
+        default:
+          if (!is_space(c)) {
+            close();
+          }
+          return true;
+      }
+  }
+  // A label: the text after a space up to "=".
+  if (c == ' ') {
+    d_after_space = true;
+    d_label_size = 0;
+    d_label_long = false;
+    d_open = kNone;
+    return true;
+  }
+  if (!d_after_space) {
+    return true;
+  }
+  std::string_view label(d_label, d_label_size);
+  if (c == '=' && !d_label_long) {
+    d_after_space = false;
+    if (label == "CSTATE") {
+      d_kind = Kind::kCState;
+    } else if (label == "SAP") {
+      d_kind = Kind::kSap;
+    } else if (label == "PARENT" || label == "COMPNO") {
+      d_kind = Kind::kScalar;
+    } else if (label == "ATOMS" || label == "PATOMS" || label == "CBONDS" ||
+               label == "XBONDS" || label == "XBHEAD" || label == "XBCORR" ||
+               label == "BRKXYZ") {
+      d_kind = Kind::kArray;
+      d_why =
+          "a V3000 S-group array's nonzero count ends the line; RDKit 2024.03 "
+          "reads its first value uninitialized";
+    }
+    d_state = 0;
+    d_window = 0;
+    return true;
+  }
+  if (d_label_size < sizeof(d_label)) {
+    d_label[d_label_size++] = c;
+  } else {
+    d_label_long = true;
+  }
+  label = std::string_view(d_label, d_label_size);
+  d_open = kNone;
+  d_window = 0;
+  if (!d_label_long) {
+    if (label == "CSTATE") {
+      d_open = pos;
+      d_why =
+          "a V3000 CSTATE value ends before its count and bond; RDKit 2024.03 "
+          "reads them uninitialized";
+    } else if (label == "SAP") {
+      d_open = pos;
+      d_why =
+          "a V3000 SAP value ends before two numbers and two words; RDKit "
+          "2024.03 then reads past a string it left empty";
+    } else if (label == "PARENT" || label == "COMPNO") {
+      d_open = pos;
+      d_why =
+          "a V3000 PARENT or COMPNO value is empty; RDKit 2024.03 reads it "
+          "uninitialized";
+    }
+  }
+  return true;
+}
+
+bool SgroupValue::fail(const char *why) {
+  d_why = why;
+  if (d_open == kNone) {
+    d_open = 0;
+  }
+  return false;
+}
+
+void SgroupValue::close() {
+  d_kind = Kind::kNone;
+  d_state = 0;
+  d_open = kNone;
+  d_window = 0;
+  d_after_space = false;
+  d_label_size = 0;
+  d_label_long = false;
+}
+
+bool InputScanner::fail(std::string why) {
+  if (d_error.empty()) {
+    d_error = std::move(why);
+    // Not inside a value or field a cut would leave misread; otherwise
+    // where the last feed ended safely.
+    d_cut = hold() == kNone ? d_cur : d_safe;
+  }
+  return false;
+}
+
+bool InputScanner::fail_at(std::string why, std::uint64_t start) {
+  if (d_error.empty()) {
+    d_error = std::move(why);
+    d_cut = std::max(d_safe, start);
+  }
+  return false;
+}
+
+// Where the logical V3000 line would be misread if the input ended here,
+// with its pending bytes read as RDKit would read them then; with
+// !dangers_only, also the start of a CXSMILES field name it may be
+// completing. `why` says why for a danger.
+std::uint64_t InputScanner::logical_hold(bool dangers_only,
+                                         const char **why) const {
+  bool v30 = d_pos >= 7 && std::memcmp(d_head, kV30, 7) == 0;
+  if (!v30) {
+    // Mid-way through a continuation's "M  V30 ", RDKit would throw.
+    return kNone;
+  }
+  int pending = d_pending;
+  if (pending > 0 && d_pend[pending - 1] == '\r') {
+    --pending;
+  }
+  if (pending > 0 && d_pend[pending - 1] == '-') {
+    return kNone;  // a continuation with no line after it: RDKit throws
+  }
+  LogicalChecks checks = d_checks;
+  for (int i = 0; i < pending; ++i) {
+    if (!checks.value.push(d_pend[i], d_pend_pos[i])) {
+      *why = checks.value.why();
+      return checks.value.start();
+    }
+    if (checks.tokens.push(d_pend[i], d_pend_pos[i])) {
+      *why = kCxField;
+      return checks.tokens.start();
+    }
+  }
+  std::uint64_t result = kNone;
+  if (checks.value.open()) {
+    *why = checks.value.why();
+    result = checks.value.start();
+  }
+  if (!dangers_only) {
+    result = std::min(result, checks.tokens.partial());
+  }
+  return result;
+}
+
+std::uint64_t InputScanner::hold() const {
+  const char *why = "";
+  std::uint64_t result = logical_hold(false, &why);
+  result = std::min(result, d_mline_tokens.partial());
+  result = std::min(result, d_data_tokens.partial());
+  return result;
+}
+
+bool InputScanner::finish() {
+  if (!d_error.empty()) {
+    return false;
+  }
+  const char *why = "";
+  std::uint64_t start = logical_hold(true, &why);
+  if (start != kNone) {
+    return fail_at(why, start);
+  }
+  return true;
+}
+
+// A byte of a V2000 "M  " line after its first seven. RDKit joins the data
+// of SCD and SED lines (columns 12 to 80 of each, after getLine drops a
+// trailing "\r") until an SED line (ParseSGroupV2000SCDSEDLine).
+void InputScanner::mol_line_byte(char c, std::uint64_t pos) {
+  bool data = std::memcmp(d_head, "M  SCD", 6) == 0 ||
+              std::memcmp(d_head, "M  SED", 6) == 0;
+  if (!data) {
+    if (d_mline_tokens.push(c, pos)) {
+      fail_at(kCxField, d_mline_tokens.start());
+    }
+    return;
+  }
+  if (d_pos < 11 || d_pos > 79) {
+    return;
+  }
+  if (d_data_cr) {
+    d_data_cr = false;
+    if (d_data_tokens.push('\r', d_data_cr_pos)) {
+      fail_at(kCxField, d_data_tokens.start());
+      return;
+    }
+  }
+  if (c == '\r') {
+    d_data_cr = true;
+    d_data_cr_pos = pos;
+    return;
+  }
+  if (d_data_tokens.push(c, pos)) {
+    fail_at(kCxField, d_data_tokens.start());
+  }
+}
+
 // A byte of the logical V3000 line, known not to be the line's trailing "\r"
 // or continuation "-". RDKit upper-cases the joined line before matching it.
-void InputScanner::confirm(char c) {
+void InputScanner::confirm(char c, std::uint64_t pos) {
   ++d_logical;
   if (d_prefix.size() < kStereoGroupPrefix) {
     d_prefix += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
@@ -105,6 +484,11 @@ void InputScanner::confirm(char c) {
          "character");
   }
   end_points(c);
+  if (!d_checks.value.push(c, pos)) {
+    fail_at(d_checks.value.why(), d_checks.value.start());
+  } else if (d_checks.tokens.push(c, pos)) {
+    fail_at(kCxField, d_checks.tokens.start());
+  }
 }
 
 // A byte of the logical V3000 line, for the ENDPTS values in it. Values are
@@ -190,9 +574,13 @@ void InputScanner::end_line() {
       continues = true;
     }
     for (int i = 0; i < d_pending; ++i) {
-      confirm(d_pend[i]);
+      confirm(d_pend[i], d_pend_pos[i]);
     }
+  } else if (d_pos >= 7 && std::memcmp(d_head, "M  SED", 6) == 0) {
+    d_data_tokens.reset();
   }
+  d_mline_tokens.reset();
+  d_data_cr = false;
   d_pending = 0;
   d_pos = 0;
   d_continuing = continues;
@@ -201,6 +589,11 @@ void InputScanner::end_line() {
     if (d_end_points == EndPoints::kStart) {
       fail(kBadEndPoints);
     }
+    if (d_checks.value.open()) {
+      fail_at(d_checks.value.why(), d_checks.value.start());
+    }
+    d_checks.value.reset();
+    d_checks.tokens.reset();
     d_logical = 0;
     d_prefix.clear();
     d_end_points = EndPoints::kKey;
@@ -214,6 +607,8 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
   }
   for (std::size_t i = 0; i < n; ++i) {
     char c = bytes[i];
+    const std::uint64_t pos = d_fed + i;
+    d_cur = pos;
     if (c == '\n') {
       end_line();
       if (++d_lines > kMaxInputLines) {
@@ -230,24 +625,36 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
     } else if (std::memcmp(d_head, kV30, 7) == 0) {
       // Content of a V3000 line; the last two bytes may yet be stripped.
       if (d_pending == 2) {
-        confirm(d_pend[0]);
+        const char first = d_pend[0];
+        const std::uint64_t first_pos = d_pend_pos[0];
         d_pend[0] = d_pend[1];
+        d_pend_pos[0] = d_pend_pos[1];
         d_pend[1] = c;
+        d_pend_pos[1] = pos;
+        confirm(first, first_pos);
       } else {
-        d_pend[d_pending++] = c;
+        d_pend[d_pending] = c;
+        d_pend_pos[d_pending] = pos;
+        ++d_pending;
       }
-      if (!d_error.empty()) {
-        return i;
-      }
+    } else if (std::memcmp(d_head, "M  ", 3) == 0) {
+      mol_line_byte(c, pos);
+    }
+    if (!d_error.empty()) {
+      return i;
     }
     ++d_pos;
   }
+  d_fed += n;
+  const std::uint64_t held = hold();
+  d_safe = held == kNone ? d_fed : held;
   return n;
 }
 
 void check_input_text(std::string_view text) {
   InputScanner scanner;
-  if (scanner.feed(text.data(), text.size()) < text.size()) {
+  if (scanner.feed(text.data(), text.size()) < text.size() ||
+      !scanner.finish()) {
     throw ValueErrorException(scanner.error());
   }
 }
@@ -344,14 +751,77 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
     std::size_t fresh = d_have - seen;
     auto ok = d_scanner.feed(d_buffer.get() + seen, fresh);
     d_scanned += ok;
+    d_finished = false;
     if (ok < fresh) {
-      refuse(d_scanner.error(), d_scanned);
+      refuse(d_scanner.error(), d_scanner.cut());
     }
     if (d_scanned == base + kChunk) {
       d_hashes.push_back(siphash(d_key, d_buffer.get(), kChunk));
     } else {
       d_tail_hash = siphash(d_key, d_buffer.get(),
                             static_cast<std::size_t>(d_scanned - base));
+    }
+  }
+  // A short read is the end of the source: what the scanner held for bytes
+  // to come is checked as RDKit will read it, cut off there.
+  if (d_have < kChunk && d_scanned == base + d_have && d_scanned < d_limit &&
+      !d_finished) {
+    d_finished = true;
+    if (!d_scanner.finish()) {
+      refuse(d_scanner.error(), d_scanner.cut());
+    }
+  }
+  if (d_scanned < d_limit) {
+    // Once the source has ended and passed, nothing is held.
+    d_hold = d_finished ? UINT64_MAX : d_scanner.hold();
+    if (d_hold != UINT64_MAX && d_scanned - d_hold > kMaxHold) {
+      refuse(
+          "the input holds a value or CXSMILES field longer than the " +
+              std::to_string(kMaxHold) + " bytes the scanner holds back",
+          d_hold);
+    }
+  }
+  return true;
+}
+
+// RDKit reached held bytes, from `pos`: they are copied out of the buffer
+// (with those of earlier chunks the hold covers) and the next chunk is
+// scanned, until the hold moves past `pos` or the input is refused. False
+// if the source changed.
+bool CheckedStreambuf::release(std::uint64_t pos) {
+  while (d_hold != UINT64_MAX && pos >= d_hold && d_scanned < d_limit) {
+    const std::uint64_t first = d_hold / kChunk;
+    const std::uint64_t last = (d_scanned - 1) / kChunk;
+    std::string carry;
+    for (std::uint64_t c = first; c <= last; ++c) {
+      const std::uint64_t base = c * kChunk;
+      const std::uint64_t from = std::max(base, d_hold);
+      const std::uint64_t to = std::min(base + kChunk, d_scanned);
+      if (from >= to) {
+        continue;
+      }
+      if (d_loaded != c && !d_carry.empty() && d_carry_pos <= from &&
+          to <= d_carry_pos + d_carry.size()) {
+        carry.append(d_carry, static_cast<std::size_t>(from - d_carry_pos),
+                     static_cast<std::size_t>(to - from));
+        continue;
+      }
+      if (!fill(c) || base + d_have < to) {
+        return false;
+      }
+      carry.append(d_buffer.get() + (from - base),
+                   static_cast<std::size_t>(to - from));
+    }
+    d_carry = std::move(carry);
+    d_carry_pos = d_hold;
+    const std::uint64_t scanned = d_scanned;
+    if (!fill(d_scanned / kChunk)) {
+      return false;
+    }
+    if (d_scanned == scanned && d_hold != UINT64_MAX && pos >= d_hold &&
+        d_scanned < d_limit) {
+      // Nothing more to scan, and the end was not seen: refuse.
+      refuse("the input ended inside a value the scanner held back", d_hold);
     }
   }
   return true;
@@ -383,12 +853,29 @@ CheckedStreambuf::int_type CheckedStreambuf::underflow() {
   if (pos >= d_limit) {
     return hit();
   }
+  if (!release(pos)) {
+    changed();
+    return traits_type::eof();
+  }
+  if (pos >= d_limit) {
+    return hit();
+  }
+  // Held bytes copied out of the buffer.
+  if (!d_carry.empty() && pos >= d_carry_pos &&
+      pos < d_carry_pos + d_carry.size() && d_loaded != chunk) {
+    const std::uint64_t end =
+        std::min({d_carry_pos + d_carry.size(), d_limit, d_hold});
+    char *begin = d_carry.data();
+    d_offset = d_carry_pos;
+    setg(begin, begin + (pos - d_carry_pos), begin + (end - d_carry_pos));
+    return traits_type::to_int_type(*gptr());
+  }
   if (!fill(chunk)) {
     changed();
     return traits_type::eof();
   }
   const std::uint64_t base = chunk * kChunk;
-  const std::uint64_t end = std::min(base + d_have, d_limit);
+  const std::uint64_t end = std::min({base + d_have, d_limit, d_hold});
   if (pos >= end) {
     return pos >= d_limit ? hit() : traits_type::eof();
   }
@@ -409,7 +896,7 @@ CheckedStreambuf::pos_type CheckedStreambuf::moved(pos_type pos) {
   d_source_pos = to;
   if (d_loaded != UINT64_MAX && !failed()) {
     const std::uint64_t base = d_loaded * kChunk;
-    const std::uint64_t end = std::min(base + d_have, d_limit);
+    const std::uint64_t end = std::min({base + d_have, d_limit, d_hold});
     if (to >= base && to < end) {
       d_offset = base;
       setg(d_buffer.get(), d_buffer.get() + (to - base),

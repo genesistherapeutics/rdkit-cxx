@@ -333,8 +333,6 @@ pub fn metadata_from_png_file(filename: impl AsRef<Path>) -> Result<BTreeMap<Str
 }
 
 /// Every metadata entry of a PNG file, in file order.
-fn metadata_from_png_file_as_list(
-    filename: impl AsRef<Path>,
-) -> Result<Vec<(String, Vec<u8>)>> {
+fn metadata_from_png_file_as_list(filename: impl AsRef<Path>) -> Result<Vec<(String, Vec<u8>)>> {
     into_list(ffi::metadata_from_png_file(path_bytes(filename.as_ref()))?)
 }

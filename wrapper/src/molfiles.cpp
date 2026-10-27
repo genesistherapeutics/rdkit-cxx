@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/molfiles.h"
 
+#include <algorithm>
 #include <climits>
 #include <cmath>
 #include <map>
@@ -59,6 +60,16 @@ std::map<std::string, std::string> replacements(
     result[std::string(keys[i])] = std::string(values[i]);
   }
   return result;
+}
+
+// How many times `part` occurs in `text`.
+std::size_t count_substrings(const std::string &text, const std::string &part) {
+  std::size_t count = 0;
+  for (auto pos = text.find(part); pos != std::string::npos;
+       pos = text.find(part, pos + 1)) {
+    ++count;
+  }
+  return count;
 }
 
 // Python returns None where these return null (E2).
@@ -346,10 +357,10 @@ SmartsParserParamsData smarts_parser_params_default() {
 SmilesWriteParamsData smiles_write_params_default() {
   RDKit::SmilesWriteParams params;
   return SmilesWriteParamsData{
-      params.doIsomericSmiles,     params.doKekule,
-      params.canonical,            params.allBondsExplicit,
-      params.allHsExplicit,        params.doRandom,
-      params.rootedAtAtom,         params.includeDativeBonds,
+      params.doIsomericSmiles,    params.doKekule,
+      params.canonical,           params.allBondsExplicit,
+      params.allHsExplicit,       params.doRandom,
+      params.rootedAtAtom,        params.includeDativeBonds,
       params.ignoreAtomMapNumbers};
 }
 
@@ -366,6 +377,22 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
   std::map<std::string, std::string> repl;
   auto params = smiles_parser_params(data, repl);
   check_smiles_cx(text, params.allowCXSMILES);
+  // Sanitizing kekulizes, which RDKit 2024.03 cannot do safely for a ring
+  // system of 32 or more dummy atoms (check_kekulize_questions), so text
+  // that may hold that many ('*' or "#0" each, before any replacements) is
+  // parsed unsanitized and checked first.
+  if (params.sanitize &&
+      (!repl.empty() || std::count(text.begin(), text.end(), '*') +
+                                count_substrings(text, "#0") >=
+                            MAX_KEKULIZE_QUESTIONS)) {
+    auto probe = params;
+    probe.sanitize = false;
+    probe.removeHs = false;
+    std::unique_ptr<RDKit::RWMol> unsanitized(RDKit::SmilesToMol(text, probe));
+    if (unsanitized) {
+      check_kekulize_questions(*unsanitized);
+    }
+  }
   return parsed(RDKit::SmilesToMol(text, params), "SMILES", text);
 }
 
@@ -622,8 +649,7 @@ void create_property_list(RWMol &mol, std::uint8_t kind, rust::Str prop_name,
       FPU::createAtomBoolPropertyList(mol, prop, marker, line_size);
       break;
     default:
-      check_first_list_value<std::string>(mol.atoms(), prop, marker,
-                                          line_size);
+      check_first_list_value<std::string>(mol.atoms(), prop, marker, line_size);
       FPU::createAtomStringPropertyList(mol, prop, marker, line_size);
       break;
   }
@@ -716,7 +742,6 @@ void mol_to_v3k_mol_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
   auto lock = lock_if_depicting(mol, data);
   RDKit::MolToV3KMolFile(mol, to_path(path), writer_params(data), data.conf_id);
 }
-
 
 namespace {
 

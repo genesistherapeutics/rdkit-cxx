@@ -319,7 +319,7 @@ fn cmake_list_item(path: &Path) -> &str {
     item
 }
 
-/// `libRDKitGraphMol.so.1.2026.03.6` → `RDKitGraphMol`.
+/// `libRDKitGraphMol.so.1.2024.03.6` → `RDKitGraphMol`.
 fn library_name(file: &str) -> &str {
     let name = file.strip_prefix("lib").unwrap_or(file);
     let end = [".so", ".dylib"]

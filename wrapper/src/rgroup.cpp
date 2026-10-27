@@ -29,8 +29,8 @@
 #include "rdkit-cxx/tautomer_checks.h"
 
 // RDKit exports relabelMappedDummies but does not install RGroupUtils.h,
-// which declares it; this is RDKit 2026.03's declaration (CMake checks the
-// release series).
+// which declares it; this is RDKit 2024.03's declaration, without its
+// default arguments (CMake checks the release series).
 namespace RDKit {
 RDKIT_RGROUPDECOMPOSITION_EXPORT void relabelMappedDummies(
     ROMol &mol, unsigned int inputLabels, unsigned int outputLabels);

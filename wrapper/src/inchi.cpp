@@ -306,10 +306,13 @@ void check_inchi_input(const RWMol &mol) {
       // With fewer than three neighbor atoms it fills in only those (and the
       // atom itself for the fourth when there are three), and passes a CW
       // or CCW center whose implicit hydrogens (counted on its kekulized
-      // copy, after calcImplicitValence) bring the total to three or more
-      // with uninitialized neighbor indices.
+      // copy, after calcImplicitValence) bring the total to three or more,
+      // of any size, with uninitialized neighbor indices (2026.03 ignores
+      // totals above four). Counting all hydrogens, as the total degree
+      // does, refuses those and centers of explicit hydrogens too.
       if (atom->getDegree() < 3 &&
-          atom->getDegree() + implicit_hs(kekulized, idx) >= 3) {
+          (atom->getTotalDegree() >= 3 ||
+           atom->getDegree() + implicit_hs(kekulized, idx) >= 3)) {
         throw ValueErrorException(
             "atom " + std::to_string(idx) +
             " is a tetrahedral stereo center with " +

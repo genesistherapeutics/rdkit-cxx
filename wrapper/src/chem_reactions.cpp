@@ -381,8 +381,8 @@ void check_rxn_agents(const std::string &text) {
   }
   unsigned agents = 0;
   try {
-    agents = boost::lexical_cast<unsigned>(boost::trim_copy_if(
-        tokens[3], boost::is_any_of(" ")));
+    agents = boost::lexical_cast<unsigned>(
+        boost::trim_copy_if(tokens[3], boost::is_any_of(" ")));
   } catch (const boost::bad_lexical_cast &) {
     return;  // RDKit throws
   }

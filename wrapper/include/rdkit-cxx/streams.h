@@ -45,9 +45,6 @@
 //   ones joined, V2000 SCD and SED data joined as RDKit joins them) may not
 //   hold "SgD:", "atomProp:", or "Sg:", the CXSMILES fields RDKit 2024.03
 //   reads past the end of (cx_extension_problem in file_checks.h).
-// - A SMILES file's lines (scan_smiles_lines) are checked as the SMILES
-//   suppliers read them: the SMILES column's CXSMILES extension, as
-//   check_smiles_cx checks it.
 //
 // RDKit parses each line as soon as it has read it, and reads a line cut off
 // by the end of the input (or by a refusal) as a whole one. So a byte is
@@ -163,9 +160,6 @@ class InputScanner {
   // The first byte that may not be delivered until more is scanned, or
   // UINT64_MAX.
   std::uint64_t hold() const;
-  // Checks each line as a SMILES supplier with this delimiter and SMILES
-  // column reads it. Called before any byte is fed.
-  void scan_smiles_lines(std::string delimiter, int column);
 
  private:
   void end_line();
@@ -173,16 +167,15 @@ class InputScanner {
   void end_points(char c);
   bool fail(std::string why);
   bool fail_at(std::string why, std::uint64_t start);
-  std::uint64_t logical_hold(bool dangers_only) const;
+  std::uint64_t logical_hold(bool dangers_only, const char **why) const;
   void mol_line_byte(char c, std::uint64_t pos);
-  void smiles_line_byte(char c, std::uint64_t pos);
-  void end_smiles_line();
 
   std::string d_error;
   std::uint64_t d_lines = 0;
   // The offset of the next byte, where a failure cuts the input, and the
   // first byte not yet delivered as safe at the end of the last feed.
   std::uint64_t d_fed = 0;
+  std::uint64_t d_cur = 0;
   std::uint64_t d_cut = UINT64_MAX;
   std::uint64_t d_safe = 0;
   // The physical line being read: its length so far, its first seven bytes,
@@ -198,13 +191,9 @@ class InputScanner {
   LogicalChecks d_checks;
   CxTokenMatcher d_mline_tokens;
   CxTokenMatcher d_data_tokens;
-  // A SMILES file's line, with its first CXSMILES field name's offset.
-  bool d_smiles = false;
-  std::string d_delimiter;
-  int d_column = 0;
-  std::string d_line;
-  CxTokenMatcher d_line_tokens;
-  std::uint64_t d_line_first = UINT64_MAX;
+  // A "\r" in SCD or SED data, which getLine drops if it ends the line.
+  bool d_data_cr = false;
+  std::uint64_t d_data_cr_pos = 0;
   // The logical V3000 line, joined across continuations.
   bool d_continuing = false;
   std::uint64_t d_logical = 0;
@@ -240,10 +229,6 @@ class CheckedStreambuf : public std::streambuf {
   // thread.
   bool failed() const { return d_failed.load(std::memory_order_acquire); }
   std::string error() const;
-  // As InputScanner::scan_smiles_lines; before any read.
-  void scan_smiles_lines(std::string delimiter, int column) {
-    d_scanner.scan_smiles_lines(std::move(delimiter), column);
-  }
 
  protected:
   int_type underflow() override;
@@ -297,10 +282,6 @@ class CheckedIStream : public std::istream {
  public:
   explicit CheckedIStream(std::unique_ptr<std::streambuf> source);
   const CheckedStreambuf &checked() const { return d_buf; }
-  // As CheckedStreambuf::scan_smiles_lines.
-  void scan_smiles_lines(std::string delimiter, int column) {
-    d_buf.scan_smiles_lines(std::move(delimiter), column);
-  }
   // Throws ValueErrorException if RDKit asked for refused input.
   void check() const;
 

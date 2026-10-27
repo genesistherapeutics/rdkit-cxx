@@ -59,7 +59,7 @@ class RustTautomerCallback : public MS::TautomerEnumeratorCallback {
   rust::Box<TautomerCallback> d_callback;
 };
 
-// RDKit 2026.03's setCallback takes ownership of a raw pointer, so each
+// RDKit 2024.03's setCallback takes ownership of a raw pointer, so each
 // enumerator gets its own forwarder to a handle's callback, which handles
 // and enumerators share (as Python's setCallbackHelper gives each a new
 // PyTautomerEnumeratorCallback).

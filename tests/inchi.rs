@@ -5,7 +5,8 @@
 
 // Ports rdkit/Chem/UnitTestInchi.py's tests of rdkit.Chem.inchi but those
 // of MolBlockToInchi (not ported) and the PubChem sets (rdinchi's own
-// tests); values from Python's module in RDKit 2026.03.6.
+// tests); values from Python's module in RDKit 2024.03.6, which lacks
+// MolFromInchiAndAuxInfo (its tests check round trips).
 
 use rdkit_cxx::chem::{
     MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key, mol_from_inchi,

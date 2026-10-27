@@ -107,7 +107,9 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
     writes in the current directory (`Error::Runtime`), FMCS's `Verbose`
     with `StoreAll` and queries of 64 or more bonds, more than 32 CIP stereo
     configurations, MolHash's Extended Murcko scaffold of more than 4000
-    atoms, and Kekulize's enumeration of 32 or more dummy atoms.
+    atoms, and, where SMILES are parsed and molecules sanitized or kekulized,
+    Kekulize's enumeration of 32 or more dummy atoms (README, Known
+    limitations, for the other paths).
   - RDKit 2024.03's C-string exceptions (a bond query SMARTS cannot write)
     are `Error::Value`, without reading the dangling string; `MaeWriter`
     writes through a stream of its own, since 2024.03's shared-stream

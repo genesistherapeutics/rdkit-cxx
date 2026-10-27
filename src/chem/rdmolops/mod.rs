@@ -138,13 +138,15 @@ impl AddHsParams {
 }
 
 /// Sanitizes a molecule in place, returning `SANITIZE_NONE`. Mirrors
-/// `rdmolops.SanitizeMol`.
+/// `rdmolops.SanitizeMol`. `Error::Value` as for `kekulize` when it
+/// kekulizes.
 pub fn sanitize_mol(mol: &mut Mol) -> Result<SanitizeFlags> {
     sanitize_mol_with_params(mol, &SanitizeMolParams::default())
 }
 
 /// Runs the chosen operations. With `catch_errors`, a failure returns the
-/// operation that failed rather than an error. Mirrors
+/// operation that failed rather than an error, except for the
+/// `Error::Value` of `kekulize`, which comes first. Mirrors
 /// `rdmolops.SanitizeMol(mol, sanitizeOps, catchErrors)`.
 pub fn sanitize_mol_with_params(
     mol: &mut Mol,
@@ -159,6 +161,9 @@ pub fn sanitize_mol_with_params(
 }
 
 /// Kekulizes a molecule in place. Mirrors `rdmolops.Kekulize`.
+/// `Error::Value` for a ring system (atoms joined by ring bonds) of an
+/// aromatic molecule holding 32 or more dummy atoms, for which RDKit
+/// 2024.03's kekulization shifts past an unsigned int's width.
 pub fn kekulize(mol: &mut Mol) -> Result<()> {
     kekulize_with_params(mol, &KekulizeParams::default())
 }

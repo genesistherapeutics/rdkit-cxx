@@ -261,19 +261,23 @@ std::string cx_extension_problem(std::string_view cx) {
   return {};
 }
 
+std::string smiles_cx_problem(const std::string &text) {
+  auto sidx = text.find_first_of(" \t");
+  if (sidx == std::string::npos || sidx == 0) {
+    return {};
+  }
+  auto cx = boost::trim_copy(text.substr(sidx));
+  if (cx.empty() || cx[0] != '|') {
+    return {};
+  }
+  return cx_extension_problem(cx);
+}
+
 void check_smiles_cx(const std::string &text, bool allow_cxsmiles) {
   if (!allow_cxsmiles) {
     return;
   }
-  auto sidx = text.find_first_of(" \t");
-  if (sidx == std::string::npos || sidx == 0) {
-    return;
-  }
-  auto cx = boost::trim_copy(text.substr(sidx));
-  if (cx.empty() || cx[0] != '|') {
-    return;
-  }
-  auto why = cx_extension_problem(cx);
+  auto why = smiles_cx_problem(text);
   if (!why.empty()) {
     throw ValueErrorException(why);
   }

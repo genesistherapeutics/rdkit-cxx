@@ -4,7 +4,8 @@
 // license that can be found in the LICENSE file.
 
 // The Python functions of rdkit/Chem/__init__.py (FindMolChiralCenters has
-// its own tests); values from Python's rdkit.Chem in RDKit 2026.03.6.
+// its own tests); values from Python's rdkit.Chem in RDKit 2024.03.6, but
+// MultiConfMolFromSDF's, which 2024.03 lacks, from RDKit 2026.03.6.
 
 mod common;
 

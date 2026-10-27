@@ -646,13 +646,11 @@ void check_query_h_removals(const RDKit::ROMol &mol) {
     if (!atom->hasQuery() || atom->getDegree() > 1) {
       return false;
     }
-    std::vector<const RDKit::QueryAtom::QUERYATOM_QUERY *> stack{
-        atom->getQuery()};
+    std::vector<const RDKit::Atom::QUERYATOM_QUERY *> stack{atom->getQuery()};
     while (!stack.empty()) {
       const auto *query = stack.back();
       stack.pop_back();
-      if (query->getDescription() == "AtomAtomicNum" &&
-          !query->getNegation()) {
+      if (query->getDescription() == "AtomAtomicNum" && !query->getNegation()) {
         const auto *equals =
             dynamic_cast<const RDKit::ATOM_EQUALS_QUERY *>(query);
         if (!equals || equals->getVal() == 1) {

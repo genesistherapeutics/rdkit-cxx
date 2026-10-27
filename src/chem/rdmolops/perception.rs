@@ -140,7 +140,7 @@ pub fn assign_radicals(mol: &mut Mol) -> Result<()> {
 pub type KekulizeIfPossibleParams = KekulizeParams;
 
 /// Kekulizes the molecule, leaving it as it was if that fails. Mirrors
-/// `rdmolops.KekulizeIfPossible`.
+/// `rdmolops.KekulizeIfPossible`. `Error::Value` as for `kekulize`.
 pub fn kekulize_if_possible(mol: &mut Mol) -> Result<()> {
     kekulize_if_possible_with_params(mol, &KekulizeIfPossibleParams::default())
 }

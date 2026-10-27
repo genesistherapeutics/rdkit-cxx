@@ -221,9 +221,12 @@ void load_default_ring_system_templates() {
 ConstrainedDepictionParamsData constrained_depiction_params_default() {
   RDDepict::ConstrainedDepictionParams p;
   return ConstrainedDepictionParamsData{
-      p.acceptFailure,         p.forceRDKit,
-      p.allowRGroups,          p.alignOnly,
-      p.adjustMolBlockWedging, p.existingConfId,
+      p.acceptFailure,
+      p.forceRDKit,
+      p.allowRGroups,
+      p.alignOnly,
+      p.adjustMolBlockWedging,
+      p.existingConfId,
       -1,
   };
 }

@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.FeatFinderCLI in RDKit 2026.03.6, with
+// Values from Python's rdkit.Chem.FeatFinderCLI in RDKit 2024.03.6, with
 // RDKit's BaseFeatures.fdef.
 
 use rdkit_cxx::chem::feat_finder_cli::get_atom_feat_info;

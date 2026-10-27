@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Values from Python's rdkit.Chem.Pharm3D in RDKit 2026.03.6, and the tests
+// Values from Python's rdkit.Chem.Pharm3D in RDKit 2024.03.6, and the tests
 // of UnitTestEmbed.py (with its doctests), UnitTestExcludedVolume.py, and
 // UnitTestPharmacophore.py. The CDK2 molecules are UnitTestEmbed.py's
 // pickles as SMILES with their hydrogens; Python's values here are for

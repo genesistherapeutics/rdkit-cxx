@@ -64,6 +64,10 @@ void check_debug_parse(int debug_parse);
 // strings keep their terminator, so they need no check.
 std::string cx_extension_problem(std::string_view cx);
 
+// cx_extension_problem for the extension text of `text` as check_smiles_cx
+// finds it.
+std::string smiles_cx_problem(const std::string &text);
+
 // The extension text MolFromSmiles and MolFromSmarts parse
 // (preprocessSmiles in SmilesParse.cpp): with allowCXSMILES, the text after
 // the first space or tab, trimmed, when it starts with "|". Throws

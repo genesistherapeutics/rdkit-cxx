@@ -422,18 +422,10 @@ void index_tdt(TDTMolSupplier &s, std::string text,
   check_input_text(text);
   std::vector<std::size_t> starts;
   for (std::size_t pos = 0; pos < text.size();) {
-    auto newline = text.find('\n', pos);
     if (text.compare(pos, 5, "$SMI<") == 0) {
       starts.push_back(pos);
-      // TDTMolSupplier::parseMol parses the record's SMILES, between its
-      // line's first "<" and last ">", with CXSMILES on (check_smiles_cx).
-      std::string line = text.substr(
-          pos, newline == std::string::npos ? std::string::npos
-                                            : newline - pos);
-      std::size_t open = line.find('<');
-      std::size_t close = line.find_last_of('>');
-      check_smiles_cx(line.substr(open + 1, close - open - 1));
     }
+    auto newline = text.find('\n', pos);
     pos = newline == std::string::npos ? text.size() : newline + 1;
   }
   s.text = std::move(text);

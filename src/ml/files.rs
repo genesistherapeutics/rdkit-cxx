@@ -173,7 +173,7 @@ impl Default for ReadDataFileParams {
 /// column) of a file of whitespace-separated numbers with `#` comments.
 /// Mirrors `files.ReadDataFile(fileName)`.
 ///
-/// Python's raises `TypeError` in RDKit 2026.03.6 (it assigns a `map`
+/// Python's raises `TypeError` in RDKit 2024.03.6 (it assigns a `map`
 /// object to a NumPy row); this reads what it means to.
 ///
 /// `Error::Os` when the file cannot be read; `Error::Value` for a value

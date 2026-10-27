@@ -294,7 +294,7 @@ mod tests {
                 message: message("reaction_parse")
             }
         );
-        // conda-forge's macOS build of RDKit 2026.03.6 has no SLN parser,
+        // conda-forge's macOS build of RDKit 2024.03.6 has no SLN parser,
         // and so nothing throws its exception; its Linux builds have one.
         match raise("sln_parse").unwrap_err() {
             Error::Value { message } if !cfg!(target_os = "linux") => {

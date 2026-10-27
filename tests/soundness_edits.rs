@@ -426,3 +426,49 @@ fn fragmenting_refuses_repeated_bonds() {
         "[1*]CC.[2*]CC"
     );
 }
+
+// A ring of one carbon and `dummies` aromatic dummy atoms.
+fn dummy_ring(dummies: usize) -> String {
+    format!("c1{}:1", ":*".repeat(dummies))
+}
+
+#[test]
+fn kekulizing_refuses_32_question_atoms() {
+    // RDKit 2024.03 enumerates the dummies' subsets in an unsigned int.
+    assert!(is_value(mol_from_smiles(&dummy_ring(32))));
+    assert!(is_value(mol_from_smiles(&dummy_ring(40))));
+    let params = SmilesParserParams {
+        sanitize: false,
+        ..Default::default()
+    };
+    let unsanitized = mol_from_smiles_with_params(&dummy_ring(32), &params).unwrap();
+    let mut mol = unsanitized.clone();
+    assert!(is_value(sanitize_mol(&mut mol)));
+    let mut mol = unsanitized.clone();
+    assert!(is_value(kekulize(&mut mol)));
+    let mut mol = unsanitized;
+    assert!(is_value(kekulize_if_possible(&mut mol)));
+
+    // Fewer dummies, or as many outside one ring system, are kekulized.
+    let mol = mol_from_smiles(&dummy_ring(30)).unwrap();
+    assert_eq!(mol.get_num_atoms(), 31);
+    let apart = format!("{}.{}", dummy_ring(20), dummy_ring(20));
+    mol_from_smiles(&apart).unwrap();
+    let chain = format!("c1ccccc1{}", "*".repeat(40));
+    mol_from_smiles(&chain).unwrap();
+}
+
+#[test]
+fn smiles_of_groups_with_bonds() {
+    // Writing SMILES removes atoms only from the copies of a molecule of
+    // several fragments, so a molecule of one fragment, or one whose groups
+    // each lie in one fragment, is written.
+    let mol = atropisomer("&1:2,8");
+    assert!(mol_to_cx_smiles(&mol).unwrap().contains("&1:"));
+    mol_to_smiles(&mol).unwrap();
+    let mut two = mol.clone();
+    two.insert_mol(&smiles("CC"));
+    // RDKit 2024.03's insertMol also adds an empty ABS group.
+    assert_eq!(groups(&two)[0], (vec![8], vec![2]));
+    mol_to_cx_smiles(&two).unwrap();
+}

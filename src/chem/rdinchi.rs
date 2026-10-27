@@ -114,7 +114,7 @@ pub fn inchi_to_mol_with_params(
 /// isotope more than 100 from its element's average mass; a coordinate that
 /// is not finite or exceeds 1e18 in magnitude; a tetrahedral stereo center
 /// with fewer than three neighbor atoms but three or more neighbors counting
-/// implicit hydrogens, whose other neighbors RDKit leaves unset; an atom
+/// hydrogens, whose other neighbors RDKit leaves unset; an atom
 /// with any chiral tag, or a `molParity` property, and more than four
 /// neighbor atoms, which RDKit 2024.03 writes past InChI's four stereo
 /// neighbors; an atom that is the lower-index end of more than 20 bonds,
