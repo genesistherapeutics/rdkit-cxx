@@ -35,11 +35,10 @@ void rwmol_set_stereo_groups(RWMol &mol,
                              rust::Slice<const StereoGroupData> groups);
 // As createStereoGroup in Code/GraphMol/Wrap/StereoGroup.cpp, whose index
 // checks have their own messages; here the indices are checked as for
-// rwmol_set_stereo_groups.
+// rwmol_set_stereo_groups. RDKit 2024.03's takes no bonds.
 StereoGroupData create_stereo_group(StereoGroupType group_type,
                                     const RWMol &mol,
                                     rust::Slice<const std::uint32_t> atom_ids,
-                                    rust::Slice<const std::uint32_t> bond_ids,
                                     unsigned read_id);
 void forward_stereo_group_ids(RWMol &mol);
 rust::Vec<StereoInfoData> find_potential_stereo(RWMol &mol, bool clean_it,

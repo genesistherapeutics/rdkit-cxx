@@ -148,9 +148,32 @@ void check_bond_end_points(const RDKit::ROMol &mol);
 constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
+// What RDKit 2024.03's RWMol (Code/GraphMol/RWMol.cpp, StereoGroup.cpp)
+// trusts in the stereo groups when it removes atoms or bonds:
+//
+// - removeBond and batchRemoveBonds (and so removeAtom, which removes the
+//   atom's bonds, and commitBatchEdit) delete the bond and never take it out
+//   of the stereo groups (2026.03 calls removeBondFromGroups there), so a
+//   group that holds it keeps the freed pointer, which copying, pickling,
+//   stereo perception, and the CXSMILES and mol-block writers then read.
+//   removeAtomFromGroups drops the groups left with no atoms, so a group of
+//   bonds alone goes when any atom is removed, but not when only bonds are.
+// - removeAtomFromGroups erases only the first copy of the atom from each
+//   group, and the StereoGroup constructor (unlike 2026.03's checkForDupes)
+//   accepts a repeated atom, so a repeat keeps the freed pointer.
+// - insertMol (so combineMols) merges every ABS group of both molecules
+//   into one (insertStereoGroups), so an atom in two of a molecule's ABS
+//   groups is repeated in the merged one.
+//
+// Throws ValueErrorException for a group that holds a bond, an atom or bond
+// a group repeats, or an atom in two ABS groups. The RWMol wrappers
+// (mol.cpp), whose removals the wrapper knows, take the removed atoms and
+// bonds out of the groups instead (remove_from_stereo_groups).
+void check_stereo_group_removals(const RDKit::ROMol &mol);
+
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
-// bonds from it (or a copy): check_bond_end_points and
-// check_substance_group_parents.
+// bonds from it (or a copy): check_bond_end_points,
+// check_substance_group_parents, and check_stereo_group_removals.
 void check_removals(const RDKit::ROMol &mol);
 
 // As check_removals, for an RDKit call that combines the molecules
@@ -163,10 +186,20 @@ void check_removals(const RDKit::ROMol &mol);
 // MAX_PARENT_CHAIN through any of them.
 void check_removals(const std::vector<const RDKit::ROMol *> &mols);
 
-// RWMol::replaceBond deletes the bond it replaces but, unlike replaceAtom,
-// leaves the molecule's stereo groups (an atropisomer's group holds its bond)
-// pointing at it, a pointer that copying, pickling, stereo perception, and
-// the CXSMILES and mol-block writers then read (CONVENTIONS.md U13).
+// Takes every copy of the atoms and bonds out of the molecule's stereo
+// groups and drops the groups left with neither, as 2026.03's
+// removeAtomFromGroups and removeBondFromGroups do, for a removal RDKit
+// 2024.03 then makes (check_stereo_group_removals): RDKit reads nothing in
+// the groups while it removes, and finds none of these left to erase.
+void remove_from_stereo_groups(RDKit::ROMol &mol,
+                               const std::vector<const RDKit::Atom *> &atoms,
+                               const std::vector<const RDKit::Bond *> &bonds);
+
+// RWMol::replaceBond deletes the bond it replaces and leaves the molecule's
+// stereo groups (an atropisomer's group holds its bond) pointing at it, as
+// RDKit 2024.03's bond removals do (check_stereo_group_removals), a pointer
+// that copying, pickling, stereo perception, and the CXSMILES and mol-block
+// writers then read (CONVENTIONS.md U13).
 //
 // RDKit's own calls of it that the wrappers reach, where a group can hold
 // the bond and be read after, are guarded: adjustQueryProperties

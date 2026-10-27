@@ -86,12 +86,22 @@ impl RWMol {
     /// numbers below 2^32 between spaces) or whose substance groups' `PARENT`
     /// chains form a cycle, which RDKit would follow forever; so do every
     /// removal and the functions that remove atoms or bonds.
+    ///
+    /// The atom and its bonds leave the stereo groups that held them (every
+    /// copy), and a group left with neither atoms nor bonds goes, as in RDKit
+    /// 2026.03; RDKit 2024.03 leaves a group pointing at a removed bond, or at
+    /// a repeated atom's second copy. The functions whose RDKit call removes
+    /// atoms or bonds itself cannot do that, so they return `Error::Value`
+    /// for a molecule whose stereo groups hold a bond, repeat an atom, or
+    /// share an atom between two ABS groups (which RDKit merges when it
+    /// combines molecules).
     pub fn remove_atom(&mut self, idx: u32) -> Result<()> {
         Ok(ffi::rwmol_remove_atom(self.mol.pin_mut(), idx)?)
     }
 
     /// Removes the bond between two atoms, if there is one. Mirrors
-    /// `RWMol.RemoveBond`, with the errors of `remove_atom`.
+    /// `RWMol.RemoveBond`, with the errors of `remove_atom`. The bond leaves
+    /// the stereo groups that held it, as for `remove_atom`.
     pub fn remove_bond(&mut self, idx1: u32, idx2: u32) -> Result<()> {
         Ok(ffi::rwmol_remove_bond(self.mol.pin_mut(), idx1, idx2)?)
     }
@@ -159,7 +169,8 @@ impl RWMol {
     /// `Error::Value`, with the batch still open and nothing removed, for a
     /// molecule whose `_MolFileBondEndPts` bond properties or substance
     /// groups' `PARENT` chains RDKit's removals would misread (a malformed
-    /// value, or a cycle), as for `remove_atom` and `remove_bond`.
+    /// value, or a cycle), as for `remove_atom` and `remove_bond`. The removed
+    /// atoms and bonds leave the stereo groups, as for `remove_atom`.
     pub fn commit_batch_edit(&mut self) -> Result<()> {
         Ok(ffi::rwmol_commit_batch_edit(self.mol.pin_mut())?)
     }

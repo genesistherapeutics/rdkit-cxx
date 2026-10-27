@@ -5,8 +5,11 @@
 
 #include "rdkit-cxx/mol.h"
 
+#include <algorithm>
 #include <iostream>
+#include <memory>
 #include <string>
+#include <vector>
 
 #include <GraphMol/MolPickler.h>
 
@@ -165,21 +168,124 @@ unsigned rwmol_add_bond(RWMol &mol, unsigned begin_atom_idx,
   return num_bonds;
 }
 
+namespace {
+
+// RWMol keeps a batch edit's removals in ROMol's private dp_delAtoms and
+// dp_delBonds, which nothing public reads. An explicit instantiation may
+// name private members ([temp.spec.general]), so Steal<Tag, &C::member>
+// defines a friend that returns the pointer to the member, found through its
+// tag (as in filter_catalog.cpp).
+using DeletionsPtr = std::unique_ptr<boost::dynamic_bitset<>>;
+
+template <class Tag, typename Tag::type Member>
+struct Steal {
+  friend typename Tag::type member(Tag) { return Member; }
+};
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wnon-template-friend"
+#endif
+struct DelAtoms {
+  using type = DeletionsPtr RDKit::ROMol::*;
+  friend type member(DelAtoms);
+};
+template struct Steal<DelAtoms, &RDKit::ROMol::dp_delAtoms>;
+struct DelBonds {
+  using type = DeletionsPtr RDKit::ROMol::*;
+  friend type member(DelBonds);
+};
+template struct Steal<DelBonds, &RDKit::ROMol::dp_delBonds>;
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
+struct BatchEdit {
+  static const boost::dynamic_bitset<> *atoms(const RDKit::ROMol &mol) {
+    return (mol.*member(DelAtoms())).get();
+  }
+  static const boost::dynamic_bitset<> *bonds(const RDKit::ROMol &mol) {
+    return (mol.*member(DelBonds())).get();
+  }
+};
+
+bool in_batch_edit(const RWMol &mol) {
+  return BatchEdit::atoms(mol) || BatchEdit::bonds(mol);
+}
+
+// The checks of check_removals but check_stereo_group_removals, whose
+// pointers the removals here take out of the groups themselves.
+void check_edit_removals(const RWMol &mol) {
+  check_bond_end_points(mol);
+  check_substance_group_parents(mol);
+}
+
+// RDKit 2024.03's removeBond and batchRemoveBonds (RWMol.cpp) delete bonds
+// and leave the stereo groups that hold them pointing at them, and
+// removeAtomFromGroups erases only an atom's first copy from a group
+// (check_stereo_group_removals), so this takes every copy of the atoms and
+// bonds about to go out of the groups first, as 2026.03's
+// removeBondFromGroups and removeAtomFromGroups do. removeAtomFromGroups
+// then also drops the groups left with no atoms, which 2026.03 keeps while
+// they hold bonds; their bonds stay, so they are put back afterwards.
+template <typename Remove>
+void remove_scrubbing_groups(RWMol &mol,
+                             const std::vector<const RDKit::Atom *> &atoms,
+                             const std::vector<const RDKit::Bond *> &bonds,
+                             Remove remove) {
+  remove_from_stereo_groups(mol, atoms, bonds);
+  const auto groups = mol.getStereoGroups();
+  const bool restore =
+      std::any_of(groups.begin(), groups.end(),
+                  [](const auto &group) { return group.getAtoms().empty(); });
+  remove();
+  if (restore) {
+    mol.setStereoGroups(groups);
+  }
+}
+
+// The atom and its bonds.
+void add_atom_removal(const RWMol &mol, const RDKit::Atom *atom,
+                      std::vector<const RDKit::Atom *> &atoms,
+                      std::vector<const RDKit::Bond *> &bonds) {
+  atoms.push_back(atom);
+  for (const auto *bond : mol.atomBonds(atom)) {
+    bonds.push_back(bond);
+  }
+}
+
+}  // namespace
+
 // RWMol's removals parse the bonds' _MolFileBondEndPts and follow the
 // substance groups' PARENT chains unchecked (check_removals), so they are
-// checked before anything is removed. In a batch the removals happen at the
-// commit, which checks again.
+// checked before anything is removed, and leave the stereo groups pointing
+// at what they delete (check_stereo_group_removals), so what goes is taken
+// out of the groups first. In a batch the removals happen at the commit,
+// which checks again and takes them out of the groups then.
 void rwmol_remove_atom(RWMol &mol, unsigned idx) {
   check_index(idx, mol.getNumAtoms());
-  check_removals(mol);
-  mol.removeAtom(idx);
+  check_edit_removals(mol);
+  if (in_batch_edit(mol)) {
+    mol.removeAtom(idx);
+    return;
+  }
+  std::vector<const RDKit::Atom *> atoms;
+  std::vector<const RDKit::Bond *> bonds;
+  add_atom_removal(mol, mol.getAtomWithIdx(idx), atoms, bonds);
+  remove_scrubbing_groups(mol, atoms, bonds, [&] { mol.removeAtom(idx); });
 }
 
 void rwmol_remove_bond(RWMol &mol, unsigned idx1, unsigned idx2) {
   check_index(idx1, mol.getNumAtoms());
   check_index(idx2, mol.getNumAtoms());
-  check_removals(mol);
-  mol.removeBond(idx1, idx2);
+  check_edit_removals(mol);
+  const auto *bond = mol.getBondBetweenAtoms(idx1, idx2);
+  if (bond && !in_batch_edit(mol)) {
+    remove_scrubbing_groups(mol, {}, {bond},
+                            [&] { mol.removeBond(idx1, idx2); });
+  } else {
+    mol.removeBond(idx1, idx2);
+  }
   clear_matrix_caches(mol);
 }
 
@@ -197,7 +303,7 @@ void rwmol_replace_bond(RWMol &mol, unsigned index, const Bond &new_bond,
   if (!keep_s_groups) {
     // replaceBond then removes the substance groups that hold the bond as
     // a bond removal does, following their PARENT chains unchecked.
-    check_removals(mol);
+    check_edit_removals(mol);
   }
   // replaceBond copies the bond. RDKit's would leave a stereo group that
   // held the old bond pointing at it, deleted (replace_bond).
@@ -212,10 +318,27 @@ void rwmol_insert_mol(RWMol &mol, const RWMol &other) {
 
 void rwmol_begin_batch_edit(RWMol &mol) { mol.beginBatchEdit(); }
 
-// A failed check leaves the batch open and the molecule as it was.
+// A failed check leaves the batch open and the molecule as it was. The
+// batch's bitsets can be shorter than the molecule, which grows during it.
 void rwmol_commit_batch_edit(RWMol &mol) {
-  check_removals(mol);
-  mol.commitBatchEdit();
+  check_edit_removals(mol);
+  std::vector<const RDKit::Atom *> atoms;
+  std::vector<const RDKit::Bond *> bonds;
+  if (const auto *del_atoms = BatchEdit::atoms(mol)) {
+    for (unsigned i = 0; i < del_atoms->size() && i < mol.getNumAtoms(); ++i) {
+      if ((*del_atoms)[i]) {
+        add_atom_removal(mol, mol.getAtomWithIdx(i), atoms, bonds);
+      }
+    }
+  }
+  if (const auto *del_bonds = BatchEdit::bonds(mol)) {
+    for (unsigned i = 0; i < del_bonds->size() && i < mol.getNumBonds(); ++i) {
+      if ((*del_bonds)[i]) {
+        bonds.push_back(mol.getBondWithIdx(i));
+      }
+    }
+  }
+  remove_scrubbing_groups(mol, atoms, bonds, [&] { mol.commitBatchEdit(); });
 }
 
 void rwmol_rollback_batch_edit(RWMol &mol) { mol.rollbackBatchEdit(); }

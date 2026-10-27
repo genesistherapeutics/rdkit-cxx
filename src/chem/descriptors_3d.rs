@@ -212,17 +212,10 @@ pub fn desc_list() -> Vec<(&'static str, Descriptor3DFn)> {
 /// Every 3D descriptor of the default conformer, by name, in
 /// [`desc_list`]'s order, as Python's dictionary has them. `Error::Value`
 /// for a molecule without conformers, as Python raises. Mirrors
-/// `Descriptors3D.CalcMolDescriptors3D`.
+/// `Descriptors3D.CalcMolDescriptors3D`. RDKit 2024.03's also takes a
+/// `confId` but ignores it, computing each descriptor of the default
+/// conformer, so it is not bound; [`desc_list`]'s functions take one.
 pub fn calc_mol_descriptors_3d(mol: &Mol) -> Result<Vec<(&'static str, f64)>> {
-    calc_mol_descriptors_3d_with_conf_id(mol, -1)
-}
-
-/// Of the conformer `conf_id`. Mirrors
-/// `Descriptors3D.CalcMolDescriptors3D(mol, confId)`.
-pub fn calc_mol_descriptors_3d_with_conf_id(
-    mol: &Mol,
-    conf_id: i32,
-) -> Result<Vec<(&'static str, f64)>> {
     if mol.get_num_conformers() == 0 {
         return Err(Error::Value {
             message: "Computing 3D Descriptors requires a structure with at least 1 conformer"
@@ -231,6 +224,6 @@ pub fn calc_mol_descriptors_3d_with_conf_id(
     }
     desc_list()
         .into_iter()
-        .map(|(name, function)| Ok((name, function(mol, conf_id)?)))
+        .map(|(name, function)| Ok((name, function(mol, -1)?)))
         .collect()
 }

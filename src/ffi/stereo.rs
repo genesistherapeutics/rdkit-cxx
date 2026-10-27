@@ -82,7 +82,6 @@ pub(crate) mod ffi {
             group_type: StereoGroupType,
             mol: &RWMol,
             atom_ids: &[u32],
-            bond_ids: &[u32],
             read_id: u32,
         ) -> Result<StereoGroupData>;
         fn forward_stereo_group_ids(mol: Pin<&mut RWMol>) -> Result<()>;

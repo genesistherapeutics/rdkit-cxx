@@ -153,7 +153,6 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::descriptors_3d::asphericity as _;
     use rdkit_cxx::chem::descriptors_3d::asphericity_with_params as _;
     use rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d as _;
-    use rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d_with_conf_id as _;
     use rdkit_cxx::chem::descriptors_3d::eccentricity as _;
     use rdkit_cxx::chem::descriptors_3d::eccentricity_with_params as _;
     use rdkit_cxx::chem::descriptors_3d::inertial_shape_factor as _;
@@ -2385,8 +2384,6 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rd_mol_descriptors::calc_exact_mol_wt as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_exact_mol_wt_with_only_heavy as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_fraction_csp3 as _;
-    use rdkit_cxx::chem::rd_mol_descriptors::calc_getaway as _;
-    use rdkit_cxx::chem::rd_mol_descriptors::calc_getaway_with_params as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_hall_kier_alpha as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_hall_kier_alpha_with_outputs as _;
     use rdkit_cxx::chem::rd_mol_descriptors::calc_inertial_shape_factor as _;

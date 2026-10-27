@@ -6,7 +6,7 @@
 // Ports testGet3DMolDescriptors of RDKit's rdkit/Chem/UnitTestDescriptors.py,
 // with its reference file tests/data/descriptors_multiconf.sdf
 // (rdkit/Chem/test_data), and pins values from Python's
-// rdkit.Chem.Descriptors3D in RDKit 2026.03.6.
+// rdkit.Chem.Descriptors3D in RDKit 2026.03.6 (the same in 2024.03.6).
 
 use std::collections::BTreeMap;
 
@@ -116,14 +116,16 @@ fn calc_mol_descriptors_3d_matches_python() {
     assert_eq!(mol.get_num_conformers(), 10);
     let descs: BTreeMap<&str, f64> = calc_mol_descriptors_3d(&mol).unwrap().into_iter().collect();
     assert!((descs["PMI1"] - 20.9595).abs() <= 1e-4);
-    let descs2: BTreeMap<&str, f64> = calc_mol_descriptors_3d_with_conf_id(&mol, 2)
-        .unwrap()
-        .into_iter()
-        .collect();
-    for ((name, expected), (_, expected2)) in MULTICONF_DEFAULT.iter().zip(MULTICONF_2) {
+    // Python 2024.03's CalcMolDescriptors3D ignores its confId, but
+    // descList's functions take one.
+    let list = desc_list();
+    for (((name, expected), (_, expected2)), (list_name, function)) in
+        MULTICONF_DEFAULT.iter().zip(MULTICONF_2).zip(&list)
+    {
+        assert_eq!(name, list_name);
         assert_close(descs[*name], *expected, name);
-        assert_close(descs2[*name], expected2, name);
-        assert_ne!(descs[*name], descs2[*name]);
+        assert_close(function(&mol, 2).unwrap(), expected2, name);
+        assert_ne!(descs[*name], expected2);
     }
 }
 

@@ -147,7 +147,10 @@ impl Default for ReplaceCoreParams {
 /// The sidechains left when the matched core is removed, each attached to
 /// a dummy atom, or `None` when they cannot be. `matches` pairs core atom
 /// indices with molecule atom indices. Mirrors `rdmolops.ReplaceCore(mol,
-/// core, matches)`. `Error::Value` for an index past either end.
+/// core, matches)`. `Error::Value` for an index past either end, and for a
+/// molecule atom matched more than once whose core atom's neighbor is not
+/// in the matches, for which RDKit 2024.03 reads past the end of the
+/// matches.
 pub fn replace_core(mol: &Mol, core: &Mol, matches: &[(u32, u32)]) -> Result<Option<Mol>> {
     replace_core_with_params(mol, core, matches, &ReplaceCoreParams::default())
 }
@@ -531,7 +534,10 @@ fn fragment_on_some_bonds_impl(
 /// A copy for each way to break `num_to_break` of the bonds. Mirrors
 /// `rdmolops.FragmentOnSomeBonds`. `Error::Value` for no bonds, more than
 /// 63, a repeated bond, or option lists shorter than the bonds;
-/// `Error::Index` for a bond index past the end.
+/// `Error::Index` for a bond index past the end. No copies when
+/// `num_to_break` is 0 or more than the bonds, as RDKit 2026.03 and, below
+/// 64, Python 2024.03 return; RDKit 2024.03 shifts by `num_to_break`, which
+/// is undefined from 64 on.
 pub fn fragment_on_some_bonds(mol: &Mol, bond_indices: &[u32]) -> Result<Vec<Mol>> {
     fragment_on_some_bonds_with_params(mol, bond_indices, &FragmentOnSomeBondsParams::default())
 }
@@ -634,7 +640,12 @@ impl Default for MolzipParams {
 /// `a` and `b` joined at their matching labeled atoms, or `None` when
 /// RDKit cannot join them. Mirrors `rdmolops.molzip(a, b)`.
 /// `Error::Value` with `MolzipLabel::FragmentOnBonds` for a dummy without
-/// exactly one neighbor, which RDKit would dereference as null.
+/// exactly one neighbor, which RDKit would dereference as null, and with
+/// any label for a linker (two labeled atoms bonded to each other, such as
+/// `[*:1][*:2]`; with `FragmentOnBonds`, two dummies bonded to each other, or
+/// a dummy whose isotope names a dummy): RDKit 2024.03 has no linker support
+/// and reads the linker's atoms after deleting them. Also as
+/// `RWMol::remove_atom` for what RDKit's removals trust.
 pub fn molzip(a: &Mol, b: &Mol) -> Result<Option<Mol>> {
     molzip_with_params(a, b, &MolzipParams::default())
 }
@@ -649,7 +660,7 @@ pub fn molzip_with_params(a: &Mol, b: &Mol, params: &MolzipParams) -> Result<Opt
 }
 
 /// The fragments within one molecule joined at their matching labeled
-/// atoms. Mirrors `rdmolops.molzip(a)` (A5).
+/// atoms. Mirrors `rdmolops.molzip(a)` (A5). `Error::Value` as `molzip`.
 pub fn molzip_single(a: &Mol) -> Result<Option<Mol>> {
     molzip_single_with_params(a, &MolzipParams::default())
 }
@@ -666,9 +677,14 @@ pub fn molzip_single_with_params(a: &Mol, params: &MolzipParams) -> Result<Optio
 /// matching labeled atoms; `None` for no molecules. With
 /// `generate_coordinates`, each input gets the coordinates it has in the
 /// result. Mirrors `rdmolops.molzipFragments`. `Error::Value` for a labeled
-/// atom without exactly one neighbor, or a linker (two labeled atoms bonded
-/// to each other): RDKit dereferences a null pointer for both when zipping
-/// a list.
+/// atom without exactly one neighbor, which RDKit dereferences as null when
+/// zipping a list, and as `molzip`. With `generate_coordinates`,
+/// `Error::Value` too for more than one molecule with
+/// `MolzipLabel::FragmentOnBonds`, and for a molecule after the first whose
+/// SMILES repeats an earlier one's (which RDKit leaves out of the zip):
+/// RDKit 2024.03 then reads past the zipped atoms for the atoms it left out.
+/// When RDKit cannot zip them with `generate_coordinates`, `None`, where
+/// RDKit 2024.03 dereferences the null result.
 pub fn molzip_fragments(mols: &mut [Mol]) -> Result<Option<Mol>> {
     molzip_fragments_with_params(mols, &MolzipParams::default())
 }

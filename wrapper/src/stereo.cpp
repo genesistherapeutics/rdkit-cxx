@@ -7,6 +7,7 @@
 
 #include "rdkit-cxx/stereo.h"
 
+#include <unordered_set>
 #include <vector>
 
 #include <RDGeneral/Exceptions.h>
@@ -32,18 +33,31 @@ StereoGroupData to_data(const RDKit::StereoGroup &group) {
   return data;
 }
 
+// RDKit 2024.03's StereoGroup constructors (StereoGroup.cpp) accept a
+// repeated atom or bond, which 2026.03's checkForDupes refuses, and
+// removeAtomFromGroups (RWMol.cpp's removeAtom and batchRemoveAtoms) then
+// erases only its first copy, leaving the second pointing at the deleted
+// atom. The message is 2026.03's.
 RDKit::StereoGroup from_data(RWMol &mol, StereoGroupType group_type,
                              rust::Slice<const std::uint32_t> atom_ids,
                              rust::Slice<const std::uint32_t> bond_ids,
                              unsigned read_id) {
   std::vector<RDKit::Atom *> atoms;
+  std::unordered_set<std::uint32_t> seen;
   for (auto idx : atom_ids) {
     check_index(idx, mol.getNumAtoms());
+    if (!seen.insert(idx).second) {
+      throw ValueErrorException("Duplicate atom in StereoGroup");
+    }
     atoms.push_back(mol.getAtomWithIdx(idx));
   }
   std::vector<RDKit::Bond *> bonds;
+  seen.clear();
   for (auto idx : bond_ids) {
     check_index(idx, mol.getNumBonds());
+    if (!seen.insert(idx).second) {
+      throw ValueErrorException("Duplicate bond in StereoGroup");
+    }
     bonds.push_back(mol.getBondWithIdx(idx));
   }
   if (atoms.empty() && bonds.empty()) {
@@ -82,11 +96,10 @@ void rwmol_set_stereo_groups(RWMol &mol,
 StereoGroupData create_stereo_group(StereoGroupType group_type,
                                     const RWMol &mol,
                                     rust::Slice<const std::uint32_t> atom_ids,
-                                    rust::Slice<const std::uint32_t> bond_ids,
                                     unsigned read_id) {
   // The group is built only to read back RDKit's checks and ids.
   return to_data(from_data(const_cast<RWMol &>(mol), group_type, atom_ids,
-                           bond_ids, read_id));
+                           {}, read_id));
 }
 
 void forward_stereo_group_ids(RWMol &mol) { RDKit::forwardStereoGroupIds(mol); }

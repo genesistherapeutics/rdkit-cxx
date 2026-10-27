@@ -27,7 +27,7 @@ use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::rascal_mces::ffi;
 
 /// Options for `find_mces_with_opts`. Mirrors `rdRascalMCES.RascalOptions`;
-/// `Default` reads RDKit's defaults.
+/// `Default` reads RDKit's defaults, but for `timeout`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct RascalOptions {
     /// The similarity estimate below which no MCES is found, from 0 to 1;
@@ -48,7 +48,10 @@ pub struct RascalOptions {
     pub max_frag_separation: i32,
     /// Returns every MCES of the largest size, not just the first.
     pub all_best_mcess: bool,
-    /// Seconds to spend on one MCES; -1 for no limit.
+    /// Seconds to spend on one MCES; -1 for no limit, the only value
+    /// accepted and the default here (Python's is 60): RDKit 2024.03's
+    /// timeout path reads past an empty vector (`checkTimeout`), so any
+    /// other value is `Error::Value`.
     pub timeout: i32,
     /// Returns a result with the similarity estimates when they miss the
     /// threshold.
@@ -295,6 +298,9 @@ pub fn rascal_cluster(mols: &[Mol]) -> Result<Vec<Vec<u32>>> {
 /// The molecules' sizes are checked as `find_mces_with_opts` checks a
 /// pair's. The pairs run on the calling thread, and an error from any is
 /// returned (Python's ends the process when it comes from another thread).
+/// Each pair's MCES runs without RDKit's 60-second timeout, whose path is
+/// undefined in RDKit 2024.03 (see `RascalOptions::timeout`), so a pair
+/// Python would cut off at 60 seconds is searched to the end.
 /// Mirrors `rdRascalMCES.RascalCluster(mols, opts)`.
 pub fn rascal_cluster_with_opts(
     mols: &[Mol],

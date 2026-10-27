@@ -119,19 +119,23 @@ fn indices_that_rdkit_trusts() {
     }
 }
 
-// RDKit 2026.03 reads past an empty vector for these bonds, and Python
-// crashes; RDKit 2026.09 leaves them unlabeled, as here.
+// RDKit 2024.03 reads past an empty vector for an atropisomer bond without
+// carriers, and Python crashes; it is left unlabeled here. A double bond
+// whose stereo atom is the bond's other atom is labeled, as in Python.
 #[test]
 fn bonds_without_carriers() {
-    // The bare end's stereo atom is the bond's other atom. The other double
-    // bond is still labeled, and the stale label cleared.
+    // The bare end's stereo atom is the bond's other atom: Python labels it
+    // Z, replacing the stale label, and the other double bond E.
     let mut mol = mol_from_smiles("[C]=CC/C=C/C").unwrap();
     let mut bond = mol.get_bond_with_idx_mut(0).unwrap();
     bond.set_stereo_atoms(1, 2).unwrap();
     bond.set_stereo(BondStereo::Stereocis);
-    bond.set_prop("_CIPCode", "Z");
+    bond.set_prop("_CIPCode", "X");
     assign_cip_labels(&mut mol).unwrap();
-    assert_eq!(bond_labels(&mol), [(3, "E".to_string())]);
+    assert_eq!(
+        bond_labels(&mol),
+        [(0, "Z".to_string()), (3, "E".to_string())]
+    );
 
     // An atropisomer bond whose ends have no other bonds.
     let mut mol = mol_from_smiles("CC").unwrap();

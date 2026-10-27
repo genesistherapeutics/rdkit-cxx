@@ -35,6 +35,10 @@ namespace {
 
 namespace Rascal = RDKit::RascalMCES;
 
+// RascalOptions::timeout for no timeout, the only one the wrapper passes
+// (rascal_options_from).
+constexpr int kNoRascalTimeout = -1;
+
 RascalOptionsData to_data(const Rascal::RascalOptions &o) {
   return RascalOptionsData{o.similarityThreshold,
                            o.completeAromaticRings,
@@ -110,7 +114,9 @@ rust::Vec<IndexList> to_lists(
 // holding control_c_mutex (as it does for the MCESs that splitting clusters
 // computes), and runs the rest of RDKit's clustering, which those files keep to
 // themselves, as ported from them below; numThreads only changes how RDKit
-// would split the work, so it is not read.
+// would split the work, so it is not read. RDKit's clustering computes its
+// MCESs with the default 60-second timeout, whose path is undefined
+// (kNoRascalTimeout), so these run without one.
 
 // As details::ClusNode in RascalDetails.h.
 struct ClusNode {
@@ -161,6 +167,7 @@ ProxGraph build_proximity_graph(const std::vector<const RDKit::ROMol *> &mols,
   std::vector<std::pair<unsigned int, unsigned int>> toDo;
   Rascal::RascalOptions opts;
   opts.similarityThreshold = clusOpts.similarityCutoff;
+  opts.timeout = kNoRascalTimeout;
   for (unsigned int i = 0; i < mols.size() - 1; ++i) {
     for (unsigned int j = i + 1; j < mols.size(); ++j) {
       toDo.emplace_back(i, j);
@@ -248,7 +255,9 @@ std::vector<std::vector<unsigned int>> make_sub_clusters(
       auto m2 = tmpNbors[i]->d_res->getMcesMol();
       auto g_13 = g_ij(m2, clusOpts.a, clusOpts.b, clusOpts.minFragSize);
 
-      auto results = Rascal::rascalMCES(*m1, *m2);
+      Rascal::RascalOptions opts;
+      opts.timeout = kNoRascalTimeout;
+      auto results = Rascal::rascalMCES(*m1, *m2, opts);
       if (results.empty() || results.front().getBondMatches().empty()) {
         continue;
       }
@@ -513,6 +522,11 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
 //   int; a NaN threshold passes every comparison before it.
 // - assignEquivalentAtoms dereferences MolFromSmarts's null for a class of
 //   equivalentAtoms that does not parse.
+// - RDKit 2024.03's checkTimeout, once the run passes the timeout (at once
+//   for one below -1), clears maxCliques when the current clique is larger
+//   and then reads maxCliques.front() of the empty vector (2026.03 checks
+//   it). Whether that happens depends on the clock, so no timeout but -1
+//   (kNoRascalTimeout) is sound.
 Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   Rascal::RascalOptions o;
   o.similarityThreshold = d.similarity_threshold;
@@ -529,6 +543,11 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   o.equivalentAtoms = std::string(d.equivalent_atoms);
   o.ignoreBondOrders = d.ignore_bond_orders;
 
+  if (o.timeout != kNoRascalTimeout) {
+    throw ValueErrorException(
+        "timeout must be -1: RDKit 2024.03 reads past an empty vector when a "
+        "search times out");
+  }
   if (o.maxFragSeparation < -1) {
     throw ValueErrorException("maxFragSeparation must be -1 or more");
   }
@@ -571,8 +590,12 @@ void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols) {
   }
 }
 
+// RDKit's default timeout is 60 seconds, which rascal_options_from refuses,
+// so the default here has none.
 RascalOptionsData rascal_options_default() {
-  return to_data(Rascal::RascalOptions());
+  Rascal::RascalOptions o;
+  o.timeout = kNoRascalTimeout;
+  return to_data(o);
 }
 
 RascalClusterOptionsData rascal_cluster_options_default() {

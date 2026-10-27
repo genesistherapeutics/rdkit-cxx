@@ -717,7 +717,8 @@ overloads_note = "force, which only steers RDKit's descriptor caches, is not bou
 
 [[entry]]
 python = "rdkit.Chem.Descriptors3D.CalcMolDescriptors3D"
-rust = ["rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d", "rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d_with_conf_id"]
+rust = ["rdkit_cxx::chem::descriptors_3d::calc_mol_descriptors_3d"]
+overloads_note = "confId, which RDKit 2024.03 accepts and ignores (every descriptor is of the default conformer), is not bound"
 name_exception = "digits stay with their letters: calc_mol_descriptors_3d"
 
 [[entry]]

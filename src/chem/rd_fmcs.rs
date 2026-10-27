@@ -582,7 +582,9 @@ pub struct MCSParameters {
     /// `canceled` set; 0 for no limit. Not enforced when a progress
     /// callback is set, as in Python.
     pub timeout: u32,
-    /// Prints statistics to standard output.
+    /// Prints statistics to standard output. With `store_all` it is
+    /// `Error::Value`: RDKit 2024.03 then dereferences a null query
+    /// molecule.
     pub verbose: bool,
     /// How atoms are matched.
     pub atom_compare_parameters: MCSAtomCompareParameters,
@@ -754,7 +756,9 @@ impl MCSResult {
 
 /// The MCS of `mols`, with the defaults of `FindMCS`'s keyword form: those
 /// of `MCSParameters::default()` with a `timeout` of 3600 seconds. Fewer
-/// than two molecules are `Error::Runtime`. Mirrors `rdFMCS.FindMCS(mols)`.
+/// than two molecules are `Error::Runtime`; the query of 64 or more bonds
+/// [`find_mcs_with_params`] refuses is `Error::Value`. Mirrors
+/// `rdFMCS.FindMCS(mols)`.
 pub fn find_mcs(mols: &[Mol]) -> Result<MCSResult> {
     find_mcs_with_params(
         mols,
@@ -781,6 +785,13 @@ pub fn find_mcs(mols: &[Mol]) -> Result<MCSResult> {
 /// returned. RDKit's errors pass through: `Error::Value` for a positive
 /// `max_distance` and a molecule without a conformer, `Error::Runtime` for
 /// `match_valences` and a molecule whose valences are not computed.
+///
+/// RDKit 2024.03 grows the MCS in a query molecule and computes `1 << n`
+/// for a seed's `n` new bonds, which is undefined for 64 (`Seed::grow`), so
+/// a molecule it may take as the query (with a `threshold` of 1, the one of
+/// fewest bonds; below 1, any of the `len - k` of fewest bonds, where `k`
+/// is how many other molecules must match) with 64 or more bonds is
+/// `Error::Value`, as is `verbose` with `store_all`.
 ///
 /// ```no_run
 /// use rdkit_cxx::chem::mol_from_smiles;

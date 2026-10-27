@@ -83,17 +83,17 @@ impl StereoGroup {
 /// (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct CreateStereoGroupParams {
-    /// The group's atoms.
+    /// The group's atoms. RDKit 2024.03's `CreateStereoGroup` takes no
+    /// bonds; a group of bonds comes from a parsed molecule.
     pub atom_ids: Vec<u32>,
-    /// The group's bonds.
-    pub bond_ids: Vec<u32>,
     /// The group's id as read from a file; 0 for none.
     pub read_id: u32,
 }
 
 /// A stereo group of `atom_ids` in `mol`. Mirrors `rdchem.CreateStereoGroup`,
-/// whose atoms are optional; a group needs at least one atom or bond, so they
-/// are required here.
+/// whose atoms are optional; a group needs at least one atom or bond, and
+/// this one holds no bonds, so they are required here. `Error::Value` for a
+/// repeated atom, as `create_stereo_group_with_params`.
 pub fn create_stereo_group(
     stereo_group_type: StereoGroupType,
     mol: &Mol,
@@ -106,8 +106,10 @@ pub fn create_stereo_group(
     create_stereo_group_with_params(stereo_group_type, mol, &params)
 }
 
-/// Mirrors `rdchem.CreateStereoGroup(stereoGroupType, mol, atomIds, bondIds,
-/// readId)`.
+/// Mirrors `rdchem.CreateStereoGroup(stereoGroupType, mol, atomIds,
+/// readId)`. `Error::Value` for no atoms or a repeated atom, which RDKit
+/// 2024.03 accepts and then leaves pointing at the atom once it is removed;
+/// `Error::Index` for an atom index past the end.
 pub fn create_stereo_group_with_params(
     stereo_group_type: StereoGroupType,
     mol: &Mol,
@@ -117,7 +119,6 @@ pub fn create_stereo_group_with_params(
         stereo_group_type.to_ffi(),
         mol.as_ffi(),
         &params.atom_ids,
-        &params.bond_ids,
         params.read_id,
     )?))
 }
@@ -140,6 +141,10 @@ impl Mol {
 
 impl RWMol {
     /// Replaces the stereo groups. Mirrors `RWMol.SetStereoGroups`.
+    /// `Error::Index` for an atom or bond index past the end; `Error::Value`
+    /// for a group with no atoms or bonds, or one that repeats an atom or
+    /// bond, which RDKit 2024.03 accepts and then leaves pointing at the
+    /// atom once it is removed.
     pub fn set_stereo_groups(&mut self, stereo_groups: &[StereoGroup]) -> Result<()> {
         let data: Vec<_> = stereo_groups.iter().map(StereoGroup::to_ffi).collect();
         Ok(ffi::rwmol_set_stereo_groups(self.pin_mut(), &data)?)

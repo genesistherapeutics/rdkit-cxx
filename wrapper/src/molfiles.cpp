@@ -918,18 +918,44 @@ void mol_to_pdb_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
   RDKit::MolToPDBFile(mol, to_path(path), conf_id, flavor);
 }
 
+namespace {
+
+// RDKit 2024.03's CML writer (molToPTree in CMLWriter.cpp) writes an
+// atomParity for every CW or CCW atom from neighbors[0] to neighbors[3] of a
+// vector of its neighbors, reading past the vector's end for an atom with
+// fewer than four (one with an implicit H, as in F[C@H](Cl)Br); 2026.03 pads
+// the list with the atom itself. Such atoms are refused.
+void check_cml_parity(const RWMol &mol) {
+  for (const auto *atom : mol.atoms()) {
+    const auto tag = atom->getChiralTag();
+    if ((tag == RDKit::Atom::CHI_TETRAHEDRAL_CW ||
+         tag == RDKit::Atom::CHI_TETRAHEDRAL_CCW) &&
+        atom->getDegree() < 4) {
+      throw ValueErrorException(
+          "atom " + std::to_string(atom->getIdx()) +
+          " is tetrahedral with fewer than four neighbors; RDKit 2024.03's "
+          "CML writer reads four");
+    }
+  }
+}
+
+}  // namespace
+
 // RDKit's CML writer (molToPTree in CMLWriter.cpp) sums the formal charges
-// in int (U9).
+// in int (U9), and reads four neighbors of each tetrahedral atom
+// (check_cml_parity).
 std::unique_ptr<std::string> mol_to_cml_block(const RWMol &mol,
                                               std::int32_t conf_id,
                                               bool kekulize) {
   check_formal_charge_sum(mol);
+  check_cml_parity(mol);
   return str(RDKit::MolToCMLBlock(mol, conf_id, kekulize));
 }
 
 void mol_to_cml_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                      std::int32_t conf_id, bool kekulize) {
   check_formal_charge_sum(mol);
+  check_cml_parity(mol);
   RDKit::MolToCMLFile(mol, to_path(path), conf_id, kekulize);
 }
 

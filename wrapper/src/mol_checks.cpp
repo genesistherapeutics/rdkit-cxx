@@ -439,9 +439,84 @@ void check_substance_group_parents(const RDKit::ROMol &mol) {
   }
 }
 
+void check_stereo_group_removals(const RDKit::ROMol &mol) {
+  std::unordered_set<const RDKit::Atom *> abs_atoms;
+  const auto &groups = mol.getStereoGroups();
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    const auto &group = groups[g];
+    if (!group.getBonds().empty()) {
+      throw ValueErrorException(
+          "stereo group " + std::to_string(g) +
+          " holds a bond, which RDKit 2024.03 leaves in the group when it "
+          "removes the bond, and reads after it is deleted");
+    }
+    std::unordered_set<const RDKit::Atom *> seen;
+    const bool abs =
+        group.getGroupType() == RDKit::StereoGroupType::STEREO_ABSOLUTE;
+    for (const auto *atom : group.getAtoms()) {
+      if (!seen.insert(atom).second) {
+        throw ValueErrorException(
+            "stereo group " + std::to_string(g) + " repeats atom " +
+            std::to_string(atom->getIdx()) +
+            ", whose second copy RDKit 2024.03 leaves in the group when it "
+            "removes the atom, and reads after it is deleted");
+      }
+      if (abs && !abs_atoms.insert(atom).second) {
+        throw ValueErrorException(
+            "atom " + std::to_string(atom->getIdx()) +
+            " is in two ABS stereo groups, which RDKit 2024.03 merges into "
+            "one group that repeats it when it combines molecules");
+      }
+    }
+  }
+}
+
 void check_removals(const RDKit::ROMol &mol) {
   check_bond_end_points(mol);
   check_substance_group_parents(mol);
+  check_stereo_group_removals(mol);
+}
+
+void remove_from_stereo_groups(RDKit::ROMol &mol,
+                               const std::vector<const RDKit::Atom *> &atoms,
+                               const std::vector<const RDKit::Bond *> &bonds) {
+  if (mol.getStereoGroups().empty() || (atoms.empty() && bonds.empty())) {
+    return;
+  }
+  const std::unordered_set<const RDKit::Atom *> gone_atoms(atoms.begin(),
+                                                           atoms.end());
+  const std::unordered_set<const RDKit::Bond *> gone_bonds(bonds.begin(),
+                                                           bonds.end());
+  bool changed = false;
+  std::vector<RDKit::StereoGroup> kept;
+  for (const auto &group : mol.getStereoGroups()) {
+    std::vector<RDKit::Atom *> group_atoms;
+    for (auto *atom : group.getAtoms()) {
+      if (gone_atoms.count(atom)) {
+        changed = true;
+      } else {
+        group_atoms.push_back(atom);
+      }
+    }
+    std::vector<RDKit::Bond *> group_bonds;
+    for (auto *bond : group.getBonds()) {
+      if (gone_bonds.count(bond)) {
+        changed = true;
+      } else {
+        group_bonds.push_back(bond);
+      }
+    }
+    if (group_atoms.empty() && group_bonds.empty()) {
+      continue;
+    }
+    RDKit::StereoGroup res(group.getGroupType(), group_atoms, group_bonds,
+                           group.getReadId());
+    res.setWriteId(group.getWriteId());
+    kept.push_back(std::move(res));
+  }
+  if (changed) {
+    mol.setStereoGroups(std::move(kept));
+  }
 }
 
 // A depth-first search of the graph whose edges lead from each group to

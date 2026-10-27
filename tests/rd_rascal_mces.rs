@@ -22,7 +22,7 @@ fn chain(n: usize) -> Mol {
 }
 
 // Expected values come from Python's rdRascalMCES. Searches use the default
-// 60-second timeout, which none of these comes near.
+// timeout of -1 (Python's 60 seconds is refused), and none comes near 60.
 
 fn smiles(text: &str) -> Mol {
     mol_from_smiles(text).unwrap()
@@ -51,7 +51,7 @@ fn defaults() {
     assert_eq!(opts.min_frag_size, -1);
     assert_eq!(opts.max_frag_separation, -1);
     assert!(!opts.all_best_mcess);
-    assert_eq!(opts.timeout, 60);
+    assert_eq!(opts.timeout, -1);
     assert!(!opts.return_empty_mces);
     assert_eq!(opts.max_bond_match_pairs, 1000);
     assert_eq!(opts.equivalent_atoms, "");
