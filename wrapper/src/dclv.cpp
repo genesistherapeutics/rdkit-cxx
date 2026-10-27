@@ -6,6 +6,7 @@
 #include "rdkit-cxx/dclv.h"
 
 #include <cmath>
+#include <mutex>
 #include <string>
 
 #include <GraphMol/Descriptors/DCLV.h>
@@ -88,8 +89,14 @@ DclvResults dclv_compute(const RWMol &mol, bool is_protein, bool include_ligand,
     }
   }
   check_monomer_infos(mol, is_protein);
+  // generateStandardDots builds its icosahedron in function-local statics on
+  // first use, which the race checker cannot see ordered with the reads
+  // other threads make, so the calls take turns (U4).
+  static std::mutex mutex;
+  std::unique_lock<std::mutex> lock(mutex);
   RDKit::Descriptors::DoubleCubicLatticeVolume dclv(
       mol, is_protein, include_ligand, probe_radius, depth, dot_density);
+  lock.unlock();
   DclvResults results;
   results.surface_area = dclv.getSurfaceArea();
   results.volume = dclv.getVolume();

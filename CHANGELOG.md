@@ -130,6 +130,21 @@ A program built against one release stops when it loads with another.
     counts RDKit 2025.03 leaves uninitialized, monomer info other than PDB
     residue info, which it casts to that, and probe radii and coordinates
     beyond 1e6.
+  - Parsers refuse what RDKit 2025.03 misreads: Mol2 bonds naming atom 0
+    or an atom past the end; V3000 SGroup lines it would read unset values
+    from or pop an empty SAP id from, and `BEGIN SGROUP` with no SGroups in
+    COUNTS (checked streams hand RDKit no part of a refused line); CXSMILES
+    `atomProp:` lists with no `|` or `,` after them; stereo groups that list
+    an atom or bond twice (from Rust, pickles, CXSMILES, V3000, Marvin, and
+    JSON), which RDKit uses after freeing; any MolInterchange JSON value
+    RDKit 2025.03's RapidJSON reader takes without a type check (a Parse
+    error); and in CDXML reactions, a fragment's bond ordering longer than
+    its connection points, binary CDX passed as text, and XML entity
+    declarations.
+  - `mol_to_cml_block` and `mol_to_cml_file` refuse a tetrahedral atom with
+    fewer than four neighbors, whose missing neighbor RDKit 2025.03 reads
+    (add hydrogens first), and drawing refuses atom labels whose last drawn
+    character is a colon or with a `<` and no `>` after it.
   - The `MaeWriter` takes its stream as Python's does: RDKit 2025.03's
     `shared_ptr` constructor always fails its own precondition.
   - The embedder, `DetermineBondOrders`, the CIP labeler (and the
@@ -160,7 +175,8 @@ A program built against one release stops when it loads with another.
   writes without a lock is locked. Readers of molecule pickles, of the
   formats that carry them (reaction, bundle, catalog, and query pickles, and
   PNG metadata), and of Boost.Serialization archives are `unsafe fn`s whose
-  contract is bytes RDKit wrote. One gap remains in RDKit itself; see the
+  contract is bytes RDKit wrote. A few gaps remain in RDKit itself (its log flags, two
+  oversized shifts, and SMARTS it parses from parameter files); see the
   README's "Known limitations".
 
 ### Where the bindings differ from Python

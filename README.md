@@ -296,8 +296,8 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in one way. It does
-not corrupt memory on the supported platforms, and it needs a fix in RDKit:
+Safe Rust can still reach undefined behavior in RDKit in a few ways. None
+corrupts memory on the supported platforms, and each needs a fix in RDKit:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
@@ -307,12 +307,24 @@ not corrupt memory on the supported platforms, and it needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
+- **Oversized shifts.** RDKit 2025.03 shifts a 32-bit one by the number of
+  questionable dummy atoms a kekulization enumerates (`Kekulize.cpp`), and
+  FMCS a 64-bit one by a seed's new external bonds when there are exactly
+  64; both are undefined at those counts. Sanitization runs the first
+  during every parse, so the crate cannot refuse it narrowly; on x86-64 and
+  arm64 the shift wraps and kekulization fails instead (at 31 such atoms it
+  already takes about 2^31 tries). Such molecules are far outside normal
+  chemistry.
+- **SMARTS in parameter files.** RDKit parses the SMARTS in fragment-catalog
+  parameter files, standardizer parameter files, and deprotection data
+  itself; a CXSMARTS `atomProp:` list there can read a byte past the
+  string, which the crate checks everywhere it passes SMARTS to RDKit.
 
 Other limits:
 
-- Substructure matching runs one call at a time across the process, since
-  every match swaps RDKit's `SIGINT` handler through static variables
-  (`control_c_mutex()`), so matching does not scale across threads.
+- Substructure matching runs one call at a time across the process, under
+  `control_c_mutex()`, which later RDKit releases need since their matches
+  swap the `SIGINT` handler; matching does not scale across threads.
 - Some inputs abort the process by overflowing the stack, which cannot
   corrupt memory: an SLN string with a `{` followed by about 100,000
   characters (RDKit's regular expression), and SMILES of very deep
