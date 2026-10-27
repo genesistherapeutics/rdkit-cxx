@@ -12,6 +12,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 namespace rdkit_cxx {
 
@@ -45,5 +46,15 @@ void check_debug_parse(int debug_parse);
 // segfault in Python). This parses the XML as RDKit does, which throws for
 // malformed XML, and checks every bond.
 void check_mrv(const std::string &text);
+
+// RDKit 2025.03's CXSMILES parser reads the list after an "atomProp:"
+// (parse_atom_props in CXSmilesOps.cpp) until a "|" or ",", and when the
+// extension ends first, it reads the byte after the end of its string. These
+// throw ValueErrorException if it would, for the extension RDKit splits
+// from a SMILES or SMARTS string (after its first space or tab, trimmed) or
+// from a reaction's (from its first "|", trimmed). RDKit's SMILES and TDT
+// suppliers parse no CXSMILES.
+void check_cx_smiles(std::string_view smiles);
+void check_cx_reaction(std::string_view text);
 
 }  // namespace rdkit_cxx

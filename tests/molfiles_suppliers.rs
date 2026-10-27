@@ -536,6 +536,25 @@ fn long_stereo_group_lines_are_refused() {
     assert!(matches!(text.len(), Err(Error::Value { .. })));
 }
 
+#[test]
+fn smiles_suppliers_read_no_cx_extensions() {
+    // RDKit's SMILES suppliers parse without CXSMILES, so its atomProp
+    // parser, which reads past the end of a list with no "|" or "," after
+    // it, never sees a field; as in Python, such a field does not parse.
+    let tabs = SmilesMolSupplierParams {
+        delimiter: "\t".into(),
+        title_line: false,
+        ..Default::default()
+    };
+    for line in ["CO |atomProp:0.p.v|", "CO |atomProp:0.p.v"] {
+        let input = format!("CC\tethane\n{line}\tmethanol\n");
+        let mut text = smiles_mol_supplier_from_text_with_params(&input, &tabs).unwrap();
+        let mols: Vec<_> = text.mols().collect();
+        assert!(mols[0].is_ok());
+        assert!(matches!(mols[1], Err(Error::Parse { .. })), "{mols:?}");
+    }
+}
+
 /// A V3000 SD record for ethanol with one SGroup, `sgroup`.
 fn sgroup_record(sgroup: &str) -> String {
     format!(

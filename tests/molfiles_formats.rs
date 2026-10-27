@@ -95,6 +95,54 @@ fn cx_smiles_and_smarts() {
 }
 
 #[test]
+fn cx_atom_props_are_checked() {
+    // As in Python.
+    let mol = smiles("CO |atomProp:0.p.v:1.q.w|");
+    assert_eq!(
+        mol.get_atom_with_idx(0).unwrap().get_prop("p").unwrap(),
+        "v"
+    );
+    assert_eq!(
+        mol.get_atom_with_idx(1).unwrap().get_prop("q").unwrap(),
+        "w"
+    );
+    let rxn =
+        rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts("[C:1]>>[C:1] |atomProp:0.p.v|")
+            .unwrap();
+    assert_eq!(
+        rxn.get_reactant_template(0)
+            .unwrap()
+            .get_atom_with_idx(0)
+            .unwrap()
+            .get_prop("p")
+            .unwrap(),
+        "v"
+    );
+    // RDKit 2025.03 reads past the end of an extension whose atomProp list
+    // has no "|" or "," after it.
+    for text in [
+        "CO |atomProp:0.p.v",
+        "CO |atomProp:0.p.v  ",
+        "CO |atomProp:x",
+        "CO |$a;b$,atomProp:0.p.&#59;",
+    ] {
+        assert!(is_value(mol_from_smiles(text)), "{text:?}");
+        assert!(is_value(mol_from_smarts(text)), "{text:?}");
+    }
+    assert!(is_value(
+        rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts("[C:1]>>[C:1] |atomProp:0.p.v")
+    ));
+    // Lists that end early are RDKit's parse errors.
+    for text in [
+        "CO |atomProp:0",
+        "CO |atomProp:0.p",
+        "CO |atomProp:0.p.&#59",
+    ] {
+        assert!(is_parse(mol_from_smiles(text)), "{text:?}");
+    }
+}
+
+#[test]
 fn fragments() {
     let mol = smiles("OCCN");
     assert_eq!(mol_fragment_to_smiles(&mol, &[1, 2, 3]).unwrap(), "CCN");

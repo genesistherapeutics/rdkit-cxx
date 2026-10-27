@@ -31,6 +31,7 @@
 #include "rdkit-cxx/ffi/adjust_query.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/mol_enumerator.h"
 #include "rdkit-cxx/substruct.h"
@@ -91,6 +92,7 @@ void check_mol_element(const bpt::ptree &elem) {
   }
   auto smiles = elem.get<std::string>("smiles", "");
   if (!smiles.empty()) {
+    check_cx_smiles(smiles);
     std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(smiles));
     if (!mol) {
       throw RDKit::SmilesParse::SmilesParseException(
@@ -100,6 +102,7 @@ void check_mol_element(const bpt::ptree &elem) {
   }
   // A missing "smarts" is RDKit's error.
   if (auto smarts = elem.get_optional<std::string>("smarts")) {
+    check_cx_smiles(*smarts);
     std::unique_ptr<RDKit::RWMol> mol(RDKit::SmartsToMol(*smarts));
     if (!mol) {
       throw RDKit::SmilesParse::SmilesParseException(
