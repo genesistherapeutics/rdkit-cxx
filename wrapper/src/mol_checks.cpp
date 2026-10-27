@@ -529,6 +529,32 @@ void check_stereo_group_removals(const RDKit::ROMol &mol, Removes removes) {
   // leaving the group pointing at the atom.
   check_stereo_group_members(mol, "");
   const auto &groups = mol.getStereoGroups();
+  // RDKit 2024.09's insertMol (insertStereoGroups in RWMol.cpp), which
+  // molzip and replaceSubstructs call before they remove atoms, merges the
+  // target's ABS groups into one, which repeats an atom or bond two of them
+  // hold (RDKit 2026.03's StereoGroup constructor refuses the repeat).
+  std::unordered_set<const void *> abs_members;
+  for (const auto &group : groups) {
+    if (group.getGroupType() != RDKit::StereoGroupType::STEREO_ABSOLUTE) {
+      continue;
+    }
+    for (const auto *atom : group.getAtoms()) {
+      if (!abs_members.insert(atom).second) {
+        throw ValueErrorException(
+            "atom " + std::to_string(atom->getIdx()) +
+            " is in two ABS stereo groups, which RDKit 2024.09 merges into "
+            "one group that repeats it when it combines molecules");
+      }
+    }
+    for (const auto *bond : group.getBonds()) {
+      if (!abs_members.insert(bond).second) {
+        throw ValueErrorException(
+            "bond " + std::to_string(bond->getIdx()) +
+            " is in two ABS stereo groups, which RDKit 2024.09 merges into "
+            "one group that repeats it when it combines molecules");
+      }
+    }
+  }
   if (removes == Removes::Anything) {
     for (std::size_t g = 0; g < groups.size(); ++g) {
       if (!groups[g].getBonds().empty()) {

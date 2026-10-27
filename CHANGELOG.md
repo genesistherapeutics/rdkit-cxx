@@ -92,7 +92,10 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     bond out of the groups, as RDKit 2025.09 does; RDKit's own removals
     (the SMILES writer for several fragments, `get_mol_frags_as_mols`,
     `remove_hs`, the transforms, the standardizer, and the rest) refuse a
-    molecule whose groups they would leave dangling (`Error::Value`), and
+    molecule whose groups they would leave dangling (`Error::Value`), or
+    that has an atom or bond in two ABS groups, which 2024.09's
+    `insertMol` (molzip, `replace_substructs`) merges into one group that
+    repeats it, and
     the pickle readers and `set_stereo_groups` refuse groups that list an
     atom or bond twice.
   - `fragment_on_bonds` refuses a repeated bond (#9430);
