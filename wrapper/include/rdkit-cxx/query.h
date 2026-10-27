@@ -38,6 +38,12 @@ void bond_expand_query(Bond &bond, const Bond &other, int how,
                        bool maintain_order);
 void bond_set_query(Bond &bond, const Bond &other);
 
+// A query atom and a query bond without queries, as their default
+// constructors make them, which no safe Rust path makes; for the tests of
+// the expand_query checks.
+std::unique_ptr<Atom> query_atom_without_query_for_tests();
+std::unique_ptr<Bond> query_bond_without_query_for_tests();
+
 // As MolGetQueryAtoms in Code/GraphMol/Wrap/Mol.cpp, which finds the
 // matches of recursive queries first; sorted by index.
 rust::Vec<std::uint32_t> mol_get_atoms_matching_query(const RWMol &mol,

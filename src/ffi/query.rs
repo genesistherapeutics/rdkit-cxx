@@ -34,6 +34,12 @@ pub(crate) mod ffi {
         ) -> Result<()>;
         fn bond_set_query(bond: Pin<&mut Bond>, other: &Bond) -> Result<()>;
 
+        // Only the crate's unit tests call these.
+        #[allow(dead_code)]
+        fn query_atom_without_query_for_tests() -> Result<UniquePtr<Atom>>;
+        #[allow(dead_code)]
+        fn query_bond_without_query_for_tests() -> Result<UniquePtr<Bond>>;
+
         fn mol_get_atoms_matching_query(mol: &RWMol, query: &Atom) -> Result<Vec<u32>>;
     }
 }

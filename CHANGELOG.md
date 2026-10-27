@@ -77,6 +77,10 @@
   whole: from RDKit 2025.09 on, a fragment keeps each stereo group that
   shares an atom with it. With 256 three-atom groups and fragments of one
   bond, RDKit wrote a catalog it could not read ("ENDMOL tag not found").
+- `expand_query` is `Error::Value` for a query atom or bond that has no
+  query of its own: RDKit's `QueryBond::expandQuery` dereferences the null
+  query, and `QueryAtom`'s fails an invariant. No safe Rust path makes such
+  an atom or bond, so this only guards a path RDKit might add.
 
 ## 2026.9.0
 
