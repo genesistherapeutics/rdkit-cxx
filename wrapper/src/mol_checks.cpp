@@ -11,11 +11,14 @@
 #include <cstdlib>
 #include <limits>
 #include <map>
+#include <set>
 #include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>
 
+#include <GraphMol/MolOps.h>
+#include <GraphMol/PeriodicTable.h>
 #include <GraphMol/MonomerInfo.h>
 #include <GraphMol/QueryOps.h>
 #include <GraphMol/SubstanceGroup.h>
@@ -293,6 +296,71 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
   }
 }
 
+// streamWriteProps counts the properties it writes in a std::uint16_t for
+// the molecule, each conformer, atom and bond (with the property flags, or
+// for a recursive query's molecule the default flags), and each substance
+// group (always): past 65535 the count wraps, and the reader takes the rest
+// of the properties for the pickle's next fields. Counts every property,
+// whether or not the flags write it, which is at least as many.
+constexpr std::size_t kPickleCountMax = 65535;
+
+void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
+  auto count = props.getDict().getData().size();
+  if (count > kPickleCountMax) {
+    throw ValueErrorException(
+        what + " has " + std::to_string(count) +
+        " properties, more than a molecule pickle counts (65535)");
+  }
+}
+
+void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
+  check_prop_count(mol, where.substr(0, where.size() - 3));
+  for (auto conf = mol.beginConformers(); conf != mol.endConformers();
+       ++conf) {
+    check_prop_count(**conf,
+                     where + "conformer " + std::to_string((*conf)->getId()));
+  }
+  for (const auto *atom : mol.atoms()) {
+    check_prop_count(*atom, where + "atom " + std::to_string(atom->getIdx()));
+  }
+  for (const auto *bond : mol.bonds()) {
+    check_prop_count(*bond, where + "bond " + std::to_string(bond->getIdx()));
+  }
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    check_prop_count(sgroups[i], where + "substance group " + std::to_string(i));
+  }
+}
+
+// RDKit 2026.03's StereoGroup constructors refuse an atom or bond listed
+// twice ("Duplicate atom in StereoGroup"); 2024.09's, which _depickleStereo
+// calls, keep it. removeAtomFromGroups (RWMol::removeAtom) then erases one
+// copy and leaves the group pointing at the deleted atom, which copying,
+// pickling and get_stereo_groups read.
+void check_stereo_group_members(const RDKit::ROMol &mol,
+                                const std::string &which) {
+  const auto &groups = mol.getStereoGroups();
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    std::unordered_set<const void *> seen;
+    for (const auto *atom : groups[g].getAtoms()) {
+      if (!seen.insert(atom).second) {
+        throw ValueErrorException("Duplicate atom in StereoGroup: " + which +
+                                  "stereo group " + std::to_string(g) +
+                                  " lists atom " +
+                                  std::to_string(atom->getIdx()) + " twice");
+      }
+    }
+    for (const auto *bond : groups[g].getBonds()) {
+      if (!seen.insert(bond).second) {
+        throw ValueErrorException("Duplicate bond in StereoGroup: " + which +
+                                  "stereo group " + std::to_string(g) +
+                                  " lists bond " +
+                                  std::to_string(bond->getIdx()) + " twice");
+      }
+    }
+  }
+}
+
 }  // namespace
 
 void check_pickled_mol(const RDKit::ROMol &mol) {
@@ -301,6 +369,8 @@ void check_pickled_mol(const RDKit::ROMol &mol) {
       [](const RDKit::ROMol &current, bool nested) {
         check_enum_values(current,
                           nested ? "a recursive query's molecule's " : "");
+        check_stereo_group_members(
+            current, nested ? "a recursive query's molecule's " : "");
         const std::string which =
             nested ? "atom of a recursive query's molecule, " : "atom ";
         for (const auto *atom : current.atoms()) {
@@ -323,6 +393,7 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
         check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        check_prop_counts(current, where);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
             check_bond_query(
@@ -439,18 +510,79 @@ void check_substance_group_parents(const RDKit::ROMol &mol) {
   }
 }
 
-void check_removals(const RDKit::ROMol &mol) {
+namespace {
+
+void refuse_stereo_group(std::size_t g, const std::string &why) {
+  throw ValueErrorException(
+      "stereo group " + std::to_string(g) + " holds " + why +
+      ", which RDKit 2024.09 would leave the group pointing at once it removes "
+      "the bond");
+}
+
+// As check_removals says for each kind of removal (Removes).
+void check_stereo_group_removals(const RDKit::ROMol &mol, Removes removes) {
+  if (removes == Removes::Guarded) {
+    return;
+  }
+  // RDKit 2024.09's groups may list an atom twice (its CXSMILES and V3000
+  // readers make such groups), and an atom's removal takes out one of them,
+  // leaving the group pointing at the atom.
+  check_stereo_group_members(mol, "");
+  const auto &groups = mol.getStereoGroups();
+  if (removes == Removes::Anything) {
+    for (std::size_t g = 0; g < groups.size(); ++g) {
+      if (!groups[g].getBonds().empty()) {
+        refuse_stereo_group(g, "a bond");
+      }
+    }
+    return;
+  }
+  bool fragments = removes == Removes::Fragments ||
+                   removes == Removes::FragmentsAndHydrogens;
+  bool hydrogens = removes == Removes::Hydrogens ||
+                   removes == Removes::FragmentsAndHydrogens;
+  std::vector<int> frag_of;
+  for (std::size_t g = 0; g < groups.size(); ++g) {
+    const auto &atoms = groups[g].getAtoms();
+    if (groups[g].getBonds().empty() || atoms.empty()) {
+      continue;
+    }
+    for (const auto *bond : groups[g].getBonds()) {
+      if (hydrogens && (bond->getBeginAtom()->getAtomicNum() == 1 ||
+                        bond->getEndAtom()->getAtomicNum() == 1)) {
+        refuse_stereo_group(g, "an atom and a bond to a hydrogen");
+      }
+      if (!fragments) {
+        continue;
+      }
+      if (frag_of.empty()) {
+        RDKit::MolOps::getMolFrags(mol, frag_of);
+      }
+      for (const auto *atom : atoms) {
+        if (frag_of[atom->getIdx()] != frag_of[bond->getBeginAtomIdx()]) {
+          refuse_stereo_group(g, "a bond and an atom of another fragment");
+        }
+      }
+    }
+  }
+}
+
+}  // namespace
+
+void check_removals(const RDKit::ROMol &mol, Removes removes) {
   check_bond_end_points(mol);
   check_substance_group_parents(mol);
+  check_stereo_group_removals(mol, removes);
 }
 
 // A depth-first search of the graph whose edges lead from each group to
 // every group with its PARENT's index, with its own stack: a path in it is
 // a chain RDKit may follow.
-void check_removals(const std::vector<const RDKit::ROMol *> &mols) {
+void check_removals(const std::vector<const RDKit::ROMol *> &mols,
+                    Removes removes) {
   std::vector<const RDKit::SubstanceGroup *> groups;
   for (const auto *mol : mols) {
-    check_removals(*mol);
+    check_removals(*mol, removes);
     for (const auto &sgroup : RDKit::getSubstanceGroups(*mol)) {
       groups.push_back(&sgroup);
     }
@@ -624,6 +756,243 @@ StereoGroupBondGuard::~StereoGroupBondGuard() {
     restored.push_back(with_bonds(groups[g], std::move(bonds)));
   }
   d_mol.setStereoGroups(std::move(restored));
+}
+
+namespace {
+
+// Set on the atoms and bonds of the stereo groups while a
+// StereoGroupRemovalGuard is alive: each one's position in the guard's lists.
+// Not a computed property, which commitBatchEdit clears.
+const std::string kGroupMember = "_rdkitCxxStereoGroupMember";
+
+}  // namespace
+
+StereoGroupRemovalGuard::StereoGroupRemovalGuard(RDKit::RWMol &mol)
+    : d_mol(mol) {
+  bool repeats = false;
+  try {
+    check_stereo_group_members(mol, "");
+  } catch (const ValueErrorException &) {
+    repeats = true;
+  }
+  if (!repeats && !has_stereo_group_bonds(mol)) {
+    return;
+  }
+  // Each atom or bond gets one position, however many groups hold it.
+  std::map<const void *, unsigned> position;
+  auto tag = [&](RDKit::RDProps &item, const void *key) {
+    auto [it, added] = position.emplace(key, position.size());
+    if (added) {
+      item.setProp(kGroupMember, it->second);
+    }
+    return it->second;
+  };
+  for (const auto &group : mol.getStereoGroups()) {
+    Group record{group.getGroupType(), group.getReadId(), group.getWriteId(),
+                 {}, {}};
+    for (auto *atom : group.getAtoms()) {
+      record.atoms.push_back(tag(*atom, atom));
+    }
+    for (auto *bond : group.getBonds()) {
+      record.bonds.push_back(tag(*bond, bond));
+    }
+    d_groups.push_back(std::move(record));
+  }
+  mol.setStereoGroups({});
+}
+
+StereoGroupRemovalGuard::~StereoGroupRemovalGuard() {
+  if (d_groups.empty()) {
+    return;
+  }
+  std::map<unsigned, RDKit::Atom *> atoms;
+  std::map<unsigned, RDKit::Bond *> bonds;
+  unsigned at;
+  for (auto *atom : d_mol.atoms()) {
+    if (atom->getPropIfPresent(kGroupMember, at)) {
+      atoms[at] = atom;
+      atom->clearProp(kGroupMember);
+    }
+  }
+  for (auto *bond : d_mol.bonds()) {
+    if (bond->getPropIfPresent(kGroupMember, at)) {
+      bonds[at] = bond;
+      bond->clearProp(kGroupMember);
+    }
+  }
+  std::vector<RDKit::StereoGroup> rebuilt;
+  for (const auto &group : d_groups) {
+    std::set<unsigned> seen;
+    std::vector<RDKit::Atom *> group_atoms;
+    for (auto idx : group.atoms) {
+      if (auto it = atoms.find(idx); it != atoms.end() && seen.insert(idx).second) {
+        group_atoms.push_back(it->second);
+      }
+    }
+    std::vector<RDKit::Bond *> group_bonds;
+    for (auto idx : group.bonds) {
+      if (auto it = bonds.find(idx); it != bonds.end() && seen.insert(idx).second) {
+        group_bonds.push_back(it->second);
+      }
+    }
+    if (group_atoms.empty() && group_bonds.empty()) {
+      continue;
+    }
+    rebuilt.emplace_back(group.type, std::move(group_atoms),
+                         std::move(group_bonds), group.read_id);
+    rebuilt.back().setWriteId(group.write_id);
+  }
+  d_mol.setStereoGroups(std::move(rebuilt));
+}
+
+namespace {
+
+// As ProximityEntry, IsBonded (with ctdIGNORE_H_H_CONTACTS), IsBlacklistedAtom,
+// SamePDBResidue, and IsBlacklistedPair in ProximityBonds.cpp.
+struct Proximity {
+  float x, y, z, r;
+  int atm, hash, next, elem;
+};
+
+bool proximity_bonded(const Proximity &p, const Proximity &q) {
+  constexpr double kExt = 0.45;
+  constexpr double kMin2 = 0.16;
+  constexpr double kMax2 = 29.7025;
+  if (p.elem == 1 && q.elem == 1) {
+    return false;
+  }
+  double dx = (double)p.x - (double)q.x;
+  double dist2 = dx * dx;
+  if (dist2 > kMax2) {
+    return false;
+  }
+  double dy = (double)p.y - (double)q.y;
+  dist2 += dy * dy;
+  if (dist2 > kMax2) {
+    return false;
+  }
+  double dz = (double)p.z - (double)q.z;
+  dist2 += dz * dz;
+  if (dist2 > kMax2 || dist2 < kMin2) {
+    return false;
+  }
+  double radius = (double)p.r + (double)q.r + kExt;
+  return dist2 <= radius * radius;
+}
+
+bool proximity_blacklisted_atom(const RDKit::Atom *atom) {
+  int elem = atom->getAtomicNum();
+  return !((5 <= elem && elem <= 8) || (14 <= elem && elem <= 16) ||
+           (32 <= elem && elem <= 34) || (51 <= elem && elem <= 52));
+}
+
+// The PDB reader and determine_connectivity give RDKit only PDB residue
+// info (OtherMonomerInfoSetAside), so other info reads as none here.
+const RDKit::AtomPDBResidueInfo *pdb_info(const RDKit::Atom *atom) {
+  return dynamic_cast<const RDKit::AtomPDBResidueInfo *>(
+      atom->getMonomerInfo());
+}
+
+bool proximity_blacklisted_pair(const RDKit::Atom *beg, const RDKit::Atom *end) {
+  const auto *b = pdb_info(beg);
+  const auto *e = pdb_info(end);
+  if (!b || b->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {
+    return false;
+  }
+  if (!e || e->getMonomerType() != RDKit::AtomMonomerInfo::PDBRESIDUE) {
+    return false;
+  }
+  bool same = b->getResidueNumber() == e->getResidueNumber() &&
+              b->getResidueName() == e->getResidueName() &&
+              b->getChainId() == e->getChainId() &&
+              b->getInsertionCode() == e->getInsertionCode();
+  if (!same) {
+    if (proximity_blacklisted_atom(beg) || proximity_blacklisted_atom(end)) {
+      return true;
+    }
+    if (b->getResidueName() == "HOH" || e->getResidueName() == "HOH") {
+      return true;
+    }
+  }
+  return false;
+}
+
+}  // namespace
+
+void check_proximity_hydrogens(const RDKit::ROMol &mol, bool without_bonds) {
+  if (!mol.getNumConformers()) {
+    return;  // ConnectTheDots then adds no bonds.
+  }
+  constexpr int kHashSize = 1024;
+  constexpr int kHashMask = 1023;
+  constexpr int kHashX = 571;
+  constexpr int kHashY = 127;
+  constexpr int kHashZ = 3;
+  constexpr double kMaxDist = 5.45;
+  const unsigned count = mol.getNumAtoms();
+  std::vector<int> table(kHashSize, -1);
+  std::vector<Proximity> tmp(count);
+  std::set<std::pair<unsigned, unsigned>> bonds;
+  std::vector<unsigned> degree(count, 0);
+  if (!without_bonds) {
+    for (const auto *bond : mol.bonds()) {
+      auto a = bond->getBeginAtomIdx();
+      auto b = bond->getEndAtomIdx();
+      bonds.emplace(std::min(a, b), std::max(a, b));
+    }
+    for (unsigned i = 0; i < count; ++i) {
+      degree[i] = mol.getAtomWithIdx(i)->getDegree();
+    }
+  }
+  const auto *periodic = RDKit::PeriodicTable::getTable();
+  const auto &conf = mol.getConformer();
+  for (unsigned i = 0; i < count; ++i) {
+    const auto *atom = mol.getAtomWithIdx(i);
+    unsigned elem = atom->getAtomicNum();
+    const auto &p = conf.getAtomPos(i);
+    auto &ti = tmp[i];
+    ti.x = (float)p.x;
+    ti.y = (float)p.y;
+    ti.z = (float)p.z;
+    ti.r = (float)periodic->getRcovalent(elem);
+    ti.atm = static_cast<int>(i);
+    ti.elem = static_cast<int>(elem);
+    int hash = kHashX * (int)(p.x / kMaxDist) + kHashY * (int)(p.y / kMaxDist) +
+               kHashZ * (int)(p.z / kMaxDist);
+    for (int dx = -kHashX; dx <= kHashX; dx += kHashX) {
+      for (int dy = -kHashY; dy <= kHashY; dy += kHashY) {
+        for (int dz = -kHashZ; dz <= kHashZ; dz += kHashZ) {
+          int probe = hash + dx + dy + dz;
+          int list = table[probe & kHashMask];
+          while (list != -1) {
+            const auto &tj = tmp[list];
+            auto a = static_cast<unsigned>(ti.atm);
+            auto b = static_cast<unsigned>(tj.atm);
+            if (tj.hash == probe && proximity_bonded(ti, tj) &&
+                !bonds.count({std::min(a, b), std::max(a, b)}) &&
+                !proximity_blacklisted_pair(atom, mol.getAtomWithIdx(b))) {
+              bonds.emplace(std::min(a, b), std::max(a, b));
+              ++degree[a];
+              ++degree[b];
+            }
+            list = tj.next;
+          }
+        }
+      }
+    }
+    int list = hash & kHashMask;
+    ti.next = table[list];
+    table[list] = static_cast<int>(i);
+    ti.hash = hash;
+  }
+  for (unsigned i = 0; i < count; ++i) {
+    if (tmp[i].elem == 1 && degree[i] > 1) {
+      throw ValueErrorException(
+          "hydrogen " + std::to_string(i) +
+          " would be bonded to several atoms by proximity bonding, whose "
+          "pruning in RDKit 2024.09 removes bonds while it iterates over them");
+    }
+  }
 }
 
 }  // namespace rdkit_cxx

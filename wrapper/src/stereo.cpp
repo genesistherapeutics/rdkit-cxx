@@ -7,6 +7,7 @@
 
 #include "rdkit-cxx/stereo.h"
 
+#include <unordered_set>
 #include <vector>
 
 #include <RDGeneral/Exceptions.h>
@@ -49,6 +50,17 @@ RDKit::StereoGroup from_data(RWMol &mol, StereoGroupType group_type,
   if (atoms.empty() && bonds.empty()) {
     throw ValueErrorException(
         "New StereoGroup must contain at least one atom or bond.");
+  }
+  // RDKit 2026.03's constructor refuses a duplicate; 2024.09's keeps it, and
+  // removeAtomFromGroups (RWMol::removeAtom) then erases one copy and leaves
+  // the group pointing at the deleted atom.
+  if (std::unordered_set<const RDKit::Atom *>(atoms.begin(), atoms.end())
+          .size() != atoms.size()) {
+    throw ValueErrorException("Duplicate atom in StereoGroup");
+  }
+  if (std::unordered_set<const RDKit::Bond *>(bonds.begin(), bonds.end())
+          .size() != bonds.size()) {
+    throw ValueErrorException("Duplicate bond in StereoGroup");
   }
   return RDKit::StereoGroup(group_type, atoms, bonds, read_id);
 }

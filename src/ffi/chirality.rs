@@ -110,10 +110,7 @@ pub(crate) mod ffi {
             conformer: &Conformer,
             params: &BondWedgingParametersData,
         ) -> Result<()>;
-        fn reapply_mol_block_wedging(
-            mol: Pin<&mut RWMol>,
-            all_bond_types: bool,
-        ) -> Result<()>;
+        fn reapply_mol_block_wedging(mol: Pin<&mut RWMol>, all_bond_types: bool) -> Result<()>;
 
         fn set_allow_nontetrahedral_chirality(val: bool) -> Result<()>;
         fn get_allow_nontetrahedral_chirality() -> Result<bool>;

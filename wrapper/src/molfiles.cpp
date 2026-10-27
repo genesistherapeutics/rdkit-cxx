@@ -6,6 +6,7 @@
 #include "rdkit-cxx/molfiles.h"
 
 #include <climits>
+#include <fstream>
 #include <cmath>
 #include <map>
 #include <mutex>
@@ -33,6 +34,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/tokenizer.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
@@ -380,7 +382,7 @@ std::unique_ptr<RWMol> mol_from_smiles(rust::Str smiles,
 // trusts what check_removals checks.
 std::unique_ptr<std::string> mol_to_smiles(const RWMol &mol,
                                            const SmilesWriteParamsData &data) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   auto lock = random_lock(data.do_random);
   return str(RDKit::MolToSmiles(mol, write_params(data)));
 }
@@ -451,7 +453,7 @@ std::unique_ptr<Bond> bond_from_smarts(rust::Str smarts) {
 std::unique_ptr<std::string> mol_to_cx_smiles(
     const RWMol &mol, const SmilesWriteParamsData &data, std::uint32_t flags,
     RestoreBondDirOption restore_bond_dirs) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   auto lock = random_lock(data.do_random);
   return str(
       RDKit::MolToCXSmiles(mol, write_params(data), flags, restore_bond_dirs));
@@ -498,7 +500,7 @@ std::unique_ptr<std::string> mol_fragment_to_smiles(
   }
   auto params = write_params(data);
   // Without bonds, a root atom has RDKit split the molecule into fragments.
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   auto lock = random_lock(data.do_random);
   const auto *b = bonds ? &*bonds : nullptr;
   const auto *as = asymbols ? &*asymbols : nullptr;
@@ -531,7 +533,7 @@ std::unique_ptr<std::vector<std::string>> mol_to_random_smiles_vect(
     const RWMol &mol, std::uint32_t num_smiles, std::uint32_t random_seed,
     bool isomeric_smiles, bool kekule_smiles, bool all_bonds_explicit,
     bool all_hs_explicit) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   // RDKit seeds the global generator and draws from it for each SMILES.
   std::lock_guard<std::mutex> lock(random_mutex());
   return std::make_unique<std::vector<std::string>>(
@@ -779,14 +781,97 @@ FP::Mol2ParserParams mol2_params(bool sanitize, bool remove_hs,
   return params;
 }
 
+std::vector<std::string> mol2_tokens(const std::string &line) {
+  boost::char_separator<char> sep(" \t\n");
+  boost::tokenizer<boost::char_separator<char>> tokens(line, sep);
+  return {tokens.begin(), tokens.end()};
+}
+
+std::optional<unsigned> mol2_unsigned(const std::string &token) {
+  try {
+    return boost::lexical_cast<unsigned>(token);
+  } catch (const boost::bad_lexical_cast &) {
+    return std::nullopt;
+  }
+}
+
+// RDKit 2024.09's Mol2 reader (ParseMol2FileBondLine in Mol2FileParser.cpp)
+// requires only one of a bond's atoms to be in the molecule, and then reads
+// both out of its list of atoms (RDKit 2026.03 requires both). This finds
+// the bond lines as MolFromMol2DataStream does: the first MOLECULE block's
+// counts line, and the nBonds lines after the last BOND header before the
+// next MOLECULE block (from the start of the data without one), and throws
+// FileParseException for a line whose atom indices RDKit reads but are not
+// those of an atom. Lines RDKit refuses for other reasons are left to it.
+void check_mol2_bonds(const std::string &text) {
+  std::vector<std::string> lines;
+  std::istringstream in(text);
+  for (std::string line; std::getline(in, line);) {
+    if (!line.empty() && line.back() == '\r') {
+      line.pop_back();
+    }
+    lines.push_back(std::move(line));
+  }
+  std::optional<std::size_t> molecule;
+  std::size_t bonds_at = 0;
+  for (std::size_t i = 0; i < lines.size(); ++i) {
+    if (lines[i].empty() || lines[i][0] != '@') {
+      continue;
+    }
+    auto tokens = mol2_tokens(lines[i]);
+    auto first = tokens.empty() ? std::string() : tokens[0];
+    if (first == "@<TRIPOS>MOLECULE") {
+      if (molecule) {
+        break;
+      }
+      molecule = i + 1;
+    } else if (first == "@<TRIPOS>BOND") {
+      bonds_at = i + 1;
+    }
+  }
+  if (!molecule || *molecule + 1 >= lines.size()) {
+    return;
+  }
+  auto counts = mol2_tokens(lines[*molecule + 1]);
+  if (counts.size() < 2) {
+    return;
+  }
+  auto num_atoms = mol2_unsigned(counts[0]);
+  auto num_bonds = mol2_unsigned(counts[1]);
+  if (!num_atoms || !num_bonds) {
+    return;
+  }
+  for (std::size_t i = 0; i < *num_bonds && bonds_at + i < lines.size();
+       ++i) {
+    auto tokens = mol2_tokens(lines[bonds_at + i]);
+    if (tokens.size() < 4) {
+      return;
+    }
+    auto begin = mol2_unsigned(tokens[1]);
+    auto end = mol2_unsigned(tokens[2]);
+    if (!begin || !end) {
+      return;
+    }
+    for (auto idx : {*begin, *end}) {
+      // RDKit subtracts one, so 0 wraps.
+      if (idx == 0 || idx > *num_atoms) {
+        throw RDKit::FileParseException(
+            "Mol2 bond line " + std::to_string(i + 1) + " names atom " +
+            std::to_string(idx) + " of " + std::to_string(*num_atoms));
+      }
+    }
+  }
+}
+
 }  // namespace
 
 std::unique_ptr<RWMol> mol_from_mol2_block(rust::Str mol2_block, bool sanitize,
                                            bool remove_hs,
                                            bool cleanup_substructures) {
+  std::string text(mol2_block);
+  check_mol2_bonds(text);
   return parsed(FP::MolFromMol2Block(
-                    std::string(mol2_block),
-                    mol2_params(sanitize, remove_hs, cleanup_substructures)),
+                    text, mol2_params(sanitize, remove_hs, cleanup_substructures)),
                 "Mol2 block");
 }
 
@@ -794,8 +879,20 @@ std::unique_ptr<RWMol> mol_from_mol2_file(rust::Slice<const std::uint8_t> path,
                                           bool sanitize, bool remove_hs,
                                           bool cleanup_substructures) {
   auto name = to_path(path);
-  return parsed(FP::MolFromMol2File(name, mol2_params(sanitize, remove_hs,
-                                                      cleanup_substructures)),
+  // The file is read once, and checked (check_mol2_bonds) before RDKit reads
+  // it; RDKit reports a file it cannot open.
+  std::ifstream file(name, std::ios::binary);
+  if (!file) {
+    return parsed(FP::MolFromMol2File(name, mol2_params(sanitize, remove_hs,
+                                                        cleanup_substructures)),
+                  "Mol2 file " + name);
+  }
+  std::stringstream contents;
+  contents << file.rdbuf();
+  std::string text = contents.str();
+  check_mol2_bonds(text);
+  return parsed(FP::MolFromMol2Block(
+                    text, mol2_params(sanitize, remove_hs, cleanup_substructures)),
                 "Mol2 file " + name);
 }
 
@@ -885,6 +982,7 @@ std::unique_ptr<RWMol> pdb_from_text(const std::string &text, bool sanitize,
         FP::MolFromPDBDataStream(in, pdb_params(false, false, flavor, false));
     if (probe) {
       check_pdb_coordinates(*probe);
+      check_proximity_hydrogens(*probe, false);
     }
   }
   std::istringstream in(text);
@@ -924,18 +1022,40 @@ void mol_to_pdb_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
   RDKit::MolToPDBFile(mol, to_path(path), conf_id, flavor);
 }
 
-// RDKit's CML writer (molToPTree in CMLWriter.cpp) sums the formal charges
-// in int (U9).
+namespace {
+
+// RDKit 2024.09's CML writer (molToPTree in CMLWriter.cpp) sums the formal
+// charges in int (U9), and writes a tetrahedral atom's parity with its first
+// four neighbors, read past the end of their list for an atom of fewer
+// (RDKit 2026.03 writes the atom itself in their place, rdkit/rdkit#9472).
+// Hydrogens made explicit (add_hs) give such an atom its fourth.
+void check_cml(const RWMol &mol) {
+  check_formal_charge_sum(mol);
+  for (const auto *atom : mol.atoms()) {
+    auto tag = atom->getChiralTag();
+    if ((tag == RDKit::Atom::CHI_TETRAHEDRAL_CW ||
+         tag == RDKit::Atom::CHI_TETRAHEDRAL_CCW) &&
+        atom->getDegree() < 4) {
+      throw ValueErrorException(
+          "atom " + std::to_string(atom->getIdx()) +
+          " is tetrahedral with fewer than four neighbors, whose parity RDKit "
+          "2024.09's CML writer writes with neighbors past their end");
+    }
+  }
+}
+
+}  // namespace
+
 std::unique_ptr<std::string> mol_to_cml_block(const RWMol &mol,
                                               std::int32_t conf_id,
                                               bool kekulize) {
-  check_formal_charge_sum(mol);
+  check_cml(mol);
   return str(RDKit::MolToCMLBlock(mol, conf_id, kekulize));
 }
 
 void mol_to_cml_file(const RWMol &mol, rust::Slice<const std::uint8_t> path,
                      std::int32_t conf_id, bool kekulize) {
-  check_formal_charge_sum(mol);
+  check_cml(mol);
   RDKit::MolToCMLFile(mol, to_path(path), conf_id, kekulize);
 }
 

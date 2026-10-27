@@ -842,6 +842,13 @@ void check_legend(const std::string &legend, const RDKit::MolDrawOptions &opts,
   if (legend.empty()) {
     return;
   }
+  // RDKit 2024.09's DrawMol::extractLegend splits the legend at newlines,
+  // dropping empty pieces, and then places the last piece, read from an
+  // empty list for a legend of only newlines.
+  if (legend.find_first_not_of('\n') == std::string::npos) {
+    throw ValueErrorException(
+        "a legend of only newlines, which RDKit 2024.09 reads past its pieces");
+  }
   check_text_size(legend, "legend");
   std::vector<std::string> lines;
   boost::split(lines, legend, boost::is_any_of("\n"));

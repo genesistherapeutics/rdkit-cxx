@@ -434,9 +434,8 @@ fn fragment_args(
 }
 
 /// A copy with the bonds broken. Mirrors `rdmolops.FragmentOnBonds`.
-/// `Error::Value` for no bonds or option lists shorter than the bonds;
-/// `Error::Index` for a bond index past the end; RDKit's range error
-/// (`Error::Runtime`) for a repeated bond, as in Python.
+/// `Error::Value` for no bonds, a repeated bond, or option lists shorter
+/// than the bonds; `Error::Index` for a bond index past the end.
 pub fn fragment_on_bonds(mol: &Mol, bond_indices: &[u32]) -> Result<Mol> {
     fragment_on_bonds_with_params(mol, bond_indices, &FragmentOnBondsParams::default())
 }

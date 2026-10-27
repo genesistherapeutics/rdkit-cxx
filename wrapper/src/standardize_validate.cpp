@@ -178,7 +178,7 @@ std::unique_ptr<std::vector<std::string>> validation_validate(
   }
   // FragmentValidation splits the molecule into its fragments
   // (getMolFrags), removing atoms from copies (check_removals).
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   HoldControlC control_c;
   return strings(handle.ptr->validate(mol, report_all_failures));
 }

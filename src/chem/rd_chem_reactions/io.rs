@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 //! Reading and writing reactions: SMARTS and SMILES, rxn blocks, Marvin,
-//! CDXML, molecules with reaction roles, and PNG metadata.
+//! molecules with reaction roles, and PNG metadata.
 
 use std::collections::BTreeMap;
 use std::path::Path;
@@ -92,14 +92,6 @@ pub struct ReactionFromMrvBlockParams {
 /// form. A Rust addition (A2).
 pub type ReactionFromMrvFileParams = ReactionFromMrvBlockParams;
 
-/// Parameters for `reactions_from_cdxml_block_with_params`, with Python's
-/// defaults (A2).
-pub type ReactionsFromCDXMLBlockParams = ReactionFromMrvBlockParams;
-
-/// Parameters for `reactions_from_cdxml_file_with_params`, with Python's
-/// defaults (A2).
-pub type ReactionsFromCDXMLFileParams = ReactionFromMrvBlockParams;
-
 /// Parameters for `reaction_to_rxn_block_with_params`, with Python's defaults
 /// (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -167,18 +159,6 @@ fn reaction(
     ptr: std::result::Result<UniquePtr<ffi::ChemicalReaction>, cxx::Exception>,
 ) -> Result<ChemicalReaction> {
     Ok(ChemicalReaction::from_ffi(ptr?))
-}
-
-fn reactions(
-    list: std::result::Result<UniquePtr<ffi::ReactionList>, cxx::Exception>,
-) -> Result<Vec<ChemicalReaction>> {
-    let mut list = list?;
-    let size = expect_ok(ffi::reaction_list_size(
-        list.as_ref().expect("RDKit returned a null list"),
-    ));
-    Ok((0..size)
-        .map(|i| ChemicalReaction::from_ffi(expect_ok(ffi::reaction_list_take(list.pin_mut(), i))))
-        .collect())
 }
 
 /// Parses reaction SMARTS: `reactants>agents>products`, with atom maps
@@ -402,45 +382,6 @@ pub fn mrv_block_is_reaction(mrv_data: &str) -> Result<bool> {
 /// `rdChemReactions.MrvFileIsReaction`.
 pub fn mrv_file_is_reaction(filename: impl AsRef<Path>) -> Result<bool> {
     Ok(ffi::mrv_file_is_reaction(path_bytes(filename.as_ref()))?)
-}
-
-/// The reactions in CDXML data, one per reaction step. Python returns an
-/// empty tuple for any failure; this returns RDKit's error. Mirrors
-/// `rdChemReactions.ReactionsFromCDXMLBlock`.
-pub fn reactions_from_cdxml_block(rxnblock: &str) -> Result<Vec<ChemicalReaction>> {
-    reactions_from_cdxml_block_with_params(rxnblock, &ReactionsFromCDXMLBlockParams::default())
-}
-
-/// Mirrors `rdChemReactions.ReactionsFromCDXMLBlock(rxnblock, sanitize,
-/// removeHs)`.
-pub fn reactions_from_cdxml_block_with_params(
-    rxnblock: &str,
-    params: &ReactionsFromCDXMLBlockParams,
-) -> Result<Vec<ChemicalReaction>> {
-    reactions(ffi::reactions_from_cdxml_block(
-        rxnblock,
-        params.sanitize,
-        params.remove_hs,
-    ))
-}
-
-/// The reactions in a CDXML file. A file that cannot be opened is
-/// `Error::Os`. Mirrors `rdChemReactions.ReactionsFromCDXMLFile`.
-pub fn reactions_from_cdxml_file(filename: impl AsRef<Path>) -> Result<Vec<ChemicalReaction>> {
-    reactions_from_cdxml_file_with_params(filename, &ReactionsFromCDXMLFileParams::default())
-}
-
-/// Mirrors `rdChemReactions.ReactionsFromCDXMLFile(filename, sanitize,
-/// removeHs)`.
-pub fn reactions_from_cdxml_file_with_params(
-    filename: impl AsRef<Path>,
-    params: &ReactionsFromCDXMLFileParams,
-) -> Result<Vec<ChemicalReaction>> {
-    reactions(ffi::reactions_from_cdxml_file(
-        path_bytes(filename.as_ref()),
-        params.sanitize,
-        params.remove_hs,
-    ))
 }
 
 /// An MDL rxn block for a reaction, V2000 with the agents among the

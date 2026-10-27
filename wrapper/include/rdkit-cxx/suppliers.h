@@ -76,6 +76,7 @@ class TDTMolSupplier {
 
 class MultithreadedSDMolSupplier {
  public:
+  ~MultithreadedSDMolSupplier();
   SupplierInput input;
   std::unique_ptr<RDKit::v2::FileParsers::MultithreadedSDMolSupplier> suppl;
   bool started = false;
@@ -85,6 +86,7 @@ class MultithreadedSDMolSupplier {
 
 class MultithreadedSmilesMolSupplier {
  public:
+  ~MultithreadedSmilesMolSupplier();
   SupplierInput input;
   std::unique_ptr<RDKit::v2::FileParsers::MultithreadedSmilesMolSupplier> suppl;
   bool broken = false;

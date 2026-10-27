@@ -42,7 +42,7 @@ void check_builder_size(const RDKit::ROMol &mol) { check_matrix_size(mol); }
 // what check_removals checks.
 template <class... Args>
 ForceFields::ForceField *build_uff(RDKit::ROMol &mol, Args &&...args) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::UFF::constructForceField(mol, std::forward<Args>(args)...);
 }

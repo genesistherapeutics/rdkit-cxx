@@ -343,16 +343,19 @@ fn malformed_json() {
     assert!(is_parse("[]"));
     assert!(is_parse(r#"{"foo": 1}"#));
     assert!(is_parse(r#"{"rdkitjson":{"version":13},"molecules":[]}"#));
-    assert!(is_parse(r#"{"rdkitjson":{"version":"12"},"molecules":[]}"#));
+    // RDKit 2024.09 reads the version with rapidjson's GetInt, unchecked.
+    assert!(is_value(json_to_mols(
+        r#"{"rdkitjson":{"version":"12"},"molecules":[]}"#
+    )));
     // Without defaults every atom needs a stereo value.
     assert!(is_parse(
         r#"{"rdkitjson":{"version":11},"molecules":[{"atoms":[{"z":6}],"bonds":[]}]}"#
     ));
-    // A value of the wrong type, which RDKit 2024.09 reads as an index past
-    // the end, as Python raises.
+    // A value of the wrong type, which RDKit 2024.09 reads as an int
+    // regardless (Python's RuntimeError comes from what it read).
     assert!(matches!(
         json_to_mols(&doc(&[butene_with_bonds(r#"[{"atoms":[0,"1"]}]"#, "")])),
-        Err(Error::Runtime { .. })
+        Err(Error::Value { .. })
     ));
     // RDKit's own checks (invariants, and indices past the end) are runtime
     // errors, as Python raises.
@@ -449,28 +452,34 @@ fn substance_group_checks() {
         assert!(is_value(json_to_mols(&sgroup(members))), "{members}");
     }
     let mol = json_to_mols(&sgroup(
-        r#","cstates":[{"bond":2}],"attachPoints":[{"aIdx":3,"lvIdx":-1}]"#,
+        r#","cstates":[{"bond":2}],"attachPoints":[{"aIdx":3},{"aIdx":2,"lvIdx":4294967295}]"#,
     ))
     .unwrap()
     .remove(0);
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
-    assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
+    // RDKit 2024.09 leaves a missing lvIdx unset; the wrapper gives it -1,
+    // as later releases do, and 4294967295 reads as -1 in AttachPoint's int.
+    let points = group.get_attach_points().unwrap();
+    assert_eq!((points[0].lv_idx, points[1].lv_idx), (-1, -1));
+    // RDKit reads lvIdx with GetUint, so a negative one is refused.
+    assert!(is_value(json_to_mols(&sgroup(
+        r#","attachPoints":[{"aIdx":3,"lvIdx":-1}]"#
+    ))));
 }
 
 #[test]
-fn bond_queries_on_stereo_group_bonds_are_refused() {
-    // replaceBond leaves the group pointing at the bond it deletes.
+fn stereo_groups_hold_atoms_only() {
+    // RDKit 2024.09 reads no stereo group's bonds, and refuses a group of
+    // none of its atoms, so bond queries leave no group pointing at a bond
+    // replaceBond deletes.
     let bond_order = r#"{"descr":"BondOrder","type":"BondOrder","tag":33,"val":1}"#;
     let groups = r#","stereoGroups":[{"type":"or","id":1,"bonds":[1]}]"#;
     let json = doc(&[butene(&format!(
         "{groups}{}",
         queries("", &format!("{bond_order},{bond_order}"))
     ))]);
-    assert!(is_value(json_to_mols(&json)));
-    // A query on another bond, or on a group's atoms, is fine: replaceAtom
-    // updates the groups. RDKit 2024.09 needs a group's atoms and does not
-    // read its bonds, as Python's MolToJSON of the molecule shows.
+    assert!(matches!(json_to_mols(&json), Err(Error::Parse { .. })));
     let groups = r#","stereoGroups":[{"type":"or","id":1,"atoms":[1],"bonds":[1]}]"#;
     let json = doc(&[butene(&format!("{groups}{}", queries("", bond_order)))]);
     let mol = json_to_mols(&json).unwrap().remove(0);

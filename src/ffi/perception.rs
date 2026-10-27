@@ -27,10 +27,7 @@ pub(crate) mod ffi {
         type IndexList = crate::ffi::geometry::ffi::IndexList;
         type AromaticityModel;
 
-        fn get_sssr(
-            mol: Pin<&mut RWMol>,
-            include_dative_bonds: bool,
-        ) -> Result<Vec<IndexList>>;
+        fn get_sssr(mol: Pin<&mut RWMol>, include_dative_bonds: bool) -> Result<Vec<IndexList>>;
         fn get_symm_sssr(
             mol: Pin<&mut RWMol>,
             include_dative_bonds: bool,

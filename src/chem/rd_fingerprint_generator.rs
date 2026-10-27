@@ -794,7 +794,6 @@ impl FingerprintGenerator64 {
             &options.to_ffi(),
         )?)
     }
-
 }
 
 fn count_bounds_ffi(bounds: &Option<Vec<u32>>) -> (bool, Vec<u32>) {

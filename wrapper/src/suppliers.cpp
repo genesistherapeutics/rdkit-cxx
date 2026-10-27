@@ -15,6 +15,7 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
 
+#include "rdkit-cxx/drained_supplier.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/suppliers.rs.h"
 #include "rdkit-cxx/file_checks.h"
@@ -564,6 +565,17 @@ FP::MultithreadedMolSupplier::Parameters mt_params(
   return params;
 }
 
+// When its threads did not all start (mt_next), the output queue never
+// ends, so the supplier and its input are left running and never freed.
+template <class W>
+void finish_mt(W &w) {
+  if (w.broken && w.suppl) {
+    w.input.stream->stop();
+    (void)w.suppl.release();
+    (void)w.input.stream.release();
+  }
+}
+
 // next() returns null both at the end and for a record it could not read;
 // only a read record changes the last record id.
 //
@@ -596,7 +608,8 @@ std::unique_ptr<RWMol> mt_next(W &w, std::uint32_t &record) {
 
 std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_new() {
   auto s = std::make_unique<MultithreadedSDMolSupplier>();
-  build<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
+  build<MultithreadedSDMolSupplier,
+        DrainedSupplier<FP::MultithreadedSDMolSupplier>>(
       *s, checked_text(""), nullptr, FP::MultithreadedMolSupplier::Parameters(),
       FP::MolFileParserParams());
   return s;
@@ -607,7 +620,8 @@ std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_from_file(
     bool strict_parsing, const MultithreadedParamsData &params) {
   auto p = mt_params(params);
   auto s = std::make_unique<MultithreadedSDMolSupplier>();
-  build<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
+  build<MultithreadedSDMolSupplier,
+        DrainedSupplier<FP::MultithreadedSDMolSupplier>>(
       *s, open_checked_file(to_path(path), true), nullptr, p,
       mol_params(sanitize, remove_hs, strict_parsing));
   return s;
@@ -652,7 +666,8 @@ void mt_sd_mol_supplier_set_process_property_lists(
 
 std::unique_ptr<MultithreadedSmilesMolSupplier> mt_smiles_mol_supplier_new() {
   auto s = std::make_unique<MultithreadedSmilesMolSupplier>();
-  build<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
+  build<MultithreadedSmilesMolSupplier,
+        DrainedSupplier<FP::MultithreadedSmilesMolSupplier>>(
       *s, checked_text(""), nullptr, FP::MultithreadedMolSupplier::Parameters(),
       FP::SmilesMolSupplierParams());
   return s;
@@ -665,7 +680,8 @@ mt_smiles_mol_supplier_from_file(rust::Slice<const std::uint8_t> path,
   auto p = mt_params(params);
   auto sp = smiles_params(smiles);
   auto s = std::make_unique<MultithreadedSmilesMolSupplier>();
-  build<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
+  build<MultithreadedSmilesMolSupplier,
+        DrainedSupplier<FP::MultithreadedSmilesMolSupplier>>(
       *s, open_checked_file(to_path(path), true), nullptr, p, sp);
   return s;
 }
@@ -687,6 +703,12 @@ std::uint32_t mt_smiles_mol_supplier_get_last_record_id(
 std::unique_ptr<std::string> mt_smiles_mol_supplier_get_last_item_text(
     const MultithreadedSmilesMolSupplier &s) {
   return std::make_unique<std::string>(s.suppl->getLastItemText());
+}
+
+MultithreadedSDMolSupplier::~MultithreadedSDMolSupplier() { finish_mt(*this); }
+
+MultithreadedSmilesMolSupplier::~MultithreadedSmilesMolSupplier() {
+  finish_mt(*this);
 }
 
 }  // namespace rdkit_cxx

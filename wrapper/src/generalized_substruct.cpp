@@ -486,7 +486,8 @@ std::unique_ptr<ExtendedQueryMol> create_extended_query_mol(
   // copies of a molecule of several fragments (check_removals); adjusting
   // removes nothing.
   if (do_enumeration || do_tautomers) {
-    check_removals(mol);
+    check_removals(mol,
+                   do_enumeration ? Removes::Anything : Removes::Fragments);
   }
   // Tautomer enumeration matches its transforms (control_c_lock.h).
   std::unique_lock<ControlCMutex> control_c(control_c_mutex());

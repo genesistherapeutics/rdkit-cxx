@@ -168,18 +168,24 @@ unsigned rwmol_add_bond(RWMol &mol, unsigned begin_atom_idx,
 // RWMol's removals parse the bonds' _MolFileBondEndPts and follow the
 // substance groups' PARENT chains unchecked (check_removals), so they are
 // checked before anything is removed. In a batch the removals happen at the
-// commit, which checks again.
+// commit, which checks again. RDKit 2024.09's would leave a stereo group
+// that held a removed bond pointing at it, deleted, so they run under a
+// StereoGroupRemovalGuard.
 void rwmol_remove_atom(RWMol &mol, unsigned idx) {
   check_index(idx, mol.getNumAtoms());
-  check_removals(mol);
+  check_removals(mol, Removes::Guarded);
+  StereoGroupRemovalGuard guard(mol);
   mol.removeAtom(idx);
 }
 
 void rwmol_remove_bond(RWMol &mol, unsigned idx1, unsigned idx2) {
   check_index(idx1, mol.getNumAtoms());
   check_index(idx2, mol.getNumAtoms());
-  check_removals(mol);
-  mol.removeBond(idx1, idx2);
+  check_removals(mol, Removes::Guarded);
+  {
+    StereoGroupRemovalGuard guard(mol);
+    mol.removeBond(idx1, idx2);
+  }
   clear_matrix_caches(mol);
 }
 
@@ -197,7 +203,7 @@ void rwmol_replace_bond(RWMol &mol, unsigned index, const Bond &new_bond,
   if (!keep_s_groups) {
     // replaceBond then removes the substance groups that hold the bond as
     // a bond removal does, following their PARENT chains unchecked.
-    check_removals(mol);
+    check_removals(mol, Removes::Guarded);
   }
   // replaceBond copies the bond. RDKit's would leave a stereo group that
   // held the old bond pointing at it, deleted (replace_bond).
@@ -214,7 +220,8 @@ void rwmol_begin_batch_edit(RWMol &mol) { mol.beginBatchEdit(); }
 
 // A failed check leaves the batch open and the molecule as it was.
 void rwmol_commit_batch_edit(RWMol &mol) {
-  check_removals(mol);
+  check_removals(mol, Removes::Guarded);
+  StereoGroupRemovalGuard guard(mol);
   mol.commitBatchEdit();
 }
 

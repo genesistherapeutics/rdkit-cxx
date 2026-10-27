@@ -310,7 +310,7 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
   const RDKit::ROMol &query = has_ref_patt ? ref_patt : reference;
   if (params.allowRGroups) {
     // It then removes the copy's terminal R groups (check_removals).
-    check_removals(query);
+    check_removals(query, Removes::Guarded);
   }
   std::unique_ptr<RDKit::RWMol> stripped;
   if (params.allowRGroups && has_stereo_group_bonds(query)) {

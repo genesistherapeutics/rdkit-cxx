@@ -343,7 +343,7 @@ rust::Vec<double> calc_autocorr_2d(const RWMol &mol,
 // that keeps the molecule's computed properties (U8), and makes that copy
 // with removeAllHs (check_removals).
 rust::Vec<double> bcut_2d(const RWMol &mol) {
-  check_removals(mol);
+  check_removals(mol, Removes::Hydrogens);
   DescriptorCacheGuard guard(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return to_vec(Desc::BCUT2D(mol));

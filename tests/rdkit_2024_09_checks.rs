@@ -1,0 +1,243 @@
+// Copyright (c) 2026 Steven Kearnes
+// All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+// Inputs RDKit 2024.09 mishandles and later releases refuse or handle: each
+// is refused with Error::Value or Error::Parse before RDKit reads it, and
+// the nearest well-formed input still works.
+
+use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_fmcs::*;
+use rdkit_cxx::chem::*;
+
+mod common;
+
+fn smiles(text: &str) -> Mol {
+    mol_from_smiles(text).unwrap()
+}
+
+fn is_value<T: std::fmt::Debug>(result: Result<T, Error>) -> bool {
+    matches!(result, Err(Error::Value { .. }))
+}
+
+fn is_parse<T: std::fmt::Debug>(result: Result<T, Error>) -> bool {
+    matches!(result, Err(Error::Parse { .. }))
+}
+
+#[test]
+fn cml_parity_needs_four_neighbors() {
+    // The writer reads four neighbors for a tetrahedral atom's parity.
+    let mol = smiles("C[C@H](O)N");
+    assert!(is_value(mol_to_cml_block(&mol)));
+    let hs = add_hs(&mol).unwrap();
+    assert!(mol_to_cml_block(&hs).unwrap().contains("atomParity"));
+}
+
+#[test]
+fn fragmenting_refuses_repeated_bonds_and_counts_past_the_bonds() {
+    let mol = smiles("CCC");
+    assert!(is_value(fragment_on_bonds(&mol, &[0, 0])));
+    assert!(is_value(fragment_on_some_bonds(&mol, &[1, 0, 1])));
+    // More bonds to break than given, up to 64 and beyond, make nothing.
+    for num_to_break in [3, 64, 100] {
+        let params = FragmentOnSomeBondsParams {
+            num_to_break,
+            ..Default::default()
+        };
+        assert!(
+            fragment_on_some_bonds_with_params(&mol, &[0, 1], &params)
+                .unwrap()
+                .is_empty()
+        );
+    }
+}
+
+fn mol2(bond: &str) -> String {
+    format!(
+        "@<TRIPOS>MOLECULE\nethane\n 2 1 0 0 0\nSMALL\nNO_CHARGES\n\n\
+         @<TRIPOS>ATOM\n\
+         \x20     1 C1         0.0000    0.0000    0.0000 C.3   1  UNL1  0.0000\n\
+         \x20     2 C2         1.5000    0.0000    0.0000 C.3   1  UNL1  0.0000\n\
+         @<TRIPOS>BOND\n     1 {bond} 1\n"
+    )
+}
+
+#[test]
+fn mol2_bonds_must_join_atoms() {
+    assert_eq!(
+        mol_from_mol2_block(&mol2("1 2")).unwrap().get_num_bonds(),
+        1
+    );
+    // RDKit 2024.09 requires only one end to be an atom, and 0 wraps.
+    for bond in ["1 3", "3 1", "0 2", "1 4294967295"] {
+        assert!(is_parse(mol_from_mol2_block(&mol2(bond))), "{bond}");
+    }
+    let path = common::temp_path("bad.mol2");
+    std::fs::write(&path, mol2("1 3")).unwrap();
+    assert!(is_parse(mol_from_mol2_file(&path)));
+    std::fs::write(&path, mol2("1 2")).unwrap();
+    assert_eq!(mol_from_mol2_file(&path).unwrap().get_num_atoms(), 2);
+}
+
+fn v3000(sgroups: usize, lines: &[&str]) -> String {
+    let mut text = format!(
+        "\n  RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n\
+         M  V30 BEGIN CTAB\nM  V30 COUNTS 3 2 {sgroups} 0 0\nM  V30 BEGIN ATOM\n\
+         M  V30 1 C 0 0 0 0\nM  V30 2 C 1.3 0 0 0\nM  V30 3 C 2.6 0 0 0\n\
+         M  V30 END ATOM\nM  V30 BEGIN BOND\nM  V30 1 1 1 2\nM  V30 2 1 2 3\n\
+         M  V30 END BOND\n"
+    );
+    if sgroups > 0 || !lines.is_empty() {
+        text += "M  V30 BEGIN SGROUP\n";
+        for line in lines {
+            text += &format!("M  V30 {line}\n");
+        }
+        text += "M  V30 END SGROUP\n";
+    }
+    text + "M  V30 END CTAB\nM  END\n"
+}
+
+#[test]
+fn v3000_substance_group_fields_need_their_values() {
+    let fine = v3000(
+        1,
+        &["1 SUP 0 ATOMS=(1 3) XBONDS=(1 2) LABEL=Me SAP=(3 3 2 1)"],
+    );
+    let mol = mol_from_mol_block(&fine).unwrap();
+    assert_eq!(get_mol_substance_groups(&mol).len(), 1);
+    let defaults = v3000(1, &["DEFAULT CLASS=x", "1 DAT 0 ATOMS=(1 1) FIELDNAME=a"]);
+    mol_from_mol_block(&defaults).unwrap();
+
+    for bad in [
+        // RDKit 2024.09 pops the last character of an empty attachment id.
+        "1 SUP 0 ATOMS=(1 3) SAP=(3 3 2)",
+        "1 SUP 0 ATOMS=(1 3) SAP=(",
+        // It leaves the external id, a CSTATE's count, a COMPNO, and an
+        // array's first value unset when there is nothing to read.
+        "1 DAT",
+        "1 SUP 0 CSTATE=(",
+        "1 DAT 0 CSTATE=(1",
+        "1 DAT 0 COMPNO=",
+        "1 DAT 0 ATOMS=(1",
+    ] {
+        assert!(is_value(mol_from_mol_block(&v3000(1, &[bad]))), "{bad}");
+    }
+    // The END SGROUP line is read as a group's when the count says two.
+    assert!(is_value(mol_from_mol_block(&v3000(
+        2,
+        &["1 DAT 0 ATOMS=(1 1)"]
+    ))));
+}
+
+#[test]
+fn v3000_refusals_reach_streams_cut_within_a_group_line() {
+    // A group line that crosses the scanner's 64 KiB chunks, with a short
+    // attachment point after the boundary: RDKit has read the line's start
+    // when the stream is refused, and must not parse it cut off.
+    let pad = "x".repeat(70_000);
+    let line = format!("1 SUP 0 ATOMS=(1 3) LABEL={pad} SAP=(3 3 2)");
+    let text = v3000(1, &[&line]) + "$$$$\n";
+    let path = common::temp_path("long_sgroup.sdf");
+    std::fs::write(&path, &text).unwrap();
+    let mut suppl = SDMolSupplier::new(&path).unwrap();
+    assert!(suppl.mols().all(|m| m.is_err()));
+    let mut forward = ForwardSDMolSupplier::new(&path).unwrap();
+    assert!(forward.mols().all(|m| m.is_err()));
+    assert!(is_value(mol_from_mol_file(&path)));
+}
+
+const BRIDGE_PDB: &str = "\
+HETATM    1  C1  UNL     1       0.000   0.000   0.000  1.00  0.00           C  \n\
+HETATM    2  H1  UNL     1       1.000   0.000   0.000  1.00  0.00           H  \n\
+HETATM    3  C2  UNL     1       2.050   0.000   0.000  1.00  0.00           C  \n\
+END\n";
+
+#[test]
+fn proximity_bonding_refuses_shared_hydrogens() {
+    // Proximity bonding would bond the hydrogen to both carbons, and RDKit
+    // 2024.09 removes one bond while it iterates over them.
+    assert!(is_value(mol_from_pdb_block(BRIDGE_PDB)));
+    let no_proximity = MolFromPDBBlockParams {
+        proximity_bonding: false,
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mol = mol_from_pdb_block_with_params(BRIDGE_PDB, &no_proximity).unwrap();
+    assert_eq!((mol.get_num_atoms(), mol.get_num_bonds()), (3, 0));
+}
+
+#[test]
+fn mcs_verbose_output_is_refused() {
+    let mols = [smiles("CCO"), smiles("CCN")];
+    let verbose = MCSParameters {
+        verbose: true,
+        ..Default::default()
+    };
+    assert!(is_value(find_mcs_with_params(&mols, &verbose)));
+    assert_eq!(find_mcs(&mols).unwrap().num_atoms(), 2);
+}
+
+#[test]
+fn zipping_with_coordinates_refuses_what_it_would_not_zip() {
+    let coords = MolzipParams {
+        generate_coordinates: true,
+        ..Default::default()
+    };
+    // RDKit zips one of two R groups of the same SMILES, and reads the
+    // other's atoms in the zipped molecule.
+    let mut repeated = [
+        smiles("c1ccc([*:1])cc1[*:2]"),
+        smiles("C[*:1]"),
+        smiles("C[*:1]"),
+    ];
+    assert!(is_value(molzip_fragments_with_params(
+        &mut repeated,
+        &coords
+    )));
+    let mut fine = [
+        smiles("c1ccc([*:1])cc1[*:2]"),
+        smiles("C[*:1]"),
+        smiles("N[*:2]"),
+    ];
+    let zipped = molzip_fragments_with_params(&mut fine, &coords)
+        .unwrap()
+        .unwrap();
+    assert_eq!(mol_to_smiles(&zipped).unwrap(), "Cc1cccc(N)c1");
+    assert_eq!(zipped.get_num_conformers(), 1);
+    let fragment_on_bonds = MolzipParams {
+        label: MolzipLabel::FragmentOnBonds,
+        ..coords
+    };
+    let mut two = [smiles("C[1*].[2*]C"), smiles("C[*:1]")];
+    assert!(is_value(molzip_fragments_with_params(
+        &mut two,
+        &fragment_on_bonds
+    )));
+}
+
+#[test]
+fn replacing_a_core_needs_the_neighbors_of_shared_atoms() {
+    // Core atoms 0 and 2 share molecule atom 0, and the match lacks their
+    // neighbor.
+    let (mol, core) = (smiles("CC"), smiles("CCC"));
+    assert!(is_value(replace_core(&mol, &core, &[(0, 0), (2, 0)])));
+}
+
+#[test]
+fn dropping_a_multithreaded_supplier_mid_read_is_safe() {
+    let block = mol_to_mol_block(&smiles("CCO")).unwrap() + "$$$$\n";
+    let path = common::temp_path("many.sdf");
+    std::fs::write(&path, block.repeat(2000)).unwrap();
+    let params = MultithreadedSDMolSupplierParams {
+        num_writer_threads: 4,
+        size_input_queue: 2,
+        size_output_queue: 2,
+        ..Default::default()
+    };
+    for _ in 0..20 {
+        let mut suppl = MultithreadedSDMolSupplier::new_with_params(&path, &params).unwrap();
+        suppl.mols().next().unwrap().unwrap();
+        drop(suppl);
+    }
+}

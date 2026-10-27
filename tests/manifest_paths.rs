@@ -1926,10 +1926,6 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rd_chem_reactions::reaction_to_smiles_with_params as _;
     use rdkit_cxx::chem::rd_chem_reactions::reaction_to_v3k_rxn_block as _;
     use rdkit_cxx::chem::rd_chem_reactions::reaction_to_v3k_rxn_block_with_separate_agents as _;
-    use rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block as _;
-    use rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block_with_params as _;
-    use rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file as _;
-    use rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file_with_params as _;
     use rdkit_cxx::chem::rd_chem_reactions::reduce_product_to_side_chains as _;
     use rdkit_cxx::chem::rd_chem_reactions::reduce_product_to_side_chains_with_add_dummy_atoms as _;
     use rdkit_cxx::chem::rd_chem_reactions::remove_mapping_numbers_from_reactions as _;

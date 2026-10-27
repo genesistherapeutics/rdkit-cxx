@@ -7,14 +7,17 @@
 
 #include <algorithm>
 #include <cctype>
+#include <charconv>
 #include <cstring>
 #include <fstream>
 #include <random>
+#include <set>
 #include <sstream>
 #include <utility>
 
 #include <RDGeneral/BadFileException.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/algorithm/string.hpp>
 
 namespace rdkit_cxx {
 
@@ -82,19 +85,329 @@ std::uint64_t siphash(const std::uint64_t key[2], const char *data,
   return v0 ^ v1 ^ v2 ^ v3;
 }
 
+// RDKit 2024.09's V3000 substance-group reader (ParseV3000SGroupsBlock and
+// ParseV3000ParseLabel in MolSGroupParsing.cpp) reads its fields with
+// operator>> and checks few of the reads: a read that finds nothing left
+// leaves its variable as it was, uninitialized for the group's sequence and
+// external ids, a CSTATE's count and bond, a COMPNO, and an array's first
+// value, and a SAP field read that way pops the last character of an empty
+// string. RDKit 2025.09 checks them (rdkit/rdkit#9417). These read a group's
+// line as RDKit does, field by field, and say whether RDKit would read such
+// a value. Where RDKit would stop reading the line (a check that throws, or
+// a lookup of an atom or bond that may), they read on, so they check at
+// least the fields RDKit reads.
+struct SGroupLimits {
+  unsigned atoms = 0;
+  unsigned bonds = 0;
+};
+
+// Whether a read with operator>> would find something: its sentry skips
+// whitespace and fails at the end (or on a failed stream), leaving the
+// variable unset.
+bool sgroup_readable(std::stringstream &s) {
+  if (!s.good()) {
+    return false;
+  }
+  s >> std::ws;
+  return s.good();
+}
+
+// As ParseV3000Array: false if its first value would be left unset.
+template <class T>
+bool sgroup_array(std::stringstream &s, int max) {
+  s.get();
+  unsigned count = 0;
+  s >> count;
+  if (max >= 0 && count > static_cast<unsigned>(max)) {
+    return true;  // RDKit returns before it reads values (non-strict)
+  }
+  for (unsigned i = 0; i < count; ++i) {
+    if (!sgroup_readable(s)) {
+      // Later reads keep the value an earlier one set.
+      if (i == 0) {
+        return false;
+      }
+      break;
+    }
+    T value;
+    s >> value;
+    if (s.fail()) {
+      break;  // a failed conversion sets 0, which later reads keep
+    }
+  }
+  s.get();
+  return true;
+}
+
+// As ParseV3000StringPropLabel, for the read alone.
+void sgroup_string(std::stringstream &s) {
+  auto next = s.peek();
+  if (next == ' ') {
+    return;
+  }
+  std::string value;
+  if (next == '"') {
+    s.get();
+    char chr;
+    while (s.get(chr)) {
+      if (chr == '"') {
+        if (s.peek() != '"') {
+          break;
+        }
+        s.get();
+      }
+    }
+  } else if (next == '\'') {
+    std::getline(s, value, '\'');
+  } else {
+    s >> value;
+  }
+}
+
+// As ParseV3000ParseLabel: an error, or empty.
+std::string sgroup_field(const std::string &label, std::stringstream &s,
+                         const std::string &type, const SGroupLimits &limits) {
+  const std::string bad = "a V3000 substance group's " + label + " field ";
+  if (label == "XBHEAD" || label == "XBCORR" || label == "CBONDS" ||
+      label == "XBONDS") {
+    if (!sgroup_array<unsigned>(s, static_cast<int>(limits.bonds))) {
+      return bad + "lists no value after its count";
+    }
+  } else if (label == "ATOMS" || label == "PATOMS") {
+    if (!sgroup_array<unsigned>(s, static_cast<int>(limits.atoms))) {
+      return bad + "lists no value after its count";
+    }
+  } else if (label == "BRKXYZ") {
+    if (!sgroup_array<double>(s, 9)) {
+      return bad + "lists no value after its count";
+    }
+  } else if (label == "CSTATE") {
+    s.get();
+    if (!sgroup_readable(s)) {
+      return bad + "has no count";
+    }
+    unsigned count = 0;
+    s >> count;
+    bool expected = type == "SUP" ? count == 4 : count == 1;
+    if (!sgroup_readable(s) && expected) {
+      return bad + "has no bond";
+    }
+    unsigned bond = 0;
+    s >> bond;
+    if (type == "SUP") {
+      double x, y, z;
+      s >> x >> y >> z;
+    }
+    s.get();
+  } else if (label == "SAP") {
+    s.get();
+    unsigned count = 0;
+    unsigned atom = 0;
+    std::string leaving;
+    std::string id;
+    s >> count >> atom >> leaving >> id;
+    if (id.empty()) {
+      return bad + "has fewer than four values";
+    }
+  } else if (label == "PARENT") {
+    if (!s.eof()) {
+      unsigned parent = 0;
+      s >> parent;
+    }
+  } else if (label == "COMPNO") {
+    if (!sgroup_readable(s)) {
+      return bad + "has no value";
+    }
+    unsigned compno = 0;
+    s >> compno;
+  } else {
+    sgroup_string(s);
+  }
+  return {};
+}
+
+// As the label loops of ParseV3000SGroupsBlock, non-strict (which reads on
+// past a separator other than a space only to stop): the labels it reads go
+// into `parsed`, and with `skip`, the defaults' labels in it are skipped as
+// RDKit skips them.
+std::string sgroup_labels(std::stringstream &s, const std::string &type,
+                          const SGroupLimits &limits,
+                          std::set<std::string> &parsed,
+                          const std::set<std::string> *skip) {
+  while (!s.eof() && !s.fail()) {
+    char spacer;
+    s.get(spacer);
+    if (s.gcount() == 0) {
+      continue;
+    }
+    if (spacer != ' ') {
+      return {};
+    }
+    std::string label;
+    std::getline(s, label, '=');
+    if (skip && skip->count(label)) {
+      auto next = s.peek();
+      std::string rest;
+      if (next == ' ') {
+        return {};
+      } else if (next == '(') {
+        std::getline(s, rest, ')');
+        s.get(spacer);
+      } else if (next == '"') {
+        s.get(spacer);
+        std::getline(s, rest, '"');
+      } else {
+        std::getline(s, rest, ' ');
+        s.putback(' ');
+      }
+      continue;
+    }
+    auto error = sgroup_field(label, s, type, limits);
+    if (!error.empty()) {
+      return error;
+    }
+    parsed.insert(label);
+  }
+  return {};
+}
+
+// A group's line, with its defaults' line (empty for none): an error, or
+// empty.
+std::string check_sgroup_line(const std::string &line,
+                              const std::string &defaults,
+                              const SGroupLimits &limits) {
+  std::stringstream s(line);
+  if (!sgroup_readable(s)) {
+    return "a V3000 substance group's line has no sequence id";
+  }
+  unsigned sequence = 0;
+  s >> sequence;
+  std::string type;
+  s >> type;
+  if (!sgroup_readable(s)) {
+    return "a V3000 substance group's line has no external id";
+  }
+  unsigned external = 0;
+  s >> external;
+  std::set<std::string> parsed;
+  auto error = sgroup_labels(s, type, limits, parsed, nullptr);
+  if (!error.empty()) {
+    return error;
+  }
+  std::stringstream d(defaults);
+  std::set<std::string> ignored;
+  return sgroup_labels(d, type, limits, ignored, &parsed);
+}
+
 }  // namespace
 
 bool InputScanner::fail(std::string why) {
   if (d_error.empty()) {
     d_error = std::move(why);
+    d_error_at = d_offset;
   }
   return false;
+}
+
+// Refuses the logical line from its first byte.
+bool InputScanner::fail_line(std::string why) {
+  if (d_error.empty()) {
+    d_error = std::move(why);
+    d_error_at = d_line_start;
+  }
+  return false;
+}
+
+bool InputScanner::within_sgroup_line(std::uint64_t pos) const {
+  // The lines are in order; find the last starting before pos.
+  auto it = std::upper_bound(
+      d_sgroup_lines.begin(), d_sgroup_lines.end(), pos,
+      [](std::uint64_t p, const std::pair<std::uint64_t, std::uint64_t> &l) {
+        return p <= l.first;
+      });
+  if (it == d_sgroup_lines.begin()) {
+    return false;
+  }
+  --it;
+  return pos > it->first && pos <= it->second;
+}
+
+// A logical V3000 line ended (or the input did, within one), with its
+// content in d_line: the CTAB counts, and the substance-group block, as
+// ParseV3000CTAB and ParseV3000SGroupsBlock read them.
+void InputScanner::end_logical_line() {
+  std::string upper = boost::to_upper_copy(d_line);
+  if (d_groups_left > 0) {
+    if (d_block_start && d_line.compare(0, 7, "DEFAULT") == 0 &&
+        d_line.size() > 8) {
+      d_defaults = boost::trim_right_copy(d_line.substr(7));
+    } else {
+      // The first group's line is not trimmed after no DEFAULT line.
+      std::string line = d_first_group && d_block_start
+                             ? d_line
+                             : boost::trim_right_copy(d_line);
+      auto error = check_sgroup_line(line, d_defaults, {d_atoms, d_bonds});
+      if (!error.empty()) {
+        fail_line(error + "; RDKit 2024.09 reads it unchecked");
+      }
+      --d_groups_left;
+      d_first_group = false;
+    }
+    d_block_start = false;
+  } else if (upper.compare(0, 7, "COUNTS ") == 0 && upper.size() >= 8) {
+    // As ParseV3000CTAB, with FileParserUtils::toUnsigned, which throws
+    // for a character other than a digit or "+" (stopping RDKit) and
+    // converts with std::from_chars, leaving 0 where it fails.
+    std::vector<std::string> counts;
+    auto trimmed = boost::trim_copy(upper.substr(7));
+    boost::split(counts, trimmed, boost::is_any_of(" \t"),
+                 boost::token_compress_on);
+    auto number = [&](std::size_t i) -> unsigned {
+      if (i >= counts.size()) {
+        return 0;
+      }
+      const auto &text = counts[i];
+      auto end = text.find('\0');
+      if (end == std::string::npos) {
+        end = text.size();
+      }
+      if (text.substr(0, end).find_first_not_of("0123456789+") !=
+          std::string::npos) {
+        return 0;
+      }
+      unsigned res = 0;
+      std::from_chars(text.data(), text.data() + text.size(), res);
+      return res;
+    };
+    d_atoms = number(0);
+    d_bonds = number(1);
+    d_sgroups = number(2);
+  } else if (d_sgroups > 0 && upper.compare(0, 12, "BEGIN SGROUP") == 0) {
+    d_groups_left = d_sgroups;
+    d_sgroups = 0;
+    d_block_start = true;
+    d_first_group = true;
+    d_defaults.clear();
+  }
+  d_line.clear();
+}
+
+void InputScanner::finish() {
+  if (!d_error.empty() || d_finished) {
+    return;
+  }
+  d_finished = true;
+  bool v30 = d_pos >= 7 && std::memcmp(d_head, kV30, 7) == 0;
+  if (v30 || d_continuing) {
+    end_line();
+  }
 }
 
 // A byte of the logical V3000 line, known not to be the line's trailing "\r"
 // or continuation "-". RDKit upper-cases the joined line before matching it.
 void InputScanner::confirm(char c) {
   ++d_logical;
+  d_line += c;
   if (d_prefix.size() < kStereoGroupPrefix) {
     d_prefix += static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
   }
@@ -201,6 +514,19 @@ void InputScanner::end_line() {
     if (d_end_points == EndPoints::kStart) {
       fail(kBadEndPoints);
     }
+    if (!d_sgroup_lines.empty() && d_sgroup_lines.back().second == UINT64_MAX) {
+      d_sgroup_lines.back().second = d_offset;
+    }
+    if (v30) {
+      end_logical_line();
+    } else {
+      // RDKit reads a CTAB's lines as V3000 lines, throwing at any other,
+      // so one ends what it was reading.
+      d_line.clear();
+      d_sgroups = 0;
+      d_groups_left = 0;
+      d_block_start = false;
+    }
     d_logical = 0;
     d_prefix.clear();
     d_end_points = EndPoints::kKey;
@@ -214,6 +540,12 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
   }
   for (std::size_t i = 0; i < n; ++i) {
     char c = bytes[i];
+    if (d_pos == 0 && !d_continuing) {
+      d_line_start = d_offset;
+      if (d_groups_left > 0) {
+        d_sgroup_lines.emplace_back(d_offset, UINT64_MAX);
+      }
+    }
     if (c == '\n') {
       end_line();
       if (++d_lines > kMaxInputLines) {
@@ -223,6 +555,7 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
       if (!d_error.empty()) {
         return i;
       }
+      ++d_offset;
       continue;
     }
     if (d_pos < 7) {
@@ -241,6 +574,7 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
       }
     }
     ++d_pos;
+    ++d_offset;
   }
   return n;
 }
@@ -248,6 +582,10 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
 void check_input_text(std::string_view text) {
   InputScanner scanner;
   if (scanner.feed(text.data(), text.size()) < text.size()) {
+    throw ValueErrorException(scanner.error());
+  }
+  scanner.finish();
+  if (!scanner.error().empty()) {
     throw ValueErrorException(scanner.error());
   }
 }
@@ -278,17 +616,30 @@ void CheckedStreambuf::refuse(const std::string &why, std::uint64_t at) {
   d_error = why;
 }
 
-// RDKit asked for a byte it may not have. The stream stays failed.
-CheckedStreambuf::int_type CheckedStreambuf::hit() {
-  d_failed.store(true, std::memory_order_release);
+// The failed stream ends where RDKit reads, at `pos`: after kSGroupSuffix
+// if that is within a substance group's line (InputScanner), which RDKit
+// would otherwise parse cut off.
+CheckedStreambuf::int_type CheckedStreambuf::end_at(std::uint64_t pos) {
+  if (!d_suffixed && d_scanner.within_sgroup_line(pos)) {
+    d_suffixed = true;
+    std::memcpy(d_suffix, kSGroupSuffix, sizeof(kSGroupSuffix));
+    setg(d_suffix, d_suffix, d_suffix + sizeof(kSGroupSuffix) - 1);
+    return traits_type::to_int_type(*gptr());
+  }
   setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
   return traits_type::eof();
 }
 
-void CheckedStreambuf::changed() {
+// RDKit asked for a byte it may not have, at `pos`. The stream stays failed.
+CheckedStreambuf::int_type CheckedStreambuf::hit(std::uint64_t pos) {
+  d_failed.store(true, std::memory_order_release);
+  return end_at(pos);
+}
+
+CheckedStreambuf::int_type CheckedStreambuf::changed(std::uint64_t pos) {
   refuse("the input changed while RDKit read it", 0);
   d_failed.store(true, std::memory_order_release);
-  setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
+  return end_at(pos);
 }
 
 // Reads chunk `chunk` into the buffer, up to the chunk's end or the source's.
@@ -344,14 +695,21 @@ bool CheckedStreambuf::fill(std::uint64_t chunk) {
     std::size_t fresh = d_have - seen;
     auto ok = d_scanner.feed(d_buffer.get() + seen, fresh);
     d_scanned += ok;
-    if (ok < fresh) {
-      refuse(d_scanner.error(), d_scanned);
+    if (!d_scanner.error().empty()) {
+      refuse(d_scanner.error(), d_scanner.error_at());
     }
     if (d_scanned == base + kChunk) {
       d_hashes.push_back(siphash(d_key, d_buffer.get(), kChunk));
     } else {
       d_tail_hash = siphash(d_key, d_buffer.get(),
                             static_cast<std::size_t>(d_scanned - base));
+    }
+  }
+  if (d_have < kChunk && d_scanned == base + d_have && d_scanned < d_limit) {
+    // The source ended: RDKit reads the line it ends in.
+    d_scanner.finish();
+    if (!d_scanner.error().empty()) {
+      refuse(d_scanner.error(), d_scanner.error_at());
     }
   }
   return true;
@@ -368,29 +726,31 @@ CheckedStreambuf::int_type CheckedStreambuf::underflow() {
       d_offset + static_cast<std::uint64_t>(egptr() - eback());
   d_offset = pos;
   setg(d_buffer.get(), d_buffer.get(), d_buffer.get());
+  if (d_stopped.load(std::memory_order_acquire)) {
+    refuse("the reader was stopped", pos);
+    return hit(pos);
+  }
   const std::uint64_t chunk = pos / kChunk;
   // First scan the chunks before it that a seek skipped.
   for (std::uint64_t c = d_scanned / kChunk; c < chunk && d_scanned < d_limit;
        ++c) {
     if (!fill(c)) {
-      changed();
-      return traits_type::eof();
+      return changed(pos);
     }
     if (d_have < kChunk) {
       return traits_type::eof();  // the source ends before pos
     }
   }
   if (pos >= d_limit) {
-    return hit();
+    return hit(pos);
   }
   if (!fill(chunk)) {
-    changed();
-    return traits_type::eof();
+    return changed(pos);
   }
   const std::uint64_t base = chunk * kChunk;
   const std::uint64_t end = std::min(base + d_have, d_limit);
   if (pos >= end) {
-    return pos >= d_limit ? hit() : traits_type::eof();
+    return pos >= d_limit ? hit(pos) : traits_type::eof();
   }
   d_offset = base;
   setg(d_buffer.get(), d_buffer.get() + (pos - base),
@@ -439,7 +799,7 @@ CheckedStreambuf::pos_type CheckedStreambuf::seekoff(
     auto end = d_source->pubseekoff(0, std::ios_base::end, std::ios_base::in);
     if (end != pos_type(off_type(-1))) {
       if (static_cast<std::uint64_t>(off_type(end)) < d_least_end) {
-        changed();
+        changed(0);
         return moved(pos_type(off_type(-1)));
       }
       d_least_end = static_cast<std::uint64_t>(off_type(end));

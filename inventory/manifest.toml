@@ -7188,11 +7188,11 @@ name_exception = "V3K is one word: reaction_to_v3k_rxn_block"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionsFromCDXMLBlock"
-rust = ["rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block", "rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_block_with_params"]
+reason = "not bound: RDKit 2024.09 reads reactions from CDXML with its molecule parser (FileParsers/CDXMLParser.cpp, over Boost.PropertyTree), which reads atoms of fragments it has already freed (a use-after-free under valgrind) and is not audited for the rest of the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReactionsFromCDXMLFile"
-rust = ["rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file", "rdkit_cxx::chem::rd_chem_reactions::reactions_from_cdxml_file_with_params"]
+reason = "not bound: RDKit 2024.09 reads reactions from CDXML with its molecule parser (FileParsers/CDXMLParser.cpp, over Boost.PropertyTree), which reads atoms of fragments it has already freed (a use-after-free under valgrind) and is not audited for the rest of the input it trusts (U1)"
 
 [[entry]]
 python = "rdkit.Chem.rdChemReactions.ReduceProductToSideChains"

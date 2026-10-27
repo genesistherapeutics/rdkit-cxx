@@ -44,7 +44,6 @@ pub(crate) mod ffi {
         type O3AHolder;
         type O3AList;
 
-
         #[allow(clippy::too_many_arguments)]
         fn get_alignment_transform(
             prb_mol: &RWMol,

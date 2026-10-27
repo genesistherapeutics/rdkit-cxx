@@ -447,8 +447,9 @@ fn multithreaded_sd_supplier() {
     let mut early = MultithreadedSDMolSupplier::new(&path).unwrap();
     early.mols().next().unwrap().unwrap();
     drop(early);
+    // RDKit 2024.09 reads the empty text as one record, which is no molecule.
     let mut empty = MultithreadedSDMolSupplier::default();
-    assert_eq!(empty.mols().count(), 0);
+    assert!(empty.mols().all(|m| m.is_err()));
 }
 
 #[test]

@@ -53,3 +53,9 @@ pub(crate) mod ffi {
         ) -> Result<Vec<f64>>;
     }
 }
+
+// SAFETY: a ShapeInput is plain data (vectors, a map and numbers), which the
+// wrappers only read through const references or change through an
+// exclusive one.
+unsafe impl Send for ffi::PubChemShapeInput {}
+unsafe impl Sync for ffi::PubChemShapeInput {}

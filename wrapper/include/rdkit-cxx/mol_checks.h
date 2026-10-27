@@ -83,7 +83,12 @@ class DescriptorCacheGuard {
 // - RDKit takes a monomer info's type for its class and casts an info of
 //   type PDBRESIDUE to AtomPDBResidueInfo, so only one of those may have it
 //   (CONVENTIONS.md U10). A pickle can give an atom a plain info of that
-//   type, or a type AtomMonomerType lacks.
+//   type, or a type AtomMonomerType lacks. (RDKit 2024.09's reader, 16.2,
+//   refuses an unknown type and always makes a PDBRESIDUE info an
+//   AtomPDBResidueInfo; the check stays for the formats that carry pickles.)
+// - RDKit 2024.09's StereoGroup, unlike 2026.03's, keeps an atom or bond a
+//   pickle lists twice in a group, and RWMol::removeAtom then leaves the
+//   group pointing at the deleted atom.
 // - MolPickler casts the bytes it reads for atoms' chiral tags and
 //   hybridizations, bonds' types, directions, and stereo, and stereo
 //   groups' types to the enums unchecked, and the Rust enums have no
@@ -101,7 +106,9 @@ void check_pickled_mol(const RDKit::ROMol &mol);
 // the sizes of their atom and bond lists, and the bonds both name. A
 // truncated size leaves MolPickler's reader taking the rest of the list for
 // the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
-// writes a pickle it cannot read. Throws ValueErrorException for any of
+// writes a pickle it cannot read. Likewise it counts the properties of the
+// molecule, each conformer, atom, bond and substance group in two bytes, so
+// none may have more than 65535. Throws ValueErrorException for any of
 // these, in the molecule or in the molecules of its recursive queries, which
 // RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
 // inside another format, calls it on the molecules it pickles.
@@ -148,10 +155,37 @@ void check_bond_end_points(const RDKit::ROMol &mol);
 constexpr unsigned MAX_PARENT_CHAIN = 4000;
 void check_substance_group_parents(const RDKit::ROMol &mol);
 
+// RDKit 2024.09's RWMol::removeBond and batchRemoveBonds leave the stereo
+// groups that hold the bond pointing at it, deleted (RDKit 2025.09 takes it
+// out of them, rdkit/rdkit#8558), for copying, pickling, and the writers to
+// read. An atom's removal removes its bonds so, and then drops every group
+// left with no atoms, bonds or not. So a group's bond dangles after a removal
+// when the group keeps an atom. RDKit 2024.09's groups may also list an
+// atom twice, and a removal takes out one copy; every kind but Guarded
+// refuses such a group. What a wrapper's RDKit call removes says which
+// molecules check_removals refuses for it (Error::Value):
+enum class Removes {
+  // Atoms or bonds, any of them: a molecule with a group that holds a bond.
+  Anything,
+  // Whole fragments, from copies of the molecule (getMolFrags, and the
+  // SMILES writer for a molecule of several fragments): a group that holds
+  // a bond and an atom of another fragment.
+  Fragments,
+  // Hydrogen atoms (removeHs): a group that holds a bond to a hydrogen and
+  // an atom.
+  Hydrogens,
+  // Both of these.
+  FragmentsAndHydrogens,
+  // What the wrapper itself guards (StereoGroupRemovalGuard), or nothing a
+  // group can hold.
+  Guarded,
+};
+
 // What RWMol trusts in a molecule when a wrapper's RDKit call removes atoms or
-// bonds from it (or a copy): check_bond_end_points and
-// check_substance_group_parents.
-void check_removals(const RDKit::ROMol &mol);
+// bonds from it (or a copy): check_bond_end_points,
+// check_substance_group_parents, and the stereo groups, as `removes` says.
+void check_removals(const RDKit::ROMol &mol,
+                    Removes removes = Removes::Anything);
 
 // As check_removals, for an RDKit call that combines the molecules
 // (insertMol, combineMols) and then removes atoms or bonds: RDKit does not
@@ -161,7 +195,8 @@ void check_removals(const RDKit::ROMol &mol);
 // (molzip leaves out fragments whose SMILES repeat), so this follows every
 // group with the PARENT's index, and refuses a cycle or a chain longer than
 // MAX_PARENT_CHAIN through any of them.
-void check_removals(const std::vector<const RDKit::ROMol *> &mols);
+void check_removals(const std::vector<const RDKit::ROMol *> &mols,
+                    Removes removes = Removes::Anything);
 
 // RWMol::replaceBond deletes the bond it replaces but, unlike replaceAtom,
 // leaves the molecule's stereo groups (an atropisomer's group holds its bond)
@@ -210,6 +245,45 @@ class StereoGroupBondGuard {
   RDKit::ROMol &d_mol;
   // Each group's bond indices; empty when no group held a bond.
   std::vector<std::vector<unsigned>> d_bonds;
+};
+
+// RDKit 2024.09's proximity bonding (ConnectTheDots_Large in
+// ProximityBonds.cpp, which the PDB reader and determineConnectivity run)
+// then cuts all but one bond of each hydrogen with more, removing them while
+// it iterates over the hydrogen's neighbors, past the end of the edges left
+// (RDKit 2026.03 removes them in a batch, rdkit/rdkit#9444). This bonds the
+// molecule's first conformer as RDKit does, from its bonds (or none, with
+// `without_bonds`), and throws ValueErrorException if a hydrogen would have
+// several. Its coordinates must be checked first (within 1e7).
+void check_proximity_hydrogens(const RDKit::ROMol &mol, bool without_bonds);
+
+// For the wrappers' own removals from a molecule (RWMol's removeAtom,
+// removeBond, and commitBatchEdit), as RDKit 2025.09 makes them: takes the
+// molecule's stereo groups out when it is made, so none is left pointing at
+// an atom or bond RDKit deletes, and when it is destroyed, even when the
+// call throws, rebuilds each group from its atoms and bonds still in the
+// molecule, dropping a group left with neither; a group that listed an atom
+// twice, which removeAtom would take out once, lists it once. The molecule
+// has no groups during the call. It finds them by a private
+// property it sets on each, since the removals renumber atoms and bonds.
+class StereoGroupRemovalGuard {
+ public:
+  explicit StereoGroupRemovalGuard(RDKit::RWMol &mol);
+  ~StereoGroupRemovalGuard();
+  StereoGroupRemovalGuard(const StereoGroupRemovalGuard &) = delete;
+  StereoGroupRemovalGuard &operator=(const StereoGroupRemovalGuard &) = delete;
+
+ private:
+  struct Group {
+    RDKit::StereoGroupType type;
+    unsigned read_id;
+    unsigned write_id;
+    std::vector<unsigned> atoms;
+    std::vector<unsigned> bonds;
+  };
+  RDKit::RWMol &d_mol;
+  // Empty when no group held a bond.
+  std::vector<Group> d_groups;
 };
 
 }  // namespace rdkit_cxx

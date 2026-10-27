@@ -329,7 +329,11 @@ pub fn get_best_rms_with_params(
         reflect: false,
         max_iters: 50,
     };
-    Ok(ffi::get_best_rms(prb_mol.pin_mut(), ref_mol.as_ffi(), &data)?)
+    Ok(ffi::get_best_rms(
+        prb_mol.pin_mut(),
+        ref_mol.as_ffi(),
+        &data,
+    )?)
 }
 
 /// The best RMSD between each pair of the molecule's conformers, in the

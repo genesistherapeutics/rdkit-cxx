@@ -308,7 +308,7 @@ std::unique_ptr<SmilesWriter> smiles_writer_from_writer(
 // The SMILES and TDT writers write SMILES (mol_to_smiles).
 void smiles_writer_write(SmilesWriter &w, const RWMol &mol,
                          std::int32_t conf_id) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 
@@ -349,7 +349,7 @@ std::unique_ptr<TDTWriter> tdt_writer_from_writer(
 }
 
 void tdt_writer_write(TDTWriter &w, const RWMol &mol, std::int32_t conf_id) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 
@@ -481,9 +481,19 @@ void check_mae(const RWMol &mol, const RDKit::STR_VECT &props) {
   }
 }
 
+// RDKit 2024.09's MaeWriter(std::shared_ptr<std::ostream>) checks the
+// pointer it has just moved from, and always fails; MaeWriter(std::ostream *)
+// takes ownership of its stream, and deletes it when it closes. So it gets a
+// stream of its own over the output's buffer, which `source` keeps alive
+// past the writer, and the output's checks read that stream until the
+// writer closes (mae_writer_close), then the source.
 std::unique_ptr<MaeWriter> make_mae_writer(WriterOutput out) {
   auto w = std::make_unique<MaeWriter>();
-  w->writer = std::make_unique<RDKit::MaeWriter>(out.stream);
+  auto *stream = new std::ostream(out.stream->rdbuf());
+  w->source = out.stream;
+  // The writer deletes the stream, even when its constructor throws.
+  w->writer = std::make_unique<RDKit::MaeWriter>(stream);
+  out.stream = std::shared_ptr<std::ostream>(stream, [](std::ostream *) {});
   w->out = std::move(out);
   return w;
 }
@@ -510,7 +520,24 @@ void mae_writer_write(MaeWriter &w, const RWMol &mol, std::int32_t conf_id) {
 
 void mae_writer_flush(MaeWriter &w) { flush_writer(w); }
 
-void mae_writer_close(MaeWriter &w) { close_writer(w); }
+// As close_writer, but the writer deletes its stream as it closes, so the
+// output's checks read the source from then on.
+void mae_writer_close(MaeWriter &w) {
+  w.out.check();
+  try {
+    w.writer->close();
+  } catch (...) {
+    w.out.stream = w.source;
+    w.out.check();
+    throw;
+  }
+  w.out.stream = w.source;
+  checked(w, [&] {
+    if (w.out.file && w.out.file->is_open()) {
+      w.out.file->close();
+    }
+  });
+}
 
 std::uint32_t mae_writer_num_mols(const MaeWriter &w) {
   return w.writer->numMols();

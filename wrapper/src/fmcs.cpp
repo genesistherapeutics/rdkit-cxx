@@ -392,7 +392,16 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   params.MaximizeBonds = data.maximize_bonds;
   params.Threshold = data.threshold;
   params.Timeout = data.timeout;
-  params.Verbose = data.verbose;
+  // RDKit 2024.09's verbose output reports the first bond of each MCS it
+  // finds, read from a list that is empty for an MCS of one atom, and
+  // matches the result's query against each target, null when StoreAll
+  // finds several (RDKit 2026.03 checks both, rdkit/rdkit#9040).
+  if (data.verbose) {
+    throw ValueErrorException(
+        "Verbose is not supported: RDKit 2024.09's verbose output reads past "
+        "an empty bond list and through a null query");
+  }
+  params.Verbose = false;
   params.AtomCompareParameters =
       atom_params_from_data(data.atom_compare_parameters);
   params.BondCompareParameters =

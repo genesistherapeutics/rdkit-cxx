@@ -302,6 +302,8 @@ void check_connectivity(const RWMol &mol, bool use_hueckel, std::int32_t charge,
     check_matrix_size(mol);
   } else {
     check_proximity_coordinates(mol);
+    // determineConnectivity removes every bond first.
+    check_proximity_hydrogens(mol, true);
   }
 }
 

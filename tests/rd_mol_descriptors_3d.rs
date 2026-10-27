@@ -866,8 +866,10 @@ fn double_cubic_lattice_volume_checks() {
     )));
     // RDKit casts scaled probe radii and coordinates to grid indices.
     for bad in [f64::NAN, f64::INFINITY, 1e7] {
-        let mut p = DoubleCubicLatticeVolumeParams::default();
-        p.probe_radius = bad;
+        let p = DoubleCubicLatticeVolumeParams {
+            probe_radius: bad,
+            ..Default::default()
+        };
         assert!(value(DoubleCubicLatticeVolume::new_with_params(&mol, &p)));
     }
     let mut far = apap();

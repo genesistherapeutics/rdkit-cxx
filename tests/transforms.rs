@@ -271,9 +271,11 @@ fn fragment_bonds() {
         fragment_on_bonds(&mol, &[]),
         Err(Error::Value { .. })
     ));
+    // RDKit 2024.09 reads a repeated bond after removing it (Python's
+    // RuntimeError comes from reading it), so the wrapper refuses it first.
     assert!(matches!(
         fragment_on_bonds(&mol, &[1, 1]),
-        Err(Error::Runtime { .. })
+        Err(Error::Value { .. })
     ));
     assert!(matches!(
         fragment_on_bonds(&mol, &[3]),

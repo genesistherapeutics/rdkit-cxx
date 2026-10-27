@@ -221,7 +221,7 @@ void tautomer_enumerator_clear_callback(TautomerEnumerator &enumerator) {
 // (check_removals).
 std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   HoldControlC control_c;
   return std::make_unique<TautomerEnumeratorResult>(enumerator.enumerate(mol));
 }
@@ -231,7 +231,7 @@ std::unique_ptr<TautomerEnumeratorResult> tautomer_enumerator_enumerate(
 std::unique_ptr<RWMol> tautomer_enumerator_canonicalize(
     const TautomerEnumerator &enumerator, const RWMol &mol) {
   check_tautomer_score(mol);
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   HoldControlC control_c;
   return adopt_mol(enumerator.canonicalize(mol));
 }
@@ -239,7 +239,7 @@ std::unique_ptr<RWMol> tautomer_enumerator_canonicalize(
 std::unique_ptr<RWMol> tautomer_enumerator_canonicalize_with(
     const TautomerEnumerator &enumerator, const RWMol &mol,
     const ScoreFunction &score) {
-  check_removals(mol);
+  check_removals(mol, Removes::Fragments);
   HoldControlC control_c;
   return adopt_mol(enumerator.canonicalize(mol, scorer(score)));
 }
@@ -251,7 +251,7 @@ std::vector<RDKit::ROMOL_SPTR> &tautomers(BorrowedMols &mols) {
     throw ValueErrorException("no tautomers to pick from");
   }
   for (const auto &mol : mols.mols()) {
-    check_removals(*mol);
+    check_removals(*mol, Removes::Fragments);
   }
   return mols.mols();
 }

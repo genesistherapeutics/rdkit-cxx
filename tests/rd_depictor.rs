@@ -784,3 +784,21 @@ fn depiction_settings_hold_for_a_whole_call_across_threads() {
     });
     assert!(!get_prefer_coord_gen());
 }
+
+#[test]
+fn coord_gen_refuses_double_bond_stereo_without_stereo_atoms() {
+    let _settings = settings();
+    // RDKit 2024.09's CoordGen reads a Z double bond's two stereo atoms
+    // from an empty list (RDKit 2025.03 skips such a bond).
+    let mut mol = smiles("C=C1C=CC(=O)CC1");
+    mol.get_bond_with_idx_mut(0)
+        .unwrap()
+        .set_stereo(rdkit_cxx::chem::BondStereo::Stereoz);
+    set_prefer_coord_gen(true);
+    let refused = compute_2d_coords(&mut mol);
+    let mut plain = smiles("C=C1C=CC(=O)CC1");
+    let fine = compute_2d_coords(&mut plain);
+    set_prefer_coord_gen(false);
+    assert!(is_value_error(refused, "fewer than two stereo atoms"));
+    fine.unwrap();
+}

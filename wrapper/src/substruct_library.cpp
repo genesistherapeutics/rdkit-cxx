@@ -50,7 +50,7 @@ void check_smiles_holder_removals(const RDKit::MolHolderBase &holder,
                                   const RDKit::ROMol &mol) {
   if (dynamic_cast<const CachedSmilesMolHolder *>(&holder) ||
       dynamic_cast<const CachedTrustedSmilesMolHolder *>(&holder)) {
-    check_removals(mol);
+    check_removals(mol, Removes::Fragments);
   }
 }
 

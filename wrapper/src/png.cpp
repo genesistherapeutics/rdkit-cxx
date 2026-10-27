@@ -152,7 +152,7 @@ rust::Vec<std::uint8_t> mol_to_png(const RWMol &mol, const std::string &png,
   }
   if (data.include_smiles) {
     // The SMILES writer removes atoms from copies (mol_to_smiles).
-    check_removals(mol);
+    check_removals(mol, Removes::Fragments);
   }
   // The mol block computes 2D coordinates for a molecule without a
   // conformer, with compute2DCoords, which trusts the molecule

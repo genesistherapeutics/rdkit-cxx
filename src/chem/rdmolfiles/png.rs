@@ -15,9 +15,7 @@ use std::path::Path;
 
 use cxx::UniquePtr;
 
-use crate::chem::{
-    Mol, SmilesParserParams,
-};
+use crate::chem::{Mol, SmilesParserParams};
 use crate::error::expect_ok;
 use crate::ffi::molops::ffi as molops;
 use crate::ffi::png::ffi;

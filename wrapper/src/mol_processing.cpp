@@ -5,10 +5,13 @@
 
 #include "rdkit-cxx/mol_processing.h"
 
+#include <cstdio>
+#include <cstdlib>
 #include <map>
 #include <mutex>
 #include <streambuf>
 #include <string>
+#include <system_error>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -25,6 +28,7 @@
 #endif
 
 #include "rdkit-cxx/control_c_lock.h"
+#include "rdkit-cxx/drained_supplier.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/mol_processing.rs.h"
 #include "rdkit-cxx/mol_checks.h"
@@ -339,6 +343,23 @@ Fingerprints run(const std::string &path, const Gen &gen,
                ? read_in_threads_fingerprint_here(in, suppl, fp)
                : read_in_threads(in, suppl, fp, mutex, by_record);
   };
+  // When the system refuses one of the supplier's threads, the output
+  // queue never ends (mt_next in suppliers.cpp), so its destructor would
+  // wait forever (DrainedSupplier), and the threads that did start run
+  // callbacks that write this call's state. Nothing can stop them, so the
+  // process ends.
+  auto read_threaded_or_abort = [&](auto suppl, std::mutex &mutex,
+                                   ByRecord &by_record) {
+    try {
+      return read_threaded(*suppl, mutex, by_record);
+    } catch (const std::system_error &e) {
+      std::fprintf(stderr,
+                   "rdkit-cxx: a molecule processing thread could not be "
+                   "started (%s); RDKit 2024.09 cannot stop the others\n",
+                   e.what());
+      std::abort();
+    }
+  };
 
   FP::MultithreadedMolSupplier::Parameters params;
   params.numWriterThreads = num_threads;
@@ -355,10 +376,11 @@ Fingerprints run(const std::string &path, const Gen &gen,
     parse_params.strictParsing = options.strictParsing;
     if (threaded) {
       auto suppl = checked(in, [&] {
-        return std::make_unique<FP::MultithreadedSDMolSupplier>(
-            in.stream(), false, params, parse_params);
+        return std::make_unique<
+            DrainedSupplier<FP::MultithreadedSDMolSupplier>>(
+            StopOn{in.checked.get()}, in.stream(), false, params, parse_params);
       });
-      return read_threaded(*suppl, mutex, by_record);
+      return read_threaded_or_abort(std::move(suppl), mutex, by_record);
     }
     auto suppl = checked(in, [&] {
       return std::make_unique<FP::ForwardSDMolSupplier>(in.stream(), false,
@@ -387,10 +409,11 @@ Fingerprints run(const std::string &path, const Gen &gen,
   parse_params.parseParameters.sanitize = options.sanitize;
   if (threaded) {
     auto suppl = checked(in, [&] {
-      return std::make_unique<FP::MultithreadedSmilesMolSupplier>(
-          in.stream(), false, params, parse_params);
+      return std::make_unique<
+            DrainedSupplier<FP::MultithreadedSmilesMolSupplier>>(
+          StopOn{in.checked.get()}, in.stream(), false, params, parse_params);
     });
-    return read_threaded(*suppl, mutex, by_record);
+    return read_threaded_or_abort(std::move(suppl), mutex, by_record);
   }
   auto suppl = checked(in, [&] {
     return std::make_unique<FP::SmilesMolSupplier>(in.stream(), false,

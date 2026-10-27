@@ -8,11 +8,12 @@
 // rdMolInterchange: molecules to and from RDKit's JSON (commonchem and
 // rdkitjson).
 //
-// RDKit's JSON parser (MolInterchange/Parser.cpp) trusts the indices, counts,
-// and query trees it reads, and no fuzzer covers it, so the wrapper parses
-// the JSON itself first, with the same boost::json parser, checks what RDKit
-// would trust (check_json_document in mol_interchange.cpp), and hands RDKit
-// the checked document (CONVENTIONS.md U2).
+// RDKit's JSON parser (MolInterchange/Parser.cpp) trusts the types, indices,
+// counts, and query trees it reads, and no fuzzer covers it, so the wrapper
+// parses the JSON itself first, with boost::json (RDKit 2024.09 reads with
+// rapidjson, which it does not install), checks what RDKit would trust
+// (DocumentChecker in mol_interchange.cpp), and hands RDKit the checked
+// document, serialized again (CONVENTIONS.md U2).
 
 #pragma once
 
@@ -33,7 +34,9 @@ JSONParseParametersData json_parse_parameters_default();
 JSONWriteParametersData json_write_parameters_default();
 
 // As JSONDataToMols, after the checks. Malformed JSON (boost::json's
-// errors and RDKit's FileParseException) is a FileParseException.
+// errors and RDKit's FileParseException) is a FileParseException; a value
+// RDKit would read unchecked as another type, or an index it trusts, is a
+// ValueErrorException.
 std::unique_ptr<MolList> json_to_mols(rust::Str json_block,
                                       const JSONParseParametersData &params);
 std::unique_ptr<std::string> mol_to_json(const RWMol &mol,

@@ -72,6 +72,10 @@ class PDBWriter {
 
 class MaeWriter {
  public:
+  // The stream the output was opened as, which owns its buffer; until the
+  // writer closes, `out` holds the writer's own stream over it
+  // (make_mae_writer).
+  std::shared_ptr<std::ostream> source;
   WriterOutput out;
   std::unique_ptr<RDKit::MaeWriter> writer;
   // The properties setProps gave the writer, which its checks need.

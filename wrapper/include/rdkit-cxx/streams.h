@@ -27,6 +27,17 @@
 //   spaces and a ")" that ends the token. Only a bond block reads ENDPTS, and
 //   RDKit reads an END BOND line after it, so input that ends (or is cut
 //   off) before a value is checked is never parsed as a molecule.
+// - RDKit 2024.09 reads a V3000 substance group's fields with operator>>,
+//   unchecked, so a field with too few values leaves variables
+//   uninitialized and pops the last character of an empty string
+//   (check_sgroup_line in streams.cpp). Each line RDKit reads as a group's
+//   (the first nSgroups lines after a BEGIN SGROUP line, after a DEFAULT
+//   line, with the counts of the CTAB's COUNTS line) is read as RDKit reads
+//   it when it ends, and a line that would be refused is refused from its
+//   start. RDKit parses whatever line the input ends in, so when a refusal
+//   leaves RDKit within such a line, the stream first delivers
+//   kSGroupSuffix, which gives every field RDKit may then read its values,
+//   and only then reads as end of file.
 //
 // A CheckedStreambuf scans the bytes of its source in order, once each, and
 // stops delivering them (reading as end of file) before the first byte that
@@ -45,6 +56,7 @@
 #include <streambuf>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace rdkit_cxx {
@@ -53,6 +65,9 @@ namespace rdkit_cxx {
 constexpr std::uint64_t kMaxInputLines = (std::uint64_t{1} << 31) - (1 << 20);
 // The longest V3000 enhanced-stereo line, in characters after "M  V30 ".
 constexpr std::uint64_t kMaxStereoGroupLine = 4000;
+// What a refused stream delivers within a substance group's line: four
+// values, each of them a number, for whatever field RDKit is reading.
+constexpr char kSGroupSuffix[] = " 0 0 0 0";
 
 // Scans text in order, one byte at a time across calls.
 class InputScanner {
@@ -61,16 +76,47 @@ class InputScanner {
   // the bytes before the first that breaks one, after which error() says
   // why).
   std::size_t feed(const char *bytes, std::size_t n);
+  // The input ended: checks the line it ends in, as RDKit reads it.
+  void finish();
   const std::string &error() const { return d_error; }
+  // Where the input is refused from: the first byte of the line that broke
+  // a limit, or the byte that did.
+  std::uint64_t error_at() const { return d_error_at; }
+  // Whether `pos` falls after the start of a line RDKit reads as a
+  // substance group's.
+  bool within_sgroup_line(std::uint64_t pos) const;
 
  private:
   void end_line();
+  void end_logical_line();
   void confirm(char c);
   void end_points(char c);
   bool fail(std::string why);
+  bool fail_line(std::string why);
+  bool d_finished = false;
 
   std::string d_error;
+  std::uint64_t d_error_at = 0;
+  // The bytes scanned so far.
+  std::uint64_t d_offset = 0;
   std::uint64_t d_lines = 0;
+  // The logical V3000 line's content as RDKit reads it, and where its first
+  // physical line starts.
+  std::string d_line;
+  std::uint64_t d_line_start = 0;
+  // The CTAB counts last read, and the substance-group block: whether the
+  // next line may be its DEFAULT line, its defaults, and how many group
+  // lines are left (0 outside one).
+  unsigned d_atoms = 0;
+  unsigned d_bonds = 0;
+  unsigned d_sgroups = 0;
+  bool d_block_start = false;
+  bool d_first_group = false;
+  std::string d_defaults;
+  std::uint64_t d_groups_left = 0;
+  // The lines RDKit reads as groups', from their first byte to their last
+  // newline (UINT64_MAX while open).
+  std::vector<std::pair<std::uint64_t, std::uint64_t>> d_sgroup_lines;
   // The physical line being read: its length so far, its first seven bytes,
   // and its last two (unconfirmed) bytes of V3000 content.
   std::uint64_t d_pos = 0;
@@ -112,6 +158,9 @@ class CheckedStreambuf : public std::streambuf {
   // thread.
   bool failed() const { return d_failed.load(std::memory_order_acquire); }
   std::string error() const;
+  // Ends the input where RDKit reads next, as a refusal does; safe to call
+  // from another thread.
+  void stop() { d_stopped.store(true, std::memory_order_release); }
 
  protected:
   int_type underflow() override;
@@ -122,8 +171,9 @@ class CheckedStreambuf : public std::streambuf {
  private:
   bool fill(std::uint64_t chunk);
   void refuse(const std::string &why, std::uint64_t at);
-  int_type hit();
-  void changed();
+  int_type hit(std::uint64_t pos);
+  int_type changed(std::uint64_t pos);
+  int_type end_at(std::uint64_t pos);
   pos_type moved(pos_type pos);
 
   std::unique_ptr<std::streambuf> d_source;
@@ -147,7 +197,11 @@ class CheckedStreambuf : public std::streambuf {
   std::uint64_t d_tail_hash = 0;
   std::uint64_t d_key[2] = {};
   InputScanner d_scanner;
+  // A copy of kSGroupSuffix to deliver, once.
+  char d_suffix[sizeof(kSGroupSuffix)] = {};
+  bool d_suffixed = false;
   std::atomic<bool> d_failed{false};
+  std::atomic<bool> d_stopped{false};
   mutable std::mutex d_error_mutex;
   std::string d_error;
 };
@@ -159,6 +213,7 @@ class CheckedIStream : public std::istream {
   const CheckedStreambuf &checked() const { return d_buf; }
   // Throws ValueErrorException if RDKit asked for refused input.
   void check() const;
+  void stop() { d_buf.stop(); }
 
  private:
   CheckedStreambuf d_buf;

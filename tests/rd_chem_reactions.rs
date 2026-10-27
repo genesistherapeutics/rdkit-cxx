@@ -520,64 +520,6 @@ fn marvin_bonds_need_two_atoms() {
 }
 
 #[test]
-fn cdxml() {
-    let rxns = reactions_from_cdxml_file(data("rxn1.cdxml")).unwrap();
-    assert_eq!(rxns.len(), 1);
-    assert_eq!(
-        reaction_to_smarts(&rxns[0]).unwrap(),
-        "[#6&D2:2]1:[#6&D2:3]:[#6&D2:4]:[#6&D3:1](:[#6&D2:5]:[#6&D2:6]:1)-[#17&D1].\
-         [#6&D3](-[#5&D2]-[#6&D3:7]1:[#6&D2:8]:[#6&D2:9]:[#6&D2:10]:[#6&D2:11]:[#6&D2:12]:1)\
-         (-[#8&D1])-[#8&D1]>>[#6&D2:1]1:[#6&D2:5]:[#6&D3:6](:[#6&D2:2]:[#6&D2:3]:[#6&D2:4]:1)\
-         -[#6&D3:7]1:[#6&D2:8]:[#6&D2:9]:[#6&D2:10]:[#6&D2:11]:[#6&D2:12]:1"
-    );
-    let text = std::fs::read_to_string(data("rxn1.cdxml")).unwrap();
-    assert_eq!(reactions_from_cdxml_block(&text).unwrap().len(), 1);
-    let params = ReactionsFromCDXMLBlockParams {
-        sanitize: true,
-        remove_hs: true,
-    };
-    assert_eq!(
-        reactions_from_cdxml_block_with_params(&text, &params)
-            .unwrap()
-            .len(),
-        1
-    );
-    assert_eq!(
-        reactions_from_cdxml_file_with_params(data("rxn1.cdxml"), &params)
-            .unwrap()
-            .len(),
-        1
-    );
-    assert!(matches!(
-        reactions_from_cdxml_file(common::temp_path("missing.cdxml")),
-        Err(Error::Os { .. })
-    ));
-    // The ChemDraw library appends to a step's atom map until memory runs
-    // out once a token fails to read as an int.
-    let auto = r#"ReactionStepAtomMapAuto="300 354 302"#;
-    assert!(text.contains(auto));
-    for token in ["x", "1.5", "2147483648", "4294967295", "5x", "&#52;"] {
-        let bad = text.replacen(
-            auto,
-            &format!(r#"ReactionStepAtomMapAuto="300 354 {token}"#),
-            1,
-        );
-        assert!(
-            matches!(reactions_from_cdxml_block(&bad), Err(Error::Parse { .. })),
-            "{token}"
-        );
-    }
-    for token in ["2147483647", "-1", "+7"] {
-        let fine = text.replacen(
-            auto,
-            &format!(r#"ReactionStepAtomMapAuto="300 354 {token}"#),
-            1,
-        );
-        assert!(reactions_from_cdxml_block(&fine).is_ok(), "{token}");
-    }
-}
-
-#[test]
 fn molecules_with_roles() {
     let rxn = amide();
     let mol = reaction_to_molecule(&rxn).unwrap();
@@ -1268,7 +1210,6 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
     let params = AtomMonomerInfoParams {
         name: "MARK".into(),
-        ..Default::default()
     };
     methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
         &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),

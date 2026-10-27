@@ -180,7 +180,7 @@ std::pair<unsigned, unsigned> check_embed_pieces(
     throw ValueErrorException("molecule has no atoms");
   }
   check_matrix_size(mol);
-  check_removals(mol);
+  check_removals(mol, Removes::FragmentsAndHydrogens);
   unsigned num_frags = 1;
   unsigned largest = num_atoms;
   if (params.embedFragmentsSeparately) {
