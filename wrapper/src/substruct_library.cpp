@@ -54,6 +54,15 @@ void check_smiles_holder_removals(const RDKit::MolHolderBase &holder,
   }
 }
 
+// CachedMolHolder keeps a molecule as its pickle, which getMol reads back
+// (check_picklable).
+void check_cached_holder_pickles(const RDKit::MolHolderBase &holder,
+                                 const RDKit::ROMol &mol) {
+  if (dynamic_cast<const CachedMolHolder *>(&holder)) {
+    check_picklable(mol);
+  }
+}
+
 // PatternFingerprintMol makes ExplicitBitVects of the holder's size, which
 // count their bits in int (U3).
 void check_num_bits(std::uint32_t num_bits) {
@@ -176,6 +185,7 @@ std::uint32_t mol_holder_len(const MolHolderHandle &holder) {
 std::uint32_t mol_holder_add_mol(MolHolderHandle &holder, const RWMol &mol) {
   check_room(holder.ptr->size());
   check_smiles_holder_removals(*holder.ptr, mol);
+  check_cached_holder_pickles(*holder.ptr, mol);
   return holder.ptr->addMol(mol);
 }
 
@@ -364,6 +374,7 @@ std::uint32_t substruct_library_add_mol(SubstructLibrary &view,
                                         const RWMol &mol) {
   check_room(view.getMolHolder()->size());
   check_smiles_holder_removals(*view.getMolHolder(), mol);
+  check_cached_holder_pickles(*view.getMolHolder(), mol);
   if (view.getFpHolder()) {
     check_room(view.getFpHolder()->size());
   }
@@ -649,6 +660,14 @@ rust::Vec<std::uint8_t> substruct_library_serialize(
     const SubstructLibrary &view) {
   if (!RDKit::SubstructLibraryCanSerialize()) {
     throw ValueErrorException("RDKit was built without Boost serialization");
+  }
+  // A MolHolder's archive pickles its molecules; a CachedMolHolder's holds
+  // the pickles it checked when it made them.
+  if (const auto *held =
+          dynamic_cast<const RDKit::MolHolder *>(view.getMolHolder().get())) {
+    for (const auto &mol : held->getMols()) {
+      check_picklable(*mol);
+    }
   }
   auto text = view.Serialize();
   rust::Vec<std::uint8_t> res;

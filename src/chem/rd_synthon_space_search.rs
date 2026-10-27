@@ -542,6 +542,7 @@ impl SynthonSpace {
     /// write, so the file is read back and checked: one that cannot be
     /// written, or that does not hold the space, is `Error::Os`. Mirrors
     /// `SynthonSpace.WriteDBFile`.
+    /// `Error::Value` for a synthon a pickle cannot hold (`Mol::to_binary`).
     pub fn write_db_file<P: AsRef<Path>>(&self, out_file: P) -> Result<()> {
         Ok(ffi::synthon_space_write_db_file(
             &self.ptr,
@@ -634,6 +635,8 @@ impl SynthonSpace {
     /// shapes need volume. A space already built with `num_confs` conformers
     /// is left as it is. Optimizers may land in other local optima on other
     /// platforms, so the shapes may differ there.
+    /// `Error::Value`, with interim writes, for a synthon a pickle cannot hold
+    /// (`Mol::to_binary`).
     pub fn build_synthon_shapes_with_py_params(
         &mut self,
         py_params: &ShapeBuildParams,

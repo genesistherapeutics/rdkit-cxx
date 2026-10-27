@@ -351,6 +351,7 @@ std::unique_ptr<ExtendedQueryMol> extended_query_mol_clone(
 // ExtendedQueryMol::toBinary (TextIO.cpp) writes a tautomer bundle's size in
 // 16 bits and then every query, so a larger bundle (JSON can hold one, and
 // so can an enumeration) would read back as its first size mod 2^16 queries.
+// It pickles every molecule it holds (check_picklable).
 rust::Vec<std::uint8_t> extended_query_mol_to_binary(
     const ExtendedQueryMol &query) {
   if (const auto *bundle = std::get_if<XQ::TautomerBundle_T>(&query.xqmol);
@@ -359,6 +360,23 @@ rust::Vec<std::uint8_t> extended_query_mol_to_binary(
     throw ValueErrorException(
         "RDKit's binary form holds at most 65535 tautomer queries");
   }
+  std::visit(overloaded{
+                 [](const XQ::RWMol_T &mol) { check_picklable(*mol); },
+                 [](const XQ::MolBundle_T &bundle) {
+                   for (const auto &mol : bundle->getMols()) {
+                     check_picklable(*mol);
+                   }
+                 },
+                 [](const XQ::TautomerQuery_T &q) {
+                   check_picklable_tautomer_query(*q);
+                 },
+                 [](const XQ::TautomerBundle_T &queries) {
+                   for (const auto &q : *queries) {
+                     check_picklable_tautomer_query(*q);
+                   }
+                 },
+             },
+             query.xqmol);
   return to_bytes(query.toBinary());
 }
 

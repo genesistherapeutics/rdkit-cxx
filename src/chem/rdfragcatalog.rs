@@ -293,6 +293,10 @@ impl FragCatGenerator {
     /// without parameters, where Python's dereferences null, and for a
     /// molecule of more than 1000 bonds when the upper length is 2 or more:
     /// RDKit then indexes its table of 1000 primes by bond index.
+    /// `Error::Value` for a molecule whose fragments a pickle may not hold: a
+    /// query of more than 255 children, a substance group or stereo group list
+    /// of more than 255 entries, more than 255 stereo groups, or, with an upper
+    /// length of more than 256 bonds, groups naming bonds (`Mol::to_binary`).
     pub fn add_frags_from_mol(&self, mol: &Mol, fcat: &mut FragCatalog) -> Result<u32> {
         Ok(ffi::frag_cat_generator_add_frags_from_mol(
             mol.as_ffi(),

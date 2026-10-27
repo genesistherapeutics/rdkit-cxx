@@ -66,6 +66,8 @@ impl MolCatalog {
     /// `Error::Runtime` when an entry has no molecule, as in Python, and
     /// `Error::Value` for a description of 2^31 - 1 bytes or more, whose
     /// length RDKit writes in 32 bits.
+    /// `Error::Value` for an entry's molecule a pickle cannot hold
+    /// (`Mol::to_binary`).
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::mol_catalog_serialize(self.raw())?)
     }
@@ -217,6 +219,7 @@ impl MolCatalogEntry {
     /// `Error::Runtime` without a molecule, as in Python, and `Error::Value`
     /// for a description of 2^31 - 1 bytes or more, whose length RDKit
     /// writes in 32 bits.
+    /// `Error::Value` for a molecule a pickle cannot hold (`Mol::to_binary`).
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::mol_catalog_entry_serialize(self.raw())?)
     }

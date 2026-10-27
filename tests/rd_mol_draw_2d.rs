@@ -314,13 +314,14 @@ fn conformers() {
 
 #[test]
 fn degenerate_layouts_keep_the_drawer_usable() {
-    // Two coincident ring atoms: RDKit throws while laying out the double
-    // bonds, which the wrappers' layout of it finds before RDKit draws.
-    let mut m = depicted("c1ccccc1");
-    let p = m.get_conformer().unwrap().get_atom_position(0).unwrap();
+    // Two coincident ring-fusion atoms: RDKit throws while laying out the
+    // double bonds, which the wrappers' layout of it finds before RDKit
+    // draws. (Coincident atoms of two bonds are refused before that.)
+    let mut m = depicted("c1ccc2ccccc2c1");
+    let p = m.get_conformer().unwrap().get_atom_position(3).unwrap();
     m.get_conformer_mut()
         .unwrap()
-        .set_atom_position(1, p)
+        .set_atom_position(8, p)
         .unwrap();
     let mut d = svg();
     assert!(matches!(
@@ -841,6 +842,23 @@ fn comic_mode_needs_bonds_with_length() {
         .set_atom_position(1, p)
         .unwrap();
     assert_value_error(d.draw_molecule(&m));
+}
+
+/// RDKit 2026.03 reads an uninitialized bond type for an atom of two bonds
+/// with a neighbor at its position (isLinearAtom); an atom of three draws.
+#[test]
+fn atoms_of_two_bonds_need_their_neighbors_apart() {
+    let at_atom_0 = |smiles: &str| {
+        let mut m = depicted(smiles);
+        let p = m.get_conformer().unwrap().get_atom_position(0).unwrap();
+        m.get_conformer_mut()
+            .unwrap()
+            .set_atom_position(1, p)
+            .unwrap();
+        m
+    };
+    assert_value_error(svg().draw_molecule(&at_atom_0("CCO")));
+    svg().draw_molecule(&at_atom_0("CC(C)C")).unwrap();
 }
 
 /// RDKit's hand-drawn lines never end for a line of no length, and a small

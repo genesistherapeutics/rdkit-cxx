@@ -5,7 +5,6 @@
 
 #include "rdkit-cxx/suppliers.h"
 
-#include <climits>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -549,12 +548,13 @@ FP::MultithreadedMolSupplier::Parameters mt_params(
     throw ValueErrorException("numWriterThreads must be at most " +
                               std::to_string(kMaxSupplierThreads));
   }
-  // RDKit's ConcurrentQueue keeps its capacity in unsigned int and blocks
-  // forever when it is 0, so the supplier's threads would never finish.
+  // RDKit's ConcurrentQueue blocks forever when its capacity is 0, so the
+  // supplier's threads would never finish; kMaxSupplierQueueSize says why
+  // large ones are refused.
   for (std::size_t size : {data.size_input_queue, data.size_output_queue}) {
-    if (size == 0 || size > UINT_MAX) {
-      throw ValueErrorException(
-          "queue sizes must be at least 1 and at most UINT_MAX");
+    if (size == 0 || size > kMaxSupplierQueueSize) {
+      throw ValueErrorException("queue sizes must be at least 1 and at most " +
+                                std::to_string(kMaxSupplierQueueSize));
     }
   }
   FP::MultithreadedMolSupplier::Parameters params;

@@ -29,7 +29,8 @@ use crate::{Error, Result};
 /// `rdmolfiles.PNGMetadataParams` (CONVENTIONS.md A3).
 #[derive(Clone, Debug, PartialEq)]
 pub struct PNGMetadataParams {
-    /// Records the molecule's pickle.
+    /// Records the molecule's pickle; `Error::Value` for a molecule a pickle
+    /// cannot hold (`Mol::to_binary`).
     pub include_pkl: bool,
     /// Records its CXSMILES.
     pub include_smiles: bool,

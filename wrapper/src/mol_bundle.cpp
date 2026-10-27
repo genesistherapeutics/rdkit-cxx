@@ -53,6 +53,9 @@ std::unique_ptr<MolList> mol_bundle_from_pkl_string(
 
 rust::Vec<std::uint8_t> mol_bundle_to_binary(const MolBundle &bundle) {
 #ifdef RDK_USE_BOOST_SERIALIZATION
+  for (const auto &mol : bundle.getMols()) {
+    check_picklable(*mol);
+  }
   auto res = bundle.serialize();
   rust::Vec<std::uint8_t> bytes;
   bytes.reserve(res.size());

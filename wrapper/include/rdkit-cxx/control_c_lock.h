@@ -20,11 +20,24 @@
 // mutex for the whole RDKit call, and runs RDKit's own threads, which the mutex
 // cannot order, on the calling thread instead (CONVENTIONS.md U4). A wrapper
 // that also needs random_mutex() (global_state.h) takes this one first.
+//
+// In RDKit 2026.03 the matches, the embedder, DetermineBondOrders, the CIP
+// labeler, and the synthon search do not construct one but call the static
+// ControlCHandler::reset(), which installs RDKit's handler and keeps nothing
+// to restore; RDKit's handler swallows the next SIGINT and installs whatever
+// handler a ControlCHandler last saved. The mutex therefore saves SIGINT's
+// disposition when it is taken and restores it when it is released, so the
+// process's own handler is back after every call that holds it, as a scoped
+// ControlCHandler (RDKit 2026.09, rdkit/rdkit#9393) leaves it. A handler
+// another thread installs while such a call runs is replaced by the one
+// before.
 
 #pragma once
 
 #include <mutex>
 #include <stdexcept>
+
+#include <signal.h>
 
 namespace rdkit_cxx {
 
@@ -56,22 +69,30 @@ class ControlCMutex {
  public:
   void lock() {
     d_mutex.lock();
-    control_c_held = true;
+    taken();
   }
   bool try_lock() {
     if (!d_mutex.try_lock()) {
       return false;
     }
-    control_c_held = true;
+    taken();
     return true;
   }
   void unlock() {
+    sigaction(SIGINT, &d_sigint, nullptr);
     control_c_held = false;
     d_mutex.unlock();
   }
 
  private:
+  void taken() {
+    control_c_held = true;
+    sigaction(SIGINT, nullptr, &d_sigint);
+  }
+
   std::mutex d_mutex;
+  // SIGINT's disposition when the mutex was taken.
+  struct sigaction d_sigint{};
 };
 
 // Defined inline so every wrapper source shares one mutex. Every lock site

@@ -94,6 +94,40 @@ class DescriptorCacheGuard {
 // format, calls it on the molecules it read.
 void check_pickled_mol(const RDKit::ROMol &mol);
 
+// MolPickler writes some values in one byte, truncating larger ones: a
+// query's number of children, and in a molecule of at most 255 atoms, the
+// sizes of its substance groups' lists (atoms, parent atoms, bonds,
+// brackets, CStates, attachment points), the number of its stereo groups and
+// the sizes of their atom and bond lists, and the bonds both name. A
+// truncated size leaves MolPickler's reader taking the rest of the list for
+// the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
+// writes a pickle it cannot read. Throws ValueErrorException for any of
+// these, in the molecule or in the molecules of its recursive queries, which
+// RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
+// inside another format, calls it on the molecules it pickles.
+void check_picklable(const RDKit::ROMol &mol);
+
+// As check_picklable, for every molecule RDKit may make of some of mol's atoms
+// and at most max_part_bonds of its bonds, keeping the substance groups and
+// stereo groups within them and the atoms' and bonds' queries
+// (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
+// them, and, for parts of more than 256 bonds, whose bonds may be numbered
+// past 255, no group that names a bond. For the fragment catalog, whose
+// fragments no wrapper can reach.
+void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+
+// check_picklable for each template of a reaction, which ReactionPickler
+// pickles as molecules.
+template <class Reaction>
+void check_picklable_templates(const Reaction &rxn) {
+  for (const auto *group :
+       {&rxn.getReactants(), &rxn.getProducts(), &rxn.getAgents()}) {
+    for (const auto &t : *group) {
+      check_picklable(*t);
+    }
+  }
+}
+
 // RWMol::removeAtom and batchRemoveAtoms (so commitBatchEdit too) rewrite
 // every bond's _MolFileBondEndPts, a property any caller can set: they read
 // the value's front() without checking that it is not empty, and for one in

@@ -183,7 +183,9 @@ std::unique_ptr<FragCatParams> frag_catalog_get_catalog_params(
 
 // FragCatalogEntry::toStream writes a description's length as an int32,
 // which a length of INT_MAX or more overflows, and the readers refuse
-// INT_MAX. RDKit checks that the catalog has parameters.
+// INT_MAX. It pickles the entry's fragment, which the generator checked as a
+// part of the molecule it made it from (check_picklable_parts). RDKit checks
+// that the catalog has parameters.
 rust::Vec<std::uint8_t> frag_catalog_serialize(const FragCatalog &catalog) {
   for (unsigned i = 0; i < catalog.getNumEntries(); ++i) {
     if (catalog.getEntryWithIdx(i)->getDescription().size() >=
@@ -262,6 +264,9 @@ rust::Vec<std::uint32_t> frag_catalog_get_entry_down_ids(
 std::uint32_t frag_cat_generator_add_frags_from_mol(const RWMol &mol,
                                                     FragCatalog &fcat) {
   check_num_bonds(mol, params_of(fcat));
+  // Each fragment is a part of the molecule of at most the upper length's
+  // bonds, which the catalog pickles (check_picklable_parts).
+  check_picklable_parts(mol, params_of(fcat).getUpperFragLength());
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::FragCatGenerator().addFragsFromMol(mol, &fcat);
 }

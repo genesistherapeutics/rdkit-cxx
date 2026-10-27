@@ -127,6 +127,7 @@ impl ExtendedQueryMol {
     /// built with Boost.Serialization (`Error::Runtime` otherwise). RDKit
     /// writes a tautomer bundle's size in 16 bits, so one of more than 65535
     /// queries is `Error::Value`. Mirrors `ExtendedQueryMol.ToBinary`.
+    /// `Error::Value` for a molecule a pickle cannot hold (`Mol::to_binary`).
     pub fn to_binary(&self) -> Result<Vec<u8>> {
         Ok(ffi::extended_query_mol_to_binary(self.as_ffi())?)
     }

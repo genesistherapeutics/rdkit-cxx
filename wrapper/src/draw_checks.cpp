@@ -590,6 +590,31 @@ void check_comic_bonds(const RDKit::ROMol &mol,
   }
 }
 
+// isLinearAtom (DrawMol.cpp), which labels an atom of two bonds in a line,
+// reads each neighbor's bond type into an uninitialized array, skips a
+// neighbor whose direction from the atom directionVector cannot normalize,
+// and compares both types: RDKit 2026.03 reads an uninitialized value for a
+// neighbor at the atom's position (RDKit 2026.09 sets both,
+// rdkit/rdkit#9550). It reads the coordinates DrawMol extracts.
+void check_linear_atoms(const RDKit::ROMol &mol,
+                        const std::vector<RDGeom::Point2D> &coords) {
+  for (const auto atom : mol.atoms()) {
+    if (atom->getDegree() != 2) {
+      continue;
+    }
+    const auto &at = coords[atom->getIdx()];
+    for (const auto nbr : mol.atomNeighbors(atom)) {
+      try {
+        at.directionVector(coords[nbr->getIdx()]);
+      } catch (const std::runtime_error &) {
+        refuse("atom " + std::to_string(atom->getIdx()) +
+               " has two bonds and a neighbor at its position, where RDKit "
+               "2026.03 reads an uninitialized bond type");
+      }
+    }
+  }
+}
+
 }  // namespace
 
 void check_colour(const RDKit::DrawColour &colour, const char *what) {
@@ -880,6 +905,9 @@ void check_drawn_mol(const RDKit::ROMol &mol, int conf_id,
   }
   if (!coords.empty() && opts.comicMode) {
     check_comic_bonds(mol, coords);
+  }
+  if (!coords.empty()) {
+    check_linear_atoms(mol, coords);
   }
 
   // Text.

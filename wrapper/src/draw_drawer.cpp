@@ -944,6 +944,16 @@ void check_drawing(Drawer &d, const RWMol &mol, int conf_id,
   check_drawn_mol(mol, conf_id, opts, d.freetype, annotations, symmetrized);
 }
 
+// MolDraw2DCairo, with includeMetadata, pickles each molecule and reaction
+// it draws into the PNG (updateMetadata in MolDraw2DCairo.cpp): the molecule
+// as drawn, which only adds hydrogens to the one given, so passes
+// check_picklable whenever that one does.
+void check_metadata(const Drawer &d, const RDKit::ROMol &mol) {
+  if (!d.svg && d.drawer->drawOptions().includeMetadata) {
+    check_picklable(mol);
+  }
+}
+
 bool comic(const Drawer &d) { return d.drawer->drawOptions().comicMode; }
 
 // Without highlight bonds, Python's first DrawMolecule overload highlights
@@ -957,6 +967,7 @@ void draw_molecule(Drawer &d, const RWMol &mol, const DrawMoleculeData &data,
   DrawnMol drawn(mol);
   check_drawing(d, drawn.mol(), data.conf_id, legend,
                 d.drawer->supportsAnnotations(), true);
+  check_metadata(d, drawn.mol());
   // The bonds RDKit highlights: as given, or, for Python's first overload,
   // those between highlighted atoms, as MolDraw2D::drawMolecule finds them.
   std::vector<int> atom_bonds;
@@ -1221,6 +1232,7 @@ void drawer_draw_molecule_with_highlights(
   // DrawMolMCH passes confId where DrawMol takes includeAnnotations, so
   // RDKit draws the first conformer, with annotations unless confId is 0.
   check_drawing(d, drawn.mol(), -1, legend, data.conf_id != 0, symmetrize);
+  check_metadata(d, drawn.mol());
   check_canvas_fits(d,
                     check_mch_layout(d, drawn.mol(), legend, h, data.conf_id));
   d.multi_highlights.push_back(std::move(h));
@@ -1345,6 +1357,7 @@ void drawer_draw_molecules(Drawer &d, BorrowedMols &mols,
     e.drawn = std::make_unique<DrawnMol>(mol, symmetrize);
     check_drawing(d, e.drawn->mol(), e.conf_id, e.legend,
                   draw.supportsAnnotations(), symmetrize);
+    check_metadata(d, e.drawn->mol());
     if (e.h.has_bonds) {
       e.bonds = e.h.bonds;
     } else if (opts.continuousHighlight && e.h.has_atoms) {
@@ -1466,6 +1479,10 @@ void drawer_draw_reaction(Drawer &d, const ChemicalReaction &rxn,
   check_draw_area(d.drawer->panelWidth(), d.drawer->panelHeight(),
                   d.drawer->drawOptions());
   check_font(d);
+  if (!d.svg && d.drawer->drawOptions().includeMetadata) {
+    // As check_metadata, for the reaction's pickle.
+    check_picklable_templates(rxn);
+  }
   set_up_text_drawer(d);
   const ReactionLayout layout(d, rxn, highlight_by_reactant,
                               has_colours ? &cols : nullptr,

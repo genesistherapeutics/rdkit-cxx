@@ -481,6 +481,8 @@ impl SubstructLibrary {
     /// sizes differ are `Error::Runtime` after the molecule holder has the
     /// molecule, as in RDKit, and full ones `Error::Value`. Mirrors
     /// `SubstructLibrary.AddMol`.
+    /// `Error::Value` with a `CachedMolHolder` for a molecule a pickle cannot
+    /// hold (`Mol::to_binary`).
     pub fn add_mol(&mut self, mol: &Mol) -> Result<u32> {
         let mut view = self.view(false)?;
         Ok(ffi::substruct_library_add_mol(
@@ -567,6 +569,8 @@ impl SubstructLibrary {
     /// `Error::Value` if RDKit was built without Boost.Serialization
     /// (`substruct_library_can_serialize`). Mirrors
     /// `SubstructLibrary.Serialize`.
+    /// `Error::Value` for a `MolHolder` molecule a pickle cannot hold
+    /// (`Mol::to_binary`).
     pub fn serialize(&self) -> Result<Vec<u8>> {
         let view = self.view(true)?;
         Ok(ffi::substruct_library_serialize(&view)?)

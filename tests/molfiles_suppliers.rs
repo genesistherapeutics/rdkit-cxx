@@ -465,7 +465,7 @@ fn multithreaded_parameters_are_checked() {
             ..Default::default()
         },
         MultithreadedSDMolSupplierParams {
-            size_output_queue: 1 << 32,
+            size_output_queue: (1 << 20) + 1,
             ..Default::default()
         },
     ] {

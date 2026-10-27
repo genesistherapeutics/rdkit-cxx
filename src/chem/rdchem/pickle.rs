@@ -5,7 +5,7 @@
 
 use crate::Result;
 use crate::chem::rdchem::{Mol, RWMol};
-use crate::error::expect_ok;
+use crate::error::{expect_ok, picklable};
 use crate::ffi::mol::ffi;
 
 /// What a pickle includes, as bits. Mirrors `rdchem.PropertyPickleOptions`
@@ -101,13 +101,25 @@ impl Mol {
 
     /// The molecule as a pickle, with the default properties. Mirrors
     /// `Mol.ToBinary`.
+    ///
+    /// # Panics
+    ///
+    /// For a molecule RDKit would pickle truncated, which Python's writes
+    /// and cannot read back: a query of more than 255 children, or, in a
+    /// molecule of at most 255 atoms, a substance group or stereo group list
+    /// of more than 255 entries, more than 255 stereo groups, or a group
+    /// naming a bond past 255.
     pub fn to_binary(&self) -> Vec<u8> {
-        expect_ok(ffi::mol_to_binary(self.as_ffi(), false, 0))
+        picklable(ffi::mol_to_binary(self.as_ffi(), false, 0))
     }
 
     /// Mirrors `Mol.ToBinary(propertyFlags)`.
+    ///
+    /// # Panics
+    ///
+    /// As `to_binary`.
     pub fn to_binary_with_property_flags(&self, property_flags: PropertyPickleOptions) -> Vec<u8> {
-        expect_ok(ffi::mol_to_binary(
+        picklable(ffi::mol_to_binary(
             self.as_ffi(),
             true,
             property_flags.bits(),

@@ -98,6 +98,7 @@ impl FilterCatalogEntry {
     /// `FilterCatalogEntry.Serialize`. `Error::Value` when a `SmartsMatcher`
     /// in it has no pattern, which Python's dereferences, and for a
     /// `CustomFilterMatcher`, whose class Boost does not know.
+    /// `Error::Value` for a pattern a pickle cannot hold (`Mol::to_binary`).
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::filter_catalog_entry_serialize(self.raw())?)
     }
@@ -334,6 +335,7 @@ impl FilterCatalog {
     /// `CustomFilterMatcher`, whose class Boost does not know;
     /// `Error::Runtime` without Boost serialization
     /// (`filter_catalog_can_serialize`).
+    /// `Error::Value` for a pattern a pickle cannot hold (`Mol::to_binary`).
     pub fn serialize(&self) -> Result<Vec<u8>> {
         Ok(ffi::filter_catalog_serialize(self.raw())?)
     }

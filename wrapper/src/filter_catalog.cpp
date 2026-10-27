@@ -163,7 +163,8 @@ enum class Walk {
   // A matcher that another will hold, whose methods RDKit then calls: no
   // part may be an empty hierarchy node.
   Use,
-  // A matcher to pickle: SmartsMatcher's save dereferences its pattern.
+  // A matcher to pickle: SmartsMatcher's save dereferences its pattern, and
+  // pickles it (check_picklable).
   Pickle,
   // A matcher read from an archive, which can hold what Rust cannot make:
   // empty hierarchy nodes or children, empty exclusion patterns, cycles,
@@ -190,6 +191,9 @@ std::vector<const FilterMatcherBase *> parts(const FilterMatcherBase &matcher,
     if (walk == Walk::Pickle && !pattern) {
       throw ValueErrorException(
           "a SmartsMatcher without a pattern cannot be pickled");
+    }
+    if (walk == Walk::Pickle) {
+      check_picklable(*pattern);
     }
     if (walk == Walk::Load && pattern) {
       check_pickled_mol(*pattern);

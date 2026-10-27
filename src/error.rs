@@ -176,6 +176,12 @@ pub(crate) fn expect_ok<T>(result: std::result::Result<T, cxx::Exception>) -> T 
     }
 }
 
+/// Unwraps a pickle, panicking with the wrapper's error for a molecule RDKit
+/// would pickle truncated (`Mol::to_binary`).
+pub(crate) fn picklable(result: std::result::Result<Vec<u8>, cxx::Exception>) -> Vec<u8> {
+    result.unwrap_or_else(|err| panic!("{}", Error::from(err)))
+}
+
 /// Unwraps an operator's result; operators panic where Python raises.
 pub(crate) fn op<T>(result: std::result::Result<T, cxx::Exception>) -> T {
     result.unwrap_or_else(|err| panic!("{}", Error::from(err)))

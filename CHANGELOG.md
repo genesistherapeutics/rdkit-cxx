@@ -29,12 +29,35 @@ A program built against one release stops when it loads with another.
 - The ports follow RDKit 2026.03.6's Python: `BertzCT` takes a non-aromatic
   bond's order as its `BondType`'s number (17 for a dative bond), and
   `fr_Ar_COO`'s description is 2026.03's.
-- Two checks RDKit 2026.03 needs: every wrapper source reads `RDConfig.h`
-  first, since `RingInfo.h` declares its ring-family members only under a
-  macro it does not include, and `RingInfo.num_relevant_cycles` is
-  `Error::Runtime` before the ring families are found, where RDKit 2026.03
-  converts RingDecomposerLib's failure value out of range, and `Error::Value`
-  for more relevant cycles than `u32` holds.
+- Checks for what RDKit 2026.09 fixed in RDKit:
+  - Every wrapper source reads `RDConfig.h` first, since `RingInfo.h`
+    declares its ring-family members only under a macro it does not
+    include.
+  - `RingInfo.num_relevant_cycles` is `Error::Runtime` before the ring
+    families are found, where RDKit 2026.03 converts RingDecomposerLib's
+    failure value out of range, and `Error::Value` for more relevant cycles
+    than `u32` holds.
+  - `MolCatalogEntry::from_pickle` builds the entry as the catalog's reader
+    does: RDKit 2026.03's pickle constructor deletes an uninitialized
+    pointer.
+  - `assign_cip_labels` leaves unlabeled, as RDKit 2026.09 does, a double
+    bond whose stereo atom is not a neighbor of its own end and an
+    atropisomer bond with an end of no other bonds, where RDKit 2026.03
+    reads past an empty vector.
+  - A molecule of at most 255 atoms whose substance groups or stereo groups
+    name a bond past 255, which RDKit 2026.03 pickles truncated, is refused
+    wherever it would be pickled (`Error::Value`; `Mol::to_binary` and
+    `ChemicalReaction::to_binary` panic). So are a substance group or stereo
+    group list of more than 255 entries, more than 255 stereo groups, and a
+    query of more than 255 children, which RDKit 2026.09 pickles truncated
+    too: RDKit writes these pickles and cannot read them back.
+  - A multithreaded supplier's queues hold at most 2^20 records: RDKit
+    2026.03 dereferences null when it cannot allocate one.
+  - Drawing refuses an atom of two bonds with a neighbor at its position,
+    for which RDKit 2026.03 reads an uninitialized bond type.
+  - RDKit 2026.03's substructure matches, embedder, CIP labeler,
+    `DetermineBondOrders`, and synthon search leave RDKit's `SIGINT` handler
+    installed; the wrappers restore the process's after each call.
 
 ### Bindings
 

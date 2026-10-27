@@ -253,7 +253,9 @@ file's line count.
   - **Ctrl-C handler:** every substructure match constructs a
     `ControlCHandler`, which swaps the `SIGINT` handler through static
     variables. Every wrapper that can match therefore holds
-    `control_c_mutex()`.
+    `control_c_mutex()`. RDKit 2026.03 leaves its handler installed after
+    a match, so the mutex restores the process's handler when it is
+    released.
   - **Single modules:** some modules' statics have their own locks, such as
     BRICS, R-group decomposition, the shape modules, and Murtagh's
     clustering.

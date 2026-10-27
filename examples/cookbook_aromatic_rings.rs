@@ -29,12 +29,12 @@ fn main() -> Result<()> {
     // up each ring:
     let atom_rings = ri.atom_rings();
     println!("{atom_rings:?}");
-    assert_eq!(atom_rings, [[0, 1, 2, 3, 4, 5], [4, 5, 6, 7, 8, 9]]);
+    assert_eq!(atom_rings, [[0, 5, 4, 3, 2, 1], [6, 7, 8, 9, 4, 5]]);
 
     // or the bonds that make up each ring:
     let bond_rings = ri.bond_rings();
     println!("{bond_rings:?}");
-    assert_eq!(bond_rings, [[0, 1, 2, 3, 4, 9], [4, 5, 6, 7, 8, 10]]);
+    assert_eq!(bond_rings, [[9, 4, 3, 2, 1, 0], [6, 7, 8, 10, 4, 5]]);
 
     // To detect aromatic rings, loop over the bonds in each ring and flag the
     // ring as aromatic if all bonds are aromatic:

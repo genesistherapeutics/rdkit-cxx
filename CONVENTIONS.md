@@ -181,7 +181,12 @@ its Boost.Python modules and its `.py` modules.
   extended-query pickles, extended-query JSON (which holds molecule
   pickles in base64), catalog pickles, PNG metadata, and
   `CachedMolHolder::add_binary`, whose bytes the holder's safe methods
-  read later. The wrappers still check what they checked before, for
+  read later. MolPickler writes some counts, and in RDKit 2026.03 a small
+  molecule's bond indices, in one byte, and reads a larger value's pickle
+  out of step, so every wrapper that hands RDKit a molecule to pickle
+  (`check_picklable` in `rdkit-cxx/mol_checks.h`) refuses one it would
+  truncate: RDKit could not read the pickle back, as the contract and the
+  holders' safe reads assume. The wrappers still check what they checked before, for
   pickles that meet the contract but come from another RDKit: a molecule
   pickle's enum values, which MolPickler casts unchecked (bond types,
   directions, and stereo, atoms' chiral tags and hybridizations, stereo

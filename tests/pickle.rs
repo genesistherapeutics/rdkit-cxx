@@ -4,7 +4,9 @@
 // license that can be found in the LICENSE file.
 
 use rdkit_cxx::Error;
+use rdkit_cxx::chem::rd_substruct_library::CachedMolHolder;
 use rdkit_cxx::chem::*;
+use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 // The default is process-wide, so everything that depends on it is in one test.
 #[test]
@@ -192,4 +194,102 @@ fn pickles_with_unknown_enum_values_are_refused() {
         Err(Error::Value { message }) => assert!(message.contains("StereoGroupType"), "{message}"),
         other => panic!("StereoGroupType: {other:?}"),
     }
+}
+
+// MolPickler writes these values in one byte, and its reader takes the rest
+// of a longer list for the pickle's next fields: Python's ToBinary writes
+// pickles it cannot read back ("Bad pickle format"). RDKit 2026.03 also
+// writes bond indices in one byte for a molecule of at most 255 atoms.
+
+fn brackets(n: usize) -> Mol {
+    let mut mol = mol_from_smiles("CCO").unwrap();
+    let mut group = create_mol_substance_group(&mut mol, "GEN");
+    group.add_atom_with_idx(0).unwrap();
+    for _ in 0..n {
+        group
+            .add_bracket(&[Point3D::new(0.0, 0.0, 0.0), Point3D::new(1.0, 0.0, 0.0)])
+            .unwrap();
+    }
+    mol
+}
+
+fn stereo_groups(n: usize) -> Mol {
+    let mut rw = RWMol::from(mol_from_smiles("C[C@H](F)Cl").unwrap());
+    let group = create_stereo_group(StereoGroupType::StereoOr, &rw, &[1]).unwrap();
+    rw.set_stereo_groups(&vec![group; n]).unwrap();
+    rw.into()
+}
+
+/// An atom query of `n` children, which RDKit's JSON reader makes as given.
+fn query_children(n: usize) -> Mol {
+    let child = r#"{"descr": "AtomType", "tag": 33, "val": 6}"#;
+    let children = vec![child; n].join(",");
+    let json = format!(
+        r#"{{"commonchem": {{"version": 10}}, "defaults": {{"atom": {{"z": 6, "impHs": 0, "chg": 0, "nRad": 0, "isotope": 0, "stereo": "unspecified"}}, "bond": {{"bo": 1, "stereo": "unspecified"}}}}, "molecules": [{{"atoms": [{{"z": 6}}, {{"z": 6}}], "bonds": [{{"atoms": [0, 1]}}], "extensions": [{{"name": "rdkitQueries", "formatVersion": 10, "atomQueries": [{{"descr": "AtomOr", "tag": 31, "children": [{children}]}}, {child}], "bondQueries": [{{"descr": "SingleOrAromaticBond", "type": "BondOrder", "tag": 33, "val": 1}}]}}]}}]}}"#
+    );
+    json_to_mols(&json).unwrap().remove(0)
+}
+
+/// The complete graph on 30 atoms (435 bonds), with a substance group of
+/// `bond`.
+fn complete_graph_with_group_bond(bond: u32) -> Mol {
+    let mut rw = RWMol::default();
+    for _ in 0..30 {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for i in 0..30 {
+        for j in i + 1..30 {
+            rw.add_bond_with_order(i, j, BondType::Single).unwrap();
+        }
+    }
+    let mut mol: Mol = rw.into();
+    create_mol_substance_group(&mut mol, "GEN")
+        .add_bond_with_idx(bond)
+        .unwrap();
+    mol
+}
+
+/// Makes a molecule with `n` of what a case counts.
+type MakeMol = fn(usize) -> Mol;
+
+#[test]
+fn molecules_a_pickle_cannot_hold() {
+    let cases: [(&str, MakeMol); 3] = [
+        ("number of brackets", brackets),
+        ("number of stereo groups", stereo_groups),
+        ("number of children", query_children),
+    ];
+    for (what, make) in cases {
+        let fits = make(255);
+        // SAFETY: a pickle RDKit wrote.
+        let back = unsafe { Mol::from_pkl_string(&fits.to_binary()) }.unwrap();
+        assert_eq!(back.get_num_atoms(), fits.get_num_atoms(), "{what}");
+        let mut holder = CachedMolHolder::default();
+        holder.add_mol(&fits).unwrap();
+        assert_eq!(
+            holder.get_mol(0).unwrap().get_num_atoms(),
+            fits.get_num_atoms()
+        );
+        match holder.add_mol(&make(256)) {
+            Err(Error::Value { message }) => assert!(message.contains(what), "{message}"),
+            other => panic!("{what}: {other:?}"),
+        }
+    }
+
+    let fits = complete_graph_with_group_bond(255);
+    // SAFETY: a pickle RDKit wrote.
+    let back = unsafe { Mol::from_pkl_string(&fits.to_binary()) }.unwrap();
+    assert_eq!(get_mol_substance_groups(&back)[0].get_bonds(), [255]);
+    // Python's reads back bond 44.
+    let mut holder = CachedMolHolder::default();
+    assert!(matches!(
+        holder.add_mol(&complete_graph_with_group_bond(300)),
+        Err(Error::Value { .. })
+    ));
+}
+
+#[test]
+#[should_panic(expected = "number of brackets")]
+fn to_binary_panics_for_what_a_pickle_cannot_hold() {
+    brackets(256).to_binary();
 }

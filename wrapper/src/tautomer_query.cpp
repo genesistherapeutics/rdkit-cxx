@@ -333,7 +333,15 @@ std::unique_ptr<TautomerQuery> tautomer_query_from_pickle(
   return query;
 }
 
+void check_picklable_tautomer_query(const TautomerQuery &query) {
+  check_picklable(query.getTemplateMolecule());
+  for (const auto &tautomer : query.getTautomers()) {
+    check_picklable(*tautomer);
+  }
+}
+
 rust::Vec<std::uint8_t> tautomer_query_to_binary(const TautomerQuery &query) {
+  check_picklable_tautomer_query(query);
   return to_bytes(query.serialize());
 }
 

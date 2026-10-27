@@ -114,7 +114,8 @@ pub struct ReactionToRxnBlockParams {
 /// Python's defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReactionMetadataToPNGStringParams {
-    /// Adds the reaction's pickle.
+    /// Adds the reaction's pickle; `Error::Value` for a template a pickle
+    /// cannot hold (`Mol::to_binary`).
     pub include_pkl: bool,
     /// Adds its reaction SMILES.
     pub include_smiles: bool,
@@ -140,7 +141,8 @@ impl Default for ReactionMetadataToPNGStringParams {
 /// defaults (A2).
 #[derive(Clone, Debug, PartialEq)]
 pub struct ReactionMetadataToPNGFileParams {
-    /// Adds the reaction's pickle.
+    /// Adds the reaction's pickle; `Error::Value` for a template a pickle
+    /// cannot hold (`Mol::to_binary`).
     pub include_pkl: bool,
     /// Adds its reaction SMILES.
     pub include_smiles: bool,
