@@ -51,6 +51,10 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
     the atom palette getter, the fingerprint-generator similarity maps, and
     `Draw`'s `MolToSVG` port, `DrawMolWithMatches`, and
     `MolsMatrixToGridImage`'s SVG output.
+  - Reactions from CDXML (`ReactionsFromCDXMLBlock` and
+    `ReactionsFromCDXMLFile`): RDKit 2024.03 reads them with its
+    molecule-level CDXML parser, which reads atoms of fragments it has
+    freed, as `MolsFromCDXML` and `MolsFromCDXMLFile` do.
   - Python ports: `Chem.MultiConfMolFromSDF`, `inchi.MolFromInchiAndAuxInfo`,
     and `DataStructs`' `getNForFlatMatrix` and `getElementFromFlatMatrix`.
   - Fingerprint generators' JSON and atoms-per-bit output, and the other
@@ -59,6 +63,17 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
     results, scaffold networks' names, molzip's coordinate alignment,
     Kekulize's `canonical`, `DetermineBonds`' `maxIterations`, and the
     newer tautomer scores and validations).
+- Where RDKit 2024.03 leaves a function one optional argument, that
+  argument has a `_with_<param>` form rather than 2026.9.0's one-field
+  params struct (CONVENTIONS.md A2): `kekulize_with_clear_aromatic_flags`,
+  `kekulize_if_possible_with_clear_aromatic_flags`,
+  `get_sssr_with_include_dative_bonds`,
+  `get_symm_sssr_with_include_dative_bonds`,
+  `reapply_mol_block_wedging_with_all_bond_types`, and
+  `AtomMonomerInfo::new_with_name` replace `KekulizeParams`,
+  `KekulizeIfPossibleParams`, `GetSSSRParams`, `GetSymmSSSRParams`,
+  `ReapplyMolBlockWedgingParams`, and `AtomMonomerInfoParams` with their
+  `_with_params` functions.
 - Kept from 2024.03, which later releases correct: its Python's
   misspelled `FingeprintGenerator32` and `FingeprintGenerator64` classes
   (the Rust types keep their names), `Properties::register_property`'s
@@ -73,7 +88,9 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
   `ClusterDataParams`; `EnumerateStereoisomers`, which keeps UNKNOWN bond
   directions; `MolToFile`'s messages).
 - `RascalOptions`' default timeout is -1, not Python's 60: RDKit 2024.03's
-  timeout path reads an emptied vector, so any other timeout is refused.
+  timeout path reads an emptied vector, so any other timeout is refused,
+  and so is any `max_frag_separation` but -1: RDKit 2024.03 measures
+  distances from a fragment it dropped, through a null pointer (#9424).
   `CalcGETAWAY` is not bound: RDKit 2024.03 writes through an empty
   vector's `begin()` on every call.
 - conda-forge's macOS build of RDKit 2024.03.6 ships no SLN parser, so on
@@ -92,6 +109,35 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
   - Removing atoms and bonds takes them out of stereo groups, which 2024.03
     leaves pointing at freed bonds; RDKit's own removals refuse groups that
     hold bonds or repeat atoms, and stereo groups refuse repeats.
+  - Stereo groups that list an atom twice, which 2024.03 keeps and a
+    removal leaves dangling (`[H][C@](C)(F)Cl |&1:0,0,1|` crashes Python),
+    wherever groups come in: CXSMILES, V3000 enhanced-stereo collections
+    (which must also list as many atoms as their count: 2024.03 reads a
+    missing first atom uninitialized and repeats the last), Marvin atom
+    arrays that give two atoms one id (`Error::Parse`), Commonchem JSON,
+    molecule pickles, and `set_stereo_groups`.
+  - Mol2 bond lines must name two atoms of the molecule (#9417): 2024.03
+    refuses a bond only when both are out of range, and reads its atom
+    table past the end for the other.
+  - The PDB reader with proximity bonding, and `determine_connectivity` and
+    `determine_bonds`, refuse a hydrogen RDKit would bond to several atoms,
+    whose extra bonds RDKit 2024.03 removes while it iterates over them
+    (#9444).
+  - Molecules RDKit's pickler would write but could not read back are
+    refused wherever a molecule is pickled: `Error::Value`, or a panic from
+    `Mol::to_binary` and `ChemicalReaction::to_binary`. MolPickler writes
+    each query node's number of children in one byte, and, in a molecule of
+    at most 255 atoms, substance groups' list sizes, stereo groups' counts
+    and sizes, and the bond indices both name; it truncates larger values.
+    It writes property counts in two bytes, so more than 65,535 properties
+    on a molecule, atom, bond, conformer, or substance group are refused
+    too. The fragment catalog's generator checks its molecules' queries and
+    property counts, but not their substance or stereo groups, which
+    2024.03's fragments do not keep.
+  - `RingInfo::num_relevant_cycles` is `Error::Value` for a count past
+    `u32`, which RDKit converts unchecked.
+  - `expand_query` on a query atom or bond without a query; RDKit 2024.03
+    dereferences it.
   - Drawing: atom labels whose colon RDKit's colon adjustment indexes past
     the label's characters (`"A:"`), legends of only newlines, comic-mode
     arrowheads of no length, and a reaction layout checked as 2024.03 lays
@@ -103,8 +149,12 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
   - CXSMILES fields RDKit would read past the end of, wherever it parses
     SMILES or SMARTS with CXSMILES on (the readers, FMCS's initial seed,
     RASCAL's equivalent atoms, filter-catalog SMARTS, deprotections,
-    scaffold-network reactions, and the text the standardizers and feature
-    definitions read), CML of tetrahedral atoms with fewer than four
+    scaffold-network reactions, the normalizations the standardizers read,
+    query-definition files, recursive-query labels, `M  MRV SMA` lines and
+    SMARTSQ data in mol blocks, and feature definitions); a polymer S-group
+    only where strictCXSMILES is off. A normalizations file is read once and
+    handed to RDKit as checked text or data, so a file of no transformations
+    is refused where RDKit would read it from cleanup parameters. CML of tetrahedral atoms with fewer than four
     neighbors, InChI of atoms with more than 20 bonds or stereo it would
     overrun, and V3000 reaction agents; V3000 S-group values and S-group
     lines RDKit 2024.03 reads uninitialized when the line ends inside them
@@ -112,13 +162,14 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
   - CoordGen of double bonds marked E or Z without stereo atoms, the
     Hückel method where YAeHMOP cannot open the output files RDKit 2024.03
     writes in the current directory (`Error::Runtime`), FMCS's `Verbose`
-    with `StoreAll` and queries of 64 or more bonds, more than 32 CIP stereo
+    with `StoreAll`, more than 32 CIP stereo
     configurations, MolHash's Extended Murcko scaffold of more than 4000
     atoms, and, where SMILES are parsed and molecules sanitized or kekulized,
     Kekulize's enumeration of 32 or more dummy atoms (README, Known
     limitations, for the other paths).
   - RDKit 2024.03's C-string exceptions (a bond query SMARTS cannot write)
-    are `Error::Value`, without reading the dangling string; `MaeWriter`
+    are `Error::Runtime`, as Python's RuntimeError, without reading the
+    dangling string; `MaeWriter`
     writes through a stream of its own, since 2024.03's shared-stream
     constructor always throws; the Marvin reaction reader goes through
     2024.03's stream reader, whose block reader is declared but not

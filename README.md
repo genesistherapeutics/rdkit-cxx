@@ -250,7 +250,10 @@ file's line count.
   bundle, catalog, and query pickles, and PNG metadata), can't be checked:
   RDKit's pickle reader trusts the query trees and values it reads. Neither
   can Boost.Serialization archives. So the functions that read them are
-  `unsafe fn`s whose contract is "bytes RDKit wrote".
+  `unsafe fn`s whose contract is "bytes RDKit wrote". RDKit's pickler
+  truncates some counts to one byte, and property counts to two, writing
+  pickles it cannot read back, so every function that pickles a molecule
+  refuses those molecules first.
 - **Cached data:** RDKit caches distance matrices and descriptor results in
   a molecule's properties and reads stale ones past their end. Wrappers that
   compute them clear them before and after the call, so no molecule Rust
@@ -348,6 +351,20 @@ platforms, and the last needs the system to run out of threads:
   other parsers and the calls that sanitize inside RDKit are not checked:
   the shift is masked on the supported CPUs, so kekulization gives up on
   such a system rather than overrunning memory.
+- **MCS seeds of exactly 64 new bonds.** RDKit 2024.03's FMCS
+  (`Seed::grow`) refuses a seed with more than 64 new external bonds, but
+  computes `1uLL << 64` for one with exactly 64, which is undefined. On the
+  supported CPUs the shift is masked, so that seed is not grown and the MCS
+  can come out smaller; no memory is read or written amiss. Refusing every
+  query molecule of 64 or more bonds would refuse ordinary large molecules.
+  R-group decomposition's MCS alignment runs the same search.
+- **Trajectory snapshot indices.** RDKit 2024.03's AMBER and GROMOS
+  trajectory readers (`read_amber_trajectory`, `read_gromos_trajectory`) add
+  each snapshot through `Trajectory::insertSnapshot`, which returns
+  `insert(begin() + n, s) - begin()`. C++17 leaves the order of the
+  subtraction's operands unspecified, so `begin()` may be taken before the
+  insert reallocates the vector, and the difference is then taken with an
+  invalidated iterator. The result is an index the readers ignore.
 - **A multithreaded supplier whose threads cannot all start.** RDKit 2024.03's
   multithreaded suppliers start their threads in the constructor. When the
   system refuses a thread, the constructor throws and the base class's
