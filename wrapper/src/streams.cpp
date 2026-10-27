@@ -10,9 +10,9 @@
 #include <cstring>
 #include <fstream>
 #include <random>
-#include <regex>
 #include <set>
 #include <sstream>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -314,23 +314,72 @@ class SGroupReplay {
 // last, and it keeps an atom listed twice, which then dangles once removed
 // (check_stereo_group_members in mol_checks.h): say, when the reader removes
 // the hydrogens.
+// RDKit matches the line with
+//   MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *
+// which this matches by hand: the wrapper keeps std::regex off this path,
+// which every V3000 read takes, since DRD (the races job) cannot see
+// libstdc++'s regex compiler's lazily built tables ordered between threads.
+bool match_stereo_collection(const std::string &line, std::string &type,
+                             std::string &count, std::string &atoms) {
+  static constexpr std::string_view prefix = "MDLV30/STE";
+  auto digit = [](char c) { return c >= '0' && c <= '9'; };
+  if (line.compare(0, prefix.size(), prefix) != 0 ||
+      line.size() < prefix.size() + 3) {
+    return false;
+  }
+  std::size_t pos = prefix.size();
+  type = line.substr(pos, 3);
+  pos += 3;
+  while (pos < line.size() && digit(line[pos])) {
+    ++pos;
+  }
+  const auto spaces = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  static constexpr std::string_view atoms_tag = "ATOMS=(";
+  if (pos == spaces || line.compare(pos, atoms_tag.size(), atoms_tag) != 0) {
+    return false;
+  }
+  pos += atoms_tag.size();
+  const auto count_start = pos;
+  while (pos < line.size() && digit(line[pos])) {
+    ++pos;
+  }
+  if (pos == count_start) {
+    return false;
+  }
+  count = line.substr(count_start, pos - count_start);
+  const auto count_end = pos;
+  while (pos < line.size() && line[pos] == ' ') {
+    ++pos;
+  }
+  if (pos == count_end) {
+    return false;
+  }
+  auto end = line.find_last_not_of(' ');
+  if (end == std::string::npos || end < pos || line[end] != ')') {
+    return false;
+  }
+  atoms = line.substr(pos, end - pos);
+  return true;
+}
+
 std::string stereo_collection_error(const std::string &line) {
-  // A plain local, as RDKit's: DRD (the races job) cannot see a function's
-  // static initialization ordered with other threads' reads.
-  const std::regex label(
-      R"regex(MDLV30/STE(...)([0-9]*) +ATOMS=\(([0-9]+) +(.*)\) *)regex");
-  std::smatch match;
-  if (!std::regex_match(line, match, label) ||
-      (match[1] != "ABS" && match[1] != "REL" && match[1] != "RAC")) {
+  std::string type;
+  std::string count_text;
+  std::string atoms;
+  if (!match_stereo_collection(line, type, count_text, atoms) ||
+      (type != "ABS" && type != "REL" && type != "RAC")) {
     return {};
   }
   unsigned int count;
   try {
-    count = RDKit::FileParserUtils::toUnsigned(match[3].str(), true);
+    count = RDKit::FileParserUtils::toUnsigned(count_text, true);
   } catch (const std::exception &) {
     return {};  // RDKit throws
   }
-  std::stringstream stream(match[4].str());
+  std::stringstream stream(atoms);
   std::set<unsigned int> seen;
   unsigned int index = 0;
   bool written = false;
