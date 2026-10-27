@@ -347,7 +347,8 @@ fn malformed_json() {
     assert!(is_parse(
         r#"{"rdkitjson":{"version":12},"molecules":[{"atoms":[{"z":6}],"bonds":[]}]}"#
     ));
-    // A value of the wrong type, which boost::json refuses.
+    // A value of the wrong type, which RDKit 2025.03 reads with RapidJSON
+    // without checking its type, is refused.
     assert!(is_parse(&doc(&[butene_with_bonds(
         r#"[{"atoms":[0,"1"]}]"#,
         ""
@@ -385,6 +386,79 @@ fn malformed_json() {
         )]))
         .is_err()
     );
+}
+
+// RDKit 2025.03 reads these with RapidJSON's accessors, which do not check
+// types or bounds: they are parse errors here.
+#[test]
+fn values_rdkit_reads_unchecked_are_refused() {
+    let is_parse = |json: &str| matches!(json_to_mols(json), Err(Error::Parse { .. }));
+    let ok = doc(&[butene("")]);
+    assert!(json_to_mols(&ok).is_ok());
+    for json in [
+        // Headers and molecules.
+        r#"{"rdkitjson":{"version":12.0},"molecules":[]}"#.to_owned(),
+        r#"{"commonchem":{"version":"10"},"molecules":[]}"#.to_owned(),
+        doc(&["[]".to_owned()]),
+        doc(&[butene(r#","name":7"#)]),
+        doc(&[r#"{"atoms":{},"bonds":[]}"#.to_owned()]),
+        doc(&[r#"{"atoms":[1],"bonds":[]}"#.to_owned()]),
+        // Bonds.
+        doc(&[butene_with_bonds(r#"[{"atoms":[0]}]"#, "")]),
+        doc(&[butene_with_bonds(r#"[{"bo":1}]"#, "")]),
+        doc(&[butene_with_bonds(r#"[{"atoms":[0,1.0]}]"#, "")]),
+        doc(&[butene_with_bonds(r#"[[0,1]]"#, "")]),
+        doc(&[butene_with_bonds(
+            r#"[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"either","stereoAtoms":{}},{"atoms":[2,3]}]"#,
+            "",
+        )]),
+        // Stereo and substance groups.
+        doc(&[butene(r#","stereoGroups":{}"#)]),
+        doc(&[butene(r#","stereoGroups":[{"type":1,"atoms":[1]}]"#)]),
+        doc(&[butene(
+            r#","stereoGroups":[{"type":"or","id":0.5,"atoms":[1]}]"#,
+        )]),
+        doc(&[butene(r#","stereoGroups":[{"type":"or","atoms":["1"]}]"#)]),
+        doc(&[butene(r#","substanceGroups":[{"properties":[]}]"#)]),
+        doc(&[butene(r#","substanceGroups":[{"properties":{"TYPE":5}}]"#)]),
+        doc(&[butene(
+            r#","substanceGroups":[{"properties":{"TYPE":"SRU"},"atoms":"1"}]"#,
+        )]),
+        doc(&[butene(
+            r#","substanceGroups":[{"properties":{"TYPE":"SRU"},"cstates":[{}]}]"#,
+        )]),
+        doc(&[butene(
+            r#","substanceGroups":[{"properties":{"TYPE":"SRU"},"brackets":[[[0,0,"z"]]]}]"#,
+        )]),
+        doc(&[butene(
+            r#","substanceGroups":[{"properties":{"TYPE":"SRU"},"attachPoints":[{"aIdx":0,"id":3}]}]"#,
+        )]),
+        // Conformers and properties.
+        doc(&[butene(r#","conformers":[{"dim":"2","coords":[]}]"#)]),
+        doc(&[butene(r#","conformers":[{"dim":2,"coords":[[0,"0"]]}]"#)]),
+        doc(&[butene(r#","properties":[]"#)]),
+        // Extensions.
+        doc(&[butene(r#","extensions":[{"name":5}]"#)]),
+        doc(&[butene(
+            r#","extensions":[{"name":"rdkitRepresentation","formatVersion":"2"}]"#,
+        )]),
+        doc(&[butene(
+            r#","extensions":[{"name":"rdkitRepresentation","formatVersion":2,"cipCodes":[[0]]}]"#,
+        )]),
+        doc(&[butene(
+            r#","extensions":[{"name":"rdkitRepresentation","formatVersion":2,"atomRings":[[0,"1",2]]}]"#,
+        )]),
+        doc(&[butene(
+            r#","extensions":[{"name":"partialCharges","formatVersion":10,"values":{}}]"#,
+        )]),
+        atom_query(r#"{"tag":"3"}"#),
+        atom_query(r#"{"tag":3,"descr":"AtomAtomicNum"}"#),
+        atom_query(r#"{"tag":3,"descr":7,"val":6}"#),
+        atom_query(r#"{"tag":3,"descr":"AtomAtomicNum","val":6,"negated":0}"#),
+        atom_query(r#"{"tag":1,"descr":"AtomAnd","children":[5,6]}"#),
+    ] {
+        assert!(is_parse(&json), "{json}");
+    }
 }
 
 #[test]
