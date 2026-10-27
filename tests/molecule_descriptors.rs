@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports RDKit's rdkit/ML/Descriptors/UnitTestMolDescriptors.py, and pins
-// values from Python's MolecularDescriptorCalculator in RDKit 2026.03.6.
+// values from Python's MolecularDescriptorCalculator in RDKit 2025.03.6.
 // Also tests the ports of rdkit.Chem.ReducedGraphs and
 // rdkit.Chem.ChemUtils.DescriptorUtilities.
 
@@ -79,7 +79,7 @@ fn matches_python() {
             "Number of Hydrogen Bond Donors",
             "Number of N functional groups attached to aromatics",
             "N/A",
-            "CalcFractionCSP3( (rdkit.Chem.rdchem.Mol)mol) -> float : returns the fraction of C \
+            "CalcFractionCSP3( (Mol)mol) -> float : returns the fraction of C \
              atoms that are SP3 hybridized",
         ]
     );

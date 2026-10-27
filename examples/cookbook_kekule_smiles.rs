@@ -25,6 +25,6 @@ fn main() -> Result<()> {
     };
     let kekule = mol_to_smiles_with_params(&mol, &params)?;
     println!("{kekule}");
-    assert_eq!(kekule, "CN1C=CC=C1NC1=CC=CC=N1");
+    assert_eq!(kekule, "CN1C=CC=C1NC1=NC=CC=C1");
     Ok(())
 }

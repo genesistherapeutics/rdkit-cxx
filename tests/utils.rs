@@ -5,7 +5,7 @@
 
 // Ports rdkit/utils/UnitTestUtils.py, with the doctests of listutils, and
 // checks rdkit_cxx::rd_paths, with values from Python's modules in RDKit
-// 2026.03.6.
+// 2025.03.6.
 
 use std::io::Cursor;
 

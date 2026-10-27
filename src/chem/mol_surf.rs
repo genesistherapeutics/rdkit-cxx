@@ -23,7 +23,7 @@ use crate::py::py_sum;
 
 /// How much each bond type shortens the sum of its atoms' radii in Python's
 /// reference Labute calculation. Mirrors `MolSurf.bondScaleFacts`, which
-/// RDKit 2026.03 keeps as a list of the aromatic, single, double, and triple
+/// RDKit 2025.03 keeps as a list of the aromatic, single, double, and triple
 /// factors.
 pub fn bond_scale_facts() -> Vec<(BondType, f64)> {
     vec![
