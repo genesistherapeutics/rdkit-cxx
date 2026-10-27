@@ -456,6 +456,15 @@ fn substance_group_checks() {
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
     assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
+    // RDKit 2025.09 leaves a missing lvIdx uninitialized (its writer leaves
+    // out -1); the crate gives it -1.
+    let mol = json_to_mols(&sgroup(r#","attachPoints":[{"aIdx":1}]"#))
+        .unwrap()
+        .remove(0);
+    let points = get_mol_substance_groups(&mol)[0]
+        .get_attach_points()
+        .unwrap();
+    assert_eq!((points[0].a_idx, points[0].lv_idx), (1, -1));
 }
 
 #[test]

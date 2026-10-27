@@ -122,7 +122,9 @@ A program built against one release stops when it loads with another.
     hydrogen that could be bonded to three or more atoms, whose bonds RDKit
     2025.09 prunes while it iterates over them.
   - JSON refuses a ranged `AtomRingSize` query, which RDKit 2025.09 reads as
-    an `EqualityQuery`.
+    an `EqualityQuery`. A JSON attachment point without `lvIdx`, which RDKit
+    2025.09 leaves uninitialized, gets -1, as RDKit's writer means by leaving
+    it out.
   - The `ExtendedMurcko` hash takes fewer than 4,096 atoms: RDKit 2025.09
     takes a byte per atom from the stack.
   - Ring-system templates are checked as SMILES, as RDKit 2025.09 parses

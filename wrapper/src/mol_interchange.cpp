@@ -695,6 +695,39 @@ JSONWriteParametersData json_write_parameters_default() {
   return data;
 }
 
+// RDKit 2025.09's readSubstanceGroups leaves an attachment point's lvIdx
+// uninitialized when the point has none, as RDKit's writer leaves out -1
+// (rdkit-2024.09's fill_leaving_atoms). The checked document gets -1 there,
+// which RDKit reads through unsigned into AttachPoint's int as -1.
+void fill_leaving_atoms(bj::value &doc) {
+  auto *top = doc.if_object();
+  auto *mols = top ? top->if_contains("molecules") : nullptr;
+  if (!mols || !mols->is_array()) {
+    return;
+  }
+  for (auto &mol : mols->as_array()) {
+    auto *sgroups = mol.is_object()
+                        ? mol.as_object().if_contains("substanceGroups")
+                        : nullptr;
+    if (!sgroups || !sgroups->is_array()) {
+      continue;
+    }
+    for (auto &sgroup : sgroups->as_array()) {
+      auto *points = sgroup.is_object()
+                         ? sgroup.as_object().if_contains("attachPoints")
+                         : nullptr;
+      if (!points || !points->is_array()) {
+        continue;
+      }
+      for (auto &point : points->as_array()) {
+        if (point.is_object() && !point.as_object().contains("lvIdx")) {
+          point.as_object()["lvIdx"] = std::int64_t{-1};
+        }
+      }
+    }
+  }
+}
+
 // RDKit parses the document it is given with boost::json's default options
 // (JSONDataToMols), as this does. It is handed the checked document,
 // serialized again, so it parses exactly what was checked (U2), whatever its
@@ -707,6 +740,7 @@ std::unique_ptr<MolList> json_to_mols(rust::Str json_block,
     bj::value doc =
         bj::parse(std::string_view(json_block.data(), json_block.size()));
     DocumentChecker check(doc);
+    fill_leaving_atoms(doc);
     mols = MI::JSONDataToMols(bj::serialize(doc), p);
   } catch (const boost::system::system_error &e) {
     // boost::json's errors, for text that is not JSON and for values RDKit
