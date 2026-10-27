@@ -43,6 +43,7 @@
 #include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
 

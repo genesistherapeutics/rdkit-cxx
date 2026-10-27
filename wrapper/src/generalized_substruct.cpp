@@ -33,6 +33,7 @@
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/mol_enumerator.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_query.h"
 #include "rdkit-cxx/util.h"
