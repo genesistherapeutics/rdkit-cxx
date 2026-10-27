@@ -11,12 +11,13 @@ exclude: ^wrapper/third_party/
 
 repos:
   # Every change goes through a branch and a pull request, so a commit on main
-  # is a mistake. Listed first so it fails before the slower hooks run.
+  # or an RDKit series' branch is a mistake. Listed first so it fails before
+  # the slower hooks run.
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
       - id: no-commit-to-branch
-        args: [--branch, main]
+        args: [--branch, main, --pattern, 'rdkit-\d{4}\.\d{2}']
       - id: check-toml
       - id: check-yaml
       - id: end-of-file-fixer
