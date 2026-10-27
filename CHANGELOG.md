@@ -81,6 +81,15 @@
   query of its own: RDKit's `QueryBond::expandQuery` dereferences the null
   query, and `QueryAtom`'s fails an invariant. No safe Rust path makes such
   an atom or bond, so this only guards a path RDKit might add.
+- `SynthonSpace::build_synthon_fingerprints` clears RDKit's Ctrl-C flag
+  before and after the build, and the fingerprint searches and the
+  database writers are `Error::Value` for a space whose fingerprints are
+  incomplete. RDKit leaves its `SIGINT` handler installed after a
+  substructure match, so a Ctrl-C afterwards sets its flag with nothing to
+  clear it; the build then returned before fingerprinting anything, with
+  the space's fingerprint type set, and the next fingerprint search
+  dereferenced the missing fingerprints (a segfault, as in Python after a
+  substructure search, a SIGINT, and `BuildSynthonFingerprints`).
 
 ## 2026.9.0
 
