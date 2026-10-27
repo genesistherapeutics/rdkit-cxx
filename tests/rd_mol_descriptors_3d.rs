@@ -863,7 +863,7 @@ fn double_cubic_lattice_volume() {
     );
     assert_close(dclv.get_compactness(), 1.1465997055971109, 1e-9);
     assert_close(dclv.get_packing_density(), 0.2728973640459242, 1e-9);
-    // RDKit 2026.03 keeps every point the surface areas above tested, once
+    // RDKit 2025.09 keeps every point the surface areas above tested, once
     // per test: atom 0's 320 twice.
     let points = dclv.get_surface_points();
     assert_eq!(points.len(), 20);
