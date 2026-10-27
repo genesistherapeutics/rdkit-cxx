@@ -431,6 +431,24 @@ class SpaceMatrixCacheGuard {
 
 constexpr int kMaxSynthonNumber = 15;
 
+// The separators RDKit splits lines at, and the header lines deduceFormat
+// knows, made when the library loads, as rdkit-2025.09's wrapper makes
+// them: function statics initialize themselves, and libstdc++'s regex
+// tables, through atomics and a futex that Valgrind's DRD cannot see, so the
+// races job would report every later read of them from another thread. (It
+// passed only because an earlier phase reads a synthon file on the main
+// thread first.)
+const std::regex kTab("\\t");
+const std::regex kTabs("\\t+");
+const std::regex kSpaces("\\s+");
+const std::regex kCommas(",+");
+const std::vector<std::vector<std::string>> kFirstLineOpts{
+    std::vector<std::string>{"SMILES", "synton_id", "synton#", "reaction_id"},
+    std::vector<std::string>{"SMILES", "synton_id", "synton#", "reaction_id",
+                             "release"},
+    std::vector<std::string>{"SMILES", "synton_id", "synton_role",
+                             "reaction_id"}};
+
 std::vector<std::string> split_line(const std::string &str,
                                     const std::regex &re) {
   return {std::sregex_token_iterator(str.begin(), str.end(), re, -1),
@@ -439,28 +457,20 @@ std::vector<std::string> split_line(const std::string &str,
 
 // As deduceFormat in SynthonSpace.cpp, once a line's separators are checked.
 int deduce_format(const std::string &line) {
-  static const std::vector<std::vector<std::string>> first_line_opts{
-      std::vector<std::string>{"SMILES", "synton_id", "synton#", "reaction_id"},
-      std::vector<std::string>{"SMILES", "synton_id", "synton#", "reaction_id",
-                               "release"},
-      std::vector<std::string>{"SMILES", "synton_id", "synton_role",
-                               "reaction_id"}};
-  static const std::regex regext("\\t");
-  auto parts = split_line(line, regext);
+  const auto &first_line_opts = kFirstLineOpts;
+  auto parts = split_line(line, kTab);
   for (std::size_t i = 0; i < first_line_opts.size(); ++i) {
     if (parts == first_line_opts[i]) {
       return static_cast<int>(i + 6);
     }
   }
-  static const std::regex regexws("\\s+");
-  parts = split_line(line, regexws);
+  parts = split_line(line, kSpaces);
   for (std::size_t i = 0; i < first_line_opts.size(); ++i) {
     if (parts == first_line_opts[i]) {
       return static_cast<int>(i);
     }
   }
-  static const std::regex regexc(",+");
-  parts = split_line(line, regexc);
+  parts = split_line(line, kCommas);
   for (std::size_t i = 0; i < first_line_opts.size(); ++i) {
     if (parts == first_line_opts[i]) {
       return static_cast<int>(i + first_line_opts.size());
@@ -552,9 +562,6 @@ std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
 // Lines as std::getline gives them to readStream: split at '\n', with the
 // empty line after a final '\n', and as getLine strips a '\r' at the end.
 void check_synthon_text(std::string_view text) {
-  static const std::regex regext("\\t+");
-  static const std::regex regexws("\\s+");
-  static const std::regex regexc(",+");
   int format = -1;
   std::uint64_t num_lines = 0;
   std::map<std::string, std::set<int>> sets;
@@ -584,11 +591,11 @@ void check_synthon_text(std::string_view text) {
       } else {
         std::vector<std::string> fields;
         if (format < 3) {
-          fields = split_line(line, regexws);
+          fields = split_line(line, kSpaces);
         } else if (format > 3 && format < 6) {
-          fields = split_line(line, regexc);
+          fields = split_line(line, kCommas);
         } else if (format > 5) {
-          fields = split_line(line, regext);
+          fields = split_line(line, kTabs);
         }
         if (fields.size() < 4) {
           return;  // RDKit refuses the line.
