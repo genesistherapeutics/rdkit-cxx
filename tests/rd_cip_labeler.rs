@@ -120,10 +120,10 @@ fn indices_that_rdkit_trusts() {
 }
 
 // RDKit 2024.09's Sp2Bond reads no neighbor of its own, so the double bond
-// whose stereo atom is its other end is labeled as Python labels it, and a
-// label is never cleared. Its AtropisomerBond has no carriers for a bond
-// with a bare end and reads them once the other end has two other bonds
-// (Python segfaults for "CC(C)O"); such a bond is left out, label and all.
+// whose stereo atom is its other end is labeled as Python labels it. Its
+// AtropisomerBond has no carriers for a bond with a bare end and reads them
+// once the other end has two other bonds (Python segfaults for "CC(C)O");
+// every such bond is left out and its label cleared, as RDKit 2026.09 does.
 #[test]
 fn bonds_without_carriers() {
     let mut mol = mol_from_smiles("[C]=CC/C=C/C").unwrap();
@@ -137,25 +137,34 @@ fn bonds_without_carriers() {
         [(0, "Z".to_string()), (3, "E".to_string())]
     );
 
-    // Bare ends with at most one other bond at the other end: RDKit reads
-    // no carrier and labels the bond.
-    for smiles in ["CC", "CCO"] {
-        let mut mol = mol_from_smiles(smiles).unwrap();
-        let mut bond = mol.get_bond_with_idx_mut(0).unwrap();
-        bond.set_stereo(BondStereo::Stereoatropcw);
-        assign_cip_labels(&mut mol).unwrap();
-        assert_eq!(bond_labels(&mol), [(0, "P".to_string())], "{smiles}");
-    }
-
-    // Two other bonds at the far end: left out, its label kept. ("CC(C)C"
-    // ties, so Python leaves it so too.)
-    for smiles in ["CC(C)O", "CC(C)C", "OC(C)C"] {
+    for smiles in ["CC", "CCO", "CC(C)O", "CC(C)C", "OC(C)C"] {
         let mut mol = mol_from_smiles(smiles).unwrap();
         let idx = if smiles == "OC(C)C" { 2 } else { 0 };
         let mut bond = mol.get_bond_with_idx_mut(idx).unwrap();
         bond.set_stereo(BondStereo::Stereoatropcw);
         bond.set_prop("_CIPCode", "X");
         assign_cip_labels(&mut mol).unwrap();
-        assert_eq!(bond_labels(&mol), [(idx, "X".to_string())], "{smiles}");
+        assert!(bond_labels(&mol).is_empty(), "{smiles}");
     }
+}
+
+/// RDKit 2024.09's PairList shifts a 64-bit pairing by 63 less the number of
+/// descriptors it pairs, undefined past 64.
+#[test]
+fn at_most_64_configurations() {
+    let chain = |n: usize| format!("C{}C", "[C@H](F)".repeat(n));
+    let mut mol = mol_from_smiles(&chain(65)).unwrap();
+    assert!(matches!(
+        assign_cip_labels(&mut mol),
+        Err(Error::Value { .. })
+    ));
+    let mut mol = mol_from_smiles(&chain(64)).unwrap();
+    assign_cip_labels(&mut mol).unwrap();
+    // Only those asked for count.
+    let mut mol = mol_from_smiles(&chain(65)).unwrap();
+    let params = AssignCIPLabelsParams {
+        atoms_to_label: Some((1..=64).collect()),
+        ..Default::default()
+    };
+    assign_cip_labels_with_params(&mut mol, &params).unwrap();
 }

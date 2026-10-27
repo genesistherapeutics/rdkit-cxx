@@ -146,10 +146,11 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
   - `MolCatalogEntry::from_pickle` builds the entry as the catalog's reader
     does, since 2024.09's pickle constructor deletes an uninitialized
     pointer too.
-  - `assign_cip_labels` labels what RDKit 2024.09 labels, as Python does,
-    and leaves out (with any label it had) an atropisomer bond with a bare
-    end whose other end has two other bonds, for which 2024.09 reads past
-    its empty carriers.
+  - `assign_cip_labels` leaves out an atropisomer bond with a bare end,
+    clearing any label it had, as RDKit 2026.09 does, since 2024.09 reads
+    past its empty carriers for one, and refuses more than 64 stereo atoms
+    and bonds at a time, past which 2024.09's descriptor pairing shifts by
+    a negative count (`Error::Value`).
   - `RingInfo.num_relevant_cycles` is `Error::Runtime` before the ring
     families are found, and every wrapper source reads `RDConfig.h` first,
     as for 2026.03.

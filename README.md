@@ -331,6 +331,12 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   (aromatic dummy atoms), undefined from 32, and FMCS by a seed's new bonds,
   undefined at 64 (a search that would first run 2^63 steps). Neither result
   reaches memory.
+- **CIP labels in fused ring systems.** RDKit 2024.09's CIP labeler shifts by
+  63 less the number of stereo descriptors it compares. The wrapper refuses
+  more than 64 stereo configurations, but in fused ring systems one atom can
+  stand for several of the labeler's digraph nodes, and a bound that covers
+  that would refuse common molecules. A shift past 63 needs more than 64
+  descriptors in one comparison.
 - **R-group decomposition** with `include_target_mol_in_results` inserts a
   range of a vector into itself when an R group has several fragments
   (`RGroupData::mergeIntoCombinedMol`), which libstdc++ copies from storage

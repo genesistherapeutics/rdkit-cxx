@@ -5,11 +5,12 @@
 
 #include "rdkit-cxx/cip_labeler.h"
 
+#include <cstddef>
 #include <mutex>
+#include <string>
 
 #include <GraphMol/Atropisomers.h>
 #include <GraphMol/CIPLabeler/CIPLabeler.h>
-#include <GraphMol/Chirality.h>
 #include <boost/dynamic_bitset.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
@@ -18,6 +19,9 @@
 namespace rdkit_cxx {
 
 namespace {
+
+// The most stereo atoms and bonds labeled in one call (assign_cip_labels).
+constexpr std::size_t kMaxCipConfigs = 64;
 
 // As pythonObjectToDynBitset in Code/RDBoost/Wrap.cpp, which
 // assignCIPLabelsWrapHelper in Code/GraphMol/CIPLabeler/Wrap/rdCIPLabeler.cpp
@@ -35,23 +39,45 @@ boost::dynamic_bitset<> to_bitset(rust::Slice<const std::uint32_t> indices,
   return result;
 }
 
-// RDKit 2024.09's AtropisomerBond leaves its carriers empty for a bond with
-// an end of no other bonds (getAtropisomerAtomsAndBonds fails), and its label
-// reads carriers[0] or carriers[1] when an end has more than one edge past the
-// bond (one per other bond at most, rdkit/rdkit#9577). The wrapper leaves
-// such a bond out unless neither end has two other bonds, keeping its labels
-// as RDKit keeps those of a bond it cannot label. 2024.09's Sp2Bond reads no
-// neighbor of its own, so double bonds are left to RDKit.
+// RDKit 2024.09's AtropisomerBond constructor (configs/AtropisomerBond.cpp)
+// returns without carriers when getAtropisomerAtomsAndBonds fails (an end of
+// no other bonds, say), and AtropisomerBond::label then reads carriers[0]
+// or carriers[1] of the empty vector once an end has more than one edge past
+// the bond (rdkit/rdkit#9577). The wrapper leaves every such bond unlabeled,
+// as RDKit 2026.09 does, clearing a stale label as RDKit clears each bond's
+// before labeling it. 2024.09's Sp2Bond reads no neighbor of its own, so
+// double bonds are left to RDKit.
 bool labelable(const Bond &bond) {
-  if (bond.getStereo() != Bond::STEREOATROPCW &&
-      bond.getStereo() != Bond::STEREOATROPCCW) {
-    return true;
+  switch (bond.getStereo()) {
+    case Bond::STEREOATROPCW:
+    case Bond::STEREOATROPCCW: {
+      RDKit::Atropisomers::AtropAtomAndBondVec atoms_and_bonds[2];
+      return RDKit::Atropisomers::getAtropisomerAtomsAndBonds(
+          &bond, atoms_and_bonds, bond.getOwningMol());
+    }
+    default:
+      return true;
   }
-  RDKit::Atropisomers::AtropAtomAndBondVec atoms_and_bonds[2];
-  return RDKit::Atropisomers::getAtropisomerAtomsAndBonds(
-             &bond, atoms_and_bonds, bond.getOwningMol()) ||
-         (bond.getBeginAtom()->getDegree() <= 2 &&
-          bond.getEndAtom()->getDegree() <= 2);
+}
+
+// As findConfigs in CIPLabeler.cpp: the atoms and bonds RDKit labels.
+bool is_config(const Atom &atom) {
+  return atom.getChiralTag() == Atom::CHI_TETRAHEDRAL_CW ||
+         atom.getChiralTag() == Atom::CHI_TETRAHEDRAL_CCW;
+}
+
+bool is_config(const Bond &bond) {
+  switch (bond.getStereo()) {
+    case Bond::STEREOE:
+    case Bond::STEREOZ:
+    case Bond::STEREOCIS:
+    case Bond::STEREOTRANS:
+    case Bond::STEREOATROPCW:
+    case Bond::STEREOATROPCCW:
+      return true;
+    default:
+      return false;
+  }
 }
 
 }  // namespace
@@ -68,9 +94,39 @@ void assign_cip_labels(RWMol &mol, bool has_atoms,
   }
   for (auto idx = bond_set.find_first(); idx != bond_set.npos;
        idx = bond_set.find_next(idx)) {
-    if (!labelable(*mol.getBondWithIdx(idx))) {
+    auto *bond = mol.getBondWithIdx(idx);
+    if (!labelable(*bond)) {
       bond_set.reset(idx);
+      bond->clearProp(RDKit::common_properties::_CIPCode);
     }
+  }
+  // RDKit 2024.09's PairList::addAndPair (rules/Pairlist.h), which Rules 4b
+  // and 5 fill with the descriptors of a branch's stereo atoms and bonds,
+  // sets bit 63 - size of a 64-bit pairing for each (64-bit since
+  // 2024.09.3, rdkit/rdkit#8015), which is a negative shift once a list
+  // holds more than 64 (2026.03 removed it). A list holds its reference
+  // descriptor and one for each node of a branch of the digraph that has
+  // one: in a tree or a single ring each other stereo atom or bond is at
+  // most one node of a branch, so at most kMaxCipConfigs of them keep every
+  // list within 64. (In fused ring systems one atom can be several nodes of
+  // a branch; a sound bound there would refuse common polycycles, so it is
+  // not checked: README, Known limitations.)
+  std::size_t configs = 0;
+  for (auto idx = atom_set.find_first(); idx != atom_set.npos;
+       idx = atom_set.find_next(idx)) {
+    configs += is_config(*mol.getAtomWithIdx(idx));
+  }
+  for (auto idx = bond_set.find_first(); idx != bond_set.npos;
+       idx = bond_set.find_next(idx)) {
+    configs += is_config(*mol.getBondWithIdx(idx));
+  }
+  if (configs > kMaxCipConfigs) {
+    throw ValueErrorException(
+        "RDKit 2024.09's CIP labeler shifts by the number of stereo "
+        "descriptors it pairs, which is undefined past 64, so it labels at "
+        "most " +
+        std::to_string(kMaxCipConfigs) + " stereo atoms and bonds at a time; " +
+        std::to_string(configs) + " were asked for");
   }
   // RDKit 2026.03's assignCIPLabels resets ControlCHandler; 2024.09's does
   // not, and the lock costs it only concurrency (control_c_lock.h).
