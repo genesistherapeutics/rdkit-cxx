@@ -39,8 +39,8 @@ void check_finite_within(double value, double bound, const char *what) {
 
 // AtomRecord::isSolvent: atoms of these residues are left out.
 bool is_solvent(const std::string &res_name) {
-  for (const char *name : {"DOD", "D20", "HOH", "H20", "SOL", "SO4", "SUL",
-                           "WAT", "TIP", "P04"}) {
+  for (const char *name :
+       {"DOD", "D20", "HOH", "H20", "SOL", "SO4", "SUL", "WAT", "TIP", "P04"}) {
     if (res_name == name) {
       return true;
     }

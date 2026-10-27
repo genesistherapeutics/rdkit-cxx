@@ -97,8 +97,7 @@ pub mod torsion_fingerprints;
 
 pub use inchi::{
     InchiLogLevel, MolFromInchiParams, MolToInchiParams, inchi_available, inchi_to_inchi_key,
-    mol_from_inchi,
-    mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
+    mol_from_inchi, mol_from_inchi_with_params, mol_to_inchi, mol_to_inchi_and_aux_info,
     mol_to_inchi_and_aux_info_with_params, mol_to_inchi_key, mol_to_inchi_key_with_options,
     mol_to_inchi_with_params,
 };

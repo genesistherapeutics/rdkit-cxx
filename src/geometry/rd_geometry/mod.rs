@@ -9,8 +9,8 @@ mod grid;
 mod point;
 
 pub use grid::{
-    SetSphereOccupancyParams, UniformGrid3D, UniformGrid3DParams,
-    compute_grid_centroid, find_grid_terminal_points,
-    protrude_distance, tanimoto_distance, tversky_index, write_grid_to_file,
+    SetSphereOccupancyParams, UniformGrid3D, UniformGrid3DParams, compute_grid_centroid,
+    find_grid_terminal_points, protrude_distance, tanimoto_distance, tversky_index,
+    write_grid_to_file,
 };
 pub use point::{Point2D, Point3D, PointND, compute_dihedral_angle, compute_signed_dihedral_angle};

@@ -6,9 +6,9 @@
 #include "rdkit-cxx/mol_align.h"
 
 #include <algorithm>
-#include <iostream>
 #include <cmath>
 #include <cstring>
+#include <iostream>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -450,11 +450,10 @@ rust::Vec<double> get_all_conformer_best_rms(
 double calc_rms(const RWMol &prb_mol, const RWMol &ref_mol,
                 const BestAlignmentParamsData &params) {
   auto native = to_native(params, prb_mol, ref_mol);
-  return MolAlign::CalcRMS(const_cast<RWMol &>(prb_mol), ref_mol,
-                           params.prb_cid, params.ref_cid, native.map,
-                           params.max_matches,
-                           params.symmetrize_conjugated_terminal_groups,
-                           native.weights.get());
+  return MolAlign::CalcRMS(
+      const_cast<RWMol &>(prb_mol), ref_mol, params.prb_cid, params.ref_cid,
+      native.map, params.max_matches,
+      params.symmetrize_conjugated_terminal_groups, native.weights.get());
 }
 
 // As alignMolConfs in rdMolAlign.cpp, returning what Python's RMSlist

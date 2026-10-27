@@ -24,7 +24,6 @@
 
 namespace rdkit_cxx {
 
-
 // Shared structs, defined by the bridge (src/ffi/chirality.rs).
 struct IndexPair;
 struct BondWedgingParametersData;

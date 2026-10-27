@@ -13,8 +13,8 @@
 //! `Error::Value` with InChI's message: Python's exception also carries the
 //! molecule or InChI made despite the warning, which `rdinchi` returns.
 
-use crate::chem::rdinchi::{self, InchiToMolParams};
 use crate::chem::Mol;
+use crate::chem::rdinchi::{self, InchiToMolParams};
 use crate::rd_base::log_message;
 use crate::{Error, Result};
 

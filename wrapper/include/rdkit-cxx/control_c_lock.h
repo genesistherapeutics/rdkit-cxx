@@ -30,10 +30,11 @@ namespace rdkit_cxx {
 
 // Set while this thread runs a Rust closure that RDKit calls from inside a
 // substructure match (FMCS's final match checks run inside vf2): the thread
-// holds control_c_mutex, which it cannot release mid-match for the closure. A wrapper the closure calls that would take the
-// mutex again (undefined for a std::mutex the thread owns), or a lock that
-// comes before it in U4's order (which could deadlock with a thread waiting
-// for this one), fails with this check instead.
+// holds control_c_mutex, which it cannot release mid-match for the closure. A
+// wrapper the closure calls that would take the mutex again (undefined for a
+// std::mutex the thread owns), or a lock that comes before it in U4's order
+// (which could deadlock with a thread waiting for this one), fails with this
+// check instead.
 inline thread_local bool in_control_c_callback = false;
 
 inline void check_not_in_control_c_callback() {
@@ -87,10 +88,10 @@ inline ControlCMutex &control_c_mutex() {
 // hold it: Rust closures, which may call wrappers that take it, and steps
 // that take a lock ordered before it. A ReleaseControlC around such code
 // releases the lock the thread's innermost HoldControlC holds, if it holds
-// it, and takes it back after. RDKit runs such code between matches. When the thread holds the mutex through
-// another lock, which a ReleaseControlC cannot release, the code inside runs
-// as in_control_c_callback, so a wrapper it calls that would take the mutex
-// again fails instead.
+// it, and takes it back after. RDKit runs such code between matches. When the
+// thread holds the mutex through another lock, which a ReleaseControlC cannot
+// release, the code inside runs as in_control_c_callback, so a wrapper it calls
+// that would take the mutex again fails instead.
 class HoldControlC {
  public:
   HoldControlC();
