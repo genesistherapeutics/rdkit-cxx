@@ -56,6 +56,24 @@ bool uses_tautomers(StandardizeOp op) {
          op == StandardizeOp::SuperParent;
 }
 
+// Whether the op normalizes (normalizerFromParams), directly or through
+// cleanupInPlace, as MolStandardize.cpp's functions do; only those read the
+// normalization file, as in Python.
+bool normalizes(StandardizeOp op, bool skip_standardize) {
+  switch (op) {
+    case StandardizeOp::Reionize:
+    case StandardizeOp::RemoveFragments:
+    case StandardizeOp::CanonicalTautomer:
+      return false;
+    case StandardizeOp::FragmentParent:
+    case StandardizeOp::StereoParent:
+    case StandardizeOp::IsotopeParent:
+      return !skip_standardize;
+    default:
+      return true;
+  }
+}
+
 // Whether the op reionizes or uncharges the molecule, which sums its charges.
 bool sums_charges(StandardizeOp op, bool skip_standardize) {
   switch (op) {
@@ -117,6 +135,9 @@ class Standardizer {
       : d_op(op),
         d_params(to_cleanup_parameters(data)),
         d_skip(skip_standardize) {
+    if (normalizes(op, skip_standardize)) {
+      read_normalizations(d_params);
+    }
     switch (op) {
       case StandardizeOp::Normalize:
         d_normalizer.reset(MS::normalizerFromParams(d_params));
@@ -347,16 +368,20 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data,
   for (const auto &e : params.tautomerTransformData) {
     check_smiles_cx(std::get<1>(e));
   }
-  // Without normalization data, normalizerFromParams (Normalize.h) reads the
-  // normalization file itself, whose reactions this could not check. The
-  // file is read once here and given to RDKit as data, the transformations
-  // its reader would make of it (transformation_data).
+  return params;
+}
+
+// Without normalization data, normalizerFromParams (Normalize.h) reads the
+// normalization file itself, whose reactions this could not check. The file
+// is read once here and given to RDKit as data, the transformations its
+// reader would make of it (transformation_data). A file of no
+// transformations leaves the data empty, so RDKit reopens it.
+void read_normalizations(CleanupParameters &params) {
   if (params.normalizationData.empty() && !params.normalizations.empty()) {
     auto file = read_file(params.normalizations);
     check_transformation_lines(file);
     params.normalizationData = transformation_data(file);
   }
-  return params;
 }
 
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params) {

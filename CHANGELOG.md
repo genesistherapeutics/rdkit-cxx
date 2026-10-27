@@ -154,8 +154,8 @@ A program built against one release stops when it loads with another.
     text, tautomer scoring terms, SMILES holders, scaffold network bond
     breakers, and RASCAL's equivalent atoms. Files RDKit would open are read
     once by the wrapper, so RDKit never reads one that changed after the
-    check; a `CleanupParameters` naming a normalization file that cannot be
-    read is an error wherever it is used.
+    check; as in Python, only the calls that normalize read a
+    `CleanupParameters`' normalization file.
   - Proximity bonding (`determine_connectivity` and the PDB reader)
     refuses a hydrogen it would bond to three or more atoms, for which
     RDKit 2025.03 reads past the hydrogen's neighbor list (#9444).

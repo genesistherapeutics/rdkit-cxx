@@ -34,9 +34,12 @@ using CleanupParameters = RDKit::MolStandardize::CleanupParameters;
 // Conversions between the bridge's struct and RDKit's. File names holding a
 // NUL byte are refused (util.h's to_path). For parameters RDKit will
 // standardize with (`for_use`), the SMARTS in their data are checked as RDKit
-// parses them, and the normalization file is read into their data.
+// parses them.
 CleanupParameters to_cleanup_parameters(const CleanupParametersData &data,
                                         bool for_use = true);
+// Reads the normalization file of parameters without normalization data into
+// their data, checked, for the calls that normalize with them.
+void read_normalizations(CleanupParameters &params);
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params);
 
 // Takes ownership of a molecule an RDKit object returned, which may be an

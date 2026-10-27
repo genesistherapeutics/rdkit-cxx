@@ -84,8 +84,9 @@ std::unique_ptr<Normalizer> normalizer_from_data(
 
 std::unique_ptr<Normalizer> normalizer_from_params(
     const CleanupParametersData &params) {
-  return std::unique_ptr<Normalizer>(
-      MS::normalizerFromParams(to_cleanup_parameters(params)));
+  auto data = to_cleanup_parameters(params);
+  read_normalizations(data);
+  return std::unique_ptr<Normalizer>(MS::normalizerFromParams(data));
 }
 
 // Normalizing runs reactions, and disconnecting metals matches patterns

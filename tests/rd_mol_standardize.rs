@@ -355,6 +355,45 @@ fn errors_in_threads_are_returned() {
 }
 
 #[test]
+fn only_normalizing_reads_the_normalizations_file() {
+    // As in Python, a missing file fails only the calls that normalize.
+    let params = CleanupParameters {
+        normalizations_file: PathBuf::from("/nonexistent/normalizations.txt"),
+        ..Default::default()
+    };
+    let m = mol("CC(=O)[O-].[Na+]");
+    let os = |r: rdkit_cxx::Result<Mol>| matches!(r, Err(Error::Os { .. }));
+    assert_eq!(
+        smiles(&reionize_with_params(&m, &params).unwrap()),
+        "CC(=O)[O-].[Na+]"
+    );
+    assert_eq!(
+        smiles(&remove_fragments_with_params(&m, &params).unwrap()),
+        "CC(=O)[O-]"
+    );
+    canonical_tautomer_with_params(&m, &params).unwrap();
+    let parent = |skip_standardize| {
+        fragment_parent_with_params(
+            &m,
+            &FragmentParentParams {
+                params: params.clone(),
+                skip_standardize,
+            },
+        )
+    };
+    assert_eq!(smiles(&parent(true).unwrap()), "CC(=O)[O-]");
+    assert!(os(parent(false)));
+    assert!(os(normalize_with_params(&m, &params)));
+    assert!(os(charge_parent_with_params(
+        &m,
+        &ChargeParentParams {
+            params: params.clone(),
+            skip_standardize: true,
+        },
+    )));
+}
+
+#[test]
 fn standardizing_smiles() {
     assert_eq!(
         standardize_smiles("[Na]OC(=O)c1ccccc1").unwrap(),
