@@ -50,6 +50,10 @@
   holds back a COMPNO field or an enhanced-stereo line until it has read
   past it, reading ahead without seeking, and refuses one that spans more
   than 1 MiB.
+- `json_to_mols` reads an attachment point without `lvIdx` as -1, the value
+  RDKit's JSON writer leaves out. RDKit's reader left the point's
+  `lvIdx` uninitialized, so a molecule written by `mol_to_json` read back
+  an indeterminate leaving atom.
 
 ## 2026.9.0
 

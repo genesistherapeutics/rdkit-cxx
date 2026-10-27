@@ -208,7 +208,8 @@ its Boost.Python modules and its `.py` modules.
   so `json_to_mols` parses the document first, with the same boost::json
   parser, checks what RDKit would read unchecked (`DocumentChecker` in
   `mol_interchange.cpp`, which follows RDKit's reads and leaves RDKit's own
-  errors to RDKit), and hands RDKit the checked document serialized again.
+  errors to RDKit), and hands RDKit the checked document serialized again,
+  with -1 for an attachment point's `lvIdx` RDKit would leave unset.
   Its queries must be ones RDKit makes, since RDKit takes a query's class
   from its tag and its meaning from its description, while the code that
   reads queries takes the description to imply the class: each
