@@ -76,6 +76,12 @@ Checks 2026.9.0 lacks, for defects RDKit 2026.03.6 has; most are in RDKit
 - `json_to_mols` gives an attachment point without an `lvIdx` the -1 RDKit's
   writer leaves out: RDKit's reader leaves the field uninitialized, so a
   plain round trip of a molecule with a substance group read it.
+- Without `strict_cxsmiles`, `mol_from_smiles`, `mol_from_smarts`, and the
+  PNG readers refuse a CXSMILES data substance group (`SgD:`) whose field
+  runs to the end of the text without its `:` (or its coordinates without
+  their `)`), and a polymer group (`Sg:`) whose type does: RDKit's parser
+  reads through the text's end, and then copies up to 2 bytes past it into
+  the `_CXSMILES_Data` property.
 
 ### Bindings
 

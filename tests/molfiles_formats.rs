@@ -91,6 +91,50 @@ fn cx_smiles_and_smarts() {
     );
 }
 
+/// RDKit 2026.03's CXSMILES parser, without strictCXSMILES, copies the
+/// text past its end when a substance group's field runs to it (found with
+/// valgrind under Python).
+#[test]
+fn cxsmiles_substance_groups_that_run_to_the_end() {
+    let loose = SmilesParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let loose_smarts = SmartsParserParams {
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let long = format!("C |SgD:0:{}", "x".repeat(40));
+    for smiles in [
+        "C |SgD:0:f:v::::(1",
+        "C |SgD:0:name:data|",
+        "C |SgD:0:abc",
+        "C |Sg:n",
+        &long,
+    ] {
+        assert!(
+            is_value(mol_from_smiles_with_params(smiles, &loose)),
+            "{smiles}"
+        );
+        assert!(
+            is_value(mol_from_smarts_with_params(smiles, &loose_smarts)),
+            "{smiles}"
+        );
+        // Strict, RDKit's own parse error.
+        assert!(mol_from_smiles(smiles).is_err(), "{smiles}");
+    }
+    mol_from_smiles_with_params("C |SgD:0:name:data::::|", &loose).unwrap();
+    mol_from_smiles_with_params("C |SgD:0:f:v::::(1.,1.)|", &loose).unwrap();
+    // Without allowCXSMILES the text after the space is the name.
+    let plain = SmilesParserParams {
+        allow_cxsmiles: false,
+        strict_cxsmiles: false,
+        ..Default::default()
+    };
+    let mol = mol_from_smiles_with_params("C |Sg:n", &plain).unwrap();
+    assert_eq!(mol.get_prop("_Name").unwrap(), "|Sg:n");
+}
+
 #[test]
 fn fragments() {
     let mol = smiles("OCCN");
