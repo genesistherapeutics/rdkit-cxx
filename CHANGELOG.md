@@ -51,6 +51,8 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
     the atom palette getter, the fingerprint-generator similarity maps, and
     `Draw`'s `MolToSVG` port, `DrawMolWithMatches`, and
     `MolsMatrixToGridImage`'s SVG output.
+  - Python ports: `Chem.MultiConfMolFromSDF`, `inchi.MolFromInchiAndAuxInfo`,
+    and `DataStructs`' `getNForFlatMatrix` and `getElementFromFlatMatrix`.
   - Fingerprint generators' JSON and atoms-per-bit output, and the other
     options 2024.03's Python lacks (MolHash's tautomerism exclusion,
     R-group decomposition's multiple cores per molecule and target in
@@ -101,7 +103,8 @@ since RDKit 2024.03's `MolTransforms.h` includes Eigen.
   - CXSMILES blocks RDKit would read past, malformed V3000 `CSTATE` values,
     CML of tetrahedral atoms with fewer than four neighbors, InChI of atoms
     with more than 20 bonds or stereo it would overrun, and V3000 reaction
-    agents.
+    agents; V3000 S-group values RDKit 2024.03 reads uninitialized when
+    the line ends inside them.
   - CoordGen of double bonds marked E or Z without stereo atoms, the
     Hückel method where YAeHMOP cannot open the output files RDKit 2024.03
     writes in the current directory (`Error::Runtime`), FMCS's `Verbose`
