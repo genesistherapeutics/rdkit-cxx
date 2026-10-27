@@ -903,7 +903,12 @@ class DocumentChecker {
     }
     bool known = false;
     if (prefixed >= 0) {
-      known = is_atom_value_query(base) && tag == prefixed;
+      // RDKit 2025.03 reads an AtomRingSize query's value through
+      // static_cast<ATOM_EQUALS_QUERY *> (finalizeQueryFromDescription in
+      // QueryOps.cpp), and RangeQuery is no EqualityQuery, as the less and
+      // greater queries are (rdkit/rdkit#9172, fixed in 2026.03.1).
+      known = is_atom_value_query(base) && tag == prefixed &&
+              !(prefixed == MolPickler::QUERY_RANGE && base == "AtomRingSize");
     } else if (is_atom_value_query(base)) {
       // AtomRingQuery is an EqualityQuery, which RDKit makes for
       // AtomInNRings and AtomRingBondCount (QueryOps.h, QueryOps.cpp).
@@ -1007,6 +1012,42 @@ JSONWriteParametersData json_write_parameters_default() {
   return data;
 }
 
+// RDKit 2025.03's readSubstanceGroups (MolInterchange/Parser.cpp) leaves an
+// attachment point's lvIdx uninitialized when the point has none, as RDKit's
+// writer leaves out -1; RDKit 2025.09 makes it -1. The checked document gets
+// 4294967295 there, which RDKit reads with GetUint as -1 into AttachPoint's
+// int.
+void fill_leaving_atoms(bj::value &doc) {
+  if (!doc.is_object()) {
+    return;
+  }
+  auto *mols = doc.as_object().if_contains("molecules");
+  if (!mols || !mols->is_array()) {
+    return;
+  }
+  for (auto &mol : mols->as_array()) {
+    auto *sgroups = mol.is_object()
+                        ? mol.as_object().if_contains("substanceGroups")
+                        : nullptr;
+    if (!sgroups || !sgroups->is_array()) {
+      continue;
+    }
+    for (auto &sgroup : sgroups->as_array()) {
+      auto *points = sgroup.is_object()
+                         ? sgroup.as_object().if_contains("attachPoints")
+                         : nullptr;
+      if (!points || !points->is_array()) {
+        continue;
+      }
+      for (auto &point : points->as_array()) {
+        if (point.is_object() && !point.as_object().contains("lvIdx")) {
+          point.as_object()["lvIdx"] = std::uint64_t{4294967295u};
+        }
+      }
+    }
+  }
+}
+
 // RDKit 2025.03 parses the document it is given with RapidJSON
 // (JSONDataToMols), without checking for errors. This parses it with
 // boost::json, which refuses what is not JSON (and nesting deeper than 32,
@@ -1021,6 +1062,7 @@ std::unique_ptr<MolList> json_to_mols(rust::Str json_block,
     bj::value doc =
         bj::parse(std::string_view(json_block.data(), json_block.size()));
     DocumentChecker check(doc, p);
+    fill_leaving_atoms(doc);
     mols = MI::JSONDataToMols(bj::serialize(doc), p);
   } catch (const boost::system::system_error &e) {
     // boost::json's errors, for text that is not JSON and for values RDKit

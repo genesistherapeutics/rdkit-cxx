@@ -528,6 +528,13 @@ fn substance_group_checks() {
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
     assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
+    // RDKit 2025.03 leaves a missing lvIdx uninitialized; the wrapper gives
+    // it -1, as RDKit's writer means by leaving it out.
+    let mol = json_to_mols(&sgroup(r#","attachPoints":[{"aIdx":1}]"#))
+        .unwrap()
+        .remove(0);
+    let group = &get_mol_substance_groups(&mol)[0];
+    assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
 }
 
 #[test]
@@ -587,6 +594,9 @@ fn queries_rdkit_does_not_make_are_refused() {
         r#"{"descr":"AtomType","tag":33,"val":2147483647}"#.to_string(),
         r#"{"descr":"AtomAtomicNum","tag":33,"val":6,"tol":-2147483648}"#.to_string(),
         r#"{"descr":"range_AtomTotalDegree","tag":38,"lower":-2147483648,"upper":2}"#.to_string(),
+        // RDKit 2025.03 reads a ranged ring size as an equality query
+        // (rdkit/rdkit#9172).
+        r#"{"descr":"range_AtomRingSize","tag":38,"lower":5,"upper":6,"ends":0}"#.to_string(),
     ];
     for query in &atom_queries {
         assert!(is_value(json_to_mols(&atom_query(query))), "{query}");
