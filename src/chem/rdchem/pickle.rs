@@ -108,7 +108,9 @@ impl Mol {
     /// and cannot read back: a query of more than 255 children, or, in a
     /// molecule of at most 255 atoms, a substance group or stereo group list
     /// of more than 255 entries, more than 255 stereo groups, or a group
-    /// naming a bond past 255.
+    /// naming a bond past 255; or for a molecule, conformer, atom, bond, or
+    /// substance group of more than 65535 properties, which RDKit counts in
+    /// two bytes.
     pub fn to_binary(&self) -> Vec<u8> {
         picklable(ffi::mol_to_binary(self.as_ffi(), false, 0))
     }

@@ -185,3 +185,42 @@ fn add_ring() {
     assert_eq!(info.num_rings().unwrap(), 1);
     assert!(rw.get_ring_info().is_atom_in_ring_of_size(2, 3).unwrap());
 }
+
+/// A ring of `n` diamonds: `n` hub atoms, each joined to the next by two
+/// parallel two-bond paths, with 2^n + n relevant cycles. Its rings are found
+/// without sanitization, whose symmetrized SSSR enumerates the relevant
+/// cycles.
+fn diamonds(n: u32) -> RWMol {
+    let mut rw = RWMol::default();
+    let hubs: Vec<u32> = (0..n).map(|_| rw.add_atom(&Atom::from_num(6))).collect();
+    for (i, &hub) in hubs.iter().enumerate() {
+        let next = hubs[(i + 1) % hubs.len()];
+        for _ in 0..2 {
+            let middle = rw.add_atom(&Atom::from_num(6));
+            rw.add_bond_with_order(hub, middle, BondType::Single)
+                .unwrap();
+            rw.add_bond_with_order(middle, next, BondType::Single)
+                .unwrap();
+        }
+    }
+    rw.update_property_cache().unwrap();
+    fast_find_rings(&mut rw).unwrap();
+    rw
+}
+
+#[test]
+fn relevant_cycles_beyond_u32_are_an_error() {
+    let mut rw = diamonds(10);
+    assert!(matches!(rw.get_ring_info().num_relevant_cycles(),
+                     Err(Error::Runtime { message }) if message.contains("Ring families not initialized")));
+    find_ring_families(&mut rw).unwrap();
+    assert_eq!(rw.get_ring_info().num_relevant_cycles().unwrap(), 1034);
+    // 2^33 + 33, which RDKit converts to unsigned int unchecked: Python
+    // returns 33.
+    let mut rw = diamonds(33);
+    find_ring_families(&mut rw).unwrap();
+    assert!(matches!(
+        rw.get_ring_info().num_relevant_cycles(),
+        Err(Error::Value { .. })
+    ));
+}
