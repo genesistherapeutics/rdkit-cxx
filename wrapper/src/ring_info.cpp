@@ -5,11 +5,13 @@
 
 #include "rdkit-cxx/ring_info.h"
 
+#include <limits>
 #include <string>
 #include <vector>
 
 #include <GraphMol/RingInfo.h>
 #include <RDGeneral/Exceptions.h>
+#include <RingDecomposerLib.h>
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
@@ -167,8 +169,24 @@ unsigned ring_info_num_ring_families(const RWMol &mol) {
   return mol.getRingInfo()->numRingFamilies();
 }
 
+// numRelevantCycles converts RDL_getNofRC's double with rdcast, a
+// static_cast in release builds, which is undefined for a count outside
+// unsigned int's range. The count grows exponentially with the rings (a ring
+// of n diamonds has 2^n + n relevant cycles), and RDL returns
+// RDL_INVALID_RC_COUNT (DBL_MAX) for one too large to compute. RDKit 2026.09
+// checks the ring info and the ring families first; the wrapper keeps those
+// checks and checks the count before it is converted.
 unsigned ring_info_num_relevant_cycles(const RWMol &mol) {
-  return mol.getRingInfo()->numRelevantCycles();
+  const auto *info = mol.getRingInfo();
+  if (!info->isInitialized() || !info->areRingFamiliesInitialized()) {
+    // RDKit's own preconditions report these, before its cast.
+    return info->numRelevantCycles();
+  }
+  double count = RDL_getNofRC(info->dp_urfData.get());
+  if (!(count >= 0 && count <= std::numeric_limits<unsigned>::max())) {
+    throw ValueErrorException("too many relevant cycles to count");
+  }
+  return static_cast<unsigned>(count);
 }
 
 rust::Vec<IndexList> ring_info_atom_ring_families(const RWMol &mol) {
