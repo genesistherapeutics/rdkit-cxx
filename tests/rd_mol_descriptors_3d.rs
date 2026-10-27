@@ -1025,3 +1025,47 @@ fn double_cubic_lattice_volume_in_threads() {
         assert_close(volume, 521.2816592976219, 1e-9);
     }
 }
+
+// RDKit 2025.09 asks whether a hydrogen's neighbors are polar by recursing
+// with includeHs, so two bonded hydrogens recurse until the stack overflows
+// (a segfault in Python; rdkit/rdkit#9687). Python raises for none of these,
+// so the methods stay infallible and panic.
+#[test]
+fn dclv_polar_descriptors_with_bonded_hydrogens() {
+    let params = rdkit_cxx::chem::SmilesParserParams {
+        remove_hs: false,
+        ..Default::default()
+    };
+    let mut h2 = rdkit_cxx::chem::mol_from_smiles_with_params("[H][H]", &params).unwrap();
+    let mut conf = Conformer::new(2);
+    conf.set_atom_position(1, Point3D::new(0.74, 0.0, 0.0))
+        .unwrap();
+    conf.set_3d(true);
+    h2.add_conformer(&conf).unwrap();
+    let mut dclv = DoubleCubicLatticeVolume::new(&h2).unwrap();
+    assert_eq!(dclv.get_polar_surface_area(), 0.0);
+    assert_eq!(dclv.get_polar_volume(), 0.0);
+    let area = GetPolarSurfaceAreaParams {
+        include_hs: true,
+        ..Default::default()
+    };
+    let volume = GetPolarVolumeParams {
+        include_hs: true,
+        ..Default::default()
+    };
+    for result in [
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            dclv.get_polar_surface_area_with_params(&area)
+        })),
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            dclv.get_polar_volume_with_params(&volume)
+        })),
+    ] {
+        let payload = result.unwrap_err();
+        let message = payload.downcast_ref::<String>().unwrap();
+        assert!(
+            message.contains("hydrogen bonded to a hydrogen"),
+            "{message}"
+        );
+    }
+}

@@ -128,6 +128,11 @@ A program built against one release stops when it loads with another.
     an `EqualityQuery`. A JSON attachment point without `lvIdx`, which RDKit
     2025.09 leaves uninitialized, gets -1, as RDKit's writer means by leaving
     it out.
+  - `DoubleCubicLatticeVolume`'s polar surface area and volume with
+    `include_hs` panic for a hydrogen bonded to a hydrogen, through which
+    RDKit 2025.09 recurses until the stack overflows (rdkit/rdkit#9687).
+    Its atoms of radius 0 (dummies), which must follow the others, are
+    unchanged: the misread RDKit fixed in rdkit/rdkit#9685 is refused.
   - The `ExtendedMurcko` hash takes at most 4,000 atoms: RDKit 2025.09
     takes a byte per atom from the stack.
   - Ring-system templates are checked as SMILES, as RDKit 2025.09 parses
