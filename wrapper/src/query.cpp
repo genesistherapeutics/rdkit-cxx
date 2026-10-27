@@ -91,6 +91,11 @@ void bond_expand_query(Bond &bond, const Bond &other, int how,
   auto &self = as_query<RDKit::QueryBond>(bond, "bond");
   const auto &query = as_query<const RDKit::QueryBond>(other, "bond");
   auto how_ = composite(how);
+  // RDKit 2025.09's QueryBond::expandQuery reads its own query unchecked;
+  // QueryAtom's checks it ("Can't expand empty query"), as this does.
+  if (!self.hasQuery()) {
+    throw ValueErrorException("Can't expand empty query");
+  }
   if (query.hasQuery()) {
     self.expandQuery(query.getQuery()->copy(), how_, maintain_order);
   }
