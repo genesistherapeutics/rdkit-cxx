@@ -109,7 +109,6 @@ std::unique_ptr<MolList> split_mol(const RWMol &mol,
   return result;
 }
 
-
 }  // namespace
 
 // The matrices are copied out before the guard clears RDKit's cache (U6).

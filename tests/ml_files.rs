@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// Checks the port of rdkit.ML.files against Python's in RDKit 2026.03.6,
+// Checks the port of rdkit.ML.files against Python's in RDKit 2025.03.6,
 // whose ReadDataFile fails (it assigns a map object to a NumPy row).
 
 mod common;

@@ -46,11 +46,6 @@ impl Mol {
         self.ptr.as_ref().unwrap()
     }
 
-    /// Gives the molecule to the C++ wrappers.
-    pub(crate) fn into_ffi(self) -> UniquePtr<ffi::RWMol> {
-        self.ptr
-    }
-
     pub(crate) fn pin_mut(&mut self) -> std::pin::Pin<&mut ffi::RWMol> {
         self.ptr.pin_mut()
     }

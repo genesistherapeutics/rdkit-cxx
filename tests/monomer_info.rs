@@ -12,8 +12,7 @@ fn monomer_info() {
         AtomMonomerInfo::default().get_monomer_type(),
         AtomMonomerType::Unknown
     );
-    let params = AtomMonomerInfoParams { name: "N1".into() };
-    let mut info = AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap();
+    let mut info = AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "N1").unwrap();
     assert_eq!(info.get_name().unwrap(), "N1");
     info.set_name("C1");
     info.set_monomer_type(AtomMonomerType::Unknown).unwrap();
@@ -157,6 +156,10 @@ fn atoms_copy_info_in_and_out() {
     );
 }
 
+fn is_runtime<T>(result: rdkit_cxx::Result<T>) -> bool {
+    matches!(result, Err(rdkit_cxx::Error::Runtime { .. }))
+}
+
 fn is_value<T>(result: rdkit_cxx::Result<T>) -> bool {
     matches!(result, Err(Error::Value { .. }))
 }
@@ -167,9 +170,9 @@ fn is_value<T>(result: rdkit_cxx::Result<T>) -> bool {
 #[test]
 fn plain_info_cannot_have_the_pdb_type() {
     assert!(is_value(AtomMonomerInfo::new(AtomMonomerType::Pdbresidue)));
-    assert!(is_value(AtomMonomerInfo::new_with_params(
+    assert!(is_value(AtomMonomerInfo::new_with_name(
         AtomMonomerType::Pdbresidue,
-        &AtomMonomerInfoParams::default()
+        ""
     )));
     let mut info = AtomMonomerInfo::new(AtomMonomerType::Other).unwrap();
     assert!(is_value(info.set_monomer_type(AtomMonomerType::Pdbresidue)));
@@ -210,13 +213,9 @@ fn pdb_residue_info_changes_type_freely() {
 /// type byte is.
 fn marked_pickle() -> (Vec<u8>, usize) {
     let mut mol = mol_from_smiles("C").unwrap();
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-        ..Default::default()
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type as a byte.
     let name = pkl
@@ -227,7 +226,7 @@ fn marked_pickle() -> (Vec<u8>, usize) {
 }
 
 #[test]
-fn pickles_cannot_give_plain_info_the_pdb_type() {
+fn pickles_check_monomer_types() {
     let (pkl, at) = marked_pickle();
     let typ = |pkl: &[u8]| {
         // SAFETY: a pickle RDKit wrote.
@@ -243,17 +242,23 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
     let mut unknown = pkl.clone();
     unknown[at] = 0;
     assert_eq!(typ(&unknown).unwrap(), AtomMonomerType::Unknown);
-    for bad in [1, 3, 255] {
+    // RDKit 2025.03 reads the PDBRESIDUE type as PDB residue info, from the
+    // fields that follow it.
+    let mut pdb = pkl.clone();
+    pdb[at] = 1;
+    assert_eq!(typ(&pdb).unwrap(), AtomMonomerType::Pdbresidue);
+    // Other types are RDKit's "unrecognized MonomerType", a RuntimeError in
+    // Python.
+    for bad in [3, 255] {
         let mut changed = pkl.clone();
         changed[at] = bad;
-        assert!(is_value(typ(&changed)), "type {bad}");
-        // SAFETY: a pickle RDKit wrote but for its monomer type byte, which the wrapper checks
-        // (U10).
-        assert!(is_value(unsafe {
+        assert!(is_runtime(typ(&changed)), "type {bad}");
+        // SAFETY: a pickle RDKit wrote but for its monomer type byte, which RDKit checks.
+        assert!(is_runtime(unsafe {
             Mol::from_pkl_string_with_property_flags(&changed, PropertyPickleOptions::AllProps)
         }));
         // SAFETY: as above.
-        assert!(is_value(unsafe { RWMol::from_pkl_string(&changed) }));
+        assert!(is_runtime(unsafe { RWMol::from_pkl_string(&changed) }));
     }
 
     // MolBundle pickles hold molecule pickles, byte for byte.
@@ -273,9 +278,9 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
         1
     );
     let mut changed = bundle_pkl;
-    changed[name + 8] = 1;
-    // SAFETY: a bundle pickle RDKit wrote but for a monomer type byte, which the wrapper checks.
-    assert!(is_value(unsafe { MolBundle::from_pkl_string(&changed) }));
+    changed[name + 8] = 3;
+    // SAFETY: a bundle pickle RDKit wrote but for a monomer type byte, which RDKit checks.
+    assert!(is_runtime(unsafe { MolBundle::from_pkl_string(&changed) }));
 }
 
 // MolPickler pickles a recursive query's molecule as a molecule, monomer
@@ -299,11 +304,12 @@ fn recursive_query_molecules_are_checked() {
     // SAFETY: a pickle RDKit wrote.
     assert!(unsafe { Mol::from_pkl_string(&pkl) }.is_ok());
     pkl[at] = 1;
-    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks.
-    assert!(is_value(unsafe { Mol::from_pkl_string(&pkl) }));
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which RDKit
+    // 2025.03 reads as PDB residue info.
+    assert!(unsafe { Mol::from_pkl_string(&pkl) }.is_ok());
     pkl[at] = 9;
-    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks.
-    assert!(is_value(unsafe { Mol::from_pkl_string(&pkl) }));
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which RDKit checks.
+    assert!(is_runtime(unsafe { Mol::from_pkl_string(&pkl) }));
 }
 
 // RDKit pickles PDB residue info by its type, so a real one round-trips.

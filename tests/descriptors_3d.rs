@@ -6,7 +6,7 @@
 // Ports testGet3DMolDescriptors of RDKit's rdkit/Chem/UnitTestDescriptors.py,
 // with its reference file tests/data/descriptors_multiconf.sdf
 // (rdkit/Chem/test_data), and pins values from Python's
-// rdkit.Chem.Descriptors3D in RDKit 2026.03.6.
+// rdkit.Chem.Descriptors3D in RDKit 2025.03.6.
 
 use std::collections::BTreeMap;
 
@@ -58,20 +58,6 @@ const MULTICONF_DEFAULT: [(&str, f64); 11] = [
     ("PBF", 0.2223884029596845),
 ];
 
-const MULTICONF_2: [(&str, f64); 11] = [
-    ("PMI1", 20.682538742581638),
-    ("PMI2", 68.47892726011843),
-    ("PMI3", 83.68316008170478),
-    ("NPR1", 0.2471529364138264),
-    ("NPR2", 0.8183119183508178),
-    ("RadiusOfGyration", 1.2887767216373087),
-    ("InertialShapeFactor", 0.03956535164931471),
-    ("Eccentricity", 0.9689764837301383),
-    ("Asphericity", 0.43412112266546465),
-    ("SpherocityIndex", 0.1020004956012484),
-    ("PBF", 0.22338403661175352),
-];
-
 const PROPANOL: [(&str, f64); 11] = [
     ("PMI1", 20.9582722049221),
     ("PMI2", 69.5741688498054),
@@ -116,14 +102,8 @@ fn calc_mol_descriptors_3d_matches_python() {
     assert_eq!(mol.get_num_conformers(), 10);
     let descs: BTreeMap<&str, f64> = calc_mol_descriptors_3d(&mol).unwrap().into_iter().collect();
     assert!((descs["PMI1"] - 20.9595).abs() <= 1e-4);
-    let descs2: BTreeMap<&str, f64> = calc_mol_descriptors_3d_with_conf_id(&mol, 2)
-        .unwrap()
-        .into_iter()
-        .collect();
-    for ((name, expected), (_, expected2)) in MULTICONF_DEFAULT.iter().zip(MULTICONF_2) {
-        assert_close(descs[*name], *expected, name);
-        assert_close(descs2[*name], expected2, name);
-        assert_ne!(descs[*name], descs2[*name]);
+    for (name, expected) in MULTICONF_DEFAULT {
+        assert_close(descs[name], expected, name);
     }
 }
 

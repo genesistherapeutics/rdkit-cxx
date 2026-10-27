@@ -28,8 +28,10 @@ pub(crate) mod ffi {
         type AromaticityModel;
 
         fn get_sssr(mol: Pin<&mut RWMol>, include_dative_bonds: bool) -> Result<Vec<IndexList>>;
-        fn get_symm_sssr(mol: Pin<&mut RWMol>, include_dative_bonds: bool)
-        -> Result<Vec<IndexList>>;
+        fn get_symm_sssr(
+            mol: Pin<&mut RWMol>,
+            include_dative_bonds: bool,
+        ) -> Result<Vec<IndexList>>;
         fn fast_find_rings(mol: Pin<&mut RWMol>) -> Result<()>;
         fn find_ring_families(mol: Pin<&mut RWMol>) -> Result<()>;
 

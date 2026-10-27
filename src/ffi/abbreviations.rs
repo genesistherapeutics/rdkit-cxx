@@ -27,13 +27,13 @@ pub(crate) mod ffi {
             label: &str,
             display_label: &str,
             display_label_w: &str,
-            ) -> Result<()>;
+        ) -> Result<()>;
         fn abbreviation_list_push_with_mol(
             list: Pin<&mut AbbreviationList>,
             label: &str,
             display_label: &str,
             display_label_w: &str,
-                mol: &RWMol,
+            mol: &RWMol,
         ) -> Result<()>;
 
         fn abbreviation_definition_default() -> Result<AbbreviationDefinitionData>;

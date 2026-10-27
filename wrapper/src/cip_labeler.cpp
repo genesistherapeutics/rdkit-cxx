@@ -9,7 +9,6 @@
 
 #include <GraphMol/Atropisomers.h>
 #include <GraphMol/CIPLabeler/CIPLabeler.h>
-#include <GraphMol/Chirality.h>
 #include <boost/dynamic_bitset.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
@@ -35,39 +34,14 @@ boost::dynamic_bitset<> to_bitset(rust::Slice<const std::uint32_t> indices,
   return result;
 }
 
-// As isValidCarrier in RDKit 2026.09's Sp2Bond.cpp: a neighbor of focus
-// other than the bond's other atom.
-bool is_carrier(const Atom &focus, const Atom &other, int idx) {
-  const auto &mol = focus.getOwningMol();
-  return idx >= 0 && static_cast<unsigned>(idx) < mol.getNumAtoms() &&
-         static_cast<unsigned>(idx) != focus.getIdx() &&
-         static_cast<unsigned>(idx) != other.getIdx() &&
-         mol.getBondBetweenAtoms(focus.getIdx(), idx);
-}
-
-// RDKit 2026.03's Sp2Bond::label reads each end's first neighbor other than
-// the bond's other atom, and AtropisomerBond::label its two carriers,
-// without checking that they exist: a double bond whose stereo atom is not
-// a neighbor of its own end (the other end atom, say), or an atropisomer
-// bond with an end of no other bonds, reads past an empty vector. RDKit
-// 2026.09 checks both (rdkit/rdkit#9577) and leaves such bonds unlabeled;
-// so does the wrapper, clearing a stale label as RDKit clears each bond's
-// before labeling it. Bonds RDKit's own checks reject (findStereoAtoms's
-// preconditions, its two stereo atoms) are left for RDKit to report.
+// RDKit 2025.03's AtropisomerBond constructor returns without carriers for
+// a bond getAtropisomerAtomsAndBonds rejects (an end of no other bonds, say),
+// and its label then reads both carriers from the empty vector. Such bonds
+// are left unlabeled, as RDKit 2026.09 does (rdkit/rdkit#9577), clearing a
+// stale label as RDKit clears each bond's before labeling it. (Its Sp2Bond
+// takes findStereoAtoms's atoms as carriers, which it checks.)
 bool labelable(const Bond &bond) {
   switch (bond.getStereo()) {
-    case Bond::STEREOE:
-    case Bond::STEREOZ:
-    case Bond::STEREOCIS:
-    case Bond::STEREOTRANS: {
-      if (bond.getBondType() != Bond::DOUBLE) {
-        return true;
-      }
-      auto atoms = RDKit::Chirality::findStereoAtoms(&bond);
-      return atoms.size() != 2 ||
-             (is_carrier(*bond.getBeginAtom(), *bond.getEndAtom(), atoms[0]) &&
-              is_carrier(*bond.getEndAtom(), *bond.getBeginAtom(), atoms[1]));
-    }
     case Bond::STEREOATROPCW:
     case Bond::STEREOATROPCCW: {
       RDKit::Atropisomers::AtropAtomAndBondVec atoms_and_bonds[2];
@@ -99,7 +73,8 @@ void assign_cip_labels(RWMol &mol, bool has_atoms,
       bond->clearProp(RDKit::common_properties::_CIPCode);
     }
   }
-  // assignCIPLabels constructs a ControlCHandler (CIPLabeler.cpp).
+  // assignCIPLabels calls ControlCHandler::reset, which installs its SIGINT
+  // handler (CIPLabeler.cpp).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::CIPLabeler::assignCIPLabels(mol, atom_set, bond_set,
                                      max_recursive_iterations);

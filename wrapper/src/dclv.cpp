@@ -62,9 +62,9 @@ void check_monomer_infos(const RWMol &mol, bool is_protein) {
 
 }  // namespace
 
-DclvResults dclv_compute(const RWMol &mol, bool is_protein,
-                         bool include_ligand, double probe_radius,
-                         std::int32_t depth, std::int32_t dot_density) {
+DclvResults dclv_compute(const RWMol &mol, bool is_protein, bool include_ligand,
+                         double probe_radius, std::int32_t depth,
+                         std::int32_t dot_density) {
   // With a dot density, generateElemPoints computes each element's dots
   // and discards them, and calculateVolume divides by the standard dots'
   // count, which only a dot density of 0 initializes; a negative density

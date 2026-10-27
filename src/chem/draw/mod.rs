@@ -8,16 +8,17 @@
 //! `SimilarityMaps`.
 //!
 //! The package's functions draw a molecule, a grid of them, or a
-//! reaction to SVG text or PNG bytes in one call ([`mol_to_svg`],
-//! [`mol_to_image`]). For more control, a drawer from
+//! reaction to SVG text or PNG bytes in one call ([`mol_to_image`],
+//! [`mols_to_grid_image_use_svg`]; `rdMolDraw2D`'s
+//! [`mol_to_svg`](rd_mol_draw_2d::mol_to_svg), which Python's package
+//! re-exports, draws one molecule to SVG). For more control, a drawer from
 //! [`rd_mol_draw_2d`] draws one or more molecules with
 //! [`MolDrawOptions`](rd_mol_draw_2d::MolDrawOptions) and highlights.
 //! Python's PIL images and matplotlib colormaps are not ported; images are
 //! PNG bytes.
 //!
 //! ```no_run
-//! use rdkit_cxx::chem::draw::mol_to_svg;
-//! use rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDraw2DSVG;
+//! use rdkit_cxx::chem::draw::rd_mol_draw_2d::{MolDraw2DSVG, mol_to_svg};
 //! use rdkit_cxx::chem::mol_from_smiles;
 //!
 //! let mol = mol_from_smiles("c1ccccc1O")?;

@@ -36,21 +36,19 @@ fn rings() {
 }
 
 #[test]
-fn param_defaults() {
+fn dative_rings() {
+    // Python's values.
+    let chelate = || smiles("N1CCN->[Cu]<-1");
+    assert!(get_sssr(&mut chelate()).unwrap().is_empty());
     assert_eq!(
-        GetSSSRParams::default(),
-        GetSSSRParams {
-            include_dative_bonds: false
-        }
+        get_sssr_with_include_dative_bonds(&mut chelate(), true).unwrap(),
+        [[0, 1, 2, 3, 4]]
     );
+    assert!(get_symm_sssr(&mut chelate()).unwrap().is_empty());
     assert_eq!(
-        GetSymmSSSRParams::default(),
-        GetSymmSSSRParams {
-            include_dative_bonds: false
-        }
+        get_symm_sssr_with_include_dative_bonds(&mut chelate(), true).unwrap(),
+        [[0, 1, 2, 3, 4]]
     );
-    let kekulize = KekulizeIfPossibleParams::default();
-    assert!(!kekulize.clear_aromatic_flags);
 }
 
 #[test]
@@ -75,7 +73,7 @@ fn sanitization_steps() {
     kekulize_if_possible(&mut kekule).unwrap();
     assert_eq!(
         kekule.get_bond_with_idx(0).unwrap().get_bond_type(),
-        BondType::Single
+        BondType::Double
     );
 
     let mut methyl = unsanitized("[CH3]");

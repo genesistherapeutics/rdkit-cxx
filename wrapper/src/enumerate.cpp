@@ -25,7 +25,7 @@
 #include "rdkit-cxx/ffi/enumerate.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 // RDKit builds EvenSamplePairsStrategy into its library but does not install
-// its header; this is RDKit 2026.03's (CMake checks the release series).
+// its header; this is RDKit 2025.03's (CMake checks the release series).
 #include "rdkit-cxx/vendor/EvenSamplePairs.h"
 
 namespace rdkit_cxx {

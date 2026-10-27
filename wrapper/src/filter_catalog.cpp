@@ -93,12 +93,11 @@ bool is_empty_node(const FilterMatcherBase &matcher) {
   return node && !part<NodeMatcher>(*node);
 }
 
-// Every substructure match constructs a ControlCHandler, so the wrappers
-// whose RDKit call can match hold control_c_mutex for the whole call
-// through HoldControlC (control_c_lock.h, CONVENTIONS.md U4). A Rust
-// matcher's methods may call such wrappers themselves, and RDKit calls them
-// only between its matches, with no ControlCHandler alive (one lives only
-// inside a SubstructMatch, which calls no matcher), so each runs inside a
+// The wrappers whose RDKit call can match substructures hold control_c_mutex
+// for the whole call through HoldControlC (control_c_lock.h, CONVENTIONS.md
+// U4). A Rust matcher's methods may call such wrappers themselves, and RDKit
+// calls them only between its matches (a SubstructMatch calls no matcher),
+// so each runs inside a
 // ReleaseControlC, which releases the lock and takes it back after, even
 // when they throw. A callback can run while it is already released: one
 // that calls a wrapper that does not match (filter_matcher_is_valid) on

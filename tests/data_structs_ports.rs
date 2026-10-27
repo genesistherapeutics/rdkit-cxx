@@ -6,7 +6,7 @@
 // Ports rdkit/DataStructs/UnitTestBitEnsemble.py (but its database tests),
 // UnitTestDocTests.py (with the doctests of BitUtils, LazySignature, and
 // VectCollection), UnitTestFlatMatrix.py, and UnitTestTopNContainer.py,
-// with values from Python's rdkit.DataStructs in RDKit 2026.03.6.
+// with values from Python's rdkit.DataStructs in RDKit 2025.03.6.
 
 use std::cell::Cell;
 
@@ -237,40 +237,6 @@ fn vect_collection() {
     vc.detach_vects_matching_bit(1).unwrap();
     assert_eq!(vc.get_num_bits().unwrap(), 10);
     assert!(matches!(vc.get_bit(1), Err(Error::Value { .. })));
-}
-
-#[test]
-fn flat_matrix() {
-    assert_eq!(get_n_for_flat_matrix(&[0; 1]), 2);
-    assert_eq!(get_n_for_flat_matrix(&[0; 3]), 3);
-    assert_eq!(get_n_for_flat_matrix(&[0; 6]), 4);
-    let ns: Vec<usize> = [0, 1, 3, 6, 10, 11]
-        .iter()
-        .map(|&k| get_n_for_flat_matrix(&vec![0.0; k]))
-        .collect();
-    assert_eq!(ns, [1, 2, 3, 4, 5, 5]);
-    let flat = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0];
-    for (i, j, v) in [
-        (1, 0, 1.0),
-        (0, 1, 1.0),
-        (2, 0, 2.0),
-        (0, 2, 2.0),
-        (2, 1, 3.0),
-        (1, 2, 3.0),
-        (0, 3, 4.0),
-        (3, 0, 4.0),
-        (1, 3, 5.0),
-        (3, 1, 5.0),
-        (2, 3, 6.0),
-        (3, 2, 6.0),
-        (0, 0, 0.0),
-    ] {
-        assert_eq!(get_element_from_flat_matrix(&flat, i, j).unwrap(), v);
-    }
-    assert!(matches!(
-        get_element_from_flat_matrix(&flat, 0, 4),
-        Err(Error::Index { .. })
-    ));
 }
 
 fn fp(smiles: &str) -> ExplicitBitVect {

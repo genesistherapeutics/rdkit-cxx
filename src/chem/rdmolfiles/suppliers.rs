@@ -979,7 +979,7 @@ pub struct MultithreadedSDMolSupplierParams {
     /// every read after it.
     pub num_writer_threads: u32,
     /// The records read ahead; 0, which never lets RDKit's threads finish, and
-    /// sizes above 2^20 are `Error::Value`: RDKit 2026.03 allocates each queue
+    /// sizes above 2^20 are `Error::Value`: RDKit 2025.03 allocates each queue
     /// whole, and dereferences null if that allocation fails.
     pub size_input_queue: usize,
     /// The molecules parsed ahead, limited as `size_input_queue`.

@@ -114,9 +114,8 @@ use rdkit_cxx::chem::{
     fragment_on_brics_bonds, mol_fragment_to_cx_smiles_with_params,
     mol_fragment_to_smiles_with_params, mol_from_scsr_block_with_params, mol_from_smarts,
     mol_from_smiles, mol_from_xyz_block, mol_metadata_to_png_string_with_params,
-    mol_to_cx_smiles_with_params, mol_to_mol_block,
-    mol_to_random_smiles_vect_with_params, mol_to_smiles, mol_to_smiles_with_params,
-    molzip_fragments_with_params, pattern_fingerprint,
+    mol_to_cx_smiles_with_params, mol_to_mol_block, mol_to_random_smiles_vect_with_params,
+    mol_to_smiles, mol_to_smiles_with_params, molzip_fragments_with_params, pattern_fingerprint,
 };
 use rdkit_cxx::distance_geometry::embed_bounds_matrix;
 use rdkit_cxx::geometry::{
@@ -153,7 +152,7 @@ H 1.8339 1.0320 0.4595
 
 /// An RNA dimer whose base templates SCSR's Auto option matches to find
 /// their hydrogen-bond sites.
-const RIBOSE_SCSR: &str = include_str!("data/RiboseFullname.mol");
+const DNA_SCSR: &str = include_str!("data/DnaTest.mol");
 
 fn main() {
     // RDKit fills some static data on first use (the periodic table, the
@@ -1053,7 +1052,7 @@ fn scsr_hbonds() -> Call<()> {
                 scsr_base_hbond_options: SCSRBaseHbondOptions::Auto,
                 ..Default::default()
             };
-            mol_from_scsr_block_with_params(RIBOSE_SCSR, &auto).unwrap();
+            mol_from_scsr_block_with_params(DNA_SCSR, &auto).unwrap();
         },
     }
 }

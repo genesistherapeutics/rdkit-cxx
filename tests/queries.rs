@@ -5,7 +5,6 @@
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::*;
-use rdkit_cxx::geometry::Point3D;
 
 fn smarts(text: &str) -> Mol {
     mol_from_smarts(text).unwrap()

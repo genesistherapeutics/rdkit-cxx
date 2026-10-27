@@ -5,7 +5,7 @@
 
 #[cxx::bridge(namespace = "rdkit_cxx")]
 pub(crate) mod ffi {
-    /// `RDKit::MMFF`'s `MMFF_VERBOSITY` values, which RDKit 2026.03 declares
+    /// `RDKit::MMFF`'s `MMFF_VERBOSITY` values, which RDKit 2025.03 declares
     /// in an unnamed enum and takes as `std::uint8_t`.
     #[repr(u8)]
     #[allow(clippy::enum_variant_names)]

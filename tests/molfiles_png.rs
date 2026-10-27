@@ -261,18 +261,14 @@ fn depiction_refuses_what_the_depictor_would_mishandle() {
 }
 
 #[test]
-fn pickles_cannot_give_plain_info_the_pdb_type() {
-    // A pickle recorded in the metadata goes through the monomer-type checks
-    // that molecule pickles do (U10): RDKit casts any info of type PDBRESIDUE
-    // to AtomPDBResidueInfo, reading past the end of a plain one.
+fn pickles_check_monomer_types() {
+    // A pickle recorded in the metadata is read as molecule pickles are:
+    // RDKit 2025.03 reads the PDBRESIDUE type as PDB residue info, and
+    // refuses types it does not know.
     let mut mol = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-        ..Default::default()
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type as a byte.
     let at = pkl
@@ -295,15 +291,25 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
         .unwrap();
     assert_eq!(info.get_monomer_type(), AtomMonomerType::Other);
     pkl[at] = 1;
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte.
+    let read = unsafe { mol_from_png_string(&chunk(&pkl)) }.unwrap();
+    let info = read
+        .get_atom_with_idx(0)
+        .unwrap()
+        .get_monomer_info()
+        .unwrap();
+    assert_eq!(info.get_monomer_type(), AtomMonomerType::Pdbresidue);
+    // RDKit's "unrecognized MonomerType", a RuntimeError in Python.
+    pkl[at] = 3;
     let png = chunk(&pkl);
     assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
+        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which RDKit checks.
         unsafe { mol_from_png_string(&png) },
-        Err(Error::Value { .. })
+        Err(Error::Runtime { .. })
     ));
     assert!(matches!(
         // SAFETY: as above.
         unsafe { mols_from_png_string(&png) },
-        Err(Error::Value { .. })
+        Err(Error::Runtime { .. })
     ));
 }

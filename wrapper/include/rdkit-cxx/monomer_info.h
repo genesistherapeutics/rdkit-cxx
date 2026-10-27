@@ -41,8 +41,7 @@ std::unique_ptr<AtomPDBResidueInfo> pdb_residue_info_with(
     rust::Str atom_name, int serial_number, rust::Str alt_loc,
     rust::Str residue_name, int residue_number, rust::Str chain_id,
     rust::Str insertion_code, double occupancy, double temp_factor,
-    bool is_hetero_atom, unsigned secondary_structure,
-    unsigned segment_number);
+    bool is_hetero_atom, unsigned secondary_structure, unsigned segment_number);
 std::unique_ptr<AtomPDBResidueInfo> pdb_residue_info_clone(
     const AtomPDBResidueInfo &info);
 const AtomMonomerInfo &pdb_residue_info_as_monomer_info(
@@ -66,8 +65,7 @@ unsigned pdb_residue_info_get_secondary_structure(
 unsigned pdb_residue_info_get_segment_number(const AtomPDBResidueInfo &info);
 void pdb_residue_info_set_serial_number(AtomPDBResidueInfo &info, int val);
 void pdb_residue_info_set_alt_loc(AtomPDBResidueInfo &info, rust::Str val);
-void pdb_residue_info_set_residue_name(AtomPDBResidueInfo &info,
-                                       rust::Str val);
+void pdb_residue_info_set_residue_name(AtomPDBResidueInfo &info, rust::Str val);
 void pdb_residue_info_set_residue_number(AtomPDBResidueInfo &info, int val);
 void pdb_residue_info_set_chain_id(AtomPDBResidueInfo &info, rust::Str val);
 void pdb_residue_info_set_insertion_code(AtomPDBResidueInfo &info,

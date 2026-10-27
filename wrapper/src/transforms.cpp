@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <map>
 #include <mutex>
+#include <optional>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -16,8 +18,10 @@
 #include <GraphMol/ChemTransforms/MolFragmenter.h>
 #include <GraphMol/QueryAtom.h>
 #include <GraphMol/QueryOps.h>
+#include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <GraphMol/Substruct/SubstructUtils.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/make_shared.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/depiction_checks.h"
@@ -28,6 +32,14 @@
 #include "rdkit-cxx/ffi/transforms.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/util.h"
+
+namespace RDKit {
+// MolFragmenter.cpp's molzip, which also records which atom took each removed
+// dummy's place. RDKit 2025.03 exports it but does not declare it.
+std::unique_ptr<ROMol> molzip(const ROMol &a, const ROMol &b,
+                              const MolzipParams &params,
+                              std::optional<std::map<int, int>> &mapping);
+}  // namespace RDKit
 
 namespace rdkit_cxx {
 
@@ -88,7 +100,10 @@ std::vector<std::pair<unsigned, unsigned>> to_label_pairs(
 // fragmentOnBonds calls getBondWithIdx, and the bondTypes size, which RDKit
 // only checks with PRECONDITION. Python treats an empty bondTypes list as None
 // and leaves dummyLabels' size unchecked; here an empty list is an empty list,
-// whose size is checked, and dummyLabels must cover the bonds too.
+// whose size is checked, and dummyLabels must cover the bonds too. A bond
+// may be given once: fragmentOnBonds takes pointers to all of them first and
+// then removes each, so a second copy is used after it is freed (Python
+// crashes).
 std::vector<unsigned> check_fragment_args(
     const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
     bool has_dummy_labels, rust::Slice<const IndexPair> dummy_labels,
@@ -97,8 +112,14 @@ std::vector<unsigned> check_fragment_args(
     throw ValueErrorException("empty bond indices");
   }
   std::vector<unsigned> indices;
+  std::vector<bool> seen(mol.getNumBonds());
   for (auto idx : bond_indices) {
     check_index(idx, mol.getNumBonds());
+    if (seen[idx]) {
+      throw ValueErrorException("bond index " + std::to_string(idx) +
+                                " is repeated");
+    }
+    seen[idx] = true;
     indices.push_back(idx);
   }
   if (has_dummy_labels && dummy_labels.size() < bond_indices.size()) {
@@ -226,6 +247,47 @@ std::unique_ptr<RWMol> replace_sidechains(const RWMol &mol,
   return to_rwmol(RDKit::replaceSidechains(mol, core_query, use_chirality));
 }
 
+namespace {
+
+// For a molecule atom that several core atoms match, replaceCore takes each
+// such core atom's one neighbor (it checks the degree) and finds the pair
+// that matches that neighbor with std::find_if, dereferencing the end when
+// there is none (Python crashes). It does this, in the match's order, only
+// once every index is in range.
+void check_core_match(const RWMol &mol, const RWMol &core,
+                      const RDKit::MatchVectType &match) {
+  const int num_core = core.getNumAtoms();
+  const int num_mol = mol.getNumAtoms();
+  std::vector<int> times(num_mol);
+  for (const auto &[core_idx, mol_idx] : match) {
+    if (core_idx < 0 || core_idx >= num_core || mol_idx < 0 ||
+        mol_idx >= num_mol) {
+      return;  // replaceCore raises.
+    }
+    ++times[mol_idx];
+  }
+  for (const auto &[core_idx, mol_idx] : match) {
+    if (times[mol_idx] < 2) {
+      continue;
+    }
+    const auto *atom = core.getAtomWithIdx(core_idx);
+    if (atom->getDegree() != 1) {
+      return;  // replaceCore raises.
+    }
+    const int nbr = core[*core.getAtomNeighbors(atom).first]->getIdx();
+    if (std::none_of(match.begin(), match.end(),
+                     [nbr](const auto &pair) { return pair.first == nbr; })) {
+      throw ValueErrorException(
+          "core atom " + std::to_string(core_idx) + " matches molecule atom " +
+          std::to_string(mol_idx) +
+          ", which another core atom matches too, but its neighbor " +
+          std::to_string(nbr) + " is not in the match");
+    }
+  }
+}
+
+}  // namespace
+
 // As replaceCoreHelper in Code/GraphMol/Wrap/MolOps.cpp, with the match as
 // (core atom, molecule atom) pairs; replaceCore checks both ranges. An index
 // past INT_MAX becomes negative here and fails that check.
@@ -237,6 +299,7 @@ std::unique_ptr<RWMol> replace_core_with_matches(
     match.emplace_back(static_cast<int>(pair.first),
                        static_cast<int>(pair.second));
   }
+  check_core_match(mol, core, match);
   check_removals(mol);
   return to_rwmol(RDKit::replaceCore(mol, core, match, replace_dummies,
                                      label_by_index, require_dummy_match));
@@ -374,7 +437,10 @@ std::unique_ptr<RWMol> fragment_on_bonds(
 }
 
 // As fragmentOnSomeBondsHelper in Code/GraphMol/Wrap/MolOps.cpp, with the
-// arguments checked as check_fragment_args says.
+// arguments checked as check_fragment_args says. RDKit starts from
+// (1 << numToBreak) - 1 in 64 bits, which is undefined for 64 or more; with
+// at most 63 bonds (RDKit's limit, which it checks first) and more to break
+// than there are, it finds no fragments, so such a call returns none.
 std::unique_ptr<MolList> fragment_on_some_bonds(
     const RWMol &mol, rust::Slice<const std::uint32_t> bond_indices,
     std::uint32_t num_to_break, bool add_dummies, bool has_dummy_labels,
@@ -384,6 +450,10 @@ std::unique_ptr<MolList> fragment_on_some_bonds(
   auto indices = check_fragment_args(mol, bond_indices, has_dummy_labels,
                                      dummy_labels, has_bond_types, bond_types);
   check_removals(mol);
+  cuts_per_atom.clear();
+  if (indices.size() <= 63 && num_to_break > indices.size()) {
+    return std::make_unique<MolList>();
+  }
   auto labels = to_label_pairs(dummy_labels);
   std::vector<BondType> types(bond_types.begin(), bond_types.end());
   std::vector<std::vector<unsigned>> cuts;
@@ -434,20 +504,76 @@ std::unique_lock<std::mutex> lock_if_depicting(
   return {};
 }
 
-// With generateCoordinates, molzip of a list (MolZip.cpp) depicts the zipped
-// molecule with compute2DCoords, which trusts it (depiction_checks.h). Zipping
-// is deterministic, so this zips once without coordinates and checks the
-// result first. The caller holds lock_depiction().
-template <typename Zip>
-void check_zipped_depiction(const RDKit::MolzipParams &params, Zip zip) {
-  if (!params.generateCoordinates) {
+// With generateCoordinates, molzip of a list (MolFragmenter.cpp in RDKit
+// 2025.03) numbers the inputs' atoms in a property, zips them, depicts the
+// zipped molecule with compute2DCoords, which trusts it
+// (depiction_checks.h), and then finds each input atom in it, or the atom
+// that took a removed dummy's place, with std::find_if. It dereferences a
+// null zipped molecule (when it cannot zip) and the end of the zipped atoms
+// for an input atom it did not keep (a duplicate fragment it dropped, or any
+// fragment past the first with the FragmentOnBonds label); RDKit 2026.03
+// checks both. Zipping is deterministic, so this replays the zip on copies,
+// without coordinates, and refuses those cases before RDKit runs. The caller
+// holds lock_depiction().
+void check_zip_list(const std::vector<RDKit::ROMOL_SPTR> &decomposition,
+                    const RDKit::MolzipParams &params) {
+  if (!params.generateCoordinates || decomposition.empty()) {
     return;
+  }
+  const std::string index_prop = "__zipIndex";
+  std::vector<RDKit::ROMOL_SPTR> copies;
+  int num_indices = 0;
+  for (const auto &mol : decomposition) {
+    auto copy = boost::make_shared<RDKit::ROMol>(*mol);
+    for (auto atom : copy->atoms()) {
+      atom->setProp(index_prop, num_indices++);
+    }
+    copies.push_back(copy);
+  }
+  std::vector<RDKit::ROMOL_SPTR> mols;
+  if (params.label != RDKit::MolzipLabel::FragmentOnBonds &&
+      copies.size() > 1) {
+    std::vector<std::string> seen;
+    for (std::size_t idx = 1; idx < copies.size(); ++idx) {
+      auto smiles = RDKit::MolToSmiles(*copies[idx]);
+      if (std::find(seen.begin(), seen.end(), smiles) == seen.end()) {
+        mols.push_back(copies[idx]);
+        seen.push_back(smiles);
+      }
+    }
+  }
+  auto combined = copies[0];
+  for (const auto &mol : mols) {
+    combined.reset(RDKit::combineMols(*combined, *mol));
   }
   auto probe = params;
   probe.generateCoordinates = false;
-  auto zipped = zip(probe);
-  if (zipped && zipped->getNumAtoms() > 0) {
-    check_compute_2d_coords_mol(*zipped, false);
+  std::optional<std::map<int, int>> mapping = std::map<int, int>();
+  static const RDKit::ROMol none;
+  auto zipped = RDKit::molzip(*combined, none, probe, mapping);
+  if (!zipped) {
+    throw ValueErrorException(
+        "molzip cannot zip these molecules, and RDKit 2025.03 would then "
+        "generate coordinates for no molecule");
+  }
+  if (zipped->getNumAtoms() == 0) {
+    return;
+  }
+  check_compute_2d_coords_mol(*zipped, false);
+  std::set<int> kept;
+  for (const auto atom : zipped->atoms()) {
+    int index;
+    if (atom->getPropIfPresent(index_prop, index)) {
+      kept.insert(index);
+    }
+  }
+  for (int index = 0; index < num_indices; ++index) {
+    auto found = mapping->find(index);
+    if (!kept.count(found == mapping->end() ? index : found->second)) {
+      throw ValueErrorException(
+          "molzip with generateCoordinates cannot place every input atom in "
+          "the zipped molecule, which RDKit 2025.03 does not check");
+    }
   }
 }
 
@@ -501,9 +627,7 @@ std::unique_ptr<RWMol> molzip_fragments(BorrowedMols &mols,
   }
   check_removals(parts);
   auto lock = lock_if_depicting(params);
-  check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
-    return RDKit::molzip(mols.mols(), probe);
-  });
+  check_zip_list(mols.mols(), params);
   return to_rwmol(RDKit::molzip(mols.mols(), params));
 }
 
@@ -533,9 +657,14 @@ std::unique_ptr<RWMol> molzip_row(BorrowedMols &row,
   }
   check_removals(parts);
   auto lock = lock_if_depicting(params);
-  check_zipped_depiction(params, [&](const RDKit::MolzipParams &probe) {
-    return RDKit::molzip(map, probe);
-  });
+  // As RDKit's molzip of a row: the core, then the rest by name.
+  std::vector<RDKit::ROMOL_SPTR> decomposition{map["Core"]};
+  for (const auto &[name, mol] : map) {
+    if (name != "Core") {
+      decomposition.push_back(mol);
+    }
+  }
+  check_zip_list(decomposition, params);
   return to_rwmol(RDKit::molzip(map, params));
 }
 

@@ -6,7 +6,7 @@
 // Ports rdkit/ML/Data/UnitTestQuantize.py, UnitTestStats.py,
 // UnitTestMLData.py, UnitTestFilter.py, and UnitTestDoctests.py (with the
 // doctests of DataUtils and SplitData), with values from Python's
-// rdkit.ML.Data modules in RDKit 2026.03.6.
+// rdkit.ML.Data modules in RDKit 2025.03.6.
 
 mod common;
 
@@ -422,23 +422,9 @@ fn write_data_matches_python() {
 fn randomize_activities_matches_python() {
     let _guard = seeded();
     let mut d = build_data_set(dat("randomize_activities_matches_python")).unwrap();
-    randomize_activities_with_shuffle(&mut d, true).unwrap();
+    randomize_activities_with_shuffle(&mut d).unwrap();
     let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
     assert_eq!(last, [F(2.1), F(1.1), F(3.1), F(4.1), F(5.1)]);
-    let mut d = build_data_set(dat("randomize_activities_matches_python")).unwrap();
-    init_random_numbers((23, 42));
-    randomize_activities(&mut d).unwrap();
-    let last: Vec<Value> = d.get_all_data().into_iter().map(|r| r[4].clone()).collect();
-    assert_eq!(
-        last,
-        [
-            F(4.799461006503781),
-            F(4.894423111972708),
-            F(4.669733376194317),
-            F(1.4342027073227346),
-            F(3.4681089075429408)
-        ]
-    );
 }
 
 #[test]

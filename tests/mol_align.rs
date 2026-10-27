@@ -428,8 +428,8 @@ fn best_alignments() {
         };
         let (rmsd, _, matched) =
             get_best_alignment_transform_with_params(&probe(1), &reference(), &params).unwrap();
-        assert_close(rmsd, 0.6937072271379565);
-        assert_eq!(matched.len(), 10);
+        assert_close(rmsd, 0.8029821548022692);
+        assert_eq!(matched.len(), 19);
     }
 
     let mut prb = probe(1);
@@ -444,7 +444,7 @@ fn best_alignments() {
     let mut prb = probe(1);
     assert_close(
         get_best_rms_with_params(&mut prb, &reference(), &Default::default()).unwrap(),
-        0.6937072271379565,
+        0.8029821548022692,
     );
     let mapped = GetBestRMSParams {
         map: vec![heavy_map()],
@@ -485,7 +485,7 @@ fn best_alignments() {
 #[test]
 fn all_conformers() {
     let mol = acetanilide();
-    let expected = [0.6937072271379565, 0.09168170803172553, 0.6904040682915917];
+    let expected = [0.8029821548022692, 0.35494074979983326, 0.7825745565387795];
     for num_threads in [1, 2] {
         let params = GetAllConformerBestRMSParams {
             num_threads,
@@ -832,7 +832,7 @@ fn concurrent_alignments() {
                     assert_close(
                         get_best_rms_with_params(&mut prb, &reference(), &Default::default())
                             .unwrap(),
-                        0.6937072271379565,
+                        0.8029821548022692,
                     );
                     let mut mol = probe(1);
                     random_transform(&mut mol).unwrap();

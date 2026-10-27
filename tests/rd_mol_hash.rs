@@ -82,25 +82,12 @@ fn cx_smiles() {
 }
 
 #[test]
-fn exclude_from_tautomerism() {
-    assert_eq!(
-        exclude_from_tautomerism_prop(),
-        "_MolHashExcludeFromTautomerism"
-    );
-    let mut mol = mol_from_smiles("CC(=O)C=CN").unwrap();
-    assert_eq!(
-        mol_hash(&mol, HashFunction::HetAtomTautomerv2).unwrap(),
-        "[C]:[C](:[O]):[C]:[C]:[N]_7_0"
-    );
-    for idx in 0..mol.get_num_atoms() {
-        mol.get_atom_with_idx_mut(idx)
-            .unwrap()
-            .set_bool_prop(exclude_from_tautomerism_prop(), true);
-    }
+fn tautomer_hashes() {
+    let mol = mol_from_smiles("CC(=O)C=CN").unwrap();
     // Python's values.
     assert_eq!(
         mol_hash(&mol, HashFunction::HetAtomTautomerv2).unwrap(),
-        "[CH3]-[C](=[O])-[CH]=[CH]-[NH2]_0_0"
+        "[C]:[C](:[O]):[C]:[C]:[N]_7_0"
     );
     assert_eq!(
         mol_hash(&mol, HashFunction::HetAtomTautomer).unwrap(),

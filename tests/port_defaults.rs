@@ -5,7 +5,7 @@
 
 // Pins the defaults of the parameter structs of the ports of rdkit.ML,
 // rdkit.DataStructs, rdkit.SimDivFilters.SimilarityPickers, and
-// rdkit.utils to Python's signatures in RDKit 2026.03.6 (CONVENTIONS.md
+// rdkit.utils to Python's signatures in RDKit 2025.03.6 (CONVENTIONS.md
 // A2).
 
 use rdkit_cxx::data_structs::FoldToTargetDensityParams;

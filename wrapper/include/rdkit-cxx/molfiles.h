@@ -18,10 +18,10 @@
 #include <vector>
 
 #include <GraphMol/FileParsers/CDXMLParser.h>
-#include <GraphMol/chemdraw.h>
 #include <GraphMol/FileParsers/FileParsers.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
+#include <GraphMol/chemdraw.h>
 
 #include "rdkit-cxx/atom.h"
 #include "rdkit-cxx/bond.h"

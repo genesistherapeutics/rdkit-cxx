@@ -4,7 +4,7 @@
 // license that can be found in the LICENSE file.
 
 // Ports rdkit/ML/SLT/UnitTestRisk.py, with values from Python's
-// rdkit.ML.SLT.Risk in RDKit 2026.03.6.
+// rdkit.ML.SLT.Risk in RDKit 2025.03.6.
 
 use rdkit_cxx::ml::slt::risk::*;
 

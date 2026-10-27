@@ -449,7 +449,10 @@ fn probe_fingerprint<T>(
             ..Default::default()
         },
     )?;
-    let atom_bits = outputs.get_atom_to_bits().map(<[_]>::to_vec).unwrap_or_default();
+    let atom_bits = outputs
+        .get_atom_to_bits()
+        .map(<[_]>::to_vec)
+        .unwrap_or_default();
     Ok((fp, atom_bits))
 }
 

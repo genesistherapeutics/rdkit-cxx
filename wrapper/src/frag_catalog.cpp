@@ -259,8 +259,8 @@ rust::Vec<std::uint32_t> frag_catalog_get_entry_down_ids(
   return ids;
 }
 
-// The generators match the functional groups, and every substructure match
-// constructs a ControlCHandler (control_c_lock.h, U4).
+// The generators match the functional groups, and the wrapper holds
+// control_c_mutex around matches (control_c_lock.h, U4).
 std::uint32_t frag_cat_generator_add_frags_from_mol(const RWMol &mol,
                                                     FragCatalog &fcat) {
   check_num_bonds(mol, params_of(fcat));

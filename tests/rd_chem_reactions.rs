@@ -13,8 +13,8 @@ use std::path::PathBuf;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_chem_reactions::*;
 use rdkit_cxx::chem::{
-    AtomMonomerInfo, AtomMonomerInfoParams, AtomMonomerType, ChiralType, Mol, PropValue,
-    PropertyPickleOptions, SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
+    AtomMonomerInfo, AtomMonomerType, ChiralType, Mol, PropValue, PropertyPickleOptions,
+    SmilesWriteParams, mol_from_smarts, mol_from_smiles, mol_to_smiles,
 };
 
 const AMIDE: &str = "[C:1](=[O:2])O.[N:3]>>[C:1](=[O:2])[N:3]";
@@ -309,15 +309,26 @@ fn writers() {
         reaction_to_smiles_with_params(&rxn, &non_canonical).unwrap(),
         "[C:1](=[O:2])O.[NH3:3]>>[C:1](=[O:2])[N:3]"
     );
-    assert_eq!(reaction_to_cx_smarts(&rxn).unwrap(), AMIDE);
+    // RDKit 2025.03 writes the atom maps as atom properties too.
+    assert_eq!(
+        reaction_to_cx_smarts(&rxn).unwrap(),
+        format!(
+            "{AMIDE} |atomProp:0.molAtomMapNumber.1:1.molAtomMapNumber.2:\
+             3.molAtomMapNumber.3:4.molAtomMapNumber.1:5.molAtomMapNumber.2:\
+             6.molAtomMapNumber.3|"
+        )
+    );
     assert_eq!(
         reaction_to_cx_smiles(&rxn).unwrap(),
-        "O[C:1]=[O:2].[NH3:3]>>[C:1](=[O:2])[N:3]"
+        "O[C:1]=[O:2].[NH3:3]>>[C:1](=[O:2])[N:3] |atomProp:1.molAtomMapNumber.1:\
+         2.molAtomMapNumber.2:3.molAtomMapNumber.3:4.molAtomMapNumber.1:\
+         5.molAtomMapNumber.2:6.molAtomMapNumber.3|"
     );
     let labeled = reaction_from_smarts("[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;$|").unwrap();
     assert_eq!(
         reaction_to_cx_smiles(&labeled).unwrap(),
-        "[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;;;$|"
+        "[CH3:1][OH:2]>>[CH2:1]=[O:2] |$R1;;;$,atomProp:0.molAtomMapNumber.1:\
+         1.molAtomMapNumber.2:2.molAtomMapNumber.1:3.molAtomMapNumber.2|"
     );
     assert_eq!(
         reaction_to_smarts(&labeled).unwrap(),
@@ -1263,13 +1274,10 @@ fn long_stereo_group_lines_are_refused() {
 /// its pickle, and where the info's type byte is in it.
 fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     let mut methane = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-        ..Default::default()
-    };
-    methane.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    methane
+        .get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
     rxn.add_agent_template(&methane);
     let pkl = rxn.to_binary();
@@ -1281,10 +1289,10 @@ fn marked_reaction_pickle() -> (ChemicalReaction, Vec<u8>, usize) {
     (rxn, pkl, name + 8)
 }
 
-/// RDKit casts any monomer info of type PDBRESIDUE to AtomPDBResidueInfo,
-/// and a reaction pickle's templates are molecule pickles (U10).
+/// A reaction pickle's templates are molecule pickles, whose monomer types
+/// RDKit 2025.03 reads by their type.
 #[test]
-fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
+fn reaction_pickles_check_monomer_types() {
     let (_, pkl, at) = marked_reaction_pickle();
     // SAFETY: a pickle RDKit wrote.
     unsafe { ChemicalReaction::from_bin_str(&pkl) }.unwrap();
@@ -1292,14 +1300,19 @@ fn reaction_pickles_cannot_give_plain_info_the_pdb_type() {
     unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &pkl)) }.unwrap();
     let mut changed = pkl.clone();
     changed[at] = 1;
+    // SAFETY: a pickle RDKit wrote but for a monomer type byte, which RDKit
+    // reads as PDB residue info.
+    unsafe { ChemicalReaction::from_bin_str(&changed) }.unwrap();
+    // RDKit's "unrecognized MonomerType", a RuntimeError in Python.
+    changed[at] = 3;
     assert!(matches!(
-        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which the wrapper checks (U10).
+        // SAFETY: a pickle RDKit wrote but for a monomer type byte, which RDKit checks.
         unsafe { ChemicalReaction::from_bin_str(&changed) },
-        Err(Error::Value { .. })
+        Err(Error::Runtime { .. })
     ));
     assert!(matches!(
         // SAFETY: as above.
         unsafe { reaction_from_png_string(&png_with_text("rdkitReactionPKL", &changed)) },
-        Err(Error::Value { .. })
+        Err(Error::Runtime { .. })
     ));
 }

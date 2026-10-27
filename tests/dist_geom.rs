@@ -126,25 +126,12 @@ fn presets() {
         )
     };
     assert_eq!(summary(etkdg()), (true, true, 1, false, false, false));
-    assert_eq!(
-        summary(etkdg_v2()),
-        (true, true, 2, false, false, false)
-    );
-    assert_eq!(
-        summary(etkdg_v3()),
-        (true, true, 2, false, true, true)
-    );
-    assert_eq!(
-        summary(sr_etkdg_v3()),
-        (true, true, 2, true, false, false)
-    );
+    assert_eq!(summary(etkdg_v2()), (true, true, 2, false, false, false));
+    assert_eq!(summary(etkdg_v3()), (true, true, 2, false, true, true));
+    assert_eq!(summary(sr_etkdg_v3()), (true, true, 2, true, false, false));
     assert_eq!(summary(etdg()), (true, false, 1, false, false, false));
-    assert_eq!(
-        summary(etdg_v2()),
-        (true, false, 2, false, false, false)
-    );
+    assert_eq!(summary(etdg_v2()), (true, false, 2, false, false, false));
     assert_eq!(summary(kdg()), (false, true, 1, false, false, false));
-
 }
 
 #[test]
@@ -507,4 +494,3 @@ fn experimental_torsions() {
         Err(Error::Value { .. })
     ));
 }
-

@@ -35,8 +35,8 @@ const RDKit::MolChemicalFeatureDef &feature_def(
   return **it;
 }
 
-// getFeaturesForMol matches every definition's pattern, and each match
-// constructs a ControlCHandler (control_c_lock.h, CONVENTIONS.md U4).
+// getFeaturesForMol matches every definition's pattern, and the wrapper
+// holds control_c_mutex around matches (control_c_lock.h, CONVENTIONS.md U4).
 RDKit::FeatSPtrList features(const MolChemicalFeatureFactory &factory,
                              const RWMol &mol, rust::Str include_only,
                              std::int32_t conf_id) {

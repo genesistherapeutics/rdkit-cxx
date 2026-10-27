@@ -318,7 +318,7 @@ void determine_connectivity(RWMol &mol, bool use_hueckel, std::int32_t charge,
   RDKit::determineConnectivity(mol, use_hueckel, charge, cov_factor, use_vdw);
 }
 
-// determineBondOrders constructs a ControlCHandler (control_c_mutex), and
+// determineBondOrders calls ControlCHandler::reset (control_c_mutex), and
 // sanitizes the molecule when it embeds chirality (U6).
 void determine_bond_orders(RWMol &mol, std::int32_t charge,
                            bool allow_charged_fragments, bool embed_chiral,

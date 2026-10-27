@@ -425,11 +425,7 @@ pub fn calc_rms_with_params(prb_mol: &Mol, ref_mol: &Mol, params: &CalcRMSParams
             1,
         )
     };
-    Ok(ffi::calc_rms(
-        prb_mol.as_ffi(),
-        ref_mol.as_ffi(),
-        &data,
-    )?)
+    Ok(ffi::calc_rms(prb_mol.as_ffi(), ref_mol.as_ffi(), &data)?)
 }
 
 /// Parameters for `align_mol_conformers_with_params`, with Python's

@@ -127,11 +127,11 @@ fn tanimoto_guards() {
             Err(Error::Value { .. })
         ));
     }
-    // Vectors of no bits compare as RDKit compares them when no folding is
-    // needed.
+    // Vectors of no bits compare as RDKit 2025.03 compares them when no
+    // folding is needed: as the same.
     assert_eq!(
         get_tanimoto_sim_mat(&[ebv(0, &[]), ebv(0, &[])]).unwrap(),
-        [0.0]
+        [1.0]
     );
     // Folding an unfolded fingerprint (2^32 - 1 bits) computes its size in
     // int; comparing two of them folds nothing.

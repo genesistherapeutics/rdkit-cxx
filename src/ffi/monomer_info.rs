@@ -50,7 +50,8 @@ pub(crate) mod ffi {
             info: &AtomPDBResidueInfo,
         ) -> Result<UniquePtr<CxxString>>;
         fn pdb_residue_info_get_residue_number(info: &AtomPDBResidueInfo) -> Result<i32>;
-        fn pdb_residue_info_get_chain_id(info: &AtomPDBResidueInfo) -> Result<UniquePtr<CxxString>>;
+        fn pdb_residue_info_get_chain_id(info: &AtomPDBResidueInfo)
+        -> Result<UniquePtr<CxxString>>;
         fn pdb_residue_info_get_insertion_code(
             info: &AtomPDBResidueInfo,
         ) -> Result<UniquePtr<CxxString>>;
@@ -75,8 +76,10 @@ pub(crate) mod ffi {
             info: Pin<&mut AtomPDBResidueInfo>,
             val: i32,
         ) -> Result<()>;
-        fn pdb_residue_info_set_chain_id(info: Pin<&mut AtomPDBResidueInfo>, val: &str)
-        -> Result<()>;
+        fn pdb_residue_info_set_chain_id(
+            info: Pin<&mut AtomPDBResidueInfo>,
+            val: &str,
+        ) -> Result<()>;
         fn pdb_residue_info_set_insertion_code(
             info: Pin<&mut AtomPDBResidueInfo>,
             val: &str,
