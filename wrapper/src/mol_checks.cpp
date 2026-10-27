@@ -243,27 +243,13 @@ void check_bond_query(const RDKit::Bond::QUERYBOND_QUERY *root,
 // The fields _pickle<unsigned char> writes in one byte, which MolPickler
 // uses for a molecule of at most 255 atoms whatever its bond count (RDKit
 // 2026.09 also counts bonds, rdkit/rdkit#9563): every atom index fits, but
-// a bond index or a list's size may not. For parts (check_picklable_parts),
-// whatever the molecule's size, with bonds named as a part of at most
-// max_part_bonds bonds may number them.
-void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
-                        bool parts = false, unsigned max_part_bonds = 0) {
-  if (!parts && mol.getNumAtoms() > kPickleByteMax) {
+// a bond index or a list's size may not.
+void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where) {
+  if (mol.getNumAtoms() > kPickleByteMax) {
     return;
   }
-  // A part's bonds are numbered from 0, so past 255 only in a part of more
-  // than 256 bonds.
-  const bool any_bond = parts && max_part_bonds > kPickleByteMax + 1;
   auto check_bond = [&](std::size_t bond, const std::string &what) {
-    if (any_bond) {
-      throw ValueErrorException(
-          what + " " + std::to_string(bond) +
-          " may be numbered past 255 in a part of more than 256 bonds, more "
-          "than a molecule pickle holds");
-    }
-    if (!parts) {
-      check_pickle_byte(bond, what);
-    }
+    check_pickle_byte(bond, what);
   };
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
@@ -293,6 +279,49 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
     for (const auto *bond : groups[i].getBonds()) {
       check_bond(bond->getIdx(), at + "bond");
     }
+  }
+}
+
+// streamWriteProps counts the properties it writes in a std::uint16_t for
+// the molecule, each conformer, atom and bond (with the property flags, or
+// for a recursive query's molecule the default flags), and each substance
+// group (always): past 65535 the count wraps (still in RDKit 2026.09), and
+// the reader takes the rest of the properties for the pickle's next fields.
+// Counts every property, whether or not the flags write it, which is at
+// least as many.
+constexpr std::size_t kPickleCountMax = 65535;
+
+void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
+  auto count = props.getDict().getData().size();
+  if (count > kPickleCountMax) {
+    throw ValueErrorException(
+        what + " has " + std::to_string(count) +
+        " properties, more than a molecule pickle counts (65535)");
+  }
+}
+
+// For a part (`atoms_and_bonds`), only the atoms' and bonds' properties,
+// which pathToSubmol copies; the part has none of the molecule's own.
+void check_prop_counts(const RDKit::ROMol &mol, const std::string &where,
+                       bool atoms_and_bonds = false) {
+  if (!atoms_and_bonds) {
+    check_prop_count(mol, where.substr(0, where.size() - 3));
+    for (auto conf = mol.beginConformers(); conf != mol.endConformers();
+         ++conf) {
+      check_prop_count(**conf,
+                       where + "conformer " + std::to_string((*conf)->getId()));
+    }
+    const auto &sgroups = RDKit::getSubstanceGroups(mol);
+    for (std::size_t i = 0; i < sgroups.size(); ++i) {
+      check_prop_count(sgroups[i],
+                       where + "substance group " + std::to_string(i));
+    }
+  }
+  for (const auto *atom : mol.atoms()) {
+    check_prop_count(*atom, where + "atom " + std::to_string(atom->getIdx()));
+  }
+  for (const auto *bond : mol.bonds()) {
+    check_prop_count(*bond, where + "bond " + std::to_string(bond->getIdx()));
   }
 }
 
@@ -338,17 +367,22 @@ void check_stereo_group_members(const std::vector<RDKit::Atom *> &atoms,
 
 namespace {
 
-// check_picklable, and for parts, check_picklable_parts: the molecule's own
-// fields as parts' are, its recursive queries' molecules, which parts copy
-// whole, as themselves.
-void check_picklable(const RDKit::ROMol &mol, bool parts,
-                     unsigned max_part_bonds) {
+// check_picklable, and for parts, check_picklable_parts: a part, which
+// RDKit 2025.03's pathToSubmol builds of copies of some atoms and bonds
+// alone, has no substance or stereo groups, conformers or properties of its
+// own; its recursive queries' molecules, which it copies whole, are checked
+// as themselves.
+void check_picklable(const RDKit::ROMol &mol, bool parts) {
   walk_pickled(
       mol,
       [&](const RDKit::ROMol &current, bool nested) {
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
-        check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        const bool part = parts && !nested;
+        if (!part) {
+          check_pickle_bytes(current, where);
+        }
+        check_prop_counts(current, where, part);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
             check_bond_query(
@@ -362,12 +396,10 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
 
 }  // namespace
 
-void check_picklable(const RDKit::ROMol &mol) {
-  check_picklable(mol, false, 0);
-}
+void check_picklable(const RDKit::ROMol &mol) { check_picklable(mol, false); }
 
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds) {
-  check_picklable(mol, true, max_part_bonds);
+void check_picklable_parts(const RDKit::ROMol &mol) {
+  check_picklable(mol, true);
 }
 
 namespace {

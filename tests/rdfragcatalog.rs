@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rdfragcatalog::*;
 use rdkit_cxx::chem::*;
+use rdkit_cxx::geometry::rd_geometry::Point3D;
 
 // Expected values come from Python's rdfragcatalog.
 
@@ -404,4 +405,54 @@ fn molecules_are_checked() {
         unsafe { FragCatalog::from_pickle(&splice(&marked)) },
         Err(Error::Runtime { .. })
     ));
+}
+
+/// `smiles` with a substance group of `atoms` and their bonds, with `n`
+/// brackets.
+fn with_brackets(smiles: &str, atoms: u32, n: usize) -> Mol {
+    let mut mol = mol(smiles);
+    let mut sgroup = create_mol_substance_group(&mut mol, "GEN");
+    for idx in 0..atoms {
+        sgroup.add_atom_with_idx(idx).unwrap();
+    }
+    for idx in 0..atoms - 1 {
+        sgroup.add_bond_with_idx(idx).unwrap();
+    }
+    let bracket = [Point3D::default(), Point3D::new(1.0, 0.0, 0.0)];
+    for _ in 0..n {
+        sgroup.add_bracket(&bracket).unwrap();
+    }
+    mol
+}
+
+// The entries' fragments are pickled with one-byte counts when small, however
+// large the molecule. RDKit 2025.03's pathToSubmol copies only the atoms and
+// bonds, with their properties and queries, so a fragment holds none of the
+// molecule's substance groups, and only what it copies is checked.
+#[test]
+fn fragments_are_picklable() {
+    let chain = "C".repeat(300);
+    let generator = FragCatGenerator;
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let large = with_brackets(&chain, 2, 256);
+    assert!(generator.add_frags_from_mol(&large, &mut catalog).unwrap() > 0);
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
+    assert_eq!(read.get_num_entries(), catalog.get_num_entries());
+
+    // An atom's properties are copied, and counted in a u16.
+    let mut many = mol(&chain);
+    let mut atom = many.get_atom_with_idx_mut(0).unwrap();
+    for i in 0..65536 {
+        atom.set_prop(&format!("p{i}"), "x");
+    }
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let Err(Error::Value { message }) = generator.add_frags_from_mol(&many, &mut catalog) else {
+        panic!("a fragment's pickle would wrap its atom's property count");
+    };
+    assert!(
+        message.contains("more than a molecule pickle counts"),
+        "{message}"
+    );
+    assert_eq!(catalog.get_num_entries(), 0);
 }

@@ -110,20 +110,22 @@ void check_stereo_group_members(const std::vector<RDKit::Atom *> &atoms,
 // the sizes of their atom and bond lists, and the bonds both name. A
 // truncated size leaves MolPickler's reader taking the rest of the list for
 // the pickle's next fields, which it reads unchecked (CONVENTIONS.md U2): it
-// writes a pickle it cannot read. Throws ValueErrorException for any of
+// writes a pickle it cannot read. So does a molecule, conformer, atom, bond,
+// or substance group with more than 65535 properties, whose count MolPickler
+// writes in a std::uint16_t. Throws ValueErrorException for any of
 // these, in the molecule or in the molecules of its recursive queries, which
 // RDKit pickles as molecules. Every wrapper that pickles a molecule, alone or
 // inside another format, calls it on the molecules it pickles.
 void check_picklable(const RDKit::ROMol &mol);
 
-// As check_picklable, for every molecule RDKit may make of some of mol's atoms
-// and at most max_part_bonds of its bonds, keeping the substance groups and
-// stereo groups within them and the atoms' and bonds' queries
-// (copyMolSubset): its one-byte fields as a part of at most 255 atoms writes
-// them, and, for parts of more than 256 bonds, whose bonds may be numbered
-// past 255, no group that names a bond. For the fragment catalog, whose
-// fragments no wrapper can reach.
-void check_picklable_parts(const RDKit::ROMol &mol, unsigned max_part_bonds);
+// As check_picklable, for every molecule RDKit 2025.03's pathToSubmol may
+// make of some of mol's atoms and bonds: copies of them alone, with their
+// queries and properties, and no substance or stereo groups, conformers or
+// properties of its own. So only the atoms' and bonds' property counts, the
+// queries' numbers of children, and the recursive queries' molecules (whole)
+// are checked. For the fragment catalog, whose fragments no wrapper can
+// reach.
+void check_picklable_parts(const RDKit::ROMol &mol);
 
 // check_picklable for each template of a reaction, which ReactionPickler
 // pickles as molecules.

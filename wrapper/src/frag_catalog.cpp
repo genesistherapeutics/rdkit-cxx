@@ -266,7 +266,7 @@ std::uint32_t frag_cat_generator_add_frags_from_mol(const RWMol &mol,
   check_num_bonds(mol, params_of(fcat));
   // Each fragment is a part of the molecule of at most the upper length's
   // bonds, which the catalog pickles (check_picklable_parts).
-  check_picklable_parts(mol, params_of(fcat).getUpperFragLength());
+  check_picklable_parts(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   return RDKit::FragCatGenerator().addFragsFromMol(mol, &fcat);
 }
