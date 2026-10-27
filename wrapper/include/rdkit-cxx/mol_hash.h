@@ -19,6 +19,11 @@
 
 namespace rdkit_cxx {
 
+// The most atoms the ExtendedMurcko hash takes: RDKit 2025.03 allocates one
+// byte of stack per atom with alloca (hashfunctions.cpp), and this keeps each
+// allocation within a 4 KiB page.
+inline constexpr unsigned kMaxExtendedMurckoAtoms = 4000;
+
 using HashFunction = RDKit::MolHash::HashFunction;
 
 std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
