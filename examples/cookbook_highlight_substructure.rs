@@ -9,19 +9,15 @@
 //! From the [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html#highlight-a-substructure-in-a-molecule),
 //! by Greg Landrum.
 //!
-//! Jupyter shows a molecule whose substructure matches were just found with
-//! the matches highlighted (`Draw.DrawMolWithMatches`, with the query, so
-//! the matched bonds are highlighted too). The recipe then sets the atoms
-//! to highlight by hand, but Jupyter keeps the query, which those atoms do
-//! not fit, and in RDKit 2026.03 drawing them fails (Python raises
-//! `AttributeError`; here the drawing is `Error::Value`). Drawn without the
-//! query, as the recipe intends, the atoms are highlighted.
+//! In RDKit 2025.03, Jupyter shows a molecule whose substructure matches
+//! were just found with the matched atoms highlighted (all matches' atoms
+//! in one list, Python's `__sssAtoms`), and with them the bonds between
+//! those atoms. The recipe then sets the atoms to highlight by hand.
 
 mod common;
 
-use common::{MOL_SIZE, write_image};
+use common::{MOL_SIZE, show_with_highlights, write_image};
 use rdkit_cxx::chem::draw::rd_mol_draw_2d::MolDrawOptions;
-use rdkit_cxx::chem::draw::{DrawMolWithMatchesParams, draw_mol_with_matches_as_svg_with_params};
 use rdkit_cxx::chem::{mol_from_smarts, mol_from_smiles};
 
 /// The highlight color, `MolDrawOptions::highlight_colour`'s default.
@@ -34,22 +30,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{matches:?}");
     assert_eq!(matches, [[3, 4, 5], [8, 9, 7]]);
 
-    let shown = DrawMolWithMatchesParams {
-        mol_size: MOL_SIZE,
-        qry: Some(substructure),
-        options: MolDrawOptions::default(),
-        ..Default::default()
-    };
-    let svg = draw_mol_with_matches_as_svg_with_params(&m, &matches, &shown)?;
+    let options = MolDrawOptions::default();
+    let atoms: Vec<u32> = matches.concat();
+    let svg = show_with_highlights(&m, MOL_SIZE, &options, &atoms)?;
     write_image("highlight_substructure.svg", &svg)?;
     assert_eq!(svg.matches(HIGHLIGHT).count(), 20);
 
     // You can also set the atoms to highlight by hand:
-    let atoms = vec![vec![0, 1, 2, 6, 11, 12]];
-    assert!(draw_mol_with_matches_as_svg_with_params(&m, &atoms, &shown).is_err());
-    let by_hand = DrawMolWithMatchesParams { qry: None, ..shown };
-    let svg = draw_mol_with_matches_as_svg_with_params(&m, &atoms, &by_hand)?;
+    let svg = show_with_highlights(&m, MOL_SIZE, &options, &[0, 1, 2, 6, 11, 12])?;
     write_image("highlight_substructure_by_hand.svg", &svg)?;
-    assert_eq!(svg.matches(HIGHLIGHT).count(), 12);
+    assert_eq!(svg.matches(HIGHLIGHT).count(), 24);
     Ok(())
 }
