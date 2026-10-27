@@ -6,9 +6,9 @@
 //! Ring finding, aromaticity, cleanup, and the other perception steps.
 
 use crate::Result;
+use crate::chem::Mol;
 use crate::chem::rdchem::AsAtom;
 use crate::chem::rdchem::enums::rdkit_enum;
-use crate::chem::{Mol, rdmolops::KekulizeParams};
 use crate::ffi::geometry::ffi::IndexList;
 use crate::ffi::perception::ffi;
 
@@ -166,24 +166,21 @@ pub fn assign_radicals(mol: &mut Mol) -> Result<()> {
     Ok(ffi::assign_radicals(mol.pin_mut())?)
 }
 
-/// Parameters for `kekulize_if_possible_with_params`, with Python's defaults
-/// (A2): the same as `kekulize_with_params`'s.
-pub type KekulizeIfPossibleParams = KekulizeParams;
-
 /// Kekulizes the molecule, leaving it as it was if that fails. Mirrors
 /// `rdmolops.KekulizeIfPossible`.
 pub fn kekulize_if_possible(mol: &mut Mol) -> Result<()> {
-    kekulize_if_possible_with_params(mol, &KekulizeIfPossibleParams::default())
+    kekulize_if_possible_with_clear_aromatic_flags(mol, false)
 }
 
-/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags)`.
-pub fn kekulize_if_possible_with_params(
+/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags)`: also
+/// clears the aromatic flags on atoms and bonds.
+pub fn kekulize_if_possible_with_clear_aromatic_flags(
     mol: &mut Mol,
-    params: &KekulizeIfPossibleParams,
+    clear_aromatic_flags: bool,
 ) -> Result<()> {
     Ok(ffi::kekulize_if_possible(
         mol.pin_mut(),
-        params.clear_aromatic_flags,
+        clear_aromatic_flags,
     )?)
 }
 

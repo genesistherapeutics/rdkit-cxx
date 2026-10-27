@@ -3476,7 +3476,7 @@ fn manifest_paths_exist() {
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::set_name;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::default;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::new;
-    let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::new_with_params;
+    let _ = <rdkit_cxx::chem::rdchem::AtomMonomerInfo>::new_with_name;
     let _: Option<rdkit_cxx::chem::rdchem::AtomMonomerType> = None;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerType>::Other;
     let _ = <rdkit_cxx::chem::rdchem::AtomMonomerType>::Pdbresidue;
@@ -4909,9 +4909,9 @@ fn manifest_paths_exist() {
     use rdkit_cxx::chem::rdmolops::haptic_bonds_to_dative as _;
     use rdkit_cxx::chem::rdmolops::has_query_hs as _;
     use rdkit_cxx::chem::rdmolops::kekulize as _;
-    use rdkit_cxx::chem::rdmolops::kekulize_with_params as _;
+    use rdkit_cxx::chem::rdmolops::kekulize_with_clear_aromatic_flags as _;
     use rdkit_cxx::chem::rdmolops::kekulize_if_possible as _;
-    use rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params as _;
+    use rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_clear_aromatic_flags as _;
     use rdkit_cxx::chem::rdmolops::layered_fingerprint as _;
     use rdkit_cxx::chem::rdmolops::layered_fingerprint_with_params as _;
     use rdkit_cxx::chem::rdmolops::layered_fingerprint_with_outputs as _;

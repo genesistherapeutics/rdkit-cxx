@@ -33,7 +33,12 @@ A program built against one release stops when it loads with another.
     `SetName`; `CaptureErrorLog`; `rdMolHash.excludeFromTautomerismProp`;
     the MMFF term, dielectric, and variant getters of `MMFFMolProperties`;
     and the residue fields and `monomerClass` of `AtomMonomerInfo` (they are
-    `AtomPDBResidueInfo`'s alone).
+    `AtomPDBResidueInfo`'s alone). With one optional argument left, those
+    take it in a `_with_<param>` function (CONVENTIONS.md A2):
+    `kekulize_with_clear_aromatic_flags`,
+    `kekulize_if_possible_with_clear_aromatic_flags`, and
+    `AtomMonomerInfo::new_with_name`, in place of `KekulizeParams` and
+    `AtomMonomerInfoParams`.
   - Drawing's `legendPosition`, `legendVerticalText`, stereo-group label
     options, and `singleColourBonds`; stereo groups are labeled `abs`,
     `or<n>`, and `and<n>`.

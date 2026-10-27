@@ -267,12 +267,9 @@ fn pickles_cannot_give_plain_info_the_pdb_type() {
     // AtomPDBResidueInfo (whose fields then follow), and refuses a type its enum
     // lacks; a type of 3 is an error.
     let mut mol = smiles("C");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut pkl = mol.to_binary();
     // The info's name (a u32 length, then its bytes), then its type, in 32
     // bits low byte first.

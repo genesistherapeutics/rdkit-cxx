@@ -58,8 +58,6 @@ fn param_defaults() {
             include_hydrogen_bonds: false
         }
     );
-    let kekulize = KekulizeIfPossibleParams::default();
-    assert!(!kekulize.clear_aromatic_flags);
 }
 
 #[test]

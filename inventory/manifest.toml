@@ -12549,7 +12549,7 @@ rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::set_name"]
 
 [[entry]]
 python = "rdkit.Chem.rdchem.AtomMonomerInfo.__init__"
-rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_params"]
+rust = ["rdkit_cxx::chem::rdchem::AtomMonomerInfo::default", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new", "rdkit_cxx::chem::rdchem::AtomMonomerInfo::new_with_name"]
 overloads_note = "type PDBRESIDUE, which Python allows, is Error::Value: only AtomPDBResidueInfo has it (U10)"
 
 [[entry]]
@@ -17345,11 +17345,11 @@ rust = ["rdkit_cxx::chem::rdmolops::has_query_hs"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.Kekulize"
-rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::kekulize", "rdkit_cxx::chem::rdmolops::kekulize_with_clear_aromatic_flags"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.KekulizeIfPossible"
-rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_params"]
+rust = ["rdkit_cxx::chem::rdmolops::kekulize_if_possible", "rdkit_cxx::chem::rdmolops::kekulize_if_possible_with_clear_aromatic_flags"]
 
 [[entry]]
 python = "rdkit.Chem.rdmolops.LayeredFingerprint"
