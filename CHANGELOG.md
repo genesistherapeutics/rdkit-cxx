@@ -41,6 +41,9 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     `maxBestMCESs`; R-group decomposition's `allowMultipleCoresInSameMol`;
     `MolzipParams.alignCoordinates`; the depictor's `useRingTemplates` and
     `usePathAngleExpansion`; `DetermineBonds`' `maxIterations`;
+    `Kekulize`'s and `KekulizeIfPossible`'s `canonical` (`KekulizeParams`
+    has `clear_aromatic_flags` alone, and kekulizing backtracks up to 100
+    times, as Python's does);
     `GetSSSR`'s and `GetSymmSSSR`'s `includeHydrogenBonds`, `algorithm`,
     and `recalcSSSR`, and the legacy ring-finding setting;
     `CanonicalizeStereoGroups`' `maxStereoGroups`;

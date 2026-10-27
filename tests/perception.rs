@@ -50,7 +50,7 @@ fn param_defaults() {
         }
     );
     let kekulize = KekulizeIfPossibleParams::default();
-    assert!(!kekulize.clear_aromatic_flags && kekulize.canonical);
+    assert!(!kekulize.clear_aromatic_flags);
 }
 
 #[test]

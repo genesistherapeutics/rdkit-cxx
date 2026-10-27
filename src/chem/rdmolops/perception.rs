@@ -146,7 +146,7 @@ pub fn kekulize_if_possible(mol: &mut Mol) -> Result<()> {
     kekulize_if_possible_with_params(mol, &KekulizeIfPossibleParams::default())
 }
 
-/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags, canonical)`.
+/// Mirrors `rdmolops.KekulizeIfPossible(mol, clearAromaticFlags)`.
 pub fn kekulize_if_possible_with_params(
     mol: &mut Mol,
     params: &KekulizeIfPossibleParams,
@@ -154,7 +154,6 @@ pub fn kekulize_if_possible_with_params(
     Ok(ffi::kekulize_if_possible(
         mol.pin_mut(),
         params.clear_aromatic_flags,
-        params.canonical,
     )?)
 }
 
