@@ -6,11 +6,11 @@
 name: CI
 
 # Branches with a pull request run once, as pull_request; push covers main
-# and this release branch, whose releases need CI's result on a push
+# and each RDKit series' branch, whose releases need CI's result on a push
 # (README.md, Releases).
 on:
   push:
-    branches: [main, rdkit-2026.03]
+    branches: [main, "rdkit-*"]
   pull_request:
 
 permissions:
@@ -77,7 +77,8 @@ jobs:
           cargo build -p downstream --config "target.'cfg(target_os = \"linux\")'.linker = '/usr/bin/cc'"
           env -u LD_LIBRARY_PATH -u DYLD_LIBRARY_PATH -u DYLD_FALLBACK_LIBRARY_PATH \
             ./target/debug/downstream | tee downstream.out
-          grep "^RDKit 2026.03." downstream.out
+          series="$(sed -n 's/^ *- librdkit-dev \([0-9]\{4\}\.[0-9]\{2\}\)\.[0-9]\{1,\}$/\1/p' environment.yml)"
+          grep "^RDKit ${series:?environment.yml pins no librdkit-dev release}\." downstream.out
       - name: Building outside an environment fails with one message
         run: |
           if env -u CONDA_PREFIX -u RDKIT_PREFIX cargo build > missing.out 2>&1; then
@@ -185,7 +186,8 @@ jobs:
           rustup default stable
       - run: pip install pre-commit
       # Runs every hook, addlicense among them, on every file. CI also runs on
-      # main, where no-commit-to-branch would always fail.
+      # main and the series' branches, where no-commit-to-branch would always
+      # fail.
       - run: SKIP=no-commit-to-branch pre-commit run --all-files --show-diff-on-failure
 
   docs:
