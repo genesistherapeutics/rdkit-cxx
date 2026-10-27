@@ -7,8 +7,8 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_rascal_mces::*;
 use rdkit_cxx::chem::*;
 
-// Expected values come from Python's rdRascalMCES. Searches use the default
-// 60-second timeout, which none of these comes near.
+// Expected values come from Python's rdRascalMCES. Searches run without a
+// timeout, which none of Python's comes near.
 
 fn smiles(text: &str) -> Mol {
     mol_from_smiles(text).unwrap()
@@ -39,7 +39,9 @@ fn defaults() {
     assert_eq!(opts.max_frag_separation, -1);
     assert!(!opts.all_best_mcess);
     assert_eq!(opts.max_best_mcess, 10000);
-    assert_eq!(opts.timeout, 60);
+    // Python's 60 seconds is refused (RDKit 2025.09 reads an emptied list
+    // when a search times out).
+    assert_eq!(opts.timeout, -1);
     assert!(!opts.return_empty_mces);
     assert_eq!(opts.max_bond_match_pairs, 1000);
     assert_eq!(opts.equivalent_atoms, "");
@@ -160,6 +162,17 @@ fn options() {
     assert_eq!(results.len(), 12);
     assert_eq!(results[0].smarts_string(), "C(-C)-C");
     assert_eq!(results[11].smarts_string(), "CCC");
+
+    // RDKit 2025.09 reads an emptied list of cliques when a search times
+    // out, so only -1, no timeout, is taken.
+    let timed = RascalOptions {
+        timeout: 5,
+        ..Default::default()
+    };
+    assert!(matches!(
+        find_mces_with_opts(&smiles("c1ccccc1"), &smiles("c1ccccc1C"), &timed),
+        Err(Error::Value { .. })
+    ));
 
     // RDKit 2025.09 measures from fragments it has pruned for any
     // maxFragSeparation but -1.

@@ -7,9 +7,12 @@
 //! with the RASCAL algorithm, and the clusterings built on its similarity.
 //!
 //! The wrapper checks what RDKit trusts (CONVENTIONS.md U1): a
-//! `max_frag_separation` below -1 and a NaN similarity threshold, which
-//! RDKit reads past a matrix and casts, and equivalent-atom SMARTS that do
-//! not parse, which RDKit dereferences; `complete_smallest_rings` sets
+//! `max_frag_separation` other than -1 and a NaN similarity threshold, which
+//! RDKit reads past a matrix (or, in 2025.09, through a pruned fragment)
+//! and casts, a timeout other than -1, on which RDKit 2025.09 reads an
+//! emptied list of cliques (the clusterings run their searches without
+//! one), and equivalent-atom SMARTS that do not parse, which RDKit
+//! dereferences; `complete_smallest_rings` sets
 //! `complete_aromatic_rings`, as RDKit documents but does not do (it reads
 //! ring data only the latter makes). Molecules past the sizes RDKit's `int`
 //! arithmetic allows are refused. Each MCES matches substructures, so the
@@ -56,9 +59,9 @@ pub struct RascalOptions {
     pub all_best_mcess: bool,
     /// The most MCESs of one size to keep.
     pub max_best_mcess: u32,
-    /// Seconds to spend on one MCES; -1 for no limit. Not honored: RDKit
-    /// 2025.09 reads an empty vector when a timeout fires with a clique
-    /// larger than those it kept, so the search runs to the end.
+    /// Seconds to spend on one MCES; -1 for no limit. RDKit 2025.09 reads
+    /// an emptied list when a search times out, so other values are
+    /// `Error::Value`, and the default is -1, not Python's 60.
     pub timeout: i32,
     /// Returns a result with the similarity estimates when they miss the
     /// threshold.

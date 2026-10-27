@@ -33,7 +33,12 @@ A program built against one release stops when it loads with another.
     `SetName`; `CaptureErrorLog`; `rdMolHash.excludeFromTautomerismProp`;
     the MMFF term, dielectric, and variant getters of `MMFFMolProperties`;
     and the residue fields and `monomerClass` of `AtomMonomerInfo` (they are
-    `AtomPDBResidueInfo`'s alone).
+    `AtomPDBResidueInfo`'s alone). With one optional argument left, those
+    take it in a `_with_<param>` function (CONVENTIONS.md A2):
+    `kekulize_with_clear_aromatic_flags`,
+    `kekulize_if_possible_with_clear_aromatic_flags`, and
+    `AtomMonomerInfo::new_with_name`, in place of `KekulizeParams` and
+    `AtomMonomerInfoParams`.
   - Drawing's `legendPosition`, `legendVerticalText`, stereo-group label
     options, and `singleColourBonds`; stereo groups are labeled `abs`,
     `or<n>`, and `and<n>`.
@@ -59,10 +64,12 @@ A program built against one release stops when it loads with another.
   bond's order as its `BondType`'s number (17 for a dative bond),
   `fr_Ar_COO`'s description is 2025.09's, and `CalculateTorsionLists` checks
   only a bond's end atom for heavy neighbors.
-- RASCAL's `timeout` is not honored, and a `max_frag_separation` other than
-  -1 is `Error::Value`: RDKit 2025.09 reads an empty vector when a timeout
-  fires, and measures fragment separation from a fragment it has just
-  pruned.
+- RASCAL's `timeout` and `max_frag_separation` take only -1, as on the
+  rdkit-2025.03 line, and other values are `Error::Value`: RDKit 2025.09
+  reads an emptied list of cliques when a search times out, and measures
+  fragment separation from a fragment it has just pruned. The timeout's
+  default is -1, not Python's 60 seconds, and the clusterings run their
+  searches without one.
 - Checks for what newer RDKit releases fixed (each refused input is
   `Error::Value`):
   - `renumber_atoms` takes only a permutation: RDKit 2025.09 writes past its
@@ -73,8 +80,15 @@ A program built against one release stops when it loads with another.
     returns no fragments for more bonds to break than it has, where RDKit
     shifts past a word.
   - Stereo groups may not hold an atom or bond twice: RDKit 2025.09's
-    constructor accepts duplicates (from `create_stereo_group`, CXSMILES, or
-    V3000), and removing such an atom leaves a dangling pointer.
+    constructor accepts duplicates, and removing such an atom leaves a
+    dangling pointer. They are refused where they are made
+    (`create_stereo_group`, `from_data`), before the wrappers' removals, and
+    in the inputs whose readers remove hydrogens themselves before any check
+    could run: CXSMILES enhanced stereo, V3000 collections, Marvin files
+    (whose stereo groups take an atom by id, so ids must differ), and JSON.
+    So is an atom or bond in two ABS groups, which RDKit 2025.09's
+    `setStereoGroups` merges into one group that holds it twice
+    (`set_stereo_groups`, and JSON's `abs` groups).
   - `replace_core` with matches checks that each core atom's neighbors are
     matched; `molzip` with depiction refuses fragment lists RDKit 2025.09
     reads past.
@@ -88,12 +102,27 @@ A program built against one release stops when it loads with another.
   - Drawing refuses an atom label whose first colon is the last character
     drawn (`C:` segfaults in RDKit 2025.09's Python), and a legend of only
     newlines, which RDKit 2025.09 lays out with no lines.
-  - V3000 `SAP`, `CSTATE`, and SGroup array values are checked as RDKit
-    2025.09 reads them unchecked, in mol blocks and as streams deliver
-    them: a stream holds back such a field until it has read past it.
-  - A CXSMILES `atomProp` block that runs to the end of the text, which
-    RDKit 2025.09 reads past, is refused in SMILES, SMARTS, reactions, PNG
-    metadata, and the wrappers' other SMILES and SMARTS inputs.
+  - Each V3000 SGroup line is replayed as RDKit 2025.09 consumes it, as on
+    the rdkit-2025.03 line, and refused where RDKit would read a value no
+    extraction wrote: a header without its type or external index, a
+    `CSTATE` count or bond, a `COMPNO`, an array's first value, or an empty
+    `SAP` identifier, whose last character RDKit pops. So is an
+    enhanced-stereo collection shorter than its count. A CTAB line is
+    scanned to its end before any of it is delivered from a stream, so a
+    refused line is cut before its first byte.
+  - CXSMILES extensions are checked as RDKit 2025.09 reads them, as on the
+    rdkit-2024.09 line: an `atomProp` block that runs to the end of the
+    text, which RDKit reads past, and, without `strict_cxsmiles`, a data or
+    polymer substance group's field without its `:`, which RDKit copies
+    past the end. They are checked in SMILES, SMARTS, reactions, PNG
+    metadata, deprotections, normalizations (from data, files, and cleanup
+    parameters), cleanup parameters' other SMARTS, query definitions,
+    recursive-query properties, tautomer score terms, `SmartsMatcher`
+    patterns (a refused one leaves the matcher without a pattern, as one
+    that does not parse), SMILES mol holders, scaffold-network bond
+    breakers, and the wrappers' other SMILES and SMARTS inputs. RDKit opens
+    normalization and query-definition files itself; the wrappers read them
+    once, check them, and hand RDKit the text.
   - `path_to_submol` and `copy_mol_subset` clear a double bond's CIS or
     TRANS (or an atropisomer's) whose stereo atoms they left out, which
     RDKit 2025.09 keeps and `MolToSmiles` then reads past.
@@ -101,8 +130,15 @@ A program built against one release stops when it loads with another.
     hydrogen that could be bonded to three or more atoms, whose bonds RDKit
     2025.09 prunes while it iterates over them.
   - JSON refuses a ranged `AtomRingSize` query, which RDKit 2025.09 reads as
-    an `EqualityQuery`.
-  - The `ExtendedMurcko` hash takes fewer than 4,096 atoms: RDKit 2025.09
+    an `EqualityQuery`. A JSON attachment point without `lvIdx`, which RDKit
+    2025.09 leaves uninitialized, gets -1, as RDKit's writer means by leaving
+    it out.
+  - `DoubleCubicLatticeVolume`'s polar surface area and volume with
+    `include_hs` panic for a hydrogen bonded to a hydrogen, through which
+    RDKit 2025.09 recurses until the stack overflows (rdkit/rdkit#9687).
+    Its atoms of radius 0 (dummies), which must follow the others, are
+    unchanged: the misread RDKit fixed in rdkit/rdkit#9685 is refused.
+  - The `ExtendedMurcko` hash takes at most 4,000 atoms: RDKit 2025.09
     takes a byte per atom from the stack.
   - Ring-system templates are checked as SMILES, as RDKit 2025.09 parses
     them.
@@ -119,21 +155,38 @@ A program built against one release stops when it loads with another.
   - `assign_cip_labels` leaves unlabeled, as RDKit 2026.09 does, a double
     bond whose stereo atom is not a neighbor of its own end and an
     atropisomer bond with an end of no other bonds, where RDKit 2025.09
-    reads past an empty vector.
+    reads past an empty vector. It refuses more than 64 stereo atoms and
+    bonds (`Error::Value`): RDKit 2025.09 pairs their descriptors in a
+    64-bit mask, by a shift that is undefined past 64.
+  - `mol_from_smiles`, `sanitize_mol`, `kekulize`, and `kekulize_if_possible`
+    refuse a fused ring system of 32 or more dummy atoms in an aromatic
+    molecule: RDKit 2025.09's kekulization enumerates their subsets with
+    `0x1u << count`, which is undefined from 32.
   - A molecule of at most 255 atoms whose substance groups or stereo groups
     name a bond past 255, which RDKit 2025.09 pickles truncated, is refused
     wherever it would be pickled (`Error::Value`; `Mol::to_binary` and
     `ChemicalReaction::to_binary` panic). So are a substance group or stereo
     group list of more than 255 entries, more than 255 stereo groups, and a
     query of more than 255 children, which RDKit 2026.09 pickles truncated
-    too: RDKit writes these pickles and cannot read them back.
+    too, and a molecule, conformer, atom, bond, or substance group of more
+    than 65535 properties, whose count RDKit writes in two bytes: RDKit
+    writes these pickles and cannot read them back. The fragment catalog's
+    generator checks the groups a fragment of the molecule can hold as a
+    small molecule's pickle writes them, whatever the molecule's size,
+    counting every stereo group, since a fragment keeps each one that shares
+    an atom with it.
   - A multithreaded supplier's queues hold at most 2^20 records: RDKit
     2025.09 dereferences null when it cannot allocate one.
   - Drawing refuses an atom of two bonds with a neighbor at its position,
     for which RDKit 2025.09 throws partway through a layout.
   - RDKit 2025.09's embedder, CIP labeler, `DetermineBondOrders`, and
     synthon search leave RDKit's `SIGINT` handler installed; the wrappers
-    restore the process's after each call.
+    restore the process's after each call. The synthon search clears
+    RDKit's Ctrl-C flag around each call, since a `SIGINT` during one search
+    left it set and cut the next fingerprint build short, after which a
+    fingerprint search dereferenced the missing fingerprints. A fingerprint
+    search builds a space's fingerprints first, and refuses a space whose
+    fingerprints are incomplete (`Error::Value`).
 
 ### Bindings
 

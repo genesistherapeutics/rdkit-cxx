@@ -9,7 +9,10 @@
 #include <climits>
 #include <exception>
 #include <mutex>
+#include <sstream>
+#include <string>
 #include <thread>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -20,6 +23,7 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/algorithm/string.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -292,7 +296,52 @@ std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol) {
   return result;
 }
 
-CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
+namespace {
+
+// readTransformations (TransformCatalogUtils.cpp) on a normalizations file's
+// text: lines read 511 characters at a time until one fails, an empty line
+// or a "//" comment skipped, and each other's first two tab-separated
+// fields, spaces erased, are its name and reaction SMARTS. A line without a
+// second field RDKit reads past its tokens for, so it is refused here.
+std::vector<std::pair<std::string, std::string>> normalization_lines(
+    const std::string &text) {
+  std::vector<std::pair<std::string, std::string>> data;
+  std::istringstream in(text);
+  char line[512];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, sizeof(line), '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    std::vector<std::string> fields;
+    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
+    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
+    if (fields.size() < 2) {
+      throw ValueErrorException(
+          "a normalization line needs a name and a reaction SMARTS, separated "
+          "by a tab: " +
+          tmp);
+    }
+    boost::erase_all(fields[0], " ");
+    boost::erase_all(fields[1], " ");
+    check_reaction_cx(fields[1], true);
+    data.emplace_back(fields[0], fields[1]);
+  }
+  return data;
+}
+
+}  // namespace
+
+// RDKit reads a normalizations file itself, each line's reaction SMARTS with
+// its CXSMILES extension (file_checks.h); with `read_normalizations` (for
+// the calls that normalize), the wrapper reads it once instead, checks it,
+// and hands RDKit its transformations as normalizationData, so RDKit never
+// reads a file that changed after the check. (The fragment, acid-base, and
+// tautomer files' readers erase the spaces from their SMARTS, which leaves
+// no extension.)
+CleanupParameters to_cleanup_parameters(const CleanupParametersData &data,
+                                        bool read_normalizations) {
   CleanupParameters params;
   params.rdbase = text(data.rdbase);
   params.normalizations = path(data.normalizations);
@@ -312,19 +361,39 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
       data.largest_fragment_chooser_use_atom_count;
   params.largestFragmentChooserCountHeavyAtomsOnly =
       data.largest_fragment_chooser_count_heavy_atoms_only;
+  // RDKit parses these as they are: the normalizations as reactions, the
+  // rest as SMARTS (file_checks.h).
   for (const auto &e : data.normalization_data) {
     params.normalizationData.emplace_back(text(e.name), text(e.first));
+    check_reaction_cx(params.normalizationData.back().second, true);
   }
   for (const auto &e : data.fragment_data) {
     params.fragmentData.emplace_back(text(e.name), text(e.first));
+    check_smiles_cx(params.fragmentData.back().second, true, true);
   }
   for (const auto &e : data.acidbase_data) {
     params.acidbaseData.emplace_back(text(e.name), text(e.first),
                                      text(e.second));
+    check_smiles_cx(std::get<1>(params.acidbaseData.back()), true, true);
+    check_smiles_cx(std::get<2>(params.acidbaseData.back()), true, true);
   }
   for (const auto &e : data.tautomer_transform_data) {
     params.tautomerTransformData.emplace_back(text(e.name), text(e.first),
                                               text(e.second), text(e.third));
+    check_smiles_cx(std::get<1>(params.tautomerTransformData.back()), true,
+                    true);
+  }
+  // normalizerFromParams reads the file only without normalizationData.
+  if (read_normalizations && params.normalizationData.empty() &&
+      !params.normalizations.empty()) {
+    params.normalizationData =
+        normalization_lines(read_file(params.normalizations));
+    if (params.normalizationData.empty()) {
+      // RDKit's empty catalog from an empty file, not its defaults.
+      throw ValueErrorException("the normalizations file " +
+                                params.normalizations +
+                                " has no normalizations");
+    }
   }
   return params;
 }
@@ -445,7 +514,7 @@ CleanupParametersData cleanup_parameters_default() {
 
 CleanupParametersData update_params_from_json(const CleanupParametersData &data,
                                               rust::Str json) {
-  auto params = to_cleanup_parameters(data);
+  auto params = to_cleanup_parameters(data, false);
   MS::updateCleanupParamsFromJSON(params, std::string(json));
   return from_cleanup_parameters(params);
 }
@@ -498,7 +567,7 @@ void standardize_in_place_mols(StandardizeOp op, BorrowedMols &mols,
 // As standardizeSmiles in MolStandardize.cpp, with the size check.
 std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   std::string input(smiles);
-  check_cx_atom_props(input);
+  check_smiles_cx(input, true, true);
   std::unique_ptr<RWMol> mol{RDKit::SmilesToMol(input, 0, false)};
   if (!mol) {
     throw ValueErrorException("SMILES Parse Error: syntax error for input: " +

@@ -29,7 +29,7 @@ MHFPEncoder &encoder_mut(const MHFPEncoder &encoder) {
 // CreateShingling(smiles) asserts that the SMILES parsed; a parse error here
 // is a ParseError instead (E2).
 std::unique_ptr<RWMol> parse(rust::Str smiles) {
-  check_cx_atom_props(std::string(smiles));
+  check_smiles_cx(std::string(smiles), true, true);
   std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(std::string(smiles)));
   if (!mol) {
     throw RDKit::SmilesParse::SmilesParseException("could not parse SMILES '" +

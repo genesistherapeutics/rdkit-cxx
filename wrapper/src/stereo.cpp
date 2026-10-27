@@ -8,6 +8,8 @@
 #include "rdkit-cxx/stereo.h"
 
 #include <algorithm>
+#include <set>
+#include <string>
 #include <vector>
 
 #include <RDGeneral/Exceptions.h>
@@ -82,12 +84,36 @@ rust::Vec<StereoGroupData> mol_get_stereo_groups(const RWMol &mol) {
   return groups;
 }
 
+// RDKit 2025.09's ROMol::setStereoGroups merges the ABS groups into one,
+// which holds an atom or bond twice if two of them list it, and a removal
+// would leave a dangling pointer (check_stereo_group_duplicates). This
+// refuses it, as rdkit-2024.03's check_stereo_group_removals does.
 void rwmol_set_stereo_groups(RWMol &mol,
                              rust::Slice<const StereoGroupData> groups) {
   std::vector<RDKit::StereoGroup> result;
+  std::set<std::uint32_t> abs_atoms;
+  std::set<std::uint32_t> abs_bonds;
   for (const auto &data : groups) {
     auto group = from_data(mol, data.group_type, slice(data.atoms),
                            slice(data.bonds), data.read_id);
+    if (data.group_type == RDKit::StereoGroupType::STEREO_ABSOLUTE) {
+      for (auto idx : data.atoms) {
+        if (!abs_atoms.insert(idx).second) {
+          throw ValueErrorException(
+              "atom " + std::to_string(idx) +
+              " is in two ABS stereo groups, which RDKit 2025.09 merges into "
+              "one group that holds it twice");
+        }
+      }
+      for (auto idx : data.bonds) {
+        if (!abs_bonds.insert(idx).second) {
+          throw ValueErrorException(
+              "bond " + std::to_string(idx) +
+              " is in two ABS stereo groups, which RDKit 2025.09 merges into "
+              "one group that holds it twice");
+        }
+      }
+    }
     group.setWriteId(data.write_id);
     result.push_back(std::move(group));
   }

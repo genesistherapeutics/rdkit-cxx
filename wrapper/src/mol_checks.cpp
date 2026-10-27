@@ -245,7 +245,12 @@ void check_bond_query(const RDKit::Bond::QUERYBOND_QUERY *root,
 // 2026.09 also counts bonds, rdkit/rdkit#9563): every atom index fits, but
 // a bond index or a list's size may not. For parts (check_picklable_parts),
 // whatever the molecule's size, with bonds named as a part of at most
-// max_part_bonds bonds may number them.
+// max_part_bonds bonds may number them. A part keeps a substance group only
+// if it holds all of the group's atoms, parent atoms and bonds, so a group
+// with more distinct atoms or bonds than a connected part of max_part_bonds
+// bonds has (max_part_bonds + 1 atoms) is in none; it keeps a stereo group
+// that shares any atom with it (copySelectedStereoGroups in RDKit 2025.09's
+// Subset.cpp), so every stereo group is counted.
 void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
                         bool parts = false, unsigned max_part_bonds = 0) {
   if (!parts && mol.getNumAtoms() > kPickleByteMax) {
@@ -265,9 +270,22 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
       check_pickle_byte(bond, what);
     }
   };
+  auto in_a_part = [&](const RDKit::SubstanceGroup &sgroup) {
+    auto atoms = sgroup.getAtoms();
+    const auto &parents = sgroup.getParentAtoms();
+    atoms.insert(atoms.end(), parents.begin(), parents.end());
+    const auto &bonds = sgroup.getBonds();
+    return std::unordered_set<unsigned>(atoms.begin(), atoms.end()).size() <=
+               std::size_t{max_part_bonds} + 1 &&
+           std::unordered_set<unsigned>(bonds.begin(), bonds.end()).size() <=
+               max_part_bonds;
+  };
   const auto &sgroups = RDKit::getSubstanceGroups(mol);
   for (std::size_t i = 0; i < sgroups.size(); ++i) {
     const auto &sgroup = sgroups[i];
+    if (parts && !in_a_part(sgroup)) {
+      continue;
+    }
     const auto at = where + "substance group " + std::to_string(i) + "'s ";
     check_pickle_byte(sgroup.getAtoms().size(), at + "number of atoms");
     check_pickle_byte(sgroup.getParentAtoms().size(),
@@ -293,6 +311,44 @@ void check_pickle_bytes(const RDKit::ROMol &mol, const std::string &where,
     for (const auto *bond : groups[i].getBonds()) {
       check_bond(bond->getIdx(), at + "bond");
     }
+  }
+}
+
+// streamWriteProps counts the properties it writes in a std::uint16_t for
+// the molecule, each conformer, atom and bond (with the property flags, or
+// for a recursive query's molecule the default flags), and each substance
+// group (always): past 65535 the count wraps, and the reader takes the rest
+// of the properties for the pickle's next fields (RDKit 2025.09.6's Python:
+// "Bad pickle format: ENDPROPS tag not found" for a molecule, "Bond index out
+// of range" for a substance group). Counts every property, whether or not
+// the flags write it, which is at least as many.
+constexpr std::size_t kPickleCountMax = 65535;
+
+void check_prop_count(const RDKit::RDProps &props, const std::string &what) {
+  auto count = props.getDict().getData().size();
+  if (count > kPickleCountMax) {
+    throw ValueErrorException(
+        what + " has " + std::to_string(count) +
+        " properties, more than a molecule pickle counts (65535)");
+  }
+}
+
+void check_prop_counts(const RDKit::ROMol &mol, const std::string &where) {
+  check_prop_count(mol, where.substr(0, where.size() - 3));
+  for (auto conf = mol.beginConformers(); conf != mol.endConformers(); ++conf) {
+    check_prop_count(**conf,
+                     where + "conformer " + std::to_string((*conf)->getId()));
+  }
+  for (const auto *atom : mol.atoms()) {
+    check_prop_count(*atom, where + "atom " + std::to_string(atom->getIdx()));
+  }
+  for (const auto *bond : mol.bonds()) {
+    check_prop_count(*bond, where + "bond " + std::to_string(bond->getIdx()));
+  }
+  const auto &sgroups = RDKit::getSubstanceGroups(mol);
+  for (std::size_t i = 0; i < sgroups.size(); ++i) {
+    check_prop_count(sgroups[i],
+                     where + "substance group " + std::to_string(i));
   }
 }
 
@@ -326,6 +382,7 @@ void check_picklable(const RDKit::ROMol &mol, bool parts,
         const std::string where =
             nested ? "a recursive query's molecule's " : "the molecule's ";
         check_pickle_bytes(current, where, parts && !nested, max_part_bonds);
+        check_prop_counts(current, where);
         for (const auto *bond : current.bonds()) {
           if (bond->hasQuery()) {
             check_bond_query(
@@ -453,6 +510,117 @@ void check_stereo_group_duplicates(const RDKit::ROMol &mol) {
       throw ValueErrorException(
           "a stereo group holds an atom or bond twice, which RDKit 2025.09 "
           "would keep a pointer to once it removed it");
+    }
+  }
+}
+
+// Bridges by Tarjan's low-link, with its own stack.
+void check_kekulize_questions(const RDKit::ROMol &mol) {
+  const auto n = mol.getNumAtoms();
+  bool aromatic = false;
+  unsigned dummies = 0;
+  for (const auto *atom : mol.atoms()) {
+    aromatic = aromatic || atom->getIsAromatic();
+    dummies += atom->getAtomicNum() == 0;
+  }
+  for (const auto *bond : mol.bonds()) {
+    aromatic = aromatic || bond->getIsAromatic() ||
+               bond->getBondType() == RDKit::Bond::AROMATIC;
+  }
+  if (!aromatic || dummies < MAX_KEKULIZE_QUESTIONS) {
+    return;
+  }
+  std::vector<unsigned> order(n, 0), low(n, 0);
+  std::vector<char> bridge(mol.getNumBonds(), 0);
+  unsigned counter = 0;
+  // An atom, the bond it was reached by, and its bonds left to follow.
+  struct Frame {
+    unsigned atom;
+    int via;
+    std::vector<const RDKit::Bond *> bonds;
+    std::size_t pos;
+  };
+  for (unsigned start = 0; start < n; ++start) {
+    if (order[start]) {
+      continue;
+    }
+    std::vector<Frame> stack;
+    auto push = [&](unsigned atom, int via) {
+      order[atom] = low[atom] = ++counter;
+      Frame frame{atom, via, {}, 0};
+      for (const auto *bond : mol.atomBonds(mol.getAtomWithIdx(atom))) {
+        frame.bonds.push_back(bond);
+      }
+      stack.push_back(std::move(frame));
+    };
+    push(start, -1);
+    while (!stack.empty()) {
+      auto &top = stack.back();
+      if (top.pos < top.bonds.size()) {
+        const auto *bond = top.bonds[top.pos++];
+        if (static_cast<int>(bond->getIdx()) == top.via) {
+          continue;
+        }
+        const auto other = bond->getOtherAtomIdx(top.atom);
+        if (order[other]) {
+          low[top.atom] = std::min(low[top.atom], order[other]);
+        } else {
+          push(other, static_cast<int>(bond->getIdx()));
+        }
+        continue;
+      }
+      const auto atom = top.atom;
+      const auto via = top.via;
+      stack.pop_back();
+      if (!stack.empty()) {
+        auto &parent = stack.back();
+        low[parent.atom] = std::min(low[parent.atom], low[atom]);
+        if (low[atom] > order[parent.atom]) {
+          bridge[via] = 1;
+        }
+      }
+    }
+  }
+  // Union the atoms across ring bonds.
+  std::vector<unsigned> root(n);
+  for (unsigned i = 0; i < n; ++i) {
+    root[i] = i;
+  }
+  auto find = [&root](unsigned i) {
+    while (root[i] != i) {
+      root[i] = root[root[i]];
+      i = root[i];
+    }
+    return i;
+  };
+  std::vector<char> in_ring(n, 0);
+  for (const auto *bond : mol.bonds()) {
+    if (!bridge[bond->getIdx()]) {
+      in_ring[bond->getBeginAtomIdx()] = in_ring[bond->getEndAtomIdx()] = 1;
+      root[find(bond->getBeginAtomIdx())] = find(bond->getEndAtomIdx());
+    }
+  }
+  std::map<unsigned, unsigned> dummy_count;
+  std::map<unsigned, bool> has_non_dummy;
+  for (const auto *atom : mol.atoms()) {
+    const auto idx = atom->getIdx();
+    if (!in_ring[idx]) {
+      continue;
+    }
+    const auto r = find(idx);
+    if (atom->getAtomicNum() == 0) {
+      ++dummy_count[r];
+    } else {
+      has_non_dummy[r] = true;
+    }
+  }
+  for (const auto &[r, count] : dummy_count) {
+    if (count >= MAX_KEKULIZE_QUESTIONS && has_non_dummy[r]) {
+      throw ValueErrorException(
+          "a ring system holds " + std::to_string(count) +
+          " dummy atoms, at least " + std::to_string(MAX_KEKULIZE_QUESTIONS) +
+          ", for which RDKit 2025.09's kekulization shifts past the width of "
+          "an unsigned int");
     }
   }
 }

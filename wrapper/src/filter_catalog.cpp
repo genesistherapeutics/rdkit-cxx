@@ -473,9 +473,29 @@ std::unique_ptr<FilterMatcherHandle> smarts_matcher_new_mol(
                                                   min_count, max_count));
 }
 
+namespace {
+
+// SmartsMatcher parses its SMARTS with the CXSMILES extension
+// (file_checks.h). One the check refuses leaves the matcher without a
+// pattern, as one that does not parse does, so it is not valid.
+bool checked_smarts(rust::Str smarts) {
+  try {
+    check_smiles_cx(std::string(smarts), true, true);
+  } catch (const ValueErrorException &) {
+    return false;
+  }
+  return true;
+}
+
+}  // namespace
+
 std::unique_ptr<FilterMatcherHandle> smarts_matcher_new_smarts(
     rust::Str name, rust::Str smarts, std::uint32_t min_count,
     std::uint32_t max_count) {
+  if (!checked_smarts(smarts)) {
+    return handle(boost::make_shared<SmartsMatcher>(
+        std::string(name), RDKit::ROMOL_SPTR(), min_count, max_count));
+  }
   return handle(boost::make_shared<SmartsMatcher>(
       std::string(name), std::string(smarts), min_count, max_count));
 }
@@ -496,7 +516,13 @@ void smarts_matcher_set_pattern_mol(FilterMatcherHandle &matcher,
 
 void smarts_matcher_set_pattern_smarts(FilterMatcherHandle &matcher,
                                        rust::Str smarts) {
-  as<SmartsMatcher>(matcher).setPattern(std::string(smarts));
+  auto &m = as<SmartsMatcher>(matcher);
+  if (!checked_smarts(smarts)) {
+    m = SmartsMatcher(m.getName(), RDKit::ROMOL_SPTR(), m.getMinCount(),
+                      m.getMaxCount());
+    return;
+  }
+  m.setPattern(std::string(smarts));
 }
 
 std::uint32_t smarts_matcher_get_min_count(const FilterMatcherHandle &matcher) {
@@ -865,7 +891,7 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
   texts.reserve(smiles.size());
   for (auto text : smiles) {
     texts.emplace_back(text);
-    check_cx_atom_props(texts.back());
+    check_smiles_cx(texts.back(), true, true);
   }
   std::vector<std::vector<FilterCatalog::CONST_SENTRY>> results(texts.size());
   // More threads than SMILES would have nothing to do.

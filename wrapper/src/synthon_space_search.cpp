@@ -26,6 +26,7 @@
 #include <GraphMol/SubstanceGroup.h>
 #include <GraphMol/TautomerQuery/TautomerQuery.h>
 #include <RDGeneral/BadFileException.h>
+#include <RDGeneral/ControlCHandler.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/RDLog.h>
 #include <RDGeneral/StreamOps.h>
@@ -145,6 +146,27 @@ SSS::SynthonSpaceSearchParams params_from(
   check_time_out(p.timeOut);
   return p;
 }
+
+// ---------------------------------------------------------------------------
+// The Ctrl-C flag. RDKit 2025.09's ControlCHandler keeps one static flag,
+// which its handler sets, reset() clears (installing the handler, with
+// nothing to restore it), and a handler's destructor clears. The searches
+// and readStream call reset() first, and buildSynthonFingerprints and the
+// RASCAL search only read it, so a SIGINT during an earlier call (between
+// its reset() and the mutex restoring SIGINT's disposition) leaves the flag
+// set and cancels them at once. Each RDKit call here runs, with
+// control_c_mutex held, between two clearings of the flag, so it neither
+// sees nor leaves a stale one, as on rdkit-2025.03.
+
+void clear_control_c_flag() { RDKit::ControlCHandler handler; }
+
+class ControlCFlagGuard {
+ public:
+  ControlCFlagGuard() { clear_control_c_flag(); }
+  ~ControlCFlagGuard() { clear_control_c_flag(); }
+  ControlCFlagGuard(const ControlCFlagGuard &) = delete;
+  ControlCFlagGuard &operator=(const ControlCFlagGuard &) = delete;
+};
 
 // ---------------------------------------------------------------------------
 // What the space's reactions hold.
@@ -516,7 +538,7 @@ std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
                                                  std::uint64_t line_num) {
   RDKit::v2::SmilesParse::SmilesParserParams params;
   params.sanitize = false;
-  check_cx_atom_props(smiles);
+  check_smiles_cx(smiles, true, true);
   auto mol = RDKit::v2::SmilesParse::MolFromSmiles(smiles, params);
   if (!mol) {
     return std::nullopt;
@@ -640,6 +662,7 @@ void read_text(SynthonSpace &space, const std::string &name,
     // readStream constructs a ControlCHandler, and the synthons' pattern
     // fingerprints match patterns (control_c_lock.h).
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     fresh->readStream(in, cancelled);
   }
   if (cancelled) {
@@ -1076,16 +1099,78 @@ std::unique_ptr<std::string> synthon_space_get_synthon_fingerprint_type(
       space.space->getSynthonFingerprintType());
 }
 
-// buildSynthonFingerprints reads the Ctrl-C flag, and the generator may
-// match patterns or run the CIP labeler (control_c_lock.h).
+// ---------------------------------------------------------------------------
+// The synthons' fingerprints (buildSynthonFingerprints in SynthonSpace.cpp).
+// It sets the space's fingerprint type first and then fingerprints each
+// reaction's synthons and builds its add and subtract fingerprints,
+// returning between reactions when the Ctrl-C flag is set, and does nothing
+// for a generator of the type it has. The fingerprint search, the add and
+// subtract fingerprints of later reactions, and the hit sets dereference
+// every synthon's fingerprint and each reaction's add and subtract
+// fingerprints, so a build cut short (by the flag or an exception) leaves a
+// space whose fingerprint search is undefined (a segfault in RDKit 2025.09.6
+// after a SIGINT during an earlier search), which a later build with the
+// same generator does not repair. The wrapper builds with the flag clear
+// (ControlCFlagGuard), so only an exception cuts a build short, and refuses
+// a fingerprint search of a space whose fingerprints are incomplete. The
+// fingerprint search of a space without fingerprints builds them itself,
+// under its own handler: the wrapper builds them first. (RDKit refuses a
+// space with another generator's.) As rdkit-2025.03's.
+
+namespace {
+
+bool fingerprints_complete(SSS::SynthonSpace &space) {
+  bool complete = true;
+  for_each_reaction(
+      space, [&](const std::string &, const SSS::SynthonSet &reaction) {
+        complete = complete && reaction.getAddFP() && reaction.getSubtractFP();
+        for (const auto &set : reaction.getSynthons()) {
+          for (const auto &[id, synthon] : set) {
+            complete = complete && synthon->getFP();
+          }
+        }
+      });
+  return complete;
+}
+
+// The generator may match patterns or run the CIP labeler
+// (control_c_lock.h).
+void build_fingerprints(SSS::SynthonSpace &space, const FpGenerator &gen) {
+  if (fingerprint_reads_distance_matrix(gen)) {
+    check_space_matrix_sizes(space);
+  }
+  SpaceMatrixCacheGuard guard(space);
+  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  ControlCFlagGuard flag;
+  space.buildSynthonFingerprints(gen);
+}
+
+void check_fingerprints_complete(SSS::SynthonSpace &space) {
+  if (!space.getSynthonFingerprintType().empty() &&
+      !fingerprints_complete(space)) {
+    throw ValueErrorException(
+        "the space's synthon fingerprints are incomplete; read the space "
+        "again");
+  }
+}
+
+// What both fingerprint searches do before searching.
+void prepare_fingerprint_search(SSS::SynthonSpace &space, const RWMol &query,
+                                const FpGenerator &gen,
+                                const SSS::SynthonSpaceSearchParams &params) {
+  check_fingerprint_search(&space, query, gen, params);
+  if (space.getSynthonFingerprintType().empty()) {
+    build_fingerprints(space, gen);
+  }
+  check_fingerprints_complete(space);
+}
+
+}  // namespace
+
 void synthon_space_build_synthon_fingerprints(SynthonSpace &space,
                                               const FpGenerator &gen) {
-  if (fingerprint_reads_distance_matrix(gen)) {
-    check_space_matrix_sizes(*space.space);
-  }
-  SpaceMatrixCacheGuard guard(*space.space);
-  std::lock_guard<ControlCMutex> control_c(control_c_mutex());
-  space.space->buildSynthonFingerprints(gen);
+  build_fingerprints(*space.space, gen);
+  check_fingerprints_complete(*space.space);
 }
 
 // The substructure searches construct a ControlCHandler, and match.
@@ -1100,6 +1185,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search(
   SSS::SearchResults results;
   {
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     results = space.space->substructureSearch(query, match, params);
   }
   return finish(std::move(results), "SubstructureSearch");
@@ -1115,6 +1201,7 @@ std::unique_ptr<SearchResults> synthon_space_substructure_search_extended(
   SSS::SearchResults results;
   {
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     results = space.space->substructureSearch(query, match, params);
   }
   return finish(std::move(results), "SubstructureSearch");
@@ -1129,6 +1216,7 @@ void synthon_space_substructure_search_incremental(
   check_query(query);
   {
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     space.space->substructureSearch(query, held_callback(callback), match,
                                     params);
   }
@@ -1142,12 +1230,13 @@ std::unique_ptr<SearchResults> synthon_space_fingerprint_search(
     SynthonSpace &space, const RWMol &query, const FpGenerator &gen,
     const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
-  check_fingerprint_search(space.space.get(), query, gen, params);
+  prepare_fingerprint_search(*space.space, query, gen, params);
   SSS::SearchResults results;
   {
     MatrixCacheGuard query_guard(query);
     SpaceMatrixCacheGuard space_guard(*space.space);
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     results = space.space->fingerprintSearch(query, gen, params);
   }
   return finish(std::move(results), "FingerprintSearch");
@@ -1157,11 +1246,12 @@ void synthon_space_fingerprint_search_incremental(
     SynthonSpace &space, const RWMol &query, const FpGenerator &gen,
     SearchCallback &callback, const SynthonSpaceSearchParamsData &data) {
   auto params = params_from(data);
-  check_fingerprint_search(space.space.get(), query, gen, params);
+  prepare_fingerprint_search(*space.space, query, gen, params);
   {
     MatrixCacheGuard query_guard(query);
     SpaceMatrixCacheGuard space_guard(*space.space);
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     space.space->fingerprintSearch(query, gen, held_callback(callback), params);
   }
 }
@@ -1180,6 +1270,7 @@ std::unique_ptr<SearchResults> synthon_space_rascal_search(
   {
     SpaceMatrixCacheGuard space_guard(*space.space);
     std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+    ControlCFlagGuard flag;
     results = space.space->rascalSearch(query, options, params);
   }
   return finish(std::move(results), "RascalSearch");
@@ -1195,6 +1286,7 @@ void synthon_space_rascal_search_incremental(
   {
     SpaceMatrixCacheGuard space_guard(*space.space);
     HoldControlC control_c;
+    ControlCFlagGuard flag;
     space.space->rascalSearch(query, options, released_callback(callback),
                               params);
   }

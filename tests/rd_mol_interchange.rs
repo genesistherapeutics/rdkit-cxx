@@ -456,6 +456,15 @@ fn substance_group_checks() {
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
     assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
+    // RDKit 2025.09 leaves a missing lvIdx uninitialized (its writer leaves
+    // out -1); the crate gives it -1.
+    let mol = json_to_mols(&sgroup(r#","attachPoints":[{"aIdx":1}]"#))
+        .unwrap()
+        .remove(0);
+    let points = get_mol_substance_groups(&mol)[0]
+        .get_attach_points()
+        .unwrap();
+    assert_eq!((points[0].a_idx, points[0].lv_idx), (1, -1));
 }
 
 #[test]
@@ -545,4 +554,33 @@ fn queries_rdkit_does_not_make_are_refused() {
         smarts(&bond_query(r#"{"descr":"BondNull","tag":40}"#)),
         ["[#6]~[#6]=[#6]-[#6]"]
     );
+}
+
+#[test]
+fn stereo_groups_hold_each_atom_once() {
+    // RDKit 2025.09.6's JSON for `C[C@H](F)Cl |&1:1|`, with the stereo group's
+    // atoms `atoms`.
+    let json = |atoms: &str| {
+        format!(
+            r#"{{"rdkitjson":{{"version":12}},"defaults":{{"atom":{{"z":6,"impHs":0,"chg":0,"nRad":0,"isotope":0,"stereo":"unspecified"}},"bond":{{"bo":1,"stereo":"unspecified"}}}},"molecules":[{{"atoms":[{{"impHs":3}},{{"impHs":1,"stereo":"ccw"}},{{"z":9}},{{"z":17}}],"bonds":[{{"atoms":[0,1]}},{{"atoms":[1,2]}},{{"atoms":[1,3]}}],"stereoGroups":[{{"type":"and","id":0,"atoms":{atoms}}}],"extensions":[{{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2025.09.6","cipRanks":[0,1,2,3],"cipCodes":[[1,"R"]]}}]}}]}}"#
+        )
+    };
+    let mols = json_to_mols(&json("[1]")).unwrap();
+    assert_eq!(mols[0].get_stereo_groups().len(), 1);
+    // RDKit 2025.09 keeps an atom listed twice, which dangles once removed.
+    assert!(is_value(json_to_mols(&json("[1,1]"))));
+    // ROMol::setStereoGroups merges ABS groups into one, which would list an
+    // atom of two of them twice.
+    let abs = |second: &str| {
+        json("[1]").replace(
+            r#"{"type":"and","id":0,"atoms":[1]}"#,
+            &format!(r#"{{"type":"abs","atoms":[1]}},{{"type":"abs","atoms":{second}}}"#),
+        )
+    };
+    assert_ne!(abs("[1]"), json("[1]"));
+    assert!(is_value(json_to_mols(&abs("[1]"))));
+    let groups = json_to_mols(&abs("[2]")).unwrap()[0].get_stereo_groups();
+    assert_eq!(groups.len(), 1);
+    // RDKit 2025.09 inserts each group's atoms at the front.
+    assert_eq!(groups[0].get_atoms(), [2, 1]);
 }

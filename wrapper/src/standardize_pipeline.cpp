@@ -65,7 +65,7 @@ MS::PipelineOptions to_options(const PipelineOptionsData &data) {
 }
 
 void check_metal_smarts(const std::string &smarts, const char *what) {
-  check_cx_atom_props(smarts);
+  check_smiles_cx(smarts, true, true);
   std::unique_ptr<RDKit::ROMol> query(RDKit::SmartsToMol(smarts));
   if (!query) {
     throw ValueErrorException(std::string(what) +
@@ -240,6 +240,9 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
   auto options = to_options(data);
   check_metal_smarts(options.metalNof, "metalNof");
   check_metal_smarts(options.metalNon, "metalNon");
+  // The normalizer reads these reactions with their CXSMILES extensions
+  // (file_checks.h).
+  check_transformation_lines(options.normalizerData);
   auto pipeline = std::make_unique<Pipeline>(options);
   auto steps = MS::Operations::standardizationSteps;
   bool replaced = false;

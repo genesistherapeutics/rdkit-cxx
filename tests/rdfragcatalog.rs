@@ -11,6 +11,7 @@ use std::sync::OnceLock;
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rdfragcatalog::*;
 use rdkit_cxx::chem::*;
+use rdkit_cxx::geometry::Point3D;
 
 // Expected values come from Python's rdfragcatalog.
 
@@ -379,12 +380,9 @@ fn molecules_are_checked() {
     // monomer info of type 3, which AtomMonomerType lacks and RDKit 2025.09's
     // pickler refuses.
     let mut mol = mol("CC");
-    let params = AtomMonomerInfoParams {
-        name: "MARK".into(),
-    };
-    mol.get_atom_with_idx_mut(0).unwrap().set_monomer_info(
-        &AtomMonomerInfo::new_with_params(AtomMonomerType::Other, &params).unwrap(),
-    );
+    mol.get_atom_with_idx_mut(0)
+        .unwrap()
+        .set_monomer_info(&AtomMonomerInfo::new_with_name(AtomMonomerType::Other, "MARK").unwrap());
     let mut marked = mol.to_binary();
     let at = marked
         .windows(12)
@@ -408,4 +406,120 @@ fn molecules_are_checked() {
     assert!(Result::is_err(&unsafe {
         FragCatalog::from_pickle(&splice(&marked))
     }));
+}
+
+/// `smiles` with a substance group of `atoms` and their bonds, with `n`
+/// brackets.
+fn with_brackets(smiles: &str, atoms: u32, n: usize) -> Mol {
+    let mut mol = mol(smiles);
+    let mut sgroup = create_mol_substance_group(&mut mol, "GEN");
+    for idx in 0..atoms {
+        sgroup.add_atom_with_idx(idx).unwrap();
+    }
+    for idx in 0..atoms - 1 {
+        sgroup.add_bond_with_idx(idx).unwrap();
+    }
+    let bracket = [Point3D::default(), Point3D::new(1.0, 0.0, 0.0)];
+    for _ in 0..n {
+        sgroup.add_bracket(&bracket).unwrap();
+    }
+    mol
+}
+
+/// `smiles` with `n` OR stereo groups of its chiral atoms.
+fn with_stereo_groups(smiles: &str, n: usize) -> Mol {
+    let mut rw = RWMol::from(mol(smiles));
+    let chiral: Vec<u32> = (0..rw.get_num_atoms())
+        .filter(|&i| {
+            rw.get_atom_with_idx(i).unwrap().get_chiral_tag() != ChiralType::ChiUnspecified
+        })
+        .collect();
+    let group = create_stereo_group(StereoGroupType::StereoOr, &rw, &chiral).unwrap();
+    rw.set_stereo_groups(&vec![group; n]).unwrap();
+    rw.into()
+}
+
+/// Reads the catalog's pickle back.
+fn round_trips(catalog: &FragCatalog) {
+    // SAFETY: a pickle RDKit wrote.
+    let read = unsafe { FragCatalog::from_pickle(&catalog.serialize().unwrap()) }.unwrap();
+    assert_eq!(read.get_num_entries(), catalog.get_num_entries());
+}
+
+// The entries' fragments are pickled with one-byte counts when small, however
+// large the molecule, so a group a fragment can hold is checked as one in a
+// small molecule's pickle; a substance group larger than every fragment is
+// left out of them.
+#[test]
+fn fragments_are_picklable() {
+    let chain = "C".repeat(300);
+    let generator = FragCatGenerator;
+    let large = with_brackets(&chain, 2, 256);
+    large.to_binary();
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let Err(Error::Value { message }) = generator.add_frags_from_mol(&large, &mut catalog) else {
+        panic!("a fragment's pickle would truncate its brackets");
+    };
+    assert!(message.contains("number of brackets"), "{message}");
+    assert_eq!(catalog.get_num_entries(), 0);
+
+    // Five atoms and four bonds fit in no fragment of at most three bonds.
+    assert!(
+        generator
+            .add_frags_from_mol(&with_brackets(&chain, 5, 256), &mut catalog)
+            .is_ok()
+    );
+
+    let mut catalog = FragCatalog::new(&params(1, 3));
+    let small = with_brackets("CCCC", 2, 255);
+    assert!(generator.add_frags_from_mol(&small, &mut catalog).unwrap() > 0);
+    round_trips(&catalog);
+
+    // A fragment's bonds are numbered from 0, so a group may name a bond past
+    // 255 in a molecule of fewer than 256 atoms (whose own pickle cannot hold
+    // it): a ladder of 100 rungs, with a hydroxyl, has 201 atoms and 299
+    // bonds.
+    let mut rw = RWMol::default();
+    for _ in 0..200 {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for i in 0..100 {
+        rw.add_bond_with_order(i, i + 100, BondType::Single)
+            .unwrap();
+        if i > 0 {
+            rw.add_bond_with_order(i - 1, i, BondType::Single).unwrap();
+            rw.add_bond_with_order(i + 99, i + 100, BondType::Single)
+                .unwrap();
+        }
+    }
+    let oxygen = rw.add_atom(&Atom::from_num(8));
+    rw.add_bond_with_order(0, oxygen, BondType::Single).unwrap();
+    let mut ladder: Mol = rw.into();
+    sanitize_mol(&mut ladder).unwrap();
+    assert_eq!(ladder.get_num_bonds(), 299);
+    create_mol_substance_group(&mut ladder, "GEN")
+        .add_bond_with_idx(298)
+        .unwrap();
+    let mut catalog = FragCatalog::new(&params(1, 1));
+    generator.add_frags_from_mol(&ladder, &mut catalog).unwrap();
+    round_trips(&catalog);
+
+    // A fragment keeps every stereo group that shares an atom with it, however
+    // many atoms the group has (RDKit 2025.09's copyMolSubset).
+    let smiles = "OC[C@H](F)[C@H](F)[C@H](F)CO";
+    let mut catalog = FragCatalog::new(&params(1, 1));
+    assert!(
+        generator
+            .add_frags_from_mol(&with_stereo_groups(smiles, 255), &mut catalog)
+            .unwrap()
+            > 0
+    );
+    round_trips(&catalog);
+    let mut catalog = FragCatalog::new(&params(1, 1));
+    let Err(Error::Value { message }) =
+        generator.add_frags_from_mol(&with_stereo_groups(smiles, 256), &mut catalog)
+    else {
+        panic!("a fragment's pickle would truncate its stereo groups");
+    };
+    assert!(message.contains("number of stereo groups"), "{message}");
 }

@@ -28,8 +28,15 @@ pub struct AssignCIPLabelsParams {
 /// `_CIPCode` properties. Mirrors `rdCIPLabeler.AssignCIPLabels`. A double
 /// bond whose stereo atom is not a neighbor of its own end, or an
 /// atropisomer bond with an end of no other bonds, is left unlabeled, as
-/// RDKit 2026.09 leaves it; RDKit 2026.03 (and Python) reads past an empty
-/// vector for one.
+/// RDKit 2026.09 leaves it; RDKit 2025.09 (and Python) reads past an empty
+/// vector for one. RDKit 2025.09 pairs stereo descriptors in a 64-bit mask,
+/// by a shift that is undefined past 64 (`PairList`), so labeling more than
+/// 64 stereo atoms and bonds (those with a tetrahedral tag or a double-bond
+/// or atropisomer stereo, among the ones asked for) is `Error::Value`.
+/// Within that limit, a fused ring system that repeats one stereo atom in a
+/// branch of RDKit's digraph many times could still reach the shift; this is
+/// not checked, since a bound that covered it would refuse common
+/// polycycles such as steroids.
 pub fn assign_cip_labels(mol: &mut Mol) -> Result<()> {
     assign_cip_labels_with_params(mol, &AssignCIPLabelsParams::default())
 }

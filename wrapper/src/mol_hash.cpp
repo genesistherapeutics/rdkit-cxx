@@ -16,7 +16,9 @@ namespace rdkit_cxx {
 
 namespace {
 
-constexpr unsigned kMaxAllocaAtoms = 4096;
+// The most atoms the ExtendedMurcko hash takes, as on rdkit-2024.03: each
+// alloca stays within a 4 KiB page, with room for the frame's other locals.
+constexpr unsigned kMaxExtendedMurckoAtoms = 4000;
 
 }  // namespace
 
@@ -44,12 +46,14 @@ std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
     case HashFunction::ExtendedMurcko:
       // RDKit 2025.09's ExtendedMurckoScaffold and DepthFirstSearchForRing
       // each take a byte per atom from the stack with alloca
-      // (hashfunctions.cpp); a page or more can step past a thread stack's
-      // one-page guard into other memory (RDKit 2026.03 uses vectors).
-      if (mol.getNumAtoms() >= kMaxAllocaAtoms) {
+      // (hashfunctions.cpp), and conda-forge's build has no stack-clash
+      // protection, so a frame that grows by a page or more can step past a
+      // thread stack's one-page guard into other memory (RDKit 2026.03 uses
+      // vectors).
+      if (mol.getNumAtoms() > kMaxExtendedMurckoAtoms) {
         throw ValueErrorException(
-            "the ExtendedMurcko hash takes fewer than " +
-            std::to_string(kMaxAllocaAtoms) +
+            "the ExtendedMurcko hash takes at most " +
+            std::to_string(kMaxExtendedMurckoAtoms) +
             " atoms: RDKit 2025.09 allocates a byte per atom on the stack");
       }
       break;

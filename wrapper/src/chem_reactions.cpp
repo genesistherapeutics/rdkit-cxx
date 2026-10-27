@@ -327,10 +327,10 @@ std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
       rxn = std::make_unique<ChemicalReaction>(value);
       check_reaction_monomer_types(*rxn);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmilesTag)) {
-      check_cx_atom_props(value);
+      check_reaction_cx(value, true);
       rxn = RP::ReactionFromSmiles(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmartsTag)) {
-      check_cx_atom_props(value);
+      check_reaction_cx(value, true);
       rxn = RP::ReactionFromSmarts(value);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnRxnTag)) {
       check_input_text(value);
@@ -813,6 +813,10 @@ rust::Vec<ReactantLabel> chemical_reaction_add_recursive_queries(
     bool get_labels) {
   auto qs = query_map(queries);
   std::string prop(prop_name);
+  for (auto it = rxn.beginReactantTemplates(); it != rxn.endReactantTemplates();
+       ++it) {
+    check_query_props(**it, prop);
+  }
   if (!get_labels) {
     RDKit::addRecursiveQueriesToReaction(rxn, qs, prop);
     return {};
@@ -842,7 +846,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_smarts(
         std::string(replacement_values[i]);
   }
   std::string text(smarts);
-  check_cx_atom_props(text);
+  check_reaction_cx(text, true);
   return finish(
       std::unique_ptr<ChemicalReaction>(
           RDKit::RxnSmartsToChemicalReaction(text, &replacements, use_smiles)),

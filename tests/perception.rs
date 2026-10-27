@@ -58,8 +58,6 @@ fn param_defaults() {
             include_hydrogen_bonds: false
         }
     );
-    let kekulize = KekulizeIfPossibleParams::default();
-    assert!(!kekulize.clear_aromatic_flags);
 }
 
 #[test]
@@ -255,4 +253,41 @@ fn added_rings_are_cycles() {
             .get_num_atoms(),
         4
     );
+}
+
+// A ring of one carbon and `dummies` aromatic dummy atoms.
+fn dummy_ring(dummies: usize) -> String {
+    format!("c1{}:1", ":*".repeat(dummies))
+}
+
+fn is_value<T>(result: rdkit_cxx::Result<T>) -> bool {
+    matches!(result, Err(Error::Value { .. }))
+}
+
+// RDKit 2025.09 enumerates the subsets of a fused ring system's dummy atoms
+// in an unsigned int, by `0x1u << count` (QuestionEnumerator in
+// Kekulize.cpp), which is undefined from 32.
+#[test]
+fn kekulizing_refuses_32_question_atoms() {
+    assert!(is_value(mol_from_smiles(&dummy_ring(32))));
+    assert!(is_value(mol_from_smiles(&dummy_ring(40))));
+    let params = SmilesParserParams {
+        sanitize: false,
+        ..Default::default()
+    };
+    let unsanitized = mol_from_smiles_with_params(&dummy_ring(32), &params).unwrap();
+    let mut mol = unsanitized.clone();
+    assert!(is_value(sanitize_mol(&mut mol)));
+    let mut mol = unsanitized.clone();
+    assert!(is_value(kekulize(&mut mol)));
+    let mut mol = unsanitized;
+    assert!(is_value(kekulize_if_possible(&mut mol)));
+
+    // Fewer dummies, or as many outside one ring system, are kekulized.
+    let mol = mol_from_smiles(&dummy_ring(30)).unwrap();
+    assert_eq!(mol.get_num_atoms(), 31);
+    let apart = format!("{}.{}", dummy_ring(20), dummy_ring(20));
+    mol_from_smiles(&apart).unwrap();
+    let chain = format!("c1ccccc1{}", "*".repeat(40));
+    mol_from_smiles(&chain).unwrap();
 }

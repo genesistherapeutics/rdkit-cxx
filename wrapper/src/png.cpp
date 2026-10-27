@@ -96,7 +96,7 @@ std::unique_ptr<RWMol> from_metadata(const std::string &key,
     return from_pickle(value);
   }
   if (boost::starts_with(key, RDKit::PNGData::smilesTag)) {
-    check_cx_atom_props(value);
+    check_smiles_cx(value, params.allowCXSMILES, params.strictCXSMILES);
     return std::unique_ptr<RWMol>(RDKit::SmilesToMol(value, params));
   }
   check_input_text(value);
