@@ -6,7 +6,7 @@
 # Builds the C++ half of the rdkit-cxx crate: the hand-written wrapper
 # functions and the C++ that cxx generates for each bridge. The crate's build
 # script passes:
-#   RDKIT_CXX_SUPPORTED_SERIES        RDKit release series, such as 2026.03
+#   RDKIT_CXX_SUPPORTED_SERIES        RDKit release series, such as 2025.09
 #   RDKIT_CXX_GENERATED_SOURCES       ;-separated generated .rs.cc files
 #   RDKIT_CXX_GENERATED_INCLUDE_DIR   directory holding rust/cxx.h and the
 #                                     generated bridge headers
@@ -235,11 +235,11 @@ target_include_directories(rdkitcxx PRIVATE
   # (compat/GraphMol/GaussianShape).
   compat
   # RDKit's own copies, from the release found (vendor/<release>), of
-  # headers its packages do not install. conda-forge's librdkit-dev 2026.03
+  # headers its packages do not install. conda-forge's librdkit-dev 2025.09
   # installs none of ML/InfoTheory's headers (RDKit::InfoTheory's); an
   # install that has them finds its own first, earlier on the path. Nor does
-  # it install GraphMol/SynthonSpaceSearch/SynthonSpaceSearchHelpers.h, which
-  # SynthonSpace.h and Synthon.h include. GraphMol/MolDraw2D holds the
+  # it install GraphMol/SynthonSpaceSearch/SynthonSpaceHitSet.h, which
+  # SynthonSpaceSearcher.h includes. GraphMol/MolDraw2D holds the
   # drawing code's internal headers (DrawText.h, DrawMol.h, and those they
   # include, and MolDraw2DDetails.h), which no package installs
   # (draw_drawer.cpp).
