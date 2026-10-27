@@ -83,7 +83,7 @@ their own:
 
 | RDKit release | Crate requirement | Branch |
 | --- | --- | --- |
-| 2026.09.1 | `~2026.9` | `main`, `rdkit-2026.09` |
+| 2026.09.1 | `~2026.9` | `main` |
 | 2026.03.6 | `~2026.3` | `rdkit-2026.03` |
 | 2025.09.6 | `~2025.9` | `rdkit-2025.09` |
 | 2025.03.6 | `~2025.3` | `rdkit-2025.03` |
@@ -412,10 +412,9 @@ one takes more than its pin ([Releases](#releases)).
 Each RDKit series has a long-running branch, `rdkit-<series>`
 (`rdkit-2025.09` for RDKit 2025.09), from which its crate versions are
 released, and to which fixes for that series go, through pull requests as on
-`main`. `main` follows the newest series, whose changes land and are released
-on `main`: its branch, `rdkit-2026.09`, is brought up to date with `main`, and
-takes over the series' releases once `main` moves on. Pushing to a branch
-publishes nothing; CI runs on every push to `main` and the series' branches.
+`main`. `main` follows the newest series and releases it; the series gets its
+branch when `main` moves on to the next one. Pushing to a branch publishes
+nothing; CI runs on every push to `main` and the series' branches.
 
 Releases are cut by hand: run the
 [Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
@@ -434,11 +433,9 @@ notes are its section of [CHANGELOG.md](CHANGELOG.md): for a patch release,
 the `## Unreleased` section, which the bump renames to the version, and for
 the first release of a series, the section for its version
 (`## 2027.3.0`). Write them before running it; the workflow stops before it
-publishes anything when they are missing. A version released from one branch
-is not released again from another (`main` and `rdkit-2026.09` share a
-series): merge the release into the branch first. A release that fails
-partway finishes when its failed jobs are re-run: each step skips what an
-earlier attempt finished, including the upload.
+publishes anything when they are missing. A release that fails partway
+finishes when its failed jobs are re-run: each step skips what an earlier
+attempt finished, including the upload.
 
 The patch level moves only through the workflow. A new RDKit series sets the
 major and minor levels by hand, in the pull request that updates
@@ -448,10 +445,9 @@ major and minor levels by hand, in the pull request that updates
 bump-my-version bump --new-version 2027.3.0
 ```
 
-Bring the old series' branch up to date with `main` before that pull
-request, so the branch keeps the series' last commit, and once it merges,
-create the new series' branch from `main` and add it to the Release
-workflow's branch choices.
+Before that pull request, create the old series' branch from `main`
+(`rdkit-2026.09`), which keeps the series and its releases from then on, and
+add it to the Release workflow's branch choices.
 
 The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
 conda-forge daily and opens an issue, assigned to the repository owner, with

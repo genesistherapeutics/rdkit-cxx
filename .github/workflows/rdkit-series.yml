@@ -103,7 +103,7 @@ jobs:
           - [ ] \`bump-my-version bump --new-version ${new_series%.*}.$((10#${new_series#*.})).0\`
           - [ ] Regenerate the inventory from \`${tag}\` as \`inventory/inventory-${new_series}.json\`.
           - [ ] Copy the vendored headers from \`${tag}\` into \`wrapper/vendor/${latest}/\` (\`wrapper/vendor/README.md\`), and remove the RDKit ${series} directories.
-          - [ ] Bring \`rdkit-${series}\` up to date with \`main\` before \`main\` moves, so the branch keeps the series' last commit and its releases from then on. Once \`main\` has moved, create \`rdkit-${new_series}\` from it and add it to the Release workflow's branch choices (\`.github/workflows/release.yml\`).
+          - [ ] Before \`main\` moves, create \`rdkit-${series}\` from it, which keeps the series and its releases from then on, and add it to the Release workflow's branch choices (\`.github/workflows/release.yml\`).
           - [ ] Update what names RDKit ${series}: \`git grep -nE '${year}[._]0?${month}'\`
           EOF
           fi
