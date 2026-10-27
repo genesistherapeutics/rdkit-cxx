@@ -236,4 +236,21 @@ class StereoGroupBondGuard {
 constexpr unsigned MAX_KEKULIZE_QUESTIONS = 32;
 void check_kekulize_questions(const RDKit::ROMol &mol);
 
+// RDKit 2025.03's proximity bonding (ConnectTheDots_Large in
+// ProximityBonds.cpp, unchanged in 2025.09), for a hydrogen it leaves bonded to
+// several atoms, removes all but the closest bond while it iterates over the
+// hydrogen's neighbors, so the iteration reads past the end of the shrunken
+// neighbor list once a hydrogen has three or more (RDKit 2026.03 batches the
+// removals). This throws ValueErrorException for a molecule with a hydrogen
+// that could have three: its bonds (none when `bonds_removed`, as
+// determineConnectivity removes them first) and every atom RDKit's bonding
+// test, with `flags`, would bond to it, less the one bond to a hydrogen that
+// ctdQUICKREMOVE_H_H_CONTACTS removes.
+void check_proximity_hydrogens(const RDKit::ROMol &mol, unsigned flags,
+                               bool bonds_removed);
+// ConnectTheDots' flags, from ProximityBonds.h, which conda-forge's
+// librdkit-dev does not install.
+constexpr unsigned kCtdIgnoreHHContacts = 0x1;
+constexpr unsigned kCtdQuickRemoveHHContacts = 0x2;
+
 }  // namespace rdkit_cxx

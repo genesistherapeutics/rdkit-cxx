@@ -6,8 +6,10 @@
 #include "rdkit-cxx/mol_checks.h"
 
 #include <algorithm>
+#include <array>
 #include <cerrno>
 #include <cmath>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <map>
@@ -17,6 +19,7 @@
 #include <vector>
 
 #include <GraphMol/MonomerInfo.h>
+#include <GraphMol/PeriodicTable.h>
 #include <GraphMol/QueryOps.h>
 #include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
@@ -756,6 +759,151 @@ void check_kekulize_questions(const RDKit::ROMol &mol) {
           " dummy atoms, at least " + std::to_string(MAX_KEKULIZE_QUESTIONS) +
           ", for which RDKit 2025.03's kekulization shifts past the width of "
           "an unsigned int");
+    }
+  }
+}
+
+namespace {
+
+// As ProximityEntry and IsBonded in ProximityBonds.cpp.
+struct ProximityAtom {
+  float x, y, z, r;
+  unsigned elem;
+};
+
+bool proximity_bonded(const ProximityAtom &p, const ProximityAtom &q,
+                      unsigned flags) {
+  if (flags & kCtdIgnoreHHContacts && p.elem == 1 && q.elem == 1) {
+    return false;
+  }
+  constexpr double kExtDist = 0.45;
+  constexpr double kMinDist2 = 0.16;
+  constexpr double kMaxDist2 = 29.7025;
+  double dx = (double)p.x - (double)q.x;
+  double dy = (double)p.y - (double)q.y;
+  double dz = (double)p.z - (double)q.z;
+  double dist2 = dx * dx + dy * dy + dz * dz;
+  if (dist2 > kMaxDist2 || dist2 < kMinDist2) {
+    return false;
+  }
+  double radius = (double)p.r + (double)q.r + kExtDist;
+  return dist2 <= radius * radius;
+}
+
+const RDKit::AtomPDBResidueInfo *pdb_info(const RDKit::Atom *atom) {
+  auto *info =
+      dynamic_cast<const RDKit::AtomPDBResidueInfo *>(atom->getMonomerInfo());
+  return info && info->getMonomerType() == RDKit::AtomMonomerInfo::PDBRESIDUE
+             ? info
+             : nullptr;
+}
+
+// As IsBlacklistedPair in ProximityBonds.cpp.
+bool proximity_blacklisted(const RDKit::Atom *a, const RDKit::Atom *b) {
+  auto *ai = pdb_info(a);
+  auto *bi = pdb_info(b);
+  if (!ai || !bi) {
+    return false;
+  }
+  if (ai->getResidueNumber() == bi->getResidueNumber() &&
+      ai->getResidueName() == bi->getResidueName() &&
+      ai->getChainId() == bi->getChainId() &&
+      ai->getInsertionCode() == bi->getInsertionCode()) {
+    return false;
+  }
+  auto blacklisted = [](const RDKit::Atom *atom) {
+    int elem = atom->getAtomicNum();
+    return !((5 <= elem && elem <= 8) || (14 <= elem && elem <= 16) ||
+             (32 <= elem && elem <= 34) || (51 <= elem && elem <= 52));
+  };
+  return blacklisted(a) || blacklisted(b) || ai->getResidueName() == "HOH" ||
+         bi->getResidueName() == "HOH";
+}
+
+}  // namespace
+
+void check_proximity_hydrogens(const RDKit::ROMol &mol, unsigned flags,
+                               bool bonds_removed) {
+  if (!mol.getNumConformers()) {
+    return;
+  }
+  const auto &conf = mol.getConformer();
+  auto *table = RDKit::PeriodicTable::getTable();
+  const unsigned n = mol.getNumAtoms();
+  std::vector<ProximityAtom> atoms(n);
+  // Atoms RDKit bonds are within 5.45 of each other, so in neighboring cells
+  // of that size.
+  constexpr double kCell = 5.45;
+  std::map<std::array<std::int64_t, 3>, std::vector<unsigned>> cells;
+  auto cell = [&](const ProximityAtom &a) {
+    return std::array<std::int64_t, 3>{
+        static_cast<std::int64_t>(std::floor(a.x / kCell)),
+        static_cast<std::int64_t>(std::floor(a.y / kCell)),
+        static_cast<std::int64_t>(std::floor(a.z / kCell))};
+  };
+  bool any_h = false;
+  for (unsigned i = 0; i < n; ++i) {
+    const auto &p = conf.getAtomPos(i);
+    unsigned elem = mol.getAtomWithIdx(i)->getAtomicNum();
+    atoms[i] = {(float)p.x, (float)p.y, (float)p.z,
+                (float)table->getRcovalent(elem), elem};
+    if (!std::isfinite(atoms[i].x) || !std::isfinite(atoms[i].y) ||
+        !std::isfinite(atoms[i].z)) {
+      continue;  // never bonded (and refused elsewhere)
+    }
+    cells[cell(atoms[i])].push_back(i);
+    any_h = any_h || elem == 1;
+  }
+  if (!any_h) {
+    return;
+  }
+  for (unsigned i = 0; i < n; ++i) {
+    const auto *atom = mol.getAtomWithIdx(i);
+    if (atoms[i].elem != 1 || !std::isfinite(atoms[i].x) ||
+        !std::isfinite(atoms[i].y) || !std::isfinite(atoms[i].z)) {
+      continue;
+    }
+    unsigned degree = 0;
+    bool to_h = false;
+    bool to_other = false;
+    auto count = [&](unsigned j) {
+      ++degree;
+      (atoms[j].elem == 1 ? to_h : to_other) = true;
+    };
+    if (!bonds_removed) {
+      for (const auto *nbr : mol.atomNeighbors(atom)) {
+        count(nbr->getIdx());
+      }
+    }
+    const auto c = cell(atoms[i]);
+    for (std::int64_t dx = -1; dx <= 1; ++dx) {
+      for (std::int64_t dy = -1; dy <= 1; ++dy) {
+        for (std::int64_t dz = -1; dz <= 1; ++dz) {
+          auto it = cells.find({c[0] + dx, c[1] + dy, c[2] + dz});
+          if (it == cells.end()) {
+            continue;
+          }
+          for (unsigned j : it->second) {
+            if (j == i || (!bonds_removed && mol.getBondBetweenAtoms(i, j))) {
+              continue;
+            }
+            if (proximity_bonded(atoms[i], atoms[j], flags) &&
+                !proximity_blacklisted(atom, mol.getAtomWithIdx(j))) {
+              count(j);
+            }
+          }
+        }
+      }
+    }
+    if (flags & kCtdQuickRemoveHHContacts && to_h && to_other) {
+      --degree;
+    }
+    if (degree >= 3) {
+      throw ValueErrorException(
+          "hydrogen " + std::to_string(i) +
+          " would be bonded to three or more atoms by proximity, which RDKit "
+          "2025.03 reads past its neighbor list for when it keeps the "
+          "closest");
     }
   }
 }

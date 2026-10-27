@@ -1113,6 +1113,7 @@ std::unique_ptr<RWMol> pdb_from_text(const std::string &text, bool sanitize,
         FP::MolFromPDBDataStream(in, pdb_params(false, false, flavor, false));
     if (probe) {
       check_pdb_coordinates(*probe);
+      check_proximity_hydrogens(*probe, kCtdIgnoreHHContacts, false);
     }
   }
   std::istringstream in(text);
