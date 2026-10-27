@@ -70,7 +70,7 @@ pub(crate) mod ffi {
         fn atom_has_query(atom: &Atom) -> Result<bool>;
         fn atom_needs_update_property_cache(atom: &Atom) -> Result<bool>;
         fn atom_get_explicit_valence(atom: &Atom) -> Result<u32>;
-        fn atom_get_implicit_valence(atom: &Atom) -> Result<u32>;
+        fn atom_get_implicit_valence(atom: &Atom) -> Result<i32>;
         fn atom_get_smarts(
             atom: &Atom,
             do_kekule: bool,

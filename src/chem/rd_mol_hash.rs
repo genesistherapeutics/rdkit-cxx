@@ -36,14 +36,6 @@ rdkit_enum! {
     }
 }
 
-/// The property, `_MolHashExcludeFromTautomerism`, that keeps the atoms and
-/// bonds that have it (with any value) out of the tautomeric systems of the
-/// `HetAtomTautomerv2` and `HetAtomProtomerv2` hashes. Mirrors
-/// `rdMolHash.excludeFromTautomerismProp`.
-pub fn exclude_from_tautomerism_prop() -> &'static str {
-    "_MolHashExcludeFromTautomerism"
-}
-
 /// Parameters for `mol_hash_with_params`, with Python's defaults (A2).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct MolHashParams {
@@ -59,7 +51,10 @@ pub struct MolHashParams {
 /// The formula, mesomer, redox-pair, net-charge, tautomer, and protomer
 /// hashes sum formal charges in `int`, and the tautomer and protomer hashes
 /// hydrogen counts too; a molecule whose sums could overflow it (only
-/// possible with millions of atoms) is `Error::Value`.
+/// possible with millions of atoms) is `Error::Value`. RDKit 2024.03's
+/// `ExtendedMurcko` hash allocates a byte of stack per atom with `alloca`,
+/// which past a page can step over the stack's guard page, so that hash of
+/// a molecule of more than 4000 atoms is `Error::Value`.
 pub fn mol_hash(mol: &Mol, func: HashFunction) -> Result<String> {
     mol_hash_with_params(mol, func, &MolHashParams::default())
 }

@@ -60,8 +60,16 @@ std::unique_ptr<MolList> fragment_mol(const RWMol &mol, std::uint32_t min_cuts,
   if (query->getNumAtoms() < 2) {
     throw ValueErrorException("the pattern must match a bond: two atoms");
   }
-  // fragmentMol cuts bonds of a copy (fragmentOnBonds) and writes the
-  // pieces as SMILES, which trusts what check_removals checks.
+  // fragmentMol cuts bonds of a copy (RWMol::removeBond in addResult,
+  // MMPA.cpp) and writes the pieces as SMILES, which trusts what
+  // check_removals checks.
+  //
+  // RDKit 2024.03's computeMorganCodeHash (MMPA.cpp), which addResult runs
+  // to deduplicate results, left-shifts each atom's formal charge by 16
+  // (getFormalCharge() << 16). For an anion that shifts a negative int,
+  // which C++17 (RDKit 2024.03's standard) leaves undefined; GCC and Clang
+  // define it as the two's-complement shift (C++20 does too, and 2026.03
+  // rewrote it with std::abs), so anions are not refused.
   check_removals(mol);
   Results results;
   // fragmentMol matches the pattern (control_c_lock.h).
@@ -83,6 +91,8 @@ std::unique_ptr<MolList> fragment_mol_bonds(
   for (auto idx : bonds_to_cut) {
     check_index(idx, mol.getNumBonds());
   }
+  // As fragment_mol: removals, and computeMorganCodeHash's shift of a
+  // negative charge.
   check_removals(mol);
   Results results;
   RDKit::MMPA::fragmentMol(

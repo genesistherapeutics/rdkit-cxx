@@ -45,7 +45,7 @@ bool atom_has_owning_mol(const Atom &atom);
 bool atom_has_query(const Atom &atom);
 bool atom_needs_update_property_cache(const Atom &atom);
 unsigned atom_get_explicit_valence(const Atom &atom);
-unsigned atom_get_implicit_valence(const Atom &atom);
+int atom_get_implicit_valence(const Atom &atom);
 // As AtomGetSmarts in Code/GraphMol/Wrap/Atom.cpp.
 std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,
                                              bool all_hs_explicit,

@@ -97,14 +97,18 @@ bool atom_needs_update_property_cache(const Atom &atom) {
   return atom.needsUpdatePropertyCache();
 }
 
-// Both throw Invar::Invariant outside a molecule and before the valences
-// are computed, and are never negative after.
+// Throws Invar::Invariant outside a molecule and before the valences are
+// computed, and is never negative after.
 unsigned atom_get_explicit_valence(const Atom &atom) {
   return static_cast<unsigned>(atom.getExplicitValence());
 }
 
-unsigned atom_get_implicit_valence(const Atom &atom) {
-  return static_cast<unsigned>(atom.getImplicitValence());
+// Throws Invar::Invariant outside a molecule. RDKit 2024.03's
+// Atom::getImplicitValence (Atom.cpp) has no precondition on the valences
+// being computed and returns d_implicitValence, -1 until they are, as Python
+// does.
+int atom_get_implicit_valence(const Atom &atom) {
+  return atom.getImplicitValence();
 }
 
 std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,

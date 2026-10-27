@@ -6,6 +6,7 @@
 #include "rdkit-cxx/mol_hash.h"
 
 #include <mutex>
+#include <string>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -33,6 +34,20 @@ std::unique_ptr<std::string> mol_hash(const RWMol &mol, HashFunction func,
     case HashFunction::HetAtomProtomer:
     case HashFunction::HetAtomProtomerv2:
       check_formal_charge_sum(mol, std::int64_t{255} * mol.getNumAtoms());
+      break;
+    case HashFunction::ExtendedMurcko:
+      // RDKit 2024.03's ExtendedMurckoScaffold and DepthFirstSearchForRing
+      // (hashfunctions.cpp) each take alloca(numAtoms) bytes of stack, and
+      // conda-forge's build has no stack-clash protection, so an allocation
+      // past the one 4 KiB guard page glibc gives a thread's stack can step
+      // over it into other memory. kMaxExtendedMurckoAtoms keeps each within
+      // a page (2026.03 uses std::vector).
+      if (mol.getNumAtoms() > kMaxExtendedMurckoAtoms) {
+        throw ValueErrorException(
+            "the ExtendedMurcko hash takes a stack buffer of one byte per atom "
+            "in RDKit 2024.03, so it is limited to " +
+            std::to_string(kMaxExtendedMurckoAtoms) + " atoms");
+      }
       break;
     default:
       break;

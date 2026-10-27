@@ -130,9 +130,9 @@ macro_rules! atom_getters {
             }
 
             /// The implicit valence: the implicit hydrogens'. `Error::Runtime`
-            /// outside a molecule or before the property cache is computed.
-            /// Mirrors `Atom.GetImplicitValence`.
-            pub fn get_implicit_valence(&self) -> Result<u32> {
+            /// outside a molecule; −1 before the property cache is computed,
+            /// as RDKit 2024.03 returns it. Mirrors `Atom.GetImplicitValence`.
+            pub fn get_implicit_valence(&self) -> Result<i32> {
                 Ok(ffi::atom_get_implicit_valence(self.raw())?)
             }
 
