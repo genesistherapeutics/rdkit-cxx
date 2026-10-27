@@ -326,9 +326,6 @@ corrupts memory on the supported platforms, and each needs a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **RascalMCES' timeout.** When a search runs out of time, RDKit 2024.09
-  clears its best cliques and then reads the first, within the vector's
-  retained storage. A timeout below -1, due at once, is refused.
 - **Shifts.** RDKit 2024.09's kekulization shifts 1 by the number of
   ambiguous atoms in a fused system that ordinary kekulization fails
   (aromatic dummy atoms), undefined from 32, and FMCS by a seed's new bonds,

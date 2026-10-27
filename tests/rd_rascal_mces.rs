@@ -7,8 +7,8 @@ use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_rascal_mces::*;
 use rdkit_cxx::chem::*;
 
-// Expected values come from Python's rdRascalMCES. Searches use the default
-// 60-second timeout, which none of these comes near.
+// Expected values come from Python's rdRascalMCES. Searches run without a
+// timeout, the only one the bindings accept.
 
 fn smiles(text: &str) -> Mol {
     mol_from_smiles(text).unwrap()
@@ -37,7 +37,7 @@ fn defaults() {
     assert_eq!(opts.min_frag_size, -1);
     assert_eq!(opts.max_frag_separation, -1);
     assert!(!opts.all_best_mcess);
-    assert_eq!(opts.timeout, 60);
+    assert_eq!(opts.timeout, -1);
     assert!(!opts.return_empty_mces);
     assert_eq!(opts.max_bond_match_pairs, 1000);
     assert_eq!(opts.equivalent_atoms, "");
@@ -381,21 +381,23 @@ fn results_move_between_threads() {
     assert_eq!(handle.join().unwrap(), "c1:c:c:c:c:c:1");
 }
 
-/// RDKit 2024.09's checkTimeout reads a result it cleared; a timeout below -1
-/// is due at the first check.
+/// RDKit 2024.09's checkTimeout reads past the best cliques it cleared once
+/// the search runs past the timeout, which depends on the clock.
 #[test]
-fn rascal_timeout_below_minus_one() {
-    let opts = RascalOptions {
-        timeout: -2,
-        ..Default::default()
-    };
-    let err = find_mces_with_opts(&smiles("c1ccccc1Cl"), &smiles("c1ccccc1F"), &opts).unwrap_err();
-    assert!(matches!(err, Error::Value { .. }), "{err:?}");
-    for timeout in [-1, 0, 60] {
+fn rascal_timeout_must_be_none() {
+    for timeout in [-2, 0, 60] {
         let opts = RascalOptions {
             timeout,
             ..Default::default()
         };
-        find_mces_with_opts(&smiles("c1ccccc1Cl"), &smiles("c1ccccc1F"), &opts).unwrap();
+        let err =
+            find_mces_with_opts(&smiles("c1ccccc1Cl"), &smiles("c1ccccc1F"), &opts).unwrap_err();
+        assert!(matches!(err, Error::Value { .. }), "{timeout}: {err:?}");
     }
+    find_mces_with_opts(
+        &smiles("c1ccccc1Cl"),
+        &smiles("c1ccccc1F"),
+        &RascalOptions::default(),
+    )
+    .unwrap();
 }

@@ -137,7 +137,10 @@ CMake package needs Eigen 3, so the environment installs `eigen 3.4.*`.
     substance-group field that does.
   - Drawing refuses a label whose colon RDKit 2024.09's `adjustColons`
     would read past or loop on.
-  - RascalMCES refuses a timeout below -1, and the query expanders a query
+  - RascalMCES refuses any timeout but -1, which is its default here
+    (Python's is 60 seconds): when a search runs past it, RDKit 2024.09
+    reads its best cliques after clearing them (#9450). The clusterings
+    run their searches without one. The query expanders refuse a query
     atom or bond without a query.
 - Checks the bindings for RDKit 2026.03 made, as they stand for 2024.09:
   - `MolCatalogEntry::from_pickle` builds the entry as the catalog's reader
