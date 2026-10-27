@@ -126,11 +126,4 @@ bulk_convert! {
     num_aliphatic_rings = calc_num_aliphatic_rings -> u32, "NumAliphaticRings";
     num_aliphatic_heterocycles = calc_num_aliphatic_heterocycles -> u32, "NumAliphaticHeterocycles";
     num_aliphatic_carbocycles = calc_num_aliphatic_carbocycles -> u32, "NumAliphaticCarbocycles";
-    num_heterocycles = calc_num_heterocycles -> u32, "NumHeterocycles";
-    num_bridgehead_atoms = calc_num_bridgehead_atoms -> Result<u32>, "NumBridgeheadAtoms";
-    num_amide_bonds = calc_num_amide_bonds -> Result<u32>, "NumAmideBonds";
-    num_atom_stereo_centers = calc_num_atom_stereo_centers -> Result<u32>, "NumAtomStereoCenters";
-    num_unspecified_atom_stereo_centers = calc_num_unspecified_atom_stereo_centers -> Result<u32>, "NumUnspecifiedAtomStereoCenters";
-    num_spiro_atoms = calc_num_spiro_atoms -> Result<u32>, "NumSpiroAtoms";
-    phi = calc_phi -> Result<f64>, "Phi";
 }

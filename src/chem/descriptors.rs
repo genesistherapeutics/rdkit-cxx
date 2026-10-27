@@ -389,9 +389,9 @@ pub(crate) type DescriptorEntry = (&'static str, &'static str, &'static str, Des
 /// Python's `descList`, with the 192 `AUTOCORR2D_*` descriptors after it,
 /// which Python defines in the module but lists only after
 /// `setupAUTOCorrDescriptors()`. The summaries are those of conda-forge's
-/// RDKit 2026.03.6, whose Boost.Python wrappers give the functions Lipinski
+/// RDKit 2024.03.6, whose Boost.Python wrappers give the functions Lipinski
 /// takes from `rdMolDescriptors` their signatures as docstrings.
-pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
+pub(crate) static DESCRIPTORS: [DescriptorEntry; 402] = [
     (
         "MaxAbsEStateIndex",
         "1.0.0",
@@ -875,7 +875,7 @@ pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
     (
         "FractionCSP3",
         "1.0.0",
-        "CalcFractionCSP3( (rdkit.Chem.rdchem.Mol)mol) -> float : returns the fraction of C atoms that are SP3 hybridized",
+        "CalcFractionCSP3( (Mol)mol) -> float : returns the fraction of C atoms that are SP3 hybridized",
         lipinski::fraction_csp3,
     ),
     (
@@ -893,56 +893,38 @@ pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
     (
         "NumAliphaticCarbocycles",
         "1.0.0",
-        "CalcNumAliphaticCarbocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of aliphatic (containing at least one non-aromatic bond) carbocycles for a molecule",
+        "CalcNumAliphaticCarbocycles( (Mol)mol) -> int : returns the number of aliphatic (containing at least one non-aromatic bond) carbocycles for a molecule",
         |m| Ok(f64::from(lipinski::num_aliphatic_carbocycles(m))),
     ),
     (
         "NumAliphaticHeterocycles",
         "1.0.0",
-        "CalcNumAliphaticHeterocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of aliphatic (containing at least one non-aromatic bond) heterocycles for a molecule",
+        "CalcNumAliphaticHeterocycles( (Mol)mol) -> int : returns the number of aliphatic (containing at least one non-aromatic bond) heterocycles for a molecule",
         |m| Ok(f64::from(lipinski::num_aliphatic_heterocycles(m))),
     ),
     (
         "NumAliphaticRings",
         "1.0.0",
-        "CalcNumAliphaticRings( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of aliphatic (containing at least one non-aromatic bond) rings for a molecule",
+        "CalcNumAliphaticRings( (Mol)mol) -> int : returns the number of aliphatic (containing at least one non-aromatic bond) rings for a molecule",
         |m| Ok(f64::from(lipinski::num_aliphatic_rings(m))),
-    ),
-    (
-        "NumAmideBonds",
-        "1.0.0",
-        "CalcNumAmideBonds( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of amide bonds in a molecule",
-        |m| Ok(f64::from(lipinski::num_amide_bonds(m)?)),
     ),
     (
         "NumAromaticCarbocycles",
         "1.0.0",
-        "CalcNumAromaticCarbocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of aromatic carbocycles for a molecule",
+        "CalcNumAromaticCarbocycles( (Mol)mol) -> int : returns the number of aromatic carbocycles for a molecule",
         |m| Ok(f64::from(lipinski::num_aromatic_carbocycles(m))),
     ),
     (
         "NumAromaticHeterocycles",
         "1.0.0",
-        "CalcNumAromaticHeterocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of aromatic heterocycles for a molecule",
+        "CalcNumAromaticHeterocycles( (Mol)mol) -> int : returns the number of aromatic heterocycles for a molecule",
         |m| Ok(f64::from(lipinski::num_aromatic_heterocycles(m))),
     ),
     (
         "NumAromaticRings",
         "1.0.0",
-        "CalcNumAromaticRings( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of aromatic rings for a molecule",
+        "CalcNumAromaticRings( (Mol)mol) -> int : returns the number of aromatic rings for a molecule",
         |m| Ok(f64::from(lipinski::num_aromatic_rings(m))),
-    ),
-    (
-        "NumAtomStereoCenters",
-        "1.0.1",
-        "CalcNumAtomStereoCenters( (rdkit.Chem.rdchem.Mol)mol) -> int : Returns the total number of atomic stereocenters (specified and unspecified)",
-        |m| Ok(f64::from(lipinski::num_atom_stereo_centers(m)?)),
-    ),
-    (
-        "NumBridgeheadAtoms",
-        "2.0.0",
-        "CalcNumBridgeheadAtoms( (rdkit.Chem.rdchem.Mol)mol [, (AtomPairsParameters)atoms=None]) -> int : Returns the number of bridgehead atoms (atoms shared between rings that share at least two bonds)",
-        |m| Ok(f64::from(lipinski::num_bridgehead_atoms(m)?)),
     ),
     (
         "NumHAcceptors",
@@ -960,12 +942,6 @@ pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
         Ok(f64::from(lipinski::num_heteroatoms(m)?))
     }),
     (
-        "NumHeterocycles",
-        "1.0.0",
-        "CalcNumHeterocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of heterocycles for a molecule",
-        |m| Ok(f64::from(lipinski::num_heterocycles(m))),
-    ),
-    (
         "NumRotatableBonds",
         "1.0.0",
         "Number of Rotatable Bonds",
@@ -974,38 +950,20 @@ pub(crate) static DESCRIPTORS: [DescriptorEntry; 409] = [
     (
         "NumSaturatedCarbocycles",
         "1.0.0",
-        "CalcNumSaturatedCarbocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of saturated carbocycles for a molecule",
+        "CalcNumSaturatedCarbocycles( (Mol)mol) -> int : returns the number of saturated carbocycles for a molecule",
         |m| Ok(f64::from(lipinski::num_saturated_carbocycles(m))),
     ),
     (
         "NumSaturatedHeterocycles",
         "1.0.0",
-        "CalcNumSaturatedHeterocycles( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of saturated heterocycles for a molecule",
+        "CalcNumSaturatedHeterocycles( (Mol)mol) -> int : returns the number of saturated heterocycles for a molecule",
         |m| Ok(f64::from(lipinski::num_saturated_heterocycles(m))),
     ),
     (
         "NumSaturatedRings",
         "1.0.0",
-        "CalcNumSaturatedRings( (rdkit.Chem.rdchem.Mol)mol) -> int : returns the number of saturated rings for a molecule",
+        "CalcNumSaturatedRings( (Mol)mol) -> int : returns the number of saturated rings for a molecule",
         |m| Ok(f64::from(lipinski::num_saturated_rings(m))),
-    ),
-    (
-        "NumSpiroAtoms",
-        "1.0.0",
-        "CalcNumSpiroAtoms( (rdkit.Chem.rdchem.Mol)mol [, (AtomPairsParameters)atoms=None]) -> int : Returns the number of spiro atoms (atoms shared between rings that share exactly one atom)",
-        |m| Ok(f64::from(lipinski::num_spiro_atoms(m)?)),
-    ),
-    (
-        "NumUnspecifiedAtomStereoCenters",
-        "1.0.1",
-        "CalcNumUnspecifiedAtomStereoCenters( (rdkit.Chem.rdchem.Mol)mol) -> int : Returns the number of unspecified atomic stereocenters",
-        |m| Ok(f64::from(lipinski::num_unspecified_atom_stereo_centers(m)?)),
-    ),
-    (
-        "Phi",
-        "1.0.0",
-        "CalcPhi( (rdkit.Chem.rdchem.Mol)mol) -> float :",
-        lipinski::phi,
     ),
     ("RingCount", "1.0.0", "N/A", |m| {
         Ok(f64::from(lipinski::ring_count(m)?))
