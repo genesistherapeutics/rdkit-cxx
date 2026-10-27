@@ -9,10 +9,11 @@
 // rdkitjson).
 //
 // RDKit's JSON parser (MolInterchange/Parser.cpp) trusts the indices, counts,
-// and query trees it reads, and no fuzzer covers it, so the wrapper parses
-// the JSON itself first, with the same boost::json parser, checks what RDKit
-// would trust (check_json_document in mol_interchange.cpp), and hands RDKit
-// the checked document (CONVENTIONS.md U2).
+// and query trees it reads, and, in 2024.03, the types of the rapidjson
+// values it reads, and no fuzzer covers it, so the wrapper parses the JSON
+// itself first, with boost::json, checks what RDKit would trust
+// (DocumentChecker in mol_interchange.cpp), and hands RDKit the checked
+// document, serialized again (CONVENTIONS.md U2).
 
 #pragma once
 

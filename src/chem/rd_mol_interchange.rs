@@ -8,15 +8,25 @@
 //! of it.
 //!
 //! RDKit's JSON parser trusts the indices, counts, and query trees it reads,
-//! so the wrapper reads the JSON first and refuses what RDKit would trust
-//! (CONVENTIONS.md U2): fewer than two stereo atoms for a bond, an empty atom
-//! ring, a substance group bracket of more than three points, cstates and
-//! attachment points for atoms or bonds the molecule lacks, a query on a
-//! bond a stereo group holds (RDKit leaves the group pointing at the bond it
-//! deletes), and queries RDKit does not make: a description with a class of
+//! and in 2024.03 reads the JSON with rapidjson, whose getters are undefined
+//! for a value of another type or a member that is missing, so the wrapper
+//! reads the JSON first and refuses what RDKit would trust (CONVENTIONS.md
+//! U2): a value RDKit reads without testing it that is missing or of another
+//! type (a molecule, atom, bond, or extension that is not an object, a name
+//! that is not a string, atoms and bonds that are not arrays, a bond with
+//! fewer than two atoms, a stereo group's type that is not a string, a
+//! substance group's properties that are not an object, a query's value
+//! that is not an int, ...), a conformer coordinate beyond `f32`'s range,
+//! fewer than two stereo atoms for a bond, a CIP code of fewer than two
+//! values, an empty atom ring, a substance group bracket of more than three
+//! points, cstates and attachment points for atoms or bonds the molecule
+//! lacks, and queries RDKit does not make: a description with a class of
 //! query RDKit never gives it, an AND, OR, or XOR query with fewer than two
-//! children, a recursive query without atoms, and query values beyond 2^30
-//! (U7).
+//! children, a recursive query without atoms, a range query on ring size
+//! (2024.03 reads it as an equality query), and query values beyond 2^30
+//! (U7). RDKit 2024.03 reads a stereo group's atoms and ignores its bonds;
+//! an attachment point without a leaving atom, or with -1, has -1, as RDKit's
+//! writer means it.
 
 use crate::Result;
 use crate::chem::Mol;

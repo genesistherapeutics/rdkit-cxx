@@ -6,12 +6,13 @@
 #include "rdkit-cxx/mol_interchange.h"
 
 #include <algorithm>
+#include <cfloat>
 #include <climits>
 #include <cstdint>
-#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 #include <GraphMol/MolInterchange/MolInterchange.h>
@@ -20,7 +21,9 @@
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
 
-// As Parser.cpp: boost::json header-only, its sources compiled once, here.
+// The wrapper reads the JSON with boost::json, header-only, its sources
+// compiled once, here. (RDKit 2024.03 reads it with rapidjson, whose headers
+// conda's RDKit does not ship.)
 #define BOOST_JSON_NO_LIB
 #ifndef BOOST_CONTAINER_NO_LIB
 #define BOOST_CONTAINER_NO_LIB
@@ -49,7 +52,14 @@ constexpr std::int64_t kMaxQueryValue = std::int64_t{1} << 30;
   throw ValueErrorException("the JSON " + why);
 }
 
-// RDKit reads the JSON's strings with c_str(), so they end at a NUL.
+// Where RDKit throws for what it reads, the checker stops: RDKit reads no
+// further, and its own error reaches the caller.
+struct RDKitThrows {};
+
+[[noreturn]] void rdkit_throws() { throw RDKitThrows{}; }
+
+// RDKit reads the JSON's strings with rapidjson's GetString, as C strings,
+// so they end at a NUL.
 std::string text(const bj::string &s) { return std::string(s.c_str()); }
 
 const bj::value *member(const bj::value &v, std::string_view key) {
@@ -59,6 +69,55 @@ const bj::value *member(const bj::value &v, std::string_view key) {
   }
   auto it = obj->find(key);
   return it == obj->end() ? nullptr : &it->value();
+}
+
+bj::value *member(bj::value &v, std::string_view key) {
+  return const_cast<bj::value *>(member(std::as_const(v), key));
+}
+
+// rapidjson's type tests, for the document as rapidjson reads boost::json's
+// serialization of it: boost::json keeps an integer in int64 when it fits
+// (otherwise in uint64, and past that in a double) and writes every double
+// with an exponent, so rapidjson reads integers as integers and doubles as
+// doubles. IsInt holds for integers in int's range, IsUint for those in
+// unsigned's, IsDouble for doubles only, and IsNumber for all three.
+bool rj_is_int(const bj::value &v) {
+  return v.is_int64() && v.as_int64() >= INT_MIN && v.as_int64() <= INT_MAX;
+}
+
+bool rj_is_uint(const bj::value &v) {
+  return v.is_int64() && v.as_int64() >= 0 && v.as_int64() <= UINT_MAX;
+}
+
+int rj_int(const bj::value &v) { return static_cast<int>(v.as_int64()); }
+
+unsigned rj_uint(const bj::value &v) {
+  return static_cast<unsigned>(v.as_int64());
+}
+
+// A number boost::json reads past double's range is infinity, which it
+// writes as 1e99999; rapidjson's default parse refuses that
+// (kParseErrorNumberTooBig) and leaves RDKit a null document, for which
+// DocToMols throws.
+bool has_infinity(const bj::value &v) {
+  if (v.is_double()) {
+    double d = v.as_double();
+    return d > DBL_MAX || d < -DBL_MAX;
+  }
+  if (const auto *list = v.if_array()) {
+    for (const auto &e : *list) {
+      if (has_infinity(e)) {
+        return true;
+      }
+    }
+  } else if (const auto *obj = v.if_object()) {
+    for (const auto &e : *obj) {
+      if (has_infinity(e.value())) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 // The descriptions finalizeQueryFromDescription (QueryOps.cpp) gives a data
@@ -130,359 +189,712 @@ bool is_boolean_tag(int tag) {
 }
 
 // Checks, before RDKit's JSON parser (MolInterchange/Parser.cpp) reads a
-// document, what it trusts, following it read by read. Where RDKit would
-// throw for what it reads (a value of the wrong type, a missing key), the
-// check stops there and leaves the error to RDKit, which reads no further;
-// what RDKit would read without a check is refused with ValueErrorException.
+// document, what it trusts, following it read by read. RDKit 2024.03 reads
+// the document with rapidjson, and defines no RAPIDJSON_ASSERT, so
+// rapidjson's asserts are compiled out of its release build: a getter
+// (GetInt, GetUint, GetDouble, GetFloat, GetBool, GetString, GetArray,
+// GetObject) on a value of another type, a member lookup (operator[],
+// HasMember, FindMember) on a value that is not an object, operator[] for a
+// member that is missing, and an index past an array's end are undefined.
+// Whatever RDKit reads so without testing it first must be there, with the
+// type its getter needs, and is refused with ValueErrorException otherwise;
+// where RDKit tests what it reads and throws, the check stops (RDKitThrows)
+// and leaves the error to RDKit, which reads no further. The checker stops
+// only where RDKit is sure to throw, and goes on where it cannot tell.
 class DocumentChecker {
  public:
-  // As DocToMols.
-  explicit DocumentChecker(const bj::value &doc) {
-    if (!doc.is_object()) {
-      return;
-    }
-    if (const auto *header = member(doc, "commonchem")) {
-      const auto *version = member(*header, "version");
-      if (!version || !version->is_int64() ||
-          version->as_int64() != MI::currentMolJSONVersion) {
-        return;
-      }
-    } else if (const auto *header = member(doc, "rdkitjson")) {
-      const auto *version = member(*header, "version");
-      if (!version || !version->is_int64() ||
-          static_cast<int>(version->as_int64()) > MI::currentRDKitJSONVersion ||
-          static_cast<int>(version->as_int64()) < 10) {
-        return;
-      }
-    } else {
-      return;
-    }
-    if (const auto *defaults = member(doc, "defaults")) {
-      if (!defaults->is_object()) {
-        return;
-      }
-      const auto *atom = member(*defaults, "atom");
-      if (atom && !atom->is_object()) {
-        return;
-      }
-      d_bond_defaults = member(*defaults, "bond");
-      if (d_bond_defaults && !d_bond_defaults->is_object()) {
-        return;
-      }
-    }
-    if (const auto *mols = member(doc, "molecules")) {
-      if (const auto *list = mols->if_array()) {
-        for (const auto &mol : *list) {
-          check_mol(mol);
-        }
-      }
+  DocumentChecker(bj::value &doc, const MI::JSONParseParameters &params)
+      : d_params(params) {
+    try {
+      check_document(doc);
+    } catch (const RDKitThrows &) {
     }
   }
 
  private:
-  // A bond's stereo, as getStringDefaultValue reads it, or nothing where it
-  // throws.
-  std::optional<std::string> bond_stereo(const bj::value &bond) const {
-    const bj::value *stereo = member(bond, "stereo");
-    if (!stereo && d_bond_defaults) {
-      stereo = member(*d_bond_defaults, "stereo");
+  // As DocToMols.
+  void check_document(bj::value &doc) {
+    if (has_infinity(doc) || !doc.is_object()) {
+      rdkit_throws();
     }
-    if (!stereo) {
+    if (const auto *header = member(doc, "commonchem")) {
+      const auto *version = member(*header, "version");
+      if (!header->is_object() || !version) {
+        rdkit_throws();
+      }
+      int v = header_version(*version);
+      if (v != MI::currentMolJSONVersion) {
+        rdkit_throws();
+      }
+    } else if (const auto *header = member(doc, "rdkitjson")) {
+      const auto *version = member(*header, "version");
+      if (!header->is_object() || !version) {
+        rdkit_throws();
+      }
+      int v = header_version(*version);
+      if (v > MI::currentRDKitJSONVersion || v < 10) {
+        rdkit_throws();
+      }
+    } else {
+      rdkit_throws();
+    }
+
+    // RDKit finds the defaults with GetValueByPointer, which finds nothing
+    // under a "defaults" that is not an object, and throws for defaults
+    // that are not objects.
+    bj::value atom_defaults = bj::object();
+    bj::value bond_defaults = bj::object();
+    if (const auto *defaults = member(doc, "defaults")) {
+      if (const auto *atom = member(*defaults, "atom")) {
+        if (!atom->is_object()) {
+          rdkit_throws();
+        }
+        atom_defaults = *atom;
+      }
+      if (const auto *bond = member(*defaults, "bond")) {
+        if (!bond->is_object()) {
+          rdkit_throws();
+        }
+        bond_defaults = *bond;
+      }
+    }
+    // DefaultValueCache searches the defaults for every value an atom or
+    // bond leaves out, and without them searches a null value, whose
+    // FindMember asserts it is an object. RDKit reads empty defaults as it
+    // reads none (0, false, ""), so the document RDKit reads has them.
+    bj::object both;
+    both["atom"] = std::move(atom_defaults);
+    both["bond"] = std::move(bond_defaults);
+    auto &defaults = doc.as_object()["defaults"];
+    defaults = std::move(both);
+    d_atom_defaults = &defaults.as_object()["atom"];
+    d_bond_defaults = &defaults.as_object()["bond"];
+
+    if (auto *mols = member(doc, "molecules")) {
+      auto *list = mols->if_array();
+      if (!list) {
+        rdkit_throws();
+      }
+      for (auto &mol : *list) {
+        check_mol(mol);
+      }
+    }
+  }
+
+  // The header's version, which RDKit reads with GetInt.
+  static int header_version(const bj::value &version) {
+    if (!rj_is_int(version)) {
+      refuse("gives a version that is not an int");
+    }
+    return rj_int(version);
+  }
+
+  // What getIntDefaultValue, getStringDefaultValue, and getBoolDefaultValue
+  // read: the member, or else the default (FindMember finds the first of
+  // a key, and the document RDKit reads, written again by boost::json, which
+  // keeps the last, has one of each).
+  static const bj::value *with_default(const bj::value &from,
+                                       const bj::value &defaults,
+                                       std::string_view key) {
+    const auto *value = member(from, key);
+    return value ? value : member(defaults, key);
+  }
+
+  // getIntDefaultValue, which throws for a value that is not an int.
+  static int default_int(const bj::value &from, const bj::value &defaults,
+                         std::string_view key) {
+    const auto *value = with_default(from, defaults, key);
+    if (!value) {
+      return 0;
+    }
+    if (!rj_is_int(*value)) {
+      rdkit_throws();
+    }
+    return rj_int(*value);
+  }
+
+  // getStringDefaultValue, which throws for a value that is not a string.
+  static std::string default_string(const bj::value &from,
+                                    const bj::value &defaults,
+                                    std::string_view key) {
+    const auto *value = with_default(from, defaults, key);
+    if (!value) {
       return std::string();
     }
-    if (const auto *s = stereo->if_string()) {
-      return text(*s);
+    const auto *s = value->if_string();
+    if (!s) {
+      rdkit_throws();
     }
-    return std::nullopt;
+    return text(*s);
+  }
+
+  // An array RDKit reads with GetArray, unchecked.
+  static const bj::array &array_of(const bj::value &v,
+                                   const std::string &what) {
+    const auto *list = v.if_array();
+    if (!list) {
+      refuse("gives " + what + " that is not an array");
+    }
+    return *list;
+  }
+
+  static bj::array &array_of(bj::value &v, const std::string &what) {
+    return const_cast<bj::array &>(array_of(std::as_const(v), what));
+  }
+
+  // An object RDKit reads members of, unchecked.
+  static void need_object(const bj::value &v, const std::string &what) {
+    if (!v.is_object()) {
+      refuse("gives " + what + " that is not an object");
+    }
+  }
+
+  // A value RDKit reads with GetInt, unchecked.
+  static int int_of(const bj::value *v, const std::string &what) {
+    if (!v || !rj_is_int(*v)) {
+      refuse("gives " + what + " that is missing or not an int");
+    }
+    return rj_int(*v);
+  }
+
+  // A value RDKit reads with GetUint, unchecked.
+  static unsigned uint_of(const bj::value *v, const std::string &what) {
+    if (!v || !rj_is_uint(*v)) {
+      refuse("gives " + what + " that is missing or not an unsigned int");
+    }
+    return rj_uint(*v);
+  }
+
+  // A value RDKit reads with GetDouble, unchecked.
+  static double number_of(const bj::value &v, const std::string &what) {
+    if (!v.is_number()) {
+      refuse("gives " + what + " that is not a number");
+    }
+    return v.to_number<double>();
+  }
+
+  // A value RDKit reads with GetString, unchecked.
+  static std::string string_of(const bj::value *v, const std::string &what) {
+    const auto *s = v ? v->if_string() : nullptr;
+    if (!s) {
+      refuse("gives " + what + " that is missing or not a string");
+    }
+    return text(*s);
+  }
+
+  // A point of three coordinates, which RDKit reads with GetDouble after
+  // testing the size (readSubstanceGroups).
+  static void check_point(const bj::value &v, const std::string &what) {
+    const auto &point = array_of(v, what);
+    if (point.size() != 3) {
+      rdkit_throws();
+    }
+    for (const auto &x : point) {
+      number_of(x, "a coordinate");
+    }
   }
 
   // As processMol, for a molecule and for a recursive query's.
-  void check_mol(const bj::value &mol) {
-    if (!mol.is_object()) {
-      return;
-    }
-    if (const auto *name = member(mol, "name"); name && !name->is_string()) {
-      return;
+  void check_mol(bj::value &mol) {
+    need_object(mol, "a molecule");
+    if (const auto *name = member(mol, "name")) {
+      string_of(name, "a molecule a name");
     }
     const auto *atoms = member(mol, "atoms");
     const auto *bonds = member(mol, "bonds");
-    if (!atoms || !bonds || !atoms->is_array() || !bonds->is_array()) {
-      return;
+    if (!atoms || !bonds) {
+      rdkit_throws();
     }
-    const std::size_t num_atoms = atoms->as_array().size();
-    const std::size_t num_bonds = bonds->as_array().size();
+    const auto &atom_list = array_of(*atoms, "a molecule atoms");
+    for (const auto &atom : atom_list) {
+      check_atom(atom);
+    }
+    const std::size_t num_atoms = atom_list.size();
 
     // readBond, then readBondStereo for every bond once one has stereo.
+    const auto &bond_list = array_of(*bonds, "a molecule bonds");
+    std::set<std::pair<unsigned, unsigned>> bonded;
     std::vector<std::string> stereo;
     bool need_stereo_loop = false;
-    for (const auto &bond : bonds->as_array()) {
-      if (!bond.is_object()) {
-        return;
-      }
-      auto s = bond_stereo(bond);
-      if (!s) {
-        return;
-      }
-      need_stereo_loop |= *s != "unspecified";
-      stereo.push_back(std::move(*s));
+    for (const auto &bond : bond_list) {
+      stereo.push_back(check_bond(bond, num_atoms, bonded));
+      need_stereo_loop |= stereo.back() != "unspecified";
     }
+    const std::size_t num_bonds = bond_list.size();
     if (need_stereo_loop) {
       for (std::size_t i = 0; i < num_bonds; ++i) {
-        if (stereo[i] == "unspecified") {
-          continue;
-        }
-        if (MI::stereoBondlookup.find(stereo[i]) ==
-            MI::stereoBondlookup.end()) {
-          return;
-        }
-        if (const auto *atoms_of =
-                member(bonds->as_array()[i], "stereoAtoms")) {
-          const auto *list = atoms_of->if_array();
-          if (!list) {
-            return;
-          }
-          // readBondStereo reads aids[0] and aids[1] without checking that
-          // they exist.
-          if (list->size() < 2) {
-            refuse("gives a bond fewer than two stereo atoms");
-          }
-        }
+        check_bond_stereo(bond_list[i], stereo[i]);
       }
     }
 
-    // readStereoGroups: the bonds the groups hold pointers to.
-    std::set<unsigned> group_bonds;
     if (const auto *groups = member(mol, "stereoGroups")) {
-      const auto *list = groups->if_array();
-      if (!list) {
-        return;
+      check_stereo_groups(*groups, num_atoms);
+    }
+    if (auto *sgroups = member(mol, "substanceGroups")) {
+      check_substance_groups(*sgroups, num_atoms, num_bonds);
+    }
+    if (d_params.parseConformers) {
+      if (const auto *confs = member(mol, "conformers")) {
+        for (const auto &conf : array_of(*confs, "a molecule conformers")) {
+          check_conformer(conf, num_atoms);
+        }
       }
-      for (const auto &group : *list) {
-        if (const auto *ids = member(group, "bonds")) {
-          const auto *id_list = ids->if_array();
-          if (!id_list) {
-            return;
+    }
+    // parseProperties reads each value only after testing its type.
+    if (d_params.parseProperties) {
+      if (const auto *props = member(mol, "properties")) {
+        need_object(*props, "a molecule properties");
+      }
+    }
+
+    // The extensions, in order.
+    if (auto *extensions = member(mol, "extensions")) {
+      bool rings = false;
+      for (auto &extension : array_of(*extensions, "a molecule extensions")) {
+        need_object(extension, "an extension");
+        const auto *name_value = member(extension, "name");
+        if (!name_value) {
+          rdkit_throws();
+        }
+        auto name = string_of(name_value, "an extension a name");
+        if (name == "rdkitRepresentation") {
+          if (format_version(extension) <=
+              MI::currentRDKitRepresentationVersion) {
+            check_representation(extension, num_atoms, num_bonds, bonded,
+                                 rings);
           }
-          for (const auto &id : *id_list) {
-            if (!id.is_int64()) {
-              return;
-            }
-            group_bonds.insert(static_cast<unsigned>(id.as_int64()));
+        } else if (name == "partialCharges") {
+          if (format_version(extension) <=
+              MI::currentChargeRepresentationVersion) {
+            check_partial_charges(extension, num_atoms);
+          }
+        } else if (name == "rdkitQueries") {
+          if (format_version(extension) <=
+              MI::currentQueryRepresentationVersion) {
+            check_queries(extension, num_atoms, num_bonds);
           }
         }
       }
     }
+  }
 
-    // readSubstanceGroups. RDKit checks the atoms, bonds, and parent atoms
-    // as it sets them, but not the brackets, the bonds of the cstates, or
-    // the atoms of the attachment points, which the crate trusts as
-    // SubstanceGroup's own setters keep them (substance_group.cpp).
-    if (const auto *sgroups = member(mol, "substanceGroups")) {
-      const auto *list = sgroups->if_array();
-      if (!list) {
-        return;
+  // As readAtom, whose reads of the atom's values all throw for the wrong
+  // type.
+  void check_atom(const bj::value &atom) const {
+    need_object(atom, "an atom");
+    default_int(atom, *d_atom_defaults, "z");
+    if (d_params.useHCounts) {
+      default_int(atom, *d_atom_defaults, "impHs");
+    }
+    default_int(atom, *d_atom_defaults, "chg");
+    default_int(atom, *d_atom_defaults, "nRad");
+    default_int(atom, *d_atom_defaults, "isotope");
+    auto stereo = default_string(atom, *d_atom_defaults, "stereo");
+    if (MI::chilookup.find(stereo) == MI::chilookup.end()) {
+      rdkit_throws();
+    }
+  }
+
+  // As readBond: the bond's stereo.
+  std::string check_bond(
+      const bj::value &bond, std::size_t num_atoms,
+      std::set<std::pair<unsigned, unsigned>> &bonded) const {
+    need_object(bond, "a bond");
+    // RDKit reads bond["atoms"][0] and [1] with GetInt.
+    const auto *atoms = member(bond, "atoms");
+    if (!atoms) {
+      refuse("gives a bond no atoms");
+    }
+    const auto &ends = array_of(*atoms, "a bond atoms");
+    if (ends.size() < 2) {
+      refuse("gives a bond fewer than two atoms");
+    }
+    auto begin = static_cast<unsigned>(int_of(&ends[0], "a bond an atom"));
+    auto end = static_cast<unsigned>(int_of(&ends[1], "a bond an atom"));
+    // addBond checks the atoms.
+    if (begin >= num_atoms || end >= num_atoms || begin == end ||
+        !bonded.insert(std::minmax(begin, end)).second) {
+      rdkit_throws();
+    }
+    auto order =
+        static_cast<unsigned>(default_int(bond, *d_bond_defaults, "bo"));
+    if (MI::bolookup.find(order) == MI::bolookup.end()) {
+      rdkit_throws();
+    }
+    return default_string(bond, *d_bond_defaults, "stereo");
+  }
+
+  // As readBondStereo.
+  static void check_bond_stereo(const bj::value &bond,
+                                const std::string &stereo) {
+    if (stereo == "unspecified") {
+      return;
+    }
+    if (MI::stereoBondlookup.find(stereo) == MI::stereoBondlookup.end()) {
+      rdkit_throws();
+    }
+    if (const auto *atoms = member(bond, "stereoAtoms")) {
+      // RDKit reads stereoAtoms[0] and [1] with GetInt; setStereoAtoms
+      // checks the atoms.
+      const auto &list = array_of(*atoms, "a bond stereo atoms");
+      if (list.size() < 2) {
+        refuse("gives a bond fewer than two stereo atoms");
       }
-      for (const auto &sgroup : *list) {
-        if (!sgroup.is_object()) {
-          return;
+      int_of(&list[0], "a bond a stereo atom");
+      int_of(&list[1], "a bond a stereo atom");
+    } else if (stereo != "either") {
+      rdkit_throws();
+    }
+  }
+
+  // As readStereoGroups, which reads each group's atoms and, in 2024.03,
+  // ignores its bonds.
+  static void check_stereo_groups(const bj::value &groups,
+                                  std::size_t num_atoms) {
+    for (const auto &group : array_of(groups, "stereo groups")) {
+      need_object(group, "a stereo group");
+      const auto *type = member(group, "type");
+      const auto *atoms = member(group, "atoms");
+      if (!type || !atoms) {
+        rdkit_throws();
+      }
+      auto name = string_of(type, "a stereo group a type");
+      auto it = MI::stereoGrouplookup.find(name);
+      if (it == MI::stereoGrouplookup.end()) {
+        rdkit_throws();
+      }
+      if (it->second != RDKit::StereoGroupType::STEREO_ABSOLUTE) {
+        if (const auto *id = member(group, "id")) {
+          uint_of(id, "a stereo group an id");
         }
-        if (const auto *brackets = member(sgroup, "brackets")) {
-          const auto *bracket_list = brackets->if_array();
-          if (!bracket_list) {
-            return;
+      }
+      for (const auto &atom : array_of(*atoms, "a stereo group atoms")) {
+        // getAtomWithIdx checks the atom.
+        if (uint_of(&atom, "a stereo group an atom") >= num_atoms) {
+          rdkit_throws();
+        }
+      }
+    }
+  }
+
+  // As readSubstanceGroups. RDKit checks the atoms, bonds, and parent atoms
+  // as it sets them, but not the brackets, the bonds of the cstates, or the
+  // atoms of the attachment points, which the crate trusts as
+  // SubstanceGroup's own setters keep them (substance_group.cpp).
+  static void check_substance_groups(bj::value &sgroups, std::size_t num_atoms,
+                                     std::size_t num_bonds) {
+    for (auto &sgroup : array_of(sgroups, "substance groups")) {
+      need_object(sgroup, "a substance group");
+      const auto *props = member(sgroup, "properties");
+      if (!props) {
+        rdkit_throws();
+      }
+      // RDKit tests the properties for TYPE with HasMember, which needs an
+      // object, and reads TYPE with GetString.
+      need_object(*props, "a substance group properties");
+      const auto *type = member(*props, "TYPE");
+      if (!type) {
+        rdkit_throws();
+      }
+      string_of(type, "a substance group a TYPE");
+      for (const char *key : {"atoms", "bonds", "parentAtoms"}) {
+        if (const auto *ids = member(sgroup, key)) {
+          for (const auto &id :
+               array_of(*ids, std::string("a substance group ") + key)) {
+            uint_of(&id, std::string("a substance group ") + key);
           }
-          for (const auto &bracket : *bracket_list) {
-            const auto *points = bracket.if_array();
-            if (!points) {
-              return;
-            }
+        }
+      }
+      if (const auto *brackets = member(sgroup, "brackets")) {
+        for (const auto &bracket :
+             array_of(*brackets, "a substance group brackets")) {
+          const auto &points = array_of(bracket, "a bracket");
+          for (std::size_t i = 0; i < points.size(); ++i) {
+            check_point(points[i], "a bracket point");
             // RDKit writes each point into a Bracket, an array of three,
             // past its end for a fourth.
-            if (points->size() > 3) {
+            if (i == 3) {
               refuse(
                   "gives a substance group a bracket of more than three "
                   "points");
             }
           }
         }
-        if (const auto *cstates = member(sgroup, "cstates")) {
-          const auto *cstate_list = cstates->if_array();
-          if (!cstate_list) {
-            return;
+      }
+      if (const auto *cstates = member(sgroup, "cstates")) {
+        for (const auto &cstate :
+             array_of(*cstates, "a substance group cstates")) {
+          need_object(cstate, "a cstate");
+          auto bond = uint_of(member(cstate, "bond"), "a cstate a bond");
+          if (bond >= num_bonds) {
+            refuse(
+                "gives a substance group a cstate for a bond the molecule "
+                "lacks");
           }
-          for (const auto &cstate : *cstate_list) {
-            const auto *bond = member(cstate, "bond");
-            if (!bond || !bond->is_int64()) {
-              return;
-            }
-            if (static_cast<unsigned>(bond->as_int64()) >= num_bonds) {
+          if (const auto *vector = member(cstate, "vector")) {
+            check_point(*vector, "a cstate vector");
+          }
+        }
+      }
+      if (auto *points = member(sgroup, "attachPoints")) {
+        for (auto &point :
+             array_of(*points, "a substance group attachment points")) {
+          need_object(point, "an attachment point");
+          auto atom =
+              uint_of(member(point, "aIdx"), "an attachment point an atom");
+          if (atom >= num_atoms) {
+            refuse(
+                "gives a substance group an attachment point at an atom the "
+                "molecule lacks");
+          }
+          // RDKit leaves an AttachPoint's lvIdx uninitialized when the
+          // point has none, and reads it with GetUint when it has one. Its
+          // writer leaves out an lvIdx of -1, so a point without one, or
+          // with -1, is handed to RDKit with UINT_MAX, which RDKit stores
+          // in AttachPoint's int as -1.
+          auto *lv_idx = member(point, "lvIdx");
+          if (!lv_idx || (lv_idx->is_int64() && lv_idx->as_int64() == -1)) {
+            point.as_object()["lvIdx"] = std::int64_t{UINT_MAX};
+          } else {
+            // As RDKit stores it, in AttachPoint's int.
+            auto lv = static_cast<int>(
+                uint_of(lv_idx, "an attachment point a leaving atom"));
+            if (lv != -1 &&
+                (lv < 0 || static_cast<std::size_t>(lv) >= num_atoms)) {
               refuse(
-                  "gives a substance group a cstate for a bond the "
-                  "molecule lacks");
+                  "gives a substance group an attachment point that leaves "
+                  "an atom the molecule lacks");
             }
           }
-        }
-        if (const auto *points = member(sgroup, "attachPoints")) {
-          const auto *point_list = points->if_array();
-          if (!point_list) {
-            return;
-          }
-          for (const auto &point : *point_list) {
-            const auto *a_idx = member(point, "aIdx");
-            if (!a_idx || !a_idx->is_int64()) {
-              return;
-            }
-            if (static_cast<unsigned>(a_idx->as_int64()) >= num_atoms) {
-              refuse(
-                  "gives a substance group an attachment point at an "
-                  "atom the molecule lacks");
-            }
-            if (const auto *lv_idx = member(point, "lvIdx")) {
-              if (!lv_idx->is_int64()) {
-                return;
-              }
-              // As RDKit stores it, in AttachPoint's int.
-              auto lv =
-                  static_cast<int>(static_cast<unsigned>(lv_idx->as_int64()));
-              if (lv != -1 &&
-                  (lv < 0 || static_cast<std::size_t>(lv) >= num_atoms)) {
-                refuse(
-                    "gives a substance group an attachment point that "
-                    "leaves an atom the molecule lacks");
-              }
-            }
+          if (const auto *id = member(point, "id")) {
+            string_of(id, "an attachment point an id");
           }
         }
-      }
-    }
-
-    // The extensions, in order.
-    std::size_t replaced_bonds = 0;
-    if (const auto *extensions = member(mol, "extensions")) {
-      const auto *list = extensions->if_array();
-      if (!list) {
-        return;
-      }
-      for (const auto &extension : *list) {
-        const auto *name_value = member(extension, "name");
-        const auto *name = name_value ? name_value->if_string() : nullptr;
-        if (!name) {
-          return;
-        }
-        const auto *version = member(extension, "formatVersion");
-        if (*name == "rdkitRepresentation") {
-          if (!version || !version->is_int64()) {
-            return;
-          }
-          if (version->as_int64() > MI::currentRDKitRepresentationVersion) {
-            continue;
-          }
-          if (!check_representation(extension)) {
-            return;
-          }
-        } else if (*name == "rdkitQueries") {
-          if (!version || !version->is_int64()) {
-            return;
-          }
-          if (version->as_int64() > MI::currentQueryRepresentationVersion) {
-            continue;
-          }
-          std::size_t replaced = 0;
-          if (!check_queries(extension, replaced)) {
-            return;
-          }
-          replaced_bonds = std::max(replaced_bonds, replaced);
-        }
-      }
-    }
-    // readQueries replaces the first bonds, one per bond query
-    // (RWMol::replaceBond), deleting each old bond, but replaceBond, unlike
-    // replaceAtom, leaves stereo groups pointing at the bond it deletes.
-    for (auto idx : group_bonds) {
-      if (idx < replaced_bonds && idx < num_bonds) {
-        refuse(
-            "gives a bond in a stereo group a query; RDKit's replaceBond "
-            "leaves the group pointing at the bond it deletes");
       }
     }
   }
 
-  // As readRDKitRepresentation; false where RDKit throws.
-  bool check_representation(const bj::value &rep) {
-    if (const auto *rings = member(rep, "atomRings")) {
-      const auto *list = rings->if_array();
-      if (!list) {
-        return false;
+  // As readConformer, which reads the coordinates with GetFloat, a cast of
+  // GetDouble to float, undefined for a double past float's range.
+  static void check_conformer(const bj::value &conf, std::size_t num_atoms) {
+    need_object(conf, "a conformer");
+    const auto *dim_value = member(conf, "dim");
+    if (!dim_value) {
+      rdkit_throws();
+    }
+    // As RDKit stores it, in a size_t.
+    auto dim =
+        static_cast<std::size_t>(int_of(dim_value, "a conformer a dimension"));
+    if (dim != 2 && dim != 3) {
+      rdkit_throws();
+    }
+    const auto *coords = member(conf, "coords");
+    if (!coords) {
+      rdkit_throws();
+    }
+    const auto &points = array_of(*coords, "a conformer coordinates");
+    for (const auto &point : points) {
+      const auto &xyz = array_of(point, "a conformer a point");
+      if (xyz.size() != dim) {
+        rdkit_throws();
       }
-      for (const auto &ring : *list) {
+      for (const auto &x : xyz) {
+        double d = number_of(x, "a conformer a coordinate");
+        if (d > FLT_MAX || d < -FLT_MAX) {
+          refuse("gives a conformer a coordinate beyond float's range");
+        }
+      }
+    }
+    if (points.size() != num_atoms) {
+      rdkit_throws();
+    }
+  }
+
+  // An extension's formatVersion, which RDKit tests for and reads with
+  // GetInt.
+  static int format_version(const bj::value &extension) {
+    const auto *version = member(extension, "formatVersion");
+    if (!version) {
+      rdkit_throws();
+    }
+    return int_of(version, "an extension a format version");
+  }
+
+  // As readRDKitRepresentation.
+  static void check_representation(
+      const bj::value &rep, std::size_t num_atoms, std::size_t num_bonds,
+      const std::set<std::pair<unsigned, unsigned>> &bonded, bool &rings) {
+    // RDKit tests each index with IsInt, and getAtomWithIdx and
+    // getBondWithIdx check it.
+    auto indices = [&](const char *key, std::size_t n) {
+      if (const auto *ids = member(rep, key)) {
+        for (const auto &id : array_of(*ids, std::string("an ") + key)) {
+          if (!rj_is_int(id) || static_cast<unsigned>(rj_int(id)) >= n) {
+            rdkit_throws();
+          }
+        }
+      }
+    };
+    indices("aromaticAtoms", num_atoms);
+    indices("aromaticBonds", num_bonds);
+    if (const auto *ranks = member(rep, "cipRanks")) {
+      std::size_t i = 0;
+      for (const auto &rank : array_of(*ranks, "CIP ranks")) {
+        if (!rj_is_int(rank) || i++ >= num_atoms) {
+          rdkit_throws();
+        }
+      }
+    }
+    if (const auto *codes = member(rep, "cipCodes")) {
+      for (const auto &code : array_of(*codes, "CIP codes")) {
+        // RDKit tests that the code is an array, and reads its [0] with
+        // GetInt and, once getAtomWithIdx checks it, its [1] with
+        // GetString.
+        const auto *pair = code.if_array();
+        if (!pair) {
+          rdkit_throws();
+        }
+        if (pair->size() < 2) {
+          refuse("gives a CIP code fewer than two values");
+        }
+        if (static_cast<unsigned>(int_of(&(*pair)[0], "a CIP code an atom")) >=
+            num_atoms) {
+          rdkit_throws();
+        }
+        string_of(&(*pair)[1], "a CIP code a label");
+      }
+    }
+    if (const auto *ring_list = member(rep, "atomRings")) {
+      // CHECK_INVARIANT: RDKit reads the rings once.
+      if (rings) {
+        rdkit_throws();
+      }
+      rings = true;
+      for (const auto &ring : array_of(*ring_list, "atom rings")) {
         const auto *atoms = ring.if_array();
         if (!atoms) {
-          return false;
+          rdkit_throws();
         }
         // RDKit reads an empty ring's element sz - 1, past the end.
         if (atoms->empty()) {
           refuse("gives an empty atom ring");
         }
+        // RDKit reads each pair of neighbors with GetInt, and
+        // getBondBetweenAtoms and CHECK_INVARIANT check them.
+        std::size_t sz = atoms->size();
+        for (std::size_t i = 0; i < sz; ++i) {
+          auto a = static_cast<unsigned>(
+              int_of(&(*atoms)[i], "an atom ring an atom"));
+          auto b = static_cast<unsigned>(
+              int_of(&(*atoms)[(i + 1) % sz], "an atom ring an atom"));
+          if (a >= num_atoms || b >= num_atoms ||
+              bonded.count(std::minmax(a, b)) == 0) {
+            rdkit_throws();
+          }
+        }
       }
     }
-    return true;
   }
 
-  // As readQueries; counts the bond queries, which replace bonds from the
-  // first; false where RDKit throws.
-  bool check_queries(const bj::value &rep, std::size_t &replaced_bonds) {
-    if (const auto *queries = member(rep, "atomQueries")) {
-      const auto *list = queries->if_array();
-      if (!list) {
-        return false;
-      }
-      for (const auto &query : *list) {
+  // As readPartialCharges, which tests the count and each value's type.
+  static void check_partial_charges(const bj::value &rep,
+                                    std::size_t num_atoms) {
+    if (const auto *values = member(rep, "values")) {
+      array_of(*values, "partial charges");
+    }
+  }
+
+  // As readQueries.
+  void check_queries(bj::value &rep, std::size_t num_atoms,
+                     std::size_t num_bonds) {
+    if (auto *queries = member(rep, "atomQueries")) {
+      std::size_t idx = 0;
+      for (auto &query : array_of(*queries, "atom queries")) {
         if (!query.is_object()) {
-          return false;
+          rdkit_throws();
         }
-        if (member(query, "tag")) {
-          check_atom_query(query);
+        if (!member(query, "tag")) {
+          continue;
         }
+        if (idx++ >= num_atoms) {
+          rdkit_throws();
+        }
+        check_atom_query(query);
       }
     }
-    if (const auto *queries = member(rep, "bondQueries")) {
-      const auto *list = queries->if_array();
-      if (!list) {
-        return false;
-      }
-      for (const auto &query : *list) {
+    if (auto *queries = member(rep, "bondQueries")) {
+      std::size_t idx = 0;
+      for (auto &query : array_of(*queries, "bond queries")) {
         if (!query.is_object()) {
-          return false;
+          rdkit_throws();
         }
-        if (member(query, "tag")) {
-          ++replaced_bonds;
-          check_bond_query(query, false);
+        if (!member(query, "tag")) {
+          continue;
         }
+        if (idx++ >= num_bonds) {
+          rdkit_throws();
+        }
+        check_bond_query(query, false);
       }
     }
-    return true;
   }
 
-  static std::optional<int> query_tag(const bj::value &query) {
-    const auto *tag = member(query, "tag");
-    if (!tag || !tag->is_int64()) {
-      return std::nullopt;
+  // The query's tag, which RDKit reads with GetInt once it tests for it.
+  static int query_tag(const bj::value &query) {
+    return int_of(member(query, "tag"), "a query a tag");
+  }
+
+  // The values readBaseQuery reads with GetInt for the query's tag, after
+  // testing for the description; it throws for a tag it does not know.
+  static void check_base_query(const bj::value &query, int tag) {
+    if (!member(query, "descr")) {
+      rdkit_throws();
     }
-    // As RDKit reads it.
-    return static_cast<int>(tag->as_int64());
-  }
-
-  static std::optional<std::string> query_descr(const bj::value &query) {
-    const auto *descr = member(query, "descr");
-    const auto *s = descr ? descr->if_string() : nullptr;
-    if (!s) {
-      return std::nullopt;
+    auto optional_int = [&](const char *key) {
+      if (const auto *value = member(query, key)) {
+        int_of(value, std::string("a query a ") + key);
+      }
+    };
+    if (is_boolean_tag(tag) || tag == MolPickler::QUERY_NULL) {
+      return;
     }
-    return text(*s);
+    if (is_equality_tag(tag)) {
+      int_of(member(query, "val"), "a query a val");
+      optional_int("tol");
+    } else if (tag == MolPickler::QUERY_RANGE) {
+      int_of(member(query, "lower"), "a query a lower");
+      int_of(member(query, "upper"), "a query an upper");
+      optional_int("tol");
+      optional_int("ends");
+    } else if (tag == MolPickler::QUERY_SET) {
+      if (const auto *set = member(query, "set")) {
+        for (const auto &value : array_of(*set, "a query a set")) {
+          int_of(&value, "a query a set member");
+        }
+      }
+    } else {
+      rdkit_throws();
+    }
   }
 
-  // The values RDKit reads for the query's tag (readBaseQuery), each within
-  // U7's bound when RDKit can read it.
+  // What finishQuery reads unchecked: the description, which the recursive
+  // and ring queries never test for, with GetString, the type with
+  // GetString, and negated with GetBool.
+  static std::string check_finish(const bj::value &query) {
+    auto descr = string_of(member(query, "descr"), "a query a description");
+    if (const auto *type = member(query, "type")) {
+      string_of(type, "a query a type");
+    }
+    if (const auto *negated = member(query, "negated")) {
+      if (!negated->is_bool()) {
+        refuse("gives a query a negation that is not a bool");
+      }
+    }
+    return descr;
+  }
+
+  // The values RDKit reads for the query's tag (readBaseQuery), within U7's
+  // bound; the type checks have shown each is an int.
   static void check_values(const bj::value &query, int tag) {
     auto bounded = [&](const char *key) {
       const auto *value = member(query, key);
@@ -506,17 +918,13 @@ class DocumentChecker {
   // finishQuery's children: two or more for AND, OR, and XOR, as RDKit's
   // writers read (SmartsWrite.cpp, MolFileWriter.cpp, QueryOps.cpp,
   // PatternFingerprints.cpp take the first two without checking), and none
-  // for the queries RDKit makes without them.
+  // for the queries RDKit makes without them. readQuery tests each child
+  // for a tag with HasMember, which needs an object.
   template <class F>
-  static void check_children(const bj::value &query, int tag, F &&check) {
-    const auto *children = member(query, "children");
-    const bj::array *list = nullptr;
-    if (children) {
-      list = children->if_array();
-      if (!list) {
-        return;
-      }
-    }
+  static void check_children(bj::value &query, int tag, F &&check) {
+    auto *children = member(query, "children");
+    bj::array *list =
+        children ? &array_of(*children, "a query children") : nullptr;
     std::size_t n = list ? list->size() : 0;
     if (is_boolean_tag(tag) && n < 2) {
       refuse("gives an AND, OR, or XOR query fewer than two children");
@@ -525,10 +933,10 @@ class DocumentChecker {
       refuse("gives children to a query that is not AND, OR, or XOR");
     }
     if (list) {
-      for (const auto &child : *list) {
-        // readQuery throws for a child that is not an object with a tag.
-        if (!child.is_object() || !member(child, "tag")) {
-          return;
+      for (auto &child : *list) {
+        need_object(child, "a query a child");
+        if (!member(child, "tag")) {
+          rdkit_throws();
         }
         check(child);
       }
@@ -536,60 +944,63 @@ class DocumentChecker {
   }
 
   // As readQuery for atoms.
-  void check_atom_query(const bj::value &query) {
-    auto tag = query_tag(query);
-    if (!tag) {
-      return;
-    }
-    if (*tag == MolPickler::QUERY_RECURSIVE) {
+  void check_atom_query(bj::value &query) {
+    int tag = query_tag(query);
+    if (tag == MolPickler::QUERY_RECURSIVE) {
       // RDKit reads the molecule before the description.
-      const auto *mol = member(query, "subquery");
+      auto *mol = member(query, "subquery");
       if (!mol) {
-        return;
+        rdkit_throws();
       }
       check_mol(*mol);
-      const auto *atoms = member(*mol, "atoms");
       // RecursiveStructureQuery's matcher reads the molecule's first atom.
-      if (atoms && atoms->is_array() && atoms->as_array().empty()) {
+      if (member(*mol, "atoms")->as_array().empty()) {
         refuse("gives a recursive query a molecule without atoms");
       }
+    } else if (tag == MolPickler::QUERY_ATOMRING) {
+      int_of(member(query, "val"), "a query a val");
+      if (const auto *tol = member(query, "tol")) {
+        int_of(tol, "a query a tol");
+      }
+    } else {
+      check_base_query(query, tag);
     }
-    auto descr = query_descr(query);
-    if (!descr) {
-      return;
-    }
+    auto descr = check_finish(query);
     // finalizeQueryFromDescription strips a range query's prefix, which the
     // SMARTS parser adds for its range, less-than, and greater-than queries
     // (smarts.yy) and gives those classes.
     int prefixed = -1;
-    std::string base = *descr;
+    std::string base = descr;
     for (const auto &[prefix, prefix_tag] :
          {std::pair<std::string, int>{"range_", MolPickler::QUERY_RANGE},
           {"less_", MolPickler::QUERY_LESSEQUAL},
           {"greater_", MolPickler::QUERY_GREATEREQUAL}}) {
-      if (descr->rfind(prefix, 0) == 0) {
+      if (descr.rfind(prefix, 0) == 0) {
         prefixed = prefix_tag;
-        base = descr->substr(prefix.size());
+        base = descr.substr(prefix.size());
         break;
       }
     }
     bool known = false;
     if (prefixed >= 0) {
-      known = is_atom_value_query(base) && *tag == prefixed;
+      // 2024.03's finalizeQueryFromDescription casts an AtomRingSize query
+      // to EqualityQuery to read its value, which a range query is not.
+      known = is_atom_value_query(base) && tag == prefixed &&
+              !(base == "AtomRingSize" && tag == MolPickler::QUERY_RANGE);
     } else if (is_atom_value_query(base)) {
       // AtomRingQuery is an EqualityQuery, which RDKit makes for
       // AtomInNRings and AtomRingBondCount (QueryOps.h, QueryOps.cpp).
-      known = is_equality_tag(*tag) || *tag == MolPickler::QUERY_ATOMRING;
+      known = is_equality_tag(tag) || tag == MolPickler::QUERY_ATOMRING;
     } else if (base == "AtomNull") {
-      known = *tag == MolPickler::QUERY_NULL;
+      known = tag == MolPickler::QUERY_NULL;
     } else if (base == "RecursiveStructure") {
-      known = *tag == MolPickler::QUERY_RECURSIVE;
+      known = tag == MolPickler::QUERY_RECURSIVE;
     } else if (base == "AtomAnd") {
-      known = *tag == MolPickler::QUERY_AND;
+      known = tag == MolPickler::QUERY_AND;
     } else if (base == "AtomOr") {
-      known = *tag == MolPickler::QUERY_OR;
+      known = tag == MolPickler::QUERY_OR;
     } else if (base == "AtomXor") {
-      known = *tag == MolPickler::QUERY_XOR;
+      known = tag == MolPickler::QUERY_XOR;
     }
     // RDKit takes the query's class from its tag and how to read it from
     // its description; RDKit's code that reads queries takes the
@@ -599,44 +1010,43 @@ class DocumentChecker {
     // its description a query dereferences null when it matches.
     if (!known) {
       refuse("gives an atom a query RDKit does not make: description '" +
-             *descr + "' with tag " + std::to_string(*tag));
+             descr + "' with tag " + std::to_string(tag));
     }
-    check_values(query, *tag);
-    check_children(query, *tag,
-                   [&](const bj::value &child) { check_atom_query(child); });
+    check_values(query, tag);
+    check_children(query, tag,
+                   [&](bj::value &child) { check_atom_query(child); });
   }
 
   // As readQuery for bonds. A child of an AND or OR query is not a null
   // query: SmartsWrite.cpp casts each child that is not AND or OR to
   // EqualityQuery. XOR bond queries are not read: QueryBond.cpp's matcher
   // casts the other bond's query to EqualityQuery whatever its class.
-  void check_bond_query(const bj::value &query, bool in_and_or) {
-    auto tag = query_tag(query);
-    auto descr = query_descr(query);
-    if (!tag || !descr) {
-      return;
-    }
+  void check_bond_query(bj::value &query, bool in_and_or) {
+    int tag = query_tag(query);
+    check_base_query(query, tag);
+    auto descr = check_finish(query);
     bool known = false;
-    if (is_bond_value_query(*descr)) {
-      known = is_equality_tag(*tag);
-    } else if (*descr == "BondNull") {
-      known = *tag == MolPickler::QUERY_NULL && !in_and_or;
-    } else if (*descr == "BondAnd") {
-      known = *tag == MolPickler::QUERY_AND;
-    } else if (*descr == "BondOr") {
-      known = *tag == MolPickler::QUERY_OR;
+    if (is_bond_value_query(descr)) {
+      known = is_equality_tag(tag);
+    } else if (descr == "BondNull") {
+      known = tag == MolPickler::QUERY_NULL && !in_and_or;
+    } else if (descr == "BondAnd") {
+      known = tag == MolPickler::QUERY_AND;
+    } else if (descr == "BondOr") {
+      known = tag == MolPickler::QUERY_OR;
     }
     if (!known) {
-      refuse("gives a bond a query RDKit does not make: description '" +
-             *descr + "' with tag " + std::to_string(*tag) +
+      refuse("gives a bond a query RDKit does not make: description '" + descr +
+             "' with tag " + std::to_string(tag) +
              (in_and_or ? " in an AND or OR query" : ""));
     }
-    check_values(query, *tag);
-    check_children(query, *tag, [&](const bj::value &child) {
-      check_bond_query(child, true);
-    });
+    check_values(query, tag);
+    check_children(query, tag,
+                   [&](bj::value &child) { check_bond_query(child, true); });
   }
 
+  const MI::JSONParseParameters &d_params;
+  const bj::value *d_atom_defaults = nullptr;
   const bj::value *d_bond_defaults = nullptr;
 };
 
@@ -676,10 +1086,16 @@ JSONWriteParametersData json_write_parameters_default() {
   return data;
 }
 
-// RDKit parses the document it is given with boost::json's default options
-// (JSONDataToMols), as this does. It is handed the checked document,
-// serialized again, so it parses exactly what was checked (U2), whatever its
-// boost::json makes of the original text.
+// The wrapper parses the text with boost::json's default options and checks
+// that document; RDKit is handed the checked document, serialized again, so
+// it parses exactly what was checked (U2), whatever rapidjson would make of
+// the original text: one value per key (boost::json keeps the last of a
+// key, rapidjson's FindMember finds the first), no NUL outside an escape
+// (RDKit parses the text up to its first NUL), integers and doubles as
+// boost::json read them, and no nesting deeper than boost::json's limit
+// (rapidjson's default parse recurses, as do RDKit's reads of queries).
+// rapidjson's default flags read neither comments nor NaN and Infinity,
+// which boost::json's default options refuse too.
 std::unique_ptr<MolList> json_to_mols(rust::Str json_block,
                                       const JSONParseParametersData &params) {
   auto p = parse_params(params);
@@ -687,11 +1103,11 @@ std::unique_ptr<MolList> json_to_mols(rust::Str json_block,
   try {
     bj::value doc =
         bj::parse(std::string_view(json_block.data(), json_block.size()));
-    DocumentChecker check(doc);
+    DocumentChecker check(doc, p);
     mols = MI::JSONDataToMols(bj::serialize(doc), p);
   } catch (const boost::system::system_error &e) {
-    // boost::json's errors, for text that is not JSON and for values RDKit
-    // reads as another type, are parse errors here (E4).
+    // boost::json's errors, for text that is not JSON, are parse errors
+    // here (E4).
     throw RDKit::FileParseException(e.what());
   }
   auto list = std::make_unique<MolList>();

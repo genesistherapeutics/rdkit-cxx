@@ -104,8 +104,9 @@ fn writes_json() {
             r#"{"atoms":[{"z":8,"impHs":2}],"bonds":[],"extensions":[{"name":"rdkitRepresentation","formatVersion":2,"toolkitVersion":"2024.03.6","cipRanks":[0]}]}"#.to_string(),
         ])
     );
-    // RDKit 2024.03 writes nothing for no molecules, as Python does.
-    assert_eq!(mols_to_json(&[]).unwrap(), "");
+    // Python's MolsToJSON returns "" for an empty list before it reaches
+    // RDKit, which writes the header.
+    assert_eq!(mols_to_json(&[]).unwrap(), doc(&[]));
     // RDKit reads atom 0 of every molecule, as Python raises.
     assert!(matches!(
         mol_to_json(&Mol::default()),
@@ -177,12 +178,12 @@ fn parse_parameters() {
     assert_eq!(
         types,
         [
-            BondType::Single,
             BondType::Double,
             BondType::Single,
             BondType::Double,
             BondType::Single,
-            BondType::Double
+            BondType::Double,
+            BondType::Single
         ]
     );
     assert!(kekule.get_bonds().all(|b| b.get_is_aromatic()));
@@ -311,19 +312,19 @@ fn queries_round_trip() {
     let accepted = [
         (
             r#"{"descr":"less_AtomRingBondCount","tag":37,"val":2}"#,
-            "[x{2-}]-[#6]=[#6]-[#6]",
+            "[x{2-}]-[#6H]=[#6H]-[#6H3]",
         ),
         (
             r#"{"descr":"range_AtomTotalDegree","tag":38,"lower":1,"upper":2,"ends":0}"#,
-            "[X{1-2}]-[#6]=[#6]-[#6]",
+            "[X{1-2}]-[#6H]=[#6H]-[#6H3]",
         ),
         (
             r#"{"descr":"AtomInNRings","tag":41,"val":2}"#,
-            "[R2]-[#6]=[#6]-[#6]",
+            "[R2]-[#6H]=[#6H]-[#6H3]",
         ),
         (
             r#"{"descr":"AtomAtomicNum","tag":33,"val":1,"negated":true,"type":"A"}"#,
-            "[!#1]-[#6]=[#6]-[#6]",
+            "[!#1]-[#6H]=[#6H]-[#6H3]",
         ),
     ];
     for (query, expected) in accepted {
@@ -333,7 +334,7 @@ fn queries_round_trip() {
     let later = doc(&[butene(
         r#","extensions":[{"name":"rdkitQueries","formatVersion":11,"atomQueries":[{"tag":39,"descr":"AtomAtomicNum","set":[6]}]}]"#,
     )]);
-    assert_eq!(smarts(&later), ["[#6]-[#6]=[#6]-[#6]"]);
+    assert_eq!(smarts(&later), ["[#6H3]-[#6H]=[#6H]-[#6H3]"]);
 }
 
 #[test]
@@ -458,6 +459,18 @@ fn substance_group_checks() {
     let group = &get_mol_substance_groups(&mol)[0];
     assert_eq!(group.get_c_states()[0].bond_idx, 2);
     assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
+    // RDKit 2024.03 leaves lvIdx uninitialized for a point without one, and
+    // its writer leaves out an lvIdx of -1; the wrapper gives RDKit -1.
+    let mol = json_to_mols(&sgroup(r#","attachPoints":[{"aIdx":3}]"#))
+        .unwrap()
+        .remove(0);
+    let group = &get_mol_substance_groups(&mol)[0];
+    assert_eq!(group.get_attach_points().unwrap()[0].lv_idx, -1);
+    assert!(
+        mol_to_json(&mol)
+            .unwrap()
+            .contains(r#""attachPoints":[{"aIdx":3}]"#)
+    );
 }
 
 #[test]
@@ -547,6 +560,267 @@ fn queries_rdkit_does_not_make_are_refused() {
     // A null bond query alone is fine, as in SMARTS's "~".
     assert_eq!(
         smarts(&bond_query(r#"{"descr":"BondNull","tag":40}"#)),
-        ["[#6]~[#6]=[#6]-[#6]"]
+        ["[#6H3]~[#6H]=[#6H]-[#6H3]"]
     );
+}
+
+/// A molecule of one atom, with `extra` members.
+fn oxygen(extra: &str) -> String {
+    doc(&[format!(r#"{{"atoms":[{{"z":8}}],"bonds":[]{extra}}}"#)])
+}
+
+/// An extension of the molecule of one atom.
+fn extension(members: &str) -> String {
+    oxygen(&format!(r#","extensions":[{{{members}}}]"#))
+}
+
+#[test]
+fn values_rdkit_reads_unchecked_are_refused() {
+    // RDKit 2024.03 reads these with rapidjson's getters, operator[], and
+    // indexing without testing the values' types or presence first.
+    let mut refused: Vec<String> = [
+        // The header's version.
+        r#"{"commonchem":{"version":"10"},"molecules":[]}"#,
+        r#"{"commonchem":{"version":10.0},"molecules":[]}"#,
+        r#"{"rdkitjson":{"version":11.5},"molecules":[]}"#,
+        r#"{"rdkitjson":{"version":4294967307},"molecules":[]}"#,
+    ]
+    .iter()
+    .map(|s| s.to_string())
+    .collect();
+    // Molecules, atoms, and bonds.
+    refused.extend([
+        doc(&["5".to_string()]),
+        doc(&["[]".to_string()]),
+        doc(&[r#"{"name":5,"atoms":[],"bonds":[]}"#.to_string()]),
+        doc(&[r#"{"atoms":{},"bonds":[]}"#.to_string()]),
+        doc(&[r#"{"atoms":[],"bonds":5}"#.to_string()]),
+        doc(&[r#"{"atoms":[5],"bonds":[]}"#.to_string()]),
+    ]);
+    for bonds in [
+        r#"[5]"#,
+        r#"[{}]"#,
+        r#"[{"atoms":[0]}]"#,
+        r#"[{"atoms":5}]"#,
+        r#"[{"atoms":[0,1.0]}]"#,
+        r#"[{"atoms":[0,4294967297]}]"#,
+        r#"[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"trans","stereoAtoms":5},{"atoms":[2,3]}]"#,
+        r#"[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereo":"trans","stereoAtoms":[0,"3"]},{"atoms":[2,3]}]"#,
+    ] {
+        refused.push(doc(&[butene_with_bonds(bonds, "")]));
+    }
+    // Stereo groups.
+    for groups in [
+        r#"5"#,
+        r#"[5]"#,
+        r#"[{"type":5,"atoms":[0]}]"#,
+        r#"[{"type":"or","id":"1","atoms":[1]}]"#,
+        r#"[{"type":"or","id":-1,"atoms":[1]}]"#,
+        r#"[{"type":"or","atoms":5}]"#,
+        r#"[{"type":"or","atoms":["1"]}]"#,
+        r#"[{"type":"or","atoms":[-1]}]"#,
+    ] {
+        refused.push(doc(&[butene(&format!(r#","stereoGroups":{groups}"#))]));
+    }
+    // Substance groups.
+    for sgroups in [
+        r#"5"#,
+        r#"[5]"#,
+        r#"[{"properties":5}]"#,
+        r#"[{"properties":{"TYPE":5}}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"atoms":5}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"atoms":[-1]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"bonds":[0.5]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"parentAtoms":["0"]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"brackets":5}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"brackets":[5]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"brackets":[[5]]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"brackets":[[["a",0,0]]]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"cstates":5}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"cstates":[5]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"cstates":[{}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"cstates":[{"bond":"0"}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"cstates":[{"bond":0,"vector":5}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"cstates":[{"bond":0,"vector":[0,0,null]}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"attachPoints":5}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"attachPoints":[5]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"attachPoints":[{}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"attachPoints":[{"aIdx":"1"}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"attachPoints":[{"aIdx":1,"lvIdx":"0"}]}]"#,
+        r#"[{"properties":{"TYPE":"SUP"},"attachPoints":[{"aIdx":1,"id":1}]}]"#,
+    ] {
+        refused.push(doc(&[butene(&format!(r#","substanceGroups":{sgroups}"#))]));
+    }
+    // Conformers and properties. GetFloat casts the coordinate to float.
+    for members in [
+        r#","conformers":5"#,
+        r#","conformers":[5]"#,
+        r#","conformers":[{"dim":"2","coords":[[0,0]]}]"#,
+        r#","conformers":[{"dim":2.0,"coords":[[0,0]]}]"#,
+        r#","conformers":[{"dim":2,"coords":5}]"#,
+        r#","conformers":[{"dim":2,"coords":[5]}]"#,
+        r#","conformers":[{"dim":2,"coords":[[0,"0"]]}]"#,
+        r#","conformers":[{"dim":2,"coords":[[0,1e300]]}]"#,
+        r#","properties":5"#,
+    ] {
+        refused.push(oxygen(members));
+    }
+    // Extensions.
+    refused.push(oxygen(r#","extensions":5"#));
+    refused.push(oxygen(r#","extensions":[5]"#));
+    for members in [
+        r#""name":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":"2""#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"aromaticAtoms":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"aromaticBonds":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"cipRanks":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"cipCodes":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"cipCodes":[[0]]"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"cipCodes":[["0","R"]]"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"cipCodes":[[0,5]]"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"atomRings":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":2,"atomRings":[["0"]]"#,
+        r#""name":"partialCharges","formatVersion":"10""#,
+        r#""name":"partialCharges","formatVersion":10,"values":5"#,
+        r#""name":"rdkitQueries","formatVersion":10.0"#,
+        r#""name":"rdkitQueries","formatVersion":10,"atomQueries":5"#,
+        r#""name":"rdkitQueries","formatVersion":10,"bondQueries":5"#,
+    ] {
+        refused.push(extension(members));
+    }
+    // A ring's atoms after the first pair.
+    refused.push(doc(&[butene(
+        r#","extensions":[{"name":"rdkitRepresentation","formatVersion":2,"atomRings":[[0,1,"2"]]}]"#,
+    )]));
+    // Queries.
+    let carbon = r#"{"descr":"AtomAtomicNum","tag":33,"val":6}"#;
+    for query in [
+        r#"{"descr":"AtomAtomicNum","tag":"33","val":6}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33.0,"val":6}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33,"val":"6"}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33,"val":6.5}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33,"val":6,"tol":"1"}"#.to_string(),
+        r#"{"descr":"range_AtomTotalDegree","tag":38,"upper":2}"#.to_string(),
+        r#"{"descr":"range_AtomTotalDegree","tag":38,"lower":"1","upper":2}"#.to_string(),
+        r#"{"descr":"range_AtomTotalDegree","tag":38,"lower":1}"#.to_string(),
+        r#"{"descr":"range_AtomTotalDegree","tag":38,"lower":1,"upper":2,"ends":"0"}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":39,"set":5}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":39,"set":["6"]}"#.to_string(),
+        // RDKit tests the recursive and ring queries for no description.
+        r#"{"tag":42,"subquery":{"atoms":[{}],"bonds":[]}}"#.to_string(),
+        r#"{"descr":5,"tag":42,"subquery":{"atoms":[{}],"bonds":[]}}"#.to_string(),
+        r#"{"descr":"RecursiveStructure","tag":42,"subquery":5}"#.to_string(),
+        r#"{"descr":"RecursiveStructure","tag":42,"subquery":{"atoms":[5],"bonds":[]}}"#
+            .to_string(),
+        r#"{"tag":41,"val":2}"#.to_string(),
+        r#"{"descr":"AtomInNRings","tag":41}"#.to_string(),
+        r#"{"descr":"AtomInNRings","tag":41,"val":2,"tol":2.0}"#.to_string(),
+        r#"{"descr":5,"tag":33,"val":6}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33,"val":6,"type":5}"#.to_string(),
+        r#"{"descr":"AtomAtomicNum","tag":33,"val":6,"negated":1}"#.to_string(),
+        r#"{"descr":"AtomAnd","tag":30,"children":5}"#.to_string(),
+        format!(r#"{{"descr":"AtomAnd","tag":30,"children":[{carbon},5]}}"#),
+        format!(r#"{{"descr":"AtomAnd","tag":30,"children":[{carbon},[]]}}"#),
+        // 2024.03's finalizeQueryFromDescription casts an AtomRingSize query
+        // to EqualityQuery, which a range query is not.
+        r#"{"descr":"range_AtomRingSize","tag":38,"lower":5,"upper":6}"#.to_string(),
+    ] {
+        refused.push(atom_query(&query));
+    }
+    for query in [
+        r#"{"descr":"BondOrder","tag":"33","val":1}"#,
+        r#"{"descr":"BondOrder","tag":33}"#,
+        r#"{"descr":5,"tag":33,"val":1}"#,
+        r#"{"descr":"BondOrder","tag":33,"val":1,"negated":"true"}"#,
+        r#"{"descr":"BondOr","tag":31,"children":[5,5]}"#,
+    ] {
+        refused.push(bond_query(query));
+    }
+    for json in &refused {
+        assert!(is_value(json_to_mols(json)), "{json}");
+    }
+}
+
+#[test]
+fn values_rdkit_does_not_read_are_not_checked() {
+    // RDKit reads conformers and properties only when asked to, and hydrogen
+    // counts only when it uses them.
+    let params = JSONParseParameters {
+        parse_conformers: false,
+        parse_properties: false,
+        ..Default::default()
+    };
+    let json = oxygen(r#","conformers":5,"properties":5"#);
+    let mols = json_to_mols_with_params(&json, &params).unwrap();
+    assert_eq!(mol_to_smiles(&mols[0]).unwrap(), "O");
+    let json = r#"{"commonchem":{"version":10},"defaults":{"atom":{"stereo":"unspecified","impHs":"x"}},"molecules":[{"atoms":[{"z":8}],"bonds":[]}]}"#;
+    let params = JSONParseParameters {
+        use_h_counts: false,
+        ..Default::default()
+    };
+    let mols = json_to_mols_with_params(json, &params).unwrap();
+    assert_eq!(mol_to_smiles(&mols[0]).unwrap(), "O");
+    assert!(matches!(json_to_mols(json), Err(Error::Parse { .. })));
+    // Extensions RDKit does not know, and representations of a later
+    // format, which it ignores.
+    for members in [
+        r#""name":"other","formatVersion":"x","atomRings":5"#,
+        r#""name":"rdkitRepresentation","formatVersion":3,"atomRings":5"#,
+    ] {
+        assert_eq!(smiles_of(&extension(members)), ["O"], "{members}");
+    }
+    // Stereo atoms of a bond without stereo, and the id of an absolute
+    // group.
+    let bonds = r#"[{"atoms":[0,1]},{"bo":2,"atoms":[1,2],"stereoAtoms":5},{"atoms":[2,3]}]"#;
+    assert_eq!(smiles_of(&doc(&[butene_with_bonds(bonds, "")])), ["CC=CC"]);
+    let json = doc(&[butene(
+        r#","stereoGroups":[{"type":"abs","id":"x","atoms":[1]}]"#,
+    )]);
+    assert_eq!(json_to_mols(&json).unwrap().len(), 1);
+}
+
+#[test]
+fn values_rdkit_checks_are_its_errors() {
+    let is_parse = |json: &str| matches!(json_to_mols(json), Err(Error::Parse { .. }));
+    // RDKit tests these values' types and throws, as Python raises.
+    assert!(is_parse(&doc(&[
+        r#"{"atoms":[{"z":"6"}],"bonds":[]}"#.to_string()
+    ])));
+    assert!(is_parse(&doc(&[butene_with_bonds(
+        r#"[{"atoms":[0,1],"bo":1.0}]"#,
+        ""
+    )])));
+    assert!(is_parse(&extension(
+        r#""name":"partialCharges","formatVersion":10,"values":[1]"#
+    )));
+    assert!(is_parse(
+        &doc(&[r#"{"atoms":[],"bonds":[]}"#.to_string()])
+            .replace(r#""molecules":["#, r#""molecules":5,"x":["#)
+    ));
+    // A number past double's range, which rapidjson does not parse.
+    assert!(is_parse(&oxygen(
+        r#","conformers":[{"dim":2,"coords":[[0,1e400]]}]"#
+    )));
+    // RDKit's own range checks.
+    assert!(matches!(
+        json_to_mols(&doc(&[butene_with_bonds(r#"[{"atoms":[0,9]}]"#, "")])),
+        Err(Error::Runtime { .. })
+    ));
+}
+
+#[test]
+fn documents_without_defaults() {
+    // DefaultValueCache reads defaults RDKit 2024.03 searches with
+    // FindMember; RDKit reads empty defaults as none, as Python does.
+    for defaults in ["", r#","defaults":5"#, r#","defaults":{}"#] {
+        let json = format!(
+            r#"{{"commonchem":{{"version":10}}{defaults},"molecules":[{{"atoms":[{{"z":6,"stereo":"unspecified"}}],"bonds":[]}}]}}"#
+        );
+        assert_eq!(smiles_of(&json), ["C"], "{json}");
+    }
+    // boost::json keeps the last of a key, and RDKit reads that document.
+    let json = doc(&[r#"{"name":5,"name":"last","atoms":[{"z":8}],"bonds":[]}"#.to_string()]);
+    let mol = json_to_mols(&json).unwrap().remove(0);
+    assert_eq!(mol.get_prop("_Name").unwrap(), "last");
 }
