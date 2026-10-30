@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -27,7 +27,7 @@ repos:
     rev: v1.2.0
     hooks:
       - id: addlicense
-        args: [-c, Steven Kearnes, -f, .license-header.txt]
+        args: [-c, "Genesis Molecular AI, Inc.", -f, .license-header.txt]
 
   - repo: local
     hooks:
@@ -35,7 +35,7 @@ repos:
       # one-line form of the header (CONVENTIONS.md L1).
       - id: license-header
         name: license headers put "All rights reserved." on its own line
-        entry: 'Kearnes\.? All[ ]rights reserved'
+        entry: 'AI, Inc\.? All[ ]rights reserved'
         language: pygrep
       - id: cargo-fmt
         name: cargo fmt
@@ -53,14 +53,14 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.10
+    rev: v0.17.2
     hooks:
       - id: ruff-check
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v22.1.2
+    rev: v23.1.3
     hooks:
       - id: clang-format
         types_or: [c, c++]
@@ -68,6 +68,6 @@ repos:
         exclude: ^wrapper/vendor/
 
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.23.1
+    rev: v0.24.0
     hooks:
       - id: markdownlint-cli2

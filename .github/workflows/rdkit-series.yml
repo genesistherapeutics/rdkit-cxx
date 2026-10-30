@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   check:
-    if: github.repository == 'skearnes/rdkit-cxx'
+    if: github.repository == 'genesistherapeutics/rdkit-cxx'
     runs-on: ubuntu-24.04
     permissions:
       contents: read

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Changes
+
+- The copyright holder is now Genesis Molecular AI, Inc., in `LICENSE` and
+  in every source file's header. The license is still BSD-3-Clause.
+
 ### Fixes
 
 - `RingInfo.num_relevant_cycles` is `Error::Value` for more relevant cycles

@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -43,7 +43,7 @@ jobs:
   # with read-only permissions: the bump commit reaches the publish job as a
   # patch, and nothing is pushed until crates.io has the crate.
   build:
-    if: github.repository == 'skearnes/rdkit-cxx'
+    if: github.repository == 'genesistherapeutics/rdkit-cxx'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -184,7 +184,7 @@ jobs:
       VERSION: ${{ needs.build.outputs.version }}
       COMMIT: ${{ needs.build.outputs.commit }}
       PATCH: ${{ needs.build.outputs.patch }}
-      USER_AGENT: rdkit-cxx-release (https://github.com/skearnes/rdkit-cxx)
+      USER_AGENT: rdkit-cxx-release (https://github.com/genesistherapeutics/rdkit-cxx)
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
