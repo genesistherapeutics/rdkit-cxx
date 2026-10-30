@@ -23,14 +23,15 @@ updates:
 
   # cxx-gen writes C++ for the cxx runtime of the same release, so the two are
   # pinned exactly and move together. Other requirements change only when a
-  # release falls outside them; Cargo.lock takes every update.
+  # release falls outside them, which is Dependabot's default for Cargo (its
+  # config accepts no other versioning-strategy than auto and lockfile-only);
+  # Cargo.lock takes every update.
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]
