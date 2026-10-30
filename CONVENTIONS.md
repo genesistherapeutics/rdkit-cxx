@@ -14,8 +14,9 @@ its Boost.Python modules and its `.py` modules.
   .license-header.txt`), another hook rejects the one-line form, and CI runs
   the hooks. Generators write the same header themselves
   (`inventory/check.py`). Vendored third-party files
-  (`wrapper/third_party/`) stay as their upstream ships them, under their
-  own licenses, and the hooks skip them.
+  (`wrapper/third_party/`, and RDKit's headers in `wrapper/vendor/<release>/`)
+  stay as their upstream ships them, under their own licenses, and the hooks
+  skip them.
 - **L2.** rustfmt formats Rust, clang-format (`.clang-format`: Google's style
   with RDKit's pointer alignment) formats C++, and ruff (`ruff.toml`) lints
   and formats Python. The pre-commit hooks in `.pre-commit-config.yaml` run
