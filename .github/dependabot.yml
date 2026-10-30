@@ -68,7 +68,6 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]
@@ -101,7 +100,6 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]
@@ -134,7 +132,6 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]
@@ -167,7 +164,6 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]
@@ -200,7 +196,6 @@ updates:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]
