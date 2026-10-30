@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   check:
-    if: github.repository == 'skearnes/rdkit-cxx'
+    if: github.repository == 'genesistherapeutics/rdkit-cxx'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
