@@ -4,7 +4,7 @@
 
 ### Changes
 
-- The copyright holder is now Genesis Molecular AI, in `LICENSE` and
+- The copyright holder is now Genesis Molecular AI, Inc., in `LICENSE` and
   in every source file's header. The license is still BSD-3-Clause.
 
 ### Fixes
