@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Genesis Molecular AI
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -27,7 +27,7 @@ repos:
     rev: v1.2.0
     hooks:
       - id: addlicense
-        args: [-c, Genesis Molecular AI, -f, .license-header.txt]
+        args: [-c, "Genesis Molecular AI, Inc.", -f, .license-header.txt]
 
   - repo: local
     hooks:
@@ -35,7 +35,7 @@ repos:
       # one-line form of the header (CONVENTIONS.md L1).
       - id: license-header
         name: license headers put "All rights reserved." on its own line
-        entry: 'Molecular AI\.? All[ ]rights reserved'
+        entry: 'AI, Inc\.? All[ ]rights reserved'
         language: pygrep
       - id: cargo-fmt
         name: cargo fmt
