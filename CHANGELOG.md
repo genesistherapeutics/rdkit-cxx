@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### Changes
+
+- The copyright holder is now Genesis Molecular AI, Inc., in `LICENSE` and
+  in every source file's header. The license is still BSD-3-Clause.
+
 ## 2025.9.0
 
 The first release for RDKit 2025.09: the bindings and ports of 2026.9.0, for
