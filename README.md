@@ -36,10 +36,7 @@ The patterns every wrapper follows are in [CONVENTIONS.md](CONVENTIONS.md), and
 the limits that remain are under [Known limitations](#known-limitations).
 [`examples/`](examples) ports the
 [RDKit Cookbook](https://www.rdkit.org/docs/Cookbook.html)'s recipes
-(`cargo run --example cookbook_hybridization`). The
-[design](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-24-rdkit-rust-bindings/README.md)
-and a [report on the work](https://github.com/skearnes/rdkit-logbook/blob/main/entries/2026-10-26-rdkit-rust-bindings-report/README.md),
-including the RDKit bugs it found, are in rdkit-logbook.
+(`cargo run --example cookbook_hybridization`).
 
 ## Environment
 
