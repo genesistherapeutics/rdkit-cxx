@@ -430,7 +430,7 @@ branch when `main` moves on to the next one. Pushing to a branch publishes
 nothing; CI runs on every push to `main` and the series' branches.
 
 Releases are cut by hand: run the
-[Release workflow](https://github.com/skearnes/rdkit-cxx/actions/workflows/release.yml)
+[Release workflow](https://github.com/genesistherapeutics/rdkit-cxx/actions/workflows/release.yml)
 from the Actions tab, from `main` (it always runs `main`'s copy), and choose
 the branch to release.
 

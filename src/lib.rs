@@ -112,7 +112,7 @@
 //! }
 //! ```
 //!
-//! The [README](https://github.com/skearnes/rdkit-cxx#readme) has the rest:
+//! The [README](https://github.com/genesistherapeutics/rdkit-cxx#readme) has the rest:
 //! the environment, how the wrappers work, the known limitations, and how
 //! coverage is measured.
 //!
