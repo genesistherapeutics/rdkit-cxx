@@ -10,7 +10,7 @@ its Boost.Python modules and its `.py` modules.
 
 - **L1.** Every source file starts with the BSD header in
   `.license-header.txt`, with "All rights reserved." on its own line. The
-  pre-commit hook adds it (`addlicense -c "Genesis Molecular AI, Inc." -f
+  pre-commit hook adds it (`addlicense -c "Genesis Molecular AI" -f
   .license-header.txt`), another hook rejects the one-line form, and CI runs
   the hooks. Generators write the same header themselves
   (`inventory/check.py`). Vendored third-party files
