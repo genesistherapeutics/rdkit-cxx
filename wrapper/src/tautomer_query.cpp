@@ -27,6 +27,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/util.h"
 
@@ -64,6 +65,9 @@ void check_transforms(const MolStandardize::TautomerCatalogParams &params) {
 // file itself; here the transforms are read once and checked before use.
 std::unique_ptr<TautomerQuery> from_mol(
     const RDKit::ROMol &query, MolStandardize::TautomerCatalogParams &params) {
+  // enumerate symmetrizes a copy's rings, and writes the tautomers, which
+  // have the molecule's graph, with MolToSmiles.
+  check_graph_relevant_cycles(query);
   MolStandardize::TautomerEnumerator enumerator(
       new MolStandardize::TautomerCatalog(&params));
   const auto res = enumerator.enumerate(query);
@@ -328,7 +332,9 @@ std::unique_ptr<TautomerQuery> make_tautomer_query(const RDKit::ROMol &query) {
 
 std::unique_ptr<TautomerQuery> tautomer_query_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
-  auto query = std::make_unique<TautomerQuery>(to_std(pickle));
+  auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
+  auto query = std::make_unique<TautomerQuery>(text);
   check_tautomer_query(*query);
   return query;
 }

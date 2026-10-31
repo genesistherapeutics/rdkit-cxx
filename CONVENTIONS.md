@@ -195,7 +195,11 @@ its Boost.Python modules and its `.py` modules.
   frame molecule pickles with lengths and indices RDKit trusts,
   `rdkit-cxx/catalog_checks.h` reads as RDKit will, with RDKit's readers
   for the molecules and parameters, checking those and the molecules'
-  monomer infos (U10), before RDKit reads the same bytes.
+  monomer infos (U10), before RDKit reads the same bytes. Molecule pickles
+  older than format 4.0, which an older RDKit wrote and MolPickler gives
+  stereochemistry as it reads them, are refused anywhere in these bytes,
+  and in synthon-space database files, before RDKit reads them
+  (`check_mol_pickle_versions` in `rdkit-cxx/relevant_cycles.h`).
   Boost.Serialization archives of polymorphic objects (`EnumerateLibrary`'s
   `Serialize` and `GetState`, `FilterCatalog`'s pickles) are not checked:
   Boost trusts their class and

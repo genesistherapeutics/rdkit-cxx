@@ -91,6 +91,40 @@ pub fn ethanol_two_confs() -> rdkit_cxx::chem::Mol {
     mol
 }
 
+/// Where each molecule pickle in `bytes` starts: MolPickler's endianId and
+/// VERSION tag, which its major, minor, and patch versions follow.
+pub fn mol_pickle_starts(bytes: &[u8]) -> Vec<usize> {
+    const START: [u8; 8] = [0xEF, 0xBE, 0xAD, 0xDE, 0, 0, 0, 0];
+    bytes
+        .windows(START.len())
+        .enumerate()
+        .filter(|(_, window)| *window == START)
+        .map(|(at, _)| at)
+        .collect()
+}
+
+/// `bytes` with the molecule pickle that starts at `at` marked as format
+/// `version` (major, minor, patch).
+pub fn with_pickle_version(bytes: &[u8], at: usize, version: [i32; 3]) -> Vec<u8> {
+    let mut bytes = bytes.to_vec();
+    for (i, v) in version.into_iter().enumerate() {
+        let field = at + 8 + 4 * i;
+        bytes[field..field + 4].copy_from_slice(&v.to_le_bytes());
+    }
+    bytes
+}
+
+/// Versions MolPickler reads as older than format 4.0, and so gives
+/// stereochemistry as it reads them: 1000 major + 10 minor + patch is below
+/// 4000 (in int, which i32::MIN overflows).
+pub const OLD_PICKLE_VERSIONS: [[i32; 3]; 5] = [
+    [3, 9, 9],
+    [0, 0, 1],
+    [-1, 0, 0],
+    [4, -1, 0],
+    [i32::MIN, 0, 0],
+];
+
 /// Asserts that two floats agree to 1e-9, relative to the larger (and
 /// absolutely below 1): enough for the last bits that differ between
 /// platforms in a direct computation.

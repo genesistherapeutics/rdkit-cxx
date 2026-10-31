@@ -21,6 +21,7 @@
 #include <coordgen/sketcherMinimizerAtom.h>
 
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 

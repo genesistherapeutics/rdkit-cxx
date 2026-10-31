@@ -28,6 +28,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 #ifdef RDK_BUILD_YAEHMOP_SUPPORT
 extern "C" {
@@ -318,6 +319,32 @@ void determine_connectivity(RWMol &mol, bool use_hueckel, std::int32_t charge,
   RDKit::determineConnectivity(mol, use_hueckel, charge, cov_factor, use_vdw);
 }
 
+namespace {
+
+// With embedChiral, determineBondOrders sanitizes the molecule once it has
+// given every bond an order (setChirality), symmetrizing the rings of the
+// graph sanitization's cleanup leaves. Above the cycle bound, the orders are
+// found first on a copy without embedding chirality, which perceives
+// nothing, and the copy checked. The caller holds control_c_mutex().
+void check_bond_orders(const RWMol &mol, std::int32_t charge,
+                       bool allow_charged_fragments, bool use_atom_map,
+                       std::size_t max_iterations) {
+  if (few_relevant_cycles(mol, true, true, true)) {
+    return;
+  }
+  RWMol copy(mol);
+  try {
+    RDKit::determineBondOrders(copy, charge, allow_charged_fragments, false,
+                               use_atom_map, max_iterations);
+  } catch (...) {
+    return;  // RDKit fails the same way before it sanitizes
+  }
+  check_sanitize_relevant_cycles(copy,
+                                 RDKit::MolOps::SanitizeFlags::SANITIZE_ALL);
+}
+
+}  // namespace
+
 // determineBondOrders constructs a ControlCHandler (control_c_mutex), and
 // sanitizes the molecule when it embeds chirality (U6).
 void determine_bond_orders(RWMol &mol, std::int32_t charge,
@@ -326,6 +353,10 @@ void determine_bond_orders(RWMol &mol, std::int32_t charge,
   check_charges(mol, charge);
   MatrixCacheGuard guard(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  if (embed_chiral) {
+    check_bond_orders(mol, charge, allow_charged_fragments, use_atom_map,
+                      max_iterations);
+  }
   RDKit::determineBondOrders(mol, charge, allow_charged_fragments, embed_chiral,
                              use_atom_map, max_iterations);
 }
@@ -345,9 +376,15 @@ void determine_bonds(RWMol &mol, bool use_hueckel, std::int32_t charge,
   MatrixCacheGuard guard(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   OtherMonomerInfoSetAside set_aside(mol);
-  RDKit::determineBonds(mol, use_hueckel, charge, cov_factor,
-                        allow_charged_fragments, embed_chiral, use_atom_map,
-                        use_vdw, max_iterations);
+  // As determineBonds, with the bond orders checked once the connectivity is
+  // known.
+  RDKit::determineConnectivity(mol, use_hueckel, charge, cov_factor, use_vdw);
+  if (embed_chiral) {
+    check_bond_orders(mol, charge, allow_charged_fragments, use_atom_map,
+                      max_iterations);
+  }
+  RDKit::determineBondOrders(mol, charge, allow_charged_fragments, embed_chiral,
+                             use_atom_map, max_iterations);
 }
 
 bool hueckel_enabled() {

@@ -18,6 +18,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/scaffold_network.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -160,6 +161,42 @@ rust::Vec<NetworkEdgeData> scaffold_network_edges(
   return res;
 }
 
+namespace {
+
+// The network sanitizes and writes as SMILES what it builds from each
+// molecule: its largest fragment, its scaffold, the fragments its bond
+// breakers make, and those with every atom a dummy and every bond single.
+// From a molecule of at most MAX_INDEPENDENT_CYCLES independent cycles
+// (with every bond), bond breakers that keep cycles (reaction_keeps_cycles)
+// build nothing with more; past that, which pieces it builds depends on
+// every match, so anything else is refused (README, Known limitations).
+void check_network_relevant_cycles(
+    const std::vector<boost::shared_ptr<RDKit::ROMol>> &mols,
+    const ScaffoldNetworkParams &params) {
+  if (RDKit::MolOps::getUseLegacyRingFinding()) {
+    return;
+  }
+  for (const auto &rxn : params.bondBreakersRxns) {
+    if (!reaction_keeps_cycles(*rxn, false)) {
+      throw ValueErrorException(
+          "a scaffold network's bond breakers must not bond atoms anew: the "
+          "relevant cycles of the fragments others build cannot be counted "
+          "before RDKit perceives them");
+    }
+  }
+  for (const auto &mol : mols) {
+    if (independent_cycles(*mol) > MAX_INDEPENDENT_CYCLES) {
+      throw ValueErrorException(
+          "a scaffold network refuses a molecule with more than " +
+          std::to_string(MAX_INDEPENDENT_CYCLES) +
+          " independent cycles: the relevant cycles of the pieces it builds "
+          "cannot be counted before RDKit perceives them");
+    }
+  }
+}
+
+}  // namespace
+
 // Fragmenting runs the bond breakers, and flattening and pruning sanitize
 // and write SMILES, all on the calling thread; the reactions match
 // substructures (control_c_lock.h). RDKit computes distance matrices only on
@@ -173,6 +210,7 @@ void update_scaffold_network(BorrowedMols &mols, ScaffoldNetwork &network,
   for (const auto &mol : mols.mols()) {
     check_removals(*mol);
   }
+  check_network_relevant_cycles(mols.mols(), params);
   auto with = with_flags(params, flags);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   RDKit::ScaffoldNetwork::updateScaffoldNetwork(mols.mols(), network, with);

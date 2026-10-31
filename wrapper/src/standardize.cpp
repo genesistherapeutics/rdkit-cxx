@@ -9,6 +9,7 @@
 #include <climits>
 #include <exception>
 #include <mutex>
+#include <stdexcept>
 #include <thread>
 #include <utility>
 #include <vector>
@@ -17,6 +18,7 @@
 #include <GraphMol/MolStandardize/Charge.h>
 #include <GraphMol/MolStandardize/Fragment.h>
 #include <GraphMol/MolStandardize/Normalize.h>
+#include <GraphMol/MolStandardize/TransformCatalog/TransformCatalogParams.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
@@ -24,7 +26,9 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
@@ -105,6 +109,24 @@ void super_parent_in_place(RWMol &mol, const CleanupParameters &params,
   MS::cleanupInPlace(mol, params);
 }
 
+// Whether the op normalizes (normalizerFromParams), directly or through
+// cleanupInPlace, as MolStandardize.cpp's functions do; only those read the
+// normalization file, as in Python.
+bool normalizes(StandardizeOp op, bool skip_standardize) {
+  switch (op) {
+    case StandardizeOp::Reionize:
+    case StandardizeOp::RemoveFragments:
+    case StandardizeOp::CanonicalTautomer:
+      return false;
+    case StandardizeOp::FragmentParent:
+    case StandardizeOp::StereoParent:
+    case StandardizeOp::IsotopeParent:
+      return !skip_standardize;
+    default:
+      return true;
+  }
+}
+
 // One op with its parameters, and the objects it shares across molecules.
 // Normalize, Reionize, and RemoveFragments share one normalizer, reionizer,
 // or remover across the threads of a multi-molecule call, as RDKit's own
@@ -116,6 +138,10 @@ class Standardizer {
       : d_op(op),
         d_params(to_cleanup_parameters(data)),
         d_skip(skip_standardize) {
+    if (normalizes(op, skip_standardize)) {
+      read_normalizations(d_params);
+      d_normalizations = normalization_cycles(d_params);
+    }
     switch (op) {
       case StandardizeOp::Normalize:
         d_normalizer.reset(MS::normalizerFromParams(d_params));
@@ -140,6 +166,7 @@ class Standardizer {
   // place, this is checked before the first edit.
   void check(const RWMol &mol) const {
     check_removals(mol);
+    check_standardize_relevant_cycles(mol, d_normalizations);
     if (sums_charges(d_op, d_skip)) {
       check_reionizer_atoms(mol);
     }
@@ -214,6 +241,7 @@ class Standardizer {
   std::unique_ptr<MS::Reionizer> d_reionizer;
   std::unique_ptr<MS::FragmentRemover> d_remover;
   std::unique_ptr<MS::TautomerEnumerator> d_enumerator;
+  TransformCycles d_normalizations;
 };
 
 // Runs work(i) for each i below n on up to num_threads threads, as RDKit's
@@ -274,6 +302,40 @@ RWMol &as_rwmol(RDKit::ROMol &mol) {
 }
 
 }  // namespace
+
+// Without normalization data, normalizerFromParams (Normalize.h) reads the
+// normalization file itself. The file is read once here and given to RDKit
+// as data, the transformations its reader would make of it
+// (transformation_data), so RDKit never reopens a file the wrapper read. A
+// file of no transformations is refused: RDKit takes empty data to mean the
+// file, and would open it again.
+void read_normalizations(CleanupParameters &params) {
+  if (params.normalizationData.empty() && !params.normalizations.empty()) {
+    params.normalizationData =
+        transformation_data(read_file(params.normalizations));
+    if (params.normalizationData.empty()) {
+      throw ValueErrorException("the normalizations file " +
+                                params.normalizations +
+                                " holds no transformations");
+    }
+  }
+}
+
+// What the normalizations the parameters name do to cycles
+// (check_standardize_relevant_cycles), once read_normalizations has made
+// them data.
+TransformCycles normalization_cycles(const CleanupParameters &params) {
+  if (params.normalizationData.empty()) {
+    if (!params.normalizations.empty()) {
+      throw std::logic_error("the normalizations file was not read");
+    }
+    static const TransformCycles defaults = transform_cycles(
+        MS::TransformCatalogParams(std::string()).getTransformations());
+    return defaults;
+  }
+  return transform_cycles(MS::TransformCatalogParams(params.normalizationData)
+                              .getTransformations());
+}
 
 std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol) {
   std::unique_ptr<RDKit::ROMol> owned(mol);
@@ -506,6 +568,8 @@ std::unique_ptr<std::string> standardize_smiles(rust::Str smiles) {
   check_reionizer_atoms(*mol);
   // CXSMILES can give the substance groups PARENT chains (Standardizer).
   check_removals(*mol);
+  check_standardize_relevant_cycles(*mol,
+                                    normalization_cycles(CleanupParameters()));
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   MS::cleanupInPlace(*mol);
   return std::make_unique<std::string>(RDKit::MolToSmiles(*mol));

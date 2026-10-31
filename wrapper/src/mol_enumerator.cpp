@@ -7,6 +7,8 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <limits>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <string>
@@ -21,6 +23,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/mol_enumerator.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -241,6 +244,82 @@ void check_enumerate(const RDKit::ROMol &mol, bool position_variation,
   }
 }
 
+// LinkNodeOp expands the link nodes one at a time, each by a reaction
+// (LinkNode.cpp) whose product, for a molecule with a directed single bond,
+// has its double bonds' neighbors' directions set, which symmetrizes its
+// rings. Each copy of a node atom comes with a bond to the last copy and its
+// other bonds, so it adds no fewer bonds than atoms: a product has at most
+// the independent cycles of the enumeration's result it leads to. Those
+// results are enumerated again without directions, which perceives nothing;
+// above the bound, the products after the first i link nodes are the
+// results for the molecule listing only those, enumerated without
+// directions and without the link nodes' limit on how many.
+void check_enumerate_relevant_cycles(
+    const RDKit::ROMol &mol, const std::vector<ME::MolEnumeratorParams> &ops) {
+  std::string text;
+  if (!mol.getPropIfPresent(RDKit::common_properties::molFileLinkNodes, text) ||
+      std::none_of(ops.begin(), ops.end(), [](const auto &p) {
+        return dynamic_cast<const ME::LinkNodeOp *>(p.dp_operation.get());
+      })) {
+    return;
+  }
+  RDKit::RWMol copy(mol);
+  bool directed = false;
+  for (auto *bond : copy.bonds()) {
+    if (bond->getBondType() == RDKit::Bond::SINGLE &&
+        bond->getBondDir() > RDKit::Bond::NONE) {
+      directed = true;
+      bond->setBondDir(RDKit::Bond::NONE);
+    }
+  }
+  if (!directed) {
+    return;
+  }
+  bool few = true;
+  const auto results = ME::enumerate(copy, ops);
+  for (const auto &res : results.getMols()) {
+    few = few && independent_cycles(*res) <= MAX_INDEPENDENT_CYCLES;
+  }
+  if (few) {
+    return;
+  }
+  auto uncapped = ops;
+  for (auto &p : uncapped) {
+    if (dynamic_cast<const ME::LinkNodeOp *>(p.dp_operation.get())) {
+      p.maxToEnumerate = std::numeric_limits<std::size_t>::max();
+    }
+  }
+  boost::char_separator<char> pipe("|");
+  std::string prefix;
+  for (const auto &node : tokenizer(text, pipe)) {
+    prefix += (prefix.empty() ? "" : "|") + node;
+    copy.setProp(RDKit::common_properties::molFileLinkNodes, prefix);
+    const auto products = ME::enumerate(copy, uncapped);
+    for (const auto &res : products.getMols()) {
+      check_graph_relevant_cycles(*res);
+    }
+  }
+}
+
+// As MolEnumerator::enumerate(mol, maxPerOperation).
+std::vector<ME::MolEnumeratorParams> default_enumerate_ops(
+    std::size_t max_per_operation) {
+  std::vector<ME::MolEnumeratorParams> ops(3);
+  ops[0].dp_operation = std::make_shared<ME::PositionVariationOp>();
+  auto sru = std::make_shared<ME::RepeatUnitOp>();
+  if (max_per_operation > 0) {
+    sru->d_maxNumRounds = max_per_operation;
+  }
+  ops[1].dp_operation = sru;
+  ops[2].dp_operation = std::make_shared<ME::LinkNodeOp>();
+  if (max_per_operation > 0) {
+    for (auto &p : ops) {
+      p.maxToEnumerate = max_per_operation;
+    }
+  }
+  return ops;
+}
+
 namespace {
 
 std::unique_ptr<MolList> to_list(const RDKit::MolBundle &bundle) {
@@ -276,6 +355,8 @@ std::unique_ptr<MolList> mol_enumerator_enumerate(
     const RWMol &mol, std::uint32_t max_per_operation) {
   check_enumerate(mol, true, true, true);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
+  check_enumerate_relevant_cycles(mol,
+                                  default_enumerate_ops(max_per_operation));
   return to_list(ME::enumerate(mol, max_per_operation));
 }
 
@@ -295,6 +376,7 @@ std::unique_ptr<MolList> mol_enumerator_enumerate_with_params(
                     type == EnumeratorType::LinkNode);
     if (type == EnumeratorType::LinkNode) {
       control_c = std::unique_lock<ControlCMutex>(control_c_mutex());
+      check_enumerate_relevant_cycles(mol, {params});
     }
   }
   return to_list(ME::enumerate(mol, params));

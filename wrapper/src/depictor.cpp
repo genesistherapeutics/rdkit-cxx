@@ -32,6 +32,7 @@
 #include "rdkit-cxx/ffi/depictor.rs.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -128,9 +129,12 @@ std::string replace_all(std::string text, const std::string &from,
 
 // RDKit copies a ring system template's coordinates into depictions
 // unchecked (EmbeddedFrag::matchToTemplate), and CXSMILES coordinates are
-// parsed with atof, so "nan" is one. This reads the file, checks each
-// template RDKit will load, and hands RDKit the checked text in a temporary
-// file, so RDKit never reads a file that changed after the check.
+// parsed with atof, so "nan" is one. It also symmetrizes each template's
+// rings, and checks that the template is one fragment by cutting it into
+// sanitized fragments (assertValidTemplate's getMolFrags), removing atoms
+// from copies. This reads the file, checks each template RDKit will load,
+// and hands RDKit the checked text in a temporary file, so RDKit never reads
+// a file that changed after the check.
 template <typename Load>
 void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
   const auto name = to_path(path);
@@ -153,6 +157,9 @@ void load_checked_templates(rust::Slice<const std::uint8_t> path, Load load) {
     for (auto it = mol->beginConformers(); it != mol->endConformers(); ++it) {
       check_depiction_conformer(**it, "ring system template coordinates");
     }
+    check_graph_relevant_cycles(*mol);
+    check_removals(*mol);
+    check_frags_sanitize_relevant_cycles(*mol);
   }
   TemporaryFile checked(text);
   try {
@@ -311,8 +318,10 @@ rust::Vec<IndexPair> generate_depiction_matching_2d_structure(
   // gets a copy whose groups hold no bonds.
   const RDKit::ROMol &query = has_ref_patt ? ref_patt : reference;
   if (params.allowRGroups) {
-    // It then removes the copy's terminal R groups (check_removals).
+    // It then removes the copy's terminal R groups (check_removals);
+    // adjustQueryProperties symmetrizes the copy's rings.
     check_removals(query);
+    check_graph_relevant_cycles(query);
   }
   std::unique_ptr<RDKit::RWMol> stripped;
   if (params.allowRGroups && has_stereo_group_bonds(query)) {

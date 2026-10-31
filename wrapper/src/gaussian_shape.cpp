@@ -18,12 +18,14 @@
 #include <GraphMol/MolTransforms/MolTransforms.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
+#include <boost/dynamic_bitset.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/gaussian_shape.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -208,6 +210,31 @@ std::unique_ptr<RWMol> checked_mol(const RWMol &mol, int conf_id,
   return copy;
 }
 
+// The constructor writes the molecule, or what is left of it after
+// removing the atoms outside atomSubset (extractSubset in ShapeInput.cpp),
+// with MolToSmiles, which perceives its stereochemistry.
+void check_shape_relevant_cycles(const RWMol &mol,
+                                 const GS::ShapeInputOptions &opts) {
+  if (opts.atomSubset.empty() ||
+      independent_cycles(mol) <= MAX_INDEPENDENT_CYCLES) {
+    check_stereo_relevant_cycles(mol);
+    return;
+  }
+  RWMol subset(mol);
+  boost::dynamic_bitset<> keep(mol.getNumAtoms());
+  for (auto idx : opts.atomSubset) {
+    keep.set(idx);
+  }
+  subset.beginBatchEdit();
+  for (const auto *atom : subset.atoms()) {
+    if (!keep[atom->getIdx()]) {
+      subset.removeAtom(atom->getIdx());
+    }
+  }
+  subset.commitBatchEdit();
+  check_stereo_relevant_cycles(subset);
+}
+
 // shapeToMol, which the A_LA_PUBCHEM start mode reaches through
 // calcMomentsOfInertia, parses the shape's SMILES and dereferences the
 // molecule it gets, null if the SMILES does not parse.
@@ -223,6 +250,7 @@ GaussianShapeInput make_shape(const RWMol &mol, int conf_id,
                               const GS::ShapeInputOptions &opts,
                               const GS::ShapeOverlayOptions &overlay_opts) {
   auto copy = checked_mol(mol, conf_id, opts);
+  check_shape_relevant_cycles(*copy, opts);
   std::lock_guard<std::mutex> lock(gaussian_shape_mutex());
   // Feature patterns are matched (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());

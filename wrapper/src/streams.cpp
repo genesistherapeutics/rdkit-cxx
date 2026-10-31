@@ -180,6 +180,27 @@ bool stereo_collection_unset(const std::string &line) {
 
 }  // namespace
 
+InputScanner InputScanner::mol_records(
+    const RDKit::v2::FileParsers::MolFileParserParams &params, bool sd) {
+  InputScanner scanner;
+  scanner.d_mol = std::make_unique<MolRecordScanner>(params, sd);
+  return scanner;
+}
+
+InputScanner InputScanner::smiles_lines(
+    const RDKit::v2::FileParsers::SmilesMolSupplierParams &params) {
+  InputScanner scanner;
+  scanner.d_smiles = std::make_unique<SmilesLineScanner>(params);
+  return scanner;
+}
+
+InputScanner InputScanner::tdt_lines(
+    const RDKit::v2::FileParsers::TDTMolSupplierParams &params) {
+  InputScanner scanner;
+  scanner.d_smiles = std::make_unique<SmilesLineScanner>(params);
+  return scanner;
+}
+
 bool InputScanner::fail(std::string why, std::uint64_t at) {
   if (d_error.empty()) {
     d_error = std::move(why);
@@ -189,7 +210,7 @@ bool InputScanner::fail(std::string why, std::uint64_t at) {
 }
 
 std::uint64_t InputScanner::held_from() const {
-  std::uint64_t held = UINT64_MAX;
+  std::uint64_t held = d_record_held;
   if (d_logical > 0 && d_prefix == kStereoGroup) {
     held = d_logical_at;
   }
@@ -372,12 +393,56 @@ void InputScanner::end_line() {
   }
 }
 
+// The end of a physical line, for the records followed (streams.h).
+void InputScanner::end_record_line() {
+  if (d_mol && !d_mol->line(d_line_text, d_line_start)) {
+    fail(d_mol->error(), d_mol->refuse_at());
+  }
+  if (d_smiles && !d_smiles->line(d_line_text)) {
+    fail(d_smiles->error(), d_smiles->refuse_at());
+  }
+  d_line_text.clear();
+  d_line_start = d_fed;
+  d_record_held = std::min(d_mol ? d_mol->held_from() : UINT64_MAX,
+                           d_smiles ? d_smiles->held_from() : UINT64_MAX);
+}
+
 std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
   if (!d_error.empty()) {
     return 0;
   }
+  const bool records = d_mol || d_smiles;
   for (std::size_t i = 0; i < n; ++i) {
     char c = bytes[i];
+    if (records) {
+      if (c == '\n') {
+        // The offset of the next line, where end_record_line starts it.
+        const auto fed = d_fed;
+        d_fed += i + 1;
+        end_record_line();
+        d_fed = fed;
+      } else {
+        d_line_text += c;
+        if (d_smiles) {
+          d_smiles->byte(c, d_fed + i);
+          d_record_held = std::min(d_record_held, d_smiles->held_from());
+        }
+      }
+      // A hold can start at the next line, past this byte.
+      if (d_record_held != UINT64_MAX && d_fed + i > d_record_held &&
+          d_fed + i - d_record_held > kMaxHeld) {
+        fail(
+            "a record whose relevant cycles RDKit could not enumerate "
+            "unless checked is held back past more than " +
+                std::to_string(kMaxHeld) +
+                " bytes, which the checked stream holds back whole",
+            d_record_held);
+      }
+      if (!d_error.empty()) {
+        d_fed += i;
+        return i;
+      }
+    }
     if (c == '\n') {
       end_line();
       if (++d_lines > kMaxInputLines) {
@@ -428,20 +493,25 @@ std::size_t InputScanner::feed(const char *bytes, std::size_t n) {
 bool InputScanner::finish() {
   if (d_error.empty() && d_pos > 0) {
     end_line();
+    if ((d_mol || d_smiles) && d_error.empty()) {
+      end_record_line();
+    }
   }
   return d_error.empty();
 }
 
-void check_input_text(std::string_view text) {
-  InputScanner scanner;
+void check_input_text(std::string_view text, InputScanner scanner) {
   if (scanner.feed(text.data(), text.size()) < text.size() ||
       !scanner.finish()) {
     throw ValueErrorException(scanner.error());
   }
 }
 
-CheckedStreambuf::CheckedStreambuf(std::unique_ptr<std::streambuf> source)
-    : d_source(std::move(source)), d_buffer(new char[kChunk]) {
+CheckedStreambuf::CheckedStreambuf(std::unique_ptr<std::streambuf> source,
+                                   InputScanner scanner)
+    : d_source(std::move(source)),
+      d_buffer(new char[kChunk]),
+      d_scanner(std::move(scanner)) {
   std::random_device random;
   for (auto &k : d_key) {
     k = (std::uint64_t{random()} << 32) ^ random();
@@ -738,8 +808,9 @@ CheckedStreambuf::pos_type CheckedStreambuf::seekpos(
   return moved(d_source->pubseekpos(pos, std::ios_base::in));
 }
 
-CheckedIStream::CheckedIStream(std::unique_ptr<std::streambuf> source)
-    : std::istream(nullptr), d_buf(std::move(source)) {
+CheckedIStream::CheckedIStream(std::unique_ptr<std::streambuf> source,
+                               InputScanner scanner)
+    : std::istream(nullptr), d_buf(std::move(source), std::move(scanner)) {
   rdbuf(&d_buf);
 }
 
@@ -750,7 +821,8 @@ void CheckedIStream::check() const {
 }
 
 std::unique_ptr<CheckedIStream> open_checked_file(const std::string &name,
-                                                  bool nonempty) {
+                                                  bool nonempty,
+                                                  InputScanner scanner) {
   auto file = std::make_unique<std::filebuf>();
   if (!file->open(name, std::ios_base::in | std::ios_base::binary)) {
     throw RDKit::BadFileException("Bad input file " + name);
@@ -758,12 +830,15 @@ std::unique_ptr<CheckedIStream> open_checked_file(const std::string &name,
   if (nonempty && file->sgetc() == std::filebuf::traits_type::eof()) {
     throw RDKit::BadFileException("Invalid input file " + name);
   }
-  return std::make_unique<CheckedIStream>(std::move(file));
+  return std::make_unique<CheckedIStream>(std::move(file), std::move(scanner));
 }
 
-std::unique_ptr<CheckedIStream> checked_text(std::string text) {
-  return std::make_unique<CheckedIStream>(std::make_unique<std::stringbuf>(
-      std::move(text), std::ios_base::in | std::ios_base::binary));
+std::unique_ptr<CheckedIStream> checked_text(std::string text,
+                                             InputScanner scanner) {
+  return std::make_unique<CheckedIStream>(
+      std::make_unique<std::stringbuf>(
+          std::move(text), std::ios_base::in | std::ios_base::binary),
+      std::move(scanner));
 }
 
 }  // namespace rdkit_cxx

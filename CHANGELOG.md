@@ -13,17 +13,31 @@
   than `u32` holds. RDKit converts RingDecomposerLib's count, a `double`, to
   `unsigned int` without a check, which is undefined out of range; Python
   returns 33 for a ring of 33 diamonds, which has 2^33 + 33.
-- Sanitization (`sanitize_mol`, `mol_from_smiles` and the other SMILES
-  parsers, `sanitize_rxn`, `sanitize_rxn_as_mols`, `validate_smiles`),
-  `get_symm_sssr`, 2D depiction with RDKit's depictor, and the wrappers that
-  symmetrize a molecule's rings themselves (drawing, abbreviations, tautomer
-  scores) are `Error::Value` for a molecule with more than `i32::MAX`
-  relevant cycles. RDKit's symmetrized SSSR reserves room for them all,
-  converting RingDecomposerLib's `double` count to `size_t` unchecked, which
-  is undefined from 2^64 (a ring of 64 diamonds, 192 atoms); Python runs out
-  of memory sanitizing a ring of 33. Molecules with at most 31 independent
-  cycles skip the count, so sanitization costs about 1-4% more. Other paths
-  to the conversion remain; see the README's "Known limitations".
+- Every wrapper that can reach RDKit's symmetrized SSSR is `Error::Value`
+  for a molecule with more than `i32::MAX` relevant cycles. RDKit reserves
+  room for them all, converting RingDecomposerLib's `double` count to
+  `size_t` unchecked, which is undefined from 2^64 (a ring of 64 diamonds,
+  192 atoms); Python runs out of memory sanitizing a ring of 33. Besides
+  sanitization, `get_symm_sssr`, and the depictor, the checks cover the mol
+  block, SD, Mol2, PDB, TPL, Marvin, SVG, SCSR, CDXML, InChI, SLN, sequence,
+  rxn, and PNG readers; the SD, SMILES, and TDT suppliers, plain, forward,
+  and multithreaded, which hold back only a record that could have more
+  than 31 independent cycles until its count is known; reactions and
+  library enumeration; stereo and aromaticity perception; the SMILES,
+  SMARTS, mol block, and JSON writers; fingerprints, hashes, molzip, MMPA,
+  MCS, RASCAL, R-group decomposition, scaffold networks, synthon spaces,
+  substructure libraries, the standardizer, and the rest. A molecule with
+  at most 31 independent cycles is never counted; some calls that build
+  molecules they cannot predict refuse inputs past that bound (README,
+  "Known limitations"). Molecule pickles older than format 4.0, which
+  RDKit gives stereochemistry as it reads them, are `Error::Value`
+  wherever RDKit would read one, on its own or inside a reaction, bundle,
+  query, catalog, library, PNG, or synthon-space pickle.
+- A normalizations file (`CleanupParameters::normalizations_file`,
+  `Normalizer::new`) is read once and given to RDKit as data or a stream,
+  so RDKit never reopens a file the wrapper read. A cleanup normalizations
+  file with no transformations is `Error::Value`: RDKit takes empty data
+  to mean the file, and would open it again.
 - Molecules RDKit's pickler would write but could not read back are
   refused wherever a molecule is pickled: `Error::Value`, or a panic from
   `Mol::to_binary` and `ChemicalReaction::to_binary`, which stay

@@ -6,15 +6,19 @@
 #include "rdkit-cxx/mhfp.h"
 
 #include <climits>
+#include <memory>
 #include <string>
 #include <vector>
 
 #include <GraphMol/SmilesParse/SmilesParse.h>
+#include <GraphMol/Subgraphs/SubgraphUtils.h>
+#include <GraphMol/Subgraphs/Subgraphs.h>
 #include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/mhfp.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -39,9 +43,29 @@ std::unique_ptr<RWMol> parse(rust::Str smiles) {
   return std::make_unique<RWMol>(*mol);
 }
 
+// CreateShingling writes the environment of each atom, out to each radius,
+// with MolToSmiles, which perceives its stereochemistry (and each ring,
+// whose one cycle is no matter). An environment's bonds are some of the
+// molecule's; above the bound, each environment is counted.
+void check_shingling(const RDKit::ROMol &mol, const ShinglingOptions &options) {
+  if (independent_cycles(mol) <= MAX_INDEPENDENT_CYCLES) {
+    return;
+  }
+  unsigned min_radius = options.min_radius ? options.min_radius : 1;
+  for (unsigned idx = 0; idx < mol.getNumAtoms(); ++idx) {
+    for (unsigned r = min_radius; r < options.radius + 1u; ++r) {
+      auto path = RDKit::findAtomEnvironmentOfRadiusN(mol, r, idx);
+      std::unique_ptr<RDKit::ROMol> env(
+          RDKit::Subgraphs::pathToSubmol(mol, path, false));
+      check_stereo_relevant_cycles(*env);
+    }
+  }
+}
+
 std::vector<std::string> shingling(const MHFPEncoder &encoder,
                                    const RDKit::ROMol &mol,
                                    const ShinglingOptions &options) {
+  check_shingling(mol, options);
   return encoder_mut(encoder).CreateShingling(
       mol, options.radius, options.rings, options.isomeric, options.kekulize,
       options.min_radius);
@@ -78,6 +102,7 @@ std::unique_ptr<BitVect> secfp(const MHFPEncoder &encoder, RDKit::ROMol &mol,
                                const ShinglingOptions &options,
                                std::size_t length) {
   check_length(length);
+  check_shingling(mol, options);
   return wrap_bit_vect(
       std::make_unique<ExplicitBitVect>(encoder_mut(encoder).EncodeSECFP(
           mol, options.radius, options.rings, options.isomeric,

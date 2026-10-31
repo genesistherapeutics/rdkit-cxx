@@ -5,6 +5,7 @@
 
 #include "rdkit-cxx/file_checks.h"
 
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -167,6 +168,36 @@ void check_mrv(const std::string &text) {
   boost::property_tree::ptree tree;
   boost::property_tree::read_xml(in, tree);
   check_bond_refs(tree);
+}
+
+// As readTransformations in TransformCatalogUtils.cpp: lines of at most 511
+// characters, up to the first longer one, skipping empty lines and "//"
+// comments, each a name and a reaction SMARTS separated by tabs, with their
+// spaces erased.
+std::vector<std::pair<std::string, std::string>> transformation_data(
+    const std::string &text) {
+  std::vector<std::pair<std::string, std::string>> data;
+  std::istringstream in(text);
+  char line[512];
+  while (!in.eof() && !in.fail()) {
+    in.getline(line, sizeof(line), '\n');
+    std::string tmp(line);
+    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
+      continue;
+    }
+    std::vector<std::string> fields;
+    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
+    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
+    if (fields.size() < 2) {
+      throw ValueErrorException(
+          "a transformation line needs a name and a reaction SMARTS, "
+          "separated by a tab");
+    }
+    boost::erase_all(fields[0], " ");
+    boost::erase_all(fields[1], " ");
+    data.emplace_back(std::move(fields[0]), std::move(fields[1]));
+  }
+  return data;
 }
 
 }  // namespace rdkit_cxx

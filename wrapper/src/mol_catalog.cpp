@@ -13,6 +13,7 @@
 #include "rdkit-cxx/catalog_checks.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -61,6 +62,7 @@ std::unique_ptr<MolCatalog> create_mol_catalog() {
 std::unique_ptr<MolCatalog> mol_catalog_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
   auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
   check_catalog_pickle<RDKit::MolCatalogParams>(text, check_entry);
   return std::make_unique<MolCatalog>(text);
 }
@@ -141,6 +143,7 @@ std::unique_ptr<MolCatalogEntry> mol_catalog_entry_new() {
 std::unique_ptr<MolCatalogEntry> mol_catalog_entry_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
   auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
   auto ss = pickle_stream(text);
   check_entry(ss, text.size());
   return std::make_unique<MolCatalogEntry>(text);

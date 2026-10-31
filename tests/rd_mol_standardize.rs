@@ -1222,3 +1222,35 @@ M  END
         "C1=CCC=C1.[*]->[Fe+].[CH2-]CCCC"
     );
 }
+
+#[test]
+fn normalization_files_are_read_once() {
+    // The wrapper reads a normalizations file once and hands RDKit its
+    // transformations, as data or a stream.
+    let nitro = "// one transformation\nNitro\t[N+0:1](=[O:2])=[O:3]>>[N+:1]([O-:2])=[O:3]\n";
+    let path = std::env::temp_dir().join(format!("rdkit_cxx_nitro_{}.txt", std::process::id()));
+    std::fs::write(&path, nitro).unwrap();
+    let normalizer = Normalizer::new(&path, 200).unwrap();
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    let cleaned = cleanup_with_params(&mol("CN(=O)=O"), &params).unwrap();
+    std::fs::remove_file(&path).unwrap();
+    assert_eq!(smiles(&cleaned), "C[N+](=O)[O-]");
+    assert_eq!(
+        smiles(&normalizer.normalize(&mol("CN(=O)=O")).unwrap()),
+        "C[N+](=O)[O-]"
+    );
+
+    // RDKit takes no transformations to mean the file, which it would then
+    // open itself.
+    std::fs::write(&path, "// none\n").unwrap();
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    let result = cleanup_with_params(&mol("CC"), &params);
+    std::fs::remove_file(&path).unwrap();
+    assert!(matches!(result, Err(Error::Value { .. })), "{result:?}");
+}

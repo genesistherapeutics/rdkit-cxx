@@ -46,6 +46,7 @@
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/rascal_mces.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/symmetrize_lock.h"
@@ -344,6 +345,33 @@ class ParentChains {
   std::vector<Group> d_groups;
 };
 
+// The searches, enumeration, and fingerprint building sanitize and perceive
+// the products they build, each a synthon from each of a reaction's sets,
+// joined at their connectors: a product has no more independent cycles than
+// its synthons with every connector a bond more. The reader perceives the
+// synthons' search molecules, which have no more than their synthons (the
+// text is checked before, check_synthon_text). Which products a search
+// builds depends on the query, so a reaction whose products could have more
+// than MAX_INDEPENDENT_CYCLES is refused (README, Known limitations).
+std::uint64_t synthon_cycle_bound(const RDKit::ROMol &synthon) {
+  std::uint64_t connectors = 0;
+  for (const auto *atom : synthon.atoms()) {
+    connectors += atom->getAtomicNum() == 0;
+  }
+  return independent_cycles(synthon) + connectors;
+}
+
+void check_reaction_cycle_bound(const std::string &name, std::uint64_t cycles) {
+  if (cycles > MAX_INDEPENDENT_CYCLES &&
+      !RDKit::MolOps::getUseLegacyRingFinding()) {
+    throw ValueErrorException(
+        "reaction " + name + "'s products can have more than " +
+        std::to_string(MAX_INDEPENDENT_CYCLES) +
+        " independent cycles: the relevant cycles of the products a search "
+        "builds cannot be counted before RDKit perceives them");
+  }
+}
+
 // What RDKit's code after a read trusts about the space it holds:
 // - summarize counts reactions by their number of synthon sets in an array
 //   of MAX_CONNECTOR_NUM + 1 (a write past it for more sets), and
@@ -363,6 +391,7 @@ void check_space(SSS::SynthonSpace &space) {
       space, [](const std::string &name, const SSS::SynthonSet &reaction) {
         const auto &sets = reaction.getSynthons();
         ParentChains chains;
+        std::uint64_t cycles = 0;
         if (sets.empty() || sets.size() > SSS::MAX_CONNECTOR_NUM) {
           throw ValueErrorException("reaction " + name + " has " +
                                     std::to_string(sets.size()) +
@@ -386,8 +415,14 @@ void check_space(SSS::SynthonSpace &space) {
               chains.add(*mol);
             }
           }
+          std::uint64_t most = 0;
+          for (const auto &[id, synthon] : set) {
+            most = std::max(most, synthon_cycle_bound(*synthon->getOrigMol()));
+          }
+          cycles += most;
         }
         chains.check(name);
+        check_reaction_cycle_bound(name, cycles);
       });
 }
 
@@ -612,6 +647,9 @@ std::optional<ParentChains> check_synthon_smiles(const std::string &smiles,
   }
   try {
     check_removals(*mol);
+    // The reader perceives each synthon's stereochemistry
+    // (Synthon::calcProperties).
+    check_stereo_relevant_cycles(*mol);
   } catch (const ValueErrorException &e) {
     throw ValueErrorException(where + ": " + e.what());
   }
@@ -628,6 +666,7 @@ void check_synthon_text(std::string_view text) {
   std::map<std::string, std::set<int>> sets;
   std::map<std::string, ParentChains> chains;
   std::unordered_map<std::string, ParentChains> checked;
+  std::map<std::string, std::map<int, std::uint64_t>> bounds;
   std::size_t pos = 0;
   while (true) {
     auto end = text.find('\n', pos);
@@ -685,6 +724,13 @@ void check_synthon_text(std::string_view text) {
         }
         auto smiles = fields[0];
         fix_connectors(smiles);
+        // A bound on the synthon's independent cycles (smiles_closure_bound)
+        // with its connectors, for check_reaction_cycle_bound; the reader
+        // perceives the synthons and their search molecules.
+        auto &most = bounds[fields[3]][num];
+        most = std::max<std::uint64_t>(
+            most, smiles_closure_bound(smiles) +
+                      std::count(smiles.begin(), smiles.end(), '*'));
         auto it = checked.find(smiles);
         if (it == checked.end()) {
           auto groups = check_synthon_smiles(smiles, num_lines);
@@ -703,6 +749,13 @@ void check_synthon_text(std::string_view text) {
   }
   for (const auto &[reaction, reaction_chains] : chains) {
     reaction_chains.check(reaction);
+  }
+  for (const auto &[reaction, sets] : bounds) {
+    std::uint64_t cycles = 0;
+    for (const auto &[num, most] : sets) {
+      cycles += most;
+    }
+    check_reaction_cycle_bound(reaction, cycles);
   }
 }
 
@@ -739,6 +792,8 @@ void read_text(SynthonSpace &space, const std::string &name,
 // and refuses a file whose offsets do not ascend through it, which also tells
 // a complete file from one the writer, which ignores a failed stream, left
 // short: it writes zeros for the offsets first and the real ones last.
+// Before RDKit reads a file, it refuses molecule pickles older than format
+// 4.0 anywhere in it (check_mol_pickle_versions).
 
 constexpr std::int32_t kEndianId = 0xa100f;
 constexpr std::int32_t kVersionMajor = 3;
@@ -857,6 +912,10 @@ DbCounts check_db_file(const std::string &name, bool reading) {
       r.fail("has record offsets that do not ascend through the file");
     }
     previous = offset;
+  }
+  if (reading) {
+    in.seekg(0, std::ios::beg);
+    check_mol_pickle_versions(in);
   }
   return counts;
 }
@@ -1067,24 +1126,42 @@ SSS::SearchResults search_lines(const SSS::SynthonSpaceSearchParams &params,
 // molecules, or each tautomer of its tautomer queries (extendedSearch in
 // SynthonSpace.cpp).
 
-void check_query(const RDKit::ROMol &query) { check_removals(query); }
+//
+// The searches also sanitize and perceive the fragments, which have no more
+// independent cycles than the query, and the products they build from the
+// synthons (check_space_relevant_cycles). Which fragments depends on every
+// split the search tries, so a query with more than MAX_INDEPENDENT_CYCLES
+// is refused (README, Known limitations).
+void check_query_mol(const RDKit::ROMol &query) {
+  check_removals(query);
+  if (independent_cycles(query) > MAX_INDEPENDENT_CYCLES &&
+      !RDKit::MolOps::getUseLegacyRingFinding()) {
+    throw ValueErrorException(
+        "a synthon space search refuses a query with more than " +
+        std::to_string(MAX_INDEPENDENT_CYCLES) +
+        " independent cycles: the relevant cycles of the fragments it "
+        "builds cannot be counted before RDKit perceives them");
+  }
+}
+
+void check_query(const RDKit::ROMol &query) { check_query_mol(query); }
 
 void check_query(const ExtendedQueryMol &query) {
   using XQ = ExtendedQueryMol;
   auto check_tautomers = [](const RDKit::TautomerQuery &tautomers) {
-    check_removals(tautomers.getTemplateMolecule());
+    check_query_mol(tautomers.getTemplateMolecule());
     for (const auto &tautomer : tautomers.getTautomers()) {
-      check_removals(*tautomer);
+      check_query_mol(*tautomer);
     }
   };
   if (const auto *mol = std::get_if<XQ::RWMol_T>(&query.xqmol)) {
     if (*mol) {
-      check_removals(**mol);
+      check_query_mol(**mol);
     }
   } else if (const auto *bundle = std::get_if<XQ::MolBundle_T>(&query.xqmol)) {
     if (*bundle) {
       for (const auto &mol : (*bundle)->getMols()) {
-        check_removals(*mol);
+        check_query_mol(*mol);
       }
     }
   } else if (const auto *tq = std::get_if<XQ::TautomerQuery_T>(&query.xqmol)) {

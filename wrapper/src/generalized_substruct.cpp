@@ -15,6 +15,7 @@
 #include <variant>
 #include <vector>
 
+#include <DataStructs/base64.h>
 #include <GraphMol/MolBundle.h>
 #include <GraphMol/MolEnumerator/LinkNode.h>
 #include <GraphMol/MolEnumerator/MolEnumerator.h>
@@ -33,6 +34,7 @@
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/mol_enumerator.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_query.h"
 #include "rdkit-cxx/util.h"
@@ -79,14 +81,18 @@ void check_base64(const std::string &text) {
   }
 }
 
-// RDKit's pt_to_mol (GeneralizedSubstruct/TextIO.cpp) returns SmilesToMol's
-// or SmartsToMol's null for text that does not parse, which the query then
-// holds and dereferences. Parsing is deterministic, so text that parses here
-// parses there.
+// RDKit's pt_to_mol (GeneralizedSubstruct/TextIO.cpp) decodes a pickle,
+// checked here as it decodes it, and returns SmilesToMol's or SmartsToMol's
+// null for text that does not parse, which the query then holds and
+// dereferences. Parsing is deterministic, so text that parses here parses
+// there.
 void check_mol_element(const bpt::ptree &elem) {
   auto pkl = elem.get<std::string>("pkl", "");
   if (!pkl.empty()) {
     check_base64(pkl);
+    unsigned int len = 0;
+    std::unique_ptr<char[]> decoded(Base64Decode(pkl.c_str(), &len));
+    check_mol_pickle_versions(std::string_view(decoded.get(), len));
     return;
   }
   auto smiles = elem.get<std::string>("smiles", "");
@@ -303,7 +309,9 @@ void check_link_nodes(const RDKit::ROMol &mol) {
 
 std::unique_ptr<ExtendedQueryMol> extended_query_mol_from_binary(
     rust::Slice<const std::uint8_t> pickle) {
-  auto query = std::make_unique<XQ>(to_std(pickle), false);
+  auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
+  auto query = std::make_unique<XQ>(text, false);
   check_extended_query_mol(*query);
   return query;
 }
@@ -351,27 +359,37 @@ std::unique_ptr<ExtendedQueryMol> extended_query_mol_clone(
 
 namespace {
 
-// ExtendedQueryMol's binary and JSON forms (TextIO.cpp) pickle every molecule
-// it holds: the molecule, the bundle's molecules, and each tautomer query's
-// template and tautomers.
-void check_picklable_extended_query_mol(const XQ &query) {
+// Calls `visit` on every molecule an ExtendedQueryMol holds: the molecule,
+// the bundle's molecules, and each tautomer query's template and tautomers.
+template <class Visit>
+void for_each_mol(const XQ &query, Visit visit) {
+  auto tautomers = [&](const TautomerQuery &tq) {
+    visit(tq.getTemplateMolecule());
+    for (const auto &tautomer : tq.getTautomers()) {
+      visit(*tautomer);
+    }
+  };
   std::visit(overloaded{
-                 [](const XQ::RWMol_T &mol) { check_picklable(*mol); },
-                 [](const XQ::MolBundle_T &bundle) {
+                 [&](const XQ::RWMol_T &mol) { visit(*mol); },
+                 [&](const XQ::MolBundle_T &bundle) {
                    for (const auto &mol : bundle->getMols()) {
-                     check_picklable(*mol);
+                     visit(*mol);
                    }
                  },
-                 [](const XQ::TautomerQuery_T &query) {
-                   check_picklable_tautomer_query(*query);
-                 },
-                 [](const XQ::TautomerBundle_T &queries) {
+                 [&](const XQ::TautomerQuery_T &query) { tautomers(*query); },
+                 [&](const XQ::TautomerBundle_T &queries) {
                    for (const auto &query : *queries) {
-                     check_picklable_tautomer_query(*query);
+                     tautomers(*query);
                    }
                  },
              },
              query.xqmol);
+}
+
+// ExtendedQueryMol's binary and JSON forms (TextIO.cpp) pickle every molecule
+// it holds.
+void check_picklable_extended_query_mol(const XQ &query) {
+  for_each_mol(query, [](const RDKit::ROMol &mol) { check_picklable(mol); });
 }
 
 }  // namespace
@@ -394,6 +412,11 @@ rust::Vec<std::uint8_t> extended_query_mol_to_binary(
 std::unique_ptr<std::string> extended_query_mol_to_json(
     const ExtendedQueryMol &query) {
   check_picklable_extended_query_mol(query);
+  // The JSON form also writes each molecule with MolToCXSmarts or
+  // MolToCXSmiles (mol_to_pt in TextIO.cpp).
+  for_each_mol(query, [](const RDKit::ROMol &mol) {
+    check_smarts_relevant_cycles(mol);
+  });
   return std::make_unique<std::string>(query.toJSON());
 }
 
@@ -434,6 +457,7 @@ XQ create_extended_query(const RDKit::ROMol &mol, bool do_enumeration,
                          const RDKit::MolOps::AdjustQueryParameters &params) {
   RDKit::MolBundle bundle;
   if (do_enumeration) {
+    check_enumerate_relevant_cycles(mol, default_enumerate_ops(0));
     bundle = RDKit::MolEnumerator::enumerate(mol);
   }
   if (bundle.empty()) {
@@ -442,6 +466,12 @@ XQ create_extended_query(const RDKit::ROMol &mol, bool do_enumeration,
   }
   RDKit::MolBundle adjusted_bundle;
   for (const auto &bmol : bundle.getMols()) {
+    // Adjusting symmetrizes the rings (adjust_query_properties), and
+    // tautomer enumeration those of a copy and of every tautomer, which
+    // has the same graph but for where its hydrogens are.
+    if (adjust_query_properties || do_tautomers) {
+      check_graph_relevant_cycles(*bmol);
+    }
     adjusted_bundle.addMol(adjust_query_properties ? adjusted(*bmol, params)
                                                    : bmol);
   }

@@ -11,6 +11,7 @@
 #include <iterator>
 #include <limits>
 #include <list>
+#include <map>
 #include <mutex>
 #include <set>
 #include <string>
@@ -21,12 +22,14 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
 #include <boost/algorithm/string.hpp>
+#include <boost/dynamic_bitset.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/rascal_mces.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -121,9 +124,77 @@ struct ClusNode {
   std::shared_ptr<RascalResult> d_res;
   double d_sim;
   unsigned int d_mol1Num, d_mol2Num;
+  // The first molecule of d_res's MCES (check_mces_mol_relevant_cycles).
+  const RDKit::ROMol *d_mol1 = nullptr;
 };
 
 using ProxGraph = std::vector<std::vector<ClusNode>>;
+
+// A result's MCES is a subgraph of each molecule; its first molecule is
+// rascalMCES's first (it swaps the molecules back). Above the bound, the
+// molecules RDKit builds from it are counted.
+//
+// RascalResult::createSmartsString writes the MCES bonds of the first
+// molecule, as query bonds of no type, with MolToSmarts, which perceives
+// their stereochemistry.
+void check_mces_smarts_relevant_cycles(const RDKit::ROMol &mol1,
+                                       const RascalResult &res) {
+  if (independent_cycles(mol1) <= MAX_INDEPENDENT_CYCLES) {
+    return;
+  }
+  RDKit::RWMol smarts;
+  std::map<int, unsigned> atoms;
+  for (const auto &[a, b] : res.getAtomMatches()) {
+    atoms[a] = smarts.addAtom(new RDKit::Atom(0), false, true);
+  }
+  for (const auto &[a, b] : res.getBondMatches()) {
+    const auto *bond = mol1.getBondWithIdx(a);
+    smarts.addBond(atoms[bond->getBeginAtomIdx()], atoms[bond->getEndAtomIdx()],
+                   RDKit::Bond::UNSPECIFIED);
+  }
+  check_stereo_relevant_cycles(smarts);
+}
+
+// RascalResult::getMcesMol removes the hydrogens of, and so sanitizes, its
+// first molecule's copy, kekulized where it can be, less the bonds and atoms
+// outside the MCES; this builds the copy as it does.
+void check_mces_mol_relevant_cycles(const RDKit::ROMol &mol1,
+                                    const RascalResult &res) {
+  if (independent_cycles(mol1) <= MAX_INDEPENDENT_CYCLES) {
+    return;
+  }
+  boost::dynamic_bitset<> bonds(mol1.getNumBonds());
+  for (const auto &bm : res.getBondMatches()) {
+    bonds.set(bm.first);
+  }
+  boost::dynamic_bitset<> atoms(mol1.getNumAtoms());
+  for (const auto &am : res.getAtomMatches()) {
+    atoms.set(am.first);
+  }
+  RDKit::RWMol tmp(mol1);
+  RDKit::MolOps::KekulizeIfPossible(tmp);
+  tmp.beginBatchEdit();
+  for (auto *bond : tmp.bonds()) {
+    if (!bonds[bond->getIdx()]) {
+      auto bo = bond->getBondType();
+      for (auto *atom : {bond->getBeginAtom(), bond->getEndAtom()}) {
+        if (atom->getNoImplicit() ||
+            (atom->getIsAromatic() && atom->getAtomicNum() != 6)) {
+          atom->setNumExplicitHs(atom->getNumExplicitHs() + bo);
+        }
+      }
+      tmp.removeBond(bond->getBeginAtomIdx(), bond->getEndAtomIdx());
+    }
+  }
+  for (auto *atom : tmp.atoms()) {
+    if (!atoms[atom->getIdx()]) {
+      tmp.removeAtom(atom);
+    }
+  }
+  tmp.commitBatchEdit();
+  check_remove_hs_relevant_cycles(tmp, RDKit::MolOps::RemoveHsParameters(),
+                                  true);
+}
 
 // As details::calcMolMolSimilarity.
 ClusNode calc_mol_mol_similarity(const RDKit::ROMol &mol1,
@@ -135,6 +206,7 @@ ClusNode calc_mol_mol_similarity(const RDKit::ROMol &mol1,
   ClusNode cn{};
   cn.d_mol1Num = i;
   cn.d_mol2Num = j;
+  cn.d_mol1 = &mol1;
   if (res.empty()) {
     // tier1Sim and tier2Sim were above the threshold, but no MCES
     // was found.
@@ -246,9 +318,12 @@ std::vector<std::vector<unsigned int>> make_sub_clusters(
   while (!tmpNbors.empty()) {
     subClusters.push_back(std::vector<unsigned int>{
         tmpNbors.front()->d_mol1Num, tmpNbors.front()->d_mol2Num});
+    check_mces_mol_relevant_cycles(*tmpNbors.front()->d_mol1,
+                                   *tmpNbors.front()->d_res);
     auto m1 = tmpNbors.front()->d_res->getMcesMol();
     auto g_12 = g_ij(m1, clusOpts.a, clusOpts.b, clusOpts.minFragSize);
     for (size_t i = 1; i < tmpNbors.size(); ++i) {
+      check_mces_mol_relevant_cycles(*tmpNbors[i]->d_mol1, *tmpNbors[i]->d_res);
       auto m2 = tmpNbors[i]->d_res->getMcesMol();
       auto g_13 = g_ij(m2, clusOpts.a, clusOpts.b, clusOpts.minFragSize);
 
@@ -257,6 +332,7 @@ std::vector<std::vector<unsigned int>> make_sub_clusters(
         continue;
       }
       auto res = results.front();
+      check_mces_mol_relevant_cycles(*m1, res);
       auto g_12_13 =
           g_ij(res.getMcesMol(), clusOpts.a, clusOpts.b, clusOpts.minFragSize);
       double sim = g_12_13 / std::min(g_12, g_13);
@@ -600,6 +676,11 @@ std::unique_ptr<RascalResultList> find_mces(const RWMol &mol1,
   // The MCES matches substructures (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());
   list->results = Rascal::rascalMCES(mol1, mol2, options);
+  // A result writes its SMARTS on demand (rascal_result_smarts_string),
+  // when the molecules are no longer at hand.
+  for (const auto &res : list->results) {
+    check_mces_smarts_relevant_cycles(mol1, res);
+  }
   return list;
 }
 

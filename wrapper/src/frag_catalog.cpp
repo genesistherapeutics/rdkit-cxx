@@ -18,6 +18,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -160,6 +161,7 @@ std::unique_ptr<FragCatalog> frag_catalog_from_params(
 std::unique_ptr<FragCatalog> frag_catalog_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
   auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
   check_catalog_pickle<FragCatParams>(text, check_entry);
   return std::make_unique<FragCatalog>(text);
 }

@@ -17,6 +17,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/perception.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -66,6 +67,14 @@ void cleanup(RWMol &mol) { RDKit::MolOps::cleanUp(mol); }
 void cleanup_chirality(RWMol &mol) { RDKit::MolOps::cleanupChirality(mol); }
 
 void cleanup_atropisomers(RWMol &mol) {
+  // Without hybridizations, Hybridizations (MolOps.cpp) sanitizes a copy to
+  // find them.
+  if (mol.getNumAtoms() > 0 &&
+      mol.getAtomWithIdx(0)->getHybridization() == RDKit::Atom::UNSPECIFIED) {
+    check_sanitize_relevant_cycles(
+        mol, RDKit::MolOps::SANITIZE_SETCONJUGATION |
+                 RDKit::MolOps::SANITIZE_SETHYBRIDIZATION);
+  }
   RDKit::MolOps::cleanupAtropisomers(mol);
 }
 
@@ -75,6 +84,7 @@ void cleanup_organometallics(RWMol &mol) {
 
 // RDKit's own check rejects AROMATICITY_CUSTOM, which needs a C++ function.
 void set_aromaticity(RWMol &mol, AromaticityModel model) {
+  check_perceive_relevant_cycles(mol, true);
   RDKit::MolOps::setAromaticity(mol, model);
 }
 

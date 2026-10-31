@@ -12,6 +12,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
 
@@ -74,6 +75,11 @@ std::unique_ptr<RWMol> largest_fragment_chooser_choose(
     const RWMol &mol, bool prefer_organic, bool use_atom_count,
     bool count_heavy_atoms_only) {
   check_removals(mol);
+  // chooseInPlace writes each fragment with MolFragmentToSmiles, which
+  // perceives the molecule's stereochemistry, and choose sanitizes the
+  // fragment it keeps.
+  check_stereo_relevant_cycles(mol);
+  check_frags_sanitize_relevant_cycles(mol);
   return adopt_mol(
       chooser(prefer_organic, use_atom_count, count_heavy_atoms_only)
           .choose(mol));
@@ -83,6 +89,7 @@ void largest_fragment_chooser_choose_in_place(RWMol &mol, bool prefer_organic,
                                               bool use_atom_count,
                                               bool count_heavy_atoms_only) {
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   chooser(prefer_organic, use_atom_count, count_heavy_atoms_only)
       .chooseInPlace(mol);
 }

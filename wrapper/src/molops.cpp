@@ -14,6 +14,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/molops.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -94,6 +95,9 @@ rust::Vec<IndexList> get_mol_frags(const RWMol &mol) {
 std::unique_ptr<MolList> get_mol_frags_as_mols(const RWMol &mol,
                                                bool sanitize_frags) {
   check_removals(mol);
+  if (sanitize_frags) {
+    check_frags_sanitize_relevant_cycles(mol);
+  }
   std::vector<std::unique_ptr<RDKit::ROMol>> frags;
   RDKit::MolOps::getMolFrags(mol, frags, sanitize_frags);
   auto list = std::make_unique<MolList>();
@@ -145,6 +149,7 @@ std::unique_ptr<RWMol> remove_hs(const RWMol &mol,
   params.removeNontetrahedralNeighbors = data.remove_nontetrahedral_neighbors;
   // Removing atoms trusts what check_removals checks.
   check_removals(mol);
+  check_remove_hs_relevant_cycles(mol, params, data.sanitize);
   auto res = std::make_unique<RWMol>(mol);
   RDKit::MolOps::removeHs(*res, params, data.sanitize);
   return res;
@@ -153,6 +158,7 @@ std::unique_ptr<RWMol> remove_hs(const RWMol &mol,
 std::unique_ptr<RWMol> remove_all_hs(const RWMol &mol, bool sanitize) {
   // Removing atoms trusts what check_removals checks.
   check_removals(mol);
+  check_remove_all_hs_relevant_cycles(mol, sanitize);
   auto res = std::make_unique<RWMol>(mol);
   RDKit::MolOps::removeAllHs(*res, sanitize);
   return res;
