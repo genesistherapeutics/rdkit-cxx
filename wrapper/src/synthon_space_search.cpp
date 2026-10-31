@@ -792,6 +792,8 @@ void read_text(SynthonSpace &space, const std::string &name,
 // and refuses a file whose offsets do not ascend through it, which also tells
 // a complete file from one the writer, which ignores a failed stream, left
 // short: it writes zeros for the offsets first and the real ones last.
+// Before RDKit reads a file, it refuses molecule pickles older than format
+// 4.0 anywhere in it (check_mol_pickle_versions).
 
 constexpr std::int32_t kEndianId = 0xa100f;
 constexpr std::int32_t kVersionMajor = 3;
@@ -910,6 +912,10 @@ DbCounts check_db_file(const std::string &name, bool reading) {
       r.fail("has record offsets that do not ascend through the file");
     }
     previous = offset;
+  }
+  if (reading) {
+    in.seekg(0, std::ios::beg);
+    check_mol_pickle_versions(in);
   }
   return counts;
 }

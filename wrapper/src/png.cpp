@@ -80,8 +80,10 @@ void check_png(const std::string &png) {
   }
 }
 
-// As Mol::from_pkl_string, a pickle's monomer types are checked (U10).
+// As Mol::from_pkl_string, a pickle's format is checked
+// (check_mol_pickle_versions) and its monomer types (U10).
 std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
+  check_mol_pickle_versions(pkl);
   auto mol = std::make_unique<RWMol>();
   RDKit::MolPickler::molFromPickle(pkl, mol.get());
   check_pickled_mol(*mol);

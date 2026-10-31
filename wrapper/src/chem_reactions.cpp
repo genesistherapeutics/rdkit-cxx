@@ -341,6 +341,7 @@ std::unique_ptr<ChemicalReaction> reaction_from_png(const std::string &data) {
   for (const auto &[key, value] : RDKit::PNGStringToMetadata(data)) {
     std::unique_ptr<ChemicalReaction> rxn;
     if (boost::starts_with(key, RDKit::PNGData::rxnPklTag)) {
+      check_mol_pickle_versions(value);
       rxn = std::make_unique<ChemicalReaction>(value);
       check_reaction_monomer_types(*rxn);
     } else if (boost::starts_with(key, RDKit::PNGData::rxnSmilesTag)) {
@@ -664,8 +665,10 @@ std::unique_ptr<ChemicalReaction> chemical_reaction_from_bin_str(
   // those are (U10); the rest is counts and tags it checks, the
   // substructure parameters' JSON, and properties read as molecule pickles
   // read them.
+  auto text = to_std(bin_str);
+  check_mol_pickle_versions(text);
   auto rxn = std::make_unique<ChemicalReaction>();
-  RDKit::ReactionPickler::reactionFromPickle(to_std(bin_str), rxn.get());
+  RDKit::ReactionPickler::reactionFromPickle(text, rxn.get());
   check_reaction_monomer_types(*rxn);
   normalize_templates(*rxn);
   return rxn;

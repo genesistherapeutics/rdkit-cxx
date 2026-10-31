@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
+mod common;
+
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::rd_generalized_substruct::*;
 use rdkit_cxx::chem::*;
@@ -291,6 +293,18 @@ fn json_is_checked() {
     let encoded = base64(&pkl);
     let from_pkl = read(&json(&format!("\"pkl\": \"{encoded}\""))).unwrap();
     assert!(mol_has_substruct_match(&smiles("CCC"), &from_pkl).unwrap());
+    // A pickle older than format 4.0, which RDKit would give stereochemistry
+    // as it reads it, before its relevant cycles can be counted.
+    for version in common::OLD_PICKLE_VERSIONS {
+        let old = base64(&common::with_pickle_version(&pkl, 0, version));
+        assert!(
+            matches!(
+                read(&json(&format!("\"pkl\": \"{old}\""))),
+                Err(Error::Value { message }) if message.contains("relevant cycles")
+            ),
+            "{version:?}"
+        );
+    }
 
     // An empty bundle has no pattern fingerprint (RDKit returns null).
     assert!(matches!(

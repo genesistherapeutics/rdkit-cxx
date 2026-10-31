@@ -522,9 +522,10 @@ std::unique_ptr<EnumerateLibrary> enumerate_library_from_string(
   // Loaded into a new library, so a load that throws partway leaves nothing
   // behind. The reaction and building blocks are molecule pickles (U2); the
   // strategies are checked against the building blocks.
+  std::string text(reinterpret_cast<const char *>(data.data()), data.size());
+  check_mol_pickle_versions(text);
   auto lib = std::make_unique<EnumerateLibrary>();
-  lib->initFromString(
-      std::string(reinterpret_cast<const char *>(data.data()), data.size()));
+  lib->initFromString(text);
   const EnumerateLibrary &loaded = *lib;
   // The reaction and the building blocks are molecule pickles (U10).
   check_reaction_monomer_types(loaded.getReaction());

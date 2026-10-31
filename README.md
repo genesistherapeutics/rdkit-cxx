@@ -314,8 +314,8 @@ an `extern "Rust"` type that the C++ subclass calls.
 
 ## Known limitations
 
-Safe Rust can still reach undefined behavior in RDKit in two ways. Neither
-corrupts memory on the supported platforms, and both need a fix in RDKit:
+Safe Rust can still reach undefined behavior in RDKit in one way. It does
+not corrupt memory on the supported platforms, and it needs a fix in RDKit:
 
 - **RDKit's log flags.** Each logger's enabled flag is a plain `bool` that
   every log statement reads. RDKit writes it inside some calls
@@ -325,25 +325,19 @@ corrupts memory on the supported platforms, and both need a fix in RDKit:
   too, so two threads using RDKit at once race on it. The wrappers order
   RDKit's own writers with one another (under `control_c_mutex()`), but not
   with logging on other threads: that would mean locking every call.
-- **Relevant cycles of old molecule pickles.** RDKit's symmetrized SSSR
-  (`symmetrizeSSSR` with its default algorithm) reserves room for every
-  relevant cycle, converting RingDecomposerLib's `double` count to `size_t`
-  unchecked: undefined from 2^64 cycles, which a ring of 64 "diamonds"
-  (192 atoms) has. Sanitization, the parsers, stereo and aromaticity
-  perception, the writers, the depictor and much else reach it; every
-  wrapper that can checks first (`relevant_cycles.h`) and returns
-  `Error::Value` above `i32::MAX` relevant cycles. One path is left: a
-  molecule pickle in a format older than 4.0, which RDKit's reader gives
-  stereochemistry while it reads it (`Mol::from_binary`, and the catalogs,
-  substructure libraries, and queries that hold pickles); no wrapper can
-  see its bonds before RDKit perceives them. Pickles the crate writes, and
-  any RDKit's since format 4.0, are not affected. On x86-64
-  RDKit converts such a count to a small number and enumerates cycles
-  until memory runs out; on arm64 the conversion saturates and `reserve`
-  throws.
 
 Other limits:
 
+- RDKit's symmetrized SSSR (`symmetrizeSSSR` with its default algorithm)
+  reserves room for every relevant cycle, converting RingDecomposerLib's
+  `double` count to `size_t` unchecked: undefined from 2^64 cycles, which a
+  ring of 64 "diamonds" (192 atoms) has. Every wrapper that can reach it
+  checks first (`relevant_cycles.h`) and returns `Error::Value` above
+  `i32::MAX` relevant cycles. Molecule pickles older than format 4.0,
+  which RDKit's reader gives stereochemistry as it reads them, before any
+  wrapper can see their bonds, are refused wherever RDKit would read one,
+  inside reaction, bundle, query, catalog, library, PNG, and synthon-space
+  pickles too.
 - The relevant-cycle checks never refuse a molecule RDKit can enumerate,
   but some calls build molecules they cannot predict, and refuse when
   those could have more than 31 independent cycles (whose relevant cycles

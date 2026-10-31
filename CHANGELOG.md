@@ -24,8 +24,10 @@
   substructure libraries, the standardizer, and the rest. A molecule with
   at most 31 independent cycles is never counted; some calls that build
   molecules they cannot predict refuse inputs past that bound (README,
-  "Known limitations"). Only molecule pickles older than format 4.0 remain
-  unchecked.
+  "Known limitations"). Molecule pickles older than format 4.0, which
+  RDKit gives stereochemistry as it reads them, are `Error::Value`
+  wherever RDKit would read one, on its own or inside a reaction, bundle,
+  query, catalog, library, PNG, or synthon-space pickle.
 - A normalizations file (`CleanupParameters::normalizations_file`,
   `Normalizer::new`) is read once and given to RDKit as data or a stream,
   so RDKit never reopens a file the wrapper read. A cleanup normalizations

@@ -31,6 +31,7 @@
 
 #include <climits>
 #include <cstdint>
+#include <istream>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -284,6 +285,21 @@ void check_scsr_relevant_cycles(
 // from the layer and counted. Sanitization could make a bond to a metal
 // dative, so a structure above the bound with one is refused.
 void check_inchi_relevant_cycles(std::string_view inchi, bool sanitize);
+
+// Molecule pickles. MolPickler::molFromPickle assigns stereochemistry to a
+// pickle older than format 4.0 as it reads it (assignStereochemistry), which
+// symmetrizes its rings before any wrapper sees its bonds, so such pickles
+// are refused. Every molecule pickle starts with endianId, the VERSION tag,
+// and its major, minor, and patch versions, and RDKit reads each one it finds
+// in a reaction, bundle, tautomer or extended query, catalog, library, or
+// synthon space, and each recursive query's, from a run of the bytes it is
+// given (once decoded, in extended-query JSON's base64 and PNG metadata's
+// compressed chunks). So these throw ValueErrorException for any run of the
+// bytes that reads as an older pickle's header; bytes that only look like
+// one, in a property's value say, are refused too.
+void check_mol_pickle_versions(std::string_view bytes);
+// The same for the bytes of a stream, read to its end.
+void check_mol_pickle_versions(std::istream &in);
 
 // Throws ValueErrorException if RDKit's CDXML reader (the ChemDraw
 // library's, under CDXMLToChemicalReactions), reading `text` with these

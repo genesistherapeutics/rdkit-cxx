@@ -19,12 +19,13 @@ use std::io::Cursor;
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::standardize_smiles;
-use rdkit_cxx::chem::rd_chem_reactions::reaction_from_smarts;
+use rdkit_cxx::chem::rd_chem_reactions::{ChemicalReaction, reaction_from_smarts};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
 use rdkit_cxx::chem::rd_mol_interchange::mol_to_json;
+use rdkit_cxx::chem::rd_substruct_library::CachedMolHolder;
 use rdkit_cxx::chem::rdinchi::inchi_to_mol;
 use rdkit_cxx::chem::*;
 
@@ -434,6 +435,54 @@ fn molzip() {
             .unwrap();
         let mut parts = vec![mol_from_smiles("C[*:1]").unwrap(), frag.into()];
         check!(n == 64, molzip_fragments(&mut parts));
+    }
+}
+
+#[test]
+fn old_pickles() {
+    use common::{OLD_PICKLE_VERSIONS, mol_pickle_starts, with_pickle_version};
+    // RDKit gives a molecule pickle older than format 4.0 stereochemistry as
+    // it reads it, before its bonds can be counted, so one is refused
+    // wherever RDKit would read it: on its own, or inside another pickle.
+    // RDKit reads none of these, so none need be a pickle it wrote.
+    let mol = mol_from_smarts("[$(C=O)]C").unwrap();
+    let pickle = mol.to_binary();
+    // A recursive query's molecule is pickled inside its atom's.
+    let starts = mol_pickle_starts(&pickle);
+    assert_eq!(starts.len(), 2);
+    let rxn = reaction_from_smarts("[C:1]=[O:2]>>[C:1][O:2]")
+        .unwrap()
+        .to_binary();
+    let mut bundle = MolBundle::default();
+    bundle.add_mol(&mol_from_smiles("CC").unwrap());
+    let bundle = bundle.to_binary().unwrap();
+    let holder_mol = mol_from_smiles("CO").unwrap().to_binary();
+    for version in OLD_PICKLE_VERSIONS {
+        for &at in &starts {
+            let old = with_pickle_version(&pickle, at, version);
+            // SAFETY: refused before RDKit reads it.
+            let result = unsafe { Mol::from_pkl_string(&old) };
+            assert!(refused(result), "{version:?} at {at}");
+        }
+        let at = *mol_pickle_starts(&rxn).last().unwrap();
+        let old = with_pickle_version(&rxn, at, version);
+        // SAFETY: refused before RDKit reads it.
+        assert!(refused(unsafe { ChemicalReaction::from_bin_str(&old) }));
+        let old = with_pickle_version(&bundle, mol_pickle_starts(&bundle)[0], version);
+        // SAFETY: refused before RDKit reads it.
+        assert!(refused(unsafe { MolBundle::from_pkl_string(&old) }));
+        let old = with_pickle_version(&holder_mol, 0, version);
+        let mut holder = CachedMolHolder::default();
+        // SAFETY: refused before the holder keeps it.
+        assert!(refused(unsafe { holder.add_binary(&old) }));
+        assert_eq!(holder.len(), 0);
+    }
+    // SAFETY: pickles RDKit wrote.
+    unsafe {
+        Mol::from_pkl_string(&pickle).unwrap();
+        ChemicalReaction::from_bin_str(&rxn).unwrap();
+        MolBundle::from_pkl_string(&bundle).unwrap();
+        CachedMolHolder::default().add_binary(&holder_mol).unwrap();
     }
 }
 

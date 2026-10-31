@@ -15,6 +15,7 @@
 #include <variant>
 #include <vector>
 
+#include <DataStructs/base64.h>
 #include <GraphMol/MolBundle.h>
 #include <GraphMol/MolEnumerator/LinkNode.h>
 #include <GraphMol/MolEnumerator/MolEnumerator.h>
@@ -80,14 +81,18 @@ void check_base64(const std::string &text) {
   }
 }
 
-// RDKit's pt_to_mol (GeneralizedSubstruct/TextIO.cpp) returns SmilesToMol's
-// or SmartsToMol's null for text that does not parse, which the query then
-// holds and dereferences. Parsing is deterministic, so text that parses here
-// parses there.
+// RDKit's pt_to_mol (GeneralizedSubstruct/TextIO.cpp) decodes a pickle,
+// checked here as it decodes it, and returns SmilesToMol's or SmartsToMol's
+// null for text that does not parse, which the query then holds and
+// dereferences. Parsing is deterministic, so text that parses here parses
+// there.
 void check_mol_element(const bpt::ptree &elem) {
   auto pkl = elem.get<std::string>("pkl", "");
   if (!pkl.empty()) {
     check_base64(pkl);
+    unsigned int len = 0;
+    std::unique_ptr<char[]> decoded(Base64Decode(pkl.c_str(), &len));
+    check_mol_pickle_versions(std::string_view(decoded.get(), len));
     return;
   }
   auto smiles = elem.get<std::string>("smiles", "");
@@ -304,7 +309,9 @@ void check_link_nodes(const RDKit::ROMol &mol) {
 
 std::unique_ptr<ExtendedQueryMol> extended_query_mol_from_binary(
     rust::Slice<const std::uint8_t> pickle) {
-  auto query = std::make_unique<XQ>(to_std(pickle), false);
+  auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
+  auto query = std::make_unique<XQ>(text, false);
   check_extended_query_mol(*query);
   return query;
 }

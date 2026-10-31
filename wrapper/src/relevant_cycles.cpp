@@ -2218,4 +2218,60 @@ void check_inchi_relevant_cycles(std::string_view inchi, bool sanitize) {
   }
 }
 
+namespace {
+
+// How MolPickler::pickleMol starts a pickle: endianId (0xDEADBEEF) and the
+// VERSION tag (0), then the major, minor, and patch versions, each an int32
+// that streamWrite writes little-endian.
+constexpr std::string_view kMolPickleStart("\xEF\xBE\xAD\xDE\0\0\0\0", 8);
+constexpr std::size_t kMolPickleHeader = kMolPickleStart.size() + 12;
+
+std::int64_t read_int32_le(const char *p) {
+  std::uint32_t value = 0;
+  for (int i = 0; i < 4; ++i) {
+    value |= std::uint32_t{static_cast<unsigned char>(p[i])} << (8 * i);
+  }
+  return static_cast<std::int32_t>(value);
+}
+
+}  // namespace
+
+void check_mol_pickle_versions(std::string_view bytes) {
+  for (auto at = bytes.find(kMolPickleStart);
+       at != std::string_view::npos && bytes.size() - at >= kMolPickleHeader;
+       at = bytes.find(kMolPickleStart, at + 1)) {
+    const char *versions = bytes.data() + at + kMolPickleStart.size();
+    const auto major = read_int32_le(versions);
+    const auto minor = read_int32_le(versions + 4);
+    const auto patch = read_int32_le(versions + 8);
+    // molFromPickle refuses these, and perceives stereochemistry when the
+    // rest combine to less than 4000 (in int, which overflows for a major or
+    // minor far below zero: refused here with the rest).
+    if (major > 1000 || minor > 100 || patch > 100) {
+      continue;
+    }
+    if (1000 * major + 10 * minor + patch < 4000) {
+      throw ValueErrorException(
+          "a molecule pickle in format " + std::to_string(major) + "." +
+          std::to_string(minor) +
+          ", older than 4.0, cannot be checked for its relevant cycles "
+          "before RDKit perceives its stereochemistry");
+    }
+  }
+}
+
+void check_mol_pickle_versions(std::istream &in) {
+  // The chunks overlap by a header less one byte, so a header that spans
+  // two is read whole.
+  std::vector<char> chunk(1 << 20);
+  std::string window;
+  while (in.read(chunk.data(), static_cast<std::streamsize>(chunk.size())) ||
+         in.gcount() > 0) {
+    window.append(chunk.data(), static_cast<std::size_t>(in.gcount()));
+    check_mol_pickle_versions(window);
+    window.erase(0,
+                 window.size() - std::min(window.size(), kMolPickleHeader - 1));
+  }
+}
+
 }  // namespace rdkit_cxx

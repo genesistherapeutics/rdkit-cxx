@@ -332,7 +332,9 @@ std::unique_ptr<TautomerQuery> make_tautomer_query(const RDKit::ROMol &query) {
 
 std::unique_ptr<TautomerQuery> tautomer_query_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
-  auto query = std::make_unique<TautomerQuery>(to_std(pickle));
+  auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
+  auto query = std::make_unique<TautomerQuery>(text);
   check_tautomer_query(*query);
   return query;
 }

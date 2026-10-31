@@ -755,7 +755,9 @@ std::unique_ptr<FilterCatalog> filter_catalog_from_catalogs(
 std::unique_ptr<FilterCatalog> filter_catalog_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
   check_can_serialize();
-  auto catalog = std::make_unique<FilterCatalog>(to_std(pickle));
+  auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
+  auto catalog = std::make_unique<FilterCatalog>(text);
   for (unsigned i = 0; i < catalog->getNumEntries(); ++i) {
     check_entry(*catalog->getEntryWithIdx(i), Walk::Load);
   }

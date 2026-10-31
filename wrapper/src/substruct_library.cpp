@@ -239,6 +239,7 @@ std::uint32_t mol_holder_add_binary(MolHolderHandle &holder,
   check_room(cached->size());
   std::string text(reinterpret_cast<const char *>(pickle.data()),
                    pickle.size());
+  check_mol_pickle_versions(text);
   std::unique_ptr<RDKit::ROMol> mol;
   try {
     mol = std::make_unique<RDKit::ROMol>(text);
@@ -738,8 +739,9 @@ std::unique_ptr<SubstructLibrary> substruct_library_from_pickle(
   if (!RDKit::SubstructLibraryCanSerialize()) {
     throw ValueErrorException("RDKit was built without Boost serialization");
   }
-  auto lib = std::make_unique<SubstructLibrary>(
-      std::string(reinterpret_cast<const char *>(data.data()), data.size()));
+  std::string text(reinterpret_cast<const char *>(data.data()), data.size());
+  check_mol_pickle_versions(text);
+  auto lib = std::make_unique<SubstructLibrary>(text);
   const auto &mols = lib->getMolHolder();
   if (!mols) {
     throw ValueErrorException("the library has no molecule holder");
