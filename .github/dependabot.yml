@@ -82,6 +82,7 @@ updates:
     groups:
       pre-commit:
         patterns: ["*"]
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: rdkit-2025.09
@@ -114,6 +115,7 @@ updates:
     groups:
       pre-commit:
         patterns: ["*"]
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: rdkit-2025.03
@@ -146,6 +148,7 @@ updates:
     groups:
       pre-commit:
         patterns: ["*"]
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: rdkit-2024.09
@@ -178,6 +181,7 @@ updates:
     groups:
       pre-commit:
         patterns: ["*"]
+
   - package-ecosystem: github-actions
     directory: /
     target-branch: rdkit-2024.03
