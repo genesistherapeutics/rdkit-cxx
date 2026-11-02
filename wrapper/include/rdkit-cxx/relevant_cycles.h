@@ -197,19 +197,20 @@ void check_parsed_relevant_cycles(const RDKit::ROMol &raw, bool sanitize,
 // Its callers check what the cutting trusts (check_removals).
 void check_frags_sanitize_relevant_cycles(const RDKit::ROMol &mol);
 
-// For ChemicalReaction::runReactants (or, with reactant_idx, runReactant)
-// with these reactants. A run sets its products' bond directions when a
-// reactant has a directed single bond (generateOneProductSet), with
-// setDoubleBondNeighborDirections, which symmetrizes each product's rings;
-// with `sanitize` the caller (or RDKit, as removeNonmatchingReagents does)
-// sanitizes the products. A product is its template's atoms and bonds, with
-// what is left of each reactant glued to them at the atoms its template
-// matched, so its independent cycles are at most the product templates'
-// bonds, plus each reactant's independent cycles and the atoms of its
-// template. Above that bound the reaction is run first on copies of the
-// reactants without bond directions, which perceives nothing and makes the
-// same products, and they are checked. The reaction is initialized; the
-// caller holds control_c_mutex().
+// For ChemicalReaction::runReactants (or, with reactant_idx, runReactant) with
+// these reactants. A run sets its products' bond directions when a reactant has
+// a directed single bond (generateOneProductSet), with
+// setDoubleBondNeighborDirections, which symmetrizes each product's rings; with
+// `sanitize` the caller (or RDKit, as removeNonmatchingReagents does) sanitizes
+// the products. A product is its template's atoms and bonds, with what is left
+// of each reactant glued to them at the atoms its template matched, so its
+// independent cycles are at most the product templates' bonds, plus each
+// reactant's independent cycles and the atoms of its template, unless a product
+// template writes a mapped atom more than once, which brings a copy of what is
+// left with each. Above that bound, or with such a template, the reaction is
+// run first on copies of the reactants without bond directions, which perceives
+// nothing and makes the same products, and they are checked. The reaction is
+// initialized; the caller holds control_c_mutex().
 void check_products_relevant_cycles(const RDKit::ChemicalReaction &rxn,
                                     const RDKit::MOL_SPTR_VECT &reactants,
                                     unsigned max_products, bool sanitize,

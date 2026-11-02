@@ -620,6 +620,40 @@ fn reaction_products() {
     }
 }
 
+/// SMILES for a chain of `m` diamonds from an N to an O. Each hub opens the
+/// next diamond's ring and closes the previous one through its second path,
+/// with ring-bond numbers 1 and 2 in turn.
+fn tipped_chain_smiles(m: u32) -> String {
+    let label = |i: u32| if i % 2 == 0 { 1 } else { 2 };
+    let mut smiles = String::from("NC1");
+    for i in 1..m {
+        smiles += &format!("CC{}(C{})", label(i), label(i - 1));
+    }
+    smiles + &format!("CC(C{})O", label(m - 1))
+}
+
+#[test]
+fn repeated_product_atoms() {
+    // A product template that writes the reactant's two mapped atoms k
+    // times brings the chain of m diamonds between them with each copy,
+    // here closing the copies into a ring of k * m diamonds.
+    for (k, m) in [(2, 5), (4, 16)] {
+        let copies: String = (1..k).map(|_| ".[O:2][N:1]").collect();
+        let mut rxn =
+            reaction_from_smarts(&format!("([N:1].[O:2])>>([N:1]%10{copies}.[O:2]%10)")).unwrap();
+        let mut mol = mol_from_smiles(&tipped_chain_smiles(m)).unwrap();
+        mol.get_bond_with_idx_mut(0)
+            .unwrap()
+            .set_bond_dir(BondDir::Endupright);
+        let result = rxn.run_reactants(&[mol]);
+        if k * m == 64 {
+            assert!(refused(result));
+        } else {
+            assert_eq!(result.unwrap()[0][0].get_num_atoms(), k * (3 * m + 3));
+        }
+    }
+}
+
 #[test]
 fn molzip() {
     for n in [10, 64] {

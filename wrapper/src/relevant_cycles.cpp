@@ -589,8 +589,17 @@ void check_products_relevant_cycles(const RDKit::ChemicalReaction &rxn,
     return;
   }
   std::uint64_t bound = 0;
+  // A mapped atom a product template writes more than once brings the
+  // reactant's other atoms and bonds with each copy
+  // (addReactantNeighborsToProduct), which the bound doesn't count.
+  bool repeated = false;
   for (const auto &templ : rxn.getProducts()) {
     bound += templ->getNumBonds();
+    std::unordered_set<int> maps;
+    for (const auto *atom : templ->atoms()) {
+      repeated |=
+          atom->getAtomMapNum() && !maps.insert(atom->getAtomMapNum()).second;
+    }
   }
   for (std::size_t i = 0; i < reactants.size(); ++i) {
     const auto idx = reactant_idx == UINT_MAX ? i : reactant_idx;
@@ -599,7 +608,7 @@ void check_products_relevant_cycles(const RDKit::ChemicalReaction &rxn,
       bound += rxn.getReactants()[idx]->getNumAtoms();
     }
   }
-  if (bound <= MAX_INDEPENDENT_CYCLES) {
+  if (!repeated && bound <= MAX_INDEPENDENT_CYCLES) {
     return;
   }
   RDKit::MOL_SPTR_VECT copies;
