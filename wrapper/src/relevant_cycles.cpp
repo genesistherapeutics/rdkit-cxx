@@ -805,6 +805,21 @@ std::unique_ptr<RDKit::RWMol> read_ctab(std::istream &in,
     }
   } catch (const RDKit::MolFileUnhandledFeatureException &) {
     delete conf;
+    // RDKit skips the block through its "M  END" (or a "$$$$"), so a reader
+    // of several blocks reads on from there, and fails without one.
+    std::string skipped;
+    if (!in.eof()) {
+      skipped = RDKit::getLine(in);
+    }
+    auto end = [&] {
+      return skipped.substr(0, 6) == "M  END" || skipped.substr(0, 4) == "$$$$";
+    };
+    while (!in.eof() && !in.fail() && !end()) {
+      skipped = RDKit::getLine(in);
+    }
+    if (in.eof() && !end()) {
+      throw RDKit::FileParseException("M  END missing");
+    }
     return nullptr;
   } catch (...) {
     delete conf;
@@ -1046,9 +1061,12 @@ void check_rxn_block_relevant_cycles(const std::string &text,
     if (counts.size() > 6 && !boost::trim_copy(counts.substr(6, 3)).empty()) {
       agents = FPU::stripSpacesAndCast<unsigned int>(counts.substr(6, 3));
     }
-    // Agents are read neither sanitized nor with the strictness asked.
+    // Agents are read with the strictness asked, but neither sanitized nor
+    // without their hydrogens.
     FP::MolFileParserParams agent_params;
     agent_params.sanitize = false;
+    agent_params.removeHs = false;
+    agent_params.strictParsing = params.strictParsing;
     const auto *agents_ps = &agent_params;
     for (auto [n, ps] : {std::pair{reactants + products, &params},
                          std::pair{agents, agents_ps}}) {
@@ -1059,6 +1077,11 @@ void check_rxn_block_relevant_cycles(const std::string &text,
         }
         bool possible = false;
         auto templ = read_ctab(in, *ps, possible);
+        // A template RDKit skips (an unhandled feature) fails a reactant or
+        // product, but stands as a null agent, and RDKit reads on.
+        if (!templ && ps == agents_ps) {
+          continue;
+        }
         if (!templ) {
           return;
         }

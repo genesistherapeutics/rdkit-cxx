@@ -19,7 +19,10 @@ use std::io::Cursor;
 
 use rdkit_cxx::Error;
 use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::standardize_smiles;
-use rdkit_cxx::chem::rd_chem_reactions::{ChemicalReaction, reaction_from_smarts};
+use rdkit_cxx::chem::rd_chem_reactions::{
+    ChemicalReaction, ReactionFromRxnBlockParams, reaction_from_rxn_block,
+    reaction_from_rxn_block_with_params, reaction_from_smarts,
+};
 use rdkit_cxx::chem::rd_fingerprint_generator::{
     GetMorganGeneratorParams, get_morgan_generator_with_params,
 };
@@ -337,6 +340,56 @@ fn sgroup_bonds() {
                 &spoked_v2000(64, kind),
                 &params
             )));
+        }
+    }
+}
+
+/// A V2000 mol block for one carbon.
+const CARBON_V2000: &str = "\n     RDKit          2D\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\nM  END\n";
+
+/// A V2000 rxn block turning carbon into carbon, with `agents`.
+fn rxn_v2000(agents: &[String]) -> String {
+    let mut block = format!("$RXN\n\n      RDKit\n\n  1  1{:3}\n", agents.len());
+    for mol in [CARBON_V2000, CARBON_V2000]
+        .into_iter()
+        .chain(agents.iter().map(String::as_str))
+    {
+        block += "$MOL\n";
+        block += mol;
+    }
+    block
+}
+
+#[test]
+fn rxn_agents() {
+    // An SGroup type RDKit doesn't know is an unhandled feature when parsing
+    // strictly.
+    let skipped = CARBON_V2000.replace("M  END\n", "M  STY  1   1 XXX\nM  END\n");
+    let lax = ReactionFromRxnBlockParams {
+        strict_parsing: false,
+        ..Default::default()
+    };
+    for n in [10, 64] {
+        let big = n == 64;
+        // RDKit skips an agent it can't read, keeping its place, and reads
+        // (and perceives) the next; the wrapper refuses the null agent only
+        // once RDKit is done.
+        let rxn = rxn_v2000(&[skipped.clone(), diamonds_v2000(n)]);
+        match reaction_from_rxn_block(&rxn) {
+            result if big => assert!(refused(result)),
+            Err(Error::Parse { message }) => assert!(message.contains("null agent")),
+            other => panic!("expected the null agent refused, got {other:?}"),
+        }
+        // It reads agents with the strictness asked, which here lets an
+        // unknown CTAB version through.
+        let rxn = rxn_v2000(&[diamonds_v2000(n).replacen("V2000", "V2001", 1)]);
+        let result = reaction_from_rxn_block_with_params(&rxn, &lax);
+        if big {
+            assert!(refused(result));
+        } else {
+            let rxn = result.unwrap();
+            let agent = rxn.get_agents().next().unwrap();
+            assert_eq!(agent.get_num_atoms(), 30);
         }
     }
 }
