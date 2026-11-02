@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Steven Kearnes
+// Copyright (c) 2026 Genesis Molecular AI, Inc.
 // All rights reserved.
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
@@ -112,7 +112,7 @@
 //! }
 //! ```
 //!
-//! The [README](https://github.com/skearnes/rdkit-cxx#readme) has the rest:
+//! The [README](https://github.com/genesistherapeutics/rdkit-cxx#readme) has the rest:
 //! the environment, how the wrappers work, the known limitations, and how
 //! coverage is measured.
 //!

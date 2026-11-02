@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -43,7 +43,7 @@ jobs:
   # with read-only permissions: the bump commit reaches the publish job as a
   # patch, and nothing is pushed until crates.io has the crate.
   build:
-    if: github.repository == 'skearnes/rdkit-cxx'
+    if: github.repository == 'genesistherapeutics/rdkit-cxx'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
@@ -166,8 +166,9 @@ jobs:
       - run: cargo test --workspace --locked
 
   # The only job that can mint a crates.io token (id-token) or push to the
-  # branch (ACTIONS_PUSH), so it runs no third-party code: the token exchange
-  # is curl, and cargo publish --no-verify runs no build scripts.
+  # branch (the CI app's token), so it runs no third-party code: its actions
+  # are GitHub's own, the crates.io token exchange is curl, and cargo publish
+  # --no-verify runs no build scripts.
   publish:
     needs: build
     runs-on: ubuntu-24.04
@@ -184,12 +185,22 @@ jobs:
       VERSION: ${{ needs.build.outputs.version }}
       COMMIT: ${{ needs.build.outputs.commit }}
       PATCH: ${{ needs.build.outputs.patch }}
-      USER_AGENT: rdkit-cxx-release (https://github.com/skearnes/rdkit-cxx)
+      USER_AGENT: rdkit-cxx-release (https://github.com/genesistherapeutics/rdkit-cxx)
     steps:
+      # The organization's CI GitHub App pushes the tag and the version bump,
+      # with a token limited to this repository's contents and revoked when
+      # the job ends. Pushing the bump to main needs the app on the bypass
+      # list of main's ruleset, which otherwise requires a pull request.
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          permission-contents: write
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ needs.build.outputs.base }}
-          token: ${{ secrets.ACTIONS_PUSH }}
+          token: ${{ steps.app-token.outputs.token }}
       - name: Apply the version bump
         run: |
           git config user.name github-actions

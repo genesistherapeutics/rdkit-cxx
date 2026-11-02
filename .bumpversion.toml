@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -8,7 +8,7 @@
 # (build.rs), so they move by hand with environment.yml (README.md, Releases).
 
 [tool.bumpversion]
-current_version = "2026.9.0"
+current_version = "2026.9.1"
 
 [[tool.bumpversion.files]]
 filename = "Cargo.toml"

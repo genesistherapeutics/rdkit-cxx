@@ -1,4 +1,4 @@
-# Copyright (c) 2026 Steven Kearnes
+# Copyright (c) 2026 Genesis Molecular AI, Inc.
 # All rights reserved.
 # Use of this source code is governed by a BSD-style
 # license that can be found in the LICENSE file.
@@ -23,14 +23,15 @@ updates:
 
   # cxx-gen writes C++ for the cxx runtime of the same release, so the two are
   # pinned exactly and move together. Other requirements change only when a
-  # release falls outside them; Cargo.lock takes every update.
+  # release falls outside them (Dependabot's default for Cargo, which its
+  # config can't name: it takes only auto and lockfile-only for Cargo);
+  # Cargo.lock takes every update.
   - package-ecosystem: cargo
     directory: /
     schedule:
       interval: weekly
     cooldown:
       default-days: 7
-    versioning-strategy: increase-if-necessary
     groups:
       cxx:
         patterns: ["cxx", "cxx-gen"]

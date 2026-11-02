@@ -11,7 +11,8 @@ copies of them, unmodified, from the release it is named for:
 | `2026.09.1/` | [`Release_2026_09_1`](https://github.com/rdkit/rdkit/tree/Release_2026_09_1) |
 
 They are RDKit's code, under RDKit's BSD 3-clause license
-([`../third_party/rdkit/LICENSE`](../third_party/rdkit/LICENSE)).
+([`../third_party/rdkit/LICENSE`](../third_party/rdkit/LICENSE)). The
+pre-commit hooks skip these directories.
 
 ## Why one directory per release
 
