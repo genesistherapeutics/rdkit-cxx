@@ -72,8 +72,9 @@ void check_reaction_cx(std::string_view text, bool allow_cx = true);
 // The reactions MolStandardize's transformation readers parse from text
 // (readTransformations in TransformCatalogUtils.cpp, which the Normalizer's
 // stream constructor uses): the second tab-separated field of each line, of
-// at most 511 characters, without spaces. (Its fragment, acid-base, and
-// tautomer readers erase the spaces from their SMARTS too, and a SMARTS
+// at most 511 characters, without spaces, as transformation_data reads
+// them, which refuses a line without both fields. (Its fragment, acid-base,
+// and tautomer readers erase the spaces from their SMARTS too, and a SMARTS
 // without spaces or tabs has no extension.)
 void check_transformation_lines(const std::string &text);
 

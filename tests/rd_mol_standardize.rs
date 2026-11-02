@@ -404,6 +404,19 @@ fn only_normalizing_reads_the_normalizations_file() {
     reionize_with_params(&m, &params).unwrap();
     // A Normalizer made from the file itself reads it as given.
     Normalizer::new(&empty, 200).unwrap();
+    // RDKit's reader would read past a line without both fields.
+    for text in ["abc\n", "\t\t\n", "x\t\n"] {
+        std::fs::write(&empty, text).unwrap();
+        assert!(value(normalize_with_params(&m, &params)));
+        assert!(matches!(
+            normalizer_from_params(&params),
+            Err(Error::Value { .. })
+        ));
+        assert!(matches!(
+            Normalizer::new(&empty, 200),
+            Err(Error::Value { .. })
+        ));
+    }
     std::fs::remove_file(&empty).unwrap();
     assert!(os(charge_parent_with_params(
         &m,
@@ -1064,6 +1077,13 @@ fn normalizer() {
         normalizer_from_data("x\tC>>>N", &params),
         Err(Error::Parse { .. })
     ));
+    // RDKit's reader would read past a line without both fields.
+    for data in ["abc", "\t\t", "x\t\n"] {
+        assert!(matches!(
+            normalizer_from_data(data, &params),
+            Err(Error::Value { .. })
+        ));
+    }
     // A transformation with no product, or two reactants, is RDKit's
     // ChemicalReactionException (E4).
     let no_product = normalizer_from_data("x\t[C:1]>>", &params).unwrap();
