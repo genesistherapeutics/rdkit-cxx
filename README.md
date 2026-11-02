@@ -453,7 +453,8 @@ bump-my-version bump --new-version 2027.3.0
 
 Before that pull request, create the old series' branch from `main`
 (`rdkit-2026.09`), which keeps the series and its releases from then on, and
-add it to the Release workflow's branch choices.
+add it to the Release workflow's branch choices and to Dependabot's target
+branches (`.github/dependabot.yml`).
 
 The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
 conda-forge daily and opens an issue, assigned to the repository owner, with
