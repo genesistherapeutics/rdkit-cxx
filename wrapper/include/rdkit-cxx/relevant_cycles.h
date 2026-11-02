@@ -239,14 +239,15 @@ void check_smiles_relevant_cycles(
     const RDKit::v2::SmilesParse::SmilesParserParams &params);
 
 // Mol blocks. RDKit's reader (MolFromMolDataStream) reads a block's CTAB
-// without perceiving anything, then (finishMolProcessing) symmetrizes the
-// rings of the graph it read: detectBondStereochemistry does, for every
-// block with a conformer (all of them), after only the cleanup steps
-// (SANITIZE_CLEANUP, which changes no bond's ring family) when it sanitizes
-// and removes hydrogens, and without sanitizing; sanitization symmetrizes
-// the graph its organometallic cleanup leaves, after hydrogens are removed
-// if they are. The independent cycles of the bonds a block lists bound them
-// all.
+// without perceiving anything, then (finishMolProcessing) makes its SGroups'
+// zero-order and dative bonds (processSGroups), which leave the ring graph, and
+// symmetrizes the rings of the graph that leaves: detectBondStereochemistry
+// does, for every block with a conformer (all of them), after only the cleanup
+// steps (SANITIZE_CLEANUP, which changes no bond's ring family) when it
+// sanitizes and removes hydrogens, and without sanitizing; sanitization
+// symmetrizes the graph its organometallic cleanup leaves, after hydrogens are
+// removed if they are. The independent cycles of the bonds a block lists bound
+// them all.
 
 // Throws ValueErrorException if RDKit, reading `block` (the text
 // MolFromMolDataStream reads: header, counts line, CTAB through "M  END")

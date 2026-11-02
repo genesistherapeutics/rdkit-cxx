@@ -277,6 +277,70 @@ fn mol_blocks() {
     assert_eq!(mol.get_ring_info().num_rings().unwrap(), 40);
 }
 
+/// A V2000 mol block for a ring of `n` diamonds and an iron atom bonded to
+/// each hub, whose 3n relevant cycles are all 4-rings, with data SGroups of
+/// `kind` that take those spokes out of the ring graph as RDKit finishes the
+/// block, leaving the ring's 2^n + n: "ZBO" makes them zero-order, and
+/// "MRV_COORDINATE_BOND_TYPE" makes them dative, from query (any) bonds.
+fn spoked_v2000(n: u32, kind: &str) -> String {
+    let ring = diamond_bonds(n);
+    let spokes = ring.len() as u32 + 1..ring.len() as u32 + n + 1;
+    let mut block = format!(
+        "spoked\n     RDKit          2D\n\n{:3}{:3}  0  0  0  0  0  0  0  0999 V2000\n",
+        3 * n + 1,
+        ring.len() as u32 + n
+    );
+    for i in 0..3 * n {
+        let angle = f64::from(i) * std::f64::consts::TAU / f64::from(3 * n);
+        block += &format!(
+            "{:10.4}{:10.4}{:10.4} C   0  0  0  0  0  0  0  0  0  0  0  0\n",
+            20.0 * angle.cos(),
+            20.0 * angle.sin(),
+            0.0
+        );
+    }
+    block += "    0.0000    0.0000    0.0000 Fe  0  0  0  0  0  0  0  0  0  0  0  0\n";
+    for (a, b) in ring {
+        block += &format!("{:3}{:3}  1  0\n", a + 1, b + 1);
+    }
+    let spoke_type = if kind == "ZBO" { 1 } else { 8 };
+    for i in 0..n {
+        block += &format!("{:3}{:3}{spoke_type:3}  0\n", 3 * i + 1, 3 * n + 1);
+    }
+    if kind == "ZBO" {
+        block += "M  STY  1   1 DAT\nM  SDT   1 ZBO\n";
+        for chunk in spokes.collect::<Vec<_>>().chunks(15) {
+            block += &format!("M  SBL   1{:3}", chunk.len());
+            for bond in chunk {
+                block += &format!("{bond:4}");
+            }
+            block += "\n";
+        }
+    } else {
+        for (sgroup, bond) in (1..).zip(spokes) {
+            block += &format!(
+                "M  STY  1{sgroup:4} DAT\nM  SDT {sgroup:3} {kind}\nM  SED {sgroup:3} {bond}\n"
+            );
+        }
+    }
+    block + "M  END\n"
+}
+
+#[test]
+fn sgroup_bonds() {
+    for kind in ["ZBO", "MRV_COORDINATE_BOND_TYPE"] {
+        for (sanitize, remove_hs) in PARAMS {
+            let params = mol_params(sanitize, remove_hs);
+            let mol = mol_from_mol_block_with_params(&spoked_v2000(10, kind), &params).unwrap();
+            assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034, "{kind}");
+            assert!(refused(mol_from_mol_block_with_params(
+                &spoked_v2000(64, kind),
+                &params
+            )));
+        }
+    }
+}
+
 /// SD text whose `bad` record follows enough small records to straddle the
 /// checked stream's 64 KiB chunks, then a last small record.
 fn sd_text(bad: &str) -> String {

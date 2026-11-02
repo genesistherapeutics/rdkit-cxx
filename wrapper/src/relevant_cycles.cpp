@@ -25,6 +25,7 @@
 #include <GraphMol/PeriodicTable.h>
 #include <GraphMol/QueryOps.h>
 #include <GraphMol/SmilesParse/SmilesParse.h>
+#include <GraphMol/SubstanceGroup.h>
 #include <RDGeneral/Exceptions.h>
 #include <RDGeneral/FileParseException.h>
 #include <RDGeneral/StreamOps.h>
@@ -860,15 +861,65 @@ void check_finished_sanitize(const RDKit::ROMol &mol, bool remove_hs) {
 
 namespace {
 
+// The molecule as finishMolProcessing's processSGroups leaves its bonds,
+// before anything perceives it, or null if that changes none: a ZBO data
+// SGroup's bonds become zero-order, and an unspecified (query) bond that a
+// MRV_COORDINATE_BOND_TYPE data SGroup names becomes dative. Either takes
+// bonds out of the ring graph, which can leave it more relevant cycles than
+// the CTAB's. Where processSGroups throws, RDKit's reader fails before it
+// perceives anything, and the CTAB stands.
+std::unique_ptr<RDKit::RWMol> with_sgroup_bonds(const RDKit::RWMol &raw) {
+  std::unique_ptr<RDKit::RWMol> res;
+  try {
+    for (const auto &sg : RDKit::getSubstanceGroups(raw)) {
+      std::string field;
+      if (sg.getProp<std::string>("TYPE") != "DAT" ||
+          !sg.getPropIfPresent("FIELDNAME", field)) {
+        continue;
+      }
+      if (field == "ZBO") {
+        if (!res) {
+          res = std::make_unique<RDKit::RWMol>(raw);
+        }
+        for (auto idx : sg.getBonds()) {
+          res->getBondWithIdx(idx)->setBondType(RDKit::Bond::ZERO);
+        }
+      } else if (field == "MRV_COORDINATE_BOND_TYPE") {
+        std::vector<std::string> fields;
+        if (!sg.getPropIfPresent("DATAFIELDS", fields) || fields.empty()) {
+          continue;
+        }
+        // As processMrvCoordinateBond, which ignores a bond it can't find.
+        const unsigned idx = FPU::toUnsigned(fields[0], true) - 1;
+        if (idx >= raw.getNumBonds()) {
+          continue;
+        }
+        if (!res) {
+          res = std::make_unique<RDKit::RWMol>(raw);
+        }
+        auto *bond = res->getBondWithIdx(idx);
+        if (bond->getBondType() == RDKit::Bond::UNSPECIFIED) {
+          bond->setBondType(RDKit::Bond::DATIVE);
+        }
+      }
+    }
+  } catch (...) {
+    return nullptr;
+  }
+  return res;
+}
+
 // Checks a molecule RDKit's CTAB reader read, which finishMolProcessing
 // finishes with `params` (rxn templates are finished the same way).
 void check_ctab_relevant_cycles(const RDKit::RWMol &raw,
                                 bool chirality_possible,
                                 const FP::MolFileParserParams &params) {
+  const auto changed = with_sgroup_bonds(raw);
+  const RDKit::RWMol &read = changed ? *changed : raw;
   // The graph detectBondStereochemistry symmetrizes, unsanitized or after
   // SANITIZE_CLEANUP, which changes only single and double bonds.
-  check_graph_relevant_cycles(raw);
-  if (!params.sanitize || !has_single_bond_to_metal(raw)) {
+  check_graph_relevant_cycles(read);
+  if (!params.sanitize || !has_single_bond_to_metal(read)) {
     return;
   }
   // The molecule finished as RDKit's reader finishes it without sanitizing,
@@ -881,7 +932,7 @@ void check_ctab_relevant_cycles(const RDKit::RWMol &raw,
   } catch (...) {
     // The steps it shares with the sanitizing reader come first; past them,
     // the molecule as read stands in for it.
-    mol = raw;
+    mol = read;
     for (auto *atom : mol.atoms()) {
       atom->calcExplicitValence(false);
     }
@@ -1341,8 +1392,11 @@ namespace {
 // `text` with the type of every V3000 bond (in a BEGIN BOND block, as
 // ParseV3000BondBlock reads them) made dative (9), but hydrogen bonds (10),
 // which the SCSR expansion treats apart. Sets `dative` if a bond was dative
-// already.
+// already, or was a query bond (8) that a MRV_COORDINATE_BOND_TYPE SGroup
+// could make dative, which it no longer does once the bond is dative.
 std::string scsr_with_dative_bonds(const std::string &text, bool &dative) {
+  const bool coordinate =
+      text.find("MRV_COORDINATE_BOND_TYPE") != std::string::npos;
   std::istringstream in(text);
   std::string out;
   bool in_bonds = false;
@@ -1373,7 +1427,7 @@ std::string scsr_with_dative_bonds(const std::string &text, bool &dative) {
         unsigned type = 0;
         std::from_chars(tokens[1].data(), tokens[1].data() + tokens[1].size(),
                         type);
-        dative |= type == 9;
+        dative |= type == 9 || (coordinate && type == 8);
         const auto at =
             static_cast<std::size_t>(tokens[1].data() - logical.data());
         logical.replace(at, tokens[1].size(), type == 10 ? "10" : "9");
