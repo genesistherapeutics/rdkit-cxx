@@ -25,6 +25,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_pipeline.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize_normalize.h"
 #include "rdkit-cxx/streams.h"
@@ -238,6 +239,10 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
   auto options = to_options(data);
   check_metal_smarts(options.metalNof, "metalNof");
   check_metal_smarts(options.metalNon, "metalNon");
+  // The standardize step reads these with RDKit's transformation reader,
+  // which reads past the fields of a line without both
+  // (transformation_data).
+  transformation_data(options.normalizerData);
   auto pipeline = std::make_unique<Pipeline>(options);
   auto steps = MS::Operations::standardizationSteps;
   bool replaced = false;

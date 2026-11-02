@@ -13,6 +13,8 @@
 
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace rdkit_cxx {
 
@@ -26,6 +28,16 @@ std::string read_file(const std::string &name);
 // RDKit::BadFileException("Invalid input file <name>"), as RDKit's
 // openAndCheckStream (MolSupplier.h) does.
 std::string read_supplier_file(const std::string &name);
+
+// The (name, reaction SMARTS) pairs RDKit's transformation reader
+// (readTransformations in TransformCatalogUtils.cpp) makes of a
+// transformation file's text, for handing a file read once to RDKit as data
+// and for checking text RDKit reads from a stream. Its getReaction takes a
+// line's second tab-separated field without checking there is one,
+// dereferencing the tokenizer's end, so a line without both fields throws
+// ValueErrorException.
+std::vector<std::pair<std::string, std::string>> transformation_data(
+    const std::string &text);
 
 // The most digits the writers format a coordinate with. libstdc++ formats a
 // double in a stack buffer as long as its output (alloca in

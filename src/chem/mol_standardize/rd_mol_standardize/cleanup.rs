@@ -24,7 +24,11 @@ use crate::{Error, Result};
 /// replaces the matching file.
 #[derive(Clone, Debug, PartialEq)]
 pub struct CleanupParameters {
-    /// The file of normalization transformations.
+    /// The file of normalization transformations, read when the
+    /// parameters have no normalization data, by the operations that
+    /// normalize, and handed to RDKit as data. A line without both fields,
+    /// which RDKit would read past, and a file of no transformations, which
+    /// RDKit would take for no data, are `Error::Value`.
     pub normalizations_file: PathBuf,
     /// The file of acid and base definitions.
     pub acidbase_file: PathBuf,

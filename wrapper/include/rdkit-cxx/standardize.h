@@ -36,6 +36,10 @@ using CleanupParameters = RDKit::MolStandardize::CleanupParameters;
 CleanupParameters to_cleanup_parameters(const CleanupParametersData &data);
 CleanupParametersData from_cleanup_parameters(const CleanupParameters &params);
 
+// Reads the parameters' normalizations file, when they have no normalization
+// data, into that data, so RDKit does not open it itself (standardize.cpp).
+void read_normalizations(CleanupParameters &params);
+
 // Takes ownership of a molecule an RDKit object returned, which may be an
 // ROMol or an RWMol, as an RWMol without cached matrices (CONVENTIONS.md U6).
 std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol);

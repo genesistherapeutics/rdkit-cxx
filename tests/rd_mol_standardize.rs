@@ -1004,6 +1004,13 @@ fn normalizer() {
         normalizer_from_data("x\tC>>>N", &params),
         Err(Error::Parse { .. })
     ));
+    // RDKit's reader would read past a line without both fields.
+    for data in ["abc", "\t\t", "x\t\n"] {
+        assert!(matches!(
+            normalizer_from_data(data, &params),
+            Err(Error::Value { .. })
+        ));
+    }
     // A transformation with no product, or two reactants, is RDKit's
     // ChemicalReactionException (E4).
     let no_product = normalizer_from_data("x\t[C:1]>>", &params).unwrap();
@@ -1221,4 +1228,54 @@ M  END
         smiles(&MetalDisconnector::default().disconnect(&m).unwrap()),
         "C1=CCC=C1.[*]->[Fe+].[CH2-]CCCC"
     );
+}
+
+#[test]
+fn normalization_files_are_read_once() {
+    // The wrapper reads a normalizations file once and hands RDKit its
+    // transformations, as data or a stream.
+    let nitro = "// one transformation\nNitro\t[N+0:1](=[O:2])=[O:3]>>[N+:1]([O-:2])=[O:3]\n";
+    let path = std::env::temp_dir().join(format!("rdkit_cxx_nitro_{}.txt", std::process::id()));
+    std::fs::write(&path, nitro).unwrap();
+    let normalizer = Normalizer::new(&path, 200).unwrap();
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    let from_params = normalizer_from_params(&params).unwrap();
+    let cleaned = cleanup_with_params(&mol("CN(=O)=O"), &params).unwrap();
+    std::fs::remove_file(&path).unwrap();
+    assert_eq!(smiles(&cleaned), "C[N+](=O)[O-]");
+    for normalizer in [&normalizer, &from_params] {
+        assert_eq!(
+            smiles(&normalizer.normalize(&mol("CN(=O)=O")).unwrap()),
+            "C[N+](=O)[O-]"
+        );
+    }
+    // Only the operations that normalize read the file.
+    assert_eq!(
+        smiles(&reionize_with_params(&mol("CC"), &params).unwrap()),
+        "CC"
+    );
+
+    // RDKit takes no transformations to mean the file, which it would then
+    // open itself.
+    std::fs::write(&path, "// none\n").unwrap();
+    let cleaned = cleanup_with_params(&mol("CC"), &params);
+    let from_params = normalizer_from_params(&params);
+    std::fs::remove_file(&path).unwrap();
+    assert!(matches!(cleaned, Err(Error::Value { .. })), "{cleaned:?}");
+    assert!(matches!(from_params, Err(Error::Value { .. })));
+
+    // RDKit's reader would read past a line without both fields.
+    for text in ["abc\n", "\t\t\n", "x\t\n"] {
+        std::fs::write(&path, text).unwrap();
+        let normalizer = Normalizer::new(&path, 1);
+        let from_params = normalizer_from_params(&params);
+        let cleaned = cleanup_with_params(&mol("CC"), &params);
+        std::fs::remove_file(&path).unwrap();
+        assert!(matches!(normalizer, Err(Error::Value { .. })));
+        assert!(matches!(from_params, Err(Error::Value { .. })));
+        assert!(matches!(cleaned, Err(Error::Value { .. })), "{cleaned:?}");
+    }
 }
