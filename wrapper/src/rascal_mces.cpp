@@ -580,7 +580,9 @@ std::vector<const RDKit::ROMol *> mol_pointers(BorrowedMols &mols) {
   for (const auto &mol : mols.mols()) {
     res.push_back(mol.get());
   }
-  check_rascal_mols(res);
+  // The clusterings' options are RascalOptions' defaults, with
+  // completeAromaticRings.
+  check_rascal_mols(res, Rascal::RascalOptions().completeAromaticRings);
   return res;
 }
 
@@ -638,14 +640,53 @@ Rascal::RascalOptions rascal_options_from(const RascalOptionsData &d) {
   return o;
 }
 
+namespace {
+
+// With completeAromaticRings, buildPairs writes each ring of a molecule's
+// ring info as SMILES (extractRings): a copy of the molecule without the
+// atoms outside the ring, which MolToSmiles perceives. The rings of a
+// symmetrized SSSR are chordless, so each piece is one cycle, but other
+// ring info (fast_find_rings) can hold a ring through any atoms, even the
+// whole molecule.
+void check_ring_pieces(const RDKit::ROMol &mol) {
+  const auto *info = mol.getRingInfo();
+  if (!info->isInitialized() || info->isSymmSssr()) {
+    return;
+  }
+  for (const auto &ring : info->atomRings()) {
+    RDKit::RWMol piece;
+    std::vector<int> index(mol.getNumAtoms(), -1);
+    for (auto a : ring) {
+      if (a >= 0 && static_cast<unsigned>(a) < index.size() && index[a] < 0) {
+        index[a] =
+            static_cast<int>(piece.addAtom(new RDKit::Atom(0), false, true));
+      }
+    }
+    for (const auto *bond : mol.bonds()) {
+      auto begin = index[bond->getBeginAtomIdx()];
+      auto end = index[bond->getEndAtomIdx()];
+      if (begin >= 0 && end >= 0) {
+        piece.addBond(begin, end, bond->getBondType());
+      }
+    }
+    check_graph_relevant_cycles(piece);
+  }
+}
+
+}  // namespace
+
 // The results remove atoms and bonds from copies of the molecules
 // (makeCliqueFrags, extractRings, makeMolFrags), which trusts what
 // check_removals checks.
-void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols) {
+void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols,
+                       bool complete_aromatic_rings) {
   int large = 0;
   for (const auto *mol : mols) {
     check_matrix_size(*mol);
     check_removals(*mol);
+    if (complete_aromatic_rings) {
+      check_ring_pieces(*mol);
+    }
     if (std::int64_t{mol->getNumAtoms()} + mol->getNumBonds() >
         kRascalMaxSquared) {
       ++large;
@@ -671,7 +712,7 @@ std::unique_ptr<RascalResultList> find_mces(const RWMol &mol1,
                                             const RWMol &mol2,
                                             const RascalOptionsData &opts) {
   auto options = rascal_options_from(opts);
-  check_rascal_mols({&mol1, &mol2});
+  check_rascal_mols({&mol1, &mol2}, options.completeAromaticRings);
   auto list = std::make_unique<RascalResultList>();
   // The MCES matches substructures (control_c_lock.h).
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());

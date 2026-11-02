@@ -28,6 +28,7 @@ use rdkit_cxx::chem::rd_fingerprint_generator::{
 };
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
 use rdkit_cxx::chem::rd_mol_interchange::mol_to_json;
+use rdkit_cxx::chem::rd_rascal_mces::{RascalOptions, find_mces_with_opts, rascal_cluster};
 use rdkit_cxx::chem::rd_sln_parse::{mol_from_query_sln, mol_from_sln};
 use rdkit_cxx::chem::rd_substruct_library::CachedMolHolder;
 use rdkit_cxx::chem::rdinchi::inchi_to_mol;
@@ -739,5 +740,45 @@ fn smiles_and_tdt_suppliers() {
         suppl.set_data(&tdt).unwrap();
         let results: Vec<_> = suppl.mols().collect();
         assert_eq!(results.iter().any(is_refusal), big);
+    }
+}
+
+/// A ring of `n` units of K4 less an edge: hub `i` is atom `3i`, and atoms
+/// `3i + 1` and `3i + 2`, bonded to each other, join it to the next hub. Its
+/// 2^n + 2n relevant cycles are 2n triangles and the shortest ways around.
+/// `fast_find_rings` finds a ring through every atom.
+fn k4e_ring(n: u32) -> Mol {
+    let mut rw = RWMol::default();
+    for _ in 0..3 * n {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for i in 0..n {
+        let (hub, next) = (3 * i, 3 * ((i + 1) % n));
+        let (u, v) = (hub + 1, hub + 2);
+        for (a, b) in [(u, v), (hub, u), (hub, v), (u, next), (v, next)] {
+            rw.add_bond_with_order(a, b, BondType::Single).unwrap();
+        }
+    }
+    rw.update_property_cache().unwrap();
+    fast_find_rings(&mut rw).unwrap();
+    rw.into()
+}
+
+#[test]
+fn rascal_ring_pieces() {
+    // With complete_aromatic_rings, RASCAL writes each ring of the ring
+    // info as SMILES, keeping only the ring's atoms: here, all of them.
+    let opts = RascalOptions {
+        timeout: 1,
+        ..Default::default()
+    };
+    for n in [10, 64] {
+        let mol = k4e_ring(n);
+        let rings = mol.get_ring_info().atom_rings();
+        assert!(rings.iter().any(|ring| ring.len() == 3 * n as usize));
+        check!(n == 64, find_mces_with_opts(&mol, &mol.clone(), &opts));
+        if n == 64 {
+            assert!(refused(rascal_cluster(&[mol.clone(), mol])));
+        }
     }
 }
