@@ -28,6 +28,7 @@ use rdkit_cxx::chem::rd_fingerprint_generator::{
 };
 use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
 use rdkit_cxx::chem::rd_mol_interchange::mol_to_json;
+use rdkit_cxx::chem::rd_sln_parse::{mol_from_query_sln, mol_from_sln};
 use rdkit_cxx::chem::rd_substruct_library::CachedMolHolder;
 use rdkit_cxx::chem::rdinchi::inchi_to_mol;
 use rdkit_cxx::chem::*;
@@ -390,6 +391,35 @@ fn rxn_agents() {
             let rxn = result.unwrap();
             let agent = rxn.get_agents().next().unwrap();
             assert_eq!(agent.get_num_atoms(), 30);
+        }
+    }
+}
+
+/// SLN for a ring of `n` diamonds, written with the macro `Q` for every
+/// ring closure, so that only the macro's definition has an "@". Each
+/// hub's second path hangs off it, labeled for the next hub to close on,
+/// and the first hub carries the last hub's too.
+fn diamonds_sln_macro(n: u32) -> String {
+    let mut sln = String::from("{Q:@}C[1](C[2])(C[3])C");
+    for i in 1..n - 1 {
+        sln += &format!("CQ{}(C[{}])C", i + 2, i + 3);
+    }
+    sln + &format!("CQ{}Q2CQ1", n + 1)
+}
+
+#[test]
+fn sln_macros() {
+    for n in [10, 64] {
+        let sln = diamonds_sln_macro(n);
+        assert_eq!(sln.matches('@').count(), 1);
+        if n == 64 {
+            assert!(refused(mol_from_sln(&sln)));
+            assert!(refused(mol_from_query_sln(&sln)));
+        } else {
+            let mol = mol_from_sln(&sln).unwrap();
+            assert_eq!(mol.get_num_atoms(), 30);
+            assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034);
+            mol_from_query_sln(&sln).unwrap();
         }
     }
 }
