@@ -335,20 +335,22 @@ Other limits:
   wrapper can see their bonds, are refused wherever RDKit would read one,
   inside reaction, bundle, query, catalog, library, PNG, and synthon-space
   pickles too.
-- The relevant-cycle checks never refuse a molecule RDKit can enumerate,
-  but some calls build molecules they cannot predict, and refuse when
-  those could have more than 31 independent cycles (whose relevant cycles
-  could then be too many) instead of counting them: R-group decomposition
-  of such a core or molecule; scaffold networks for such a molecule, or
-  with bond breakers that bond atoms anew; synthon space searches for such
-  a query, or in a space whose reactions could make such products; the
-  standardizer for such a molecule with bonds to metals, zero-order, dative
-  or hydrogen bonds, or with normalizations that change rings, and with
-  normalizations that bond atoms anew for any molecule; the tautomer hashes
-  for such a molecule with zero-order, dative or hydrogen bonds; query SLN
-  with more than 31 ring closures; InChI, SCSR mol blocks, and CDXML read
-  with sanitization whose structures have bonds to metals; binary CDX; and
-  a streamed record held back for its count past 1 MiB.
+- The relevant-cycle checks never refuse a molecule RDKit can enumerate, but
+  some calls build molecules they cannot predict, and refuse when those
+  could have more than 31 independent cycles (whose relevant cycles could
+  then be too many) instead of counting them: R-group decomposition of such
+  a core or molecule; scaffold networks for such a molecule, or with bond
+  breakers that bond atoms anew; synthon space searches for such a query, or
+  in a space whose reactions could make such products; the standardizer for
+  such a molecule with bonds to metals, zero-order, dative or hydrogen
+  bonds, or with normalizations that change rings, and with normalizations
+  that bond atoms anew for any molecule; the tautomer hashes for such a
+  molecule with zero-order, dative or hydrogen bonds; query SLN with more
+  than 31 ring closures, counted once its macros are expanded; InChI, SCSR
+  mol blocks, and CDXML read with sanitization whose structures have bonds
+  to metals; SCSR mol blocks with dative bonds, or with query bonds and a
+  coordinate-bond SGroup; binary CDX; and a streamed record held back for
+  its count past 1 MiB.
 
 - Substructure matching runs one call at a time across the process, since
   every match swaps RDKit's `SIGINT` handler through static variables

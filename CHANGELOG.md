@@ -28,7 +28,14 @@
   `Normalizer::new`) is read once and given to RDKit as data or a stream,
   so RDKit never reopens a file the wrapper read. A cleanup normalizations
   file with no transformations is `Error::Value`: RDKit takes empty data
-  to mean the file, and would open it again.
+  to mean the file, and would open it again. `Normalizer::new` reads its
+  file on every call, where RDKit kept its first reading of each file name
+  for the process.
+- `Normalizer::new`, `normalizer_from_data`, and `Pipeline::new` (its
+  `normalizer_data`) are `Error::Value` for a transformation line without
+  both a name and a reaction SMARTS. RDKit's transformation reader takes
+  a line's second field without checking that it has one, reading past
+  the end of its fields.
 
 ## 2026.9.1
 
