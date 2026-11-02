@@ -641,7 +641,7 @@ fn reaction_products() {
 /// next diamond's ring and closes the previous one through its second path,
 /// with ring-bond numbers 1 and 2 in turn.
 fn tipped_chain_smiles(m: u32) -> String {
-    let label = |i: u32| if i % 2 == 0 { 1 } else { 2 };
+    let label = |i: u32| if i.is_multiple_of(2) { 1 } else { 2 };
     let mut smiles = String::from("NC1");
     for i in 1..m {
         smiles += &format!("CC{}(C{})", label(i), label(i - 1));
