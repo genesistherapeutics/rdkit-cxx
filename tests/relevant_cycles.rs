@@ -608,6 +608,22 @@ fn formats() {
 }
 
 #[test]
+fn inchi_layer_sizes() {
+    // Multipliers that name more atoms than InChI takes are refused before
+    // the check builds them: a formula's, and a connection layer's.
+    let pairs = ["1-2"; 33].join("-");
+    for inchi in [
+        format!("InChI=1S/1048576C1048576/c{pairs}"),
+        format!("InChI=1S/C2/c1048576*{pairs}"),
+    ] {
+        assert!(matches!(
+            inchi_to_mol(&inchi),
+            Err(Error::Value { message }) if message.contains("atoms InChI takes")
+        ));
+    }
+}
+
+#[test]
 fn reaction_products() {
     let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
     for n in [10, 64] {

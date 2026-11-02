@@ -2117,12 +2117,27 @@ bool SmilesLineScanner::line(std::string_view text) {
 
 namespace {
 
+// InChI takes at most MAX_ATOMS (32766, with LargeMolecules) atoms, each
+// with at most MAXVAL (20) neighbors (inchi_api.h), so a layer that names
+// more fails in InChI anyway, and is refused before the check builds it.
+constexpr std::uint64_t kMaxInchiAtoms = 32766;
+constexpr std::uint64_t kMaxInchiBonds = 20 * kMaxInchiAtoms;
+
+void check_inchi_size(std::uint64_t atoms, std::uint64_t bonds = 0) {
+  if (atoms > kMaxInchiAtoms || bonds > kMaxInchiBonds) {
+    throw ValueErrorException("an InChI layer names more than the " +
+                              std::to_string(kMaxInchiAtoms) +
+                              " atoms InChI takes");
+  }
+}
+
 // The atoms but hydrogens of each component of an InChI formula layer, in
 // the order the connection layer numbers them, with the components repeated
 // as their multipliers say.
 std::vector<std::vector<int>> inchi_formula_atoms(std::string_view formula) {
   std::vector<std::vector<int>> components;
   const auto *table = RDKit::PeriodicTable::getTable();
+  std::uint64_t total = 0;
   std::size_t pos = 0;
   while (pos <= formula.size()) {
     auto end = std::min(formula.find('.', pos), formula.size());
@@ -2163,8 +2178,12 @@ std::vector<std::vector<int>> inchi_formula_atoms(std::string_view formula) {
       } catch (...) {
         // An unknown symbol counts as a metal.
       }
-      atoms.insert(atoms.end(), digits ? count : 1, num);
+      const std::uint64_t n = digits ? count : 1;
+      check_inchi_size(total + atoms.size() + n);
+      atoms.insert(atoms.end(), n, num);
     }
+    total += atoms.size() * std::max<std::uint64_t>(repeat, 1);
+    check_inchi_size(total);
     for (std::uint64_t k = 0; k < std::max<std::uint64_t>(repeat, 1); ++k) {
       components.push_back(atoms);
     }
@@ -2183,6 +2202,8 @@ struct InchiComponent {
 
 std::vector<InchiComponent> inchi_connections(std::string_view layer) {
   std::vector<InchiComponent> components;
+  std::uint64_t atom_total = 0;
+  std::uint64_t bond_total = 0;
   std::size_t pos = 0;
   while (pos <= layer.size()) {
     auto end = std::min(layer.find(';', pos), layer.size());
@@ -2229,6 +2250,9 @@ std::vector<InchiComponent> inchi_connections(std::string_view layer) {
       ++i;
     }
     component.cycles = numbers - atoms.size();
+    atom_total += atoms.size() * repeat;
+    bond_total += component.bonds.size() * repeat;
+    check_inchi_size(atom_total, bond_total);
     for (std::uint64_t k = 0; k < repeat; ++k) {
       components.push_back(component);
     }
