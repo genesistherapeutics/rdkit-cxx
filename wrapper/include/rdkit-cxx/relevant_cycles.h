@@ -122,10 +122,14 @@ void check_standardize_relevant_cycles(const RDKit::ROMol &mol,
                                        bool custom_metals = false);
 
 // Throws ValueErrorException if symmetrizeSSSR, recalculating, would
-// enumerate more than INT_MAX relevant cycles of the molecule's graph.
-void check_graph_relevant_cycles(const RDKit::ROMol &mol,
-                                 bool include_dative_bonds = false,
-                                 bool include_hydrogen_bonds = false);
+// enumerate more than INT_MAX relevant cycles of the molecule's graph. Its
+// legacy algorithm, which DEFAULT means while the legacy setting is on,
+// enumerates none.
+void check_graph_relevant_cycles(
+    const RDKit::ROMol &mol, bool include_dative_bonds = false,
+    bool include_hydrogen_bonds = false,
+    RDKit::MolOps::SymmetrizeSSSRAlgorithm algorithm =
+        RDKit::MolOps::SymmetrizeSSSRAlgorithm::DEFAULT);
 
 // Throws ValueErrorException if symmetrizeSSSR, with these options, would
 // enumerate more than INT_MAX relevant cycles: those of the molecule's ring
@@ -135,7 +139,9 @@ void check_graph_relevant_cycles(const RDKit::ROMol &mol,
 void check_relevant_cycles(const RDKit::ROMol &mol,
                            bool include_dative_bonds = false,
                            bool include_hydrogen_bonds = false,
-                           bool recalc_sssr = true);
+                           bool recalc_sssr = true,
+                           RDKit::MolOps::SymmetrizeSSSRAlgorithm algorithm =
+                               RDKit::MolOps::SymmetrizeSSSRAlgorithm::DEFAULT);
 
 // As check_relevant_cycles, for the RDKit calls that symmetrize a molecule's
 // rings only when they are not already a symmetrized SSSR (`if

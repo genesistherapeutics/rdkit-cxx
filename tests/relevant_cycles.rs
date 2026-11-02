@@ -393,6 +393,56 @@ fn perception() {
 }
 
 #[test]
+fn legacy_ring_finding() {
+    // RDKit reads the legacy setting from the environment, so a child
+    // process starts with it on.
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "legacy_ring_finding_child",
+            "--exact",
+            "--ignored",
+            "--test-threads=1",
+        ])
+        .env("RDK_USE_LEGACY_RING_FINDING", "1")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success() && stdout.contains("1 passed"),
+        "{stdout}{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+#[ignore = "run by `legacy_ring_finding` with its environment"]
+fn legacy_ring_finding_child() {
+    if std::env::var_os("RDK_USE_LEGACY_RING_FINDING").is_none() {
+        return;
+    }
+    assert!(get_use_legacy_ring_finding());
+    // The setting changes only what the default algorithm means: RDL still
+    // enumerates the relevant cycles, of the graph or of the ring families
+    // kept without recalc_sssr.
+    let rdl = GetSymmSSSRParams {
+        algorithm: SymmetrizeSSSRAlgorithm::Rdl,
+        ..Default::default()
+    };
+    let kept = GetSymmSSSRParams {
+        recalc_sssr: false,
+        ..rdl.clone()
+    };
+    for n in [10, 64] {
+        let big = n == 64;
+        check!(big, get_symm_sssr_with_params(&mut diamonds(n), &rdl));
+        let mut rw = diamonds(n);
+        find_ring_families(&mut rw).unwrap();
+        check!(big, get_symm_sssr_with_params(&mut rw, &kept));
+        get_symm_sssr(&mut diamonds(n)).unwrap();
+    }
+}
+
+#[test]
 fn formats() {
     for n in [10, 64] {
         let big = n == 64;

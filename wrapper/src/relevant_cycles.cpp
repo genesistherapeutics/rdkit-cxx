@@ -352,14 +352,26 @@ void check_standardize_relevant_cycles(const RDKit::ROMol &mol,
   check_graph_relevant_cycles(mol);
 }
 
-void check_graph_relevant_cycles(const RDKit::ROMol &mol,
-                                 bool include_dative_bonds,
-                                 bool include_hydrogen_bonds) {
-  if (few_relevant_cycles(mol, include_dative_bonds, include_hydrogen_bonds,
-                          false) ||
-      // symmetrizeSSSR's default algorithm is then the legacy one, which
-      // enumerates no relevant cycles.
-      RDKit::MolOps::getUseLegacyRingFinding()) {
+namespace {
+
+// Whether symmetrizeSSSR, given this algorithm, takes the legacy one, which
+// enumerates no relevant cycles.
+bool legacy_symmetrize(RDKit::MolOps::SymmetrizeSSSRAlgorithm algorithm) {
+  using RDKit::MolOps::SymmetrizeSSSRAlgorithm;
+  return algorithm == SymmetrizeSSSRAlgorithm::LEGACY ||
+         (algorithm == SymmetrizeSSSRAlgorithm::DEFAULT &&
+          RDKit::MolOps::getUseLegacyRingFinding());
+}
+
+}  // namespace
+
+void check_graph_relevant_cycles(
+    const RDKit::ROMol &mol, bool include_dative_bonds,
+    bool include_hydrogen_bonds,
+    RDKit::MolOps::SymmetrizeSSSRAlgorithm algorithm) {
+  if (legacy_symmetrize(algorithm) ||
+      few_relevant_cycles(mol, include_dative_bonds, include_hydrogen_bonds,
+                          false)) {
     return;
   }
   // As findRingFamilies, which gives an empty graph one atom.
@@ -382,19 +394,21 @@ void check_graph_relevant_cycles(const RDKit::ROMol &mol,
 }
 
 void check_relevant_cycles(const RDKit::ROMol &mol, bool include_dative_bonds,
-                           bool include_hydrogen_bonds, bool recalc_sssr) {
+                           bool include_hydrogen_bonds, bool recalc_sssr,
+                           RDKit::MolOps::SymmetrizeSSSRAlgorithm algorithm) {
+  if (legacy_symmetrize(algorithm)) {
+    return;
+  }
   const auto *info = mol.getRingInfo();
   // symmetrizeSSSR resets an initialized ring info's families only with
   // recalcSSSR, and finds new ones only when there are none.
   if (info->areRingFamiliesInitialized() &&
       (!recalc_sssr || !info->isInitialized())) {
-    if (!RDKit::MolOps::getUseLegacyRingFinding()) {
-      check_relevant_cycle_count(RDL_getNofRC(info->dp_urfData.get()));
-    }
+    check_relevant_cycle_count(RDL_getNofRC(info->dp_urfData.get()));
     return;
   }
-  check_graph_relevant_cycles(mol, include_dative_bonds,
-                              include_hydrogen_bonds);
+  check_graph_relevant_cycles(mol, include_dative_bonds, include_hydrogen_bonds,
+                              algorithm);
 }
 
 void check_perceive_relevant_cycles(const RDKit::ROMol &mol,
