@@ -26,6 +26,7 @@
 #include "rdkit-cxx/depiction_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize_pipeline.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/standardize.h"
@@ -60,6 +61,11 @@ MS::PipelineOptions to_options(const PipelineOptionsData &data) {
   options.metalNof = text(data.metal_nof);
   options.metalNon = text(data.metal_non);
   options.normalizerData = text(data.normalizer_data);
+  // RDKit's transformation reader reads past the fields of a line with
+  // fewer than two (transformation_data).
+  if (!options.normalizerData.empty()) {
+    transformation_data(options.normalizerData);
+  }
   options.normalizerMaxRestarts = data.normalizer_max_restarts;
   options.scaledMedianBondLength = data.scaled_median_bond_length;
   options.outputV2000 = data.output_v2000;

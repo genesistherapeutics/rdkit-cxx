@@ -320,3 +320,13 @@ fn long_stereo_group_lines_are_refused() {
         Err(Error::Value { .. })
     ));
 }
+
+#[test]
+fn normalizer_data_lines() {
+    // RDKit's reader would read past a line without both fields.
+    let result = Pipeline::new(&PipelineOptions {
+        normalizer_data: "abc".to_string(),
+        ..Default::default()
+    });
+    assert!(matches!(result, Err(Error::Value { .. })));
+}

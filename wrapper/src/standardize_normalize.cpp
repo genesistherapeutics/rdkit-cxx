@@ -71,6 +71,9 @@ std::unique_ptr<Normalizer> normalizer_new(
         normalization_cycles(CleanupParameters()), path, max_restarts);
   }
   auto text = read_file(path);
+  // RDKit's transformation reader reads past the fields of a line with
+  // fewer than two (transformation_data).
+  transformation_data(text);
   std::istringstream data(text);
   auto cycles =
       transform_cycles(MS::TransformCatalogParams(data).getTransformations());
@@ -81,6 +84,7 @@ std::unique_ptr<Normalizer> normalizer_new(
 // As normalizerFromDataAndParams in Wrap/Normalize.cpp.
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
+  transformation_data(std::string(param_data));
   std::istringstream data{std::string(param_data)};
   auto cycles =
       transform_cycles(MS::TransformCatalogParams(data).getTransformations());
