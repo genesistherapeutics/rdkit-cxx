@@ -406,8 +406,11 @@ pip install pre-commit
 pre-commit install
 ```
 
-The workflows pin each action to a commit. Dependabot and the RDKit series
-workflow run on `main`, which follows the newest RDKit series.
+The workflows pin each action to a commit. Dependabot proposes updates to the
+actions, the Cargo dependencies, and the pre-commit hooks every week, a week
+after each release, on this branch as on `main`, from the configuration on
+`main`. The RDKit series workflow runs on `main`, which follows the newest
+RDKit series.
 
 ## Releases
 
