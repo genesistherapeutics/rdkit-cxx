@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <cstddef>
-#include <limits>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -253,7 +252,10 @@ void check_enumerate(const RDKit::ROMol &mol, bool position_variation,
 // results are enumerated again without directions, which perceives nothing;
 // above the bound, the products after the first i link nodes are the
 // results for the molecule listing only those, enumerated without
-// directions and without the link nodes' limit on how many.
+// directions under the same limits: getVariations takes the variations in
+// lexicographic order, the first link node's count first, so the first i
+// counts of those within the limit are among the first that many of the
+// shorter list's.
 void check_enumerate_relevant_cycles(
     const RDKit::ROMol &mol, const std::vector<ME::MolEnumeratorParams> &ops) {
   std::string text;
@@ -283,18 +285,12 @@ void check_enumerate_relevant_cycles(
   if (few) {
     return;
   }
-  auto uncapped = ops;
-  for (auto &p : uncapped) {
-    if (dynamic_cast<const ME::LinkNodeOp *>(p.dp_operation.get())) {
-      p.maxToEnumerate = std::numeric_limits<std::size_t>::max();
-    }
-  }
   boost::char_separator<char> pipe("|");
   std::string prefix;
   for (const auto &node : tokenizer(text, pipe)) {
     prefix += (prefix.empty() ? "" : "|") + node;
     copy.setProp(RDKit::common_properties::molFileLinkNodes, prefix);
-    const auto products = ME::enumerate(copy, uncapped);
+    const auto products = ME::enumerate(copy, ops);
     for (const auto &res : products.getMols()) {
       check_graph_relevant_cycles(*res);
     }

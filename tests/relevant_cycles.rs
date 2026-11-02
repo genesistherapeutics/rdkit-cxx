@@ -798,3 +798,59 @@ fn rascal_ring_pieces() {
         }
     }
 }
+
+/// A V3000 mol block for F/C=C/ and a chain of three link nodes, each a
+/// spiro atom of a cyclopropane that repeats up to `reps` times, every copy
+/// with its own ring.
+fn link_nodes_block(reps: u32) -> String {
+    let atoms = [
+        "F", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C",
+    ];
+    let mut bonds = vec![
+        (1, 1, 2),
+        (2, 2, 3),
+        (1, 3, 4),
+        (1, 4, 5),
+        (1, 5, 6),
+        (1, 6, 7),
+        (1, 7, 8),
+        (1, 8, 9),
+    ];
+    for (node, ring) in [(4, 10), (6, 12), (8, 14)] {
+        bonds.extend([(1, node, ring), (1, node, ring + 1), (1, ring, ring + 1)]);
+    }
+    let mut block = String::from(
+        "\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\nM  V30 BEGIN CTAB\n",
+    );
+    block += &format!("M  V30 COUNTS {} {} 0 0 0\n", atoms.len(), bonds.len());
+    block += "M  V30 BEGIN ATOM\n";
+    for (i, symbol) in (1..).zip(atoms) {
+        block += &format!("M  V30 {i} {symbol} {i}.0 {}.0 0.0 0\n", i % 2);
+    }
+    block += "M  V30 END ATOM\nM  V30 BEGIN BOND\n";
+    for (i, (order, a, b)) in (1..).zip(bonds) {
+        block += &format!("M  V30 {i} {order} {a} {b}\n");
+    }
+    block += "M  V30 END BOND\n";
+    for node in [4, 6, 8] {
+        block += &format!(
+            "M  V30 LINKNODE 1 {reps} 2 {node} {} {node} {}\n",
+            node - 1,
+            node + 1
+        );
+    }
+    block + "M  V30 END CTAB\nM  END\n"
+}
+
+#[test]
+fn link_node_limits() {
+    // Past the bound, with a directed bond, the check enumerates the
+    // molecule with each prefix of its link nodes under the caller's
+    // limit (1000 by default), not the million variations of all three.
+    let mut mol = mol_from_mol_block(&link_nodes_block(100)).unwrap();
+    mol.get_bond_with_idx_mut(0)
+        .unwrap()
+        .set_bond_dir(BondDir::Endupright);
+    let result = rd_mol_enumerator::enumerate(&mol);
+    assert!(!is_refusal(&result), "{:?}", result.err());
+}
