@@ -408,8 +408,11 @@ pip install pre-commit
 pre-commit install
 ```
 
-The workflows pin each action to a commit. Dependabot and the RDKit series
-workflow run on `main`, which follows the newest RDKit series.
+The workflows pin each action to a commit. Dependabot proposes updates to the
+actions, the Cargo dependencies, and the pre-commit hooks every week, a week
+after each release, on this branch as on `main`, from the configuration on
+`main`. The RDKit series workflow runs on `main`, which follows the newest
+RDKit series.
 
 ## Releases
 
@@ -455,7 +458,8 @@ bump-my-version bump --new-version 2027.3.0
 
 Before that pull request, create the old series' branch from `main`
 (`rdkit-2026.09`), which keeps the series and its releases from then on, and
-add it to the Release workflow's branch choices.
+add it to the Release workflow's branch choices and to Dependabot's target
+branches (`.github/dependabot.yml`).
 
 The [RDKit series workflow](.github/workflows/rdkit-series.yml) checks
 conda-forge daily and opens an issue, assigned to the repository owner, with
