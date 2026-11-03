@@ -13,6 +13,8 @@
 
 #include <string>
 #include <string_view>
+#include <utility>
+#include <vector>
 
 namespace RDKit {
 class ROMol;
@@ -82,11 +84,22 @@ void check_smiles_cx(const std::string &text, bool allow_cx, bool strict);
 // trimmed; RDKit throws when it fails.
 void check_reaction_cx(const std::string &text, bool allow_cx);
 
+// The (name, reaction SMARTS) pairs MolStandardize's transformation reader
+// (readTransformations in TransformCatalogUtils.cpp) makes of a
+// transformation file's text, for handing a file read once to RDKit as data
+// and for checking text RDKit reads from a stream. Its getReaction takes a
+// line's second tab-separated field without checking there is one,
+// dereferencing the tokenizer's end, so a line without both fields throws
+// ValueErrorException.
+std::vector<std::pair<std::string, std::string>> transformation_data(
+    const std::string &text);
+
 // The reactions MolStandardize's transformation readers parse from text
 // (readTransformations in TransformCatalogUtils.cpp, which Normalizer's
 // stream constructor uses): the second tab-separated field of each line, of
-// at most 511 characters, without spaces. (Its fragment, acid-base, and
-// tautomer readers erase the spaces from their SMARTS too, and a SMARTS
+// at most 511 characters, without spaces, as transformation_data reads
+// them, which refuses a line without both fields. (Its fragment, acid-base,
+// and tautomer readers erase the spaces from their SMARTS too, and a SMARTS
 // without spaces or tabs has no extension.)
 void check_transformation_lines(const std::string &text);
 

@@ -9,7 +9,6 @@
 #include <climits>
 #include <exception>
 #include <mutex>
-#include <sstream>
 #include <string>
 #include <thread>
 #include <tuple>
@@ -23,7 +22,6 @@
 #include <GraphMol/SmilesParse/SmilesParse.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
-#include <boost/algorithm/string.hpp>
 
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
@@ -296,43 +294,6 @@ std::unique_ptr<RWMol> adopt_mol(RDKit::ROMol *mol) {
   return result;
 }
 
-namespace {
-
-// readTransformations (TransformCatalogUtils.cpp) on a normalizations file's
-// text: lines read 511 characters at a time until one fails, an empty line
-// or a "//" comment skipped, and each other's first two tab-separated
-// fields, spaces erased, are its name and reaction SMARTS. A line without a
-// second field RDKit reads past its tokens for, so it is refused here.
-std::vector<std::pair<std::string, std::string>> normalization_lines(
-    const std::string &text) {
-  std::vector<std::pair<std::string, std::string>> data;
-  std::istringstream in(text);
-  char line[512];
-  while (!in.eof() && !in.fail()) {
-    in.getline(line, sizeof(line), '\n');
-    std::string tmp(line);
-    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
-      continue;
-    }
-    std::vector<std::string> fields;
-    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
-    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
-    if (fields.size() < 2) {
-      throw ValueErrorException(
-          "a normalization line needs a name and a reaction SMARTS, separated "
-          "by a tab: " +
-          tmp);
-    }
-    boost::erase_all(fields[0], " ");
-    boost::erase_all(fields[1], " ");
-    check_reaction_cx(fields[1], true);
-    data.emplace_back(fields[0], fields[1]);
-  }
-  return data;
-}
-
-}  // namespace
-
 // RDKit reads a normalizations file itself, each line's reaction SMARTS with
 // its CXSMILES extension (file_checks.h); with `read_normalizations` (for
 // the calls that normalize), the wrapper reads it once instead, checks it,
@@ -387,7 +348,10 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data,
   if (read_normalizations && params.normalizationData.empty() &&
       !params.normalizations.empty()) {
     params.normalizationData =
-        normalization_lines(read_file(params.normalizations));
+        transformation_data(read_file(params.normalizations));
+    for (const auto &[name, smarts] : params.normalizationData) {
+      check_reaction_cx(smarts, true);
+    }
     if (params.normalizationData.empty()) {
       // RDKit's empty catalog from an empty file, not its defaults.
       throw ValueErrorException("the normalizations file " +
