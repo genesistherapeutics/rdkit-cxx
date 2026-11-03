@@ -267,7 +267,13 @@ void check_query_props(const RDKit::ROMol &mol, const std::string &prop) {
   }
 }
 
-void check_transformation_lines(const std::string &text) {
+// As readTransformations in TransformCatalogUtils.cpp: lines read 511
+// characters at a time until one fails, an empty line or a "//" comment
+// skipped, and each other's first two tab-separated fields, spaces erased,
+// are its name and reaction SMARTS.
+std::vector<std::pair<std::string, std::string>> transformation_data(
+    const std::string &text) {
+  std::vector<std::pair<std::string, std::string>> data;
   std::istringstream in(text);
   char line[512];
   while (!in.eof() && !in.fail()) {
@@ -279,10 +285,22 @@ void check_transformation_lines(const std::string &text) {
     std::vector<std::string> fields;
     boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
     fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
-    if (fields.size() >= 2) {
-      boost::erase_all(fields[1], " ");
-      check_reaction_cx(fields[1], true);
+    if (fields.size() < 2) {
+      throw ValueErrorException(
+          "a transformation line needs a name and a reaction SMARTS, "
+          "separated by a tab: " +
+          tmp);
     }
+    boost::erase_all(fields[0], " ");
+    boost::erase_all(fields[1], " ");
+    data.emplace_back(std::move(fields[0]), std::move(fields[1]));
+  }
+  return data;
+}
+
+void check_transformation_lines(const std::string &text) {
+  for (const auto &[name, smarts] : transformation_data(text)) {
+    check_reaction_cx(smarts, true);
   }
 }
 
