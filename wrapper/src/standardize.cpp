@@ -363,13 +363,14 @@ CleanupParameters to_cleanup_parameters(const CleanupParametersData &data) {
 // RDKit reads a normalizations file it is named each time it makes a
 // normalizer from the parameters (normalizerFromParams, which cleanup calls
 // for each molecule), so a check of the file could be raced. This reads it
-// once, checks its reactions (check_transformation_lines), and hands RDKit
-// them as data, which RDKit reads as it reads the file's lines.
+// once (transformation_data, which refuses a line RDKit would read past),
+// checks its reactions, and hands RDKit them as data, which RDKit reads as
+// it reads the file's lines.
 void read_normalizations(CleanupParameters &params) {
   if (params.normalizations.empty() || !params.normalizationData.empty()) {
     return;  // RDKit's defaults, or the data, which RDKit reads instead
   }
-  auto data = read_transformation_lines(read_file(params.normalizations));
+  auto data = transformation_data(read_file(params.normalizations));
   for (const auto &entry : data) {
     check_reaction_cx(entry.second);
   }

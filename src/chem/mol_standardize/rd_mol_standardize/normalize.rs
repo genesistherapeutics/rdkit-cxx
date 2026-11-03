@@ -53,9 +53,10 @@ impl Normalizer {
     /// at most `max_restarts` restarts. The file is read on each call and
     /// RDKit parses the text read (Python's RDKit reads a file once per
     /// process and keeps it, under its name). `Error::Os` for a file that
-    /// cannot be read, and `Error::Parse` or `Error::Value` for reaction
-    /// SMARTS that do not parse. Mirrors `Normalizer(normalizeFilename,
-    /// maxRestarts)`.
+    /// cannot be read, `Error::Value` for a line without both fields, which
+    /// RDKit would read past, and `Error::Parse` or `Error::Value` for
+    /// reaction SMARTS that do not parse. Mirrors
+    /// `Normalizer(normalizeFilename, maxRestarts)`.
     pub fn new<P: AsRef<Path>>(normalize_filename: P, max_restarts: u32) -> Result<Normalizer> {
         Ok(Normalizer::from_ffi(ffi::normalizer_new(
             path_bytes(normalize_filename.as_ref()),
@@ -86,8 +87,9 @@ impl Normalizer {
 
 /// A normalizer from transformations, one per line: a name and reaction
 /// SMARTS, tab-separated (lines starting `//` are comments), with
-/// `params.max_restarts` restarts. `Error::Parse` or `Error::Value` for
-/// reaction SMARTS that do not parse. Mirrors
+/// `params.max_restarts` restarts. `Error::Value` for a line without both
+/// fields, which RDKit would read past, and `Error::Parse` or
+/// `Error::Value` for reaction SMARTS that do not parse. Mirrors
 /// `rdMolStandardize.NormalizerFromData`.
 pub fn normalizer_from_data(param_data: &str, params: &CleanupParameters) -> Result<Normalizer> {
     Ok(Normalizer::from_ffi(ffi::normalizer_from_data(

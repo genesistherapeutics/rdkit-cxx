@@ -46,7 +46,7 @@ std::unique_ptr<FragmentRemover> fragment_remover_new(
     rust::Slice<const std::uint8_t> fragment_filename, bool leave_last,
     bool skip_if_all_match) {
   // RDKit's fragment reader parses no CXSMILES extension: it erases the
-  // spaces from the SMARTS it splits at tabs (read_transformation_lines in
+  // spaces from the SMARTS it splits at tabs (transformation_data in
   // file_checks.h), so the file needs no check.
   return std::make_unique<FragmentRemover>(to_path(fragment_filename),
                                            leave_last, skip_if_all_match);

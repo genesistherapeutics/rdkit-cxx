@@ -413,11 +413,11 @@ void check_text_cx_fields(std::string_view text, const char *what) {
   }
 }
 
-std::vector<std::pair<std::string, std::string>> read_transformation_lines(
+std::vector<std::pair<std::string, std::string>> transformation_data(
     const std::string &text) {
   // As readTransformations(std::istream &) and getReaction(const
-  // std::string &), down to their reading past the last token: a line of one
-  // field gives an empty SMARTS (the tokenizer clears its token at the end).
+  // std::string &), up to their taking a line's second field without
+  // checking there is one, which dereferences the tokenizer's end.
   std::vector<std::pair<std::string, std::string>> result;
   std::istringstream in(text);
   constexpr int kMaxLineLen = 512;
@@ -431,7 +431,12 @@ std::vector<std::pair<std::string, std::string>> read_transformation_lines(
     std::vector<std::string> fields;
     boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
     fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
-    fields.resize(std::max<std::size_t>(fields.size(), 2));
+    if (fields.size() < 2) {
+      throw ValueErrorException(
+          "a transformation line needs a name and a reaction SMARTS, "
+          "separated by a tab: " +
+          tmp);
+    }
     boost::erase_all(fields[0], " ");
     boost::erase_all(fields[1], " ");
     result.emplace_back(std::move(fields[0]), std::move(fields[1]));
@@ -440,7 +445,7 @@ std::vector<std::pair<std::string, std::string>> read_transformation_lines(
 }
 
 void check_transformation_lines(const std::string &text) {
-  for (const auto &[name, smarts] : read_transformation_lines(text)) {
+  for (const auto &[name, smarts] : transformation_data(text)) {
     check_reaction_cx(smarts);
   }
 }
