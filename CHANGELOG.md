@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2024.9.1
 
 ### Changes
 
