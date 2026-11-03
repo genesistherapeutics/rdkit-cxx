@@ -115,7 +115,8 @@ pub struct PipelineOptions {
     /// `metal_nof`.
     pub metal_non: String,
     /// The normalizations, as `normalizer_from_data` reads them; empty for
-    /// RDKit's built-in ones.
+    /// RDKit's built-in ones. A line without both fields is `Error::Value`
+    /// from `Pipeline::new`.
     pub normalizer_data: String,
     /// The most times to restart the normalizations.
     pub normalizer_max_restarts: u32,

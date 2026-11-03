@@ -432,21 +432,8 @@ std::vector<std::pair<std::string, std::string>> transformation_data(
 
 // As readTransformations in TransformCatalogUtils.cpp.
 void check_transformation_lines(const std::string &text) {
-  std::istringstream in(text);
-  char line[512];
-  while (!in.eof() && !in.fail()) {
-    in.getline(line, sizeof(line), '\n');
-    std::string tmp(line);
-    if (tmp.empty() || tmp.compare(0, 2, "//") == 0) {
-      continue;
-    }
-    std::vector<std::string> fields;
-    boost::split(fields, tmp, boost::is_any_of("\t"), boost::token_compress_on);
-    fields.erase(std::remove(fields.begin(), fields.end(), ""), fields.end());
-    if (fields.size() >= 2) {
-      boost::erase_all(fields[1], " ");
-      check_reaction_cx(fields[1], true);
-    }
+  for (const auto &[name, smarts] : transformation_data(text)) {
+    check_reaction_cx(smarts, true);
   }
 }
 

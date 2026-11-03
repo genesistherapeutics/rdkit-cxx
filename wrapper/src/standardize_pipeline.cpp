@@ -240,6 +240,9 @@ std::unique_ptr<Pipeline> pipeline_new(const PipelineOptionsData &data) {
   auto options = to_options(data);
   check_metal_smarts(options.metalNof, "metalNof");
   check_metal_smarts(options.metalNon, "metalNon");
+  // The standardize step reads these with RDKit's transformation reader
+  // (check_transformation_lines).
+  check_transformation_lines(options.normalizerData);
   auto pipeline = std::make_unique<Pipeline>(options);
   auto steps = MS::Operations::standardizationSteps;
   bool replaced = false;

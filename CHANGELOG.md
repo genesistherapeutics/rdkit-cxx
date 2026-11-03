@@ -7,6 +7,16 @@
 - The copyright holder is now Genesis Molecular AI, Inc., in `LICENSE` and
   in every source file's header. The license is still BSD-3-Clause.
 
+### Fixes
+
+- `Normalizer::new`, `normalizer_from_data`, and `Pipeline::new` (its
+  `normalizer_data`) are `Error::Value` for a transformation line without
+  both a name and a reaction SMARTS, as a cleanup normalizations file
+  already was. RDKit's transformation reader takes a line's second
+  tab-separated field without checking that it has one, dereferencing the
+  end of its tokens. `Pipeline::new` now also checks its normalizer data's
+  CXSMILES extensions, as `normalizer_from_data` does.
+
 ## 2025.3.0
 
 The first release for RDKit 2025.03: the bindings and ports of 2026.9.0, for
