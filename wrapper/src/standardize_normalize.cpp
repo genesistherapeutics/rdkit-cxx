@@ -16,6 +16,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/standardize.rs.h"
 #include "rdkit-cxx/ffi/standardize_normalize.rs.h"
+#include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/standardize.h"
 #include "rdkit-cxx/util.h"
@@ -55,25 +56,42 @@ std::unique_ptr<Normalizer> normalizer_default() {
   return std::make_unique<Normalizer>();
 }
 
+// RDKit's transformation reader reads past the fields of a line without
+// both (transformation_data): the wrapper reads the file once, checks it,
+// and hands RDKit the text as a stream, so RDKit never opens a file the
+// wrapper checked. (An empty name is RDKit's default normalizations, which
+// it reads from no file.)
 std::unique_ptr<Normalizer> normalizer_new(
     rust::Slice<const std::uint8_t> normalize_filename,
     std::uint32_t max_restarts) {
-  return std::make_unique<Normalizer>(to_path(normalize_filename),
-                                      max_restarts);
+  auto path = to_path(normalize_filename);
+  if (path.empty()) {
+    return std::make_unique<Normalizer>(path, max_restarts);
+  }
+  auto text = read_file(path);
+  transformation_data(text);
+  std::istringstream in(text);
+  return std::make_unique<Normalizer>(in, max_restarts);
 }
 
-// As normalizerFromDataAndParams in Wrap/Normalize.cpp.
+// As normalizerFromDataAndParams in Wrap/Normalize.cpp, with the lines
+// checked (transformation_data).
 std::unique_ptr<Normalizer> normalizer_from_data(
     rust::Str param_data, const CleanupParametersData &params) {
-  std::istringstream in{std::string(param_data)};
+  std::string text(param_data);
+  transformation_data(text);
+  std::istringstream in(text);
   return std::make_unique<Normalizer>(
       in, to_cleanup_parameters(params).maxRestarts);
 }
 
+// As normalizerFromParams in Normalize.h, with the normalizations file read
+// once as data (read_normalizations).
 std::unique_ptr<Normalizer> normalizer_from_params(
-    const CleanupParametersData &params) {
-  return std::unique_ptr<Normalizer>(
-      MS::normalizerFromParams(to_cleanup_parameters(params)));
+    const CleanupParametersData &data) {
+  auto params = to_cleanup_parameters(data);
+  read_normalizations(params);
+  return std::unique_ptr<Normalizer>(MS::normalizerFromParams(params));
 }
 
 // Normalizing runs reactions, and disconnecting metals matches patterns

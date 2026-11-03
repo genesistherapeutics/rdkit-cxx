@@ -7,6 +7,22 @@
 - The copyright holder is now Genesis Molecular AI, Inc., in `LICENSE` and
   in every source file's header. The license is still BSD-3-Clause.
 
+### Fixes
+
+- A transformation line without both a name and a reaction SMARTS is
+  `Error::Value` wherever RDKit would read one: in a cleanup normalizations
+  file (`CleanupParameters::normalizations_file`, read by the operations
+  that normalize and `normalizer_from_params`), `Normalizer::new`,
+  `normalizer_from_data`, and `Pipeline::new` (its `normalizer_data`).
+  RDKit's transformation reader takes a line's second tab-separated field
+  without checking that it has one, dereferencing the end of its tokens.
+- A normalizations file is read once and given to RDKit as data or a
+  stream, so RDKit never opens a file the wrapper checked. A cleanup
+  normalizations file with no transformations is `Error::Value`: RDKit
+  takes empty data to mean the file, and would open it again.
+  `Normalizer::new` reads its file on every call, where RDKit kept its
+  first reading of each file name for the process.
+
 ## 2026.3.0
 
 The first release for RDKit 2026.03: the bindings and ports of 2026.9.0, for
