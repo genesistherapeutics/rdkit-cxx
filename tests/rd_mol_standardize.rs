@@ -1004,6 +1004,13 @@ fn normalizer() {
         normalizer_from_data("x\tC>>>N", &params),
         Err(Error::Parse { .. })
     ));
+    // RDKit's reader would read past a line without both fields.
+    for data in ["abc", "\t\t", "x\t\n"] {
+        assert!(matches!(
+            normalizer_from_data(data, &params),
+            Err(Error::Value { .. })
+        ));
+    }
     // A transformation with no product, or two reactants, is RDKit's
     // ChemicalReactionException (E4).
     let no_product = normalizer_from_data("x\t[C:1]>>", &params).unwrap();
@@ -1221,4 +1228,31 @@ M  END
         smiles(&MetalDisconnector::default().disconnect(&m).unwrap()),
         "*->[Fe+].C1=CCC=C1.[CH2-]CCCC"
     );
+}
+
+// RDKit's transformation reader takes a line's second tab-separated field
+// without checking that it has one, so every call that reads a
+// normalizations file refuses a line without both fields.
+#[test]
+fn normalizations_files_with_one_field_lines() {
+    let path = std::env::temp_dir().join(format!(
+        "rdkit-cxx-one-field-normalizations-{}.txt",
+        std::process::id()
+    ));
+    let params = CleanupParameters {
+        normalizations_file: path.clone(),
+        ..Default::default()
+    };
+    for text in ["abc\n", "\t\t\n", "x\t\n"] {
+        std::fs::write(&path, text).unwrap();
+        let normalizer = Normalizer::new(&path, 10);
+        let from_params = normalizer_from_params(&params);
+        let normalized = normalize_with_params(&mol("CC"), &params);
+        let cleaned = cleanup_with_params(&mol("CC"), &params);
+        std::fs::remove_file(&path).unwrap();
+        assert!(is_value(normalizer));
+        assert!(is_value(from_params));
+        assert!(is_value(normalized));
+        assert!(is_value(cleaned));
+    }
 }

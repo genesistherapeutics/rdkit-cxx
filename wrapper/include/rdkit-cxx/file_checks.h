@@ -98,14 +98,17 @@ void check_reaction_cx(const std::string &text, bool allow_cxsmiles = true);
 // file and stream constructors use): for each line of at most 511
 // characters that is not empty or a "//" comment, its first two
 // tab-separated fields without spaces, the name and the reaction SMARTS,
-// as RDKit's data reader takes them. Its fragment, acid-base, and tautomer
-// readers erase the spaces from their SMARTS too, and split their lines at
-// tabs, so a SMARTS of theirs has no CXSMILES extension (SmartsToMol finds
-// one after a space or tab), and they need no check.
-std::vector<std::pair<std::string, std::string>> read_transformation_lines(
+// as RDKit's data reader takes them. Its getReaction takes a line's second
+// field without checking there is one, dereferencing the tokenizer's end,
+// so a line without both fields throws ValueErrorException. Its fragment,
+// acid-base, and tautomer readers erase the spaces from their SMARTS too,
+// and split their lines at tabs, so a SMARTS of theirs has no CXSMILES
+// extension (SmartsToMol finds one after a space or tab), and they need no
+// check.
+std::vector<std::pair<std::string, std::string>> transformation_data(
     const std::string &text);
 
-// check_reaction_cx for each reaction read_transformation_lines finds.
+// check_reaction_cx for each reaction transformation_data finds.
 void check_transformation_lines(const std::string &text);
 
 // RDKit's text-format readers that are not split as their readers split

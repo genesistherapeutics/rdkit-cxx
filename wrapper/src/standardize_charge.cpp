@@ -75,7 +75,7 @@ std::unique_ptr<Reionizer> reionizer_new(
     rust::Slice<const std::uint8_t> acidbase_file,
     rust::Slice<const ChargeCorrectionData> ccs, bool default_ccs) {
   // RDKit's acid-base reader parses no CXSMILES extension: it erases the
-  // spaces from the SMARTS it splits at tabs (read_transformation_lines in
+  // spaces from the SMARTS it splits at tabs (transformation_data in
   // file_checks.h), so the file needs no check.
   auto name = to_path(acidbase_file);
   if (default_ccs) {
