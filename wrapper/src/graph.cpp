@@ -23,6 +23,7 @@
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/ffi/graph.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -116,6 +117,23 @@ void set_options(RDKit::SubsetOptions &options, const SubsetOptionsData &data) {
   options.copyCoordinates = data.copy_coordinates;
   options.conformerIdx = static_cast<unsigned>(data.conformer_idx);
   options.method = data.method;
+}
+
+// copyMolSubset sanitizes the subset when asked. A subset has no more
+// independent cycles than the molecule; above the bound, the subset is made
+// first without sanitizing, and checked.
+template <class Copy>
+void check_subset_relevant_cycles(const RDKit::ROMol &mol,
+                                  const RDKit::SubsetOptions &options,
+                                  Copy copy) {
+  if (!options.sanitize || independent_cycles(mol) <= MAX_INDEPENDENT_CYCLES) {
+    return;
+  }
+  auto dry = options;
+  dry.sanitize = false;
+  dry.clearComputedProps = true;
+  check_sanitize_relevant_cycles(*copy(dry),
+                                 RDKit::MolOps::SanitizeFlags::SANITIZE_ALL);
 }
 
 void set_info(SubsetInfoData &data, const RDKit::SubsetInfo &info) {
@@ -327,6 +345,10 @@ std::unique_ptr<RWMol> copy_mol_subset(const RWMol &mol,
   RDKit::SubsetOptions options;
   set_options(options, data);
   RDKit::SubsetInfo info;
+  check_subset_relevant_cycles(mol, options, [&](const auto &dry) {
+    RDKit::SubsetInfo dry_info;
+    return RDKit::copyMolSubset(mol, to_vector(path), dry_info, dry);
+  });
   auto result = RDKit::copyMolSubset(mol, to_vector(path), info, options);
   set_info(info_data, info);
   return result;
@@ -347,6 +369,11 @@ std::unique_ptr<RWMol> copy_mol_subset_atoms_bonds(
   RDKit::SubsetOptions options;
   set_options(options, data);
   RDKit::SubsetInfo info;
+  check_subset_relevant_cycles(mol, options, [&](const auto &dry) {
+    RDKit::SubsetInfo dry_info;
+    return RDKit::copyMolSubset(mol, to_vector(atom_indices),
+                                to_vector(bond_indices), dry_info, dry);
+  });
   auto result = RDKit::copyMolSubset(mol, to_vector(atom_indices),
                                      to_vector(bond_indices), info, options);
   set_info(info_data, info);

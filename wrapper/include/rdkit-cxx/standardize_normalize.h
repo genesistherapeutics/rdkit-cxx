@@ -13,11 +13,13 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include <GraphMol/MolStandardize/Metal.h>
 #include <GraphMol/MolStandardize/Normalize.h>
 
 #include "rdkit-cxx/mol.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rust/cxx.h"
 
 namespace rdkit_cxx {
@@ -27,7 +29,19 @@ namespace rdkit_cxx {
 struct CleanupParametersData;
 struct MetalDisconnectorOptionsData;
 
-using Normalizer = RDKit::MolStandardize::Normalizer;
+// RDKit's Normalizer, with what its transforms do to cycles
+// (check_standardize_relevant_cycles), which it does not tell once made.
+class Normalizer : public RDKit::MolStandardize::Normalizer {
+ public:
+  template <class... Args>
+  explicit Normalizer(TransformCycles cycles, Args &&...args)
+      : RDKit::MolStandardize::Normalizer(std::forward<Args>(args)...),
+        d_cycles(cycles) {}
+  TransformCycles cycles() const { return d_cycles; }
+
+ private:
+  TransformCycles d_cycles;
+};
 using MetalDisconnector = RDKit::MolStandardize::MetalDisconnector;
 
 std::unique_ptr<Normalizer> normalizer_default();

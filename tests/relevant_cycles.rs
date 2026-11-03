@@ -1,0 +1,856 @@
+// Copyright (c) 2026 Genesis Molecular AI, Inc.
+// All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+//! Every path to RDKit's relevant-cycle enumeration refuses a molecule with
+//! more relevant cycles than RDKit can enumerate (relevant_cycles.h).
+//!
+//! The molecules are rings of "diamonds": `n` hub atoms, each joined to the
+//! next by two paths of two bonds, which have 2^n + n relevant cycles. 64
+//! diamonds give 2^64 + 64, whose conversion to size_t in
+//! RingInfo::atomRelevantCycles is undefined; on x86-64 RDKit then
+//! enumerates cycles until memory runs out, so no test may reach it
+//! unguarded. 10 diamonds give 1034, which every path reads.
+
+mod common;
+
+use std::io::Cursor;
+
+use rdkit_cxx::Error;
+use rdkit_cxx::chem::mol_standardize::rd_mol_standardize::standardize_smiles;
+use rdkit_cxx::chem::rd_chem_reactions::{
+    ChemicalReaction, ReactionFromRxnBlockParams, reaction_from_rxn_block,
+    reaction_from_rxn_block_with_params, reaction_from_smarts,
+};
+use rdkit_cxx::chem::rd_fingerprint_generator::{
+    GetMorganGeneratorParams, get_morgan_generator_with_params,
+};
+use rdkit_cxx::chem::rd_mol_hash::{HashFunction, mol_hash};
+use rdkit_cxx::chem::rd_mol_interchange::mol_to_json;
+use rdkit_cxx::chem::rd_rascal_mces::{RascalOptions, find_mces_with_opts, rascal_cluster};
+use rdkit_cxx::chem::rd_sln_parse::{mol_from_query_sln, mol_from_sln};
+use rdkit_cxx::chem::rd_substruct_library::CachedMolHolder;
+use rdkit_cxx::chem::rdinchi::inchi_to_mol;
+use rdkit_cxx::chem::*;
+
+/// The atoms of a ring of `n` diamonds: hub `i` is atom `3i`, and its paths
+/// to the next hub go through atoms `3i + 1` and `3i + 2`.
+fn diamond_bonds(n: u32) -> Vec<(u32, u32)> {
+    let mut bonds = Vec::new();
+    for i in 0..n {
+        let next = 3 * ((i + 1) % n);
+        for middle in [3 * i + 1, 3 * i + 2] {
+            bonds.push((3 * i, middle));
+            bonds.push((middle, next));
+        }
+    }
+    bonds
+}
+
+/// A ring of `n` diamonds, with its rings found by `fast_find_rings`, so
+/// not a symmetrized SSSR.
+fn diamonds(n: u32) -> RWMol {
+    let mut rw = RWMol::default();
+    for _ in 0..3 * n {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for (a, b) in diamond_bonds(n) {
+        rw.add_bond_with_order(a, b, BondType::Single).unwrap();
+    }
+    rw.update_property_cache().unwrap();
+    fast_find_rings(&mut rw).unwrap();
+    rw
+}
+
+/// SMILES for a ring of `n` diamonds.
+fn diamonds_smiles(n: u32) -> String {
+    // The hubs' second paths close on the next hub through %12 and %13 in
+    // turn, and the last hub's paths on the first through %10 and %11.
+    let mut smiles = String::from("C%10%11(C%12)C");
+    for i in 1..n {
+        let (close, open) = if i % 2 == 1 { (12, 13) } else { (13, 12) };
+        if i == n - 1 {
+            smiles += &format!("C%{close}(C%10)C%11");
+        } else {
+            smiles += &format!("C%{close}(C%{open})C");
+        }
+    }
+    smiles
+}
+
+/// A V2000 mol block for a ring of `n` diamonds.
+fn diamonds_v2000(n: u32) -> String {
+    let bonds = diamond_bonds(n);
+    let mut block = format!(
+        "diamonds\n     RDKit          2D\n\n{:3}{:3}  0  0  0  0  0  0  0  0999 V2000\n",
+        3 * n,
+        bonds.len()
+    );
+    for i in 0..3 * n {
+        let angle = f64::from(i) * std::f64::consts::TAU / f64::from(3 * n);
+        block += &format!(
+            "{:10.4}{:10.4}{:10.4} C   0  0  0  0  0  0  0  0  0  0  0  0\n",
+            20.0 * angle.cos(),
+            20.0 * angle.sin(),
+            0.0
+        );
+    }
+    for (a, b) in bonds {
+        block += &format!("{:3}{:3}  1  0\n", a + 1, b + 1);
+    }
+    block + "M  END\n"
+}
+
+/// A V3000 mol block for a ring of `n` diamonds, with each bond line
+/// continued across two physical lines.
+fn diamonds_v3000(n: u32) -> String {
+    let bonds = diamond_bonds(n);
+    let mut block = String::from(
+        "diamonds\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\n",
+    );
+    block += "M  V30 BEGIN CTAB\n";
+    block += &format!("M  V30 COUNTS {} {} 0 0 0\n", 3 * n, bonds.len());
+    block += "M  V30 BEGIN ATOM\n";
+    for i in 0..3 * n {
+        block += &format!("M  V30 {} C {}.0 0.0 0.0 0\n", i + 1, i);
+    }
+    block += "M  V30 END ATOM\nM  V30 BEGIN BOND\n";
+    for (i, (a, b)) in bonds.into_iter().enumerate() {
+        block += &format!("M  V30 {} 1 {} -\nM  V30 {}\n", i + 1, a + 1, b + 1);
+    }
+    block + "M  V30 END BOND\nM  V30 END CTAB\nM  END\n"
+}
+
+/// A chain of `n` diamonds, the last hub not joined to the first: `n`
+/// independent cycles, but only `n` relevant ones, which every path reads
+/// however many independent cycles there are.
+fn diamond_chain(n: u32) -> RWMol {
+    let mut rw = RWMol::default();
+    for _ in 0..3 * n + 1 {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for i in 0..n {
+        for middle in [3 * i + 1, 3 * i + 2] {
+            rw.add_bond_with_order(3 * i, middle, BondType::Single)
+                .unwrap();
+            rw.add_bond_with_order(middle, 3 * i + 3, BondType::Single)
+                .unwrap();
+        }
+    }
+    rw.update_property_cache().unwrap();
+    rw
+}
+
+/// A ring of `n` diamonds without ring info.
+fn diamonds_raw(n: u32) -> RWMol {
+    let mut rw = RWMol::default();
+    for _ in 0..3 * n {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for (a, b) in diamond_bonds(n) {
+        rw.add_bond_with_order(a, b, BondType::Single).unwrap();
+    }
+    rw.update_property_cache().unwrap();
+    rw
+}
+
+/// Atom positions on a circle wide enough that no two are within bonding
+/// distance (the PDB reader's proximity bonds).
+fn position(i: u32, atoms: u32) -> (f64, f64) {
+    let radius = f64::from(atoms) * 3.0 / std::f64::consts::TAU;
+    let angle = f64::from(i) * std::f64::consts::TAU / f64::from(atoms);
+    (radius * angle.cos(), radius * angle.sin())
+}
+
+/// A Mol2 block for a ring of `n` diamonds.
+fn diamonds_mol2(n: u32) -> String {
+    let bonds = diamond_bonds(n);
+    let mut block = format!(
+        "@<TRIPOS>MOLECULE\ndiamonds\n{} {} 0 0 0\nSMALL\nNO_CHARGES\n\n@<TRIPOS>ATOM\n",
+        3 * n,
+        bonds.len()
+    );
+    for i in 0..3 * n {
+        let (x, y) = position(i, 3 * n);
+        block += &format!(
+            "{:>7} C{:<6}{x:>10.4}{y:>10.4}{:>10.4} C.3 1 RES1 0.0000\n",
+            i + 1,
+            i + 1,
+            0.0
+        );
+    }
+    block += "@<TRIPOS>BOND\n";
+    for (i, (a, b)) in bonds.into_iter().enumerate() {
+        block += &format!("{:>6}{:>6}{:>6} 1\n", i + 1, a + 1, b + 1);
+    }
+    block
+}
+
+/// A PDB block for a ring of `n` diamonds, its bonds in CONECT records.
+fn diamonds_pdb(n: u32) -> String {
+    let mut block = String::new();
+    for i in 0..3 * n {
+        let (x, y) = position(i, 3 * n);
+        block += &format!(
+            "HETATM{:>5}  C   UNL A   1    {x:>8.3}{y:>8.3}{:>8.3}  1.00  0.00           C\n",
+            i + 1,
+            0.0
+        );
+    }
+    let mut neighbors = vec![Vec::new(); 3 * n as usize];
+    for (a, b) in diamond_bonds(n) {
+        neighbors[a as usize].push(b + 1);
+        neighbors[b as usize].push(a + 1);
+    }
+    for (i, list) in neighbors.iter().enumerate() {
+        for chunk in list.chunks(4) {
+            block += &format!("CONECT{:>5}", i + 1);
+            for j in chunk {
+                block += &format!("{j:>5}");
+            }
+            block += "\n";
+        }
+    }
+    block + "END\n"
+}
+
+const INCHI_10: &str = "InChI=1S/C30H40/c1-21-2-22(1)5-24(6-22)9-26(10-24)13-28(14-26)17-30(18-28)19-29(20-30)15-27(16-29)11-25(12-27)7-23(3-21,4-21)8-25/h1-20H2";
+const INCHI_64: &str = concat!(
+    "InChI=1S/C192H256/c1-129-2-130(1)5-132(6-130)9-134(10-132)13-136(14-134)",
+    "17-138(18-136)21-140(22-138)25-142(26-140)29-144(30-142)33-146(34-144)37",
+    "-148(38-146)41-150(42-148)45-152(46-150)49-154(50-152)53-156(54-154)57-1",
+    "58(58-156)61-160(62-158)65-162(66-160)69-164(70-162)73-166(74-164)77-168",
+    "(78-166)81-170(82-168)85-172(86-170)89-174(90-172)93-176(94-174)97-178(9",
+    "8-176)101-180(102-178)105-182(106-180)109-184(110-182)113-186(114-184)11",
+    "7-188(118-186)121-190(122-188)125-192(126-190)127-191(128-192)123-189(12",
+    "4-191)119-187(120-189)115-185(116-187)111-183(112-185)107-181(108-183)10",
+    "3-179(104-181)99-177(100-179)95-175(96-177)91-173(92-175)87-171(88-173)8",
+    "3-169(84-171)79-167(80-169)75-165(76-167)71-163(72-165)67-161(68-163)63-",
+    "159(64-161)59-157(60-159)55-155(56-157)51-153(52-155)47-151(48-153)43-14",
+    "9(44-151)39-147(40-149)35-145(36-147)31-143(32-145)27-141(28-143)23-139(",
+    "24-141)19-137(20-139)15-135(16-137)11-133(12-135)7-131(3-129,4-129)8-133",
+    "/h1-128H2",
+);
+
+fn refused<T: std::fmt::Debug>(result: Result<T, Error>) -> bool {
+    match result {
+        Err(Error::Value { message }) => message.contains("relevant cycles"),
+        other => panic!("expected a refusal, got {other:?}"),
+    }
+}
+
+fn is_refusal<T>(result: &Result<T, Error>) -> bool {
+    matches!(result, Err(Error::Value { message }) if message.contains("relevant cycles"))
+}
+
+fn mol_params(sanitize: bool, remove_hs: bool) -> MolFromMolBlockParams {
+    MolFromMolBlockParams {
+        sanitize,
+        remove_hs,
+        ..Default::default()
+    }
+}
+
+const PARAMS: [(bool, bool); 3] = [(true, true), (true, false), (false, false)];
+
+#[test]
+fn mol_blocks() {
+    for block in [diamonds_v2000(10), diamonds_v3000(10)] {
+        for (sanitize, remove_hs) in PARAMS {
+            let mol =
+                mol_from_mol_block_with_params(&block, &mol_params(sanitize, remove_hs)).unwrap();
+            assert_eq!(mol.get_num_atoms(), 30);
+            assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034);
+        }
+    }
+    for block in [diamonds_v2000(64), diamonds_v3000(64)] {
+        for (sanitize, remove_hs) in PARAMS {
+            assert!(refused(mol_from_mol_block_with_params(
+                &block,
+                &mol_params(sanitize, remove_hs)
+            )));
+        }
+        let path = common::temp_path("diamonds.mol");
+        std::fs::write(&path, &block).unwrap();
+        assert!(refused(mol_from_mol_file(&path)));
+    }
+    // Past the bound, the exact count lets a block with few relevant cycles
+    // through.
+    let chain = mol_to_mol_block(&diamond_chain(40).into()).unwrap();
+    let mol = mol_from_mol_block(&chain).unwrap();
+    assert_eq!(mol.get_ring_info().num_rings().unwrap(), 40);
+}
+
+/// A V2000 mol block for a ring of `n` diamonds and an iron atom bonded to
+/// each hub, whose 3n relevant cycles are all 4-rings, with data SGroups of
+/// `kind` that take those spokes out of the ring graph as RDKit finishes the
+/// block, leaving the ring's 2^n + n: "ZBO" makes them zero-order, and
+/// "MRV_COORDINATE_BOND_TYPE" makes them dative, from query (any) bonds.
+fn spoked_v2000(n: u32, kind: &str) -> String {
+    let ring = diamond_bonds(n);
+    let spokes = ring.len() as u32 + 1..ring.len() as u32 + n + 1;
+    let mut block = format!(
+        "spoked\n     RDKit          2D\n\n{:3}{:3}  0  0  0  0  0  0  0  0999 V2000\n",
+        3 * n + 1,
+        ring.len() as u32 + n
+    );
+    for i in 0..3 * n {
+        let angle = f64::from(i) * std::f64::consts::TAU / f64::from(3 * n);
+        block += &format!(
+            "{:10.4}{:10.4}{:10.4} C   0  0  0  0  0  0  0  0  0  0  0  0\n",
+            20.0 * angle.cos(),
+            20.0 * angle.sin(),
+            0.0
+        );
+    }
+    block += "    0.0000    0.0000    0.0000 Fe  0  0  0  0  0  0  0  0  0  0  0  0\n";
+    for (a, b) in ring {
+        block += &format!("{:3}{:3}  1  0\n", a + 1, b + 1);
+    }
+    let spoke_type = if kind == "ZBO" { 1 } else { 8 };
+    for i in 0..n {
+        block += &format!("{:3}{:3}{spoke_type:3}  0\n", 3 * i + 1, 3 * n + 1);
+    }
+    if kind == "ZBO" {
+        block += "M  STY  1   1 DAT\nM  SDT   1 ZBO\n";
+        for chunk in spokes.collect::<Vec<_>>().chunks(15) {
+            block += &format!("M  SBL   1{:3}", chunk.len());
+            for bond in chunk {
+                block += &format!("{bond:4}");
+            }
+            block += "\n";
+        }
+    } else {
+        for (sgroup, bond) in (1..).zip(spokes) {
+            block += &format!(
+                "M  STY  1{sgroup:4} DAT\nM  SDT {sgroup:3} {kind}\nM  SED {sgroup:3} {bond}\n"
+            );
+        }
+    }
+    block + "M  END\n"
+}
+
+#[test]
+fn sgroup_bonds() {
+    for kind in ["ZBO", "MRV_COORDINATE_BOND_TYPE"] {
+        for (sanitize, remove_hs) in PARAMS {
+            let params = mol_params(sanitize, remove_hs);
+            let mol = mol_from_mol_block_with_params(&spoked_v2000(10, kind), &params).unwrap();
+            assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034, "{kind}");
+            assert!(refused(mol_from_mol_block_with_params(
+                &spoked_v2000(64, kind),
+                &params
+            )));
+        }
+    }
+}
+
+/// A V2000 mol block for one carbon.
+const CARBON_V2000: &str = "\n     RDKit          2D\n\n  1  0  0  0  0  0  0  0  0  0999 V2000\n    0.0000    0.0000    0.0000 C   0  0  0  0  0  0  0  0  0  0  0  0\nM  END\n";
+
+/// A V2000 rxn block turning carbon into carbon, with `agents`.
+fn rxn_v2000(agents: &[String]) -> String {
+    let mut block = format!("$RXN\n\n      RDKit\n\n  1  1{:3}\n", agents.len());
+    for mol in [CARBON_V2000, CARBON_V2000]
+        .into_iter()
+        .chain(agents.iter().map(String::as_str))
+    {
+        block += "$MOL\n";
+        block += mol;
+    }
+    block
+}
+
+#[test]
+fn rxn_agents() {
+    // An SGroup type RDKit doesn't know is an unhandled feature when parsing
+    // strictly.
+    let skipped = CARBON_V2000.replace("M  END\n", "M  STY  1   1 XXX\nM  END\n");
+    let lax = ReactionFromRxnBlockParams {
+        strict_parsing: false,
+        ..Default::default()
+    };
+    for n in [10, 64] {
+        let big = n == 64;
+        // RDKit skips an agent it can't read, keeping its place, and reads
+        // (and perceives) the next; the wrapper refuses the null agent only
+        // once RDKit is done.
+        let rxn = rxn_v2000(&[skipped.clone(), diamonds_v2000(n)]);
+        match reaction_from_rxn_block(&rxn) {
+            result if big => assert!(refused(result)),
+            Err(Error::Parse { message }) => assert!(message.contains("null agent")),
+            other => panic!("expected the null agent refused, got {other:?}"),
+        }
+        // It reads agents with the strictness asked, which here lets an
+        // unknown CTAB version through.
+        let rxn = rxn_v2000(&[diamonds_v2000(n).replacen("V2000", "V2001", 1)]);
+        let result = reaction_from_rxn_block_with_params(&rxn, &lax);
+        if big {
+            assert!(refused(result));
+        } else {
+            let rxn = result.unwrap();
+            let agent = rxn.get_agents().next().unwrap();
+            assert_eq!(agent.get_num_atoms(), 30);
+        }
+    }
+}
+
+/// SLN for a ring of `n` diamonds, written with the macro `Q` for every
+/// ring closure, so that only the macro's definition has an "@". Each
+/// hub's second path hangs off it, labeled for the next hub to close on,
+/// and the first hub carries the last hub's too.
+fn diamonds_sln_macro(n: u32) -> String {
+    let mut sln = String::from("{Q:@}C[1](C[2])(C[3])C");
+    for i in 1..n - 1 {
+        sln += &format!("CQ{}(C[{}])C", i + 2, i + 3);
+    }
+    sln + &format!("CQ{}Q2CQ1", n + 1)
+}
+
+#[test]
+fn sln_macros() {
+    for n in [10, 64] {
+        let sln = diamonds_sln_macro(n);
+        assert_eq!(sln.matches('@').count(), 1);
+        if n == 64 {
+            assert!(refused(mol_from_sln(&sln)));
+            assert!(refused(mol_from_query_sln(&sln)));
+        } else {
+            let mol = mol_from_sln(&sln).unwrap();
+            assert_eq!(mol.get_num_atoms(), 30);
+            assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034);
+            mol_from_query_sln(&sln).unwrap();
+        }
+    }
+}
+
+/// SD text whose `bad` record follows enough small records to straddle the
+/// checked stream's 64 KiB chunks, then a last small record.
+fn sd_text(bad: &str) -> String {
+    let small = diamonds_v2000(2) + "$$$$\n";
+    let mut sd = String::new();
+    while sd.len() + small.len() < (1 << 16) - bad.len() / 2 {
+        sd += &small;
+    }
+    sd + bad + "$$$$\n" + &small
+}
+
+#[test]
+fn sd_suppliers() {
+    for block in [diamonds_v2000(64), diamonds_v3000(64)] {
+        let sd = sd_text(&block);
+        assert!(sd.find("diamonds\n").is_some());
+        let mut suppl = SDMolSupplier::default();
+        suppl.set_data(&sd).unwrap();
+        assert!(suppl.mols().any(|mol| is_refusal(&mol)));
+        let mut forward = ForwardSDMolSupplier::from_fileobj(Cursor::new(sd.clone())).unwrap();
+        assert!(forward.mols().any(|mol| is_refusal(&mol)));
+        let path = common::temp_path("diamonds.sdf");
+        std::fs::write(&path, &sd).unwrap();
+        let mut forward = ForwardSDMolSupplier::new(&path).unwrap();
+        assert!(forward.mols().any(|mol| is_refusal(&mol)));
+        let mut threaded = MultithreadedSDMolSupplier::new(&path).unwrap();
+        assert!(threaded.mols().any(|mol| is_refusal(&mol)));
+    }
+    for block in [diamonds_v2000(10), diamonds_v3000(10)] {
+        let sd = sd_text(&block);
+        let mut suppl = SDMolSupplier::default();
+        suppl.set_data(&sd).unwrap();
+        let rings: Vec<u32> = suppl
+            .mols()
+            .map(|mol| mol.unwrap().get_ring_info().num_rings().unwrap())
+            .collect();
+        assert!(rings.contains(&1034));
+        let path = common::temp_path("diamonds10.sdf");
+        std::fs::write(&path, &sd).unwrap();
+        let mut threaded = MultithreadedSDMolSupplier::new(&path).unwrap();
+        assert!(threaded.mols().all(|mol| mol.is_ok()));
+    }
+    // A record held for its exact count, across the chunk, comes through.
+    let chain = mol_to_mol_block(&diamond_chain(40).into()).unwrap();
+    let sd = sd_text(&chain);
+    let rings = |mols: Vec<Result<Mol, Error>>| {
+        let rings: Vec<u32> = mols
+            .into_iter()
+            .map(|mol| mol.unwrap().get_ring_info().num_rings().unwrap())
+            .collect();
+        assert!(rings.contains(&40));
+    };
+    let mut suppl = SDMolSupplier::default();
+    suppl.set_data(&sd).unwrap();
+    rings(suppl.mols().collect());
+    let mut forward = ForwardSDMolSupplier::from_fileobj(Cursor::new(sd.clone())).unwrap();
+    rings(forward.mols().collect());
+    let path = common::temp_path("chain.sdf");
+    std::fs::write(&path, &sd).unwrap();
+    let mut threaded = MultithreadedSDMolSupplier::new(&path).unwrap();
+    rings(threaded.mols().collect());
+}
+
+#[test]
+fn smiles() {
+    assert!(refused(mol_from_smiles(&diamonds_smiles(64))));
+    assert_eq!(
+        mol_from_smiles(&diamonds_smiles(10))
+            .unwrap()
+            .get_ring_info()
+            .num_rings()
+            .unwrap(),
+        1034
+    );
+    // Many independent cycles but few relevant ones parse whatever the
+    // bound.
+    let chain = mol_to_smiles(&diamond_chain(40).into()).unwrap();
+    let mol = mol_from_smiles(&chain).unwrap();
+    assert_eq!(mol.get_ring_info().num_rings().unwrap(), 40);
+}
+
+/// Checks `$e`: refused for a ring of 64 diamonds, otherwise accepted.
+macro_rules! check {
+    ($big:expr, $e:expr) => {
+        if $big {
+            assert!(refused($e));
+        } else {
+            $e.unwrap();
+        }
+    };
+}
+
+#[test]
+fn perception() {
+    for n in [10, 64] {
+        let big = n == 64;
+        let mol: Mol = diamonds(n).into();
+        check!(big, mol_to_smiles(&mol));
+        check!(big, assign_stereochemistry(&mut mol.clone()));
+        check!(big, find_potential_stereo(&mut mol.clone()));
+        check!(big, mol_to_json(&mol));
+        check!(big, mol_hash(&mol, HashFunction::CanonicalSmiles));
+        check!(big, mol_hash(&mol, HashFunction::AnonymousGraph));
+        let morgan = get_morgan_generator_with_params(&GetMorganGeneratorParams {
+            include_chirality: true,
+            ..GetMorganGeneratorParams::default()
+        })
+        .unwrap();
+        check!(big, morgan.get_fingerprint_as_num_py(&mol));
+        let mut raw: Mol = diamonds_raw(n).into();
+        check!(big, set_aromaticity(&mut raw));
+        check!(big, standardize_smiles(&diamonds_smiles(n)));
+    }
+}
+
+#[test]
+fn legacy_ring_finding() {
+    // RDKit reads the legacy setting from the environment, so a child
+    // process starts with it on.
+    let output = std::process::Command::new(std::env::current_exe().unwrap())
+        .args([
+            "legacy_ring_finding_child",
+            "--exact",
+            "--ignored",
+            "--test-threads=1",
+        ])
+        .env("RDK_USE_LEGACY_RING_FINDING", "1")
+        .output()
+        .unwrap();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        output.status.success() && stdout.contains("1 passed"),
+        "{stdout}{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+#[test]
+#[ignore = "run by `legacy_ring_finding` with its environment"]
+fn legacy_ring_finding_child() {
+    if std::env::var_os("RDK_USE_LEGACY_RING_FINDING").is_none() {
+        return;
+    }
+    assert!(get_use_legacy_ring_finding());
+    // The setting changes only what the default algorithm means: RDL still
+    // enumerates the relevant cycles, of the graph or of the ring families
+    // kept without recalc_sssr.
+    let rdl = GetSymmSSSRParams {
+        algorithm: SymmetrizeSSSRAlgorithm::Rdl,
+        ..Default::default()
+    };
+    let kept = GetSymmSSSRParams {
+        recalc_sssr: false,
+        ..rdl.clone()
+    };
+    for n in [10, 64] {
+        let big = n == 64;
+        check!(big, get_symm_sssr_with_params(&mut diamonds(n), &rdl));
+        let mut rw = diamonds(n);
+        find_ring_families(&mut rw).unwrap();
+        check!(big, get_symm_sssr_with_params(&mut rw, &kept));
+        get_symm_sssr(&mut diamonds(n)).unwrap();
+    }
+}
+
+#[test]
+fn formats() {
+    for n in [10, 64] {
+        let big = n == 64;
+        let rings = |mol: Mol| assert_eq!(mol.get_ring_info().num_rings().unwrap(), 1034);
+        if big {
+            assert!(refused(mol_from_mol2_block(&diamonds_mol2(n))));
+            assert!(refused(mol_from_pdb_block(&diamonds_pdb(n))));
+            assert!(refused(inchi_to_mol(INCHI_64)));
+        } else {
+            rings(mol_from_mol2_block(&diamonds_mol2(n)).unwrap());
+            rings(mol_from_pdb_block(&diamonds_pdb(n)).unwrap());
+            rings(inchi_to_mol(INCHI_10).unwrap().mol.unwrap());
+        }
+    }
+}
+
+#[test]
+fn inchi_layer_sizes() {
+    // Multipliers that name more atoms than InChI takes are refused before
+    // the check builds them: a formula's, and a connection layer's.
+    let pairs = ["1-2"; 33].join("-");
+    for inchi in [
+        format!("InChI=1S/1048576C1048576/c{pairs}"),
+        format!("InChI=1S/C2/c1048576*{pairs}"),
+    ] {
+        assert!(matches!(
+            inchi_to_mol(&inchi),
+            Err(Error::Value { message }) if message.contains("atoms InChI takes")
+        ));
+    }
+}
+
+#[test]
+fn reaction_products() {
+    let mut rxn = reaction_from_smarts("[C:1]>>[C:1]").unwrap();
+    for n in [10, 64] {
+        // A directed single bond has the products' double bonds' neighbors'
+        // directions set, which symmetrizes their rings.
+        let mut mol: Mol = diamonds(n).into();
+        mol.get_bond_with_idx_mut(0)
+            .unwrap()
+            .set_bond_dir(BondDir::Endupright);
+        check!(n == 64, rxn.run_reactants(&[mol]));
+    }
+}
+
+/// SMILES for a chain of `m` diamonds from an N to an O. Each hub opens the
+/// next diamond's ring and closes the previous one through its second path,
+/// with ring-bond numbers 1 and 2 in turn.
+fn tipped_chain_smiles(m: u32) -> String {
+    let label = |i: u32| if i.is_multiple_of(2) { 1 } else { 2 };
+    let mut smiles = String::from("NC1");
+    for i in 1..m {
+        smiles += &format!("CC{}(C{})", label(i), label(i - 1));
+    }
+    smiles + &format!("CC(C{})O", label(m - 1))
+}
+
+#[test]
+fn repeated_product_atoms() {
+    // A product template that writes the reactant's two mapped atoms k
+    // times brings the chain of m diamonds between them with each copy,
+    // here closing the copies into a ring of k * m diamonds.
+    for (k, m) in [(2, 5), (4, 16)] {
+        let copies: String = (1..k).map(|_| ".[O:2][N:1]").collect();
+        let mut rxn =
+            reaction_from_smarts(&format!("([N:1].[O:2])>>([N:1]%10{copies}.[O:2]%10)")).unwrap();
+        let mut mol = mol_from_smiles(&tipped_chain_smiles(m)).unwrap();
+        mol.get_bond_with_idx_mut(0)
+            .unwrap()
+            .set_bond_dir(BondDir::Endupright);
+        let result = rxn.run_reactants(&[mol]);
+        if k * m == 64 {
+            assert!(refused(result));
+        } else {
+            assert_eq!(result.unwrap()[0][0].get_num_atoms(), k * (3 * m + 3));
+        }
+    }
+}
+
+#[test]
+fn molzip() {
+    for n in [10, 64] {
+        let mut frag = diamonds(n);
+        let dummy = frag.add_atom(&Atom::from_num(0));
+        frag.get_atom_with_idx_mut(dummy)
+            .unwrap()
+            .set_atom_map_num(1);
+        frag.add_bond_with_order(1, dummy, BondType::Single)
+            .unwrap();
+        let mut parts = vec![mol_from_smiles("C[*:1]").unwrap(), frag.into()];
+        check!(n == 64, molzip_fragments(&mut parts));
+    }
+}
+
+#[test]
+fn old_pickles() {
+    use common::{OLD_PICKLE_VERSIONS, mol_pickle_starts, with_pickle_version};
+    // RDKit gives a molecule pickle older than format 4.0 stereochemistry as
+    // it reads it, before its bonds can be counted, so one is refused
+    // wherever RDKit would read it: on its own, or inside another pickle.
+    // RDKit reads none of these, so none need be a pickle it wrote.
+    let mol = mol_from_smarts("[$(C=O)]C").unwrap();
+    let pickle = mol.to_binary();
+    // A recursive query's molecule is pickled inside its atom's.
+    let starts = mol_pickle_starts(&pickle);
+    assert_eq!(starts.len(), 2);
+    let rxn = reaction_from_smarts("[C:1]=[O:2]>>[C:1][O:2]")
+        .unwrap()
+        .to_binary();
+    let mut bundle = MolBundle::default();
+    bundle.add_mol(&mol_from_smiles("CC").unwrap());
+    let bundle = bundle.to_binary().unwrap();
+    let holder_mol = mol_from_smiles("CO").unwrap().to_binary();
+    for version in OLD_PICKLE_VERSIONS {
+        for &at in &starts {
+            let old = with_pickle_version(&pickle, at, version);
+            // SAFETY: refused before RDKit reads it.
+            let result = unsafe { Mol::from_pkl_string(&old) };
+            assert!(refused(result), "{version:?} at {at}");
+        }
+        let at = *mol_pickle_starts(&rxn).last().unwrap();
+        let old = with_pickle_version(&rxn, at, version);
+        // SAFETY: refused before RDKit reads it.
+        assert!(refused(unsafe { ChemicalReaction::from_bin_str(&old) }));
+        let old = with_pickle_version(&bundle, mol_pickle_starts(&bundle)[0], version);
+        // SAFETY: refused before RDKit reads it.
+        assert!(refused(unsafe { MolBundle::from_pkl_string(&old) }));
+        let old = with_pickle_version(&holder_mol, 0, version);
+        let mut holder = CachedMolHolder::default();
+        // SAFETY: refused before the holder keeps it.
+        assert!(refused(unsafe { holder.add_binary(&old) }));
+        assert_eq!(holder.len(), 0);
+    }
+    // SAFETY: pickles RDKit wrote.
+    unsafe {
+        Mol::from_pkl_string(&pickle).unwrap();
+        ChemicalReaction::from_bin_str(&rxn).unwrap();
+        MolBundle::from_pkl_string(&bundle).unwrap();
+        CachedMolHolder::default().add_binary(&holder_mol).unwrap();
+    }
+}
+
+#[test]
+fn smiles_and_tdt_suppliers() {
+    for n in [10, 64] {
+        let big = n == 64;
+        let text = format!(
+            "smiles name\nC first\n{} ring\nCC last\n",
+            diamonds_smiles(n)
+        );
+        let mut suppl = SmilesMolSupplier::default();
+        suppl.set_data(&text).unwrap();
+        let results: Vec<_> = suppl.mols().collect();
+        assert_eq!(results.iter().any(is_refusal), big);
+        let path = common::temp_path(&format!("diamonds{n}.smi"));
+        std::fs::write(&path, &text).unwrap();
+        let mut threaded = MultithreadedSmilesMolSupplier::new(&path).unwrap();
+        let results: Vec<_> = threaded.mols().collect();
+        assert_eq!(results.iter().any(is_refusal), big);
+        let tdt = format!("$SMI<C>\n|\n$SMI<{}>\n|\n$SMI<CC>\n|\n", diamonds_smiles(n));
+        let mut suppl = TDTMolSupplier::default();
+        suppl.set_data(&tdt).unwrap();
+        let results: Vec<_> = suppl.mols().collect();
+        assert_eq!(results.iter().any(is_refusal), big);
+    }
+}
+
+/// A ring of `n` units of K4 less an edge: hub `i` is atom `3i`, and atoms
+/// `3i + 1` and `3i + 2`, bonded to each other, join it to the next hub. Its
+/// 2^n + 2n relevant cycles are 2n triangles and the shortest ways around.
+/// `fast_find_rings` finds a ring through every atom.
+fn k4e_ring(n: u32) -> Mol {
+    let mut rw = RWMol::default();
+    for _ in 0..3 * n {
+        rw.add_atom(&Atom::from_num(6));
+    }
+    for i in 0..n {
+        let (hub, next) = (3 * i, 3 * ((i + 1) % n));
+        let (u, v) = (hub + 1, hub + 2);
+        for (a, b) in [(u, v), (hub, u), (hub, v), (u, next), (v, next)] {
+            rw.add_bond_with_order(a, b, BondType::Single).unwrap();
+        }
+    }
+    rw.update_property_cache().unwrap();
+    fast_find_rings(&mut rw).unwrap();
+    rw.into()
+}
+
+#[test]
+fn rascal_ring_pieces() {
+    // With complete_aromatic_rings, RASCAL writes each ring of the ring
+    // info as SMILES, keeping only the ring's atoms: here, all of them.
+    let opts = RascalOptions {
+        timeout: 1,
+        ..Default::default()
+    };
+    for n in [10, 64] {
+        let mol = k4e_ring(n);
+        let rings = mol.get_ring_info().atom_rings();
+        assert!(rings.iter().any(|ring| ring.len() == 3 * n as usize));
+        check!(n == 64, find_mces_with_opts(&mol, &mol.clone(), &opts));
+        if n == 64 {
+            assert!(refused(rascal_cluster(&[mol.clone(), mol])));
+        }
+    }
+}
+
+/// A V3000 mol block for F/C=C/ and a chain of three link nodes, each a
+/// spiro atom of a cyclopropane that repeats up to `reps` times, every copy
+/// with its own ring.
+fn link_nodes_block(reps: u32) -> String {
+    let atoms = [
+        "F", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C", "C",
+    ];
+    let mut bonds = vec![
+        (1, 1, 2),
+        (2, 2, 3),
+        (1, 3, 4),
+        (1, 4, 5),
+        (1, 5, 6),
+        (1, 6, 7),
+        (1, 7, 8),
+        (1, 8, 9),
+    ];
+    for (node, ring) in [(4, 10), (6, 12), (8, 14)] {
+        bonds.extend([(1, node, ring), (1, node, ring + 1), (1, ring, ring + 1)]);
+    }
+    let mut block = String::from(
+        "\n     RDKit          2D\n\n  0  0  0  0  0  0  0  0  0  0999 V3000\nM  V30 BEGIN CTAB\n",
+    );
+    block += &format!("M  V30 COUNTS {} {} 0 0 0\n", atoms.len(), bonds.len());
+    block += "M  V30 BEGIN ATOM\n";
+    for (i, symbol) in (1..).zip(atoms) {
+        block += &format!("M  V30 {i} {symbol} {i}.0 {}.0 0.0 0\n", i % 2);
+    }
+    block += "M  V30 END ATOM\nM  V30 BEGIN BOND\n";
+    for (i, (order, a, b)) in (1..).zip(bonds) {
+        block += &format!("M  V30 {i} {order} {a} {b}\n");
+    }
+    block += "M  V30 END BOND\n";
+    for node in [4, 6, 8] {
+        block += &format!(
+            "M  V30 LINKNODE 1 {reps} 2 {node} {} {node} {}\n",
+            node - 1,
+            node + 1
+        );
+    }
+    block + "M  V30 END CTAB\nM  END\n"
+}
+
+#[test]
+fn link_node_limits() {
+    // Past the bound, with a directed bond, the check enumerates the
+    // molecule with each prefix of its link nodes under the caller's
+    // limit (1000 by default), not the million variations of all three.
+    let mut mol = mol_from_mol_block(&link_nodes_block(100)).unwrap();
+    mol.get_bond_with_idx_mut(0)
+        .unwrap()
+        .set_bond_dir(BondDir::Endupright);
+    let result = rd_mol_enumerator::enumerate(&mol);
+    assert!(!is_refusal(&result), "{:?}", result.err());
+}

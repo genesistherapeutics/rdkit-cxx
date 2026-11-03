@@ -12,6 +12,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/adjust_query.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -90,9 +91,12 @@ AdjustQueryParametersData adjust_query_parameters_no_adjustments() {
 
 // adjustQueryProperties replaces bonds with RWMol::replaceBond, which would
 // leave the copy's stereo groups pointing at the bonds it deletes
-// (replace_bond), so the groups are guarded.
+// (replace_bond), so the groups are guarded. It symmetrizes the rings, or
+// sanitizes them afresh (aromatizeIfPossible), and replaces no bond's type
+// with one outside the rings' graph.
 std::unique_ptr<RWMol> adjust_query_properties(
     const RWMol &mol, const AdjustQueryParametersData &data) {
+  check_graph_relevant_cycles(mol);
   auto params = from_data(data);
   auto res = std::make_unique<RWMol>(mol);
   StereoGroupBondGuard guard(*res);

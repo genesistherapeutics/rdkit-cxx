@@ -30,6 +30,7 @@
 #include "rdkit-cxx/force_field.h"
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/symmetrize_lock.h"
 #include "rdkit-cxx/util.h"
 
@@ -334,6 +335,13 @@ rust::Vec<std::int32_t> embed_multiple_confs(RWMol &mol,
   auto native = to_native(data);
   auto &params = native->params;
   check_embed(mol, data, params);
+  // It embeds the molecule's fragments, cut from it and sanitized, or a
+  // copy of it, perceiving each piece's stereochemistry.
+  if (params.embedFragmentsSeparately) {
+    check_frags_sanitize_relevant_cycles(mol);
+  } else {
+    check_perceive_relevant_cycles(mol);
+  }
   params.numThreads = 1;
   MatrixCacheGuard guard(mol);
   std::lock_guard<ControlCMutex> control_c(control_c_mutex());

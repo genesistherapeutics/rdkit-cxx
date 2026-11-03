@@ -11,6 +11,8 @@
 #include <GraphMol/SmilesParse/SmartsWrite.h>
 #include <GraphMol/SmilesParse/SmilesWrite.h>
 
+#include "rdkit-cxx/relevant_cycles.h"
+
 namespace rdkit_cxx {
 
 std::unique_ptr<Atom> atom_new(rust::Str what) {
@@ -104,6 +106,8 @@ std::unique_ptr<std::string> atom_get_smarts(const Atom &atom, bool do_kekule,
                                              bool all_hs_explicit,
                                              bool isomeric_smiles) {
   if (atom.hasQuery()) {
+    // GetAtomSmarts writes recursive queries' molecules with MolToSmarts.
+    check_atom_smarts_relevant_cycles(atom);
     return std::make_unique<std::string>(RDKit::SmartsWrite::GetAtomSmarts(
         static_cast<const RDKit::QueryAtom *>(&atom)));
   }

@@ -9,6 +9,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/threads.h"
 
 namespace rdkit_cxx {
@@ -36,6 +37,11 @@ std::unique_ptr<RWMol> to_rwmol(RDKit::ROMol *mol) {
 std::unique_ptr<ResonanceMolSupplier> resonance_mol_supplier_new(
     const RWMol &mol, std::uint32_t flags, std::uint32_t max_structs) {
   check_formal_charge_sum(mol);
+  // Each resonance structure, which has the molecule's graph with other
+  // bond orders, is sanitized for its radicals and hydrogens
+  // (ResonanceUtils::sanitizeMol in Resonance.cpp), afresh.
+  check_sanitize_relevant_cycles(mol, RDKit::MolOps::SANITIZE_FINDRADICALS |
+                                          RDKit::MolOps::SANITIZE_ADJUSTHS);
   // The supplier copies the molecule, so the const_cast does not write it.
   return std::make_unique<ResonanceMolSupplier>(const_cast<RWMol &>(mol), flags,
                                                 max_structs);

@@ -157,15 +157,16 @@ struct Input {
 };
 
 // Opens the file as GeneralMolSupplier::getSupplier does, with its errors.
-Input open_input(const std::string &path, const std::string &compression) {
+Input open_input(const std::string &path, const std::string &compression,
+                 InputScanner scanner) {
   Input in;
   if (compression.empty()) {
-    in.checked = open_checked_file(path, true);
+    in.checked = open_checked_file(path, true, std::move(scanner));
     return in;
   }
 #ifdef RDK_USE_BOOST_IOSTREAMS
-  in.checked =
-      std::make_unique<CheckedIStream>(std::make_unique<GzipFileBuf>(path));
+  in.checked = std::make_unique<CheckedIStream>(
+      std::make_unique<GzipFileBuf>(path), std::move(scanner));
   in.unseekable = std::make_unique<UnseekableBuf>(*in.checked->rdbuf());
   in.outer = std::make_unique<std::istream>(in.unseekable.get());
   // gzstream opens the file without reporting a failure, so a file it cannot
@@ -306,6 +307,34 @@ Fingerprints read_in_threads_fingerprint_here(const Input &in, S &suppl,
   return in_record_order(by_record);
 }
 
+// The parameters getSupplier reads each format with.
+FP::MolFileParserParams sdf_params(const Options &options) {
+  FP::MolFileParserParams params;
+  params.sanitize = options.sanitize;
+  params.removeHs = options.removeHs;
+  params.strictParsing = options.strictParsing;
+  return params;
+}
+
+FP::TDTMolSupplierParams tdt_params(const Options &options) {
+  FP::TDTMolSupplierParams params;
+  params.nameRecord = options.nameRecord;
+  params.confId2D = options.confId2D;
+  params.confId3D = options.confId3D;
+  params.parseParameters.sanitize = options.sanitize;
+  return params;
+}
+
+FP::SmilesMolSupplierParams smiles_params(const Options &options) {
+  FP::SmilesMolSupplierParams params;
+  params.delimiter = options.delimiter;
+  params.smilesColumn = options.smilesColumn;
+  params.nameColumn = options.nameColumn;
+  params.titleLine = options.titleLine;
+  params.parseParameters.sanitize = options.sanitize;
+  return params;
+}
+
 // `control_c` holds control_c_mutex if the generator may construct a
 // ControlCHandler (lock_control_c_for), for the whole call.
 template <class Gen>
@@ -316,7 +345,16 @@ Fingerprints run(const std::string &path, const Gen &gen,
   std::string format;
   std::string compression;
   RDKit::GeneralMolSupplier::determineFormat(path, format, compression);
-  auto in = open_input(path, compression);
+  // The records' relevant cycles are checked as they are read (streams.h).
+  InputScanner scanner;
+  if (format == "sdf") {
+    scanner = InputScanner::mol_records(sdf_params(options), true);
+  } else if (format == "tdt") {
+    scanner = InputScanner::tdt_lines(tdt_params(options));
+  } else if (format != "mae") {
+    scanner = InputScanner::smiles_lines(smiles_params(options));
+  }
+  auto in = open_input(path, compression, std::move(scanner));
   if (format == "mae") {
     // getSupplier reads MAE files with RDKit's MaeMolSupplier, which trusts
     // maeparser's parse (see MaeMolSupplier in inventory/manifest.toml).
@@ -349,10 +387,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
   // The suppliers do not own the stream, which outlives them (as build in
   // suppliers.cpp).
   if (format == "sdf") {
-    FP::MolFileParserParams parse_params;
-    parse_params.sanitize = options.sanitize;
-    parse_params.removeHs = options.removeHs;
-    parse_params.strictParsing = options.strictParsing;
+    auto parse_params = sdf_params(options);
     if (threaded) {
       auto suppl = checked(in, [&] {
         return std::make_unique<FP::MultithreadedSDMolSupplier>(
@@ -367,11 +402,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
     return read_in_order(in, *suppl, fp);
   }
   if (format == "tdt") {
-    FP::TDTMolSupplierParams parse_params;
-    parse_params.nameRecord = options.nameRecord;
-    parse_params.confId2D = options.confId2D;
-    parse_params.confId3D = options.confId3D;
-    parse_params.parseParameters.sanitize = options.sanitize;
+    auto parse_params = tdt_params(options);
     auto suppl = checked(in, [&] {
       return std::make_unique<FP::TDTMolSupplier>(in.stream(), false,
                                                   parse_params);
@@ -379,12 +410,7 @@ Fingerprints run(const std::string &path, const Gen &gen,
     return read_in_order(in, *suppl, fp);
   }
   // smi, csv, txt, and tsv; determineFormat knows no other.
-  FP::SmilesMolSupplierParams parse_params;
-  parse_params.delimiter = options.delimiter;
-  parse_params.smilesColumn = options.smilesColumn;
-  parse_params.nameColumn = options.nameColumn;
-  parse_params.titleLine = options.titleLine;
-  parse_params.parseParameters.sanitize = options.sanitize;
+  auto parse_params = smiles_params(options);
   if (threaded) {
     auto suppl = checked(in, [&] {
       return std::make_unique<FP::MultithreadedSmilesMolSupplier>(

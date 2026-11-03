@@ -8,12 +8,14 @@
 #include <algorithm>
 #include <climits>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <GraphMol/SmilesParse/SmilesParse.h>
+#include <GraphMol/SmilesParse/SmilesWrite.h>
 #include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/control_c_lock.h"
@@ -21,6 +23,7 @@
 #include "rdkit-cxx/ffi/substruct.rs.h"
 #include "rdkit-cxx/ffi/substruct_library.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_checks.h"
 
@@ -138,6 +141,43 @@ Range search_range(const SubstructLibrary &view, bool ranged,
   return Range{start_idx, end_idx};
 }
 
+// The cached holders read their molecules back (CachedSmilesMolHolder
+// sanitizing its SMILES, CachedTrustedSmilesMolHolder not, either perceiving
+// stereochemistry), and a search for a query with ring queries symmetrizes
+// each molecule it reads whose rings are not a symmetrized SSSR
+// (SubstructLibrary.cpp).
+void check_holder_smiles(const RDKit::MolHolderBase &holder,
+                         const std::string &smiles) {
+  if (!dynamic_cast<const CachedTrustedSmilesMolHolder *>(&holder)) {
+    check_smiles_relevant_cycles(smiles, RDKit::SmilesParserParams());
+    return;
+  }
+  // Read back unsanitized, which perceives nothing, it is symmetrized for a
+  // search with ring queries.
+  if (smiles_closure_bound(smiles) > MAX_INDEPENDENT_CYCLES) {
+    std::unique_ptr<RDKit::RWMol> mol(RDKit::SmilesToMol(smiles, 0, false));
+    if (mol) {
+      check_graph_relevant_cycles(*mol);
+    }
+  }
+}
+
+// The SMILES holders write a molecule with MolToSmiles, which perceives its
+// stereochemistry; the SMILES, of a graph with the molecule's bonds, are
+// counted only above the bound. The others keep the molecule, or its pickle.
+void check_holder_mol(const RDKit::MolHolderBase &holder,
+                      const RDKit::ROMol &mol) {
+  if (dynamic_cast<const CachedSmilesMolHolder *>(&holder) ||
+      dynamic_cast<const CachedTrustedSmilesMolHolder *>(&holder)) {
+    check_stereo_relevant_cycles(mol);
+    if (independent_cycles(mol) > MAX_INDEPENDENT_CYCLES) {
+      check_holder_smiles(holder, RDKit::MolToSmiles(mol, true));
+    }
+    return;
+  }
+  check_graph_relevant_cycles(mol);
+}
+
 }  // namespace
 
 std::unique_ptr<MolHolderHandle> mol_holder_new(std::uint8_t kind) {
@@ -186,6 +226,7 @@ std::uint32_t mol_holder_add_mol(MolHolderHandle &holder, const RWMol &mol) {
   check_room(holder.ptr->size());
   check_smiles_holder_removals(*holder.ptr, mol);
   check_cached_holder_pickle(*holder.ptr, mol);
+  check_holder_mol(*holder.ptr, mol);
   return holder.ptr->addMol(mol);
 }
 
@@ -196,13 +237,25 @@ std::uint32_t mol_holder_add_binary(MolHolderHandle &holder,
     throw ValueErrorException("the holder is not a CachedMolHolder");
   }
   check_room(cached->size());
-  return cached->addBinary(std::string(
-      reinterpret_cast<const char *>(pickle.data()), pickle.size()));
+  std::string text(reinterpret_cast<const char *>(pickle.data()),
+                   pickle.size());
+  check_mol_pickle_versions(text);
+  std::unique_ptr<RDKit::ROMol> mol;
+  try {
+    mol = std::make_unique<RDKit::ROMol>(text);
+  } catch (const std::exception &) {
+    // The holder's getMol fails the same way.
+  }
+  if (mol) {
+    check_holder_mol(*cached, *mol);
+  }
+  return cached->addBinary(text);
 }
 
 std::uint32_t mol_holder_add_smiles(MolHolderHandle &holder, rust::Str smiles) {
   check_room(holder.ptr->size());
   std::string text(smiles);
+  check_holder_smiles(*holder.ptr, text);
   if (auto *h = dynamic_cast<CachedSmilesMolHolder *>(holder.ptr.get())) {
     return h->addSmiles(text);
   }
@@ -375,6 +428,7 @@ std::uint32_t substruct_library_add_mol(SubstructLibrary &view,
   check_room(view.getMolHolder()->size());
   check_smiles_holder_removals(*view.getMolHolder(), mol);
   check_cached_holder_pickle(*view.getMolHolder(), mol);
+  check_holder_mol(*view.getMolHolder(), mol);
   if (view.getFpHolder()) {
     check_room(view.getFpHolder()->size());
   }
@@ -685,8 +739,9 @@ std::unique_ptr<SubstructLibrary> substruct_library_from_pickle(
   if (!RDKit::SubstructLibraryCanSerialize()) {
     throw ValueErrorException("RDKit was built without Boost serialization");
   }
-  auto lib = std::make_unique<SubstructLibrary>(
-      std::string(reinterpret_cast<const char *>(data.data()), data.size()));
+  std::string text(reinterpret_cast<const char *>(data.data()), data.size());
+  check_mol_pickle_versions(text);
+  auto lib = std::make_unique<SubstructLibrary>(text);
   const auto &mols = lib->getMolHolder();
   if (!mols) {
     throw ValueErrorException("the library has no molecule holder");

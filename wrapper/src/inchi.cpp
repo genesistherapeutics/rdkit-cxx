@@ -23,6 +23,7 @@
 #include "rdkit-cxx/control_c_lock.h"
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/inchi.rs.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 // The InChI library keeps no state between calls: inchi_dll.c works on the
 // caller's input and its own locals, so threads may call it at once (its
@@ -352,6 +353,8 @@ void check_inchi_h_counts(std::string_view inchi) {
 
 InchiToMolData inchi_to_mol(rust::Str inchi, bool sanitize, bool remove_hs) {
   check_inchi_h_counts(std::string_view(inchi.data(), inchi.size()));
+  check_inchi_relevant_cycles(std::string_view(inchi.data(), inchi.size()),
+                              sanitize);
   RDKit::ExtraInchiReturnValues rv;
   std::unique_ptr<RWMol> mol;
   {

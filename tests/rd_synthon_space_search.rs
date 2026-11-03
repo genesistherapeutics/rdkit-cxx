@@ -684,6 +684,21 @@ fn database_files() {
 
     // A file cut short, its offsets' reads past the mapped file in RDKit.
     let bytes = std::fs::read(&file).unwrap();
+    // A molecule pickle older than format 4.0 in the last record, which
+    // RDKit would give stereochemistry as it reads it, before its relevant
+    // cycles can be counted.
+    let old_file = temp_path("synthon-old-pickle.spc");
+    let at = *common::mol_pickle_starts(&bytes).last().unwrap();
+    for version in common::OLD_PICKLE_VERSIONS {
+        std::fs::write(&old_file, common::with_pickle_version(&bytes, at, version)).unwrap();
+        // SAFETY: the wrapper refuses the file before RDKit reads it.
+        let err = unsafe { read.read_db_file(&old_file) }.unwrap_err();
+        assert!(
+            matches!(&err, Error::Value { message } if message.contains("relevant cycles")),
+            "{version:?}: {err:?}"
+        );
+    }
+    std::fs::remove_file(&old_file).unwrap();
     let short = temp_path("synthon-short.spc");
     for len in [10, 60, bytes.len() / 2] {
         std::fs::write(&short, &bytes[..len]).unwrap();

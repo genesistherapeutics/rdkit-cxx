@@ -39,6 +39,12 @@
 //   whose list ends before its count's first number (ATOMS=(1 )) has RDKit
 //   read an unset index. Such a line is refused; RDKit 2026.09 itself
 //   refuses an atom listed twice, which a shorter list repeats.
+// - RDKit symmetrizes the rings of each molecule it reads, enumerating their
+//   relevant cycles (relevant_cycles.h). A scanner made by mol_records,
+//   smiles_lines or tdt_lines follows the records of the text as RDKit reads
+//   them, and holds and checks those whose bonds or ring closures could close
+//   more than MAX_INDEPENDENT_CYCLES independent cycles, refusing one with more
+//   than INT_MAX relevant cycles where its hold starts.
 // Because RDKit parses a line cut off by the end of the input (or by a
 // refusal) as it does a whole one, input is never delivered, nor refused,
 // inside a COMPNO field (or a word that may begin one) or an
@@ -66,6 +72,8 @@
 #include <string_view>
 #include <vector>
 
+#include "rdkit-cxx/relevant_cycles.h"
+
 namespace rdkit_cxx {
 
 // The most lines an input may have; RDKit's counters stay below INT_MAX.
@@ -78,6 +86,21 @@ constexpr std::uint64_t kMaxHeld = std::uint64_t{1} << 20;
 // Scans text in order, one byte at a time across calls.
 class InputScanner {
  public:
+  InputScanner() = default;
+  // A scanner that also follows the mol blocks of the text (one, or SD
+  // records with `sd`), as RDKit reads them with these parameters, and
+  // refuses one that would have RDKit symmetrize more than INT_MAX relevant
+  // cycles (MolRecordScanner in relevant_cycles.h).
+  static InputScanner mol_records(
+      const RDKit::v2::FileParsers::MolFileParserParams &params, bool sd);
+  // A scanner that also follows the lines of a SMILES file as RDKit's SMILES
+  // suppliers read them with these parameters (SmilesLineScanner).
+  static InputScanner smiles_lines(
+      const RDKit::v2::FileParsers::SmilesMolSupplierParams &params);
+  // Or the SMILES lines of a TDT file, as TDTMolSupplier reads them.
+  static InputScanner tdt_lines(
+      const RDKit::v2::FileParsers::TDTMolSupplierParams &params);
+
   // Scans bytes; returns how many are within the limits (all of them, or
   // the bytes before the first that breaks one, after which error() says
   // why).
@@ -101,6 +124,7 @@ class InputScanner {
   void compno(char c, std::uint64_t at);
   std::uint64_t held_from() const;
   bool fail(std::string why, std::uint64_t at = UINT64_MAX);
+  void end_record_line();
 
   std::string d_error;
   std::uint64_t d_lines = 0;
@@ -141,10 +165,19 @@ class InputScanner {
   bool d_in_space = false;
   char d_space = 0;
   std::uint64_t d_space_at = 0;
+  // The records followed for their relevant cycles, if any: the physical
+  // line being read, where it starts, and where they hold the input from.
+  std::unique_ptr<MolRecordScanner> d_mol;
+  std::unique_ptr<SmilesLineScanner> d_smiles;
+  std::string d_line_text;
+  std::uint64_t d_line_start = 0;
+  std::uint64_t d_record_held = UINT64_MAX;
 };
 
-// Throws ValueErrorException if `text` breaks the limits above.
-void check_input_text(std::string_view text);
+// Throws ValueErrorException if `text` breaks the limits above, or those of
+// `scanner`.
+void check_input_text(std::string_view text,
+                      InputScanner scanner = InputScanner());
 
 // A streambuf over `source` that delivers only bytes InputScanner accepts.
 // It reads the source in aligned chunks. Bytes past the furthest point read
@@ -155,7 +188,8 @@ void check_input_text(std::string_view text);
 // changed underneath), fails the stream.
 class CheckedStreambuf : public std::streambuf {
  public:
-  explicit CheckedStreambuf(std::unique_ptr<std::streambuf> source);
+  explicit CheckedStreambuf(std::unique_ptr<std::streambuf> source,
+                            InputScanner scanner = InputScanner());
   ~CheckedStreambuf() override;
   CheckedStreambuf(const CheckedStreambuf &) = delete;
   CheckedStreambuf &operator=(const CheckedStreambuf &) = delete;
@@ -215,7 +249,8 @@ class CheckedStreambuf : public std::streambuf {
 // An istream that owns its CheckedStreambuf.
 class CheckedIStream : public std::istream {
  public:
-  explicit CheckedIStream(std::unique_ptr<std::streambuf> source);
+  explicit CheckedIStream(std::unique_ptr<std::streambuf> source,
+                          InputScanner scanner = InputScanner());
   const CheckedStreambuf &checked() const { return d_buf; }
   // Throws ValueErrorException if RDKit asked for refused input.
   void check() const;
@@ -227,9 +262,11 @@ class CheckedIStream : public std::istream {
 // Opens a file as RDKit's suppliers do (openAndCheckStream in MolSupplier.h):
 // BadFileException("Bad input file <name>") if it cannot be opened, and, when
 // `nonempty`, BadFileException("Invalid input file <name>") if it is empty.
-std::unique_ptr<CheckedIStream> open_checked_file(const std::string &name,
-                                                  bool nonempty);
+std::unique_ptr<CheckedIStream> open_checked_file(
+    const std::string &name, bool nonempty,
+    InputScanner scanner = InputScanner());
 // A checked stream over a copy of `text`.
-std::unique_ptr<CheckedIStream> checked_text(std::string text);
+std::unique_ptr<CheckedIStream> checked_text(
+    std::string text, InputScanner scanner = InputScanner());
 
 }  // namespace rdkit_cxx

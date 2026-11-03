@@ -12,6 +12,7 @@
 #include <RDGeneral/Exceptions.h>
 
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -41,8 +42,9 @@ void fixed_mol_size_mol_bundle_check(const RWMol &first, const RWMol &nmol) {
 
 std::unique_ptr<MolList> mol_bundle_from_pkl_string(
     rust::Slice<const std::uint8_t> pkl) {
-  MolBundle bundle(
-      std::string(reinterpret_cast<const char *>(pkl.data()), pkl.size()));
+  std::string text(reinterpret_cast<const char *>(pkl.data()), pkl.size());
+  check_mol_pickle_versions(text);
+  MolBundle bundle(text);
   auto list = std::make_unique<MolList>();
   for (const auto &mol : bundle.getMols()) {
     check_pickled_mol(*mol);

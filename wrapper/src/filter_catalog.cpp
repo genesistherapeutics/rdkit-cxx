@@ -22,6 +22,7 @@
 #include "rdkit-cxx/ffi/chirality.rs.h"
 #include "rdkit-cxx/ffi/filter_catalog.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
@@ -754,7 +755,9 @@ std::unique_ptr<FilterCatalog> filter_catalog_from_catalogs(
 std::unique_ptr<FilterCatalog> filter_catalog_from_pickle(
     rust::Slice<const std::uint8_t> pickle) {
   check_can_serialize();
-  auto catalog = std::make_unique<FilterCatalog>(to_std(pickle));
+  auto text = to_std(pickle);
+  check_mol_pickle_versions(text);
+  auto catalog = std::make_unique<FilterCatalog>(text);
   for (unsigned i = 0; i < catalog->getNumEntries(); ++i) {
     check_entry(*catalog->getEntryWithIdx(i), Walk::Load);
   }
@@ -864,6 +867,8 @@ std::unique_ptr<FilterCatalogEntryList> run_filter_catalog(
   texts.reserve(smiles.size());
   for (auto text : smiles) {
     texts.emplace_back(text);
+    // Each is parsed with SmilesToMol's defaults, sanitizing it.
+    check_smiles_relevant_cycles(texts.back(), RDKit::SmilesParserParams());
   }
   std::vector<std::vector<FilterCatalog::CONST_SENTRY>> results(texts.size());
   // More threads than SMILES would have nothing to do.

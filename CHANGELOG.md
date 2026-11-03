@@ -1,5 +1,42 @@
 # Changelog
 
+## Unreleased
+
+### Fixes
+
+- Every other wrapper that can reach RDKit's symmetrized SSSR is now
+  `Error::Value` for a molecule with more than `i32::MAX` relevant cycles,
+  as sanitization, `get_symm_sssr`, and the depictor have been since
+  2026.9.1. RDKit reserves room for them all, converting RingDecomposerLib's
+  `double` count to `size_t` unchecked, which is undefined from 2^64 (a ring
+  of 64 diamonds, 192 atoms). The checks cover the mol block, SD, Mol2, PDB,
+  TPL, Marvin, SVG, SCSR, CDXML, InChI, SLN, sequence, rxn, and PNG readers;
+  the SD, SMILES, and TDT suppliers, plain, forward, and multithreaded,
+  which hold back only a record that could have more than 31 independent
+  cycles until its count is known; reactions and library enumeration;
+  stereo and aromaticity perception; the SMILES, SMARTS, mol block, and JSON
+  writers; fingerprints, hashes, molzip, MMPA, MCS, RASCAL, R-group
+  decomposition, scaffold networks, synthon spaces, substructure libraries,
+  the standardizer, and the rest. A molecule with at most 31 independent
+  cycles is never counted; some calls that build molecules they cannot
+  predict refuse inputs past that bound (README, "Known limitations").
+  Molecule pickles older than format 4.0, which RDKit gives stereochemistry
+  as it reads them, are `Error::Value` wherever RDKit would read one, on its
+  own or inside a reaction, bundle, query, catalog, library, PNG, or
+  synthon-space pickle.
+- A normalizations file (`CleanupParameters::normalizations_file`,
+  `Normalizer::new`) is read once and given to RDKit as data or a stream,
+  so RDKit never reopens a file the wrapper read. A cleanup normalizations
+  file with no transformations is `Error::Value`: RDKit takes empty data
+  to mean the file, and would open it again. `Normalizer::new` reads its
+  file on every call, where RDKit kept its first reading of each file name
+  for the process.
+- `Normalizer::new`, `normalizer_from_data`, and `Pipeline::new` (its
+  `normalizer_data`) are `Error::Value` for a transformation line without
+  both a name and a reaction SMARTS. RDKit's transformation reader takes
+  a line's second field without checking that it has one, reading past
+  the end of its fields.
+
 ## 2026.9.1
 
 ### Changes

@@ -18,6 +18,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -26,6 +27,7 @@ std::unique_ptr<RWMol> mol_new() { return std::make_unique<RWMol>(); }
 std::unique_ptr<RWMol> mol_from_pkl_string(rust::Slice<const std::uint8_t> pkl,
                                            bool has_flags, unsigned flags) {
   std::string text(reinterpret_cast<const char *>(pkl.data()), pkl.size());
+  check_mol_pickle_versions(text);
   auto mol = std::make_unique<RWMol>();
   if (has_flags) {
     RDKit::MolPickler::molFromPickle(text, mol.get(), flags);

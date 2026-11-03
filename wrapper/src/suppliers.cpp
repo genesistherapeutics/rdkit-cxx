@@ -19,6 +19,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/suppliers.rs.h"
 #include "rdkit-cxx/file_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
@@ -135,12 +136,13 @@ void build(W &w, std::unique_ptr<CheckedIStream> in, const RustReadBuf *reader,
   w.input = std::move(input);
 }
 
-std::unique_ptr<CheckedIStream> text_of(rust::Slice<const std::uint8_t> data) {
-  return checked_text(to_std(data));
+std::unique_ptr<CheckedIStream> text_of(rust::Slice<const std::uint8_t> data,
+                                        InputScanner scanner) {
+  return checked_text(to_std(data), std::move(scanner));
 }
 
-std::unique_ptr<CheckedIStream> text_of(rust::Str data) {
-  return checked_text(std::string(data));
+std::unique_ptr<CheckedIStream> text_of(rust::Str data, InputScanner scanner) {
+  return checked_text(std::string(data), std::move(scanner));
 }
 
 // The text of record idx, after checking that there is one (E3).
@@ -186,10 +188,13 @@ std::unique_ptr<SDMolSupplier> sd_mol_supplier_new() {
 std::unique_ptr<SDMolSupplier> sd_mol_supplier_from_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs,
     bool strict_parsing) {
+  auto params = mol_params(sanitize, remove_hs, strict_parsing);
   auto s = std::make_unique<SDMolSupplier>();
   build<SDMolSupplier, FP::SDMolSupplier>(
-      *s, open_checked_file(to_path(path), true), nullptr,
-      mol_params(sanitize, remove_hs, strict_parsing));
+      *s,
+      open_checked_file(to_path(path), true,
+                        InputScanner::mol_records(params, true)),
+      nullptr, params);
   return s;
 }
 
@@ -198,9 +203,10 @@ void sd_mol_supplier_set_data(SDMolSupplier &s,
                               rust::Slice<const std::uint8_t> data,
                               bool sanitize, bool remove_hs,
                               bool strict_parsing) {
+  auto params = mol_params(sanitize, remove_hs, strict_parsing);
   build<SDMolSupplier, FP::SDMolSupplier>(
-      s, text_of(data), nullptr,
-      mol_params(sanitize, remove_hs, strict_parsing));
+      s, text_of(data, InputScanner::mol_records(params, true)), nullptr,
+      params);
 }
 
 std::unique_ptr<RWMol> sd_mol_supplier_next(SDMolSupplier &s) {
@@ -246,10 +252,13 @@ void sd_mol_supplier_set_process_property_lists(SDMolSupplier &s, bool val) {
 std::unique_ptr<ForwardSDMolSupplier> forward_sd_mol_supplier_from_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs,
     bool strict_parsing) {
+  auto params = mol_params(sanitize, remove_hs, strict_parsing);
   auto s = std::make_unique<ForwardSDMolSupplier>();
   build<ForwardSDMolSupplier, FP::ForwardSDMolSupplier>(
-      *s, open_checked_file(to_path(path), false), nullptr,
-      mol_params(sanitize, remove_hs, strict_parsing));
+      *s,
+      open_checked_file(to_path(path), false,
+                        InputScanner::mol_records(params, true)),
+      nullptr, params);
   return s;
 }
 
@@ -258,10 +267,13 @@ std::unique_ptr<ForwardSDMolSupplier> forward_sd_mol_supplier_from_reader(
     bool strict_parsing) {
   auto buf = std::make_unique<RustReadBuf>(std::move(reader));
   const RustReadBuf *raw = buf.get();
+  auto params = mol_params(sanitize, remove_hs, strict_parsing);
   auto s = std::make_unique<ForwardSDMolSupplier>();
   build<ForwardSDMolSupplier, FP::ForwardSDMolSupplier>(
-      *s, std::make_unique<CheckedIStream>(std::move(buf)), raw,
-      mol_params(sanitize, remove_hs, strict_parsing));
+      *s,
+      std::make_unique<CheckedIStream>(std::move(buf),
+                                       InputScanner::mol_records(params, true)),
+      raw, params);
   return s;
 }
 
@@ -327,14 +339,16 @@ std::unique_ptr<SmilesMolSupplier> smiles_mol_supplier_from_file(
   auto p = smiles_params(params);
   auto s = std::make_unique<SmilesMolSupplier>();
   build<SmilesMolSupplier, FP::SmilesMolSupplier>(
-      *s, open_checked_file(to_path(path), true), nullptr, p);
+      *s, open_checked_file(to_path(path), true, InputScanner::smiles_lines(p)),
+      nullptr, p);
   return s;
 }
 
 void smiles_mol_supplier_set_data(SmilesMolSupplier &s, rust::Str data,
                                   const SmilesMolSupplierParamsData &params) {
   auto p = smiles_params(params);
-  build<SmilesMolSupplier, FP::SmilesMolSupplier>(s, text_of(data), nullptr, p);
+  build<SmilesMolSupplier, FP::SmilesMolSupplier>(
+      s, text_of(data, InputScanner::smiles_lines(p)), nullptr, p);
 }
 
 std::unique_ptr<RWMol> smiles_mol_supplier_next(SmilesMolSupplier &s) {
@@ -437,7 +451,20 @@ void index_tdt(TDTMolSupplier &s, std::string text,
 }
 
 // Reads record idx with a fresh RDKit supplier, then sets where s stands.
+// RDKit parses the SMILES between the first "<" and the last ">" of the
+// record's "$SMI<" line (TDTMolSupplier::parseMol), sanitizing it as asked.
 std::unique_ptr<RWMol> read_tdt(TDTMolSupplier &s, std::size_t idx) {
+  {
+    const auto start = s.starts[idx];
+    const auto newline = s.text.find('\n', start);
+    const std::string line =
+        s.text.substr(start, newline == std::string::npos ? std::string::npos
+                                                          : newline - start);
+    const auto open = line.find('<');
+    const auto close = line.find_last_of('>');
+    check_smiles_relevant_cycles(line.substr(open + 1, close - open - 1),
+                                 s.params.parseParameters);
+  }
   TextBuf buf(s.text);
   std::istream in(&buf);
   in.seekg(static_cast<std::streamoff>(s.starts[idx]));
@@ -606,10 +633,13 @@ std::unique_ptr<MultithreadedSDMolSupplier> mt_sd_mol_supplier_from_file(
     rust::Slice<const std::uint8_t> path, bool sanitize, bool remove_hs,
     bool strict_parsing, const MultithreadedParamsData &params) {
   auto p = mt_params(params);
+  auto mp = mol_params(sanitize, remove_hs, strict_parsing);
   auto s = std::make_unique<MultithreadedSDMolSupplier>();
   build<MultithreadedSDMolSupplier, FP::MultithreadedSDMolSupplier>(
-      *s, open_checked_file(to_path(path), true), nullptr, p,
-      mol_params(sanitize, remove_hs, strict_parsing));
+      *s,
+      open_checked_file(to_path(path), true,
+                        InputScanner::mol_records(mp, true)),
+      nullptr, p, mp);
   return s;
 }
 
@@ -666,7 +696,9 @@ mt_smiles_mol_supplier_from_file(rust::Slice<const std::uint8_t> path,
   auto sp = smiles_params(smiles);
   auto s = std::make_unique<MultithreadedSmilesMolSupplier>();
   build<MultithreadedSmilesMolSupplier, FP::MultithreadedSmilesMolSupplier>(
-      *s, open_checked_file(to_path(path), true), nullptr, p, sp);
+      *s,
+      open_checked_file(to_path(path), true, InputScanner::smiles_lines(sp)),
+      nullptr, p, sp);
   return s;
 }
 

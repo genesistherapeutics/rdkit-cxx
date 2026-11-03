@@ -13,6 +13,7 @@
 
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/stereo.rs.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -94,6 +95,7 @@ void forward_stereo_group_ids(RWMol &mol) { RDKit::forwardStereoGroupIds(mol); }
 rust::Vec<StereoInfoData> find_potential_stereo(RWMol &mol, bool clean_it,
                                                 bool flag_possible) {
   rust::Vec<StereoInfoData> result;
+  check_perceive_relevant_cycles(mol);
   for (const auto &info :
        RDKit::Chirality::findPotentialStereo(mol, clean_it, flag_possible)) {
     StereoInfoData data;

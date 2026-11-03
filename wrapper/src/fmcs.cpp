@@ -22,6 +22,7 @@
 #include "rdkit-cxx/errors.h"
 #include "rdkit-cxx/ffi/fmcs.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 
 namespace rdkit_cxx {
 
@@ -401,6 +402,14 @@ MCSResultData find_mcs(BorrowedMols &mols, const MCSParametersData &data,
   params.setMCSBondTyperFromEnum(data.bond_typer);
   params.InitialSeed = std::string(data.initial_seed);
   params.StoreAll = data.store_all;
+
+  // Verbose output writes the molecules with MolToSmiles, which perceives
+  // their stereochemistry.
+  if (params.Verbose) {
+    for (const auto &mol : mols.mols()) {
+      check_stereo_relevant_cycles(*mol);
+    }
+  }
 
   // MaximumCommonSubgraph::find converts ceil(n * Threshold) to int, which
   // is undefined for NaN (Python passes it through) and for values past

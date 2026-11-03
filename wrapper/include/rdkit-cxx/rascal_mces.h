@@ -52,10 +52,12 @@ RDKit::RascalMCES::RascalOptions rascal_options_from(
 inline constexpr std::int64_t kRascalMaxSquared = 46340;
 
 // Checks molecules whose MCESs RDKit will compute, pairwise: each one's
-// matrices (check_matrix_size) and what its results' removals trust
-// (check_removals), and at most one with more than kRascalMaxSquared atoms
-// and bonds. Throws ValueErrorException.
-void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols);
+// matrices (check_matrix_size), what its results' removals trust
+// (check_removals), the relevant cycles of the ring pieces it writes as
+// SMILES with `complete_aromatic_rings`, and at most one with more than
+// kRascalMaxSquared atoms and bonds. Throws ValueErrorException.
+void check_rascal_mols(const std::vector<const RDKit::ROMol *> &mols,
+                       bool complete_aromatic_rings);
 
 RascalOptionsData rascal_options_default();
 RascalClusterOptionsData rascal_cluster_options_default();

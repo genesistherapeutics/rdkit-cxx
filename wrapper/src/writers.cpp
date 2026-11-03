@@ -22,6 +22,7 @@
 #include "rdkit-cxx/ffi/writers.rs.h"
 #include "rdkit-cxx/file_checks.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/util.h"
 
 namespace rdkit_cxx {
@@ -189,8 +190,11 @@ RDKit::STR_VECT to_strings(const rust::Vec<rust::String> &props) {
 // The SD and Maestro writers compute 2D coordinates for a molecule without a
 // conformer (prepareMol in MolFileWriter.cpp, _MolToMaeCtBlock in
 // MaeWriter.cpp), so they hold the depiction lock then (U4). They use
-// compute2DCoords, which trusts the molecule (depiction_checks.h).
+// compute2DCoords, which trusts the molecule (depiction_checks.h). The mol
+// block writes query atoms with GetAtomSmarts, which perceives recursive
+// queries' molecules.
 std::unique_lock<std::mutex> lock_if_depicting(const RWMol &mol) {
+  check_smarts_relevant_cycles(mol, false);
   if (mol.getNumConformers() == 0) {
     auto lock = lock_depiction();
     check_compute_2d_coords_mol(mol, false);
@@ -309,6 +313,7 @@ std::unique_ptr<SmilesWriter> smiles_writer_from_writer(
 void smiles_writer_write(SmilesWriter &w, const RWMol &mol,
                          std::int32_t conf_id) {
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 
@@ -350,6 +355,7 @@ std::unique_ptr<TDTWriter> tdt_writer_from_writer(
 
 void tdt_writer_write(TDTWriter &w, const RWMol &mol, std::int32_t conf_id) {
   check_removals(mol);
+  check_stereo_relevant_cycles(mol);
   checked(w, [&] { w.writer->write(mol, conf_id); });
 }
 

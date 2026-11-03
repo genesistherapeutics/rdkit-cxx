@@ -24,6 +24,7 @@
 #include "rdkit-cxx/generalized_substruct.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/mol_enumerator.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/substruct.h"
 #include "rdkit-cxx/tautomer_checks.h"
 
@@ -138,6 +139,24 @@ void check_label(std::int64_t label) {
 // The decomposition removes atoms from copies of the cores and of the
 // molecules it adds (their matching cores, replaceCore, getMolFrags, the
 // R groups' hydrogens), which trusts what check_removals checks.
+// The decomposition builds, and sanitizes or perceives the stereochemistry
+// of, pieces of the cores and molecules: cores with their attachment
+// points, cores matched in each molecule, and R groups. Each is part of a
+// core or a molecule, with dummy atoms of one bond added, so it has no more
+// independent cycles; but which parts they are depends on every match the
+// decomposition weighs, so a core or molecule with more than
+// MAX_INDEPENDENT_CYCLES is refused (README, Known limitations).
+void check_rgroup_relevant_cycles(const RDKit::ROMol &mol, const char *what) {
+  if (independent_cycles(mol) > MAX_INDEPENDENT_CYCLES &&
+      !RDKit::MolOps::getUseLegacyRingFinding()) {
+    throw ValueErrorException(
+        std::string("R-group decomposition refuses a ") + what +
+        " with more than " + std::to_string(MAX_INDEPENDENT_CYCLES) +
+        " independent cycles: the relevant cycles of the pieces it builds "
+        "cannot be counted before RDKit perceives them");
+  }
+}
+
 void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
                  const RDKit::RGroupDecompositionParameters &p) {
   bool mcs = !p.onlyMatchAtRGroups && (p.alignment & RDKit::MCS);
@@ -169,11 +188,18 @@ void check_cores(const std::vector<boost::shared_ptr<RDKit::ROMol>> &cores,
         }
       }
     }
+    check_rgroup_relevant_cycles(*core, "core");
     if (p.doEnumeration) {
       check_link_nodes(*core);
       // RGroupDecompData enumerates each core with
       // MolEnumerator::enumerate(core).
       check_enumerate(*core, true, true, true);
+      check_enumerate_relevant_cycles(*core, default_enumerate_ops(0));
+      // Repeat units and link nodes can add rings.
+      const auto bundle = RDKit::MolEnumerator::enumerate(*core);
+      for (const auto &mol : bundle.getMols()) {
+        check_rgroup_relevant_cycles(*mol, "core");
+      }
     }
     if (p.doTautomers) {
       check_tautomer_template(*core);
@@ -269,6 +295,7 @@ std::unique_ptr<RGroupDecomposition> r_group_decomposition_new(
 std::int32_t r_group_decomposition_add(RGroupDecomposition &decomp,
                                        const RWMol &mol) {
   check_removals(mol);
+  check_rgroup_relevant_cycles(mol, "molecule");
   Locks locks;
   return decomp.add(mol);
 }
@@ -276,6 +303,7 @@ std::int32_t r_group_decomposition_add(RGroupDecomposition &decomp,
 MatchingCoreResult r_group_decomposition_get_matching_core_idx(
     RGroupDecomposition &decomp, const RWMol &mol) {
   check_removals(mol);
+  check_rgroup_relevant_cycles(mol, "molecule");
   std::vector<RDKit::MatchVectType> matches;
   int idx;
   {
@@ -331,6 +359,7 @@ RGroupDecomposeResult r_group_decompose(
   RGroupDecomposeResult res{{std::make_unique<MolList>(), {}}, {}};
   for (const auto &mol : mols.mols()) {
     check_removals(*mol);
+    check_rgroup_relevant_cycles(*mol, "molecule");
   }
   Locks locks;
   auto decomp = make_decomposition(cores, params);

@@ -21,6 +21,7 @@
 #include <GraphMol/Fingerprints/MorganGenerator.h>
 #include <GraphMol/Fingerprints/RDKitFPGenerator.h>
 #include <GraphMol/Fingerprints/TopologicalTorsionGenerator.h>
+#include <GraphMol/SmilesParse/SmilesParse.h>
 #include <RDGeneral/Exceptions.h>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -32,6 +33,7 @@
 #include "rdkit-cxx/ffi/fingerprints.rs.h"
 #include "rdkit-cxx/ffi/geometry.rs.h"
 #include "rdkit-cxx/mol_checks.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/threads.h"
 #include "rdkit-cxx/util.h"
 
@@ -166,6 +168,11 @@ void check_call(const FpGenerator &gen, const RDKit::ROMol &mol,
   }
   if (uses_3d_distances(gen)) {
     check_3d_distances(mol, conf_id);
+  }
+  // getFingerprintHelper assigns stereochemistry to a copy.
+  if (gen.getOptions()->df_includeChirality &&
+      !mol.hasProp(RDKit::common_properties::_StereochemDone)) {
+    check_stereo_relevant_cycles(mol);
   }
 }
 
@@ -464,6 +471,20 @@ void check_generator_json(const std::string &json) {
     throw ValueErrorException("the generator JSON's " + args + " and " + env +
                               " do not go together");
   }
+  // The Morgan feature invariants' patterns are written back with
+  // MolToSmarts (fp_generator_to_json), which perceives them.
+  if (smiles_cycle_bound(json) > MAX_INDEPENDENT_CYCLES) {
+    auto patterns =
+        pt.get_child_optional("atomInvariantsGenerator.patternSMARTS");
+    for (const auto &node :
+         patterns ? *patterns : boost::property_tree::ptree()) {
+      std::unique_ptr<RDKit::ROMol> pattern(
+          RDKit::SmartsToMol(node.second.get_value<std::string>()));
+      if (pattern) {
+        check_smarts_relevant_cycles(*pattern);
+      }
+    }
+  }
 }
 
 std::unique_ptr<FpGenerator> fingerprint_generator_from_json(rust::Str json) {
@@ -488,6 +509,8 @@ std::unique_ptr<AtomInvGen> get_morgan_feature_atom_inv_gen(
   }
   std::vector<const RDKit::ROMol *> mols;
   for (const auto &mol : patterns.mols()) {
+    // fp_generator_to_json writes the patterns with MolToSmarts.
+    check_smarts_relevant_cycles(*mol);
     mols.push_back(mol.get());
   }
   return std::make_unique<

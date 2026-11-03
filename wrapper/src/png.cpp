@@ -25,6 +25,7 @@
 #include "rdkit-cxx/global_state.h"
 #include "rdkit-cxx/mol_checks.h"
 #include "rdkit-cxx/molfiles.h"
+#include "rdkit-cxx/relevant_cycles.h"
 #include "rdkit-cxx/streams.h"
 #include "rdkit-cxx/util.h"
 
@@ -79,8 +80,10 @@ void check_png(const std::string &png) {
   }
 }
 
-// As Mol::from_pkl_string, a pickle's monomer types are checked (U10).
+// As Mol::from_pkl_string, a pickle's format is checked
+// (check_mol_pickle_versions) and its monomer types (U10).
 std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
+  check_mol_pickle_versions(pkl);
   auto mol = std::make_unique<RWMol>();
   RDKit::MolPickler::molFromPickle(pkl, mol.get());
   check_pickled_mol(*mol);
@@ -88,7 +91,8 @@ std::unique_ptr<RWMol> from_pickle(const std::string &pkl) {
 }
 
 // As PNGStreamToMols in PNGParser.cpp: a molecule for one metadata value,
-// or null for a SMILES RDKit cannot parse. The mol block is checked (U12),
+// or null for a SMILES RDKit cannot parse. The mol block is checked (U12)
+// and followed for its relevant cycles (MolRecordScanner),
 // and so is a SMILES's CXSMILES extension (check_smiles_cx).
 std::unique_ptr<RWMol> from_metadata(const std::string &key,
                                      const std::string &value,
@@ -101,10 +105,10 @@ std::unique_ptr<RWMol> from_metadata(const std::string &key,
     check_smiles_relevant_cycles(value, params);
     return std::unique_ptr<RWMol>(RDKit::SmilesToMol(value, params));
   }
-  check_input_text(value);
   FP::MolFileParserParams mol_params;
   mol_params.sanitize = params.sanitize;
   mol_params.removeHs = params.removeHs;
+  check_input_text(value, InputScanner::mol_records(mol_params, false));
   return FP::MolFromMolBlock(value, mol_params);
 }
 
@@ -159,8 +163,10 @@ rust::Vec<std::uint8_t> mol_to_png(const RWMol &mol, const std::string &png,
   params.cxSmilesFlags = data.cx_smiles_flags;
   params.restoreBondDirs = data.restore_bond_dirs;
   if (params.includeSmiles) {
-    // The SMILES writer removes atoms from copies (mol_to_smiles).
+    // The SMILES writer removes atoms from copies (mol_to_smiles), and
+    // perceives their stereochemistry.
     check_removals(mol);
+    check_stereo_relevant_cycles(mol);
   }
   if (params.includePkl) {
     check_picklable(mol);
